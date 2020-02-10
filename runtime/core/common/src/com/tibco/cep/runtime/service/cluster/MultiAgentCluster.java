@@ -79,7 +79,8 @@ public class MultiAgentCluster implements Cluster {
 	private LockCache lockCache;
     
     private ClusterProvider clusterProvider;
-    //private BEStore defaultStore;
+    private GenericBackingStore defaultStore;
+    private BECacheProvider beCacheProvider;
 
     public MultiAgentCluster(String name, RuleServiceProvider rsp) throws Exception {
         this.clusterName = name;
@@ -220,7 +221,7 @@ public class MultiAgentCluster implements Cluster {
     }
 
     @Override
-    public BEStore getBackingStore() {
+    public GenericBackingStore getBackingStore() {
        // return this.daoProvider.getBackingStore();
     	return null;
     }
@@ -348,4 +349,17 @@ public class MultiAgentCluster implements Cluster {
 	public ClusterProvider getClusterProvider() {
 		return clusterProvider;
 	}
+	
+	@Override
+	public BECacheProvider getBECacheProvider() {
+		return beCacheProvider;
+	}
+
+	@Override
+	public EventTableProvider getEventTableProvider() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	
 }

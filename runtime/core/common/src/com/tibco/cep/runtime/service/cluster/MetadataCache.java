@@ -42,7 +42,6 @@ import com.tibco.be.util.config.cdd.ProcessingUnitConfig;
 import com.tibco.cep.designtime.model.Entity;
 import com.tibco.cep.designtime.model.Ontology;
 import com.tibco.cep.designtime.model.element.PropertyDefinition;
-import com.tibco.cep.kernel.model.entity.Id;
 import com.tibco.cep.kernel.service.logging.Level;
 import com.tibco.cep.kernel.service.logging.LogManagerFactory;
 import com.tibco.cep.kernel.service.logging.Logger;
@@ -496,22 +495,24 @@ public class MetadataCache implements IMetadataCache {
      * @return
      * @throws Exception 
      */
-    public EntityDao createEntityDaoAndRegister(Class entityClass, String uri, int typeId) throws Exception {
-    	EntityDao entityDao = null;
+    
+    public EntityDao createEntityDaoAndRegister_old(Class entityClass, String uri, int typeId) throws Exception {
+        EntityDao entityDao = null;
+
         EntityDaoConfig daoConfig = entityDaoConfigs.get(entityClass);
 
-        String entityStoreName = EntityDaoConfigCreator.getStoreNameForEntity(cluster, uri);
-        if (entityStoreName != null) {
-        	BEStore store = cluster.registerBEStoreForType(typeId, entityStoreName);
-        	if (store != null) {
-        		entityDao = store.createOrGetEntityDao(entityClass, daoConfig, true);
-        	}
-        	MetadataDescriptor md = new MetadataDescriptor(uri, entityClass, typeId, entityDao);
-        	metadataDescriptors[typeId - BE_TYPE_START] = md;
-        	//metadataDescriptors.add(md);
-        	classToMetadata.put(entityClass, md);
-        	classNameToMetadata.put(entityClass.getName(), md);
-        }
+        cluster.getBECacheProvider().createOrGetEntityDao(entityClass, daoConfig, true);
+
+        MetadataDescriptor md = new MetadataDescriptor(uri, entityClass, typeId, entityDao);
+        metadataDescriptors[typeId - BE_TYPE_START] = md;
+        //metadataDescriptors.add(md);
+
+        classToMetadata.put(entityClass, md);
+        classNameToMetadata.put(entityClass.getName(), md);
+        
+        TypeDescriptor td = cluster.getRuleServiceProvider().getTypeManager().getTypeDescriptor(entityClass);
+        if (td != null)	td.setTypeId(typeId);
+
         return entityDao;
     }
     

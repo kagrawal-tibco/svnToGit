@@ -12,6 +12,7 @@ import java.util.EnumMap;
 
 import com.tibco.cep.common.resource.ResourceProvider;
 import com.tibco.cep.runtime.service.cluster.agent.AgentManager;
+import com.tibco.cep.runtime.service.cluster.backingstore.GenericBackingStore;
 //import com.tibco.cep.runtime.service.cluster.backingstore.CacheAsideBackingStore;
 //import com.tibco.cep.runtime.service.cluster.backingstore.RecoveryManager;
 import com.tibco.cep.runtime.service.cluster.deploy.HotDeployer;
@@ -92,10 +93,11 @@ public interface Cluster extends Service {
 	LockCache getApplicationLockCache();
 
 	ClusterProvider getClusterProvider();
+	BECacheProvider getBECacheProvider();
 
 //	CacheProvider getCacheProvider();
 	
-	BEStore getBackingStore();
+	GenericBackingStore getBackingStore();
 
 	//BEStore getBackingStoreForType(int typeId);
 	
