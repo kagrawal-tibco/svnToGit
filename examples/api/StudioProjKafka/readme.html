@@ -1,0 +1,108 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>     KafkaChannel(API Example)
+
+- TIBCO BusinessEvents&reg; Examples
+</title>
+<meta http-equiv="Content-type" content="text/html; charset=iso-8859-1" />
+<meta http-equiv="Content-Language" content="en-us" />
+<link rel="Shortcut Icon" href="../../../../examples/_resources/icon.gif" type="image/gif" />
+<style type="text/css" media="all">@import "../../../../examples/_resources/examples.css";</style>
+<script type="text/javascript" src="../../../../examples/_resources/examples.js" /></script>
+<script type="text/javascript">
+</script>
+</head>
+<body>
+
+
+<h1>KafkaChannel</h1>
+
+
+<h2>Purpose of This Example</h2>
+
+<p>The KafkaChannel example demonstrates the TIBCO BusinessEvents&reg; Channel API. You can examine the project in TIBCO BusinessEvents Studio to understand the setup, and refer to <i>TIBCO BusinessEvents Developer's Guide</i> for details on channel configuration. </p>
+
+<h2>Instructions</h2>
+<p>To run this example, first setup Kafka, then setup and run the example </p>
+<h3>Install, start and configure the Kafka broker</h3>
+
+
+<ol>
+<li>
+	<p>Install Apache Kafka</p>
+	<ol>
+		<li>To install Kafka on your machine, click on the below link </li>
+		<a href="http://kafka.apache.org/downloads.html">Download Kafka</a>
+		<li>Download version <code>0.10.0.0</code> or later</li>
+		<li>Extract the tar file in a directory e.g. <code>C:\kafka\</code>. This will act as <code>KAFKA_HOME</code></li>
+	</ol>
+</li>
+<li>
+    <p>Start Zookeeper</p>
+	 <ol>
+		<li>Open a new command prompt in <code>KAFKA_HOME</code> , start a zookeeper server as follows</li>
+     </ol>
+		 <pre class="commands">.\bin\windows\zookeeper-server-start.bat .\config\zookeeper.properties</i></pre>
+
+    
+</li>
+<li>
+	<p>Start Kafka broker</p>
+	<ol>
+		<li>Open a new command prompt in <code>KAFKA_HOME</code> , start a Kafka broker as follows</li>
+	 </ol>
+		<pre class="commands">.\bin\windows\kafka-server-start.bat .\config\server.properties</i></pre>
+
+</li>
+<li>
+	<p>Create topic</p>
+	<ol>
+		<li>Open a new command prompt in <code>KAFKA_HOME</code> , a create a topic as follows</li>
+	 </ol>
+		<pre class="commands">kafka-topics.bat --create --zookeeper localhost:2181 --replication-factor 1 --partitions 1 --topic ktopic</i></pre>
+
+</li>
+
+
+</ol>
+
+<h3>Run the Example</h3>
+
+<ol>
+<li><p> Copy the Kafka custom channel jar file<code> cep-kafka-channel.jar </code> from <i>BE_HOME</i><code>/api/channel-api/examples/kafka</code> to <i>BE_HOME</i><code>/lib/ext/tpcl</code></p>
+</li>
+
+<li>
+<p>Open another command window and at the command prompt, start the TIBCO BusinessEvents engine using the following command.</p>
+<pre class="commands">
+cd BE_HOME/api/channel-api/examples/StudioProjKafka
+BE_HOME/bin/be-engine --propFile BE_HOME/bin/be-engine.tra -u default -c StudioProjKafka/kafka.cdd StudioProjKafka.ear
+</pre>
+</li>
+
+<li><p>Here we have a startup rule function <code>SendAccountInfo</code>, that does <code>Event.sendEvent</code>. This event's default destination is configured to be a Kafka Destination. This message will be sent to the Kafka broker that is started on the localhost. Inspect the project for the Channel and Destination configurations. This message will arrive back at the destination <code>AllOps</code> via the Kafka channel (<code>KafkaChannel</code>) The destination's default event is a <code>CreateAccount</code> event. Upon receiving a message at the Kafka destination, it is converted into a <code>CreateAccount</code> event and is asserted. The <code>CreateAccountRule</code> rule is fired. This example also demonstrates how the event payload is available for use in BE. In this case, the payload is transformed into a <code>Customer</code> concept. The example prints details of the event and its payload and you should see the following output in the BE engine console.</p>
+<p> 
+<pre class="logs">########### Received a CreateAccount Event #########
+Event Payload : &lt;?xml version="1.0" encoding="UTF-8"?&gt;
+
+&lt;tns:Customer xmlns:tns="www.tibco.com/be/ontology/Concepts/Customer" extId="1" Id="2"&gt;
+    &lt;firstName&gt;Jon&lt;/firstName&gt;
+    &lt;lastName&gt;Doe&lt;/lastName&gt;
+    &lt;age&gt;35&lt;/age&gt;
+&lt;/tns:Customer&gt;
+Account Type : savings
+</pre> </p>
+</li>
+</ol>
+
+
+
+<div class="footer">
+<p>TIBCO BusinessEvents&reg; 5.6<br />
+Copyright&copy; 2004-2019 TIBCO Software Inc. All rights reserved.</p>
+</div>
+</body>
+</html>

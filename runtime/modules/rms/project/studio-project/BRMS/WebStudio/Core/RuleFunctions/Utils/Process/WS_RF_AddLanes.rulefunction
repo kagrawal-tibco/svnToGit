@@ -1,0 +1,27 @@
+/**
+ * @description 
+ */
+int rulefunction WebStudio.Core.RuleFunctions.Utils.Process.WS_RF_AddLanes {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object laneSetWrapper;
+		Object processEMFWrapperObject;
+		WebStudio.Core.Concepts.Process.WS_C_Lane lane;
+	}
+	body {
+		Object laneWrapper = WS.Process.addLane(processEMFWrapperObject, lane.name, laneSetWrapper, lane.laneId);
+		Object childLaneSetWrapper = WS.Process.addChildLaneSet(processEMFWrapperObject, laneWrapper, null);
+		
+		WS_C_Lane[] childLanes = Instance.PropertyArray.toArrayConcept(lane.childLanes);
+		if (childLanes@length > 0) {
+			for (int i=0; i<childLanes@length; i++) {
+				WS_C_Lane childLane = childLanes[i];
+				WS_RF_AddLanes(childLaneSetWrapper, processEMFWrapperObject, childLane);
+			}
+		}
+		
+		return 0; // Dummy return value
+	}
+}

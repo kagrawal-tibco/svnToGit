@@ -1,0 +1,774 @@
+package com.tibco.cep._retired_;
+
+import com.tibco.be.util.XiSupport;
+import com.tibco.cep.kernel.model.entity.Element;
+import com.tibco.cep.kernel.model.entity.Entity;
+import com.tibco.cep.kernel.service.logging.Level;
+import com.tibco.cep.kernel.service.logging.Logger;
+import com.tibco.cep.runtime.config.Configuration;
+import com.tibco.cep.runtime.model.element.VersionedObject;
+import com.tibco.cep.runtime.model.element.impl.ConceptImpl;
+import com.tibco.cep.runtime.model.serializers.DataInputConceptDeserializer;
+import com.tibco.cep.runtime.model.serializers.DataOutputConceptSerializer;
+import com.tibco.cep.runtime.service.om.coherence.cluster.CacheAgent;
+import com.tibco.cep.runtime.service.om.invm.LocalCache;
+import com.tibco.xml.data.primitive.ExpandedName;
+import com.tibco.xml.datamodel.XiNode;
+import com.tibco.xml.datamodel.helpers.XiSerializer;
+
+import java.io.*;
+
+/**
+ * Created by IntelliJ IDEA.
+ * User: nleong
+ * Date: Mar 13, 2008
+ * Time: 5:50:59 PM
+ * To change this template use File | Settings | File Templates.
+  */
+@Deprecated
+public class L1Cache implements LocalCache {
+    Entry[] hashTable;
+
+    Entry removableList;
+    Entry nonRemovableList;
+    Entry pendingRemovalList;
+
+    int currentSize;
+    int cacheSize;
+
+    int numRequests=0, numHits=0;
+    CacheAgent cacheAgent;
+
+    public L1Cache() {
+    }
+
+    public String getId() {
+        return getClass().getSimpleName() + ":" + System.identityHashCode(this);
+    }
+
+    /**
+     * @param configuration Ignored.
+     * @param otherArgs     First parameter should be {@link com.tibco.cep.runtime.service.om.coherence.cluster.CacheAgent}
+     *                      and the second the cache-size as an Integer.
+     * @throws Exception
+     */
+    public void init(Configuration configuration, Object... otherArgs) throws Exception {
+        cacheAgent = (CacheAgent) otherArgs[0];
+        cacheSize = (Integer) otherArgs[1];
+        hashTable = new Entry[cacheSize * 2];
+        currentSize = 0;
+
+        removableList = new Entry();
+        removableList.listNext = removableList;
+        removableList.listPrev = removableList;
+
+        nonRemovableList = new Entry();
+        nonRemovableList.listNext = nonRemovableList;
+        nonRemovableList.listPrev = nonRemovableList;
+
+        pendingRemovalList = new Entry();
+        pendingRemovalList.listNext = pendingRemovalList;
+        pendingRemovalList.listPrev = pendingRemovalList;
+    }
+
+    public void start() throws Exception {
+    }
+
+    public void stop() throws Exception {
+    }
+
+    public synchronized void printContents(PrintStream printStream) {
+        printStream.println("=== L1 Cache ===");
+        printStream.println("currentSize: " + currentSize);
+
+
+        int totalCount = 0;
+        for (int i = 0; i < hashTable.length; i++) {
+            printStream.println("   Position: " + i);
+
+            int count = 0;
+            Entry e = hashTable[i];
+            while (e != null) {
+                count++;
+                printStream.println("     Entry Id:" + e.id + ", Status: " + e.status + ", [" +
+                        e.getRef() + "]");
+
+                e = e.hashNext;
+            }
+
+            printStream.println("   Total at this position: " + count);
+
+            totalCount += count;
+        }
+
+        printStream.println("   Total in hashTable: " + totalCount);
+
+        Entry e = pendingRemovalList;
+        printStream.println("   pendingRemovalList:");
+        LocalCache.Entry head = e;
+        int count = 0;
+        while (e != null) {
+            e = e.listNext;
+            count++;
+
+            printStream.println(
+                    "     Entry Id:" + e.id + ", Status: " + e.status + ", [" + e.getRef() + "]");
+
+            if (e == head) {
+                break;
+            }
+        }
+        printStream.println("   Total in chain: " + count);
+
+
+        e = removableList;
+        printStream.println("   removableList:");
+        head = e;
+        count = 0;
+        while (e != null) {
+            e = e.listNext;
+            count++;
+
+            printStream.println(
+                    "     Entry Id:" + e.id + ", Status: " + e.status + ", [" + e.getRef() + "]");
+
+            if (e == head) {
+                break;
+            }
+        }
+        printStream.println("   Total in chain: " + count);
+
+        e = nonRemovableList;
+        printStream.println("   nonRemovableList:");
+        head = e;
+        count = 0;
+        while (e != null) {
+            e = e.listNext;
+            count++;
+
+            printStream.println(
+                    "     Entry Id:" + e.id + ", Status: " + e.status + ", [" + e.getRef() + "]");
+
+            if (e == head) {
+                break;
+            }
+        }
+        printStream.println("   Total in chain: " + count);
+
+        printStream.println("~--------~--------~");
+    }
+
+    public void printToLog(Logger logger) {
+       if (logger.isEnabledFor(Level.INFO)) {
+            StringBuilder sb = new StringBuilder();
+            for (int i=0; i< hashTable.length; i++){
+                Entry e = hashTable[i];
+                while (e != null){
+                    sb.append("\n Next:" + e.getRef());
+                    e = e.hashNext;
+                }
+            }
+            logger.log(Level.INFO,sb.toString());
+        }
+    }
+
+    public void clear() {
+        hashTable = new Entry[cacheSize * 2];
+        currentSize = 0;
+
+        removableList = new Entry();
+        removableList.listNext = removableList;
+        removableList.listPrev = removableList;
+
+        nonRemovableList = new Entry();
+        nonRemovableList.listNext = nonRemovableList;
+        nonRemovableList.listPrev = nonRemovableList;
+
+        pendingRemovalList = new Entry();
+        pendingRemovalList.listNext = pendingRemovalList;
+        pendingRemovalList.listPrev = pendingRemovalList;
+    }
+    //Assumption!!! object has been modified from the cache by another engine.  we can upsert it into the L1Cache
+    //return true if ok putting into the L1Cache, false if the object is pending for removal.  throw Exception if there is some race condition.
+    synchronized public boolean directPut(Entity entity) {
+        long id = entity.getId();
+        int indexObjectTable = indexForById(id, hashTable.length);
+        for (Entry e = hashTable[indexObjectTable]; e != null; e = e.hashNext) {
+            if (e.id == id) { //update
+                if(e.isPendingRemoval()) {
+                    //todo - Puneet, could be a race condition here.  This engine is deleting the object while it is being updated from another engine.
+                    //todo - just ignore?
+                    return false;
+                }
+
+                if (e.isSaved()) {
+                    if (entity instanceof VersionedObject) {
+                        if (((VersionedObject) entity).getVersion() > e.version) {
+                            e.setRef(entity);
+                            return true;
+                        } else {
+                            return false;
+                        }
+                    } else {
+                        e.setRef(entity);
+                        return true;
+                    }
+                } else {
+                    // Ignore the write
+                    return false;
+                }
+//                if(e.object == entity) {
+//                    //todo - may be ignore this case not to throw exception
+//                    //throw new RuntimeException("PROGRAM ERROR: This should not be possible, same reference but come from outside?");
+//                }
+//                //different ref
+//                if(e.isSaved()) {
+//                    //todo - Puneet, need to check for Object version here!!!!!
+//                    if (entity instanceof VersionedObject) {
+//                        if (((VersionedObject) entity).getVersion() > ((VersionedObject) e.object).getVersion()) {
+//                            e.object = entity;  //just update the one in the L1Cache
+//                        }
+//                    }
+//                    return true;
+//                }
+//                else { //not saved yet
+//                    //todo - Puneet, could be a race condition here.  This engine is updating the object while a new copy is received.
+//                    // throw new RuntimeException("Object <" + e.object + "> is being saved while a new copy is received from outside");
+////                    if (entity instanceof VersionedObject) {
+////                        if (((VersionedObject) entity).getVersion() > ((VersionedObject) e.object).getVersion()) {
+////                            e.object=entity;
+////                            e.markSaved();
+////                            removeFromList(e);
+////                            moveToRemovableList(e);
+////                            return true;
+////                        } else {
+////                            return false;
+////                        }
+////                    }
+//                    return true;
+//                    //if we just want to set the reference, we need to move the object to the removableList
+//                }
+            }
+        }
+        Entry newEntry = new Entry(entity, hashTable[indexObjectTable]);
+        hashTable[indexObjectTable] = newEntry;
+        //default put to removableList
+        newEntry.markSaved();
+        moveToRemovableList(newEntry);
+        currentSize++;
+        if(currentSize > cacheSize)
+            removeLastRemovableEntry();
+        return true;
+    }
+
+
+    //Assumption!!! object has been removed from the cache by another engine.  we can remove the current one if found
+    synchronized public Entity directRemove(long id) {
+        int i = indexForById(id, hashTable.length);
+        Entry prev = hashTable[i];
+        Entry e = prev;
+        while (e != null) {
+            Entry next = e.hashNext;
+            if (e.id == id) {
+                if(!e.isSaved()) {
+                    //todo - Puneet, could be a race condition here.  This engine is saving the object while it is being deleted from another engine.
+                    //todo - throw exception here and call delete for this object for this engine?
+                    //throw new RuntimeException("Object <" + e.object + "> is being saved while it was deleted from outside");
+                    return null;
+                }
+                //else - this is ok
+                //if(e.isPendingRemoval()) - this case is ok
+                if (prev == e)
+                    hashTable[i] = next;
+                else
+                    prev.hashNext = next;
+                removeFromList(e);
+                currentSize--;
+                return e.getRef();
+            }
+            prev = e;
+            e = next;
+        }
+        return null;
+    }
+
+
+    //Assumption!!!  Put a new object or modified object into L1Cahce, markSaved has to be called later after this call.
+    synchronized public void put(Entity entity) {
+        System.err.println("### PUT " + entity.getId() + ", " + entity );
+        new Exception().printStackTrace();        
+        long id = entity.getId();
+        int indexObjectTable = indexForById(id, hashTable.length);
+        for (Entry e = hashTable[indexObjectTable]; e != null; e = e.hashNext) {
+            if (e.id == id) { //update
+                if(e.isPendingRemoval()) {
+                //    throw new RuntimeException("PROGRAM ERROR: This should not be possible, entity already set as pending for removal");
+                    return;
+                }
+
+                if(e.isSaved()) {
+                    e.setRef(entity);
+                    e.clearSaved();
+                    removeFromList(e);
+                    moveToNonRemovableList(e);
+                } else {
+                    throw new RuntimeException("PROGRAM ERROR: This should not be possible, entity set as pending save " + entity);
+                    //e.setRef(entity);
+                }
+//
+//                if(e.object == entity)  {//ref is the same
+//                    if(e.isSaved()) {
+//                        e.clearSaved();
+//                        removeFromList(e);
+//                        moveToNonRemovableList(e);
+//                    }
+//                    else {  //this should be impossib
+//                        throw new RuntimeException("PROGRAM ERROR: This should not be possible");
+//                    }
+//                }
+//                else {  //different ref
+//                    if(e.isSaved()) {
+//                        e.object = entity;  //replace with new reference
+//                        e.clearSaved();
+//                        removeFromList(e);
+//                        moveToNonRemovableList(e);
+//                    }
+//                    else {
+//                        e.object = entity;   //replace with new reference
+//                    }
+//                }
+                return;
+            }
+        }
+        Entry newEntry = new Entry(entity, hashTable[indexObjectTable]);
+        hashTable[indexObjectTable] = newEntry;
+        //default not save yet
+        moveToNonRemovableList(newEntry);
+        currentSize++;
+        if(currentSize > cacheSize)
+            removeLastRemovableEntry();
+    }
+
+    synchronized public LocalCache.Entry getEntry(long id) {
+        ++numRequests;
+        int i = indexForById(id, hashTable.length);
+        Entry cursor = hashTable[i];
+        while (cursor != null) {
+            if(cursor.id == id) {
+                return cursor;
+            }
+            cursor = cursor.hashNext;
+        }
+        return null;
+    }
+
+    public boolean hasEntity(long id) {
+        int i = indexForById(id, hashTable.length);
+        Entry cursor = hashTable[i];
+        while (cursor != null) {
+            if (cursor.id == id) {
+                if (cursor.isPendingRemoval()) {
+                    return false;
+                }
+                return cursor.hasRef();
+            }
+            cursor = cursor.hashNext;
+        }
+        return false;
+    }
+
+    public Entity getV2(Long id){
+        return get(id.longValue());
+    }
+
+    //
+    synchronized public Entity get(long id) {
+        ++numRequests;
+        int i = indexForById(id, hashTable.length);
+        Entry cursor = hashTable[i];
+        while (cursor != null) {
+            if(cursor.id == id) {
+                if(cursor.isPendingRemoval()) {
+                    return null;
+                }
+                ++numHits;
+                return cursor.getRef();
+                    //throw new PendingForRemovalException("Object <" + cursor.object + "> is pending for removal");
+//                if(cursor.isSaved()) {
+//                    removeFromList(cursor);
+//                    moveToRemovableList(cursor);
+//                    ++numHits;
+//                    return cursor.getRef();
+//                }
+//                else {  //not saved yet
+//                    if (cursor.object instanceof Concept) {
+//                        cursor.markSaved();
+//                        removeFromList(cursor);
+//                        moveToRemovableList(cursor);  //move to the front of the list, todo - problem when the object is not saved yet but removed from the list
+////                        Entity dup = ((Concept)cursor.object).duplicateThis();
+////                        cursor.object=dup;
+//                        ++numHits;
+//                        return cursor.object;
+//                    }
+//                    else {// this is an event
+//                        ++numHits;
+//                        return cursor.object;
+//                    }
+//                }
+            }
+            cursor = cursor.hashNext;
+        }
+        return null;
+    }
+
+    synchronized public boolean isPendingRemoval(long id) {
+        int i = indexForById(id, hashTable.length);
+        Entry cursor = hashTable[i];
+        while (cursor != null) {
+            if(cursor.id == id) {
+                if(cursor.isPendingRemoval()) {
+                    return true;
+                }
+            }
+            cursor = cursor.hashNext;
+        }
+        return false;
+    }
+
+    synchronized public boolean isPendingWrite(long id) {
+        int i = indexForById(id, hashTable.length);
+        Entry cursor = hashTable[i];
+        while (cursor != null) {
+            if(cursor.id == id) {
+                if(!cursor.isSaved()) {
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+            cursor = cursor.hashNext;
+        }
+        return false;
+    }
+
+    synchronized public int getVersion(long id)  {
+        int i = indexForById(id, hashTable.length);
+        Entry cursor = hashTable[i];
+        while (cursor != null) {
+            if(cursor.id == id) {
+                return cursor.getVersion();
+            }
+            cursor = cursor.hashNext;
+        }
+        return -1;
+    }
+
+    public void remove(long id) {
+    }
+
+    public void removeV2(Long id) {
+    }
+
+    //Assumption!!!  Mark the object as pending for removal, markDeleted has to be called later after this call.
+    synchronized public boolean remove(Entity entity) {
+        long id = entity.getId();
+        int i = indexForById(id, hashTable.length);
+
+        Entry cursor = hashTable[i];
+        while (cursor != null) {
+            if(cursor.id == id) {
+                if(cursor.isPendingRemoval()) return false;
+                cursor.markPendingRemoval();
+                removeFromList(cursor); //remove from current list
+                moveToPendingRemovalList(cursor);  //move to pending for removal list
+                return true;
+            }
+            cursor = cursor.hashNext;
+        }
+        //the following should not be possible, but anyway, handle this case
+        Entry newEntry = new Entry(entity, hashTable[i]);
+        hashTable[i] = newEntry;
+        newEntry.markPendingRemoval();
+        newEntry.markSaved();
+        moveToPendingRemovalList(newEntry);
+        currentSize++;
+        return true;
+
+    }
+
+    //return false if can't find the entry or the entry already marked dirty.
+    //otherwise, return true.
+    synchronized public boolean markSaved(long id) {
+        System.err.println("### MARK-SAVED-REQ " + id );
+        int i = indexForById(id, hashTable.length);
+        Entry prev   = hashTable[i];
+        Entry cursor = prev;
+//
+//        Entry cursor = hashTable[i];
+        while (cursor != null) {
+            Entry next = cursor.hashNext;
+            if(cursor.id == id) {
+//                if(cursor.object != e) return false;  // important!!!!!!reference already changed by someone, no need to do anything
+                if(cursor.isPendingRemoval()) {
+                    if (prev == cursor)
+                        hashTable[i] = next;
+                    else
+                        prev.hashNext = next;
+                    removeFromList(cursor);
+                    this.currentSize--;
+                    System.err.println("### MARK-SAVED-PENDING-REMOVAL " + id);
+                    return true;
+                } else if (!cursor.isSaved()) {
+                    cursor.markSaved();
+                    cursor.version=cursor.version+1;
+                    removeFromList(cursor); //remove from nonremovableList
+                    moveToRemovableList(cursor);
+                    System.err.println("### MARK-SAVED-DONE " + id);
+                    return true;
+                }
+//                if(cursor.isSaved()) return false;
+//                cursor.markSaved();
+//                cursor.version=newVersion;
+//                //move to the removable list
+//                removeFromList(cursor); //remove from nonremovableList
+//                moveToRemovableList(cursor);
+//                return true;
+            }
+            cursor = cursor.hashNext;
+        }
+        return false;
+    }
+
+    public int size() {
+        return this.currentSize;
+    }
+
+    public int getNumRequests() {
+        return this.numRequests;
+    }
+
+    public int getNumHits() {
+        return this.numHits;
+    }
+
+    protected void printObject(String msg, Object element) {
+        if (element instanceof Element) {
+            ExpandedName rootNm=ExpandedName.makeName("amitabh", "amit");
+            XiNode node = XiSupport.getXiFactory().createElement(rootNm);
+            ((ConceptImpl) element).toXiNode(node, false);
+            System.out.println(msg + " = " + XiSerializer.serialize(node));
+        }
+    }
+
+    synchronized public boolean markDeleted(Entity entity) {
+        long id = entity.getId();
+        int i = indexForById(id, hashTable.length);
+
+        Entry prev   = hashTable[i];
+        Entry cursor = prev;
+        while (cursor != null) {
+            Entry next = cursor.hashNext;
+            if (cursor.id == id) {
+//                if(cursor.object == entity) {
+//                    if(!cursor.isPendingRemoval()) {
+//                        throw new RuntimeException("PROGRAM ERROR: This should not be possible, should be marked as pending for removal");
+//                    }
+//                    if(!cursor.isSaved()) {
+//                        //todo - Should never happen. race condition in here, object hasn't been saved yet but already deleted from the cache.
+//                        throw new RuntimeException("PROGRAM ERROR: This should not be possible, object hasn't been saved but already deleted");
+//                    }
+//                }
+                if (prev == cursor)
+                    hashTable[i] = next;
+                else
+                    prev.hashNext = next;
+                removeFromList(cursor);
+                this.currentSize--;
+                return true;
+            }
+            prev = cursor;
+            cursor = next;
+        }
+        return false;
+    }
+
+    void removeLastRemovableEntry() {
+        if(removableList.listPrev != removableList) {  //removable list is not empty
+            Entry removeThis = removableList.listPrev;  //last one to remove
+            directRemove(removeThis.id);
+        }
+        //remove from the cache
+    }
+
+    void removeFromList(Entry e) {
+        //remove from the double linked list
+        e.listPrev.listNext = e.listNext;
+        e.listNext.listPrev = e.listPrev;
+    }
+
+    void moveToNonRemovableList(Entry e) {
+        e.listNext = nonRemovableList.listNext;
+        nonRemovableList.listNext = e;
+        e.listPrev = e.listNext.listPrev;
+        e.listNext.listPrev = e;
+    }
+
+    void moveToRemovableList(Entry e) {
+        e.listNext = removableList.listNext;
+        removableList.listNext = e;
+        e.listPrev = e.listNext.listPrev;
+        e.listNext.listPrev = e;
+    }
+
+    void moveToPendingRemovalList(Entry e) {
+        e.listNext = pendingRemovalList.listNext;
+        pendingRemovalList.listNext = e;
+        e.listPrev = e.listNext.listPrev;
+        e.listNext.listPrev = e;
+    }
+
+    static int indexForById(long Id, int length) {
+        int h = (int)(Id ^ (Id >>> 32));
+        h += ~(h << 9);
+        h ^=  (h >>> 14);
+        h +=  (h << 4);
+        h ^=  (h >>> 10);
+        return h & (length-1);
+    }
+
+    class Entry implements LocalCache.Entry {
+        private static final byte SAVED = 0x01;
+        private static final byte PENDING_REMOVAL = 0x02;
+
+        byte status = 0;
+        Entry listNext;
+        Entry listPrev;
+
+        Entry hashNext;
+
+        //Entity object;
+        //int type_id;
+        //int version;
+        Object buf;
+        long id;
+        int version;
+        Entry() {
+        }
+
+        Entry(Entity object_, Entry hashNext_) {
+            try {
+                setRef(object_);
+                hashNext = hashNext_;
+            } catch (Exception ex) {
+                throw new RuntimeException(ex);
+            }
+        }
+
+        synchronized public boolean isSaved() {
+            return (status & SAVED) != 0;
+        }
+
+        synchronized void markSaved() {
+            status |= SAVED;
+        }
+
+        synchronized void clearSaved() {
+            status &= ~SAVED;
+        }
+
+        synchronized public boolean isPendingRemoval() {
+            return (status & PENDING_REMOVAL) != 0;
+        }
+
+        synchronized void markPendingRemoval() {
+            status |= PENDING_REMOVAL;
+        }
+
+        synchronized int getVersion() {
+            try {
+                return getEntityVersion(buf);
+            } catch (Exception ex) {
+                throw new RuntimeException(ex);
+            }
+        }
+
+        synchronized public Entity getRef() {
+            try {
+                Entity en= bytesToEntity(buf);
+                if (en instanceof ConceptImpl) {
+                    ((ConceptImpl) en).setVersion(this.version);
+                }
+                return en;
+            } catch (Exception ex) {
+                throw new RuntimeException(ex);
+            }
+        }
+
+        synchronized void setRef(Entity object_) {
+            try {
+                id=object_.getId();
+                if (object_ instanceof VersionedObject) {
+                    version= ((VersionedObject) object_).getVersion();
+                } else {
+                    version=0;
+                }
+                buf=entityToBytes(object_);
+            } catch (Exception ex) {
+                throw new RuntimeException(ex);
+            }
+        }
+
+        synchronized boolean hasRef() {
+            return buf != null;
+        }
+    }
+
+    protected final  Object entityToBytes(Entity entity) throws Exception{
+        if (entity instanceof ConceptImpl) {
+            ConceptImpl cept= (ConceptImpl) entity;
+            ByteArrayOutputStream bo = new ByteArrayOutputStream();
+            ((ConceptImpl) cept).serialize(new DataOutputConceptSerializer(new DataOutputStream(bo), getTypeId(entity) ));
+            return bo.toByteArray();
+        } else {
+            return entity;
+        }
+    }
+
+    protected final  Entity bytesToEntity(Object entity) throws Exception{
+        if (entity instanceof byte []) {
+            byte [] buf = (byte[]) entity;
+            ByteArrayInputStream bi = new ByteArrayInputStream(buf);
+            DataInputStream di = new DataInputStream(bi);
+            int typeId = DataInputConceptDeserializer.getTypeId(di);
+            ConceptImpl cept= (ConceptImpl) newInstance(typeId);
+            di.reset();
+            cept.deserialize(new DataInputConceptDeserializer(di));
+            return cept;
+        } else {
+            return (Entity) entity;
+        }
+    }
+
+    protected final  int getTypeId(Entity entity) throws Exception{
+        return cacheAgent.getCluster().getMetadataCache().getTypeId(entity.getClass());
+    }
+
+    protected final Class getEntityClz(int typeId) throws Exception{
+        return cacheAgent.getCluster().getMetadataCache().getClass(typeId);
+    }
+
+    protected final Entity newInstance(int typeId) throws Exception{
+        return cacheAgent.getCluster().getMetadataCache().newInstance(typeId);
+    }
+
+    protected final int getEntityVersion(Object entity) throws Exception{
+        if (entity instanceof byte []) {
+            byte [] buf = (byte[]) entity;
+            ByteArrayInputStream bi = new ByteArrayInputStream(buf);
+            DataInputStream di = new DataInputStream(bi);
+            return DataInputConceptDeserializer.getVersion(di);
+        } else {
+            return 0;
+        }
+    }
+}

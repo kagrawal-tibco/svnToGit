@@ -1,0 +1,25 @@
+<table align="center" valign="top" border="0" cellspacing="0" cellpadding="0" style="table-layout:fixed">
+#set ($fieldconditionrowsuffix = "_condition_row")
+#foreach ($field in $fields)
+	#if ($field.multiple == "false") 
+    <tr onclick="showmenu('$field.name', '$field.datatype', false);">
+        <td align="left" nowrap class="fieldlabel" title="Click to change condition on $field.displayname">$field.displayname</td>
+        <td id="$field.name$fieldconditionrowsuffix" class="conditionlabel" align="right" nowrap title="$field.condition">$field.condition</td>
+    </tr>
+	#else 
+    <tr onclick="alert('Setting conditions on muti-valued $field.displayname is not supported');">
+        <td align="left" nowrap class="unsupportedfieldlabel" title="Setting conditions on muti-valued $field.displayname is not supported">$field.displayname</td>
+        <td id="$field.name$fieldconditionrowsuffix" class="unsupportedconditionlabel" align="right" nowrap title="$field.condition">$field.condition</td>
+    </tr>
+	#end	
+    #if ($velocityHasNext)
+    <tr>
+        <td colspan="2" class="rowseparator"></td>
+    </tr>
+    #else
+    <tr>
+        <td colspan="2" class="dropshadow"></td>
+    </tr>
+    #end
+#end
+</table>

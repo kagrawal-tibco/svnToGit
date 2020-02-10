@@ -1,0 +1,17 @@
+/**
+ * @description Get user artifact instance from committable entry.
+ */
+WebStudio.Core.Concepts.WS_C_UserArtifact rulefunction WebStudio.Core.RuleFunctions.Utils.Lifecycle.WS_RF_GetArtifactFromCommittableEntry {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		WebStudio.Core.Concepts.Lifecycle.WS_C_CommittableDeltaEntry committableDeltaEntry;
+	}
+	body {
+		WS_C_UserArtifactRevision referencedRevision = Instance.PropertyAtom.getConceptReference(committableDeltaEntry.userArtifactRevision, 1L);
+		//Get parent artifact
+		WS_C_UserArtifact parentUserArtifact = WS_RF_IsUserArtifact(referencedRevision.parentArtifactId, referencedRevision.parentArtifactType);
+		return parentUserArtifact;
+	}
+}

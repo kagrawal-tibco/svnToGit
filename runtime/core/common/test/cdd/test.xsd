@@ -1,0 +1,41 @@
+<xs:schema xmlns:xs= "http://www.w3.org/2001/XMLSchema"
+   xmlns:ecore= "http://www.eclipse.org/emf/2002/Ecore"
+   elementFormDefault="qualified" attributeFormDefault="unqualified">
+
+  <xs:complexType name="AuthorType">
+    <xs:attribute name="id" type="xs:ID" use="required"/>
+    <xs:attribute name="books" type="xs:IDREFS" use="required" ecore:reference="BookType" ecore:opposite="authors"/>
+  </xs:complexType>
+
+  <xs:complexType name="BookType">
+    <xs:attribute name="id" type="xs:ID" use="required"/>
+    <xs:attribute name="authors" type="xs:IDREFS" ecore:reference="AuthorType" ecore:opposite="books"/>
+  </xs:complexType>
+
+  <xs:element name="author" type="AuthorType"/>
+  <xs:element name="book" type="BookType"></xs:element>
+
+
+<xs:complexType ecore:name="FunctionsConfig" name="functions-type" >
+
+<!-- 		<xs:complexContent> -->
+<!-- 			<xs:extension base="cdd:artifact-type"> -->
+				<xs:sequence>
+<!-- 					<xs:choice ecore:featureMap="group" maxOccurs="unbounded"> -->
+						<xs:element
+							ecore:upperBound="-1"
+							ecore:reference="FunctionsConfig"
+							ecore:opposite="id"
+							minOccurs="0" name="ref" type="xs:IDREF"/>
+						<xs:element ecore:upperBound="-1" minOccurs="0" name="uri" type="xs:string"/>
+<!-- 					</xs:choice> -->
+				</xs:sequence>
+				<xs:attribute name="id" ecore:opposite="ref" type="xs:ID" use="required"/>
+<!-- 			</xs:extension> -->
+<!-- 		</xs:complexContent> -->
+	</xs:complexType>
+	
+	<xs:element name="functions" type="functions-type"/>
+	
+	
+</xs:schema> 

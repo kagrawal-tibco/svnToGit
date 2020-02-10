@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+	<xs:element name="username">
+		<xs:simpleType>
+			<xs:restriction base="xs:string"/>
+		</xs:simpleType>
+	</xs:element>
+	<xs:element name="sessionToken">
+		<xs:simpleType>
+			<xs:restriction base="xs:string"/>
+		</xs:simpleType>
+	</xs:element>
+	<xs:element name="roles">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="role" minOccurs="1" maxOccurs="unbounded"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="role">
+		<xs:complexType>
+			<xs:attribute name="name" use="required">
+				<xs:simpleType>
+					<xs:restriction base="xs:string"/>
+				</xs:simpleType>
+			</xs:attribute>
+		</xs:complexType>
+		<xs:unique name="uniqueRoleName">
+			<xs:selector xpath="role"/>
+			<xs:field xpath="@name"/>
+		</xs:unique>
+	</xs:element>
+	<xs:element name="expiry">
+		<xs:simpleType>
+			<xs:restriction base="xs:byte">
+				<xs:enumeration value="5"/>
+			</xs:restriction>
+		</xs:simpleType>
+	</xs:element>
+	<xs:element name="authz">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="roles"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="authenticatedBy">
+		<xs:simpleType>
+			<xs:restriction base="xs:anyURI">
+			</xs:restriction>
+		</xs:simpleType>
+	</xs:element>
+	<xs:element name="authInstant">
+		<xs:simpleType>
+			<xs:restriction base="xs:time">
+			</xs:restriction>
+		</xs:simpleType>
+	</xs:element>
+	<xs:element name="auth">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="username" maxOccurs="1"/>
+				<xs:element ref="sessionToken" maxOccurs="1"/>
+				<xs:element ref="authInstant" maxOccurs="1"/>
+				<xs:element ref="authenticatedBy" maxOccurs="1"/>
+				<xs:element ref="expiry" maxOccurs="1"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="AuthResponse">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="auth" maxOccurs="1" minOccurs="1"/>
+				<xs:element ref="authz" maxOccurs="1" minOccurs="1"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+</xs:schema>

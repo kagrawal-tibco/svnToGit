@@ -1,0 +1,155 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!-- Schema file written by PDE -->
+<schema targetNamespace="com.tibco.cep.studio.core" xmlns="http://www.w3.org/2001/XMLSchema">
+<annotation>
+      <appInfo>
+         <meta.schema plugin="com.tibco.cep.studio.core" id="projectResourceValidator" name="Studio Project Resource Validator"/>
+      </appInfo>
+      <documentation>
+         Allows other plugins to contribute to the project validation of a designer/studio project.  Each validator is responsible for validating one or more resources within the project, reporting errors against those resources.&lt;br&gt;&lt;br&gt;
+
+The validator is also able to determine whether the validation can continue to the next resource/validator, or whether the validation phase should end (presumably when an error is encountered).
+      </documentation>
+   </annotation>
+
+   <element name="extension">
+      <annotation>
+         <appInfo>
+            <meta.element />
+         </appInfo>
+      </annotation>
+      <complexType>
+         <sequence>
+            <element ref="validator" minOccurs="1" maxOccurs="unbounded"/>
+         </sequence>
+         <attribute name="point" type="string" use="required">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="id" type="string">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="name" type="string">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+               <appInfo>
+                  <meta.attribute translatable="true"/>
+               </appInfo>
+            </annotation>
+         </attribute>
+      </complexType>
+   </element>
+
+   <element name="validator">
+      <annotation>
+         <documentation>
+            Allows other plugins to contribute to the project validation of a designer/studio project.  Each validator is responsible for validating one or more resources within the project, reporting errors against those resources.&lt;br&gt;&lt;br&gt;
+
+The validator is also able to determine whether the validation can continue to the next resource/validator, or whether the validation phase should end (presumably when an error is encountered).
+         </documentation>
+      </annotation>
+      <complexType>
+         <attribute name="Validator" type="string" use="required">
+            <annotation>
+               <documentation>
+                  An instance of com.tibco.cep.studio.core.validation.IResourceValidator that is responsible for the validation of the given resource.
+               </documentation>
+               <appInfo>
+                  <meta.attribute kind="java" basedOn=":com.tibco.cep.studio.core.validation.IResourceValidator"/>
+               </appInfo>
+            </annotation>
+         </attribute>
+         <attribute name="extensions" type="string">
+            <annotation>
+               <documentation>
+                  A comma separated list of extensions for which this validator is valid.  A blank value or a value of &quot;*&quot; enables all extensions.
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="instanceOf" type="string">
+            <annotation>
+               <documentation>
+                  All resources of this type will enable the validator.&lt;br&gt;&lt;br&gt;
+Example values:&lt;br&gt;
+org.eclipse.core.resources.IFile&lt;br&gt;
+org.eclipse.core.resources.IContainer&lt;br&gt;
+org.eclipse.core.resources.IProject&lt;br&gt;
+Can be used to process only projects, folders, or files.&lt;br&gt;&lt;br&gt;
+               </documentation>
+               <appInfo>
+                  <meta.attribute kind="java" basedOn=":org.eclipse.core.resources.IResource"/>
+               </appInfo>
+            </annotation>
+         </attribute>
+         <attribute name="names" type="string">
+            <annotation>
+               <documentation>
+                  A comma separated list of names for which this validator is active.  If the resource is a file, the name must include the file extension (for example, deployment.xml).
+               </documentation>
+            </annotation>
+         </attribute>
+      </complexType>
+   </element>
+
+   <annotation>
+      <appInfo>
+         <meta.section type="since"/>
+      </appInfo>
+      <documentation>
+         [Enter the first release in which this extension point appears.]
+      </documentation>
+   </annotation>
+
+   <annotation>
+      <appInfo>
+         <meta.section type="examples"/>
+      </appInfo>
+      <documentation>
+         &lt;extension
+      point=&quot;com.tibco.cep.studio.core.projectResourceValidator&quot;&gt;
+   &lt;validator
+         Validator=&quot;com.tibco.cep.studio.ui.validation.RuleResourceValidator&quot;
+         extensions=&quot;rule, rulefunction&quot;&gt;
+   &lt;/validator&gt;
+&lt;/extension&gt;
+
+&lt;extension
+      point=&quot;com.tibco.cep.studio.core.projectResourceValidator&quot;&gt;
+   &lt;validator
+         Validator=&quot;com.tibco.cep.studio.ui.validation.SpecificFileResourceValidator&quot;
+         instanceOf=&quot;org.eclipse.core.resources.IFile&quot;
+         names=&quot;invoke_getCompanyInfo.rulefunction, coherence-cache-config.xml&quot;&gt;
+   &lt;/validator&gt;
+&lt;/extension&gt;
+      </documentation>
+   </annotation>
+
+   <annotation>
+      <appInfo>
+         <meta.section type="apiinfo"/>
+      </appInfo>
+      <documentation>
+         [Enter API information here.]
+      </documentation>
+   </annotation>
+
+   <annotation>
+      <appInfo>
+         <meta.section type="implementation"/>
+      </appInfo>
+      <documentation>
+         [Enter information about supplied implementation of this extension point.]
+      </documentation>
+   </annotation>
+
+
+</schema>

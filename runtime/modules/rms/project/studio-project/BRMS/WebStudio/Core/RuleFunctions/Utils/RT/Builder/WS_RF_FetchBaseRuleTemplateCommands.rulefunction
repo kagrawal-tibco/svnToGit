@@ -1,0 +1,41 @@
+/**
+ * @description 
+ */
+WebStudio.Core.Concepts.RuleTemplateInstance.Builder.WS_C_CommandInfo[] rulefunction WebStudio.Core.RuleFunctions.Utils.RT.Builder.WS_RF_FetchBaseRuleTemplateCommands {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String baseArtifactPath;
+		String projectName;
+		String userName;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.RT.Builder.WS_RF_FetchBaseRuleTemplateCommands");
+		
+		String userArtifactExtId = WebStudio.Core.RuleFunctions.Utils.WS_RF_CreateUserArtifactExtId(null, baseArtifactPath, projectName, userName, null, null);
+		Log.log(LOGGER, "Debug", "Base RT ExtId - %s", userArtifactExtId);
+		
+		WS_C_RuleTemplateInstanceUserArtifact rtiUserArtifact = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(userArtifactExtId, false, "/WebStudio/Core/Concepts/RuleTemplateInstance/WS_C_RuleTemplateInstanceUserArtifact");
+		if (rtiUserArtifact != null) {
+			//Get base symbols reference from RT 	
+			String[] baseRTRevisionIds = Instance.PropertyArray.toArrayString(rtiUserArtifact.artifactRevisionIds);
+			//Get first
+			String baseRTRevisionId = baseRTRevisionIds[0];
+			WS_C_UserArtifactRevision artifactRevision = Instance.getByExtIdByUri(baseRTRevisionId, "/WebStudio/Core/Concepts/WS_C_UserArtifactRevision");
+			//Look for contained RT builder
+			WS_C_RuleTemplateInstanceBuilder baseRuleTemplateContainedBuilder = WS_RF_GetArtifactContentInstance(artifactRevision.artifactContentsId, artifactRevision.parentArtifactType);
+			if (baseRuleTemplateContainedBuilder != null) {
+				WS_C_Commands baseRTCommands = Instance.PropertyAtom.getContainedConcept(baseRuleTemplateContainedBuilder.commands, 1L);
+				//Add base RT commands
+				WS_C_CommandInfo[] baseRTCommandInfos = WS.Common.toArrayConcept(baseRTCommands.commandInfo);
+				
+				return baseRTCommandInfos;
+			}
+		} else {
+			Log.log(LOGGER, "Debug", "RT with extId[%s] not found.", userArtifactExtId);
+		}
+		
+		return null;
+	}
+}

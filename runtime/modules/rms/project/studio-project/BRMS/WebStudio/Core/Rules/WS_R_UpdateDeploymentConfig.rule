@@ -1,0 +1,122 @@
+/**
+ * @description 
+ * @author vpatil-MBP15
+ */
+rule WebStudio.Core.Rules.WS_R_UpdateDeploymentConfig {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		WebStudio.Core.Events.WS_E_DeploymentConfigEvent ws_e_deploymentConfigEvent;
+	}
+	when {
+		ws_e_deploymentConfigEvent.userName != null;
+	}
+	then {
+		Object LOGGER = Log.getLogger("WebStudio.Core.Rules.WS_R_UpdateDeploymentConfig");
+		
+		WS_C_ResponseData responseData = null;
+		int responseStatus = 0;
+		String errorCode = null;
+		String responseMessage = "Deployment Config successfully ";
+		
+		WS_C_DeploymentConfigItem deploymentConfigItem = null;
+		String deploymentConfigItemPayload = ws_e_deploymentConfigEvent@payload;
+		Log.log(LOGGER, "Debug", "Pay load data - %s.", deploymentConfigItemPayload);
+		
+		if ((deploymentConfigItemPayload == null || String.equals(deploymentConfigItemPayload, "")) && (String.equals(ws_e_deploymentConfigEvent.actionType, "ADD") || String.equals(ws_e_deploymentConfigEvent.actionType, "UPDATE"))) {
+			responseStatus = -1;
+			errorCode = "ERR_6511";
+			responseMessage = String.format("Deployment Config payload mising for Add/Update operation");
+		} else {
+			if (deploymentConfigItemPayload != null) {
+				WS_C_DeploymentConfigRequest deploymentConfigRequest = Instance.createTransientInstanceFromXML("/WebStudio/Core/Concepts/Request/Usecases/Deployment/WS_C_DeploymentConfigRequest", deploymentConfigItemPayload);
+				deploymentConfigItem = deploymentConfigRequest.deploymentConfigItem;
+			}
+			
+			String subscriptionId = null;
+			if (ws_e_deploymentConfigEvent.subscriptionId != null) subscriptionId = ws_e_deploymentConfigEvent.subscriptionId;
+			
+			String deployConfigContainerExtId = WS_RF_CreateUserArtifactExtId("DEPLOYMENT_CONFIG_CONTAINER", null, null, null, subscriptionId, null);
+			WS_C_DeploymentConfigContainer wsDeployConfigContainer = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(deployConfigContainerExtId, true, "/WebStudio/Core/Concepts/Lifecycle/WS_C_DeploymentConfigContainer");
+			if (wsDeployConfigContainer == null) {
+				responseStatus = -1;
+				errorCode = "ERR_6514";
+				responseMessage = String.format("Deployment Config Container with extId [%s] not found", deployConfigContainerExtId);
+			} else {
+				String deploymentConfigExtId  = WS_RF_CreateUserArtifactExtId("DEPLOYMENT_CONFIG", null, ws_e_deploymentConfigEvent.projectName, null, subscriptionId, ws_e_deploymentConfigEvent.name);
+				Log.log(LOGGER, "Debug", "Deployment Config ExtId - %s", deploymentConfigExtId);
+				
+				WS_C_DeploymentConfig deploymentConfig = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(deploymentConfigExtId, false, "/WebStudio/Core/Concepts/Lifecycle/WS_C_DeploymentConfig");
+				if (deploymentConfig == null && (String.equals(ws_e_deploymentConfigEvent.actionType, "DELETE") || String.equals(ws_e_deploymentConfigEvent.actionType, "UPDATE"))) {
+					responseStatus = -1;
+					errorCode = "ERR_6512";
+					responseMessage = String.format("Deployment Config with name [%s] not found", ws_e_deploymentConfigEvent.name);
+					
+				} else if (deploymentConfig != null && String.equals(ws_e_deploymentConfigEvent.actionType, "ADD")) {
+					responseStatus = -1;
+					errorCode = "ERR_6513";
+					responseMessage = String.format("Deployment Config with name [%s] already exists for project [%s]", ws_e_deploymentConfigEvent.name, ws_e_deploymentConfigEvent.projectName);
+				
+				} else {
+					if (String.equals(ws_e_deploymentConfigEvent.actionType, "UPDATE")) {
+						String deploymentNameToCheck = (deploymentConfigItem.projectName + "_" + deploymentConfigItem.name);
+						if (!String.equals((ws_e_deploymentConfigEvent.projectName + "_" + ws_e_deploymentConfigEvent.name), deploymentNameToCheck)) {
+							Log.log(LOGGER, "Debug", "Deployment Config Name changed, Previous Name [%s] & Updated Name [%s]. Deleting previous config.", ws_e_deploymentConfigEvent.name, deploymentConfigItem.name);
+							Instance.PropertyArray.removeContainedConcept(wsDeployConfigContainer.deploymentConfigs, deploymentConfig);
+							Instance.deleteInstance(deploymentConfig);
+							deploymentConfig = null;
+							deploymentConfigExtId = WS_RF_CreateUserArtifactExtId("DEPLOYMENT_CONFIG", null, deploymentConfigItem.projectName, null, subscriptionId, deploymentConfigItem.name);
+						}
+						responseMessage += "updated";
+					} else if (String.equals(ws_e_deploymentConfigEvent.actionType, "DELETE")) {
+						Instance.PropertyArray.removeContainedConcept(wsDeployConfigContainer.deploymentConfigs, deploymentConfig);
+						Instance.deleteInstance(deploymentConfig);
+						deploymentConfig = null;
+						responseMessage += "deleted";
+						Log.log(LOGGER, "Debug", "Deployment Config - %s deleted.", ws_e_deploymentConfigEvent.name);
+					}
+					
+					if (deploymentConfig == null && !String.equals(ws_e_deploymentConfigEvent.actionType, "DELETE")) {
+						Log.log(LOGGER, "Debug", "Case for Add new Deployment Config or Update with name change with ExtId[%s]", deploymentConfigExtId);
+						deploymentConfig = Instance.createInstance("xslt://{{/WebStudio/Core/Concepts/Lifecycle/WS_C_DeploymentConfig}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"2.0\"><xsl:param name=\"deploymentConfigExtId\"/><xsl:template name=\"Function\" match=\"/\"><createObject><object><xsl:attribute name=\"extId\"><xsl:value-of select=\"$deploymentConfigExtId\"/></xsl:attribute></object></createObject></xsl:template></xsl:stylesheet>");
+						if (!String.endsWith(responseMessage, "updated")) responseMessage += "created";
+						
+						Instance.PropertyArray.appendContainedConcept(wsDeployConfigContainer.deploymentConfigs, deploymentConfig, 1L);
+					}
+					
+					if (deploymentConfig != null) {
+						deploymentConfig.agentName = deploymentConfigItem.agentName;
+						deploymentConfig.clusterName = deploymentConfigItem.clusterName;
+						deploymentConfig.enabled = deploymentConfigItem.enabled;
+						deploymentConfig.host = deploymentConfigItem.host;
+						deploymentConfig.inMemory = deploymentConfigItem.inMemory;
+						deploymentConfig.name = deploymentConfigItem.name;
+						deploymentConfig.password = deploymentConfigItem.password;
+						deploymentConfig.port = deploymentConfigItem.port;
+						deploymentConfig.projectName = deploymentConfigItem.projectName;
+						deploymentConfig.userName = deploymentConfigItem.userName;
+						
+						Log.log(LOGGER, "Debug", "Updated Deployment Config details");
+					}
+				}
+			}
+		}
+		
+		WS_RF_AddAuditTrailEntry(ws_e_deploymentConfigEvent.userName, ws_e_deploymentConfigEvent.projectName, null, null, "DEPLOY_CONFIG", responseMessage);
+		
+		// process response
+		Object asyncContext = Util.HashMap.getObject(ws_e_deploymentConfigEvent.mapKey, ws_e_deploymentConfigEvent.asyncContextId);
+		//Clear it
+		Util.HashMap.removeObject(ws_e_deploymentConfigEvent.mapKey, ws_e_deploymentConfigEvent.asyncContextId);
+		Util.HashMap.deleteMap(ws_e_deploymentConfigEvent.mapKey);
+		Object servletResponse = HTTP.Servlet.getServletResponse(asyncContext);
+		
+		String responseDSXML = WS_RF_CreateAndSerializeResponseDataSource(responseStatus, 0, errorCode, responseMessage, responseData, ws_e_deploymentConfigEvent.contentType);
+		Log.log(LOGGER, "Debug", "Data source response %s", responseDSXML);
+		
+		HTTP.Servlet.Response.setResponseHeader(servletResponse, "Content-type", ws_e_deploymentConfigEvent.contentType + ";charset=utf-8");    										
+		HTTP.Servlet.Response.setResponseContent(asyncContext, responseDSXML, true);	
+	}
+}

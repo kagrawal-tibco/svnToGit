@@ -1,0 +1,31 @@
+/**
+ * @description
+ * @author anpatil-dt
+ */
+ruletemplate BusinessRules.onOverdraft {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	views{
+	}
+	bindings{
+	}
+	declare {
+		Concepts.Account account;
+	}
+	when {
+	}
+	actionContext {
+		//log to indicate rule template is executing
+		System.debugOut("### Account[id="+account.AccountID+"] has over drafted...");
+		//allow the rule template instance to create the event
+		create Events.Overdraft_Notification overDraftNotification;
+		if (overDraftNotification != null) {
+			//assert the event if created
+			Event.assertEvent(overDraftNotification);
+		}
+		//invoke a rule function to reset the over draft count
+		call RuleFunctions.resetOverdraftCount resetOverDraftCount;
+	}
+}

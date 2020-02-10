@@ -1,0 +1,14 @@
+<div #parent>
+  <select *ngIf="this.actionsImpl.getActions() != undefined && this.actionsImpl.getActions().length > 0"
+          class="action-select"
+          (change)="this.onSelection($event)"
+          [disabled]="this.parentRTIEditor.readOnly">
+         <option selected hidden disabled value="-1" i18n>{{i18n(' Action ')}}</option>
+         <option *ngFor="let  action of this.actionsImpl.getActions() " [ngValue]="action">{{action.actionType}} {{action.type}} {{action.alias}}</option>
+  </select>
+  <select *ngIf="this.actionsImpl.getActions() == undefined || this.actionsImpl.getActions().length == 0"
+           class='action-select' 
+           value=' '>
+          <option i18n>{{i18n('Empty Menu')}}</option>
+  </select>
+</div>

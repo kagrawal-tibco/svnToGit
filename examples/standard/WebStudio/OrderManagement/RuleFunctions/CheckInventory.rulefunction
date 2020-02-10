@@ -1,0 +1,21 @@
+/**
+ * @description This function is used to check and create the inventory
+ */
+Concepts.Inventory rulefunction RuleFunctions.CheckInventory {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		
+	}
+	body {
+		 //Get the existing item,if item is exist in the don't add it again.
+		Concepts.Inventory inventory =Instance.getByExtId("OMS-INVENTORY");
+		
+		if(null==inventory)	{
+		    inventory = Instance.newInstance("/Concepts/Inventory","OMS-INVENTORY");
+		    System.debugOut("Inventory is created.");
+		}
+		return inventory;
+	}
+}

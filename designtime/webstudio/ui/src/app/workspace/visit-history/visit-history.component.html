@@ -1,0 +1,30 @@
+<div class="visit-history">
+  <div
+    class="visit-history-content"
+    *ngIf='history().length > 0'
+    >
+    <div class='list-group'>
+      <button
+        *ngFor='let e of history()'
+        class='list-group-item'
+        [class.active]='e === selected()'
+        (click)='select(e)'
+      >
+          <div class='entry-title'>
+            <span>{{e.artifact.displayName()}}</span>
+          </div>
+          <div class='entry-detail'>
+            <span>{{'/' + projectName(e.artifact.projectId) + e.artifact.fullPath()}}</span>
+          </div>
+      </button>
+    </div>
+  </div>
+  <div
+    class="visit-history-empty-msg"
+    *ngIf='!history() || history().length === 0'
+    >
+    <div class="card" i18n>{{i18n('
+      No Visit History
+      ')}}</div>
+  </div>
+</div>

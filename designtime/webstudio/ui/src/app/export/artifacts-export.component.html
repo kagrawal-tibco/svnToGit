@@ -1,0 +1,54 @@
+<div class='artifacts'>
+  <div *ngIf='input.projectId'>
+    <div *ngIf='artifactCandidates; then artifactList; else loading'></div><ng-template #loading>
+      <p>    
+        <i class='fa fa-refresh fa-spin'></i><ng-container i18n>{{i18n(' Loading... ')}}</ng-container>
+      </p>
+    </ng-template>
+    
+    <ng-template #artifactList>
+      <div class='artifact-filter'>
+        <div class="input-group input-group-sm">
+          <span class="input-group-btn">
+            <button class="btn btn-outline-primary artifact-filter-addon">
+              <i class="fa fa-search" aria-hidden="true"></i>
+            </button>
+          </span>
+          <input type="text" class="form-control" placeholder="{{i18n('Search for...')}}" i18n-placeholder [(ngModel)]='artifactFilter'>
+        </div>
+      </div>
+      <div *ngIf='artifactCandidates.length === 0; then noArtifacts; else hasArtifacts'></div>
+      <ng-template #noArtifacts>
+        <p i18n>{{i18n('No accessible artifacts in this project.')}}</p>
+      </ng-template>
+      <ng-template #hasArtifacts>
+        <div *ngIf='visibleArtifacts.length === 0; then noMatches; else visibleList'></div>
+        <ng-template #noMatches>
+          <p i18n>{{i18n('No Artifact matches the search criteria.')}}</p>
+        </ng-template>
+        <ng-template #visibleList>
+          <div class="list-group artifact-list">
+            <a class='list-group-item' *ngFor='let c of visibleArtifacts'>
+              <div class="row">
+                <div class="col-sm-9">
+                  <div class='no-decoration'>
+                    <a>
+                      <input type="checkbox" 
+                        [ngModel]='isSelected(c)' (ngModelChange)='selectArtifact(c, $event)'>
+                      <span class='item-title' (click)='onToggleSelection($event, c)' > {{description(c)}}</span>
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </a>
+          </div>
+          <mat-slide-toggle [(ngModel)]="selectAll" color="primary">
+              {{getMessage()}}
+          </mat-slide-toggle> 
+          <!-- <label for="select-all" class='control-label control-label-normal clickable'>artifactFilter ? "Select All Matches: " : "Select All: "</label>
+          <toggle-switch [size]='"mini"' [(value)]='selectAll'></toggle-switch> -->
+        </ng-template>
+      </ng-template>
+    </ng-template>
+  </div>
+</div>

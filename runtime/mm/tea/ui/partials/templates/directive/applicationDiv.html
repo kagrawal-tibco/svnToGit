@@ -1,0 +1,35 @@
+<section>        
+    <div class="appManagement_appItem_overlay"></div>	
+    <div class="row">    	
+    	<h4 ng-click="showInstances(appObj.name)" ng-class="{'tea-status-error' : appObj.status.state=='Stopped','tea-status-warning' : appObj.status.state=='Other' || appObj.status.state=='Needs Deployment','tea-status-ok' : appObj.status.state=='Running'}" class="appManagement_appItem_title pull-left">{{appObj.name}}</h4>
+		<span class="dropdown pull-right" dropdown on-toggle="toggled(open)">
+      		<a href class="dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+      			<i class="fa fa-ellipsis-v fa-lg appManagement_appItem_dropdown"></i>
+      		</a>
+      		<ul class="dropdown-menu">
+      			<li>        			
+          			<a ng-click="updateTRAandLog(appObj)" ng-if="$parent.hasPermission(24)">Master Application TRA file</a>
+        		</li>
+      			<li>        			
+          			<a ng-click="loadApplicationLevelCDD(appObj)">Deployment CDD</a>
+        		</li>
+        		<li ng-class="{'disabled' :!appObj.config.hotDeployable}" ng-if="$parent.hasPermission(3)">        			
+          			<a ng-click="appObj.config.hotDeployable ? showHotDeployModal(appObj) : null">Hot Deploy</a>
+        		</li>
+        		<li>
+         		 	<a ng-click="editApplication(appObj)" ng-if="$parent.hasPermission(22)">Edit Deployment</a>
+        		</li>
+        		<li>        			
+          			<a ng-click="deleteApplication(appObj)" ng-if="$parent.hasPermission(2)">Delete Deployment </a>
+        		</li>
+        		<li>        			
+          			<a ng-click="exportApplication(appObj)">Export Deployment </a>
+        		</li>
+        		
+      		</ul>
+    	</span>
+   </div>			
+   <div class="appManagement_appItem_funcList">
+		<div high-chart chart_object-path="chartoptions"></div>	
+   </div>
+</section>

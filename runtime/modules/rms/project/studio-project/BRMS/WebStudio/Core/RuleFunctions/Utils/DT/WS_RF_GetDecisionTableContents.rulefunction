@@ -1,0 +1,19 @@
+/**
+ * @description 
+ */
+String rulefunction WebStudio.Core.RuleFunctions.Utils.DT.WS_RF_GetDecisionTableContents {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		WebStudio.Core.Concepts.Decision.Pagination.WS_C_DecisionTable decisionTable;
+	}
+	body {
+		Object decisionTableEMFObject = WS_RF_CreateEMFObjectForDecisionTable(decisionTable);		 	
+		
+		Object xmlBytes = WS.Decision.serializeDecisionTableEMFObject(decisionTableEMFObject);
+		String contents = String.convertByteArrayToString(xmlBytes, "UTF-8");
+		
+		return contents;
+	}
+}

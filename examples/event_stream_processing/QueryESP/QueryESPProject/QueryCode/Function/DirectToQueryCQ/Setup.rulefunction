@@ -1,0 +1,29 @@
+/**
+ * @description 
+ */
+void rulefunction QueryCode.Function.DirectToQueryCQ.Setup {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		
+	}
+	body {
+		String queryName = "DirectToQueryCQ";
+		
+		String queryText = 
+		                   "select count(*) as theCount" +
+		                   " from /InferenceOntology/DirectToQueryEvent" +
+		                   "            {policy: maintain last 10 seconds; accept: new} as dtq\n" +
+		                   " group by 1;";
+		
+		Query.create(queryName, queryText);
+		String statementName = queryName + "-S";
+		String listenerName = statementName + "-C";
+		Query.Statement.open(queryName, statementName);
+		Query.Statement.executeWithCallback(statementName, listenerName, 
+		                  "/QueryCode/Function/DirectToQueryCQ/Callback", true, queryName);
+		
+		System.debugOut("Started query and listener: " + listenerName + ", text: " + queryText);
+	}
+}

@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas
+	xmlns:mx="http://www.adobe.com/2006/mxml"
+>
+	
+	<mx:Script>
+		<![CDATA[
+			import com.tibco.be.views.core.events.logging.DefaultLogEvent;
+			import com.tibco.be.views.utils.Logger;
+			import mx.core.Container;
+			import mx.events.MenuEvent;
+			import mx.controls.Menu;
+			
+			[Bindable]
+			[Embed(source="assets/images/breadcrumbs/arrow_right.png")]
+			private var ArrowRight:Class;
+			
+			[Bindable]
+			[Embed(source="assets/images/breadcrumbs/arrow_down.png")]
+			private var ArrowDown:Class;
+			
+			[Bindable]
+			public var linkLabel:String;
+			
+			private var _menu:Menu;
+
+			public function get menu():Menu{ return _menu; }
+			public function set menu(value:Menu):void{
+				if(_menu != null){ removeEventListener(MenuEvent.MENU_HIDE, showArrowRight); }
+				_menu = value;
+				_menu.filters = [];
+				_menu.addEventListener(MenuEvent.MENU_HIDE, showArrowRight);
+			}
+			
+			private function showMenu(event:MouseEvent):void{
+				if(_menu != null){
+					img_Arrow.source = ArrowDown;
+					
+					var parentContainer:Container = parent as Container;
+					if(parentContainer == null){
+						Logger.log(DefaultLogEvent.WARNING, "BreadCrumbsLink.showMenu - Parent is invalid container.");
+						return;
+					}
+					var menuCoordinates:Point = parentContainer.contentToGlobal(new Point(x, y));
+					_menu.show(menuCoordinates.x+10, menuCoordinates.y+this.height);
+				}
+			}
+			
+			private function showArrowRight(event:MenuEvent):void{
+				img_Arrow.source = ArrowRight;
+			}
+			
+		]]>
+	</mx:Script>
+	
+	<mx:HBox x="0" y="0" width="100%" height="100%" horizontalGap="0" verticalAlign="middle" horizontalScrollPolicy="off">
+		<mx:LinkButton id="lb_DirectoryLink" rollOver="showMenu(event);" click="showMenu(event);" styleName="breadcrumbsButton" label="{linkLabel}" />
+		<mx:Image id="img_Arrow" source="{ArrowRight}" scaleContent="false" />
+	</mx:HBox>
+	
+</mx:Canvas>

@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema xmlns="http://www.w3.org/2001/XMLSchema" targetNamespace="http://www.tibco.com/be/bpmn/VariableXMLSchema" xmlns:tns="http://www.example.org/VariableXMLSchema" elementFormDefault="qualified" xmlns:pv="http://www.tibco.com/be/bpmn/VariableXMLSchema">
+
+    
+    <complexType name="VariablesType">
+    	<sequence>
+    		<element name="variable" type="pv:VariableType"
+    			maxOccurs="unbounded" minOccurs="0">
+    		</element>
+    	</sequence>
+    </complexType>
+
+    <complexType name="VariableType">
+    	<sequence>
+    		<element name="value" type="pv:ValueType" minOccurs="0" maxOccurs="unbounded"></element>
+    	</sequence>
+    	<attribute name="name" type="string"></attribute>
+    	<attribute name="type" type="string"></attribute>
+    	<attribute name="array" type="boolean"></attribute>
+    </complexType>
+
+    <complexType name="ValueType">
+    	<sequence>
+    		<any minOccurs="1" namespace="##any"
+    			processContents="skip">
+    		</any>
+    	</sequence>
+    	<attribute name="index" type="int"></attribute>
+    </complexType>
+
+
+    <element name="jobdata" type="pv:JobDataType"></element>
+
+    <complexType name="JobDataType">
+    	<sequence>
+    		<element name="variables" type="pv:VariablesType"></element>
+    		<element name="pendingevents" type="pv:PendingEventsType"></element>
+    	</sequence>
+    </complexType>
+
+    <complexType name="PendingEventsType">
+    	<sequence>
+    		<element name="pendingevent" type="pv:PendingEventType" maxOccurs="unbounded" minOccurs="0"></element>
+    	</sequence>
+    </complexType>
+
+    <complexType name="PendingEventType">
+    	<sequence>
+    		<any minOccurs="1" namespace="##any"
+    			processContents="skip">
+    		</any>
+    	</sequence>
+    	<attribute name="taskid" type="string"></attribute>
+    </complexType>
+</schema>

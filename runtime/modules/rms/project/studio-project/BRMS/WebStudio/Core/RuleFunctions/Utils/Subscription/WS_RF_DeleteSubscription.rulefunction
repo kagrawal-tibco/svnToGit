@@ -1,0 +1,200 @@
+/**
+ * @description 
+ */
+WebStudio.Core.Concepts.DataSources.WS_C_TemporaryReturnData rulefunction WebStudio.Core.RuleFunctions.Utils.Subscription.WS_RF_DeleteSubscription {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object servletRequest;
+		String subscriptionId;
+		WebStudio.Security.Authn.Concepts.WS_C_LoggedInUser loggedInUser;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.Subscription.WS_RF_DeleteSubscription");
+		
+		String responseMessage = null;
+		String errorCode = null;
+		int recordCount = 0;
+		int responseStatus = 0;
+		WS_C_ResponseData responseData = null;
+
+		if (!WS_RF_CheckHTTPMethod(servletRequest, "DELETE")) {
+			errorCode = "ERR_5101";
+			responseMessage = "Invalid HTTP Method, expect method is [DELETE].";
+			
+		} else {
+			boolean isAdmin = WS_RF_IsAdminRole(loggedInUser);
+			if (!isAdmin) {
+				responseStatus = -1;
+				responseMessage = "User do not have this permission";
+			} else {
+				String aclFileLocation = System.getSystemPropertyAsString("ws.projects.acl.location", null);
+				String baseACLFilePath = aclFileLocation + "/";
+				if (subscriptionId != null) baseACLFilePath += subscriptionId;
+				
+				// users associated to this subscriptionId
+				Object[] allUserEntries = WS.Acl.getUserDataArray(subscriptionId);
+				
+				String userName, projectName = null;
+				// Fetch managed projects associated to this subscription
+				String managedProjectsExtId = WS_RF_CreateUserArtifactExtId("MANAGED_PROJECTS", null, null, null, subscriptionId, null);
+				WS_C_ManagedProjects managedProjects = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(managedProjectsExtId, true, "/WebStudio/Core/Concepts/WS_C_ManagedProjects");
+				if (managedProjects != null) {
+					WS_C_ProjectEntry[] projectEntries =  Instance.PropertyArray.toArrayContainedConcept(managedProjects.managedProjectNames);
+					Log.log(LOGGER, "Debug", "Total project extries to clean up - %s", projectEntries@length);
+					for (int j=0; j<projectEntries@length; j++) {
+						projectName = projectEntries[j].name;
+						
+						for (int i = 0; i < allUserEntries@length; i++) {
+							userName = WS.Acl.getUserName(allUserEntries[i]);
+							
+							// Delete projects and artifacts within the projects
+							String projectExtId = WS_RF_CreateUserArtifactExtId(null, null, projectName, userName, null, null);
+							WS_C_UserProject userProject = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(projectExtId, true, "/WebStudio/Core/Concepts/WS_C_UserProject");
+							if (userProject != null) {
+								WS_RF_DeleteProjectDependencies(userProject, subscriptionId);								
+							} else {
+								Log.log(LOGGER, "Debug", "User Project with ExtId [%s] does not exits.", projectExtId);
+							}
+							
+							WS_RF_DeleteUserDependencies(userName);
+						}
+						
+						// Phyically delete the user from the ac file, considering all users are removed  in previous loop
+						WS.Acl.saveUserContentToFile();
+						
+						// phyically delete the project entry and instance
+						Log.log(LOGGER, "Debug", "Deleting Project Path [%s]", projectEntries[j].scsUrl);
+						if (File.fileExists(projectEntries[j].scsUrl)) {
+							File.fileRemove(projectEntries[j].scsUrl);
+						} else {
+							Log.log(LOGGER, "Debug", "Project path [%s] does not exist", projectEntries[j].scsUrl);
+						}
+						
+						Log.log(LOGGER, "Debug", "Deleting project Entry with ExtId [%s]", projectEntries[j]@extId);
+						Instance.deleteInstance(projectEntries[j]);
+						
+						// Removing the ACL manager plus the actual file
+						RMS.Authorization.removeACLManager(projectName, subscriptionId);
+						
+						String projectACLFilePath = baseACLFilePath + "/" + projectName + ".ac";
+						Log.log(LOGGER, "Debug", "Deleting Project ACL file - %s", projectACLFilePath);
+						if (File.fileExists(projectACLFilePath)) {
+							File.fileRemove(projectACLFilePath);
+						} else {
+							Log.log(LOGGER, "Debug", "Project ACL file - %s does not exist", projectACLFilePath);
+						}
+					}
+					
+					// Delete the ACL subscription Folder
+					Log.log(LOGGER, "Debug", "Deleting Base ACL subscription folder - %s", baseACLFilePath);
+					if (File.fileExists(baseACLFilePath)) {
+						File.fileRemove(baseACLFilePath);
+					} else {
+						Log.log(LOGGER, "Debug", "Base ACL subscription folder - %s does not exist", baseACLFilePath);
+					}	
+					
+					// clean up all project entries from the managed project list and delete managed project list
+					Log.log(LOGGER, "Debug", "Clearing all Project Entries from Managed Project List");
+					Instance.PropertyArray.clear(managedProjects.managedProjectNames);
+					
+					Log.log(LOGGER, "Debug", "Deleting Managed Project instance");
+					Instance.deleteInstance(managedProjects);
+					
+					// Deleting the Project subscription folder
+					String baseProjectSubscriptionPath = System.getSystemPropertyAsString("ws.scs.rootURL", null) + "/" + subscriptionId;
+					Log.log(LOGGER, "Debug", "Deleting Base Project subscription folder - %s", baseProjectSubscriptionPath);
+					if (File.fileExists(baseProjectSubscriptionPath)) {
+						File.fileRemove(baseProjectSubscriptionPath);
+					} else {
+						Log.log(LOGGER, "Debug", "Base Project Subscription folder - %s does not exist", baseProjectSubscriptionPath);
+					}
+					
+				} else {
+					Log.log(LOGGER, "Debug", "Managed Projects with ExtId [%s] does not exits.", managedProjectsExtId);
+				}
+				
+				// Now clear all subscription related dependencies
+				
+				// Starting with THRASH_CAN
+				String thrashcanExtId = WS_RF_CreateUserArtifactExtId("THRASH_CAN", null, null, null, subscriptionId, null);
+				WS_C_ThrashCan thrashCan = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(thrashcanExtId, true, "/WebStudio/Core/Concepts/Lifecycle/WS_C_ThrashCan");
+				if (thrashCan != null) {
+					Log.log(LOGGER, "Debug", "Processing Thrash Can [%s] deletion", thrashcanExtId);
+					WS_C_ThrashedArtifact[] thrashedArtifacts = Instance.PropertyArray.toArrayContainedConcept(thrashCan.thrashedArtifacts);
+					Log.log(LOGGER, "Debug", "Total thrashed artifacts to clean up - %s", thrashedArtifacts@length);
+					
+					for (int i=0; i<thrashedArtifacts@length; i++) {
+						WS_C_MasterArtifact masterArtifactThrashed = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(thrashedArtifacts[i].deletedMasterArtifactId, true, "/WebStudio/Core/Concepts/Lifecycle/WS_C_MasterArtifact");
+						if (masterArtifactThrashed != null) {
+							WS_RF_DeleteMasterArtifact(masterArtifactThrashed, subscriptionId);
+						} else {
+							Log.log(LOGGER, "Debug", "Thrashed Master Artifact with ExtId [%s] does not exits.", thrashedArtifacts[i].deletedMasterArtifactId);
+						}
+					}
+					
+				} else {
+					Log.log(LOGGER, "Debug", "Thrash Can with ExtId [%s] does not exist", thrashcanExtId);
+				}
+				
+				// Delete all deployment configs associated to this subscription
+				String deployConfigContainerExtId = WS_RF_CreateUserArtifactExtId("DEPLOYMENT_CONFIG_CONTAINER", null, null, null, subscriptionId, null);
+				WS_C_DeploymentConfigContainer wsDeployConfigContainer = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(deployConfigContainerExtId, true, "/WebStudio/Core/Concepts/Lifecycle/WS_C_DeploymentConfigContainer");
+				if (wsDeployConfigContainer != null) {
+					WS_C_DeploymentConfig[] deployConfigs = Instance.PropertyArray.toArrayContainedConcept(wsDeployConfigContainer.deploymentConfigs);
+				    if (deployConfigs != null) {
+				    		Log.log(LOGGER, "Debug", "Total Deploy Config need to be cleaned up - %s", deployConfigs@length);
+				    		for (int i=0; i<deployConfigs@length; i++) {
+				    			Instance.PropertyArray.removeContainedConcept(wsDeployConfigContainer.deploymentConfigs, deployConfigs[i]);
+				    			Instance.deleteInstance(deployConfigs[i]);
+				    		}
+				    }
+				}
+				
+				// deleting subscription based review sink
+				String subscriptionReviewSink = WS_RF_CreateUserArtifactExtId(null, null, null, null, subscriptionId, "REVIEW_SINK");
+				WS_C_CommonReviewSink projectSubscriptionSink = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(subscriptionReviewSink, true, "/WebStudio/Core/Concepts/Lifecycle/WS_C_CommonReviewSink");
+				if (projectSubscriptionSink != null) {
+					WS_RF_DeleteReviewSink(projectSubscriptionSink);
+				} else {
+					Log.log(LOGGER, "Debug", "Review Sink with ExtId [%s] does not exist", subscriptionReviewSink);
+				}
+				
+				// Deleting notification preferences
+				String notifyPreferencesExtId = WS_RF_CreateUserArtifactExtId("NOTIFY_PREFERENCES", null, null, null, subscriptionId, null);
+				WS_C_NotificationPreferences notificationPreferences = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(notifyPreferencesExtId, false, "/WebStudio/Core/Concepts/WS_C_NotificationPreferences");
+				if (notificationPreferences != null) {
+					Log.log(LOGGER, "Debug", "Deleting Notify Preferences - %s", notifyPreferencesExtId);
+					Instance.deleteInstance(notificationPreferences);
+				} else {
+					Log.log(LOGGER, "Debug", "Notify Preferences with ExtId [%s] does not exist", notifyPreferencesExtId);
+				}
+				
+				// Deleting Application and Operator Preferences
+				String appPreferencesExtId = WS_RF_CreateUserArtifactExtId("APPLICATION_PREFERENCES", null, null, null, subscriptionId, null);
+				WS_C_ApplicationPreferences applicationPreferences = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(appPreferencesExtId, false, "/WebStudio/Core/Concepts/WS_C_ApplicationPreferences");
+				if (applicationPreferences != null) {
+					Log.log(LOGGER, "Debug", "Deleting Application Preferences - %s", appPreferencesExtId);
+					Instance.deleteInstance(applicationPreferences);
+				} else {
+					Log.log(LOGGER, "Debug", "Application Preferences with ExtId [%s] does not exist", appPreferencesExtId);
+				}
+				
+				// finally Revision number cleanup
+				String revNumberExtId = WS_RF_CreateUserArtifactExtId("REV_NUMBER", null, null, null, subscriptionId, null);
+				AMS_C_RevisionNumber revisionNumber = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(revNumberExtId, false, "/Approval/Scorecards/AMS_C_RevisionNumber");
+				if (revisionNumber != null) {
+					Log.log(LOGGER, "Debug", "Deleting Revision Number - %s", revNumberExtId);
+					Instance.deleteInstance(revisionNumber);
+				} else {
+					Log.log(LOGGER, "Debug", "Revision Number with ExtId [%s] does not exist", revNumberExtId);
+				}
+				
+				// finally success response message
+				responseMessage = "SubscriptionId[" + subscriptionId + "] sucessfully deleted";
+			}
+		}
+		return WS_RF_CreateTemporaryReturnData(responseStatus, recordCount, errorCode, responseMessage, responseData);
+	}
+}

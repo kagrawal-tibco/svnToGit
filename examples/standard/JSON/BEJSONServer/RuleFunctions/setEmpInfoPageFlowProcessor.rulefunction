@@ -1,0 +1,46 @@
+/**
+ * @description 
+ */
+void rulefunction RuleFunctions.setEmpInfoPageFlowProcessor {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object asyncContext;
+	}
+	body {
+		Object httpRequest = HTTP.Servlet.getServletRequest(asyncContext);
+		
+		Object requestContentBytes = HTTP.Servlet.Request.getRequestContent(httpRequest);
+		String requestContent = String.convertByteArrayToString(requestContentBytes, "UTF-8");
+		
+		// create Concept instance from JSON payload
+		Concepts.Employee employee = Instance.createTransientInstanceFromJSON("/Concepts/Employee", requestContent);
+		System.debugOut("Employee Details - Id (" + employee.Emp_Id + "), Name (" + employee.Name + ") & Salary (" + employee.Salary +").");
+		
+		// Can Manually parse the JSON payload as well
+		Object parsedJSONNode = JSON.parseJSON(requestContent);
+		if (parsedJSONNode != null) {
+			Object empIdNode = JSON.findNode(parsedJSONNode, "Emp_Id");
+			if (JSON.isValueNode(empIdNode)) {
+				System.debugOut("Employee Id - " + JSON.getTextValue(empIdNode));
+			}
+			
+			Object empNameNode = JSON.findNode(parsedJSONNode, "Name");
+			if (JSON.isValueNode(empNameNode)) {
+				System.debugOut("Employee Name - " + JSON.getTextValue(empNameNode));
+			}
+			
+			Object empSalaryNode = JSON.findNode(parsedJSONNode, "Salary");
+			if (JSON.isValueNode(empNameNode)) {
+				System.debugOut("Employee Salary - " + JSON.getTextValue(empSalaryNode));
+			}
+		}
+		
+		String serializedEmployee = Instance.serializeToJSON(employee, true, null);
+		
+		Object httpResponse = HTTP.Servlet.getServletResponse(asyncContext);
+		HTTP.Servlet.Response.setResponseStatusCode(httpResponse, 200);
+		HTTP.Servlet.Response.setResponseContent(asyncContext, serializedEmployee, true);
+	}
+}

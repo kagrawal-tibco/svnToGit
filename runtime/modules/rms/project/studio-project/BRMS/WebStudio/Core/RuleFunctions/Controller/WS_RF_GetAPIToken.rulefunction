@@ -1,0 +1,28 @@
+/**
+ * @description 
+ */
+String rulefunction WebStudio.Core.RuleFunctions.Controller.WS_RF_GetAPIToken {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String contextPath;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Controller.WS_RF_GetAPIToken");
+		
+		String token = null;
+		
+		if (contextPath != null) {
+			int tokenIndex = String.indexOfString(contextPath, 0, "/");
+			if (tokenIndex != -1) {
+				token = String.substring(contextPath, 0, tokenIndex);
+			} else {
+				token = contextPath;
+			}
+		}
+		Log.log(LOGGER, "Debug", "Token %s", token);
+		
+		return token;
+	}
+}

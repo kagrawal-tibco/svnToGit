@@ -1,0 +1,47 @@
+/**
+ * @description 
+ * @author hlouro-lt-T61
+ */
+rule Management.Rules.EntityMngmtRuleSet.GetMethodsLayout_ValidToken {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Management.Events.request.MethodsLayoutRequestEvent requestevent;
+	}
+	when {
+		requestevent.token != null && String.length(requestevent.token) != 0;
+	}
+	then {
+		String family = "GetMethodsLayout_ValidToken";
+		Shared.RuleFunctions.log(family,"DEBUG","Rule " + family + " triggered");
+		String entityType = requestevent.entitytype;
+		
+		try {
+			Shared.Concepts.LoggedInUser user = Instance.getByExtId(requestevent.token);
+			if (user == null) {
+			    Shared.Events.reqres.FailureResponseEvent event = Shared.Events.reqres.FailureResponseEvent.FailureResponseEvent(null,null,"001","Invalid token");
+			    Event.replyEvent(requestevent, event);
+			}
+			else {
+			    Shared.RuleFunctions.log(family,"INFO","Retrieving methods layout for entities of type: " + entityType);        
+			    String methodsLayoutXML = BEMM.methods.getMethodsLayout(entityType);
+			    if (methodsLayoutXML == null || String.length(String.trim(methodsLayoutXML)) == 0) {
+			    	Shared.RuleFunctions.log(family,"WARNING","Requested data not found. No method description found for entity: " + entityType);
+	/*todo check*/ 	Exception.newException("Requested data not found", "No method description found for entity: " + entityType ,null); 
+			    }
+			    else {
+			        Shared.RuleFunctions.log(family,"DEBUG"," ... SENDING ... " + methodsLayoutXML);
+			        Shared.Events.reqres.SuccessXMLResponseEvent event = Shared.Events.reqres.SuccessXMLResponseEvent.SuccessXMLResponseEvent(null,methodsLayoutXML);
+			        Event.replyEvent(requestevent, event);
+			    }
+			}
+		} //try 
+		catch(Exception e) {
+			Management.RuleFunctions.Exceptions.printAndSendException(e /*Except Object */,
+									family/*family String */,"getMethodsLayout"/*methodFQName String */,
+									entityType /*monitoredEntityName String */,requestevent/*requestevent Event */);
+		}
+	}
+}

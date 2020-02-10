@@ -1,0 +1,176 @@
+/**
+ * @description Deploys decision table to shared location.
+ */
+WebStudio.Core.Concepts.Lifecycle.WS_C_ArtifactDeployStatus rulefunction WebStudio.Core.RuleFunctions.Actions.Lifecycle.BuildAndDeploy.WS_RF_DeployDecisionTable {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String scsRootURL;
+		String sharedLocation;
+		String projectName;
+		String loggedInUsername;
+		WebStudio.Core.Concepts.Lifecycle.Ops.WS_C_AbstractOperation lastOperationPerformed;
+		WebStudio.Core.Concepts.WS_C_UserArtifact userArtifact;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.Lifecycle.BuildAndDeploy.WS_RF_DeployDecisionTable");
+		
+		int statusCode = 0;
+		String statusMessage = null;
+		
+		String artifactPath = userArtifact.artifactPath;
+		String artifactFileExtn = userArtifact.artifactFileExtn;
+		
+		Log.log(LOGGER, "Info", "Generating class for artifact %s", artifactPath);
+		
+		Object reusableBuffer = String.createBuffer(0);
+		String pathSeparator = "/";
+		if (!(lastOperationPerformed instanceof WS_C_DeleteOperation)) {				
+			//Project path										
+			reusableBuffer = String.append(reusableBuffer, scsRootURL);
+			reusableBuffer = String.append(reusableBuffer, pathSeparator);
+			reusableBuffer = String.append(reusableBuffer, projectName);				
+			String projectPath = String.convertBufferToString(reusableBuffer);
+			String.clearBuffer(reusableBuffer);
+			//Extended class path
+			String customLibsPath = System.getSystemPropertyAsString("ws.projects.customLib.location", null);	
+			reusableBuffer = String.append(reusableBuffer, customLibsPath);
+			reusableBuffer = String.append(reusableBuffer, pathSeparator);
+			reusableBuffer = String.append(reusableBuffer, projectName);
+			String libPath = String.convertBufferToString(reusableBuffer);
+			String.clearBuffer(reusableBuffer);				
+			Log.log(LOGGER, "Debug", "Libray path in lib dir %s", libPath);
+			String extendedClasspath = 
+				Approval.Rules.RuleFunctions.ArtifactRuleFunctions.AMS_RF_CreateClasspath(libPath);					
+			//Only used in dev setup
+			if (extendedClasspath == null || String.length(extendedClasspath) == 0) {
+				extendedClasspath = System.getSystemPropertyAsString("build.extended.classpath", "");
+			}	
+			Log.log(LOGGER, "Debug", "Extended Classpath - %s ", extendedClasspath);
+			//Output directory					
+			String.append(reusableBuffer, sharedLocation);
+			String.append(reusableBuffer, pathSeparator);
+			String.append(reusableBuffer, projectName);
+			String outputDirectory = String.convertBufferToString(reusableBuffer);
+			//Classes output directory
+			String.append(reusableBuffer, pathSeparator);
+			String.append(reusableBuffer, "Decision_Tables");					
+			String classesOutputDirectory = String.convertBufferToString(reusableBuffer);		
+			String.clearBuffer(reusableBuffer);
+			//Ear path	
+			reusableBuffer = String.append(reusableBuffer, outputDirectory);
+			reusableBuffer = String.append(reusableBuffer, pathSeparator);
+			reusableBuffer = String.append(reusableBuffer, projectName);
+			reusableBuffer = String.append(reusableBuffer, ".ear");					
+			String earPath = String.convertBufferToString(reusableBuffer);
+			String.clearBuffer(reusableBuffer);
+			//Project Library Path
+			String projectLibsPath = System.getSystemPropertyAsString("ws.projects.projectLib.location", null);	
+			reusableBuffer = String.append(reusableBuffer, projectLibsPath);
+			reusableBuffer = String.append(reusableBuffer, pathSeparator);
+			reusableBuffer = String.append(reusableBuffer, projectName);
+			String plPath = String.convertBufferToString(reusableBuffer);
+			String.clearBuffer(reusableBuffer);					
+			Log.log(LOGGER, "Debug", "Project Libray path dir %s", plPath);
+			
+			String projectLibraryPath = WS_RF_CreateProjectLibraryPaths(plPath);					
+			Log.log(LOGGER, "Debug", "Project Library Path %s", projectLibraryPath);
+
+			// if to use legacy compilation
+			boolean useLegacyCompilation = System.getSystemPropertyAsBoolean("be.codegen.useLegacyCompilation", false);					
+			try {
+				//Generate class
+				String classesBuiltMsg = RMS.CodeGeneration.generateClass(projectPath, earPath, classesOutputDirectory, artifactPath + ".rulefunctionimpl", extendedClasspath, useLegacyCompilation, projectLibraryPath);
+				if (classesBuiltMsg == null) {
+					statusMessage = String.format("Artifact %s successfully deployed to shared location", artifactPath);
+					Log.log(LOGGER, "Debug", statusMessage);
+				} else {
+					statusCode = -1;
+					statusMessage = String.format("Deployment for artifact [%s] failed with error [%s]. Please check log for errors.", artifactPath, classesBuiltMsg);
+					Log.log(LOGGER, "Error", statusMessage);
+				}
+			} catch (Exception e) {
+				statusCode = -1;
+				statusMessage = String.format("Deployment for artifact [%s] failed due to %s", artifactPath, e@message);
+				Log.logException(LOGGER, "Error", statusMessage, e);
+			}
+		} else {
+			// Remove decision table if Deleted -> Approved -> Build&Deploy
+			if (userArtifact instanceof WS_C_UserDTableArtifact) {
+				String.append(reusableBuffer, sharedLocation);
+				String.append(reusableBuffer, pathSeparator);
+				String.append(reusableBuffer, projectName);
+				String.append(reusableBuffer, pathSeparator);
+				String.append(reusableBuffer, "Decision_Tables");
+				String.append(reusableBuffer, pathSeparator);
+				String.append(reusableBuffer, "be");
+				String.append(reusableBuffer, pathSeparator);
+				String.append(reusableBuffer, "gen");
+									
+				String vrfPath = userArtifact.baseArtifactPath;
+				if (vrfPath != null && String.contains(vrfPath, ".")) {
+					vrfPath = String.substringBefore(vrfPath, ".");
+				}
+				
+				if (vrfPath == null || vrfPath == "") {
+					vrfPath = WS_RF_GetImplementsPath(loggedInUsername, projectName, artifactPath, artifactFileExtn, scsRootURL);								
+				}
+				Log.log(LOGGER, "Debug", "VRF path - %s", vrfPath);
+				
+				String.append(reusableBuffer, vrfPath + "$vrf_impls$");
+				String.append(reusableBuffer, pathSeparator);
+
+				Object[] VRFInfo = WebStudio.Core.RuleFunctions.Utils.DT.WS_RF_GetVRFArtifactDetails(loggedInUsername, projectName, vrfPath);
+				String vrfName = VRFInfo[0];
+				String returnType = VRFInfo[1];
+				Object[] symbols = VRFInfo[2];
+				String vrfCodeGenFolder = WS.Decision.getVRFCodeGenDirectoryName(vrfName, returnType, symbols);					
+				String.append(reusableBuffer, vrfCodeGenFolder);
+				
+				String destinationFolderPath = String.convertBufferToString(reusableBuffer);
+				String.clearBuffer(reusableBuffer);
+				Log.log(LOGGER, "Debug", "Destination Folder Path - %s", destinationFolderPath);
+				
+				String dtName = String.substring(artifactPath, String.lastIndexOfString(artifactPath, 0, "/") + 1, String.length(artifactPath)) + ".";
+				
+				int filesRemoved = 0;
+				String[] listOfFiles = File.listFiles(destinationFolderPath, null);
+				if (listOfFiles != null) {
+					for (int i=0; i<listOfFiles@length; i++) {
+						if (String.startsWith(listOfFiles[i], dtName)) {
+							String fileToRemove = destinationFolderPath + "/" + listOfFiles[i];
+							File.fileRemove(fileToRemove);
+							Log.log(LOGGER, "Debug", "Deleted file %s", fileToRemove);
+							filesRemoved++;
+						}
+					}
+					
+					// if all files are removed clear out any empty folders
+					if (filesRemoved == listOfFiles@length) {
+						while (!String.equals(destinationFolderPath, "")) {
+							File.fileRemove(destinationFolderPath);
+							Log.log(LOGGER, "Debug", "Deleted file located at - %s", destinationFolderPath);
+							
+							destinationFolderPath = String.substring(destinationFolderPath, 0, String.lastIndexOfString(destinationFolderPath, 0, "/"));
+							if (String.indexOfString(destinationFolderPath, 0, projectName) != -1) {
+								String[] files = File.listFiles(destinationFolderPath, null);
+								if (files@length > 0) {
+									break;
+								}
+							} else {
+								break;
+							}
+						}
+					}
+				}
+			}
+		}
+
+		WS_C_ArtifactDeployStatus deployStatus = 
+			Instance.newTransientInstance("/WebStudio/Core/Concepts/Lifecycle/WS_C_ArtifactDeployStatus");
+		deployStatus.statusCode = statusCode;
+		deployStatus.statusMessage = statusMessage;	
+		return deployStatus;	
+	}
+}

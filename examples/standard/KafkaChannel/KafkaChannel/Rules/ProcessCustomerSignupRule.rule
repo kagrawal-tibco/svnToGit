@@ -1,0 +1,24 @@
+/**
+ * @description 
+ * @author moshaikh-p50
+ */
+rule Rules.ProcessCustomerSignupRule {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Events.CustomerSignup signup;
+	}
+	when {
+		
+	}
+	then {
+		Concepts.Customer customer = Instance.createTransientInstanceFromJSON("/Concepts/Customer", signup@payload);
+		System.debugOut("#### Customer Signup-");
+		System.debugOut("#### RefCode:" + signup.ref_code);
+		System.debugOut("#### Name:" + customer.name);
+		System.debugOut("#### Address:" + customer.address);
+		
+	}
+}

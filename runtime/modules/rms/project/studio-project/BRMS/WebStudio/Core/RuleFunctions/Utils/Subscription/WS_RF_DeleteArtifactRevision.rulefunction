@@ -1,0 +1,54 @@
+/**
+ * @description 
+ */
+void rulefunction WebStudio.Core.RuleFunctions.Utils.Subscription.WS_RF_DeleteArtifactRevision {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		WebStudio.Core.Concepts.WS_C_UserArtifactRevision artifactRevision;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.Subscription.WS_RF_DeleteUserArtifactRevision");
+		
+		Log.log(LOGGER, "Debug", "Processing Artifact Revision [%s] for deletion", artifactRevision);
+		WS_C_LifecycleMetadata lifeCycleMetadata = artifactRevision.lifecycleMetadata;
+		if (lifeCycleMetadata != null) {
+			Log.log(LOGGER, "Debug", "Processing Lifecycle Metadata [%s] for deletion", lifeCycleMetadata@id);
+			WS_C_ArtifactBaseState[] stateHistory = Instance.PropertyArray.toArrayConcept(lifeCycleMetadata.stateHistory);
+			for (int m=0; m<stateHistory@length; m++) {
+				Instance.deleteInstance(stateHistory[m]);
+			}
+			Log.log(LOGGER, "Debug", "Deleted [%s] State History instances.", stateHistory@length);
+			Instance.PropertyArray.clear(lifeCycleMetadata.stateHistory);
+			
+			if (lifeCycleMetadata.currentState != null) {
+				Instance.deleteInstance(lifeCycleMetadata.currentState);
+				Log.log(LOGGER, "Debug", "Deleted currentState.");
+			}
+			
+			if (lifeCycleMetadata.lastOperation != null) {
+				Instance.deleteInstance(lifeCycleMetadata.lastOperation);
+				Log.log(LOGGER, "Debug", "Deleted lastOperation.");
+			}
+			
+			Instance.deleteInstance(lifeCycleMetadata);
+			Log.log(LOGGER, "Debug", "Deleted lifeCycleMetadata.");
+		} else {
+			Log.log(LOGGER, "Debug", "Associated Lifecycle Metadata does not exits.");
+		}
+		if (artifactRevision.artifactContentsId != null) {
+			WS_C_AnyArtifactDetails artifactContent = WS_RF_GetArtifactContentInstance(artifactRevision.artifactContentsId, artifactRevision.parentArtifactType);
+			if (artifactContent != null) {
+				// TODO May need to manually clean this up
+				Instance.deleteInstance(artifactContent);
+				Log.log(LOGGER, "Debug", "Deleted ArtifactContent with ExtId[%s] and type[%s].", artifactRevision.artifactContentsId, artifactRevision.parentArtifactType);
+			} else {
+				Log.log(LOGGER, "Debug", "ArtifactContent with ExtId[%s] and type[%s] does not exits.", artifactRevision.artifactContentsId, artifactRevision.parentArtifactType);
+			}
+		}
+		
+		Instance.deleteInstance(artifactRevision);
+		Log.log(LOGGER, "Debug", "Deleted Artifact Revision[%s]", artifactRevision);
+	}
+}

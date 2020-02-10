@@ -1,0 +1,242 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>     AS3x Store Example
+
+- TIBCO BusinessEvents&reg; Examples
+</title>
+<meta http-equiv="Content-type" content="text/html; charset=iso-8859-1" />
+<meta http-equiv="Content-Language" content="en-us" />
+<link rel="Shortcut Icon" href="../../_resources/icon.gif" type="image/gif" />
+<style type="text/css" media="all">@import "../../_resources/examples.css";</style>
+<script type="text/javascript" src="../../_resources/examples.js" /></script>
+
+<script type="text/javascript">
+
+function buildForms() {
+ var form;
+
+
+ SendEventForm.setServer("http://localhost:4545");
+
+
+ // Metadata
+ form = SendEventForm.get("showMetadata");
+ form.setDestinationPath("/Channels/HTTPChannel/metadata");
+ form.setEventPath("/Events/GetMetadata");
+ form.build();
+
+ // Put Employee
+ form = SendEventForm.get("putEmployee");
+ form.setDestinationPath("/Channels/HTTPChannel/put");
+ form.setEventPath("/Events/PutEmployee");
+ form.addProperty("name", "Bob");
+ form.addProperty("age", "25");
+ form.addProperty("isPermanat", "true");
+ form.addProperty("salary", "500.00");
+ form.addProperty("homePhone", "212-313-4114");
+ form.addProperty("mobilePhone", "400-300-4000");
+ form.addProperty("address", "Palo Alto, California");
+ form.addProperty("alternateAddress", "Mountain View, California");
+ form.addProperty("departments", "Sales, HR");
+ form.build();
+
+ // Get Employee
+ form = SendEventForm.get("getEmployee");
+ form.setDestinationPath("/Channels/HTTPChannel/get");
+ form.setEventPath("/Events/GetEmployee");
+ form.addProperty("empId", "679241819293221");
+ form.addProperty("addressId", "679241818009414,679241818947365");
+ form.addProperty("phoneId", "679241819072128");
+ form.build();
+
+ // Delete Employee
+ form = SendEventForm.get("deleteEmployee");
+ form.setDestinationPath("/Channels/HTTPChannel/delete");
+ form.setEventPath("/Events/DeleteEmployee");
+ form.addProperty("empId", "679241819293221");
+ form.addProperty("addressId", "679241818009414,679241818947365");
+ form.addProperty("phoneId", "679241819072128");
+ form.build();
+
+ // Query Employees
+ form = SendEventForm.get("queryEmployees");
+ form.setDestinationPath("/Channels/HTTPChannel/query");
+ form.setEventPath("/Events/QueryEmployee");
+ form.addProperty("age", "20");
+ form.build();
+
+ // Query Employees
+ form = SendEventForm.get("queryEmployees");
+ form.setDestinationPath("/Channels/HTTPChannel/query");
+ form.setEventPath("/Events/QueryEmployee");
+ form.addProperty("age", "20");
+ form.build();
+
+// Phone Transaction
+ form = SendEventForm.get("phoneTransaction");
+ form.setDestinationPath("/Channels/HTTPChannel/phoneTransaction");
+ form.setEventPath("/Events/PerformPhoneTransaction");
+ form.build();
+
+}
+</script>
+</head>
+<body onLoad="buildForms()">
+
+
+<h1>AS3x Example</h1>
+
+
+<h2>Purpose of This Example</h2>
+
+<p>This example demonstrates the use of various Store Catalog functions APIs to provide communication with the store.</p> Currently AS3x and AS4x stores are supported. Below is the list of features this example covers,
+<ul>
+<li><p>Fetching metadata of the configured store</p></li>
+<li><p>Put/Get/Delete/Query operations on Entities(Concept/Events) against the store </p></li>
+<li><p>Manual creation of items and performing Put/Get/Delete/Query on them against the store </p></li>
+<li><p>Running store operations within a transaction </p></li>
+</ul>
+<p>This example can also be run with AS4x store. Please configure the dependent FTL Server as mentioned in pre-requisites section below</p>
+<h2>Pre-requisites</h2>
+
+<p>Below are the list of pre-requisites before running this example:</p>
+<ul>
+<li><p>Install TIBCO FTL (version 5.3.0 and above if using AS 3.x, version FTL 6.1 and above if using AS 4.1.x)</p></li>
+<li><p>Install TIBCO AS3x. (AS 3.3.0 and above) </p></li>
+</ul>
+<p><b>Note:</b> To run/understand this sample, prior knowledge of AS3x is required. </p>
+
+<h2>How to Run the Example</h2>
+<ol>
+
+<li>
+<p>Update be-engine.tra.
+<ul>
+<li><p>If FTL dependency is already resolved as part of the AS3x installation via symbolic link (e.g. in Linux/MacOS installation), then only AS3x_HOME needs to be set.</p></li>
+<li><p>However if FTL dependency is not set as part of AS3x installation, then both AS3x_HOME as well as FTL_HOME need to be set.</p></li>
+</ul>
+</li>
+<li>
+<p>Set TIBDG_ROOT to point to AS3x home directory in <i>BE_HOME</i>/examples/standard/AS3x/scripts/setup file. Use corresponding .bat file for Windows OS.  For Windows OS, also set TIBFTL_ROOT to point to FTL home directory</p>
+</li>
+<li>
+<p>Setup and Start the AS3x store.</p>
+<pre class="commands">
+<b>Change the directory to  <i>BE_HOME</i>/examples/standard/AS3x/scripts</b>
+
+<b>Start the AS3x store as follows</b>
+./as-start
+or ./as-start-ftl6 (if using FTL 6.1 or above with AS 4.1 or above)
+
+Use corresponding .bat files for Windows OS
+</pre>
+<b>Note:</b> In case of Windows multiple command prompt windows for various tibdg executables will be opened. One each for FTL Server, tibdgproxy, tibdgkeeper & tibdgnode. Please do not close those windows while the grid is running.
+</li>
+<li>
+<p>Start the TIBCO BusinessEvents engine using the following command. </p>
+
+<pre class="commands">
+
+cd <i>BE_HOME</i>/examples/standard/AS3x
+<i>BE_HOME</i>/bin/be-engine --propFile <i>BE_HOME</i>/bin/be-engine.tra -u default -c AS3x/Deployments/AS3x.cdd AS3x.ear
+
+</pre>
+
+<p>Adapt the command as needed, for example, if you have customized the example project, or are running it from a different directory.</p>
+</li>
+
+<li>
+<p>Show store metadata</p>
+
+<form id="showMetadata"></form>
+
+<p>In the command window you see a message like this:<br/>
+<br/><image src="images/1.png"/>
+</p>
+</li>
+
+<li>
+<p>Create Employee and provide it with the necessary details in the form below. All the dependent/contained entities will be created and added as well</p>
+
+<form id="putEmployee"></form>
+
+<p>In the command window you see a message like this:<br/>
+<br/><image src="images/2.png"/>
+</p>
+</li>
+
+<li>
+<p>Get Employee Details. Use the EmpId created from earlier Employee creations. Conditionally if associated Address and Phone entities details need to be retrieved, then provide corresponding entity id's as well. Those again should be available from previous Employee creation.</p>
+
+<form id="getEmployee"></form>
+
+<p>Passing only empId retrieves only employee details:<br/>
+<br/><image src="images/3.png"/>
+</p>
+
+<p>However passing addressId's and PhoneId along with empId retrieves employee plus contained address/phone entity details:<br/>
+<br/><image src="images/4.png"/>
+</p>
+</li>
+
+<li>
+<p>Query Employee Details based on a predefined filter age > ?</p>
+
+<form id="queryEmployees"></form>
+
+<p>In the command window you see a message like this:<br/>
+<br/><image src="images/5.png"/>
+</p>
+</li>
+
+<li>
+<p>Delete Employee. Use the EmpId created from earlier Employee creations. Conditionally if associated Address and Phone entities need to be deleted, then provide corresponding entity id's as well. Those again should be available from previous Employee creation.</p>
+
+<form id="deleteEmployee"></form>
+
+<p>In the command window you see a message like this:<br/>
+<span class="logs"><br/>Deleted Employee/Address/Phone Concept/s with EmpId[679241819293221], AddressIds[679241818009414,679241818947365] & Phone[679241819072128]</span></p>
+</li>
+
+<li>
+
+<p>Clicking on the below button will perform the following operations within a transaction on Phone container (Table in AS3x),</p>
+<ul>
+	<li>Enable Transactions</li>
+	<li>Put 2 phone items</li>
+	<li>Get details of one phone items</li>
+	<li>Delete one from it</li>
+	<li>Query Phones - Nothing from #1 and #2 should be visible</li>
+	<li>Commit</li>
+	<li>Query Phones again - Should show #1 + #2 (only 1 of 2 phone item added should show up)</li>
+</ul>
+
+<form id="phoneTransaction"></form>
+<p>In the command window you see a message like this:<br/>
+<br/><image src="images/6.png"/>
+</p>
+
+<li>
+<p> Finally once all done. You can stop the store.</p>
+<pre class="commands">
+<b>Change the directory to  <i>BE_HOME</i>/examples/standard/AS3x/scripts</b>
+
+<b>Stop the AS3x store as follows</b>
+./as-stop
+or ./as-stop-ftl6 (if using FTL 6.1 or above with AS 4.1 or above)
+
+Use corresponding .bat files for Windows OS</pre>
+<b>Note:</b> The Realm Server window opened during "as-start" would now be updated and the realm server will be shut down. You can now close the Realm server window as well. Additionally the data is persisted under "<i>BE_HOME</i>/examples/standard/AS3x/scripts/activespaces". If you want a clean start during the next run, delete this folder.
+</li>
+
+</ol>
+
+<div class="footer">
+<p>TIBCO BusinessEvents&reg; 5.6<br />
+Copyright&copy; 2004-2019 TIBCO Software Inc. All rights reserved.</p>
+</div>
+</body>
+</html>

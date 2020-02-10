@@ -1,0 +1,134 @@
+<project name="CommonTasks">
+
+    <taskdef resource="net/sf/antcontrib/antcontrib.properties"/>
+
+	<target name="substitute-variables-examples">	
+		<foreach target="substitute-variables-example-for-cdd" param="cdd-path">
+			<path>
+				<fileset dir="${examples-path}" casesensitive="no">
+					<include name="**/*.cdd"/>
+					<include name="**/*.st"/>
+					<include name="**/*.beproject"/>
+					<include name="**/*.bat"/>
+					<include name="**/*.sh"/>
+				</fileset>
+			</path>
+		</foreach>
+	</target>
+
+	<target name="substitute-variables-example-for-cdd">
+		<antcall target="substitute-variables">
+			<param name="out.file" value="${cdd-path}"/>
+		</antcall>
+	</target>
+	
+	<target name="substitute-variables">
+		<echo message="Substituting variables in ${out.file}..." />
+		<replace file="${out.file}" propertyFile="post-install.properties">
+			<replacefilter token="%PS%" value="${psp}"/>
+			<replacefilter token="%BE_VERSION_ESC%" value="${beVersion}"/>
+			<replacefilter token="%TIBCO_HOME_ESC%" value="${tibco.home.esc}"/>
+			<replacefilter token="%TIBCO_BE_HOME_ESC%" value="${tibco.home.esc}/be/${beVersionShort}"/>
+			<replacefilter token="%TIBCO_AS_HOME_ESC%" value="${tibco.as.home.esc}"/>
+			<replacefilter token="%TIBCO_JAVA_HOME_ESC%" value="${tibco.java.home.esc}"/>
+			<replacefilter token="%TIBCO_JVM_LIB_ESC%" value="${tibco.jvm.lib.esc}"/>
+			<replacefilter token="%TIBCO_JVM_LIB_DIR_ESC%" value="${tibco.jvm.lib.dir.esc}"/>
+			<replacefilter token="%TIBCO_JVM_LIB_CLIENT_ESC%" value="${tibco.jvm.lib.client.esc}"/>
+			<replacefilter token="%TIBCO_JVM_LIB_CLIENT_DIR_ESC%" value="${tibco.jvm.lib.client.dir.esc}"/>		
+			<replacefilter token="%TIBCO_JVM_LIB_SERVER_ESC%" value="${tibco.jvm.lib.server.esc}"/>
+			<replacefilter token="%TIBCO_JVM_LIB_SERVER_DIR_ESC%" value="${tibco.jvm.lib.server.dir.esc}"/>		
+			<replacefilter token="%JAVA_EXTENDED_PROPERTIES_ESC%" value="-Xbootclasspath/p:%JDK_LIB%/tools.jar"/>
+		</replace>
+		<if>
+			<os family="mac"/>
+			<then>
+				<replace file="${out.file}" propertyFile="post-install.properties">
+					<replacefilter token="%TIBCO_ECLIPSE_PATH_ESC%" value="eclipse/Eclipse.app/Contents/Eclipse"/>
+				</replace>
+			</then>
+			<else>
+				<replace file="${out.file}" propertyFile="post-install.properties">
+				    <replacefilter token="%TIBCO_ECLIPSE_PATH_ESC%" value="eclipse"/>
+				</replace>
+			</else>
+		</if>
+		<if>
+			<or>
+			<os name="AIX"/>
+			<os arch="s390x"/>
+			</or>
+			<then>
+				<replace file="${out.file}" propertyFile="post-install.properties">
+					<replacefilter token="%TIBCO_SECURITY_VENDOR%" value="ibm"/>			
+				</replace>
+			</then>
+			<else>
+				<replace file="${out.file}" propertyFile="post-install.properties">
+					<replacefilter token="%TIBCO_SECURITY_VENDOR%" value="j2se"/>			
+				</replace>
+			</else>
+		</if>
+		<if>
+			<equals arg1="${be.product.standard.installed}" arg2="true"/>
+			<then>
+				<replace file="${out.file}" propertyFile="post-install.properties">
+					<replacefilter token="%MM_ST_FILE_LOCATION%" value="${tibco.home.esc}/be/${beVersionShort}/examples/standard/FraudDetectionCache/FraudDetectionCache/FraudDetectionCache.st"/>
+				</replace>
+			</then>
+			<else>
+				<replace file="${out.file}" propertyFile="post-install.properties">
+					<replacefilter token="%MM_ST_FILE_LOCATION%" value="${tibco.home.esc}/be/${beVersionShort}/examples/standard/FraudDetection/FraudDetection/FraudDetection.st"/>
+				</replace>
+			</else>
+		</if>
+		
+	</target>
+	
+	<target name="update-tra">
+		<echo message="Updating file ${update.file}: Operation ${update.operation} on property ${update.property}"/>
+		<if>
+			<not>
+				<equals arg1="${update.sep}" arg2="="/>
+			</not>
+			<then>
+				<var name="seperator" value=" "/>
+			</then>
+			<else>
+				<var name="seperator" value="="/>
+			</else>
+		</if>
+		<if>
+			<equals arg1="${update.operation}" arg2="add-property"/>
+			<then>
+				<if>
+					<resourcecontains resource="${update.file}" substring="${update.property}"/>
+				
+				<then>
+					<echo message="Property already exists in file, skipping the add-property operation"/>
+				</then>
+				<else>
+					 <concat append="true" destfile="${update.file}" fixlastline="yes" eol="unix">${line.separator}${update.property}${seperator}${update.value}${line.separator}</concat>
+				</else>
+				</if>
+			</then>				
+		</if>
+		<if>
+			<equals arg1="${update.operation}" arg2="remove-property"/>
+			<then>
+				<replaceregexp byline="true" file="${update.file}">
+					<regexp pattern="${update.property}(.*)"/>
+					<substitution expression=""/>
+				</replaceregexp>
+			</then>				
+		</if>
+		<if>
+			<equals arg1="${update.operation}" arg2="replace-value"/>
+			<then>
+				<replaceregexp byline="true" file="${update.file}">
+					<regexp pattern="${update.property}(.*)"/>
+					<substitution expression="${update.property}${seperator}${update.value}"/>
+				</replaceregexp>
+			</then>				
+		</if>
+	</target>
+</project>

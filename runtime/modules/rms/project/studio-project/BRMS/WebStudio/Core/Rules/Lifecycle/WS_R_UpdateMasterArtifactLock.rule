@@ -1,0 +1,59 @@
+/**
+ * @description Rule to Update the artifact lock concept on lock/unlock operations
+ * @author vdhumal-t420
+ */
+rule WebStudio.Core.Rules.Lifecycle.WS_R_UpdateMasterArtifactLock {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		WebStudio.Core.Events.Lifecycle.WS_E_UpdateMasterArtrifactLockEvent updateMasterArtifactLockEvent;
+	}
+	when {
+		updateMasterArtifactLockEvent.masterArtifactLockExtId != null;
+		updateMasterArtifactLockEvent.managedProjectName != null;
+	}
+	then {
+		Object LOGGER = Log.getLogger("WebStudio.Core.Rules.Lifecycle.WS_R_UpdateMasterArtifactLock");
+				
+		WS_C_MasterArtifactLock masterArtifactLock = Instance.getByExtIdByUri(updateMasterArtifactLockEvent.masterArtifactLockExtId, "/WebStudio/Core/Concepts/Lifecycle/WS_C_MasterArtifactLock");
+		if (masterArtifactLock != null) {
+			String subscriptionId = WS_RF_GetSubscriptionId(updateMasterArtifactLockEvent.lockRequestForUser);
+			String projectArtifactLocksExtId = WS_RF_CreateUserArtifactExtId("LOCKS_REGISTRY", null, updateMasterArtifactLockEvent.managedProjectName, null, subscriptionId, null);
+
+			WS_C_ProjectArtifactLocksRegistry projectArtifactLocks 
+					= Cluster.DataGrid.CacheLoadConceptByExtIdByUri(projectArtifactLocksExtId, false, "/WebStudio/Core/Concepts/Lifecycle/Lock/WS_C_ProjectArtifactLocksRegistry");
+			if (projectArtifactLocks == null) {
+				Log.log(LOGGER, "Debug", "Creating new Project Locks registry concept for project %s", updateMasterArtifactLockEvent.managedProjectName);
+				projectArtifactLocks = 
+					Instance.createInstance("xslt://{{/WebStudio/Core/Concepts/Lifecycle/Lock/WS_C_ProjectArtifactLocksRegistry}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" version=\"1.0\" exclude-result-prefixes=\"xsl xsd\">\n    <xsl:output method=\"xml\"/>\n    <xsl:param name=\"projectArtifactLocksExtId\"/>\n    <xsl:param name=\"updateMasterArtifactLockEvent\"/>\n    <xsl:template match=\"/\">\n        <createObject>\n            <object>\n                <xsl:attribute name=\"extId\">\n                    <xsl:value-of select=\"$projectArtifactLocksExtId\"/>\n                </xsl:attribute>\n                <xsl:if test=\"$updateMasterArtifactLockEvent/managedProjectName\">\n                    <managedProjectName>\n                        <xsl:value-of select=\"$updateMasterArtifactLockEvent/managedProjectName\"/>\n                    </managedProjectName>\n                </xsl:if>\n            </object>\n        </createObject>\n    </xsl:template>\n</xsl:stylesheet>");				
+			}
+			
+			if (updateMasterArtifactLockEvent.acquireLock) {
+				Log.log(LOGGER, "Debug", "Update to acquire lock %s", updateMasterArtifactLockEvent.masterArtifactLockExtId);
+				masterArtifactLock.locked = true;
+				masterArtifactLock.lockedBy = updateMasterArtifactLockEvent.lockRequestForUser;
+				masterArtifactLock.lockedTime = DateTime.now();
+				//Add the lock entry to the projectArtifactsLock concept 
+				int idIndex = Instance.PropertyArray.indexOfString(projectArtifactLocks.artifactLockId, masterArtifactLock@extId);
+				if (idIndex < 0) { //Not present, add
+					Log.log(LOGGER, "Debug", "Adding the artifact lock %s to the Project Locks registry for project %s", updateMasterArtifactLockEvent.masterArtifactLockExtId, updateMasterArtifactLockEvent.managedProjectName);
+					Instance.PropertyArray.appendString(projectArtifactLocks.artifactLockId, masterArtifactLock@extId, 1L);
+				}	
+				Log.log(LOGGER, "Debug", "Acquired lock %s by user %s", updateMasterArtifactLockEvent.masterArtifactLockExtId, masterArtifactLock.lockedBy);				
+			} else { // release lock
+				Log.log(LOGGER, "Debug", "Update to release lock %s", updateMasterArtifactLockEvent.masterArtifactLockExtId);
+				masterArtifactLock.locked = false;
+				masterArtifactLock.lockedBy = null;
+				masterArtifactLock.lockedTime = null;
+				//Remove the lock entry from the projectArtifactsLock concept
+				boolean isRemoved = Instance.PropertyArray.removeString(projectArtifactLocks.artifactLockId, masterArtifactLock@extId);
+				if (isRemoved)
+					Log.log(LOGGER, "Debug", "Removing the artifact lock %s from the Project Locks registry for project %s", updateMasterArtifactLockEvent.masterArtifactLockExtId, updateMasterArtifactLockEvent.managedProjectName);
+				Log.log(LOGGER, "Debug", "Released lock %s by user %s", updateMasterArtifactLockEvent.masterArtifactLockExtId, masterArtifactLock.lockedBy);				
+			}
+			
+		}		
+	}
+}

@@ -1,0 +1,27 @@
+/**
+ * @description Fetch list of tasks related to lock requests.
+ * @author aathalye-lt
+ */
+rule Approval.Rules.ArtifactsRuleSet.AMS_RU_RetrieveLockRequestsTaskListRule {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Approval.Events.ArtifactEvents.AMS_E_LockTasksRequestEvent ams_e_locktasksrequestevent;
+	}
+	when {
+		ams_e_locktasksrequestevent.role != null;
+	}
+	then {
+		String roleString = ams_e_locktasksrequestevent.role;
+		System.debugOut("Requesting Tasks for Role >>> " + roleString);
+		
+		AAA.Concepts.AMS_C_Role role = Instance.getByExtIdByUri(roleString, "/AAA/Concepts/AMS_C_Role");
+		
+		if (role != null) {
+			String[] lockRequestsExtIds = 
+				Instance.PropertyArray.toArrayString(role.lockReviewTaskExtIds);
+		}
+	}
+}

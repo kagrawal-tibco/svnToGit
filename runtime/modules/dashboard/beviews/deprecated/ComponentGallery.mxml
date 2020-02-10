@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute" title="Metric Gallery" creationPolicy="all" horizontalScrollPolicy="off" showCloseButton="true" xmlns:view="com.tibco.be.views.ui.gallery.view.*">
+	<mx:Script>
+		<![CDATA[
+		
+		[Embed("assets/images/gallery/Folder.jpg")]
+		private var FolderIcon:Class;
+		
+		[Embed("assets/images/gallery/Metric1.jpg")]
+		private var Metric1Icon:Class;
+		
+		[Embed("assets/images/gallery/Arrow.jpg")]
+		private var ArrowIcon:Class;
+		
+		private function init():void {
+			
+		}
+			
+		]]>
+	</mx:Script>
+	<mx:Canvas backgroundColor="#b0bdc6" width="640" height="170" id="galleryContainer">
+		
+		<mx:HBox id="treeMenu" backgroundColor="#85819d" width="100%" verticalAlign="top">
+			<mx:Spacer width="3"/>
+			<mx:Text id="homeMenuItem" text="Home" color="white" paddingTop="4"/>
+			<mx:Repeater id="menuItems">
+				<mx:Text text=">" color="#3a3652" paddingTop="4"/>
+				<!-- <mx:Text text="{menuItems.currentItem.label.toString()}" color="white" paddingTop="4"/>-->
+				<mx:Text text="{menuItems.currentItem.text}" color="white" paddingTop="4"/>
+			</mx:Repeater>
+		</mx:HBox>
+		
+		<mx:Canvas id="metricStrip" width="640" height="170" horizontalScrollPolicy="on">
+			<view:galleryMetric id="upButton" imgSource="assets/images/gallery/Arrow.jpg"
+						   	   componentName="Go Up"
+						       y="48"
+						       x="30"/>
+			<mx:Repeater id="folderItems">
+				<view:galleryMetric id="galleryFolders"
+						       componentTip="{folderItems.currentItem.name.toString()}"
+						       componentName="{folderItems.currentItem.name.toString()}"
+						       metricID="{folderItems.currentItem.attribute('id').toString()}"
+						       parentID="{folderItems.currentItem.attribute('parentid').toString()}"
+						       imgSource="assets/images/gallery/Folder.jpg"
+						       y="48"/>
+			</mx:Repeater>
+			<mx:Repeater id="metricItems">
+				<view:galleryMetric id="galleryMetrics"
+						       componentTip="{metricItems.currentItem.name.toString()}"
+						       componentName="{metricItems.currentItem.attribute('name').toString()}"
+						       metricID="{metricItems.currentItem.attribute('id').toString()}"
+						       parentID="{metricItems.currentItem.attribute('parentid').toString()}"
+						       imgSource="assets/images/gallery/Metric1.jpg"
+						       y="48"/>
+			</mx:Repeater>
+		</mx:Canvas>
+		
+		<mx:VBox id="leftArrow" left="0" top="22">
+			<mx:Image source="navIcons/left.jpg"/>
+		</mx:VBox>
+		<mx:VBox id="rightArrow" right="0" top="22">
+			<mx:Image source="navIcons/right.jpg"/>
+		</mx:VBox>
+	</mx:Canvas>
+</mx:TitleWindow>

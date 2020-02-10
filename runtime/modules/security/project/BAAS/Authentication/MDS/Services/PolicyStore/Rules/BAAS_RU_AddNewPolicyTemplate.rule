@@ -1,0 +1,30 @@
+/**
+ * @description Add a new policy template to the global policy store.
+ * @author aathalye-T410
+ */
+rule Authentication.MDS.Services.PolicyStore.Rules.BAAS_RU_AddNewPolicyTemplate {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Authentication.MDS.Services.PolicyStore.Events.BAAS_E_AddNewTemplateRequestEvent baas_e_addnewtemplaterequestevent;
+	}
+	when {
+		baas_e_addnewtemplaterequestevent.templateId != null &&
+		baas_e_addnewtemplaterequestevent@payload != null;
+	}
+	then {
+		String templateId = baas_e_addnewtemplaterequestevent.templateId;
+		//Load cache only concept
+		BAAS_C_PolicyStore mdsPolicyStore = Instance.getByExtId("POLICY_STORE");
+		BAAS_C_PolicyTemplate newPolicyTemplate = 
+			Authentication.MDS.Policy.Concepts.BAAS_C_PolicyTemplate.BAAS_C_PolicyTemplate(templateId, templateId, baas_e_addnewtemplaterequestevent@payload);
+		
+		Instance.PropertyArray.appendContainedConcept(mdsPolicyStore.policyTemplates, newPolicyTemplate, 1L);
+		//Send success response
+		BAAS_E_AddNewTemplateResponseEvent templateAdditionResponseEvent = 
+			Event.createEvent("xslt://{{/Authentication/MDS/Services/PolicyStore/Events/BAAS_E_AddNewTemplateResponseEvent}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"1.0\" exclude-result-prefixes=\"xsl xsd\">\n    <xsl:output method=\"xml\"/>\n    <xsl:template match=\"/\">\n        <createEvent>\n            <event>\n                <status>\n                    <xsl:value-of select=\"&quot;Success&quot;\"/>\n                </status>\n            </event>\n        </createEvent>\n    </xsl:template>\n</xsl:stylesheet>");
+		Event.replyEvent(baas_e_addnewtemplaterequestevent, templateAdditionResponseEvent);		
+	}
+}

@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="com.tibco.cep.rt.functionCatalogProvider">
+      <functionCatalog
+            provider="com.tibco.cep.datamodeling.DefaultFunctionCatalogProvider">
+      </functionCatalog>
+   </extension>
+   <extension
+         point="com.tibco.cep.tpcl.runtimeBundleClasspathProvider">
+      <RuntimeBundle
+            classpathProvider="com.tibco.cep.datamodeling.DataModelingRuntimeClasspathProvider">
+      </RuntimeBundle>
+   </extension>
+
+      <extension
+            point="org.eclipse.ui.activities">
+         <activity
+               description="Develop data centric and state machine applications"
+               id="com.tibco.cep.datamodeling.development"
+               name="Data Modeling Development">
+         </activity>
+		 <activityRequirementBinding
+			 	activityId="com.tibco.cep.datamodeling.development"
+  			 	requiredActivityId="com.tibco.cep.standard.development">
+		 </activityRequirementBinding>
+         <categoryActivityBinding
+               activityId="com.tibco.cep.datamodeling.development"
+               categoryId="com.tibco.cep.standard.category">
+         </categoryActivityBinding>
+         <activityPatternBinding
+               activityId="com.tibco.cep.datamodeling.development"
+               pattern="com\.tibco\.cep\.studio\.dbconcept/.*">
+         </activityPatternBinding>
+         <activityPatternBinding
+               activityId="com.tibco.cep.datamodeling.development"
+               pattern="com\.tibco\.cep\.studio\.ui\.statemachine/.*">
+         </activityPatternBinding>
+         <defaultEnablement
+               id="com.tibco.cep.datamodeling.development">
+         </defaultEnablement>
+      </extension>   
+         <extension
+         point="com.tibco.cep.rt.addonContributor">
+      <addon
+            class="com.tibco.cep.datamodeling.DataModelingAddOnLoader">
+      </addon>
+   </extension>
+   <extension
+        point="com.tibco.cep.studio.core.moduleCodeGenerator">
+     <module
+           generator="com.tibco.cep.studio.dbconcept.codegen.ModuleCodeGenerator">
+     </module>
+  </extension>
+  <extension
+        point="com.tibco.cep.studio.core.dbConceptCodeGenerator">
+     <dbConcept
+           generator="com.tibco.cep.studio.dbconcept.codegen.DBConceptCodeGenerator">
+     </dbConcept>
+  </extension>
+</plugin>

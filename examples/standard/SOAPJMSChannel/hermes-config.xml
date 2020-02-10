@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<config lastEditedByUser="bala" lastEditedByHermesVersion="v1.14 SoapUI" maxThreadPoolSize="5" auditDirectory="/temp" messageFilesDir="/opt/SmartBear/SoapUI-5.0.0/bin/./messages" maxMessagesInBrowserPane="1000" copyJMSProviderProperties="true" copyJMSCorrelationID="true" copyJMSType="true" copyJMSExpiration="true" copyJMSReplyTo="true" copyJMSPriority="true" displayFactoryAdmin="true" maxColumnsInStatisticsTable="10" autoBrowseRefreshRate="10" correctDropSemantics="false" selectorImpl="hermes.selector.JAMSELMessageSelectorFactory" queueBrowseConsumerTimeout="0" enableJython="true" lookAndFeel="javax.swing.plaf.metal.MetalLookAndFeel" scrollMessagesDuringBrowse="true" base64EncodeMessages="true">
+    <classpathGroup id="EMS">
+        <library jar="/opt/tibco/ems/7.0/lib/jms.jar" noFactories="true"/>
+        <library jar="/opt/tibco/ems/7.0/lib/slf4j-api-1.4.2.jar" noFactories="true"/>
+        <library jar="/opt/tibco/ems/7.0/lib/slf4j-simple-1.4.2.jar" noFactories="true"/>
+        <library jar="/opt/tibco/ems/7.0/lib/tibcrypt.jar" noFactories="true"/>
+        <library jar="/opt/tibco/ems/7.0/lib/tibemsd_sec.jar" noFactories="true"/>
+        <library jar="/opt/tibco/ems/7.0/lib/tibjms.jar" noFactories="false" factories="com.tibco.tibjms.TibjmsConnectionFactory,com.tibco.tibjms.TibjmsQueueConnectionFactory,com.tibco.tibjms.TibjmsTopicConnectionFactory,com.tibco.tibjms.TibjmsXAQueueConnectionFactory,com.tibco.tibjms.TibjmsXATopicConnectionFactory,com.tibco.tibjms.naming.TibjmsFederatedConnectionFactory,com.tibco.tibjms.naming.TibjmsFederatedQueueConnectionFactory,com.tibco.tibjms.naming.TibjmsFederatedTopicConnectionFactory,com.tibco.tibjms.naming.TibjmsFederatedXAQueueConnectionFactory,com.tibco.tibjms.naming.TibjmsFederatedXATopicConnectionFactory"/>
+        <library jar="/opt/tibco/ems/7.0/lib/tibjmsadmin.jar" noFactories="true"/>
+        <library jar="/opt/tibco/ems/7.0/lib/tibjmsapps.jar" noFactories="false" factories="com.tibco.tibjms.appserver.borland.TibjmsBorlandQueueConnectionFactory,com.tibco.tibjms.appserver.borland.TibjmsBorlandTopicConnectionFactory,com.tibco.tibjms.appserver.borland.TibjmsBorlandXAQueueConnectionFactory,com.tibco.tibjms.appserver.borland.TibjmsBorlandXATopicConnectionFactory"/>
+        <library jar="/opt/tibco/ems/7.0/lib/tibjmsufo.jar" noFactories="false" factories="com.tibco.tibems.ufo.TibjmsUFOConnectionFactory,com.tibco.tibems.ufo.TibjmsUFOQueueConnectionFactory,com.tibco.tibems.ufo.TibjmsUFOTopicConnectionFactory"/>
+        <library jar="/opt/tibco/ems/7.0/lib/tibrvjms.jar" noFactories="true"/>
+    </classpathGroup>
+    <renderer className="hermes.renderers.DefaultMessageRenderer">
+        <properties>
+            <property name="bytesIsString" value="false"/>
+            <property name="bytesIsObject" value="false"/>
+            <property name="active" value="true"/>
+            <property name="messageCache" value="100"/>
+            <property name="bytesIsObjectBufferSize" value="65536"/>
+            <property name="toStringOnObjectMessage" value="false"/>
+        </properties>
+    </renderer>
+    <renderer className="hermes.renderers.DefaultMessageHeaderRenderer">
+        <properties>
+            <property name="active" value="true"/>
+        </properties>
+    </renderer>
+    <renderer className="hermes.renderers.ToStringMessageRenderer">
+        <properties>
+            <property name="active" value="true"/>
+        </properties>
+    </renderer>
+    <renderer className="hermes.renderers.HexMessageRenderer">
+        <properties>
+            <property name="active" value="true"/>
+        </properties>
+    </renderer>
+    <renderer className="hermes.renderers.XMLMessageRenderer">
+        <properties>
+            <property name="active" value="true"/>
+        </properties>
+    </renderer>
+    <renderer className="hermes.renderers.fix.FIXMessageRenderer">
+        <properties>
+            <property name="displayValueWithEnum" value="true"/>
+            <property name="active" value="true"/>
+            <property name="messageCache" value="100"/>
+            <property name="displayHeaderAndTrailer" value="true"/>
+        </properties>
+    </renderer>
+    <renderer className="hermes.renderers.EBCDICMessageRenderer">
+        <properties>
+            <property name="rowLength" value="16"/>
+            <property name="undisplayableChar" value="."/>
+            <property name="active" value="true"/>
+            <property name="maxMessageSize" value="5242880"/>
+        </properties>
+    </renderer>
+    <factory classpathId="System">
+        <provider className="hermes.providers.file.FileConnectionFactory">
+            <properties>
+                <property name="baseDirectory" value="${hermes.home}/bin/messages"/>
+            </properties>
+        </provider>
+        <connection clientID="" connectionPerThread="false">
+            <session id="Files" reconnects="0" audit="false" useConsumerForQueueBrowse="false"/>
+        </connection>
+        <destination name="examples.xml" domain="1"/>
+        <destination name="fix.xml" domain="1" durable="false" useLocalRenderer="true"/>
+        <extension className="hermes.ext.DefaultHermesAdminFactory">
+            <properties/>
+        </extension>
+    </factory>
+    <factory classpathId="EMS">
+        <provider className="com.tibco.tibjms.TibjmsConnectionFactory">
+            <properties>
+                <property name="serverUrl" value="tcp://localhost:7222"/>
+            </properties>
+        </provider>
+        <connection clientID="" connectionPerThread="false">
+            <session id="EMS" reconnects="0" transacted="true" audit="false" useConsumerForQueueBrowse="false"/>
+        </connection>
+        <destination name="queue.mathops" domain="1" durable="false"/>
+        <destination name="queue.divide.reply" domain="1" durable="false"/>
+        <destination name="queue.multiply.reply" domain="1" durable="false"/>
+        <destination name="queue.add.reply" domain="1" durable="false"/>
+        <destination name="queue.subtract.reply" domain="1" durable="false"/>
+        <extension className="hermes.ext.ems.TibcoEMSAdminFactory">
+            <properties>
+                <property name="username" value="admin"/>
+            </properties>
+        </extension>
+    </factory>
+    <quickFIX cacheSize="1024" filterSessionMsgTypes="false"/>
+</config>

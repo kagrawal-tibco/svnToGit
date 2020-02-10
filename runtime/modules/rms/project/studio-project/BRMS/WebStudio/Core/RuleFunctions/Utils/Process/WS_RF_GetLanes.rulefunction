@@ -1,0 +1,34 @@
+/**
+ * @description 
+ */
+WebStudio.Core.Concepts.Process.WS_C_Lane rulefunction WebStudio.Core.RuleFunctions.Utils.Process.WS_RF_GetLanes {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object lane;
+	}
+	body {
+		Object LOGGER = Log.getLogger(" WebStudio.Core.RuleFunctions.Utils.Process.WS_RF_GetLanes");
+		
+		WS_C_Lane ws_c_lane = Instance.newInstance("/WebStudio/Core/Concepts/Process/WS_C_Lane", null);
+		Object laneDetails = WS.Process.getLaneDetails(lane);
+		if (Collections.Map.size(laneDetails) > 0) {
+			ws_c_lane.laneId = Collections.Map.get(laneDetails, "id");
+			ws_c_lane.name = Collections.Map.get(laneDetails, "name");
+			
+			Object childLaneSet = WS.Process.getChildLaneSet(lane);
+			if (childLaneSet != null) {
+				Object[] childLanes = WS.Process.getChildLanes(childLaneSet);
+				if (childLanes != null) {
+					for (int i = 0; i < childLanes@length; i++) {
+						WS_C_Lane childLane = WS_RF_GetLanes(childLanes[i]);
+						Instance.PropertyArray.appendConceptReference(ws_c_lane.childLanes, childLane, 1L);
+					}
+				}
+			}
+		}
+		
+		return ws_c_lane;
+	}
+}

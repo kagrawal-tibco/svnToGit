@@ -1,0 +1,62 @@
+/**
+ * @description 
+ */
+WebStudio.Core.Concepts.DataSources.Problems.WS_C_TableAnalyzerProblemsResponse rulefunction WebStudio.Core.RuleFunctions.Utils.DT.Analyzer.WS_RF_BuildDecisionTableAnalyzerResponse {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String projectName;
+		String artifactPath;
+		Object[] problems;
+		String pageNum;
+	}
+	body {
+		
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.DT.Analyzer.WS_RF_BuildDecisionTableAnalyzerResponse");
+		
+		WebStudio.Core.Concepts.DataSources.Problems.WS_C_TableAnalyzerProblemsResponse analyzerProblemsResponse = 
+													Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/Problems/WS_C_TableAnalyzerProblemsResponse");
+		analyzerProblemsResponse.projectName = projectName;
+		analyzerProblemsResponse.artifactPath = artifactPath;
+
+		Log.log(LOGGER, "Debug", "Building Decision Table %s Analyzer response with %s problems", artifactPath, problems@length);
+
+		for (int i = 0; i < problems@length; i++) {		
+			Object problem = problems[i];
+			String problemType = WS.Decision.TableAnalyzer.getProblemType(problem);			
+			WebStudio.Core.Concepts.DataSources.Problems.WS_C_TableAnalyzerProblem analyzerProblem = null;
+			if (String.equals(problemType, "RangeProblemEvent")) {
+				analyzerProblem = Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/Problems/WS_C_TableAnalyzerRangeProblem");
+				WebStudio.Core.Concepts.DataSources.Problems.WS_C_TableAnalyzerRangeProblem rangeProblem = analyzerProblem;
+				rangeProblem.minValue = WS.Decision.TableAnalyzer.getProblemRangeMinValue(problem);
+				rangeProblem.maxValue = WS.Decision.TableAnalyzer.getProblemRangeMaxValue(problem);
+				rangeProblem.rangeTypeProblem = WS.Decision.TableAnalyzer.getProblemRangeType(problem);
+				String[] rangeChars = WS.Decision.TableAnalyzer.getProblemRangeChars(problem);
+				rangeProblem.rangeChar1 = rangeChars[0];
+				rangeProblem.rangeChar2 = rangeChars[1];									  					
+			} else {
+				analyzerProblem = Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/Problems/WS_C_TableAnalyzerProblem");
+			}
+						 
+			analyzerProblem.errorCode = WS.Decision.TableAnalyzer.getProblemErrorCode(problem);
+			analyzerProblem.errorMessage = WS.Decision.TableAnalyzer.getProblemErrorMessage(problem);
+			analyzerProblem.details = WS.Decision.TableAnalyzer.getProblemDetails(problem);
+			analyzerProblem.severity = WS.Decision.TableAnalyzer.getProblemSeverity(problem) + "";
+			analyzerProblem.location = WS.Decision.TableAnalyzer.getProblemLocation(problem) + "";
+			analyzerProblem.pageNum = pageNum;
+			
+			analyzerProblem.columnName = WS.Decision.TableAnalyzer.getProblemColumnName(problem);
+			analyzerProblem.otherRuleId = WS.Decision.TableAnalyzer.getOtherRuleId(problem);
+			analyzerProblem.problemType = problemType;
+			
+			if (String.equals(problemType, "MissingEqualsCriterionProblemEvent")) {
+				analyzerProblem.criterion = WS.Decision.TableAnalyzer.getMissingEqualsCriterion(problem);			
+			}
+			
+			Instance.PropertyArray.appendContainedConcept(analyzerProblemsResponse.problem, analyzerProblem, 1L);
+		}
+		
+		return analyzerProblemsResponse;
+	}
+}

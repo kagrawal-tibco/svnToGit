@@ -1,0 +1,56 @@
+/**
+ * @description 
+ */
+WebStudio.Core.Concepts.DataSources.WS_C_TemporaryReturnData rulefunction WebStudio.Core.RuleFunctions.Actions.WS_RF_FetchProcessPalette {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object servletRequest;
+		WebStudio.Security.Authn.Concepts.WS_C_LoggedInUser loggedInUser;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.WS_RF_FetchProcessPalette");
+		
+		int totalRowsCounter = 0;
+		String responseMessage = null;
+		int responseStatusCode = 1;
+		String errorCode = null;
+		WS_C_ResponseData responseData = null;
+		WS_C_ProcessPaletteDataSourceRecord paletteRecord = null;
+		
+		if (!WS_RF_CheckHTTPMethod(servletRequest, "GET")) {
+			responseStatusCode = -1;
+			totalRowsCounter = 0;
+			errorCode = "ERR_5101";
+			responseMessage = "Invalid HTTP Method, expect method is [GET].";
+		} else {
+			responseData = Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/WS_C_ResponseData");
+			responseData.clearContentReference = true;
+			
+			String subscriptionId = null;
+			if (loggedInUser.jwtToken != null) subscriptionId = loggedInUser.jwtToken.sbsc;
+			
+			WebStudio.Core.Concepts.Process.Palette.WS_C_ProcessPalette processPalette = WS_RF_CreateProcessPalette(subscriptionId);
+			if (processPalette != null) {
+				Log.log(LOGGER, "Debug", "ProcessPalette - %s", processPalette);
+				
+				paletteRecord = Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/Records/WS_C_ProcessPaletteDataSourceRecord");
+				Instance.PropertyAtom.setContainedConcept(paletteRecord.palette, processPalette, 1L);
+				
+				WS_C_AbstractDataSourceRecord paletteDataSourceRecord = paletteRecord;
+				Instance.PropertyArray.appendContainedConcept(responseData.record, paletteDataSourceRecord, 1L);
+				
+				responseStatusCode = 0;
+				totalRowsCounter = 1;
+			} else {
+				Log.log(LOGGER, "Debug", "ProcessPalette not found.");
+				totalRowsCounter = 0;
+				errorCode = "ERR_1201";
+				responseMessage = "Error Loading the process palette";
+			}
+		}
+
+		return WS_RF_CreateTemporaryReturnData(responseStatusCode, totalRowsCounter, errorCode, responseMessage, responseData);
+	}
+}

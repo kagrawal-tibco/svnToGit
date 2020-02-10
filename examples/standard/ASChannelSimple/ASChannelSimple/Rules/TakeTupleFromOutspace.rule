@@ -1,0 +1,26 @@
+/**
+ * @description 
+ * @author huabin-lt
+ */
+rule Rules.TakeTupleFromOutspace {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		
+		Events.OutspaceEvent outSpaceEvent;
+	}
+	when {
+		
+	}
+	then {
+		System.debugOut("OutspaceDefEvent ID: "					+ outSpaceEvent.eid);
+		System.debugOut("OutspaceDefEvent VALUE: "				+ outSpaceEvent.value);
+		System.debugOut("OutspaceDefEvent DATETIME: "			+ outSpaceEvent.datetime);
+		System.debugOut("OutspaceDefEvent CONSUMPTION MODE: "	+ outSpaceEvent.consumption_mode);
+		System.debugOut("OutspaceDefEvent BROWSER TYPE: "		+ outSpaceEvent.browser_type);
+
+		Event.consumeEvent(outSpaceEvent);
+	}
+}

@@ -1,0 +1,118 @@
+/**
+ * @description Add new user group
+ */
+WebStudio.Core.Concepts.DataSources.WS_C_TemporaryReturnData rulefunction WebStudio.Core.RuleFunctions.Actions.Dashboard.WS_RF_AddUserGroup {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object servletRequest;
+		WebStudio.Security.Authn.Concepts.WS_C_LoggedInUser loggedInUser;
+		String contentType;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.Dashboard.WS_RF_AddUserGroup");
+		
+//		Object servletRequest = HTTP.Servlet.getServletRequest(asyncContextObject);
+//		Object servletResponse = HTTP.Servlet.getServletResponse(asyncContextObject);
+		
+//		//Validate the request for logged in user
+//		WS_C_LoggedInUser loggedInUser = WebStudio.Security.Authn.RuleFunctions.WS_RF_ValidateLogin(asyncContextObject, true);
+		
+		WS_C_ResponseData responseData = null;
+		int responseStatus = 0;
+		int recordCount = 0;
+		String errorCode = null;
+		String responseMessage = null;
+		
+		if (!WS_RF_CheckHTTPMethod(servletRequest, "POST")) {
+			responseStatus = -1;
+			recordCount = 0;
+			errorCode = "ERR_5101";
+			responseMessage = "Invalid HTTP Method, expect method is [POST].";
+		} else {
+			Object requestDataBytes = HTTP.Servlet.Request.getRequestContent(servletRequest);
+			String requestData = String.convertByteArrayToString(requestDataBytes, "UTF-8");
+			Log.log(LOGGER, "Debug", "Request Post Data Received %s", requestData);
+			
+			//Convert to concept model
+			WS_C_GroupBaseRequest groupBaseRequest = null;
+			if (String.equals(contentType, System.getGlobalVariableAsString("WebStudio/CONTENT_TYPE/XML", "application/xml"))) {
+				groupBaseRequest = Instance.createTransientInstanceFromXML("/WebStudio/Core/Concepts/Request/Usecases/AddGroup/WS_C_GroupBaseRequest", requestData);
+			} else {
+				groupBaseRequest = Instance.createTransientInstanceFromJSON("/WebStudio/Core/Concepts/Request/Usecases/AddGroup/WS_C_GroupBaseRequest", requestData);
+			}
+		
+			Log.log(LOGGER, "Debug", "Request concept deserialized %s", groupBaseRequest);
+			
+			WS_C_GroupRequestData requestContainedData = groupBaseRequest.data;
+			WS_C_GroupRequest group = requestContainedData.userGroup;
+			String groupName = group.name;			
+			Log.log(LOGGER, "Debug", "Group Name Request value Received %s", groupName);
+			
+			String[] groupArtifacts = null;
+			if (group.groupItem.artifact != null && group.groupItem.artifact@length > 0) {
+				groupArtifacts = Instance.PropertyArray.toArrayString(group.groupItem.artifact);
+				Log.log(LOGGER, "Debug", "Artifact Count withing the Group - %s", groupArtifacts@length);
+			}
+			
+			//Lock and load User Dashboard concept
+			String userDashboardExtId = WS_RF_CreateUserArtifactExtId("DASHBOARD", null, null, loggedInUser.username, null, null);
+			boolean userDashboardLock = Cluster.DataGrid.Lock(userDashboardExtId, 1000, false);
+			if (userDashboardLock) {
+								
+				WS_C_UserDashboard userDashboard = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(userDashboardExtId, false, "/WebStudio/Core/Concepts/Dashboard/WS_C_UserDashboard");
+				boolean groupExists = false;
+				if (userDashboard != null) {
+					WS_C_Group groupObject  = null;
+					for (int i=0; i < userDashboard.userGroups@length; i++) {
+						groupObject  = userDashboard.userGroups[i];
+						if (String.equals(groupObject.name, groupName)) {
+							groupExists = true;
+							break;
+						}
+					}
+				}
+				
+				if (!groupExists) {
+					WS_E_UpdateUserGroupEvent updateUserGroupEvent =
+									Event.createEvent("xslt://{{/WebStudio/Core/Events/WS_E_UpdateUserGroupEvent}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"1.0\" exclude-result-prefixes=\"xsl xsd\">\n    <xsl:output method=\"xml\"/>\n    <xsl:param name=\"groupName\"/>\n    <xsl:template match=\"/\">\n        <createEvent>\n            <event>\n                <groupName>\n                    <xsl:value-of select=\"$groupName\"/>\n                </groupName>\n            </event>\n        </createEvent>\n    </xsl:template>\n</xsl:stylesheet>");
+					updateUserGroupEvent.userName = loggedInUser.username;
+					if (groupArtifacts != null) {
+						String artifactList = WS.Common.joinStringArray(groupArtifacts, "$");					
+						updateUserGroupEvent.artifacts = artifactList;
+					}
+					updateUserGroupEvent.operationType = "ADD_GROUP";
+					Event.assertEvent(updateUserGroupEvent);
+	
+					responseMessage = "Group Successfully Added";
+				} else {
+					responseStatus = -1;
+					recordCount = 0;
+					errorCode = "ERR_1111";
+					responseMessage = "This User Group already exists.";
+				}
+			} else {
+				responseStatus = -1;
+				recordCount = 0;
+				errorCode = "ERR_1105";
+				responseMessage = "User Group space locked";
+			}
+		}
+			
+//		} else {
+//			responseStatus = -1;
+//			recordCount = 0;
+//			errorCode = "ERR_1102";
+//			responseMessage = "Authentication Failed, User is not logged in";
+//		}
+
+		return WS_RF_CreateTemporaryReturnData(responseStatus, recordCount, errorCode, responseMessage, responseData);
+		
+//		String responseDSXML = WS_RF_CreateAndSerializeResponseDataSource(responseStatus, recordCount, errorCode, responseMessage, responseData);
+//	    
+//	    Log.log(LOGGER, "Debug", "Response DS XML %s", responseDSXML);
+//		HTTP.Servlet.Response.setResponseHeader(servletResponse, "Content-type", "text/xml;charset=utf-8");
+//		HTTP.Servlet.Response.setResponseContent(asyncContextObject, responseDSXML, true);
+	}
+}

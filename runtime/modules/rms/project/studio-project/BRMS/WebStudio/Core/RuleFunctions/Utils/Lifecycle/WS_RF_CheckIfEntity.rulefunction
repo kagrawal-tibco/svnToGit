@@ -1,0 +1,27 @@
+/**
+ * @description 
+ */
+boolean rulefunction WebStudio.Core.RuleFunctions.Utils.Lifecycle.WS_RF_CheckIfEntity {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		WebStudio.Core.Concepts.Request.Usecases.Checkout.WS_C_ArtifactCheckoutDataItem[] artifactItems;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.Lifecycle.WS_RF_CheckIfEntity");
+		
+		boolean isEntity = false;
+		
+		String artifactType = null;
+		for (int i=0; i<artifactItems@length; i++) {
+			artifactType = artifactItems[i].artifactType;
+			if (String.equals(artifactType, "concept") || String.equals(artifactType, "event")) {
+				isEntity = true;
+				break;
+			}
+		}
+		
+		return isEntity;
+	}
+}

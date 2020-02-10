@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0"
+    xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" name="model"
+    nsURI="http:///com/tibco/cep/studio/rms/preferences/RMSPrefs.ecore" nsPrefix="rmsPrefs">
+  <eClassifiers xsi:type="ecore:EClass" name="AuthenticationInfo">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="urlInfo" eType="#//AuthenticationURLInfo"
+        containment="true"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="userInfos" upperBound="-1"
+        eType="#//UserInfo" containment="true"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="URLInfo" abstract="true">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="urls" upperBound="-1" eType="#//URL"
+        containment="true"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="URL">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="urlString" lowerBound="1"
+        eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="CheckoutRepoInfo">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="urlInfo" eType="#//CheckoutURLInfo"
+        containment="true"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="RMSPreferences">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="authInfo" eType="#//AuthenticationInfo"
+        containment="true"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="checkoutInfo" eType="#//CheckoutRepoInfo"
+        containment="true"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="AuthenticationURLInfo" eSuperTypes="#//URLInfo"/>
+  <eClassifiers xsi:type="ecore:EClass" name="CheckoutURLInfo" eSuperTypes="#//URLInfo"/>
+  <eClassifiers xsi:type="ecore:EClass" name="UserInfo">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="username" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="password" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EByteArray"/>
+  </eClassifiers>
+</ecore:EPackage>

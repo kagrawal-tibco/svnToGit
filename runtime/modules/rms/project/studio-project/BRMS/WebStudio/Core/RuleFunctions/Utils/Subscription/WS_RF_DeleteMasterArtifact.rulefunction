@@ -1,0 +1,50 @@
+/**
+ * @description 
+ */
+void rulefunction WebStudio.Core.RuleFunctions.Utils.Subscription.WS_RF_DeleteMasterArtifact {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		WebStudio.Core.Concepts.Lifecycle.WS_C_MasterArtifact masterArtifact;
+		String subscriptionId;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.Subscription.WS_RF_DeleteMasterArtifact");
+		
+		Log.log(LOGGER, "Debug", "Processing Master Artifact [%s] for deletion", masterArtifact@extId);
+				
+		if (masterArtifact.currentMasterRevision != null) {
+			Log.log(LOGGER, "Debug", "Deleting currentMasterRevision");
+			WS_RF_DeleteArtifactRevision(masterArtifact.currentMasterRevision);
+		}
+		
+		if (masterArtifact.preMasterRevision != null ) {
+			Log.log(LOGGER, "Debug", "Deleting previoudMasterRevision");
+			WS_RF_DeleteArtifactRevision(masterArtifact.preMasterRevision);
+		}
+		
+		if (masterArtifact.checkinHistory != null) {
+			Log.log(LOGGER, "Debug", "Deleting checkinHistory");
+			AMS_C_ArtifactCheckinHistoryEntry[] historyEntries = Instance.PropertyArray.toArrayContainedConcept(masterArtifact.checkinHistory.checkinEntries);
+			Log.log(LOGGER, "Debug", "Total History Entries to clean up - [%s]", historyEntries@length);
+			
+			String reviewTaskExtId = null;
+			for (int i=0; i<historyEntries@length; i++) {
+				reviewTaskExtId = WS_RF_CreateUserArtifactExtId(String.valueOfLong(historyEntries[i].revisionId), null, null, null, subscriptionId, null);
+				WS_C_ReviewTask reviewTask = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(reviewTaskExtId, true, "/WebStudio/Core/Concepts/Lifecycle/WS_C_ReviewTask");
+				if (reviewTask != null) {
+					WS_RF_DeleteReviewTask(reviewTask);
+				} else {
+					Log.log(LOGGER, "Debug", "Review Task with extId [%s] is either already deleted or does not exist", reviewTaskExtId);
+				}
+			}
+			
+			Instance.PropertyArray.clear(masterArtifact.checkinHistory.checkinEntries);
+			
+			Instance.deleteInstance(masterArtifact.checkinHistory);
+		}
+		
+		Instance.deleteInstance(masterArtifact);
+	}
+}

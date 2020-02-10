@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema targetNamespace="http://www.example.org/SetGVSchema" elementFormDefault="qualified" xmlns="http://www.w3.org/2001/XMLSchema" xmlns:tns="http://www.example.org/SetGVSchema">
+
+    <element name="request" type="tns:requestType"></element>
+
+    <complexType name="requestType">
+    	<sequence>
+    		<element name="payload" type="tns:payloadType" minOccurs="1" maxOccurs="1"></element>
+    	</sequence>
+    	<attribute name="token" type="string"></attribute>
+    	<attribute name="monitorableid" type="string"></attribute>
+    </complexType>
+    
+    <complexType name="payloadType">
+    	<sequence>
+    		<element name="Machine" type="tns:MachineType" minOccurs="1" maxOccurs="1"></element>
+    	</sequence>
+    </complexType>
+
+    <complexType name="MachineType">
+    	<sequence>
+    		<element name="GlobalVariables" type="tns:GVsType" minOccurs="1" maxOccurs="unbounded"></element>
+    	</sequence>
+        <attribute name="mfqn" type="string"></attribute>
+    </complexType>
+
+    <complexType name="GVsType">
+    	<sequence>
+    		<element name="GlobalVariable" type="tns:GVType" minOccurs="1" maxOccurs="unbounded"></element>
+    	</sequence>
+        <attribute name="dun" type="string"></attribute>
+    </complexType>
+    
+    <complexType name="GVType">
+    	<attribute name="name" type="string"></attribute>
+    	<attribute name="defaultValue" type="string"></attribute>
+    	<attribute name="currentValue" type="string"></attribute>
+    </complexType>
+
+</schema>

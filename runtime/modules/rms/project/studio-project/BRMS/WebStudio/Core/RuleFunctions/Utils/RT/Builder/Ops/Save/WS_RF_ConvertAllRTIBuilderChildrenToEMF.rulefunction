@@ -1,0 +1,33 @@
+/**
+ * @description Convert conditions/commands in RTI builder etc to EMF.
+ */
+Object rulefunction WebStudio.Core.RuleFunctions.Utils.RT.Builder.Ops.Save.WS_RF_ConvertAllRTIBuilderChildrenToEMF {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		WebStudio.Core.Concepts.RuleTemplateInstance.Builder.WS_C_RuleTemplateInstanceBuilder ruleTemplateInstanceBuilder;
+		String UUID;
+	}
+	body {
+		Object ruleTemplateInstanceEObject = WS.RTI.createRuleTemplateInstanceEObject(UUID, ruleTemplateInstanceBuilder.implementsPath);
+		WS_C_Conditions conditions = WS.Common.getContainedConcept(ruleTemplateInstanceBuilder.conditions);
+		//Process conditions
+		WebStudio.
+			Core.
+				RuleFunctions.
+					Utils.RT.Builder.
+						Ops.Save.
+							WS_RF_ConvertConditionsToEMF(ruleTemplateInstanceEObject, conditions);
+		
+		
+		WS_C_Commands commands = WS.Common.getContainedConcept(ruleTemplateInstanceBuilder.commands);
+		WebStudio.
+			Core.
+				RuleFunctions.
+					Utils.RT.Builder.
+						Ops.Save.
+							WS_RF_ConvertCommandsToEMF(ruleTemplateInstanceEObject, commands);
+		return ruleTemplateInstanceEObject;							
+	}
+}

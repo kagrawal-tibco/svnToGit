@@ -1,0 +1,236 @@
+/**
+ * @description 
+ */
+void rulefunction WebStudio.Core.RuleFunctions.Utils.Process.WS_RF_LoadAndParseFlowNodes {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		WebStudio.Core.Concepts.Process.WS_C_Process process;
+		Object processEMFWrapper;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.Process.WS_RF_LoadAndParseFlowNodes");
+		
+		String PROP_ID = "id";
+		String PROP_TYPE = "type";
+		String PROP_SERVICE = "service";
+		String PROP_PORT = "port";
+		String PROP_OPERATION = "operation";
+		String PROP_SOAPACTION = "soapAction";
+		String PROP_TIMEOUT = "timeout";
+		String PROP_ENDPOINTURL = "endPointUrl";
+		String PROP_BINDINGTYPE = "bindingType";
+		String PROP_JNDICONTEXTURL = "jndiContextURL";
+		String PROP_REPLYTO = "replyTo";
+		String PROP_CONSUME = "consume";
+		String PROP_TRANSFORMATION = "transformation";
+		String PROP_SEQUENCEIDS = "sequenceIds";
+		String PROP_JOINRULEFUNCTION = "joinRuleFunction";
+		String PROP_FORKRULEFUNCTION = "forkRuleFunction";
+		String PROP_MERGEEXPRESSION = "mergeExpression";
+		String PROP_DEFAULT_SEQUENCEID = "defaultSequenceId";
+		
+		Log.log(LOGGER, "Debug", "Started Loading and parsing Flows Nodes");
+		
+		// fetch flow nodes
+		WS_C_FlowNodes ws_c_flowNodes = Instance.newInstance("/WebStudio/Core/Concepts/Process/FlowElements/WS_C_FlowNodes", null);
+		Instance.PropertyAtom.setContainedConcept(process.flowNodes, ws_c_flowNodes, 1L);
+		
+		Object[] flowNodes = WS.Process.FlowNode.getAllFlowNodes(processEMFWrapper);
+		for (int i = 0; i< flowNodes@length; i++) {
+			WS_C_TaskElement flowElement = WS_RF_FlowNodeCreationFactory(flowNodes[i]);
+	
+			WS_RF_PopulateBaseElementDetails(flowElement, process, flowNodes[i]);
+			
+			// handle Specific cases for various Element types
+			if (flowElement instanceof WS_C_ReceiveMessageElement) {		
+				String keyExpression = WS.Process.FlowNode.getKeyExpression(flowNodes[i]);
+				
+				WS_C_ReceiveMessageElement receiveMessageElement = flowElement;
+				Instance.PropertyAtom.setString(receiveMessageElement.keyExpression, keyExpression, 1L);
+				
+			} else if (flowElement instanceof WS_C_ServiceElement) {
+				Object serviceDetails = WS.Process.FlowNode.getServiceDetails(flowNodes[i]);
+				if (Collections.Map.size(serviceDetails) > 0) {
+					WS_C_ServiceElement serviceElement = flowElement;
+					
+					String service = Collections.Map.get(serviceDetails, PROP_SERVICE);
+					Instance.PropertyAtom.setString(serviceElement.service, service, 1L);
+					
+					String port = Collections.Map.get(serviceDetails, PROP_PORT);
+					Instance.PropertyAtom.setString(serviceElement.port, port, 1L);
+					
+					String operation = Collections.Map.get(serviceDetails, PROP_OPERATION);
+					Instance.PropertyAtom.setString(serviceElement.operation, operation, 1L);
+					
+					long timeout = Collections.Map.get(serviceDetails, PROP_TIMEOUT);
+					Instance.PropertyAtom.setLong(serviceElement.opTimeout, timeout, 1L);
+					
+					String soapAction = Collections.Map.get(serviceDetails, PROP_SOAPACTION);
+					Instance.PropertyAtom.setString(serviceElement.soapAction, soapAction, 1L);
+					
+					String bindingType = Collections.Map.get(serviceDetails, PROP_BINDINGTYPE);
+					Instance.PropertyAtom.setString(serviceElement.bindingType, bindingType, 1L);
+					
+					if (Collections.Map.containsKey(serviceDetails, PROP_ENDPOINTURL)) {
+						String endPointUrl = Collections.Map.get(serviceDetails, PROP_ENDPOINTURL);
+						Instance.PropertyAtom.setString(serviceElement.transport, endPointUrl, 1L);
+					} else {
+						String jndiContextUrl = Collections.Map.get(serviceDetails, PROP_JNDICONTEXTURL);
+						Instance.PropertyAtom.setString(serviceElement.transport, jndiContextUrl, 1L);
+					}
+				}
+				
+			} else if (flowElement instanceof WS_C_BusinessRuleElement) {
+				String[] implURIs = WS.Process.FlowNode.getImplementationURIList(flowNodes[i]);
+				
+				WS_C_BusinessRuleElement businessRuleElement = flowElement;
+
+				if (implURIs@length > 0) {					
+					WS_C_ImplementationURI implementationURI = null;
+					WS_C_URIDetails uriDetails = Instance.newInstance("/WebStudio/Core/Concepts/Process/Common/WS_C_URIDetails", null);
+					Instance.PropertyAtom.setContainedConcept(businessRuleElement.uriList, uriDetails, 1L);
+					
+					for (int j = 0; j < implURIs@length; j++) {
+						implementationURI = Instance.newInstance("/WebStudio/Core/Concepts/Process/Common/WS_C_ImplementationURI", null);
+						
+						String impl = implURIs[j];
+						if (String.indexOfString(impl, 0, ":") != -1) {
+							String[] items = String.split(impl, ":");
+							
+							String uri = items[0];
+							Instance.PropertyAtom.setString(implementationURI.uri, uri, 1L);
+							
+							String isDeployed = items[1];
+							Instance.PropertyAtom.setString(implementationURI.isDeployed, isDeployed, 1L);
+						}
+						
+						Instance.PropertyArray.appendContainedConcept(uriDetails.implementationURI, implementationURI, 1L);
+					}
+				}
+				
+			} else if (flowElement instanceof WS_C_StartElement) {
+				WS_C_StartElement startElement = flowElement;
+				int priorityValue = WS.Process.FlowNode.getPriority(flowNodes[i]);
+				Instance.PropertyAtom.setInt(startElement.priorityValue, priorityValue, 1L);
+				
+				String  outputMapXSLT = WS.Process.FlowNode.getFlowNodeOutputMapper(flowNodes[i]);
+				if (outputMapXSLT != null && !String.equals(outputMapXSLT, "")) {
+					WS_C_IOMapping outputMap = Instance.newInstance("/WebStudio/Core/Concepts/Process/Common/WS_C_IOMapping", null);
+					outputMap.mapping = outputMapXSLT;
+					Instance.PropertyAtom.setConceptReference(startElement.outputMap, outputMap, 1L);
+				}
+				
+				Object eventDefinitionDetails = WS.Process.FlowNode.getEventDefinitionDetails(flowNodes[i]);
+				if (Collections.Map.size(eventDefinitionDetails) > 0) {
+					WS_C_EventDefinition eventDefinition = Instance.newInstance("/WebStudio/Core/Concepts/Process/Common/WS_C_EventDefinition", null);
+					Instance.PropertyAtom.setContainedConcept(startElement.eventDefinition, eventDefinition, 1L);
+					
+					String eventDefId = Collections.Map.get(eventDefinitionDetails, PROP_ID);
+					Instance.PropertyAtom.setString(eventDefinition.definitionId, eventDefId, 1L);
+					
+					String eventDefType = Collections.Map.get(eventDefinitionDetails, PROP_TYPE);
+					Instance.PropertyAtom.setString(eventDefinition.definitionType, eventDefType, 1L);
+				}
+				
+			} else if (flowElement instanceof WS_C_EndElement) {
+				WS_C_EndElement endElement = flowElement;
+				int priorityValue = WS.Process.FlowNode.getPriority(flowNodes[i]);
+				Instance.PropertyAtom.setInt(endElement.priorityValue, priorityValue, 1L);
+				
+				String  inputMapXSLT = WS.Process.FlowNode.getFlowNodeInputMapper(flowNodes[i]);
+				if (inputMapXSLT != null && !String.equals(inputMapXSLT, "")) {
+					WS_C_IOMapping inputMap = Instance.newInstance("/WebStudio/Core/Concepts/Process/Common/WS_C_IOMapping", null);
+					inputMap.mapping = inputMapXSLT;
+					Instance.PropertyAtom.setConceptReference(endElement.inputMap, inputMap, 1L);
+				}
+				
+				Object[] messageStarterList = WS.Process.FlowNode.getMessageStarterList(flowNodes[i]);
+				if (messageStarterList@length > 0) {
+					WS_C_MessageStarterDetails msgStarterDetails = Instance.newInstance("/WebStudio/Core/Concepts/Process/Common/WS_C_MessageStarterDetails", null);
+					Instance.PropertyAtom.setContainedConcept(endElement.messageStarterList, msgStarterDetails, 1L);
+					
+					WS_C_MessageStarter messageStarter = null;
+					for (int j = 0; j < messageStarterList@length; j++) {
+						Object messageStarterDetails = WS.Process.FlowNode.getMessageStarterDetails(messageStarterList[j]);
+						
+						if (Collections.Map.size(messageStarterDetails) > 0) {
+							messageStarter = Instance.newInstance("/WebStudio/Core/Concepts/Process/Common/WS_C_MessageStarter", null);
+							
+							String id = Collections.Map.get(messageStarterDetails, PROP_ID);
+							Instance.PropertyAtom.setString(messageStarter.msgStarterId, id, 1L);
+							
+							boolean replyTo = Collections.Map.get(messageStarterDetails, PROP_REPLYTO);
+							Instance.PropertyAtom.setBoolean(messageStarter.replyTo, replyTo, 1L);
+							
+							boolean consume = Collections.Map.get(messageStarterDetails, PROP_CONSUME);
+							Instance.PropertyAtom.setBoolean(messageStarter.consume, consume, 1L);
+							
+							Instance.PropertyArray.appendContainedConcept(msgStarterDetails.messageStarter, messageStarter, 1L);
+						}
+					}
+				}
+				
+				Object eventDefinitionDetails = WS.Process.FlowNode.getEventDefinitionDetails(flowNodes[i]);
+				if (Collections.Map.size(eventDefinitionDetails) > 0) {
+					WS_C_EventDefinition eventDefinition = Instance.newInstance("/WebStudio/Core/Concepts/Process/Common/WS_C_EventDefinition", null);
+					Instance.PropertyAtom.setContainedConcept(endElement.eventDefinition, eventDefinition, 1L);
+					
+					String eventDefId = Collections.Map.get(eventDefinitionDetails, PROP_ID);
+					Instance.PropertyAtom.setString(eventDefinition.definitionId, eventDefId, 1L);
+					
+					String eventDefType = Collections.Map.get(eventDefinitionDetails, PROP_TYPE);
+					Instance.PropertyAtom.setString(eventDefinition.definitionType, eventDefType, 1L);
+				}
+				
+			} else if (flowElement instanceof WS_C_GatewayElement) {
+				WS_C_GatewayElement gatewayElement = flowElement;
+				
+				String direction = WS.Process.FlowNode.getGatewayDirection(flowNodes[i]);
+				Instance.PropertyAtom.setString(gatewayElement.direction, direction, 1L);
+				
+				if (String.equals(gatewayElement.elementType, "ExclusiveGateway")) {
+					Object exclusiveGatewayDetails = WS.Process.FlowNode.getExclusiveGatewayDetails(flowNodes[i]);
+					if (Collections.Map.size(exclusiveGatewayDetails) > 0) {
+						String defaultSequenceId = Collections.Map.get(exclusiveGatewayDetails, PROP_DEFAULT_SEQUENCEID);
+						if (defaultSequenceId != "") {
+							Instance.PropertyAtom.setString(gatewayElement.defaultSequenceId, defaultSequenceId, 1L);
+						}
+						
+						String transformation = Collections.Map.get(exclusiveGatewayDetails, PROP_TRANSFORMATION);
+						if (transformation != "") {
+							Instance.PropertyAtom.setString(gatewayElement.transformation, transformation, 1L);
+						}
+						
+						String sequenceId = Collections.Map.get(exclusiveGatewayDetails, PROP_SEQUENCEIDS);
+						if (sequenceId != "") {
+							Instance.PropertyAtom.setString(gatewayElement.sequenceId, sequenceId, 1L);
+						}
+					}
+					
+				} else if (String.equals(gatewayElement.elementType, "ParallelGateway")) {
+					Object parallelGatewayDetails = WS.Process.FlowNode.getParallelGatewayDetails(flowNodes[i]);
+					if (Collections.Map.size(parallelGatewayDetails) > 0) {
+						String joinRuleFunction = Collections.Map.get(parallelGatewayDetails, PROP_JOINRULEFUNCTION);
+						if (joinRuleFunction != "") {
+							Instance.PropertyAtom.setString(gatewayElement.joinRuleFunction, joinRuleFunction, 1L);
+						}
+						
+						String forkRuleFunction = Collections.Map.get(parallelGatewayDetails, PROP_FORKRULEFUNCTION);
+						if (forkRuleFunction != "") {
+							Instance.PropertyAtom.setString(gatewayElement.forkRuleFunction, forkRuleFunction, 1L);
+						}
+						
+						String mergeExpression = Collections.Map.get(parallelGatewayDetails, PROP_MERGEEXPRESSION);
+						if (mergeExpression != "") {
+							Instance.PropertyAtom.setString(gatewayElement.mergeExpression, mergeExpression, 1L);
+						}
+					}
+				}
+			}
+		
+			Instance.PropertyArray.appendContainedConcept(ws_c_flowNodes.flowNodeElement, flowElement, 1L);
+		}
+	}
+}

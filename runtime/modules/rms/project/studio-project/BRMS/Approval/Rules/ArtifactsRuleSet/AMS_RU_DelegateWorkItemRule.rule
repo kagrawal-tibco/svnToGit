@@ -1,0 +1,52 @@
+/**
+ * @description Delegate workitem to different role.
+ * @author aathalye-t410
+ */
+rule Approval.Rules.ArtifactsRuleSet.AMS_RU_DelegateWorkItemRule {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Approval.Events.ArtifactEvents.Worklist.Delegation.AMS_E_WorkitemDelegationRequestEvent workitemDelegationRequestevent;
+	}
+	when {
+		workitemDelegationRequestevent.delegationRoles != null && workitemDelegationRequestevent.revisionId != null;
+	}
+	then {
+		Object LOGGER = Log.getLogger("Approval.Rules.ArtifactsRuleSet.AMS_RU_DelegateWorkItemRule");
+		String loggedInUserName = workitemDelegationRequestevent.loggedInUserName;
+		//Split roles using ; as delimiter
+		String[] delegationRoles = String.split(workitemDelegationRequestevent.delegationRoles, ";");
+		String taskId = workitemDelegationRequestevent.revisionId;
+		
+		//Get logged in user's roles
+		AMS_C_LoggedInUser loggedInUser = Instance.getByExtIdByUri(loggedInUserName, "/AAA/Concepts/AMS_C_LoggedInUser");
+		String[] loggedinUserRoles = Instance.PropertyArray.toArrayString(loggedInUser.roles);
+		
+		for (int loop = 0; loop < loggedinUserRoles@length; loop++) {
+			//Lock and load
+			Log.log(LOGGER, "Debug", "Acquiring lock on %s", loggedinUserRoles[loop]);
+			if (Cluster.DataGrid.Lock(loggedinUserRoles[loop], -1, false)) {
+				//No need to load in WM as there are no rules to fire on this.
+				AMS_C_Role loggedInUserRole = Instance.getByExtIdByUri(loggedinUserRoles[loop], "/AAA/Concepts/AMS_C_Role");
+				//If this task id exists for this role, remove it
+				Instance.PropertyArray.removeString(loggedInUserRole.reviewTasksExtIds, taskId);
+			}
+		}
+		//Add it to the delegated roles
+		for (int loop = 0; loop < delegationRoles@length; loop++) {
+			Log.log(LOGGER, "Debug", "Delegation request of taskId %s  to role %s", taskId, delegationRoles[loop]);
+			//Lock and load
+			if (Cluster.DataGrid.Lock(delegationRoles[loop], -1, false)) {
+				AMS_C_Role delegatedRole = Instance.getByExtIdByUri(delegationRoles[loop], "/AAA/Concepts/AMS_C_Role");
+				//If this task id exists for this role, remove it to avoid duplication.
+				Instance.PropertyArray.removeString(delegatedRole.reviewTasksExtIds, taskId);
+				Instance.PropertyArray.appendString(delegatedRole.reviewTasksExtIds, taskId, 1L);
+			}
+		}
+		AMS_E_WorkitemDelegationResponseEvent responseEvent = Event.createEvent("xslt://{{/Approval/Events/ArtifactEvents/Worklist/Delegation/AMS_E_WorkitemDelegationResponseEvent}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"1.0\" exclude-result-prefixes=\"xsl xsd\">\n    <xsl:output method=\"xml\"/>\n    <xsl:param name=\"loggedInUserName\"/>\n    <xsl:param name=\"workitemDelegationRequestevent\"/>\n    <xsl:template match=\"/\">\n        <createEvent>\n            <event>\n                <loggedInUserName>\n                    <xsl:value-of select=\"$loggedInUserName\"/>\n                </loggedInUserName>\n                <xsl:if test=\"$workitemDelegationRequestevent/delegationRoles\">\n                    <delegationRoles>\n                        <xsl:value-of select=\"$workitemDelegationRequestevent/delegationRoles\"/>\n                    </delegationRoles>\n                </xsl:if>\n                <xsl:if test=\"$workitemDelegationRequestevent/revisionId\">\n                    <taskId>\n                        <xsl:value-of select=\"$workitemDelegationRequestevent/revisionId\"/>\n                    </taskId>\n                </xsl:if>\n            </event>\n        </createEvent>\n    </xsl:template>\n</xsl:stylesheet>");
+		Event.replyEvent(workitemDelegationRequestevent, responseEvent);
+		Event.consumeEvent(workitemDelegationRequestevent);
+	}
+}

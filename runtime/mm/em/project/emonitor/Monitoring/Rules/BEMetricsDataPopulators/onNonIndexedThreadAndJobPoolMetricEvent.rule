@@ -1,0 +1,83 @@
+/**
+ * @description 
+ * @author 
+ */
+rule Monitoring.Rules.BEMetricsDataPopulators.onNonIndexedThreadAndJobPoolMetricEvent {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Monitoring.Events.bemetrics.ThreadAndJobPoolMetricEvent	metricevent;
+		
+	}
+	when {
+		metricevent.hostName != null && String.length(String.trim(metricevent.hostName)) != 0 && metricevent.metricName != null && String.length(String.trim(metricevent.metricName)) != 0 && metricevent.index == -1;
+	}
+	then {
+		Shared.RuleFunctions.log("onNonIndexedThreadAndJobPoolMetricEvent","DEBUG","Received ThreadAndJobPoolMetricEvent[id="+metricevent@id+",hostName="+metricevent.hostName+",metricName="+metricevent.metricName+",idx="+metricevent.index+",size="+metricevent.batchSize+",batchStart="+metricevent.isBatchStart+",batchEnd="+metricevent.isBatchEnd+"]");
+		Shared.Concepts.MonitorableEntity[] entities = searchMonitorableEntities(metricevent.hostName);
+		if (entities == null){
+		    Shared.RuleFunctions.log("onNonIndexedThreadAndJobPoolMetricEvent","DEBUG","No entities found matching "+metricevent.hostName);
+		    Event.consumeEvent(metricevent);
+		    return;
+		}
+		int idx = String.lastIndexOfString(metricevent.metricName,0,":");
+		String seriesName = getShortName(String.substring(metricevent.metricName,idx+1,String.length(metricevent.metricName)));
+		Shared.RuleFunctions.log("onNonIndexedThreadAndJobPoolMetricEvent","DEBUG","Going to use "+seriesName+"...");
+		for (int i = 0 ; i < entities@length ; i = i + 1) {
+		    String monitorableFQName = getFQName(entities[i]);
+		    String viewExtId = monitorableFQName+":tpool";
+		    Shared.Concepts.AbstractMonitorView view = Instance.getByExtId(viewExtId);
+		    if (view != null) {
+		        Shared.RuleFunctions.log("onNonIndexedThreadAndJobPoolMetricEvent","DEBUG","Going to use View[extId="+view@extId+",type="+view.type+"]...");
+		        String seriesDataExtId = view@extId+":"+seriesName;
+		        Shared.Concepts.SeriesData seriesData = Instance.getByExtId(seriesDataExtId);
+		        if (seriesData == null){
+		            seriesData = Instance.newInstance("/Shared/Concepts/SeriesData",seriesDataExtId);
+		             //maintain last 10 mins
+		            seriesData.name = seriesName;
+		            String componentConfigMapId = getComponentConfigMapId(entities[i],view.type);
+		            seriesData.threshold = Util.HashMap.getObject(componentConfigMapId,"threshold");
+		            view.seriesdata[view.seriesdata@length] = seriesData;
+		            Shared.RuleFunctions.log("onNonIndexedThreadAndJobPoolMetricEvent","DEBUG","Created SeriesData[extId"+seriesDataExtId+",name"+seriesName+"] under View[extId="+view@extId+",type="+view.type+"]...");
+		        }
+		        else {
+		            Shared.RuleFunctions.log("onNonIndexedThreadAndJobPoolMetricEvent","DEBUG","Updating SeriesData[extId"+seriesDataExtId+",name"+seriesName+"] under View[extId="+view@extId+",type="+view.type+"]...");
+		        }
+		        seriesData.categories[seriesData.categories@length] = String.valueOfLong(metricevent.timeMillis);
+		        seriesData.values[seriesData.values@length] = String.valueOfInt(metricevent.activeThreads);
+		        seriesData.rawValues[seriesData.rawValues@length] = String.valueOfInt(metricevent.activeThreads);
+		    }
+		    else {
+		        Shared.RuleFunctions.log("onNonIndexedThreadAndJobPoolMetricEvent","DEBUG","Found no view matching "+viewExtId+"...");
+		    }
+		    viewExtId = monitorableFQName+":jqueue";
+		    view = Instance.getByExtId(viewExtId);
+		    if (view != null) {
+		        Shared.RuleFunctions.log("onNonIndexedThreadAndJobPoolMetricEvent","DEBUG","Going to use View[extId="+view@extId+",type="+view.type+"]...");
+		        String seriesDataExtId = view@extId+":"+seriesName;
+		        Shared.Concepts.SeriesData seriesData = Instance.getByExtId(seriesDataExtId);
+		        if (seriesData == null){
+		            seriesData = Instance.newInstance("/Shared/Concepts/SeriesData",seriesDataExtId);
+		             //maintain last 10 mins
+		            seriesData.name = seriesName;
+		            String componentConfigMapId = getComponentConfigMapId(entities[i],view.type);
+		            seriesData.threshold = Util.HashMap.getObject(componentConfigMapId,"threshold");
+		            view.seriesdata[view.seriesdata@length] = seriesData;
+		            Shared.RuleFunctions.log("onNonIndexedThreadAndJobPoolMetricEvent","DEBUG","Created SeriesData[extId"+seriesDataExtId+",name"+seriesName+"] under View[extId="+view@extId+",type="+view.type+"]..."); 
+		       }
+		        else {
+		            Shared.RuleFunctions.log("onNonIndexedThreadAndJobPoolMetricEvent","DEBUG","Updating SeriesData[extId"+seriesDataExtId+",name"+seriesName+"] under View[extId="+view@extId+",type="+view.type+"]...");
+		        }
+		        seriesData.categories[seriesData.categories@length] = String.valueOfLong(metricevent.timeMillis);
+		        seriesData.values[seriesData.values@length] = String.valueOfInt(metricevent.queueSize);
+		        seriesData.rawValues[seriesData.rawValues@length] = String.valueOfInt(metricevent.queueSize);
+		    }
+		    else {
+		        Shared.RuleFunctions.log("onNonIndexedThreadAndJobPoolMetricEvent","DEBUG","Found no view matching "+viewExtId+"...");
+		    }
+		}
+		Event.consumeEvent(metricevent);
+	}
+}

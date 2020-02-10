@@ -1,0 +1,38 @@
+/**
+ * @description Fired when lock request status is changed.
+ * @author aathalye-lt
+ */
+rule Approval.Rules.ArtifactsRuleSet.AMS_RU_LockStatusChangeRule {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Approval.Events.ArtifactEvents.Lock.AMS_E_ArtifactLockStatusChangeRequestEvent ams_e_artifactlockstatuschangerequestevent;
+	}
+	when {
+		ams_e_artifactlockstatuschangerequestevent.lockRequestId != null &&
+		ams_e_artifactlockstatuschangerequestevent.status != null;
+	}
+	then {
+		String lockRequestId = ams_e_artifactlockstatuschangerequestevent.lockRequestId;
+		String newStatus = ams_e_artifactlockstatuschangerequestevent.status;
+		
+		//Get Task matching this lockRequestId
+		Approval.Concepts.ArtifactsConcepts.ArtifactLockConcepts.AMS_C_LockArtifactReviewTask lockArtifactReviewTask = 
+			Instance.getByExtIdByUri(lockRequestId, "/Approval/Concepts/ArtifactsConcepts/ArtifactLockConcepts/AMS_C_LockArtifactReviewTask");
+		
+		if (lockArtifactReviewTask != null) {
+			//Get the referenced concept
+			Approval.Concepts.ArtifactsConcepts.ArtifactLockConcepts.AMS_C_LockArtifactRequest lockArtifactRequest = Instance.getByExtIdByUri(lockArtifactReviewTask.referencedLockRequestId, "/Approval/Concepts/ArtifactsConcepts/ArtifactLockConcepts/AMS_C_LockArtifactRequest");
+			
+			if (lockArtifactRequest != null) {
+				//Change its status
+				//This should trigger the SM Transition rule.
+				lockArtifactRequest.approvalStatus = newStatus;
+			}
+		} else {
+			//TODO Error out?
+		}	
+	}
+}

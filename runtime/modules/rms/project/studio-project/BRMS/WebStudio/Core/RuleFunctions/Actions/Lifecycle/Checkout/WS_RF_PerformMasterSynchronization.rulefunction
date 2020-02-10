@@ -1,0 +1,19 @@
+/**
+ * @description Perform synchronization with master during checkout.
+ */
+void rulefunction WebStudio.Core.RuleFunctions.Actions.Lifecycle.Checkout.WS_RF_PerformMasterSynchronization {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		WebStudio.Core.Concepts.Lifecycle.WS_C_MasterArtifact masterArtifact;
+		//The checked out user artifact.
+		WebStudio.Core.Concepts.WS_C_UserArtifact userArtifact;
+	}
+	body {
+		WS_C_UserArtifactRevision currentMasterRevision = Instance.PropertyAtom.getConceptReference(masterArtifact.currentMasterRevision, 1L);
+		if (currentMasterRevision != null) {
+			WS_RF_SetCheckpointRevisionConceptReference(userArtifact, currentMasterRevision);
+		}
+	}
+}

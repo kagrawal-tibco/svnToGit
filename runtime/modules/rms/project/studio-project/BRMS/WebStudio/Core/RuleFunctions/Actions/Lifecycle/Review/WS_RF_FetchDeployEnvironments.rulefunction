@@ -1,0 +1,38 @@
+/**
+ * @description 
+ */
+String rulefunction WebStudio.Core.RuleFunctions.Actions.Lifecycle.Review.WS_RF_FetchDeployEnvironments {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String projectName;
+		String subscriptionId;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.Lifecycle.Review.WS_RF_FetchDeployEnvironments");
+		
+		String deployEnvironments = null;
+		
+		String deployConfigContainerExtId = WS_RF_CreateUserArtifactExtId("DEPLOYMENT_CONFIG_CONTAINER", null, null, null, subscriptionId, null);
+		WS_C_DeploymentConfigContainer wsDeployConfigContainer = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(deployConfigContainerExtId, true, "/WebStudio/Core/Concepts/Lifecycle/WS_C_DeploymentConfigContainer");
+		if (wsDeployConfigContainer != null) {
+			WS_C_DeploymentConfig[] deployConfigs = Instance.PropertyArray.toArrayContainedConcept(wsDeployConfigContainer.deploymentConfigs);
+		    
+		    if (deployConfigs != null) {
+		    		Log.log(LOGGER, "Debug", "Total Deploy Config found - %s", deployConfigs@length);
+		    		for (int i=0; i<deployConfigs@length; i++) {
+		    			if (String.equals(deployConfigs[i].projectName, projectName)) {
+		    				if (deployEnvironments == null) deployEnvironments = deployConfigs[i].name + ",";
+		    				else deployEnvironments += (deployConfigs[i].name + ",");
+		    			}
+		    		}
+		    		deployEnvironments = String.substring(deployEnvironments, 0 , String.length(deployEnvironments) - 1);
+		    }
+		} else {
+			Log.log(LOGGER, "Warn", "Deployment Config Container with extId [%s] not found", deployConfigContainerExtId);
+		}
+		
+		return deployEnvironments;
+	}
+}

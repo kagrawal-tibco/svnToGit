@@ -1,0 +1,90 @@
+/**
+ * @description Diff with previous approved copy.
+ */
+WebStudio.Core.Concepts.DataSources.Records.WS_C_ArtifactVersionDiffContentDataSourceRecord rulefunction WebStudio.Core.RuleFunctions.Actions.Lifecycle.History.WS_RF_GetPreviousApprovedDiff {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String artifactPath;
+		String artifactExtn;
+		String projectName;
+		String username;
+		String revisionIdParam;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.Lifecycle.Review.WS_RF_GetPreviousApprovedDiff");
+		
+		WS_C_UserArtifactRevision currentArtifactRevision = null;
+		
+		String subscriptionId = WS_RF_GetSubscriptionId(username);
+		
+		WS_C_UserArtifact parentArtifact = WS_RF_IsUserArtifact(WS_RF_CreateUserArtifactExtId(null, artifactPath, projectName, username, null, null), artifactExtn);
+		currentArtifactRevision = WS_RF_GetLastApprovedArtifactVersion(Number.intValue(revisionIdParam, 10), artifactPath, projectName, false, subscriptionId);
+		Log.log(LOGGER, "Info", "Current Revision found id[%s] & extId[%s]", currentArtifactRevision@id, currentArtifactRevision@extId);
+		WS_C_UserArtifactRevision previousArtifactRevision = null;
+		
+		String masterArtifactExtId = WS_RF_CreateUserArtifactExtId(null, artifactPath, projectName, null, subscriptionId, null);
+		WS_C_MasterArtifact masterArtifact = Instance.getByExtIdByUri(masterArtifactExtId, "/WebStudio/Core/Concepts/Lifecycle/WS_C_MasterArtifact");
+		if (masterArtifact != null) {
+			Log.log(LOGGER, "Info", "MasterArtifactExtId - [%s] & MasterArtifact - [%s]", masterArtifactExtId, masterArtifact);
+			previousArtifactRevision = Instance.PropertyAtom.getConceptReference(masterArtifact.currentMasterRevision, 1L);
+			
+			// make sure the master version is older than the current version
+			// iterate and find the version older than the current version
+			if (previousArtifactRevision != null && currentArtifactRevision != null) {
+				if (currentArtifactRevision.version <= previousArtifactRevision.version) {
+					previousArtifactRevision = WS_RF_GetLastApprovedArtifactVersion(Number.intValue(revisionIdParam, 10) - 1, artifactPath, projectName, false, subscriptionId);
+				}
+			}
+			
+			// Indicates no previous approval still done for this artifact
+			// get the first version of this artifact
+			if (previousArtifactRevision == null) {
+				Log.log(LOGGER, "Debug", "Master copy still not approved, looking for first revision");
+				if (parentArtifact == null || parentArtifact.artifactRevisionIds@length == 0) { // Get previousVersion for checkin user.
+					WS_C_AbstractReviewTask reviewTask = Instance.getByExtIdByUri(revisionIdParam, "/WebStudio/Core/Concepts/Lifecycle/WS_C_ReviewTask");
+					WS_C_UserCheckin userCheckin = Instance.getByExtIdByUri(reviewTask.referencedCheckinId, "/WebStudio/Core/Concepts/Lifecycle/WS_C_UserCheckin");
+					String checkinUserName = userCheckin.username;
+					parentArtifact = WS_RF_IsUserArtifact(WS_RF_CreateUserArtifactExtId(null, artifactPath, projectName, checkinUserName, null, null), artifactExtn);
+				}
+				if (parentArtifact != null && parentArtifact.artifactRevisionIds@length > 0) {
+					previousArtifactRevision = Instance.getByExtIdByUri(parentArtifact.artifactRevisionIds[0], "/WebStudio/Core/Concepts/WS_C_UserArtifactRevision");
+				}
+			}
+		}
+		else {
+			if (parentArtifact != null && parentArtifact.artifactRevisionIds@length > 0) {
+				previousArtifactRevision = Instance.getByExtIdByUri(parentArtifact.artifactRevisionIds[0], "/WebStudio/Core/Concepts/WS_C_UserArtifactRevision");
+			}
+		}
+		
+		if (currentArtifactRevision != null && previousArtifactRevision != null && currentArtifactRevision.artifactContentsId != previousArtifactRevision.artifactContentsId) {
+			Log.log(LOGGER, "Info", "Previous Revision found id[%s] & extId[%s]", previousArtifactRevision@id, previousArtifactRevision@extId);
+			
+			WS_C_AnyArtifactDetails currentArtifactContentsConcept = WS_RF_GetArtifactContentInstance(currentArtifactRevision.artifactContentsId, currentArtifactRevision.parentArtifactType);
+			WS_C_AnyArtifactDetails previousArtifactContentsConcept = WS_RF_GetArtifactContentInstance(previousArtifactRevision.artifactContentsId, previousArtifactRevision.parentArtifactType);
+			
+			WS_C_ArtifactVersionDiffContentDataSourceRecord artifactVersionDiffContentDSR = Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/Records/WS_C_ArtifactVersionDiffContentDataSourceRecord");
+			artifactVersionDiffContentDSR.artifactPath = artifactPath;
+			artifactVersionDiffContentDSR.artifactType = artifactExtn;
+			
+			if (String.equals(artifactExtn, "ruletemplate") || String.equals(artifactExtn, "ruletemplateinstance")) {
+				Log.log(LOGGER, "Info", "Artifact Type Rule Template Instance, Extn[%s]", artifactExtn); 
+
+				artifactVersionDiffContentDSR.currentVersionContents = currentArtifactContentsConcept;
+				artifactVersionDiffContentDSR.previousVersionContents = previousArtifactContentsConcept;
+				
+			} else if (String.equals(artifactExtn, "rulefunction") || String.equals(artifactExtn, "rulefunctionimpl")) {
+				currentArtifactContentsConcept = WebStudio.Core.RuleFunctions.Utils.DT.WS_RF_GetDecisionTableContentsForDiff(projectName, artifactPath, currentArtifactContentsConcept);
+				previousArtifactContentsConcept = WebStudio.Core.RuleFunctions.Utils.DT.WS_RF_GetDecisionTableContentsForDiff(projectName, artifactPath, previousArtifactContentsConcept);
+
+				artifactVersionDiffContentDSR.currentVersionContents = currentArtifactContentsConcept;
+				artifactVersionDiffContentDSR.previousVersionContents = previousArtifactContentsConcept;
+			}
+									
+			return artifactVersionDiffContentDSR;
+		}
+		return null;
+	}
+}

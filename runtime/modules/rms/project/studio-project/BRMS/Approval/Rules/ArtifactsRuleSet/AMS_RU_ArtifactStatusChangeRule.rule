@@ -1,0 +1,76 @@
+/**
+ * @description Handle changes to status made from client
+ * @author aathalye-lt
+ */
+rule Approval.Rules.ArtifactsRuleSet.AMS_RU_ArtifactStatusChangeRule {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Approval.Events.ArtifactEvents.StatusChange.AMS_E_ArtifactStatusChangeRequestEvent ams_e_artifactstatuschangerequestevent;
+	}
+	when {
+		ams_e_artifactstatuschangerequestevent.loggedInUserName != null
+		&& ams_e_artifactstatuschangerequestevent@payload != null;
+	}
+	then {
+		Object LOGGER = Log.getLogger("Approval.Rules.ArtifactsRuleSet.AMS_RU_ArtifactStatusChangeRule");
+		//Chunk payload
+		String[] artifactsNodes = 
+			XPath.executeXPathWithEvent("$var//ns1:artifact", 
+			                            ams_e_artifactstatuschangerequestevent, 
+			                            "ns1=www.tibco.com/be/rms/ArtifactStatusChangePayload");
+
+		for (int loop = 0, length = artifactsNodes@length; loop < length; loop++) {
+			String node = artifactsNodes[loop];
+			
+			//Get extId.i.e : <ns1:AMS_C_Artifact extId="...">
+			String artifactConceptExtId = 
+				XPath.execute("$var//ns0:AMS_C_Artifact/attribute::extId", 
+				               node,
+				               "ns0=www.tibco.com/be/ontology/Approval/Concepts/ArtifactsConcepts/AMS_C_ArtifactCommited");
+			
+			//Get extId.i.e : <ns1:AMS_C_Artifact extId="...">
+			String artifactConceptChangedStatus = 
+				XPath.execute("$var//ns0:AMS_C_Artifact/status/text()", 
+				               node,
+				               "ns0=www.tibco.com/be/ontology/Approval/Concepts/ArtifactsConcepts/AMS_C_ArtifactCommited");	               
+				
+			String historyNode = 
+				XPath.execute("$var//ns0:AMS_C_ReviewerHistory", 
+				              node,
+				              "ns0=www.tibco.com/be/ontology/Approval/Concepts/ArtifactsConcepts/AMS_C_ReviewerHistory");				              
+			
+			//Get the matching concept
+			//This needs to be asserted for recovery
+			AMS_C_ReviewerHistory reviewerHistory = 
+				Instance.createInstanceFromXML("/Approval/Concepts/ArtifactsConcepts/AMS_C_ReviewerHistory", historyNode);
+			
+			//Lock and load concept with this extid
+			if (Cluster.DataGrid.Lock(artifactConceptExtId, -1, false)) {
+				//Load into WM so that SM rule will be triggered.
+				AMS_C_ArtifactCommited artifactCommitted = Cluster.DataGrid.CacheLoadConceptByExtId(artifactConceptExtId, true);
+				//This should not be null;
+				//Change the status
+				if (artifactCommitted != null) {
+					Log.log(LOGGER, "Debug", "Before Changing Status %s", artifactCommitted.status);
+					artifactCommitted.status = artifactConceptChangedStatus;
+					//This will only be one at a time
+					if (reviewerHistory != null) {	
+						Instance.PropertyArray.appendConceptReference(artifactCommitted.reviewerHistory, 
+						                                              reviewerHistory,
+						                                              1L);
+					}
+					Log.log(LOGGER, "Debug", "Changed Status %s", artifactCommitted.status);
+				}	
+			}	
+		}
+		AMS_E_ArtifactStatusChangeResponseEvent responseEvent = 
+			Approval.Events.ArtifactEvents.StatusChange.AMS_E_ArtifactStatusChangeResponseEvent.AMS_E_ArtifactStatusChangeResponseEvent(null, null);
+		
+		Event.replyEvent(ams_e_artifactstatuschangerequestevent, responseEvent);
+		//Consume this event
+		Event.consumeEvent(ams_e_artifactstatuschangerequestevent);
+	}
+}

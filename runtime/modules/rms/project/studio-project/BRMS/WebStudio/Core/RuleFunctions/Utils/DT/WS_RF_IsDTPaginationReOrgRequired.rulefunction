@@ -1,0 +1,68 @@
+/**
+ * @description 
+ */
+boolean rulefunction WebStudio.Core.RuleFunctions.Utils.DT.WS_RF_IsDTPaginationReOrgRequired {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String username;
+		WebStudio.Core.Concepts.Decision.Pagination.WS_C_DecisionTable decisionTableArtifact;
+		boolean singlePageView;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.DT.WS_RF_IsDTPaginationReOrgRequired");
+		
+		WebStudio.Core.Concepts.Decision.Pagination.WS_C_TableRuleSet tableRuleSet = Instance.PropertyAtom.getContainedConcept(decisionTableArtifact.decisionTable, 1L);
+		WS_C_TablePage[] currentTablePages = Instance.PropertyArray.toArrayContainedConcept(tableRuleSet.tablePage);
+		long totalTableRules = 0;
+		for (int currPageIndx = 0; currPageIndx < currentTablePages@length; currPageIndx++) {
+			WS_C_TablePage currentTablePage = currentTablePages[currPageIndx];
+			WebStudio.Core.Concepts.Decision.Pagination.WS_C_TableRule[] currentTablePageRules = Instance.PropertyArray.toArrayContainedConcept(currentTablePage.tableRule);
+			totalTableRules = totalTableRules + currentTablePageRules@length;
+
+			WebStudio.Core.Concepts.Decision.Pagination.WS_C_TableRule[] currentTablePageNewRules = Instance.PropertyArray.toArrayConcept(currentTablePage.newTableRule);
+			totalTableRules = totalTableRules + currentTablePageNewRules@length;
+		}
+		
+		int pageSize = 0; 
+		if (singlePageView) {
+			pageSize = totalTableRules;
+		} else {	
+			pageSize = WS_RF_GetDecisionTablePageSize(username, "DECISION_TABLE", totalTableRules);
+		}			
+
+		boolean isReOrgRequired = false;
+		for (int currPageIndx = 0; currPageIndx < currentTablePages@length; currPageIndx++) {
+			//For each Page
+			WS_C_TablePage currentTablePage = currentTablePages[currPageIndx];
+			//Get the Table Rules on the page
+			WebStudio.Core.Concepts.Decision.Pagination.WS_C_TableRule[] currentTablePageRules = Instance.PropertyArray.toArrayContainedConcept(currentTablePage.tableRule);
+			if (currPageIndx != (currentTablePages@length - 1)) {
+				int tablePageRulesCount = currentTablePageRules@length;
+				if (tablePageRulesCount != pageSize) {				
+					isReOrgRequired = true;
+					Log.log(LOGGER, "Debug", "Decision Table ReOrg required for Page - %s", currentTablePage.pageNumber);
+					break;
+				}
+			} else { //Perform this check for the Last page
+				int tablePageRulesCount = currentTablePageRules@length;
+				if (tablePageRulesCount > pageSize) {				
+					isReOrgRequired = true;
+					Log.log(LOGGER, "Debug", "Decision Table ReOrg required for Last Page - %s", currentTablePage.pageNumber);
+					break;
+				}				
+			}	
+						
+			WebStudio.Core.Concepts.Decision.Pagination.WS_C_TableRule[] currentTablePageNewRules = Instance.PropertyArray.toArrayConcept(currentTablePage.newTableRule);
+			int tablePageNewRulesCount = currentTablePageNewRules@length;
+			if (tablePageNewRulesCount > 0) {				
+				isReOrgRequired = true;
+				Log.log(LOGGER, "Debug", "Decision Table ReOrg required for Page (New Table Rules) - %s", currentTablePage.pageNumber);
+				break;
+			}			
+		}
+		
+		return isReOrgRequired;		
+	}
+}

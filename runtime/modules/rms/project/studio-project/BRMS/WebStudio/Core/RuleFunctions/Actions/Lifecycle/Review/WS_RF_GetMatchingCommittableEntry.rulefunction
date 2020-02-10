@@ -1,0 +1,29 @@
+/**
+ * @description Get matching committable delta entry for a status change request item.
+ */
+WebStudio.Core.Concepts.Lifecycle.WS_C_CommittableDeltaEntry rulefunction WebStudio.Core.RuleFunctions.Actions.Lifecycle.Review.WS_RF_GetMatchingCommittableEntry {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		WebStudio.Core.Concepts.Request.Usecases.Lifecycle.Review.WS_C_StatusChangeRequestDataItem requestDataItem;
+		WebStudio.Core.Concepts.Lifecycle.WS_C_CommittableDeltaEntry[] searchableCommittables;
+	}
+	body {
+		String requestedArtifactPath = requestDataItem.artifactPath;
+		for (int loop = 0; loop < searchableCommittables@length; loop++) {
+			WS_C_CommittableDeltaEntry committableDeltaEntry = searchableCommittables[loop];
+			//Get referenced revision
+			WS_C_UserArtifactRevision referencedRevision = Instance.PropertyAtom.getConceptReference(committableDeltaEntry.userArtifactRevision, 1L);
+			//Get parent artifact
+			WS_C_UserArtifact parentUserArtifact = WS_RF_IsUserArtifact(referencedRevision.parentArtifactId, referencedRevision.parentArtifactType);
+			String parentArtifactPath = parentUserArtifact.artifactPath;
+			//For now this comparsion is enough
+			//TODO need to check project as well since same resource can exist in 2 places.
+			if (String.equals(requestedArtifactPath, parentArtifactPath)) {
+				return committableDeltaEntry;
+			}
+		} 
+		return null;
+	}
+}

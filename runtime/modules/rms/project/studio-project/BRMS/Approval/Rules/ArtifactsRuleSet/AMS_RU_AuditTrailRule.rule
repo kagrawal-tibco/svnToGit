@@ -1,0 +1,36 @@
+/**
+ * @description Send Audit trail for a checkin
+ * @author aathalye-lt
+ */
+rule Approval.Rules.ArtifactsRuleSet.AMS_RU_AuditTrailRule {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Approval.Events.ArtifactEvents.AuditTrail.AMS_E_AuditTrailRequestEvent ams_e_auditTrailRequestevent;
+	}
+	when {
+		ams_e_auditTrailRequestevent.patternId != null
+		&& ams_e_auditTrailRequestevent.artifactPath != null;
+	}
+	then {
+		//Create extid
+		String patternId = ams_e_auditTrailRequestevent.patternId;
+		String artifactPath = ams_e_auditTrailRequestevent.artifactPath;
+		
+		String extId = patternId + "@" + artifactPath;
+		//Check for concept with this extId
+		AMS_C_ArtifactCommited artifactCommitted = Instance.getByExtIdByUri(extId, "/Approval/Concepts/ArtifactsConcepts/AMS_C_ArtifactCommited");
+		
+		if (artifactCommitted != null) {
+			//Get its reviewer history
+			AMS_C_ReviewerHistory[] allreviewerHistory = Instance.PropertyArray.toArrayConcept(artifactCommitted.reviewerHistory);
+			
+			AMS_E_AuditTrailResponseEvent responseEvent = 
+				Event.createEvent("xslt://{{/Approval/Events/ArtifactEvents/AuditTrail/AMS_E_AuditTrailResponseEvent}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" xmlns:ns=\"www.tibco.com/be/rms/AuditTrail\" version=\"2.0\" exclude-result-prefixes=\"xsl ns xsd\"><xsl:output method=\"xml\"/><xsl:param name=\"allreviewerHistory\"/><xsl:template name=\"Function\" match=\"/\"><createEvent><event><payload><ns:AuditTrailHistory><xsl:for-each select=\"$allreviewerHistory/elements\"><ns:ReviewerHistory><xsl:if test=\"@extId\"><xsl:attribute name=\"extId\"><xsl:value-of select=\"@extId\"/></xsl:attribute></xsl:if><xsl:attribute name=\"Id\"><xsl:value-of select=\"string(@Id)\"/></xsl:attribute><xsl:if test=\"username\"><username><xsl:value-of select=\"username\"/></username></xsl:if><xsl:if test=\"reviewerComments\"><reviewerComments><xsl:value-of select=\"reviewerComments\"/></reviewerComments></xsl:if><xsl:if test=\"newStatus\"><newStatus><xsl:value-of select=\"newStatus\"/></newStatus></xsl:if><xsl:if test=\"oldStatus\"><oldStatus><xsl:value-of select=\"oldStatus\"/></oldStatus></xsl:if><xsl:if test=\"reviewerRole\"><reviewerRole><xsl:value-of select=\"reviewerRole\"/></reviewerRole></xsl:if></ns:ReviewerHistory></xsl:for-each></ns:AuditTrailHistory></payload></event></createEvent></xsl:template></xsl:stylesheet>");
+			
+			Event.replyEvent(ams_e_auditTrailRequestevent, responseEvent);		
+		}	
+	}
+}

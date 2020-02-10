@@ -1,0 +1,135 @@
+/**
+ * @description Generate Class file for an approved artifact
+ * @author aathalye-lt
+ */
+rule Approval.Rules.ArtifactsRuleSet.ArtifactsStateMachineRuleSets.AMS_RU_GenerateClassRule {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Approval.Concepts.ArtifactsConcepts.AMS_C_ArtifactCommited ams_c_artifactcommited;
+		Approval.Events.ArtifactEvents.StateMachine.AMS_E_GenerateClassEvent ams_e_generateclassevent;
+	}
+	when {
+		ams_c_artifactcommited.projectName == ams_e_generateclassevent.projectName &&
+		ams_c_artifactcommited.artifactPath == ams_e_generateclassevent.artifactPath;
+	}
+	then {
+		Object LOGGER = Log.getLogger("Approval.Rules.ArtifactsRuleSet.ArtifactsStateMachineRuleSets.AMS_RU_GenerateClassRule");
+		Log.log(LOGGER, "Debug", "In Generate Class Rule");
+		
+		//Check if the ear is in sync
+		String projectName = ams_c_artifactcommited.projectName;
+		AMS_C_DeployableState deployableState = Instance.getByExtIdByUri("Deploy" + "@" + projectName, "/Approval/Concepts/ArtifactsConcepts/AMS_C_DeployableState");
+		
+		if (deployableState == null) {
+			Log.log(LOGGER, "Debug", "deployableState is null");
+			deployableState = Instance.createInstance("xslt://{{/Approval/Concepts/ArtifactsConcepts/AMS_C_DeployableState}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"1.0\" exclude-result-prefixes=\"xsl xsd\">\n    <xsl:output method=\"xml\"/>\n    <xsl:param name=\"projectName\"/>\n    <xsl:template match=\"/\">\n        <createObject>\n            <object>\n                <xsl:attribute name=\"extId\">\n                    <xsl:value-of select=\"concat(&quot;Deploy&quot;, concat(&quot;@&quot;, $projectName))\"/>\n                </xsl:attribute>\n            </object>\n        </createObject>\n    </xsl:template>\n</xsl:stylesheet>");
+			deployableState.dirty = false;
+		} else {
+			//If it is dirty, the ear would need to be generated
+			if (deployableState.dirty) {
+				ams_c_artifactcommited.status = "APPROVE";
+				Exception ex = 
+					Exception.newException("Ear for project not in sync", "Regenerate ear for the project", null);
+				throw ex;
+			} else {
+				String artifactPath = ams_c_artifactcommited.artifactPath;
+				
+				Log.log(LOGGER, "Info", "Generating class for artifact %s", artifactPath);
+				
+				String pathSeparator = "/";
+				String baseProjectDir = System.getSystemPropertyAsString("rms.projects.baselocation", null);
+				//Check if this project name matches one in RMS
+				
+				Object projectDataBuffer = String.createBuffer(0);
+				projectDataBuffer = String.append(projectDataBuffer, baseProjectDir);
+				projectDataBuffer = String.append(projectDataBuffer, pathSeparator);
+				projectDataBuffer = String.append(projectDataBuffer, projectName);
+				projectDataBuffer = String.append(projectDataBuffer, pathSeparator);
+					
+							
+				String projectPath = String.convertBufferToString(projectDataBuffer);
+				
+				//Clear the buffer
+				String.clearBuffer(projectDataBuffer);
+					
+				boolean projectExists = File.fileExists(projectPath);
+				
+				if (projectExists) {
+					Object reusableBuffer = String.createBuffer(0);
+					String customLibsPath = System.getSystemPropertyAsString("ws.projects.customLib.location", null);	
+					reusableBuffer = String.append(reusableBuffer, customLibsPath);
+					reusableBuffer = String.append(reusableBuffer, pathSeparator);
+					reusableBuffer = String.append(reusableBuffer, projectName);
+					
+					String libPath = String.convertBufferToString(reusableBuffer);
+					//Clear the buffer
+					String.clearBuffer(reusableBuffer);
+					
+					Log.log(LOGGER, "Debug", "Libray path in lib dir %s", libPath);
+					
+					String extendedClasspath = 
+						Approval.Rules.RuleFunctions.ArtifactRuleFunctions.AMS_RF_CreateClasspath(libPath);
+					
+					//Only used in dev setup
+					if (extendedClasspath == null || String.length(extendedClasspath) == 0) {
+						//Look for property with any external classpath
+						extendedClasspath = System.getSystemPropertyAsString("build.extended.classpath", null);
+					}	
+					Log.log(LOGGER, "Debug", "Extended Classpath - %s ", extendedClasspath);
+					
+					reusableBuffer = String.append(reusableBuffer, baseProjectDir);
+					reusableBuffer = String.append(reusableBuffer, pathSeparator);
+					reusableBuffer = String.append(reusableBuffer, projectName);
+					reusableBuffer = String.append(reusableBuffer, pathSeparator);
+					reusableBuffer = String.append(reusableBuffer, System.getSystemPropertyAsString("rms.project.deployment", "deployment"));
+					
+					String classesOutputDirectory = String.convertBufferToString(reusableBuffer);
+					
+					//Clear the buffer
+					String.clearBuffer(reusableBuffer);
+					
+					reusableBuffer = String.append(reusableBuffer, baseProjectDir);
+					reusableBuffer = String.append(reusableBuffer, pathSeparator);
+					reusableBuffer = String.append(reusableBuffer, projectName);
+					reusableBuffer = String.append(reusableBuffer, pathSeparator);
+					reusableBuffer = String.append(reusableBuffer, "bin");
+					reusableBuffer = String.append(reusableBuffer, pathSeparator);
+					reusableBuffer = String.append(reusableBuffer, projectName);
+					reusableBuffer = String.append(reusableBuffer, ".ear");
+					
+					String earPath = String.convertBufferToString(reusableBuffer);
+					//Clear the buffer
+					String.clearBuffer(reusableBuffer);
+					
+					// if to use legacy compilation
+					boolean useLegacyCompilation = System.getSystemPropertyAsBoolean("be.codegen.useLegacyCompilation", false);
+									
+					try {
+						String artifactExtension = ams_c_artifactcommited.artifactFileExtension;
+						//Generate class
+						RMS.CodeGeneration.generateClass(projectPath, earPath, classesOutputDirectory, artifactPath + ".rulefunctionimpl", extendedClasspath, useLegacyCompilation);
+						AMS_C_ApplicableStages applicableStages = Instance.getByExtIdByUri(ams_c_artifactcommited.applicableStagesConceptId, "/Approval/Concepts/ArtifactsConcepts/AMS_C_ApplicableStages");
+						//Clear all references because after build there is nothing to do
+						Instance.PropertyArray.clear(applicableStages.stages);
+						
+					} catch (Exception e) {
+						//Change status to Error
+						ams_c_artifactcommited.status = "ERROR";
+						System.debugOut(e@stackTrace);
+						System.debugOut("Class generation failed..Reverting status to Approve");
+//						throw Exception.newException("ERROR", "Class generation failed", e);
+						Approval.Events.ArtifactEvents.AMS_E_ErrorEvent	errorEvent = 
+							Approval.CommonServices.AMS_RF_CreateErrorEvent("GENERATE_CLASS_FAILURE", "Could not generate class for project " + projectName, null);
+						Event.replyEvent(ams_e_generateclassevent, errorEvent);
+					}
+				}
+			}
+		}
+		//Also consume the event to avoid re-execution of the rule.
+		Event.consumeEvent(ams_e_generateclassevent);	
+	}
+}
+				

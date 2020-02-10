@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!--
+ !
+ ! $HeadURL: http://svn.tibco.com/svn/be/branches/3.0/build/build.xml $ $LastChangedRevision: 16816 $ $LastChangedDate: 2009-02-05 14:13:54 -0800 (Thu, 05 Feb 2009) $
+ !
+ ! Copyright 2004-2013 TIBCO Software Inc. All rights reserved.
+ !
+ ! BusinessEvents ant build script
+ !
+ !-->
+
+<project name="test" default="test-svn" basedir=".">
+
+     <taskdef resource="net/sf/antcontrib/antcontrib.properties" />
+     <taskdef resource="org/tigris/subversion/svnant/svnantlib.xml" 
+	      classpath="svnant.jar"/>
+
+    <property file="../version.properties" /> 
+
+    <target name="test-svn">
+
+	<svn>
+		<update dir="../../" />
+		<status path="../../" lastChangedRevisionProperty="r.revision" propStatusProperty="r.status" />
+	</svn>
+
+        <if>
+            <equals arg1="${r.status}" arg2="conflicted" />
+            <then>
+		<fail message="svn update failed...."/>
+            </then>
+            <else>
+                 <echo message="svn update completed with revision=${r.revision}....." />
+                 <replaceregexp file="../version.properties" match="env.BE_REVISION=(.*)"
+                      replace="env.BE_REVISION=${r.revision}" byline="true" />
+            </else>
+        </if>
+
+     </target>
+
+</project>

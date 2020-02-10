@@ -1,0 +1,163 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>     Load balanced EMS Destination
+
+- TIBCO BusinessEvents&reg; Examples
+</title>
+<meta http-equiv="Content-type" content="text/html; charset=iso-8859-1" />
+<meta http-equiv="Content-Language" content="en-us" />
+<link rel="Shortcut Icon" href="../../_resources/icon.gif" type="image/gif" />
+<style type="text/css" media="all">@import "../../_resources/examples.css";</style>
+</head>
+<body onLoad="buildForms()">
+
+
+<h1>Load balanced EMS Destination  </h1>
+
+
+<h2>Purpose of This Example</h2>
+
+<p>This example shows how the LoadBalancer feature can be used by inference and query agents to route events from an EMS queue to a cluster of agents in such a way that only one subscribing agent will receive all the events with the same routing key. This concept of sending events with the same routing key to a single subscriber when there are many is commonly called "sticky sessions" or "consistent hash based routing".</p>
+
+<h2>About the project</h2>
+
+<p>The project has 2 agent classes - a receiver inference class and a router inference class. The routers and receivers both have the same EMS destination configured.</p>
+
+<p>The router agent does not contain any business logic and its EMS destination receives events from the EMS server. The router processes messages from the EMS queue and re-sends it to a receiver based on the routing key specified in the LoadBalancer Router-Receiver Pair configuration in the CDD.</p>
+
+<p>The receiver agent does not connect directly to the EMS server even though it has the EMS destination enabled.The destination is merely a proxy on which messages from the router arrive at the receiver. Communication between the receiver and the router happens through an internal TCP connection.</p>
+
+<p>The example also has a small Java program <code>SimpleDemo/JavaSender</code> which is used to send test messages to the routers via the EMS server.</p>
+
+<h3>Running the project</h3>
+
+<ol>
+
+<li><p>Make sure that the EMS server is running on this address <code>tcp://localhost:7222</code>.</p>
+</li>
+
+<li><p>Open a command window. Start a receiver agent instance.</p>
+<pre class="commands">
+cd <i>BE_HOME</i>\bin
+be-engine.exe -c <i>BE_HOME</i>\examples\standard\LoadBalancer\SimpleDemo\SimpleDemo\Deployments\simpledemo.cdd -u receiver <i>BE_HOME</i>\examples\standard\LoadBalancer\simpledemo.ear
+</pre>
+</li>
+
+<li><p>Open another command window and start a second receiver agent instance.</p>
+<pre class="commands">
+cd <i>BE_HOME</i>\bin
+be-engine.exe -c <i>BE_HOME</i>\examples\standard\LoadBalancer\SimpleDemo\SimpleDemo\Deployments\simpledemo.cdd -u receiver <i>BE_HOME</i>\examples\standard\LoadBalancer\simpledemo.ear
+</pre>
+</li>
+
+<li><p>Open another command window and start a router agent instance.</p>
+<pre class="commands">
+cd <i>BE_HOME</i>\bin
+be-engine.exe -c <i>BE_HOME</i>\examples\standard\LoadBalancer\SimpleDemo\SimpleDemo\Deployments\simpledemo.cdd -u router <i>BE_HOME</i>\examples\standard\LoadBalancer\simpledemo.ear
+</pre>
+</li>
+
+<li>
+	<p>Open a command window to run the Java sender. This requires EMS and JMS Java libraries to be in the CLASSPATH. Set the CLASSPATH to match the location of the directory in which EMS is installed.</p>
+	<p>The command makes the Java sender to send 10 <code>/Events/TestEventA</code> events to the EMS server. The <code>name</code> property repeats and cycles back every 10 messages if the <code>-repeat</code> parameter is increased beyond 10. The <code>name</code> property of the event is the routing key. The command can be executed multiple times to repeat the test.</p>
+<pre class="commands">
+cd <i>BE_HOME</i>\examples\standard\LoadBalancer\SimpleDemo\JavaSender\bin
+java -cp <i>EMS_HOME</i>\lib\jms.jar;<i>EMS_HOME</i>\lib\tibjms.jar;. Sender -server tcp://localhost:7222 -queue queue.loadbalance.test -repeat 10
+</pre>
+</li>
+
+</ol>
+
+<h3>Output</h3>
+
+<p>Once the engines are up and running the loadbalanced results will appear as follows when the sender is executed.</p>
+
+<p>Note: The distribution of the events to the receivers will change each time the cluster is restarted and also when a receiver leaves or joins the cluster.</p>
+
+<h4>Sample output from the the first of two receivers</h4>
+<pre class="commands">
+...
+[$default.be.mt$.Thread.10] - [user] [inference-receiver-class] In OnTestEventA rule. Received Events.TestEventA:
+       Id                         10002
+       ExtId                      /hello/1.1344016577716.6389450986815542
+       Name                       Hello-1
+       JMSMessageID               ID:EMS-SERVER.226C5009D2A52E:1
+       JMSRedelivered             false
+       JMSTimestamp               1344016577716
+       __content_id__             ID:EMS-SERVER.226C5009D2A52E:1
+       __version_id__             1344016577758
+       __likely_dup_delivery__    true
+       __ack_expected__           true
+[$default.be.mt$.Thread.6] - [user] [inference-receiver-class] In OnTestEventA rule. Received Events.TestEventA:
+       Id                         10003
+       ExtId                      /hello/2.1344016577968.6389451238069647
+       Name                       Hello-2
+       JMSMessageID               ID:EMS-SERVER.226C5009D2A52E:2
+       JMSRedelivered             false
+       JMSTimestamp               1344016577968
+       __content_id__             ID:EMS-SERVER.226C5009D2A52E:2
+       __version_id__             1344016577969
+       __likely_dup_delivery__    true
+       __ack_expected__           true
+[$default.be.mt$.Thread.2] - [user] [inference-receiver-class] In OnTestEventA rule. Received Events.TestEventA:
+       Id                         10004
+       ExtId                      /hello/3.1344016577969.6389451239874900
+       Name                       Hello-3
+       JMSMessageID               ID:EMS-SERVER.226C5009D2A52E:3
+       JMSRedelivered             false
+       JMSTimestamp               1344016577970
+       __content_id__             ID:EMS-SERVER.226C5009D2A52E:3
+       __version_id__             1344016577970
+       __likely_dup_delivery__    true
+       __ack_expected__           true
+[$default.be.mt$.Thread.5] - [user] [inference-receiver-class] In OnTestEventA rule. Received Events.TestEventA:
+       Id                         10005
+       ExtId                      /hello/5.1344016577972.6389451242535814
+       Name                       Hello-5
+       JMSMessageID               ID:EMS-SERVER.226C5009D2A52E:5
+       JMSRedelivered             false
+       JMSTimestamp               1344016577972
+       __content_id__             ID:EMS-SERVER.226C5009D2A52E:5
+       __version_id__             1344016577973
+       __likely_dup_delivery__    true
+       __ack_expected__           true
+...
+</pre>
+
+<h4>Sample output from the the second receiver</h4>
+<pre class="commands">
+...
+[$default.be.mt$.Thread.9] - [user] [inference-receiver-class] In OnTestEventA rule. Received Events.TestEventA:
+       Id                         2
+       ExtId                      /hello/4.1344016577971.6389451241094486
+       Name                       Hello-4
+       JMSMessageID               ID:EMS-SERVER.226C5009D2A52E:4
+       JMSRedelivered             false
+       JMSTimestamp               1344016577971
+       __content_id__             ID:EMS-SERVER.226C5009D2A52E:4
+       __version_id__             1344016577971
+       __likely_dup_delivery__    true
+       __ack_expected__           true
+[$default.be.mt$.Thread.10] - [user] [inference-receiver-class] In OnTestEventA rule. Received Events.TestEventA:
+       Id                         3
+       ExtId                      /hello/6.1344016577974.6389451244519180
+       Name                       Hello-6
+       JMSMessageID               ID:EMS-SERVER.226C5009D2A52E:6
+       JMSRedelivered             false
+       JMSTimestamp               1344016577974
+       __content_id__             ID:EMS-SERVER.226C5009D2A52E:6
+       __version_id__             1344016577975
+       __likely_dup_delivery__    true
+       __ack_expected__           true
+...
+</pre>
+
+<div class="footer">
+<p>TIBCO BusinessEvents&reg; 5.6<br />
+Copyright&copy; 2004-2019 TIBCO Software Inc. All rights reserved.</p>
+</div>
+</body>
+</html>

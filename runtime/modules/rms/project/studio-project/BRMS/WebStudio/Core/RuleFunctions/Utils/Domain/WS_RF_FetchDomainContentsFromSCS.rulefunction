@@ -1,0 +1,46 @@
+/**
+ * @description 
+ */
+WebStudio.Core.Concepts.Domain.WS_C_Domain rulefunction WebStudio.Core.RuleFunctions.Utils.Domain.WS_RF_FetchDomainContentsFromSCS {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String scsRootURL;
+		String userName;
+		String projectName;
+		String artifactPath;
+		String artifactExtn;
+		boolean checkProjectLib;	
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.Domain.WS_RF_FetchDomainContentsFromSCS");
+		
+		Log.log(LOGGER, "Info", "Contents need to be loaded for Domain %s from SCS", artifactPath);
+		
+		boolean checkInProjectLibs = checkProjectLib;
+		
+		String artifactContents = null;
+		if (!checkInProjectLibs) {
+			try {
+				artifactContents = WS_RF_FetchContentFromSCS(scsRootURL, projectName, artifactPath, artifactExtn, userName);
+			} catch (Exception exception) {
+				Log.log(LOGGER, "Debug", "Contents for artifact[%s] not found in base location, now checking in project libraries.", artifactPath);
+				checkInProjectLibs = true;
+			}
+		}
+		
+		if (checkInProjectLibs) {
+			artifactContents = WS_RF_GetEntityContentsFromProjectLibrary(scsRootURL, userName, projectName, artifactPath, artifactExtn);
+		}
+		Log.log(LOGGER, "Debug", "Contents of artifact loaded from SCS %s", artifactContents);
+
+		Object domainEMFObject = WS.Domain.createDomainModelEMFObject(artifactContents);
+		Log.log(LOGGER, "Debug", "Domain EMF Object Created");
+
+		WebStudio.Core.Concepts.Domain.WS_C_Domain domainArtifact = WebStudio.Core.RuleFunctions.Utils.Domain.WS_RF_CreateDomainArtifactConcept(domainEMFObject);
+		Log.log(LOGGER, "Debug", "Domain artifact Concept Created, id - %s", domainArtifact@id);
+
+		return domainArtifact;		
+	}
+}

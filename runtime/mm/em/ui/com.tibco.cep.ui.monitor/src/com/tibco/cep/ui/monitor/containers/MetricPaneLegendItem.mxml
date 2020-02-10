@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:LegendItem xmlns:mx="http://www.adobe.com/2006/mxml" toolTip="{this._toolTip}">
+	<mx:Script>
+		<![CDATA[
+			import com.tibco.cep.ui.monitor.panes.MetricPane;
+			import mx.charts.chartClasses.Series;
+			import mx.charts.chartClasses.ChartBase;
+			import mx.core.UIComponent;
+			
+			public static var PIX_PER_CHAR:int = 8;
+			
+			[Bindable]
+			private var _toolTip:String;
+			private var _clipLength:int = int.MAX_VALUE;
+			
+			//series.
+			//parent^1 = UIComponent
+			//parent^2 = UIComponent
+			//parent^3 = AreaChart (or other instance of ChartBase)
+			//parent^4 = {TimeBasedAreaChart, MultiAxesChart, TimeBasedLineChart, etc}
+			//parent^5 = PanelPage
+			
+			public function set tipLength(length:int):void{ _clipLength = length; }
+			
+			public override function set legendData(value:Object):void{
+			    if(value == null) return;
+			    var txtLength:int = value.label.toString().length;
+			    var chart:ChartBase = parentN(source as Series, 3) as ChartBase;
+			    var pane:MetricPane = parentN(source as Series, 4) as MetricPane;
+			    if(chart == null || pane == null){
+			    	trace("MetricPaneLegend.legendData - Cannot determine number of LegendItems");
+			    }
+			    else{
+			    	var labels:Array = new Array();
+			    	for each(var series:Series in chart.series){
+			    		labels.push(series.displayName);
+			    	}
+			    	
+			    	/*TODO
+			    	if(labels.length > slots){
+			    		//too many legend objects, clip and show extended legend as tool-tip
+			    	}
+			    	//*/
+			    	
+			    	//the number of available character slots depends on width of the legend and the
+			    	//number of legend items that will be displayed (marker takes up legend space).
+			    	var slots:int = pane.width/PIX_PER_CHAR - (labels.length*4);
+			    	_clipLength = findClipLength(slots, labels);
+			    }
+			    if(txtLength > _clipLength){
+			        label = value.label.toString().substr(0, _clipLength-3) + "...";
+			        _toolTip = value.label;
+			    }
+			    else{
+			    	_toolTip = null;
+			        label = value.label;
+			    }
+			    setStyle("markerWidth",5);
+			}
+			
+			private function findClipLength(slotsAvaillable:int, labels:Array):int{
+				var clipLength:int = 0;
+				var spotsTaken:int = 0;
+				//be sure to keep clipLength < slotsAvailable condition else risk infinite loop
+				while(spotsTaken < slotsAvaillable && clipLength < slotsAvaillable){
+					for each(var label:String in labels){
+						if(label.length > clipLength) spotsTaken++;
+					}
+					clipLength++;
+				}
+				return clipLength;
+			}
+			
+			private function parentN(root:DisplayObjectContainer, n:int):DisplayObjectContainer{
+				var returnVal:DisplayObjectContainer = root;
+				for(var i:int = 0; i < n && returnVal != null; i++){
+					returnVal = returnVal.parent;
+				}
+				return returnVal;
+			}
+		]]>
+	</mx:Script>
+</mx:LegendItem>

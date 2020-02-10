@@ -1,0 +1,5 @@
+delete from CUSTOMER_ORDER.ORDER_ITEMS;
+delete from CUSTOMER_ORDER.ITEMS;
+delete from CUSTOMER_ORDER.ORDERS;
+delete from CUSTOMER_ORDER.CUSTOMERS;
+commit;

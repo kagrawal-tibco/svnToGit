@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Application
+	xmlns:mx="http://www.adobe.com/2006/mxml" 
+	implements="IBEVLocalConnectionClient"
+	width="100%"
+	height="100%"
+	layout="vertical"
+	paddingLeft="10"
+	paddingRight="10"
+	horizontalAlign="left"
+	creationComplete="init()"
+	remove="destroy(event)"
+>
+	<mx:Script>
+		<![CDATA[
+			import mx.events.ListEvent;
+			import mx.events.ItemClickEvent;
+			import mx.controls.Alert;
+			import mx.events.CollectionEvent;
+			import mx.collections.ArrayCollection;
+			import mx.collections.XMLListCollection;
+		
+			[Bindable]
+			private var _eventList:XMLListCollection;
+			
+			[Bindable]
+			private var _eventTypeList:ArrayCollection;
+			
+			[Bindable]
+			private var _eventLogSource:String;
+
+			private function init():void{
+				var urlParser:URLParser = new URLParser(ExternalInterface.call("window.location.href.toString"));
+				urlParser.parse();
+				var connectionName:String = urlParser.getQueryParam("localConnectionName") as String;
+//				var connectionName:String = Application.application.parameters.localConnectionName as String;
+//				var connectionName:String = "fordebuging";
+				
+				if(connectionName == null){
+					Alert.show("Invalid LocalConnection name.", "ERROR");
+					return;
+				}
+				BEVLocalConnectionManager.instance.connectionName = connectionName;
+				BEVLocalConnectionManager.instance.registerClient(this);
+				_eventLogSource = null;	
+			}
+			
+			private function destroy(event:Event):void{
+				BEVLocalConnectionManager.instance.unregisterClient(this);
+			}
+			
+			public function receiveMessage(message:String):void{
+//				txt_Message.text += "\n===============================================\n" + message;
+//				txt_Message.validateNow();
+//				if(ckb_AutoScroll.selected){ txt_Message.verticalScrollPosition = txt_Message.maxVerticalScrollPosition; }
+			}
+			
+			public function receiveEventData(eventData:XML):void{
+				if(!ckb_CaptureEvents.selected){ return; }
+				if(_eventList == null){
+					_eventList = new XMLListCollection(new XMLList(eventData));
+				}
+				else{
+					_eventList.addItem(eventData);
+					while(_eventList.length > 100){
+						_eventList.removeItemAt(0);
+					}
+				}
+				if(_eventTypeList == null){
+					_eventTypeList = new ArrayCollection();
+					_eventTypeList.addItem("ALL");
+				}
+				if(!_eventTypeList.contains(String(eventData.@name))){
+					_eventTypeList.addItem(new String(eventData.@name));
+				}
+				_eventList.refresh();
+				appendToSourceView(eventData);
+				dg_EventTable.validateNow();
+				if(ckb_AutoScroll.selected){ 
+					dg_EventTable.verticalScrollPosition = dg_EventTable.maxVerticalScrollPosition;
+					if (txt_LogSource != null) {
+						txt_LogSource.verticalScrollPosition = txt_LogSource.maxVerticalScrollPosition;
+					} 
+				}
+			}
+			
+			private function filterEventTypes():void{
+				var typeFilter:String = cbox_NameFilter.selectedItem as String;
+				if(typeFilter == null){ return; }
+				if(typeFilter == "ALL"){
+					_eventList.filterFunction = null;
+					_eventList.refresh();
+					_eventLogSource = _eventList.toXMLString();
+				}
+				else{
+					_eventLogSource = null;
+					_eventList.filterFunction = filterItemType;
+					_eventList.refresh();
+					for each(var eventData:XML in _eventList){
+						appendToSourceView(eventData);
+					}
+				}
+			}
+			
+			private function filterItemType(item:XML):Boolean{
+				return item.@name == String(cbox_NameFilter.selectedItem);
+			}
+			
+			private function clearEventList():void{
+				if(_eventList != null){
+					var existingFilterFunction:Function = _eventList.filterFunction;
+					_eventList.filterFunction = null;  
+					_eventList.removeAll();
+					_eventList.filterFunction = existingFilterFunction;
+					_eventList.refresh(); 
+				}
+				_eventLogSource = null;
+				txt_EventDetails.text = "";
+			}
+			
+			private function handleTableItemClick(event:ListEvent):void{
+				txt_EventDetails.text = new String((_eventList.getItemAt(event.rowIndex) as XML).details);
+			}
+			
+			private function handleTableItemSelectionChanged(event:ListEvent):void{
+				var data:XML = (event.itemRenderer.data as XML);
+				txt_EventDetails.text = new String(data.details);
+			}
+			
+			private function appendToSourceView(eventData:XML):void {
+				if (_eventList.filterFunction != null) {
+					if (filterItemType(eventData) == false) {
+						return;
+					}
+				}
+				if (_eventLogSource == null) {
+					_eventLogSource = eventData.toXMLString();
+				}
+				else {
+					_eventLogSource = _eventLogSource + "\n" + eventData.toXMLString();
+				}
+			}
+			
+		]]>
+	</mx:Script>
+	<mx:VBox width="100%" height="55" verticalGap="0">
+		<mx:Label width="100%" text="BE Views Event Bus Log" id="lbl_Title" fontSize="20" fontWeight="bold" textAlign="center"/>
+		<mx:HBox width="100%" borderStyle="solid" verticalAlign="middle">
+			<mx:CheckBox id="ckb_CaptureEvents" selected="true" label="Capture Events" />
+			<mx:Spacer width="25" />
+			<mx:CheckBox id="ckb_AutoScroll" selected="true" label="Enable Auto-Scroll" />
+			<mx:Spacer width="25" />
+			<mx:Label id="lbl_EventNameFilter" text="Event Name Filter: " />
+			<mx:ComboBox id="cbox_NameFilter" dataProvider="{_eventTypeList}" change="filterEventTypes()" />
+			<mx:Spacer width="25" />
+			<mx:Button id="btn_ClearLog" label="Clear Log" click="clearEventList()" />
+		</mx:HBox>
+	</mx:VBox>
+	
+	<mx:TabNavigator id="tn_LogViewNavigator" width="100%" height="100%">
+		<mx:VBox label="Table View">
+			<mx:DataGrid id="dg_EventTable" width="100%" height="65%" dataProvider="{_eventList}" change="handleTableItemSelectionChanged(event)"> <!--itemClick="handleTableItemClick(event)"-->
+				<mx:columns>
+					<mx:DataGridColumn dataField="@name" headerText="Name" wordWrap="true" />
+					<mx:DataGridColumn dataField="type" headerText="Type" wordWrap="true" />
+					<mx:DataGridColumn dataField="intendedRecepient" headerText="Intended Recepient" wordWrap="true" />
+					<mx:DataGridColumn dataField="broadcast" headerText="Broadcast" wordWrap="true" />
+				</mx:columns>
+			</mx:DataGrid>
+			<mx:TextArea id="txt_EventDetails" width="100%" height="35%"></mx:TextArea>
+		</mx:VBox>
+		<mx:VBox label="Source View">
+			<mx:TextArea id="txt_LogSource" width="100%" height="100%" text="{_eventLogSource}"></mx:TextArea>
+		</mx:VBox>
+	</mx:TabNavigator>
+</mx:Application>

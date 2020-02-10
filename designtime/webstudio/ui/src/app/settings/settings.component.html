@@ -1,0 +1,81 @@
+<div  *ngIf='!showBEUI()' class="left-pad right-pad">
+  <div class="row">
+    <div class="col-sm-3">
+      <div class="card">
+        <div class="card-header">
+          <b i18n>{{i18n('User Settings')}}</b>
+        </div>
+        <div class='list-group' *ngIf='!this.userSettingsCollapse'>
+          <a
+            class='list-group-item'
+            routerLink='preferences'
+            routerLinkActive='selected'
+            >
+            <ng-container i18n>{{i18n('Personal Preferences')}}</ng-container>
+            </a>
+          <a class='list-group-item'
+            routerLink='projects'
+            routerLinkActive='selected'
+            >
+            <ng-container i18n>{{i18n('Projects Configuration')}}</ng-container>
+            </a>
+          <a class='list-group-item'
+            routerLink='accounts'
+            routerLinkActive='selected'
+            >
+            <ng-container i18n>{{i18n('Account Settings')}}</ng-container>
+            </a>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-9">
+      <router-outlet></router-outlet>
+    </div>
+  </div>
+</div>
+
+<mat-drawer-container style='height: 100%; overflow: hidden' *ngIf='this.showBEUI()'>
+  <mat-drawer #sidenav mode='side' opened>
+    <div class="card" style="min-width: 250px">
+      <h6 mat-subheader> 
+        <strong i18n>{{i18n(' User Settings ')}}</strong>
+      </h6>
+      <mat-divider></mat-divider>
+      <mat-nav-list role="navigation">
+        <mat-list-item routerLink='preferences' routerLinkActive='active'>
+          <ng-container i18n>{{i18n('Personal Preferences')}}</ng-container>
+          </mat-list-item>
+      </mat-nav-list>
+      <div class='top-pad' *ngIf='this.available || this.isTCEUI()'>
+        <mat-divider></mat-divider>
+        <h6 mat-subheader>
+          <strong i18n >{{i18n(' Application Settings ')}}</strong>
+        </h6>
+        <mat-divider></mat-divider>
+        <mat-nav-list role="navigation">
+          <mat-list-item  *ngIf='(this.isTCEUI() && this.available)' routerLink='operator-preferences' routerLinkActive='active'>
+            <ng-container i18n>{{i18n('Operator Preferences')}}</ng-container>
+            </mat-list-item>
+          <mat-list-item *ngIf="!this.isTCEUI()" routerLink='notification-preferences' routerLinkActive='active'>
+            <ng-container i18n>{{i18n('Notification Preferences')}}</ng-container>
+            </mat-list-item>
+          <mat-list-item *ngIf="!this.isTCEUI()"  routerLink='be-deployment-preferences' routerLinkActive='active'>
+            <ng-container i18n>{{i18n('Deployment Preferences')}}</ng-container>
+          </mat-list-item>
+          <mat-list-item *ngIf="this.isTCEUI()"  routerLink='download-projects' routerLinkActive='active'>
+            <ng-container>Download Projects</ng-container>
+          </mat-list-item>
+        </mat-nav-list>
+        <mat-divider></mat-divider>
+      </div>
+    </div>
+  </mat-drawer>
+  <i class="material-icons {{ isRtl() ? 'slide-rtl' : 'slide' }}" (click)="sidenav.toggle()">more_vert</i>
+  <mat-drawer-content>
+    <i class="material-icons {{ isRtl() ? 'slide-rtl' : 'slide' }}" (click)="sidenav.toggle()">more_vert</i>
+    <div class="slide-content">
+        <router-outlet></router-outlet>
+    </div>
+  </mat-drawer-content>
+</mat-drawer-container>
+

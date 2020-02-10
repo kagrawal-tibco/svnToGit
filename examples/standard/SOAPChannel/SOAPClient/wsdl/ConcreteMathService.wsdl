@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--Created by TIBCO WSDL-->
+<wsdl:definitions xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:tns="www.tibco.com/be/ontology/SOAPChannel" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:ns0="http://www.tibco.com/TNT/webservices/" name="_SOAPChannel" targetNamespace="www.tibco.com/be/ontology/SOAPChannel">
+    <wsdl:types>
+        <s:schema xmlns:http="http://schemas.xmlsoap.org/wsdl/http/" xmlns:mime="http://schemas.xmlsoap.org/wsdl/mime/" xmlns:s="http://www.w3.org/2001/XMLSchema" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:tm="http://microsoft.com/wsdl/mime/textMatching/" xmlns:tns="http://www.tibco.com/TNT/webservices/" targetNamespace="http://www.tibco.com/TNT/webservices/" elementFormDefault="unqualified" attributeFormDefault="unqualified">
+            <s:element name="Add">
+                <s:complexType>
+                    <s:sequence>
+                        <s:element name="a" type="s:float"/>
+                        <s:element name="b" type="s:float"/>
+                    </s:sequence>
+                </s:complexType>
+            </s:element>
+            <s:element name="AddResponse">
+                <s:complexType>
+                    <s:sequence>
+                        <s:element name="AddResult" type="s:float"/>
+                    </s:sequence>
+                </s:complexType>
+            </s:element>
+            <s:element name="Divide">
+                <s:complexType>
+                    <s:sequence>
+                        <s:element name="a" type="s:float"/>
+                        <s:element name="b" type="s:float"/>
+                    </s:sequence>
+                </s:complexType>
+            </s:element>
+            <s:element name="DivideResponse">
+                <s:complexType>
+                    <s:sequence>
+                        <s:element name="DivideResult" type="s:float"/>
+                    </s:sequence>
+                </s:complexType>
+            </s:element>
+            <s:element name="Multiply">
+                <s:complexType>
+                    <s:sequence>
+                        <s:element name="a" type="s:float"/>
+                        <s:element name="b" type="s:float"/>
+                    </s:sequence>
+                </s:complexType>
+            </s:element>
+            <s:element name="MultiplyResponse">
+                <s:complexType>
+                    <s:sequence>
+                        <s:element name="MultiplyResult" type="s:float"/>
+                    </s:sequence>
+                </s:complexType>
+            </s:element>
+            <s:element name="Subtract">
+                <s:complexType>
+                    <s:sequence>
+                        <s:element name="a" type="s:float"/>
+                        <s:element name="b" type="s:float"/>
+                    </s:sequence>
+                </s:complexType>
+            </s:element>
+            <s:element name="SubtractResponse">
+                <s:complexType>
+                    <s:sequence>
+                        <s:element name="SubtractResult" type="s:float"/>
+                    </s:sequence>
+                </s:complexType>
+            </s:element>
+            <s:element name="float" type="s:float"/>
+        </s:schema>
+    </wsdl:types>
+    <wsdl:message name="AddSoapIn">
+        <wsdl:part name="Add" element="ns0:Add"/>
+    </wsdl:message>
+    <wsdl:message name="AddSoapOut">
+        <wsdl:part name="AddResponse" element="ns0:AddResponse"/>
+    </wsdl:message>
+    <wsdl:message name="DivideSoapIn">
+        <wsdl:part name="Divide" element="ns0:Divide"/>
+    </wsdl:message>
+    <wsdl:message name="DivideSoapOut">
+        <wsdl:part name="DivideResponse" element="ns0:DivideResponse"/>
+    </wsdl:message>
+    <wsdl:message name="MultiplySoapIn">
+        <wsdl:part name="Multiply" element="ns0:Multiply"/>
+    </wsdl:message>
+    <wsdl:message name="MultiplySoapOut">
+        <wsdl:part name="MultiplyResponse" element="ns0:MultiplyResponse"/>
+    </wsdl:message>
+    <wsdl:message name="SubtractSoapIn">
+        <wsdl:part name="Subtract" element="ns0:Subtract"/>
+    </wsdl:message>
+    <wsdl:message name="SubtractSoapOut">
+        <wsdl:part name="SubtractResponse" element="ns0:SubtractResponse"/>
+    </wsdl:message>
+    <wsdl:portType name="SOAPChannelPortType">
+        <wsdl:operation name="Add">
+            <wsdl:input message="tns:AddSoapIn"/>
+            <wsdl:output message="tns:AddSoapOut"/>
+        </wsdl:operation>
+        <wsdl:operation name="Divide">
+            <wsdl:input message="tns:DivideSoapIn"/>
+            <wsdl:output message="tns:DivideSoapOut"/>
+        </wsdl:operation>
+        <wsdl:operation name="Multiply">
+            <wsdl:input message="tns:MultiplySoapIn"/>
+            <wsdl:output message="tns:MultiplySoapOut"/>
+        </wsdl:operation>
+        <wsdl:operation name="Subtract">
+            <wsdl:input message="tns:SubtractSoapIn"/>
+            <wsdl:output message="tns:SubtractSoapOut"/>
+        </wsdl:operation>
+    </wsdl:portType>
+    <wsdl:binding name="HTTPBinding" type="tns:SOAPChannelPortType">
+        <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+        <wsdl:operation name="Add">
+            <soap:operation soapAction="AddDestination" style="document"/>
+            <wsdl:input>
+                <soap:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="Subtract">
+            <soap:operation soapAction="SubtractDestination" style="document"/>
+            <wsdl:input>
+                <soap:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="Multiply">
+            <soap:operation soapAction="MultiplyDestination" style="document"/>
+            <wsdl:input>
+                <soap:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="Divide">
+            <soap:operation soapAction="DivideDestination" style="document"/>
+            <wsdl:input>
+                <soap:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+    </wsdl:binding>
+    <wsdl:service name="HTTPService">
+        <wsdl:port name="HTTPConnection" binding="tns:HTTPBinding">
+            <soap:address location="http://localhost:9696/Channels/HTTP"/>
+        </wsdl:port>
+    </wsdl:service>
+</wsdl:definitions>

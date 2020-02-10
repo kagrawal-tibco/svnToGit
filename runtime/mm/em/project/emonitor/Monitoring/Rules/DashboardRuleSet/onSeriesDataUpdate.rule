@@ -1,0 +1,22 @@
+/**
+ * @description 
+ * @author 
+ */
+rule Monitoring.Rules.DashboardRuleSet.onSeriesDataUpdate {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Shared.Concepts.SeriesData	seriesdata;
+		
+	}
+	when {
+		seriesdata.categories@length > 0;
+	}
+	then {
+		//truncate series data 
+		truncateSeriesData(seriesdata);
+		fireAlerts(seriesdata);
+	}
+}

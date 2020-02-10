@@ -1,0 +1,35 @@
+/**
+ * @description 
+ * @author pdhar-w510
+ */
+rule Rules.getCustomer {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Events.getCustomer getCustomerEvent;		
+	}
+	when {
+		
+	}
+	then {
+		System.debugOut(getCustomerEvent.name);
+		
+		System.debugOut("#### Received a getCustomer with ID:"+ getCustomerEvent.name);
+		Concepts.Customer customer = Instance.getByExtId(getCustomerEvent.name);
+		String xml = "";
+		Events.getCustomerResponse response;
+		if(customer != null) {
+			xml = Categories.Serialize.serializeConcept(customer,false,"http://www.tibco.com/be/person","customer");
+			System.debugOut("Customer XML:"+xml);
+			response = Events.getCustomerResponse.getCustomerResponse(customer@extId,xml);
+		} else {
+			System.debugOut("#### Customer ID is not valid");
+			response = Events.getCustomerResponse.getCustomerResponse(null,xml);
+		}
+		
+		Event.replyEvent (getCustomerEvent, response);
+		Event.consumeEvent(getCustomerEvent);
+	}
+}

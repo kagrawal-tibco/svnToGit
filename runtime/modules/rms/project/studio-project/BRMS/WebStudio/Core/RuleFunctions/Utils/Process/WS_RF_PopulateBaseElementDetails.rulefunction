@@ -1,0 +1,191 @@
+/**
+ * @description 
+ */
+void rulefunction WebStudio.Core.RuleFunctions.Utils.Process.WS_RF_PopulateBaseElementDetails {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		WebStudio.Core.Concepts.Process.FlowElements.WS_C_FlowElement flowElement;
+		WebStudio.Core.Concepts.Process.WS_C_Process process;
+		Object flowNode;
+	}
+	body {		
+		String PROP_ID = "id";
+		String PROP_NAME = "name";
+		String PROP_TYPE = "type";
+		String PROP_UNIQUEID = "uniqueId";
+		String PROP_LANEIDS = "laneIds";
+		String PROP_POINT_X = "X";
+		String PROP_POINT_Y = "Y";
+		String PROP_RESOURCE = "resource";
+		String PROP_SEQUENCEIDS = "sequenceIds";
+		
+		String PROP_TIMEOUT_EXPRESSION = "timeoutExpr";
+		String PROP_TIMEOUT_EVENT = "timeoutEvent";
+		String PROP_TIMEOUT_UNIT = "timeoutUnit";
+		
+		String PROP_LC_TESTBEFORE = "testBefore";
+		String PROP_LC_LOOPCONDITION = "loopCondition";
+		String PROP_LC_LOOPCOUNT = "loopCount";
+		String PROP_LC_ISSEQUENTIAL = "isSequential";
+		String PROP_LC_CARDINALITYBODY = "cardinalityBody";
+		String PROP_LC_BEHAVIOR = "behavior";
+		String PROP_LC_CONDITIONBODY = "conditionBody";
+		String PROP_DOC_ID = "docId";
+		String PROP_DOC_TEXT = "docText";
+		
+		// Set base FlowElement attributes
+		WS_C_FlowElement flowElementNode = flowElement;
+		
+		Object flowElementDetails = WS.Process.FlowNode.getFlowNodeDetails(flowNode);
+		if (Collections.Map.size(flowElementDetails) > 0) {
+			flowElementNode.elementId = Collections.Map.get(flowElementDetails, PROP_ID);
+			flowElementNode.elementName = Collections.Map.get(flowElementDetails, PROP_NAME);
+			flowElementNode.uniqueId = Collections.Map.get(flowElementDetails, PROP_UNIQUEID);
+			flowElementNode.resourcePath = Collections.Map.get(flowElementDetails, PROP_RESOURCE);
+		}
+		
+		flowElementNode.elementVersion = WS.Process.FlowNode.getFlowNodeVersion(flowNode);
+		
+		String elementLabel = WS.Process.FlowNode.getFlowNodeLabel(flowNode);
+		if (elementLabel != null) flowElementNode.elementLabel = elementLabel;
+		
+		String toolId = WS.Process.FlowNode.getFlowNodeToolId(flowNode);
+		if (toolId != null) flowElementNode.toolId = toolId;
+		
+		Object incomingSequences = WS.Process.FlowNode.getFlowNodeIncomingSequenceDetails(flowNode);
+		if (Collections.Map.size(incomingSequences) > 0) {
+			String incomingSequenceIds = Collections.Map.get(incomingSequences, PROP_SEQUENCEIDS);
+			Instance.PropertyAtom.setString(flowElementNode.incoming, incomingSequenceIds, 1L);
+		}
+		
+		Object outgoingSequences = WS.Process.FlowNode.getFlowNodeOutgoingSequenceDetails(flowNode);
+		if (Collections.Map.size(outgoingSequences) > 0) {
+			String outgoingSequenceIds = Collections.Map.get(outgoingSequences, PROP_SEQUENCEIDS);
+			Instance.PropertyAtom.setString(flowElementNode.outgoing, outgoingSequenceIds, 1L);
+		}
+		
+		Object laneDetails = WS.Process.FlowNode.getLanes(flowNode);
+		if (Collections.Map.size(laneDetails) > 0) {
+			WS_C_FlowElementLaneSet laneset = Instance.newInstance("/WebStudio/Core/Concepts/Process/FlowElements/WS_C_FlowElementLaneSet", null);
+			Instance.PropertyAtom.setContainedConcept(flowElementNode.lanes, laneset, 1L);
+			
+			String lanes = Collections.Map.get(laneDetails, PROP_LANEIDS);
+			String[] laneIds = String.split(lanes, ",");
+			for (int j = 0; j < laneIds@length; j++) {
+				WS_C_Lane lane = WS_RF_GetLaneFromProcess(laneIds[j], process.laneset);
+				if (lane != null) {
+					Instance.PropertyArray.appendContainedConcept(laneset.lane, lane, 1L);
+				}
+			}
+		}
+		
+		Object nodePointDetails = WS.Process.FlowNode.getFlowNodePoints(flowNode);
+		if (Collections.Map.size(nodePointDetails) > 0) {
+			WS_C_NodePoint nodePoint = Instance.newInstance("/WebStudio/Core/Concepts/Process/Common/WS_C_NodePoint", null);
+			nodePoint.x = Collections.Map.get(nodePointDetails, PROP_POINT_X);
+			nodePoint.y = Collections.Map.get(nodePointDetails, PROP_POINT_Y);
+			
+			Instance.PropertyAtom.setContainedConcept(flowElementNode.nodePoint, nodePoint, 1L);
+		}
+		
+		Object labelPointDetails = WS.Process.FlowNode.getFlowNodeLabelPoints(flowNode);
+		if (Collections.Map.size(labelPointDetails) > 0) {
+			WS_C_LabelPoint labelPoint = Instance.newInstance("/WebStudio/Core/Concepts/Process/Common/WS_C_LabelPoint", null);
+			labelPoint.x = Collections.Map.get(labelPointDetails, PROP_POINT_X);
+			labelPoint.y = Collections.Map.get(labelPointDetails, PROP_POINT_Y);
+			
+			Instance.PropertyAtom.setContainedConcept(flowElementNode.labelPoint, labelPoint, 1L);
+		}
+		
+		// Set TaskElement attributes
+		if (flowElementNode instanceof WS_C_TaskElement) {
+			WS_C_TaskElement taskElement = flowElementNode;
+			
+			taskElement.checkpoint = WS.Process.FlowNode.getFlowNodeCheckPoint(flowNode);
+			
+			Object documentDetails = WS.Process.FlowNode.getDocumentation(flowNode);
+			if (Collections.Map.size(documentDetails) > 0) {
+				WS_C_Documentation documentation = Instance.newInstance("/WebStudio/Core/Concepts/Process/Common/WS_C_Documentation", null);
+				
+				String docId = Collections.Map.get(documentDetails, PROP_DOC_ID);
+				Instance.PropertyAtom.setString(documentation.docId, docId, 1L);
+					
+				String docText = Collections.Map.get(documentDetails, PROP_DOC_TEXT);
+				Instance.PropertyAtom.setString(documentation.text, docText, 1L);
+				
+				Instance.PropertyAtom.setContainedConcept(taskElement.documentation, documentation, 1L);
+			}
+			
+			if (WS.Process.FlowNode.isTimerEnabled(flowNode)) {
+				Object timerDetails = WS.Process.FlowNode.getTimerDetails(flowNode);
+				if (Collections.Map.size(timerDetails) > 0) {
+					WS_C_Timeout timeout = Instance.newInstance("/WebStudio/Core/Concepts/Process/Common/WS_C_Timeout", null);
+					
+					String expr = Collections.Map.get(timerDetails, PROP_TIMEOUT_EXPRESSION);
+					Instance.PropertyAtom.setString(timeout.expression, expr, 1L);
+					
+					String event = Collections.Map.get(timerDetails, PROP_TIMEOUT_EVENT);
+					Instance.PropertyAtom.setString(timeout.eventURI, event, 1L);
+					
+					String unit = Collections.Map.get(timerDetails, PROP_TIMEOUT_UNIT);
+					Instance.PropertyAtom.setString(timeout.unit, unit, 1L);
+					
+					Instance.PropertyAtom.setContainedConcept(taskElement.timeout, timeout, 1L);
+				}
+			}
+			
+			Object loopCharacteristics = WS.Process.FlowNode.getLoopCharacteristics(flowNode);
+			if (loopCharacteristics != null) {
+				Object loopCharacteristicDetails = WS.Process.FlowNode.getLoopCharacteristicDetails(loopCharacteristics);
+				if (Collections.Map.size(loopCharacteristicDetails) > 0) {
+					WS_C_LoopCharacteristics ws_loopCharacteristic = Instance.newInstance("/WebStudio/Core/Concepts/Process/Common/WS_C_LoopCharacteristics", null);
+
+					String loopType = Collections.Map.get(loopCharacteristicDetails, PROP_TYPE);
+					Instance.PropertyAtom.setString(ws_loopCharacteristic.type, loopType, 1L);
+						
+					boolean testBefore = Collections.Map.get(loopCharacteristicDetails, PROP_LC_TESTBEFORE);
+					Instance.PropertyAtom.setBoolean(ws_loopCharacteristic.testBefore, testBefore, 1L);
+					
+					if(!Collections.Map.containsKey(loopCharacteristicDetails, PROP_LC_ISSEQUENTIAL)){
+											
+						String loopCondition = Collections.Map.get(loopCharacteristicDetails, PROP_LC_LOOPCONDITION);
+						Instance.PropertyAtom.setString(ws_loopCharacteristic.loopCondition, loopCondition, 1L);
+						
+						String loopCnt = Collections.Map.get(loopCharacteristicDetails, PROP_LC_LOOPCOUNT);
+						Instance.PropertyAtom.setString(ws_loopCharacteristic.loopCount, loopCnt, 1L);
+					}else {
+						boolean isSequential = Collections.Map.get(loopCharacteristicDetails, PROP_LC_ISSEQUENTIAL);
+						Instance.PropertyAtom.setBoolean(ws_loopCharacteristic.isSequential, isSequential, 1L);
+						
+						String loopCardinality = Collections.Map.get(loopCharacteristicDetails, PROP_LC_CARDINALITYBODY);
+						Instance.PropertyAtom.setString(ws_loopCharacteristic.loopCardinality, loopCardinality, 1L);
+						
+						String behavior = Collections.Map.get(loopCharacteristicDetails, PROP_LC_BEHAVIOR);
+						Instance.PropertyAtom.setString(ws_loopCharacteristic.behavior, behavior, 1L);
+						
+						String completionCondition = Collections.Map.get(loopCharacteristicDetails, PROP_LC_CONDITIONBODY);
+						Instance.PropertyAtom.setString(ws_loopCharacteristic.completionCondition, completionCondition, 1L);
+					}
+					
+					Instance.PropertyAtom.setConceptReference(taskElement.loopCharacteristics, ws_loopCharacteristic, 1L);
+				}
+			}
+			
+			String  inputMapXSLT = WS.Process.FlowNode.getFlowNodeInputMapper(flowNode);
+			if (inputMapXSLT != null && !String.equals(inputMapXSLT, "")) {
+				WS_C_IOMapping inputMap = Instance.newInstance("/WebStudio/Core/Concepts/Process/Common/WS_C_IOMapping", null);
+				inputMap.mapping = inputMapXSLT;
+				Instance.PropertyAtom.setConceptReference(taskElement.inputMap, inputMap, 1L);
+			}
+			
+			String  outputMapXSLT = WS.Process.FlowNode.getFlowNodeOutputMapper(flowNode);
+			if (outputMapXSLT != null && !String.equals(outputMapXSLT, "")) {
+				WS_C_IOMapping outputMap = Instance.newInstance("/WebStudio/Core/Concepts/Process/Common/WS_C_IOMapping", null);
+				outputMap.mapping = outputMapXSLT;
+				Instance.PropertyAtom.setConceptReference(taskElement.outputMap, outputMap, 1L);
+			}
+		}
+	}
+}

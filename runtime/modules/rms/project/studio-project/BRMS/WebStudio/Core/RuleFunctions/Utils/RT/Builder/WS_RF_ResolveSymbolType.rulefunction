@@ -1,0 +1,31 @@
+/**
+ * @description Resolve symbol type from declarations of RT in case type cannot be resolved.
+ */
+String rulefunction WebStudio.Core.RuleFunctions.Utils.RT.Builder.WS_RF_ResolveSymbolType {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String scsIntegrationType;
+		String scsRootURL;
+		String projectName;
+		String searchAlias;
+		Object ruleTemplateObject;
+		String subscriptionId;
+	}
+	body {
+		String requiredSymbolType;
+		//Search basic symbols
+		Object[] rootSymbols = WS.RT.Builder.getRuleTemplateBaseSymbols(ruleTemplateObject);
+		for (int innerLoop = 0; innerLoop < rootSymbols@length; innerLoop++) {
+			Object rootSymbol = rootSymbols[innerLoop];
+			String symbolType = WS.RT.Builder._getSymbolType_(scsIntegrationType, scsRootURL, projectName, rootSymbol, WS_RF_GetEarPath(projectName, subscriptionId)); 
+			String symbolAlias = WS.RT.Builder._getSymbolAlias_(rootSymbol); 
+			if (symbolAlias == searchAlias) {
+				requiredSymbolType = symbolType;
+				break;
+			}
+		}
+		return requiredSymbolType;
+	}
+}

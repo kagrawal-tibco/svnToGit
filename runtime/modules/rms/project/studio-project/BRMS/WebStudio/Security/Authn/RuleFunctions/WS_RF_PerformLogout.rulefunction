@@ -1,0 +1,47 @@
+/**
+ * @description Logout operation
+ */
+WebStudio.Core.Concepts.DataSources.WS_C_TemporaryReturnData rulefunction WebStudio.Security.Authn.RuleFunctions.WS_RF_PerformLogout {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object servletRequest;
+		WebStudio.Security.Authn.Concepts.WS_C_LoggedInUser loggedInUser;
+		String jwtUName;
+	}
+	body {		
+		Object LOGGER = Log.getLogger("WebStudio.Security.Authn.RuleFunctions.WS_RF_PerformLogout");
+		
+		WS_C_ResponseData responseData = null;
+		int responseStatus = -1;
+		String errorCode = null;
+		String responseMessage = null;	
+		int recordCount = 0;
+		String username = null;	
+		
+		if (!WS_RF_CheckHTTPMethod(servletRequest, "GET")) {
+			responseStatus = -1;
+			errorCode = "ERR_5101";
+			responseMessage = "Invalid HTTP Method, expect method is [GET].";
+		} else {
+			if (loggedInUser != null) {
+				username = loggedInUser.username;
+			} else if (jwtUName != null) {
+				username  = jwtUName;
+			}
+			Log.log(LOGGER, "Info", "Logging out. Cleaning up logged in user %s", username);
+
+			//We already have a lock on qusername key
+			WS_E_UpdateLoginUserSessionEvent logoutUserSessionEvent =
+					Event.createEvent("xslt://{{/WebStudio/Security/Authn/Events/WS_E_UpdateLoginUserSessionEvent}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"2.0\" exclude-result-prefixes=\"xsl xsd\"><xsl:output method=\"xml\"/><xsl:param name=\"username\"/><xsl:template name=\"Function\" match=\"/\"><createEvent><event><username><xsl:value-of select=\"$username\"/></username></event></createEvent></xsl:template></xsl:stylesheet>");
+			logoutUserSessionEvent.operationType = "LOGOUT";
+			Event.assertEvent(logoutUserSessionEvent);
+			Log.log(LOGGER, "Debug", "Asserting logoutUserSessionEvent Event for user %s", username);
+			responseStatus = 0;
+		
+		}
+		return WS_RF_CreateTemporaryReturnData(responseStatus, recordCount, errorCode, responseMessage, responseData);
+		
+	}
+}

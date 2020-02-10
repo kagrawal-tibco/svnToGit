@@ -1,0 +1,33 @@
+/**
+ * @description 
+ * @author vpatil-MBP15
+ */
+rule WebStudio.Core.Rules.WS_R_DeleteStaleDomainModels {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		WebStudio.Core.Events.WS_E_DeleteStaleDomainModelEvent ws_e_deleteStaleDomainModels;
+	}
+	when {
+		!String.equals(ws_e_deleteStaleDomainModels.domainModelIds, "");
+	}
+	then {
+		Object LOGGER = Log.getLogger("WebStudio.Core.Rules.WS_R_DeleteStaleDomainModels");
+		
+		String[] domainModelIds = WS.Common.splitToStringArray(ws_e_deleteStaleDomainModels.domainModelIds, ",");
+		Log.log(LOGGER, "Debug", "Total Stale Domain Models to Delete - %s", domainModelIds@length);
+		for (int i=0; i<domainModelIds@length; i++) {
+			WS_C_Domain domainToDelete = Instance.getByExtIdByUri(domainModelIds[i], "/WebStudio/Core/Concepts/Domain/WS_C_Domain");
+			if (domainToDelete != null) {
+				Instance.deleteInstance(domainToDelete);
+				Log.log(LOGGER, "Debug", "Deleted Domain Id[%s], Type[%s]", domainToDelete@id, domainToDelete);
+			} else {
+				Log.log(LOGGER, "Debug", "DomainModel with ExtId [%s] not found !!", domainModelIds[i]);
+			}
+		}
+		
+		Event.consumeEvent(ws_e_deleteStaleDomainModels);
+	}
+}

@@ -1,0 +1,66 @@
+/**
+ * @description 
+ */
+String rulefunction WebStudio.Core.RuleFunctions.Utils.Process.WS_RF_GetProcessType {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String userName;
+		String projectName;
+		String artifactPath;
+		String artifactExtn;
+		String scsRootURL;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.Process.WS_RF_GetProcessType");
+		
+		WS_C_AnyArtifactDetails artifactContents = null;
+		WS_C_UserArtifact userArtifact = null;
+		String processType = null;
+		
+		String userArtifactExtId = WS_RF_CreateUserArtifactExtId(null, artifactPath, projectName, userName, null, null);
+		
+		if (artifactExtn == "beprocess") {
+			userArtifact = Instance.getByExtIdByUri(userArtifactExtId, "/WebStudio/Core/Concepts/Process/WS_C_ProcessUserArtifact");
+		}
+		
+		boolean loadEObjectFromSCS = false; 
+		
+		String[] revisionIds = null;
+		if (userArtifact != null) {
+			revisionIds = Instance.PropertyArray.toArrayString(userArtifact.artifactRevisionIds);
+		}
+		
+		if (revisionIds == null || revisionIds@length == 0) {
+			Log.log(LOGGER, "Info", "No artifact revsision has been created yet for artifact %s", artifactPath);
+			loadEObjectFromSCS = true;
+		} else {
+			//Load instance with this latest revision id
+			String latestRevisionId = revisionIds[revisionIds@length - 1];
+			WS_C_UserArtifactRevision userArtifactRevision = Instance.getByExtIdByUri(latestRevisionId, "/WebStudio/Core/Concepts/WS_C_UserArtifactRevision");
+			
+			Log.log(LOGGER, "Debug", "Artifact Content ID for [%s]", userArtifactRevision.artifactContentsId);
+			artifactContents = WS_RF_GetArtifactContentInstance(userArtifactRevision.artifactContentsId, userArtifactRevision.parentArtifactType);
+									 
+			if (artifactContents != null) {
+				Log.log(LOGGER, "Info", "Existing artifact value for %s in project %s", artifactContents, projectName);
+				if (artifactContents instanceof WS_C_ProcessView) {
+					WS_C_ProcessView processView = artifactContents;
+					processType = processView.processDef.processType;
+				}
+			} else {
+				//This means artifact was checked out but contents not yet loaded.
+				loadEObjectFromSCS = true;				
+			}
+		}
+		
+		if (loadEObjectFromSCS) {
+			String projectPath = scsRootURL + "/" + projectName;
+			Object processEMFWrapper = WS.Process.getProcessEMFObject(projectPath, projectName, artifactPath + "." + artifactExtn);
+			processType = WS.Process.getType(processEMFWrapper);
+		}
+		
+		return processType;
+	}
+}

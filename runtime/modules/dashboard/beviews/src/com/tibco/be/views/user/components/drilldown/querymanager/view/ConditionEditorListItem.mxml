@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml"
+	horizontalScrollPolicy="off"
+	verticalScrollPolicy="off"
+	styleName="queryManagerConditionEditorListItem"
+	verticalGap="0"
+>
+
+	<mx:Script>
+		<![CDATA[
+			import mx.utils.StringUtil;
+			import com.tibco.be.views.user.components.drilldown.querymanager.events.ConditionUpdatedEvent;
+			import mx.core.ScrollPolicy;
+			import com.tibco.be.views.core.ui.mediator.BaseUIController;
+			import com.tibco.be.views.user.dashboard.OverlayBEVChartComponentHolder;
+			import com.tibco.be.views.user.components.drilldown.querymanager.events.ConditionUpdatedEvent;
+			
+			public static const BUTTON_SPACER:int = 2;
+			
+			private var _conditionEditor:ConditionEditor;
+			
+			public function get condition():String{
+				return _conditionEditor == null ? "":_conditionEditor.conditionAsString;
+			}
+			
+			override protected function updateDisplayList(unscaledWidth:Number, unscaledHeight:Number):void{
+				if(conditionLbl != null && _conditionEditor != null){
+					conditionLbl.text = _conditionEditor.conditionAsString;
+				}
+				if(unscaledWidth > 0){
+					var hGap:Number = remainingWidth = getStyle("horizontalGap") as Number;
+					//remove right padding
+					var remainingWidth:Number = unscaledWidth - viewMetricsAndPadding.right;
+					remainingWidth = remainingWidth - hGap;
+					//remove the vertical scroll bar width 
+					if(verticalScrollPolicy == ScrollPolicy.AUTO && verticalScrollBar != null){
+						remainingWidth = remainingWidth - verticalScrollBar.width;
+					}
+					//set the remainingWidth on the condition label
+					conditionLbl.width = remainingWidth;
+					//remove the button and button spacer widths
+					remainingWidth = remainingWidth - 3*(editButton.width + BUTTON_SPACER);
+					//set the width
+					fieldNameLbl.width = remainingWidth;
+				}
+				super.updateDisplayList(unscaledWidth, unscaledHeight);
+				//adjust the conditioneditorcontainer width to unscaledwidth else we do not see the RHS edge
+				if(currentState == "opened"){
+					conditionEditorContainer.width = unscaledWidth;
+				}
+			}
+			
+			private function set conditionEditor(value:ConditionEditor):void{
+				_conditionEditor = value;
+				if(conditionEditorContainer == null || _conditionEditor == null){ return; }
+				conditionEditorContainer.removeAllChildren();
+				conditionEditorContainer.addChild(_conditionEditor);
+				addEventListener(ConditionUpdatedEvent.IS_HEADER_CHANGED,headerChangeHandler);
+			}
+			
+			override public function set data(value:Object):void{
+				super.data = value;
+				conditionEditor = data as ConditionEditor; //use the setter to add to container
+				if(!_conditionEditor){ return; }
+				if(StringUtil.trim(_conditionEditor.conditionAsString) == "Is Any") {
+					resetButton.enabled = false;
+				}
+				fieldNameLbl.text = _conditionEditor.fieldName;
+				invalidateProperties();
+			}
+						
+			private function toggleEditState():void{
+				if(currentState == "opened"){
+					currentState = "";
+					editButton.styleName = "queryManagerEditButton";
+				}
+				else{
+					currentState = "opened";
+					editButton.styleName = "queryManagerEditButtonActive";
+				}
+			}
+			
+			public function stopEdit():void {
+				currentState = "";
+				editButton.styleName = "queryManagerEditButton";
+				if (_conditionEditor != null){
+					_conditionEditor.reset();
+				}
+			}
+						
+            private function clearClicked(event:MouseEvent):void{
+            	if(_conditionEditor == null){ return; }
+            	_conditionEditor.resetConditionToAny();	
+            	conditionLbl.text = _conditionEditor.conditionAsString;
+            }
+            
+            private function defaultClicked(event:MouseEvent):void{
+            	if(_conditionEditor == null){ return; }
+            	_conditionEditor.resetConditionToDefault();
+            	conditionLbl.text = _conditionEditor.conditionAsString;
+            }
+            
+            private function headerChangeHandler(event:ConditionUpdatedEvent):void{
+            	if(_conditionEditor == null){ return; }
+            	//var newLabel:String = event.label;
+            	conditionLbl.text = event.label;
+            }
+			
+		]]>
+	</mx:Script>
+	
+	<mx:VBox width="100%" height="100%" styleName="queryManagerConditionEditorHeader">
+		<mx:HBox width="100%" height="100%" verticalAlign="top" paddingTop="0" horizontalGap="{BUTTON_SPACER}">
+			<mx:Label id="fieldNameLbl" styleName="queryManagerConditionEditorFieldName"/>
+			<mx:Button id="editButton" width="14" height="14" styleName="queryManagerEditButton" toolTip="Edit Condition" click="toggleEditState()" />
+			<mx:Button id="resetButton" width="14" height="14" styleName="queryManagerResetButton" toolTip="Reset to Original" click="defaultClicked(event)"/>
+			<mx:Button id="clearButton" width="14" height="14" styleName="queryManagerClearButton" toolTip="Reset to Any" click="clearClicked(event)"/>			
+		</mx:HBox>
+		<mx:Label id="conditionLbl" truncateToFit="true" 
+			styleName="queryManagerConditionEditorFieldValue" 			
+			/>
+	</mx:VBox>
+	<mx:states>
+		<mx:State name="opened">
+			<mx:AddChild>
+				<mx:VBox id="conditionEditorContainer" width="100%" styleName="queryManagerConditionEditorContainer"/>
+			</mx:AddChild>
+		</mx:State>
+	</mx:states>
+	
+</mx:VBox>

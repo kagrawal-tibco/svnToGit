@@ -1,0 +1,46 @@
+/**
+ * @description 
+ */
+void rulefunction WebStudio.Core.RuleFunctions.Controller.WS_RF_SendResponse {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object asyncContextObject;
+		String responseString;
+		String responseContentType;
+		WebStudio.Core.Concepts.DataSources.WS_C_TemporaryReturnData tempReturnData;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Controller.WS_RF_SendResponse");
+		Object response = responseString;
+		
+		Object servletResponse = HTTP.Servlet.getServletResponse(asyncContextObject);
+		
+		String contentType = responseContentType + ";charset=utf-8";
+		if (tempReturnData != null && tempReturnData.contentType != null && !String.equals(tempReturnData.contentType, "")) {
+			contentType = tempReturnData.contentType;
+		}
+		
+		//return response
+		if (tempReturnData.redirectURL != null) {
+			HTTP.Servlet.Response.setResponseStatusCode(servletResponse, 301);
+		    HTTP.Servlet.Response.setResponseHeader(servletResponse,"Location", tempReturnData.redirectURL);		
+        	
+		} else {
+		    HTTP.Servlet.Response.setResponseStatusCode(servletResponse, 200);
+		}
+		HTTP.Servlet.Response.setResponseHeader(servletResponse, "Content-type", contentType);
+        
+		if (tempReturnData != null && tempReturnData.contentSize > 0) {
+			HTTP.Servlet.Response.setResponseHeader(servletResponse, "Content-Length", tempReturnData.contentSize + "");
+		}
+		
+		if (tempReturnData != null && tempReturnData.contentDisposition != null && !String.equals(tempReturnData.contentDisposition, "")) {
+			HTTP.Servlet.Response.setResponseHeader(servletResponse, "Content-disposition", tempReturnData.contentDisposition);
+			response = RMS.Util.decodeBase64(responseString);
+		}
+		
+		HTTP.Servlet.Response.setResponseContent(asyncContextObject, response, true);
+	}
+}

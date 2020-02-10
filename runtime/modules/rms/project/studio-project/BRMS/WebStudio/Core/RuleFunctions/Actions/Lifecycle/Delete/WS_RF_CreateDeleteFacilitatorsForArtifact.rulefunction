@@ -1,0 +1,77 @@
+/**
+ * @description Create revisions to facilitate delete op.
+ */
+WebStudio.Core.Concepts.WS_C_UserArtifactRevision rulefunction WebStudio.Core.RuleFunctions.Actions.Lifecycle.Delete.WS_RF_CreateDeleteFacilitatorsForArtifact {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String projectName;
+		String username;
+		WebStudio.Core.Concepts.WS_C_UserArtifact userArtifact;
+		String[] roles;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.Lifecycle.Delete.WS_RF_CreateDeleteFacilitatorsForArtifact");
+		
+		String subscriptionId = WS_RF_GetSubscriptionId(username);
+		
+		String scsRootURL = WS_RF_GetSCSRootURL(projectName, subscriptionId);
+		String artifactPath = userArtifact.artifactPath;
+		String artifactExtn = userArtifact.artifactFileExtn;
+		
+		Log.log(LOGGER, "Info", "Contents need to be loaded for artifact [%s] from SCS", artifactPath);
+		//Load from SCS
+		String artifactContents = 
+			WS_RF_FetchContentFromSCS(scsRootURL, projectName, artifactPath, userArtifact.artifactFileExtn, username);
+						
+		String userArtifactExtId = userArtifact@extId;
+		
+		//The concept representing loaded contents from SCS.
+		WS_C_AnyArtifactDetails contentsConcept = null;
+		if (artifactExtn == "ruletemplateinstance") {
+			Object ruleTemplateObject = WS.RT.getBaseRuleTemplate(projectName, artifactContents, artifactExtn);
+			contentsConcept = WS_RF_CreateAbstractRuleTemplateConceptFromSCS(projectName, username, null, scsRootURL, artifactPath, artifactExtn, ruleTemplateObject, roles);
+		} else if (artifactExtn == "rulefunctionimpl") {
+			contentsConcept = WS_RF_FetchArtifactContentsFactory(scsRootURL, username, projectName, artifactPath, artifactExtn, userArtifactExtId, roles);
+		} else if (artifactExtn == "beprocess") {
+			//TODO
+		}
+				
+		userArtifact.currentArtifactVersion = 0.0;
+		double currentVersionNumber = userArtifact.currentArtifactVersion;
+		currentVersionNumber = currentVersionNumber + 1;
+
+		//Now create dummy revision for delete 
+		WS_C_UserArtifactRevision currentRevision = 
+			Instance.newInstance("/WebStudio/Core/Concepts/WS_C_UserArtifactRevision", userArtifactExtId + "@" + currentVersionNumber);
+		//Set parent artifact id	
+		currentRevision.parentArtifactId = userArtifact@extId;
+		currentRevision.parentArtifactType = userArtifact.artifactType;
+		currentRevision.version = currentVersionNumber;
+		currentRevision.creationTime = DateTime.now();
+		if (contentsConcept != null) {
+			//Set same contents on this too.
+			currentRevision.artifactContentsId = contentsConcept@extId;
+		}	
+
+		//set it to borrowed state
+		WS_C_LifecycleMetadata checkpointLifecycleMetadata = 
+			Instance.newInstance("/WebStudio/Core/Concepts/Lifecycle/WS_C_LifecycleMetadata", null);
+		Instance.PropertyAtom.setContainedConcept(currentRevision.lifecycleMetadata, checkpointLifecycleMetadata, 1L);
+		Instance.PropertyAtom.setConceptReference(checkpointLifecycleMetadata.currentState, WS_RF_ArtifactStateCreationFactory("Borrowed"), 1L);
+		Instance.PropertyArray.appendConceptReference(checkpointLifecycleMetadata.stateHistory, checkpointLifecycleMetadata.currentState, 1L);
+
+		//Set the checkpoint revision to masters revision
+		boolean fromMaster = WebStudio.Core.RuleFunctions.Utils.WS_RF_FetchAndSetLatestArtifactContentsFromMaster(projectName, userArtifact, currentRevision, subscriptionId);
+		if (!fromMaster) {
+			//Make this the checkpoint revision if this could not be resolved from a master.
+			WS_RF_SetCheckpointRevisionConceptReference(userArtifact, currentRevision);
+		}
+		
+		userArtifact.currentArtifactVersion = currentVersionNumber;
+		Instance.PropertyArray.appendString(userArtifact.artifactRevisionIds, currentRevision@extId, 1L);
+		
+		return currentRevision;
+	}
+}

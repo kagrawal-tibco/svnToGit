@@ -1,0 +1,44 @@
+/**
+ * @description 
+ */
+void rulefunction WebStudio.Core.RuleFunctions.Utils.Subscription.WS_RF_DeleteReviewTask {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		WebStudio.Core.Concepts.Lifecycle.WS_C_ReviewTask reviewTask;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.Subscription.WS_RF_DeleteReviewTask");
+		
+		Log.log(LOGGER, "Debug", "Processing Review Task [%s] deletion", reviewTask);
+		WS_C_UserCheckin userCheckIn = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(reviewTask.referencedCheckinId, true, "/WebStudio/Core/Concepts/Lifecycle/WS_C_UserCheckin");
+		if (userCheckIn != null) {
+			Log.log(LOGGER, "Debug", "Processing User Checkin[%s] deletion", userCheckIn@extId);
+			WS_C_CommittableDeltaEntry[] commitableDeltaEntry = Instance.PropertyArray.toArrayConcept(userCheckIn.committables);
+			Log.log(LOGGER, "Debug", "Total committable delta entries to clean up - %s", commitableDeltaEntry@length);
+			for (int j=0; j<commitableDeltaEntry@length; j++) {
+				if (commitableDeltaEntry[j].userArtifactRevision != null) WS_RF_DeleteArtifactRevision(commitableDeltaEntry[j].userArtifactRevision);
+				if (commitableDeltaEntry[j].commitLifeCycleState != null) Instance.deleteInstance(commitableDeltaEntry[j].commitLifeCycleState);
+				if (commitableDeltaEntry[j].operation != null) Instance.deleteInstance(commitableDeltaEntry[j].operation);
+				if (commitableDeltaEntry[j].parentCheckinId != null && !String.equals(commitableDeltaEntry[j].parentCheckinId, userCheckIn@extId)) {
+					Log.log(LOGGER, "Debug", "ParentCheckId and the UserCheckin ExtId are the same - [%s]", commitableDeltaEntry[j].parentCheckinId);
+				} else {
+					Log.log(LOGGER, "Debug", "ParentCheckId is null or is different from the UserCheckin ExtId - [%s]. Need to handle this !!", commitableDeltaEntry[j].parentCheckinId);
+				}
+				
+				Instance.deleteInstance(commitableDeltaEntry[j]);
+			}
+			
+			Instance.PropertyArray.clear(userCheckIn.committables);
+			
+			Log.log(LOGGER, "Debug", "Deleting UserCheckIn - %s", userCheckIn@extId);
+			Instance.deleteInstance(userCheckIn);
+		} else {
+			Log.log(LOGGER, "Debug", "Review Task with ExtId [%s] does not exits.", reviewTask);
+		}
+		
+		Log.log(LOGGER, "Debug", "Deleting Review Task - %s", reviewTask@extId);
+		Instance.deleteInstance(reviewTask);
+	}
+}

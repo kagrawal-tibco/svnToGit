@@ -1,0 +1,414 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<project>
+  <actions/>
+  <description></description>
+  <logRotator class="hudson.tasks.LogRotator">
+    <daysToKeep>-1</daysToKeep>
+    <numToKeep>-1</numToKeep>
+    <artifactDaysToKeep>-1</artifactDaysToKeep>
+    <artifactNumToKeep>-1</artifactNumToKeep>
+  </logRotator>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <EnvInjectJobProperty plugin="envinject@1.89">
+      <info>
+        <loadFilesFromMaster>false</loadFilesFromMaster>
+      </info>
+      <on>true</on>
+      <keepJenkinsSystemVariables>true</keepJenkinsSystemVariables>
+      <keepBuildVariables>true</keepBuildVariables>
+      <contributors/>
+    </EnvInjectJobProperty>
+  </properties>
+  <scm class="hudson.scm.SubversionSCM" plugin="subversion@2.2">
+    <locations>
+      <hudson.scm.SubversionSCM_-ModuleLocation>
+        <remote>http://svn.tibco.com/be/branches/5.2</remote>
+        <credentialsId>0b68c637-0b41-436e-ba88-0300984c5a64</credentialsId>
+        <depthOption>infinity</depthOption>
+        <ignoreExternalsOption>false</ignoreExternalsOption>
+      </hudson.scm.SubversionSCM_-ModuleLocation>
+    </locations>
+    <excludedRegions>build/logs/*</excludedRegions>
+    <includedRegions></includedRegions>
+    <excludedUsers></excludedUsers>
+    <excludedRevprop></excludedRevprop>
+    <excludedCommitMessages></excludedCommitMessages>
+    <workspaceUpdater class="hudson.scm.subversion.CheckoutUpdater"/>
+    <ignoreDirPropChanges>false</ignoreDirPropChanges>
+    <filterChangelog>false</filterChangelog>
+  </scm>
+  <canRoam>true</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers class="vector"/>
+  <concurrentBuild>false</concurrentBuild>
+  <builders>
+    <hudson.tasks.Shell>
+      <command>export sourceDir=&quot;${WORKSPACE}/5.2&quot;
+cd ${sourceDir}/build
+export buildDir=&quot;${sourceDir}/build/Enterprise/exp/linux26gl25/x86/dbg&quot;
+major=`grep &quot;BE_VERSION_MAJOR=&quot; version_hf.properties | cut -f 2 -d=`
+minor=`grep &quot;BE_VERSION_MINOR=&quot; version_hf.properties | cut -f 2 -d=`
+update=`grep &quot;BE_VERSION_UPDATE=&quot; version_hf.properties | cut -f 2 -d=`
+bpmn_major=`grep &quot;BE_BPMN_MAJOR=&quot; version_hf.properties | cut -f 2 -d=`
+bpmn_minor=`grep &quot;BE_BPMN_MINOR=&quot; version_hf.properties | cut -f 2 -d=`
+bpmn_update=`grep &quot;BE_BPMN_UPDATE=&quot; version_hf.properties | cut -f 2 -d=`
+hotfix=`grep &quot;BE_VERSION_HOTFIX=&quot; version_hf.properties | cut -f 2 -d=`
+export version=&quot;${major}.${minor}.${update}&quot;
+export bpmn_version=&quot;${bpmn_major}.${bpmn_minor}.${bpmn_update}&quot;
+export readmeversion=&quot;${major}.${minor}.${update}&quot;
+export autobuild=&quot;&quot;
+export enggDir=&quot;${sourceDir}/build/engg_build&quot;
+export logsDir=&quot;/home/build/be-build/logs/be&quot;
+export releaseDir=&quot;/mnt/ql/build/BE/${major}.${minor}&quot;
+export assembliesExportDir=&quot;/mnt/ql/build/BE/leo/packaging/${version}&quot;
+export osLin=linux26gl25
+export archLin32=x86
+export doLin32Build=1
+export doLin64Build=0
+
+export bomBaseDir=&quot;${sourceDir}/build/pkg_info/bom/${version}&quot;
+export releaseBaseDir=&quot;/mnt/testinst&quot;
+export buildersemailaddr=&quot;sbagi@tibco.com,mgujrath@tibco.com,abhave@tibco.com,bgokhale@tibco.com,vasharma@tibco.com,vshelar@tibco.com&quot;
+export successemailaddr=&quot;ql-build@tibco.com,be-qa@tibco.com,stg-engr@tibco.com,magrawal@tibco.com,akunchef@tibco.com,jpark@tibco.com,mqian@tibco.com,be-xsg@tibco.com,jakaur@tibco.com&quot;
+
+########  No Definitions beyond this line  ########
+
+
+echo &quot;Initializing Build...&quot;
+
+oldRevision=`grep &quot;env.BE_REVISION=&quot; version_hf.properties | cut -f 2 -d=`
+oldRevision=`expr $oldRevision + 1`
+buildOldFldr=`grep &quot;env.BE_BUILD=&quot; version_hf.properties | cut -b 14-16`
+buildCnt=`grep &quot;env.BE_BUILD=&quot; version_hf.properties | cut -f 2 -d=`
+buildNext=`expr ${buildCnt} + 1`
+buildNext=`printf &apos;%03d&apos; ${buildNext}`
+
+rm -f version_hf.properties.backup
+cp version_hf.properties version_hf.properties.backup
+
+perl -p -i -e &quot;s/\=${buildCnt}/\=${buildNext}/&quot; version_hf.properties
+
+
+buildCnt=${buildNext}
+
+cd ${sourceDir}
+export svnlatest=`svn info |grep Revision: |cut -c11-`
+cd ${sourceDir}/build
+perl -p -i -e &quot;s/env\.BE_REVISION\=.*/env\.BE_REVISION\=${svnlatest}/&quot; version_hf.properties
+
+export buildTag=`grep &quot;env.BE_BUILD=&quot; version_hf.properties | cut -f 2 -d=`
+echo &quot;Build Tag=&quot; $buildTag
+export buildFldr=`grep &quot;env.BE_BUILD=&quot; version_hf.properties | cut -b 14-16`
+export buildNum=${version}.${buildTag}
+export revision=`grep &quot;env.BE_REVISION=&quot; version_hf.properties | cut -f 2 -d=`
+
+# Build trigger notification
+rm -f build.mail
+cp ${enggDir}/blank.txt build.mail
+mail ${buildersemailaddr} -s &quot;BE Nightly Build ${buildNum} HF1 started at ${BUILD_URL}&quot; &lt; build.mail
+echo &quot;[`date`] Build ${buildNum} Started...&quot;
+</command>
+    </hudson.tasks.Shell>
+    <hudson.tasks.Ant plugin="ant@1.1">
+      <targets>clobber-all pre-all-hf</targets>
+      <antName>1.7.1</antName>
+      <buildFile>build/build_hf.xml</buildFile>
+      <properties>env.SRC_ROOT=${WORKSPACE}/5.2
+env.TSI_ROOT=/mnt/tsi/root
+env.DEV_SETUP_ROOT=/mnt/ql/tsi-root
+env.PORT=linux26gl25/x86
+env.OS=linux26gl25
+env.PSP=:
+PRODUCT=be
+BE_BRANCH=5.2
+env.DOC_ROOT=/mnt/pubs/docs4release
+env.BUILD_TYPE=dbg
+env.TAG_FILTERING=on
+ENGG_TESTBASE=/home/build/tibco/be/5.2
+ENGG_TESTBASE_VALUE=/home/build/tibco/be/5.2
+STUDIO_DEBUG_INFO=true
+env.WINDOWS_64BIT_PACKAGING_ENABLE=false
+env.UNIX_ALL_PACKAGING_ENABLE=true
+STUDIO_TOOLS_OS=linux26gl25
+STUDIO_TOOLS_ARCH=x86_64
+env.ANT_OPTS=-Xmx1024m</properties>
+    </hudson.tasks.Ant>
+    <hudson.tasks.Shell>
+      <command>export sourceDir=&quot;${WORKSPACE}/5.2&quot;
+cd ${sourceDir}/build
+export bomBaseDir=&quot;${sourceDir}/build/pkg_info/bom/5.2.0&quot;
+
+export enggDir=&quot;${sourceDir}/build/engg_build&quot;
+major=`grep &quot;BE_VERSION_MAJOR=&quot; version_hf.properties | cut -f 2 -d=`
+minor=`grep &quot;BE_VERSION_MINOR=&quot; version_hf.properties | cut -f 2 -d=`
+update=`grep &quot;BE_VERSION_UPDATE=&quot; version_hf.properties | cut -f 2 -d=`
+export version=&quot;${major}.${minor}.${update}&quot;
+
+export buildTag=`grep &quot;env.BE_BUILD=&quot; version_hf.properties | cut -f 2 -d=`
+echo &quot;Build Tag=&quot; $buildTag
+export buildFldr=`grep &quot;env.BE_BUILD=&quot; version_hf.properties | cut -b 14-16`
+export buildNum=${version}.${buildTag}
+export revision=`grep &quot;env.BE_REVISION=&quot; version_hf.properties | cut -f 2 -d=`
+cd ${bomBaseDir}
+export updated_bom_files=`svn diff | grep Index: | cut -c 8- | sed &quot;s@^@${bomBaseDir}/@g&quot;`
+
+cd ${sourceDir}/build
+svn commit --non-interactive --username=qlbuild --password=T!bco123 ${sourceDir}/runtime/modules/interpreter/src/com/tibco/cep/interpreter/cep_interpreterVersion.java ${sourceDir}/runtime/modules/channels/as/src/com/tibco/cep/driver/as/cep_as_channelVersion.java ${sourceDir}/runtime/modules/channels/hawk/src/com/tibco/cep/driver/hawk/cep_hawk_channelVersion.java ${sourceDir}/build/version_hf.properties ${sourceDir}/runtime/core/backingstore-bdb/src/com/tibco/cep/persister/be_bdbVersion.java ${sourceDir}/common/src/com/tibco/be/viewsrt/cep_viewsrtVersion.java ${sourceDir}/runtime/core/datagrid/activespaces/src/com/tibco/cep/as/cep_datagrid_tibcoVersion.java ${sourceDir}/runtime/core/datagrid/coherence/src/com/tibco/cep/cep_datagrid_oracleVersion.java ${sourceDir}/runtime/core/kernel/src/com/tibco/cep/kernel/cep_kernelVersion.java ${sourceDir}/runtime/core/container/src/com/tibco/cep/container/cep_containerVersion.java ${sourceDir}/runtime/core/common/src/com/tibco/cep/cep_commonVersion.java ${sourceDir}/runtime/core/functions/src/com/tibco/be/functions/be_functionsVersion.java ${sourceDir}/runtime/core/base/be/src/com/tibco/cep/cep_baseVersion.java ${sourceDir}/runtime/core/backingstore/src/com/tibco/be/jdbcstore/be_jdbcstoreVersion.java ${sourceDir}/runtime/core/backingstore/src/com/tibco/be/oracle/be_oracleVersion.java ${sourceDir}/runtime/core/drivers/src/com/tibco/cep/driver/cep_driversVersion.java ${sourceDir}/runtime/modules/interpreter/src/com/tibco/cep/interpreter/cep_interpreterVersion.java ${sourceDir}/runtime/modules/tools/migration/src/com/tibco/be/dbutils/be_dbutilsVersion.java ${sourceDir}/runtime/modules/tools/migration/src/com/tibco/be/migration/cep_migrationVersion.java ${sourceDir}/runtime/modules/rms/src/com/tibco/be/rms/cep_rmsVersion.java ${sourceDir}/runtime/modules/dbconcepts/src/com/tibco/cep/modules/cep_modulesVersion.java ${sourceDir}/runtime/modules/query/common/src/com/tibco/cep/query/cep_queryVersion.java ${sourceDir}/runtime/modules/dashboard/metricengine/src/com/tibco/cep/metric/cep_metricVersion.java ${sourceDir}/runtime/modules/dashboard/agent/common/src/com/tibco/cep/dashboard/cep_dashboardVersion.java ${sourceDir}/runtime/modules/loadbalancer/loadbalancer-be/src/com/tibco/cep/loadbalancer/cep_loadbalancerVersion.java ${sourceDir}/runtime/modules/security/src/com/tibco/cep/security/cep_securityVersion.java ${sourceDir}/runtime/modules/bw/src/com/tibco/be/bw/plugin/be_bwVersion.java ${sourceDir}/runtime/modules/bpmn/src/com/tibco/cep/bpmn/cep_bpmnVersion.java ${sourceDir}/runtime/modules/pattern/pattern-be/src/com/tibco/cep/pattern/cep_patternVersion.java ${sourceDir}/runtime/mm/administrator/src/com/tibco/be/deployment/administrator/be_adminVersion.java ${sourceDir}/runtime/mm/em/src/com/tibco/be/bemm/functions/be_mmVersion.java ${sourceDir}/common/src/com/tibco/be/uirms/cep_uirmsVersion.java ${sourceDir}/common/src/com/tibco/be/uirt/cep_uirtVersion.java ${sourceDir}/designtime/studio/plugins/com.tibco.cep.studio.application/about.mappings ${sourceDir}/designtime/studio/functions/src/com/tibco/be/functions/be_studiofunctionsVersion.java ${updated_bom_files} -m &quot;TIBCO BusinessEvents Nightly Build Version ${buildNum}&quot;</command>
+    </hudson.tasks.Shell>
+    <hudson.tasks.Ant plugin="ant@1.1">
+      <targets>build-all-hf build-studio-site</targets>
+      <antName>1.7.1</antName>
+      <buildFile>build/build_hf.xml</buildFile>
+      <properties>env.SRC_ROOT=${WORKSPACE}/5.2
+env.TSI_ROOT=/mnt/tsi/root
+env.DEV_SETUP_ROOT=/mnt/ql/tsi-root
+env.PORT=linux26gl25/x86
+env.OS=linux26gl25
+env.PSP=:
+PRODUCT=be
+BE_BRANCH=5.2
+env.DOC_ROOT=/mnt/pubs/docs4release
+env.BUILD_TYPE=dbg
+env.TAG_FILTERING=on
+ENGG_TESTBASE=/home/build/tibco/be/5.2
+ENGG_TESTBASE_VALUE=/home/build/tibco/be/5.2
+STUDIO_DEBUG_INFO=true
+env.WINDOWS_64BIT_PACKAGING_ENABLE=false
+env.UNIX_ALL_PACKAGING_ENABLE=true
+STUDIO_TOOLS_OS=linux26gl25
+STUDIO_TOOLS_ARCH=x86_64
+env.ANT_OPTS=-Xmx1024m</properties>
+    </hudson.tasks.Ant>
+    <hudson.tasks.Shell>
+      <command># Compilation successful notification
+export sourceDir=&quot;${WORKSPACE}/5.2&quot;
+cd ${sourceDir}/build
+export enggDir=&quot;${sourceDir}/build/engg_build&quot;
+major=`grep &quot;BE_VERSION_MAJOR=&quot; version_hf.properties | cut -f 2 -d=`
+minor=`grep &quot;BE_VERSION_MINOR=&quot; version_hf.properties | cut -f 2 -d=`
+update=`grep &quot;BE_VERSION_UPDATE=&quot; version_hf.properties | cut -f 2 -d=`
+export version=&quot;${major}.${minor}.${update}&quot;
+export assembliesExportDir=&quot;/mnt/ql/build/BE/leo/packaging/${version}&quot;
+
+export buildTag=`grep &quot;env.BE_BUILD=&quot; version_hf.properties | cut -f 2 -d=`
+echo &quot;Build Tag=&quot; $buildTag
+export buildFldr=`grep &quot;env.BE_BUILD=&quot; version_hf.properties | cut -b 14-16`
+export buildNum=${version}.${buildTag}
+export revision=`grep &quot;env.BE_REVISION=&quot; version_hf.properties | cut -f 2 -d=`
+
+export osLin=linux26gl25
+export archLin32=x86
+
+export buildersemailaddr=&quot;sbagi@tibco.com,abhave@tibco.com,mgujrath@tibco.com,bgokhale@tibco.com,vasharma@tibco.com,vshelar@tibco.com&quot;
+export successemailaddr=&quot;ql-build@tibco.com,be-qa@tibco.com,stg-engr@tibco.com,akunchef@tibco.com,jpark@tibco.com,mqian@tibco.com,be-xsg@tibco.com,
+magrawal@tibco.com,jakaur@tibco.com&quot;
+
+cd ${sourceDir}/build
+rm -f build.mail
+cp ${enggDir}/GenericAssemblies.mail build.mail
+mail ${buildersemailaddr} -s &quot;BE Nightly Build - ${buildNum} HF1 - Compilation successful&quot; &lt; build.mail
+
+# Export assemblies
+echo &quot;[`date`] Exporting assemblies to ${assembliesExportDir}...&quot;
+rm -rf ${assembliesExportDir}/*
+cp -r ${sourceDir}/build/Enterprise/exp/${osLin}/${archLin32}/dbg/Final/* ${assembliesExportDir}
+
+echo &quot;[`date`] Exporting assemblies done.&quot;
+
+chmod 777 ${enggDir}/integration-preflight-tool/linux_x86/ectool</command>
+    </hudson.tasks.Shell>
+    <hudson.tasks.Ant plugin="ant@1.1">
+      <targets>build-hf</targets>
+      <antName>1.7.1</antName>
+      <antOpts>-DqaTests=true</antOpts>
+      <buildFile>build/engg_build/integration-preflight-tool/build.xml</buildFile>
+    </hudson.tasks.Ant>
+    <hudson.tasks.Shell>
+      <command>export sourceDir=&quot;${WORKSPACE}/5.2&quot;
+cd ${sourceDir}/build
+export buildDir=&quot;${sourceDir}/build/Enterprise/exp/linux26gl25/x86/dbg&quot;
+export enggDir=&quot;${sourceDir}/build/engg_build&quot;
+major=`grep &quot;BE_VERSION_MAJOR=&quot; version_hf.properties | cut -f 2 -d=`
+minor=`grep &quot;BE_VERSION_MINOR=&quot; version_hf.properties | cut -f 2 -d=`
+update=`grep &quot;BE_VERSION_UPDATE=&quot; version_hf.properties | cut -f 2 -d=`
+bpmn_major=`grep &quot;BE_BPMN_MAJOR=&quot; version_hf.properties | cut -f 2 -d=`
+bpmn_minor=`grep &quot;BE_BPMN_MINOR=&quot; version_hf.properties | cut -f 2 -d=`
+bpmn_update=`grep &quot;BE_BPMN_UPDATE=&quot; version_hf.properties | cut -f 2 -d=`
+hotfix=`grep &quot;BE_VERSION_HOTFIX=&quot; version_hf.properties | cut -f 2 -d=`
+export version=&quot;${major}.${minor}.${update}&quot;
+export bpmn_version=&quot;${bpmn_major}.${bpmn_minor}.${bpmn_update}&quot;
+
+export buildTag=`grep &quot;env.BE_BUILD=&quot; version_hf.properties | cut -f 2 -d=`
+echo &quot;Build Tag=&quot; $buildTag
+export buildFldr=`grep &quot;env.BE_BUILD=&quot; version_hf.properties | cut -b 14-16`
+export buildNum=${version}.${buildTag}
+export revision=`grep &quot;env.BE_REVISION=&quot; version_hf.properties | cut -f 2 -d=`
+
+export releaseBaseDir=&quot;/mnt/testinst&quot;
+export releaseDir=&quot;/mnt/ql/build/BE/${major}.${minor}&quot;
+
+export buildersemailaddr=&quot;sbagi@tibco.com,abhave@tibco.com,mgujrath@tibco.com,bgokhale@tibco.com,vasharma@tibco.com,vshelar@tibco.com&quot;
+export successemailaddr=&quot;ql-build@tibco.com,be-qa@tibco.com,stg-engr@tibco.com,akunchef@tibco.com,jpark@tibco.com,mqian@tibco.com,be-xsg@tibco.com,
+magrawal@tibco.com,jakaur@tibco.com&quot;
+
+# Copy the necessary files to the Release area
+export buildReleaseDir=${buildNum}&quot;(R${revision})&quot;
+export buildReleaseLocation=${releaseDir}/${version}.${buildFldr}/${buildReleaseDir}
+echo &quot;[`date`] Exporting Service Pack to Release area - ${buildReleaseLocation}...&quot;
+mkdir -p ${buildReleaseLocation}
+sleep 3
+if [ &quot;${hotfix}&quot; != &quot;0&quot; ]
+then
+	addOnBuildDir=${releaseBaseDir}/businessevents-hf/${version}/test-installers
+	latestBuildDir=`ls -t ${addOnBuildDir} | head -1`
+	iDir=${addOnBuildDir}/${latestBuildDir}
+	echo &quot;Copying installers from ${iDir}...&quot;
+	cp ${iDir}/*.zip ${buildReleaseLocation}
+else
+        addOnBuildDir=${releaseBaseDir}/businessevents-standard/${version}/test-installers
+        latestBuildDir=`ls -t ${addOnBuildDir} | head -1`
+        iDir=${addOnBuildDir}/${latestBuildDir}
+        echo &quot;Copying installers from ${iDir}...&quot;
+        cp ${iDir}/*.zip ${buildReleaseLocation}
+        addOnBuildDir=${releaseBaseDir}/businessevents-datamodeling/${version}/test-installers
+        latestBuildDir=`ls -t ${addOnBuildDir} | head -1`
+        iDir=${addOnBuildDir}/${latestBuildDir}
+        echo &quot;Copying installers from ${iDir}...&quot;
+        cp ${iDir}/*.zip ${buildReleaseLocation}
+        addOnBuildDir=${releaseBaseDir}/businessevents-decisionmanager/${version}/test-installers
+        latestBuildDir=`ls -t ${addOnBuildDir} | head -1`
+        iDir=${addOnBuildDir}/${latestBuildDir}
+        echo &quot;Copying installers from ${iDir}...&quot;
+        cp ${iDir}/*.zip ${buildReleaseLocation}
+        addOnBuildDir=${releaseBaseDir}/businessevents-eventstreamprocessing/${version}/test-installers
+        latestBuildDir=`ls -t ${addOnBuildDir} | head -1`
+        iDir=${addOnBuildDir}/${latestBuildDir}
+        echo &quot;Copying installers from ${iDir}...&quot;
+        cp ${iDir}/*.zip ${buildReleaseLocation}
+        addOnBuildDir=${releaseBaseDir}/businessevents-express/${version}/test-installers
+        latestBuildDir=`ls -t ${addOnBuildDir} | head -1`
+        iDir=${addOnBuildDir}/${latestBuildDir}
+        echo &quot;Copying installers from ${iDir}...&quot;
+        cp ${iDir}/*.zip ${buildReleaseLocation}
+        addOnBuildDir=${releaseBaseDir}/businessevents-process/${bpmn_version}/test-installers
+        latestBuildDir=`ls -t ${addOnBuildDir} | head -1`
+        iDir=${addOnBuildDir}/${latestBuildDir}
+        echo &quot;Copying installers from ${iDir}...&quot;
+        cp ${iDir}/*.zip ${buildReleaseLocation}
+        addOnBuildDir=${releaseBaseDir}/businessevents-views/${version}/test-installers
+        latestBuildDir=`ls -t ${addOnBuildDir} | head -1`
+        iDir=${addOnBuildDir}/${latestBuildDir}
+        echo &quot;Copying installers from ${iDir}...&quot;
+        cp ${iDir}/*.zip ${buildReleaseLocation}
+fi
+
+echo &quot;[`date`] Installer available at ${buildReleaseLocation}.&quot;
+cp ${sourceDir}/build/engg_build/engg-build.readme ${buildReleaseLocation}
+cp ${sourceDir}/build/engg_build/engg-fix.readme ${buildReleaseLocation}
+
+# Organize into PORTs
+mkdir ${buildReleaseLocation}/win_x86_64
+mv ${buildReleaseLocation}/*win_x86_64.zip ${buildReleaseLocation}/win_x86_64
+cp ${buildReleaseLocation}/engg-* ${buildReleaseLocation}/win_x86_64
+
+mkdir ${buildReleaseLocation}/linux26gl25_x86_64
+mv ${buildReleaseLocation}/*linux26gl25_x86_64.zip ${buildReleaseLocation}/linux26gl25_x86_64
+cp ${buildReleaseLocation}/engg-* ${buildReleaseLocation}/linux26gl25_x86_64
+
+mkdir ${buildReleaseLocation}/aix61_power_64
+mv ${buildReleaseLocation}/*aix61_power_64.zip ${buildReleaseLocation}/aix61_power_64
+cp ${buildReleaseLocation}/engg-* ${buildReleaseLocation}/aix61_power_64
+
+mkdir ${buildReleaseLocation}/hpux112_ia64
+mv ${buildReleaseLocation}/*hpux112_ia64.zip ${buildReleaseLocation}/hpux112_ia64
+cp ${buildReleaseLocation}/engg-* ${buildReleaseLocation}/hpux112_ia64
+
+mkdir ${buildReleaseLocation}/sol10_x86_64
+mv ${buildReleaseLocation}/*sol10_x86_64.zip ${buildReleaseLocation}/sol10_x86_64
+cp ${buildReleaseLocation}/engg-* ${buildReleaseLocation}/sol10_x86_64
+
+mkdir ${buildReleaseLocation}/macosx_x86_64
+mv ${buildReleaseLocation}/*macosx_x86_64.zip ${buildReleaseLocation}/macosx_x86_64
+cp ${buildReleaseLocation}/engg-* ${buildReleaseLocation}/macosx_x86_64
+
+# Copy Studio SDK Site
+mkdir -p ${buildReleaseLocation}_SDK
+cp ${buildDir}/TIB_*.zip ${buildReleaseLocation}_SDK
+
+
+# Send email notification
+echo &quot;Sending email notification...&quot;
+rm -f build.mail
+cp ${enggDir}/GenericBuild.mail build.mail
+perl -p -i -e &quot;s/Build-/Installer Build-/&quot; build.mail
+buildId=`echo ${buildTag} | cut -f 2 -d.`
+perl -p -i -e &quot;s/xxx/${buildId}/&quot; build.mail
+rDir=`echo ${releaseDir} | sed -e &apos;s:/:\\\\\\\\:g&apos; -e &apos;s:mnt:\\\\\\\\na-h-filer2:&apos;`
+echo ${rDir}
+perl -p -i -e &quot;s/&lt;LINK&gt;/${rDir}\\\\${version}.${buildFldr}\\\\${buildNum}(R${revision})/&quot; build.mail
+asJarPath=`ant showenv-as | awk &apos;/AS_LIB/ {print $4}&apos; | tr -d &quot;[]&quot; | awk &apos;{printf(&quot;%s/as-common.jar&quot;,$1)}&apos;`
+asVersion=`unzip -p ${asJarPath} META-INF/MANIFEST.MF | awk &apos;/Build-Version/ {print $2}&apos;`
+echo &quot;AS version used: ${asVersion}&quot;
+perl -p -i -e &quot;s/&lt;ASVERSION&gt;/${asVersion}/&quot; build.mail
+mail ${successemailaddr} -s &quot;BE Nightly Build - ${buildNum} HF1&quot; &lt; build.mail
+
+mkdir -p /BE_Builds/builder_build_notifications/5.2/test-installers/${version}.${buildFldr}/${revision}</command>
+    </hudson.tasks.Shell>
+  </builders>
+  <publishers>
+    <hudson.plugins.postbuildtask.PostbuildTask plugin="postbuild-task@1.8">
+      <tasks>
+        <hudson.plugins.postbuildtask.TaskProperties>
+          <logTexts>
+            <hudson.plugins.postbuildtask.LogProperties>
+              <logText>BUILD FAILED</logText>
+              <operator>AND</operator>
+            </hudson.plugins.postbuildtask.LogProperties>
+          </logTexts>
+          <EscalateStatus>false</EscalateStatus>
+          <RunIfJobSuccessful>false</RunIfJobSuccessful>
+          <script>export sourceDir=&quot;${WORKSPACE}/5.2&quot;&#xd;
+cd ${sourceDir}/build&#xd;
+cp version_hf.properties.backup version_hf.properties &#xd;
+svn commit --non-interactive --username=qlbuild --password=T!bco123 version_hf.properties -m &quot;reverted&quot;&#xd;
+&#xd;
+&#xd;
+</script>
+        </hudson.plugins.postbuildtask.TaskProperties>
+      </tasks>
+    </hudson.plugins.postbuildtask.PostbuildTask>
+    <hudson.plugins.emailext.ExtendedEmailPublisher plugin="email-ext@2.30.2">
+      <recipientList>$DEFAULT_RECIPIENTS</recipientList>
+      <configuredTriggers>
+        <hudson.plugins.emailext.plugins.trigger.FailureTrigger>
+          <email>
+            <recipientList></recipientList>
+            <subject>$PROJECT_DEFAULT_SUBJECT</subject>
+            <body>$PROJECT_DEFAULT_CONTENT</body>
+            <sendToDevelopers>true</sendToDevelopers>
+            <sendToRequester>false</sendToRequester>
+            <includeCulprits>false</includeCulprits>
+            <sendToRecipientList>false</sendToRecipientList>
+            <attachmentsPattern></attachmentsPattern>
+            <attachBuildLog>false</attachBuildLog>
+            <compressBuildLog>false</compressBuildLog>
+            <replyTo></replyTo>
+          </email>
+        </hudson.plugins.emailext.plugins.trigger.FailureTrigger>
+      </configuredTriggers>
+      <contentType>text/plain</contentType>
+      <defaultSubject>$DEFAULT_SUBJECT</defaultSubject>
+      <defaultContent>$DEFAULT_CONTENT</defaultContent>
+      <attachmentsPattern></attachmentsPattern>
+      <presendScript></presendScript>
+      <attachBuildLog>false</attachBuildLog>
+      <compressBuildLog>false</compressBuildLog>
+      <replyTo>$DEFAULT_REPLYTO</replyTo>
+      <saveOutput>false</saveOutput>
+    </hudson.plugins.emailext.ExtendedEmailPublisher>
+  </publishers>
+  <buildWrappers/>
+</project>

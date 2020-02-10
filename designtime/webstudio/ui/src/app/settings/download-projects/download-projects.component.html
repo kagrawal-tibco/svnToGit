@@ -1,0 +1,41 @@
+<div class="slide-content">
+  <mat-grid-list cols="4" gutterSize='10px' rowHeight="2:1">
+    <mat-grid-tile colspan='1'>
+      <div class="full-top">
+        <h6 mat-subheader>
+          List of Projects
+        </h6>
+        <mat-divider></mat-divider>
+        <div *ngIf="this.privateProjectList.length > 0">  
+          <mat-selection-list #projects [(ngModel)]='this.selectedProjectList'  (ngModelChange)='onProjectSelection($event)'  role="option">
+            <mat-list-option  *ngFor="let project of this.privateProjectList" [value]="project">
+              <a mat-list-item class="clickable">
+                {{project}}
+                <span class='material-icons custom-roles'></span>
+              </a>
+            </mat-list-option>
+          </mat-selection-list>
+        </div>
+        <div *ngIf="this.privateProjectList.length == 0"> 
+          <mat-nav-list>
+            <mat-list-item>
+              <i class="material-icons custom-warning">warning</i>
+              <small>
+                No projects are available for the download. 
+              </small>
+             </mat-list-item>
+           </mat-nav-list>
+        </div>
+        
+      </div>
+    </mat-grid-tile>
+  </mat-grid-list>
+  <mat-divider></mat-divider>
+  <div class="save-button">
+    <button mat-raised-button  
+            [ngClass]= "{'custom-save-button': !this.disableDownload}"
+            [disabled]="this.disableDownload" 
+            (click)="this.downloadProjects()"
+    >Download Projects</button>
+  </div>
+</div>

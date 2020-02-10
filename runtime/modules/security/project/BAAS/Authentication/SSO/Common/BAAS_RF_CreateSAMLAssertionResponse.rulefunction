@@ -1,0 +1,30 @@
+/**
+ * @description Create and cache SAML assertion. Done by IdP.
+ */
+String rulefunction Authentication.SSO.Common.BAAS_RF_CreateSAMLAssertionResponse {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String authnAssnReqId; //Used for response to
+		String assertionId;
+		String assertionIssuerURL;
+		String[] audiences;
+		Authentication.SSO.Concepts.BAAS_C_LoggedInUser loggedInUser;
+	}
+	body {
+		//Create composite concept
+		BAAS_C_AssertionComposite assertionComposite = 
+			Instance.createInstance("xslt://{{/Authentication/SSO/Concepts/BAAS_C_AssertionComposite}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" xmlns:tib=\"http://www.tibco.com/bw/xslt/custom-functions\" version=\"1.0\" exclude-result-prefixes=\"xsl xsd tib\">\n    <xsl:output method=\"xml\"/>\n    <xsl:param name=\"assertionIssuerURL\"/>\n    <xsl:param name=\"loggedInUser\"/>\n    <xsl:param name=\"assertionId\"/>\n    <xsl:param name=\"audiences\"/>\n    <xsl:param name=\"authnAssnReqId\"/>\n    <xsl:template match=\"/\">\n        <createObject>\n            <object>\n                <issuerUrl>\n                    <xsl:value-of select=\"$assertionIssuerURL\"/>\n                </issuerUrl>\n                <issueInstant>\n                    <xsl:value-of select=\"current-dateTime()\"/>\n                </issueInstant>\n                <xsl:if test=\"$loggedInUser/username\">\n                    <subjectName>\n                        <xsl:value-of select=\"$loggedInUser/username\"/>\n                    </subjectName>\n                </xsl:if>\n                <authnInstant>\n                    <xsl:value-of select=\"current-dateTime()\"/>\n                </authnInstant>\n                <assertionId>\n                    <xsl:value-of select=\"$assertionId\"/>\n                </assertionId>\n                <condition_notBefore>\n                    <xsl:value-of select=\"current-dateTime()\"/>\n                </condition_notBefore>\n                <condition_notAfter>\n                    <xsl:value-of select=\"tib:add-to-dateTime(current-dateTime(), 0, 0, 0, 0, 30, 0)\"/>\n                </condition_notAfter>\n                <xsl:for-each select=\"$audiences/elements\">\n                    <audiences>\n                        <xsl:value-of select=\".\"/>\n                    </audiences>\n                </xsl:for-each>\n                <authnAssnReqId>\n                    <xsl:value-of select=\"$authnAssnReqId\"/>\n                </authnAssnReqId>\n            </object>\n        </createObject>\n    </xsl:template>\n</xsl:stylesheet>");
+		String samlAssertionResponse = SAML.createSAMLAssertionResponseContent(assertionComposite);
+		String assertionContent = XPath.execute("$var//saml:Assertion", samlAssertionResponse, "samlp=urn:oasis:names:tc:SAML:2.0:protocol,saml=urn:oasis:names:tc:SAML:2.0:assertion");
+		
+		//Extract assertion from it
+		BAAS_C_Assertion assertion = 
+			Instance.createInstance("xslt://{{/Authentication/SSO/Concepts/BAAS_C_Assertion}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"1.0\" exclude-result-prefixes=\"xsl xsd\">\n    <xsl:output method=\"xml\"/>\n    <xsl:param name=\"assertionId\"/>\n    <xsl:param name=\"assertionContent\"/>\n    <xsl:template match=\"/\">\n        <createObject>\n            <object>\n                <xsl:attribute name=\"extId\">\n                    <xsl:value-of select=\"$assertionId\"/>\n                </xsl:attribute>\n                <assertionContent>\n                    <xsl:value-of select=\"$assertionContent\"/>\n                </assertionContent>\n            </object>\n        </createObject>\n    </xsl:template>\n</xsl:stylesheet>");
+		
+		//set reference in user assertion
+		loggedInUser.userSession.associatedAssertion = assertion;	
+		return samlAssertionResponse;
+	}
+} 

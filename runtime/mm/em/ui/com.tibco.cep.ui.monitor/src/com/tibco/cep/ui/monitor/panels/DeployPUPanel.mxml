@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Panel xmlns:mx="http://www.adobe.com/2006/mxml" 
+					layout="horizontal" title="Process Units Deployment" 
+					styleName="bttnPanelDialogStyle" width="100%" paddingLeft="10" paddingRight="10">
+
+	<mx:Script>
+		<![CDATA[
+			import com.tibco.cep.ui.monitor.panes.table.GVsTableMultDUs;
+			import mx.containers.VBox;
+			import com.tibco.cep.ui.monitor.util.Util;
+			import mx.core.Container;
+			import mx.utils.DisplayUtil;
+			import mx.utils.ObjectUtil;
+		
+			private var _stackIndex:int = 0;
+			private var _previewIndex:int = -1;
+
+			public function get stackIndex():int {return _stackIndex;}
+			
+			public function next():void {	//TODO: Put comments on this code
+				btn_Prev.enabled = true;
+				_stackIndex++;
+				
+				if(_stackIndex == duViewStack.numChildren-1) {
+					btn_Next.enabled = false;
+					btn_Finish.enabled = true;
+				} else if (_stackIndex < duViewStack.numChildren-1) {
+					btn_Next.enabled = true;
+					btn_Finish.enabled = false;
+				} else if (_stackIndex == duViewStack.numChildren){ //only one item in the view stack
+					btn_Prev.enabled = false;
+					btn_Next.enabled = false;
+					btn_Finish.enabled = true;
+					return;
+				}
+				
+				duViewStack.selectedChild = duViewStack.getChildAt(_stackIndex) as Container; 
+			}
+			
+			public function prev():void {
+				_stackIndex--;
+				
+				if (_stackIndex < duViewStack.numChildren-1) {
+					btn_Next.enabled = true;
+					btn_Finish.enabled = false;
+					
+					if (_stackIndex <= 0){
+						_stackIndex = 0;
+						btn_Prev.enabled=false;
+					}										
+				}
+				
+				duViewStack.selectedChild = duViewStack.getChildAt(_stackIndex) as Container;
+			}
+		]]>
+	</mx:Script>
+
+    <mx:ViewStack id="duViewStack" width="500" height="500">
+		<mx:Form id="deployPUForm" styleName="bttnPanelFormStyle" width="100%">
+			<mx:FormItem label="Host Name:" styleName="formLblStyle" width="100%" >
+	            <mx:Label id="hostName" styleName="labelStyle" width="100%" selectable="true"/>
+	        </mx:FormItem>
+			<mx:FormItem label="IP:" styleName="formLblStyle" width="100%" >
+	            <mx:Label id="ip" styleName="labelStyle" width="100%" selectable="true" />
+	        </mx:FormItem>
+			<mx:FormItem label="User Name:" styleName="formLblStyle">
+	            <mx:TextInput id="username" styleName="textInputStyle"/>
+	        </mx:FormItem>
+			<mx:FormItem label="Password:" styleName="formLblStyle">
+	            <mx:TextInput id="password" displayAsPassword="true" styleName="textInputStyle" />
+	        </mx:FormItem>
+		</mx:Form>
+    </mx:ViewStack>
+	
+	<mx:ControlBar styleName="bttnPanelControlBarStyle" width="100%">
+		<mx:Spacer height="100%" width="100%"/>
+		<mx:Button id="btn_Prev" label="&lt;Prev" buttonMode="true" enabled="false" useHandCursor="true" styleName="loginBtnStyle"/>
+		<mx:Button id="btn_Next" label="Next&gt;" buttonMode="true" useHandCursor="true" styleName="loginBtnStyle" enabled="false"/>
+		<mx:Button id="btn_Finish" label="Finish" buttonMode="true" enabled="false" useHandCursor="true" styleName="loginBtnStyle"/>
+		<mx:Button id="btn_Cancel" label="Cancel" buttonMode="true" useHandCursor="true" styleName="loginBtnStyle"/>
+	</mx:ControlBar>
+</mx:Panel>

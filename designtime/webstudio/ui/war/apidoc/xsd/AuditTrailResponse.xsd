@@ -1,0 +1,37 @@
+<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:element name="response">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="status" type="xs:unsignedByte" />
+        <xs:element name="startRow" type="xs:unsignedByte" />
+        <xs:element name="endRow" type="xs:unsignedByte" />
+        <xs:element name="totalRows" type="xs:unsignedByte" />
+        <xs:element name="data">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element maxOccurs="unbounded" name="record">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="userName" type="xs:string" />
+                    <xs:element minOccurs="0" name="projectName" type="xs:string" />
+                    <xs:element minOccurs="0" name="artifactPath" type="xs:string" />
+                    <xs:element name="actionType" type="xs:string" />
+                    <xs:element name="actionTime" type="xs:unsignedLong" />
+                    <xs:element minOccurs="0" name="comment" type="xs:string" />
+                    <xs:element minOccurs="0" name="artifactType" type="xs:string" />
+                  </xs:sequence>
+                  <xs:attribute name="Id" type="xs:unsignedShort" use="required" />
+                  <xs:attribute name="type" type="xs:string" use="required" />
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+            <xs:attribute name="Id" type="xs:unsignedShort" use="required" />
+            <xs:attribute name="type" type="xs:string" use="required" />
+          </xs:complexType>
+        </xs:element>
+      </xs:sequence>
+      <xs:attribute name="Id" type="xs:unsignedShort" use="required" />
+      <xs:attribute name="type" type="xs:string" use="required" />
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

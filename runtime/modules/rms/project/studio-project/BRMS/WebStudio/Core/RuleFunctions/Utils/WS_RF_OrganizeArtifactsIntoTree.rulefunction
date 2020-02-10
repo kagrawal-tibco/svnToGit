@@ -1,0 +1,36 @@
+/**
+ * @description Organize flat paths into heirarchy for tree type representation.
+ */
+WebStudio.Core.Concepts.DataSources.TreeModel.WS_C_AbstractTreeNode rulefunction WebStudio.Core.RuleFunctions.Utils.WS_RF_OrganizeArtifactsIntoTree {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String artifactFullPath;
+		String artifactType;
+	}
+	body {
+		//Split it on basis of last /
+		int lastIndexOfSlash = String.lastIndexOfString(artifactFullPath, 0, "/");
+		String parentResource = String.substring(artifactFullPath, 0, lastIndexOfSlash);
+		if (parentResource == null || String.length(parentResource) == 0) parentResource = "/";
+		//Check if concept exists with this parentresource extid
+		WS_C_AbstractTreeNode parentResourceNode = Instance.getByExtId(parentResource);
+		if (parentResourceNode == null) {
+			parentResourceNode = 
+				Instance.createInstance("xslt://{{/WebStudio/Core/Concepts/DataSources/TreeModel/WS_C_InnerNode}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"1.0\" exclude-result-prefixes=\"xsl xsd\">\n    <xsl:output method=\"xml\"/>\n    <xsl:param name=\"parentResource\"/>\n    <xsl:template match=\"/\">\n        <createObject>\n            <object>\n                <xsl:attribute name=\"extId\">\n                    <xsl:value-of select=\"$parentResource\"/>\n                </xsl:attribute>\n                <nodeType>\n                    <xsl:value-of select=\"&quot;Folder&quot;\"/>\n                </nodeType>\n            </object>\n        </createObject>\n    </xsl:template>\n</xsl:stylesheet>");
+		}	
+		//Create an instance for this artifactPath (Can be folder or artifact)
+		WS_C_AbstractTreeNode childResourceNode = Instance.getByExtId(artifactFullPath);
+		if (childResourceNode == null) {
+			childResourceNode = 
+				Instance.createInstance("xslt://{{/WebStudio/Core/Concepts/DataSources/TreeModel/WS_C_AbstractTreeNode}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"1.0\" exclude-result-prefixes=\"xsl xsd\">\n    <xsl:output method=\"xml\"/>\n    <xsl:param name=\"artifactFullPath\"/>\n    <xsl:template match=\"/\">\n        <createObject>\n            <object>\n                <xsl:attribute name=\"extId\">\n                    <xsl:value-of select=\"$artifactFullPath\"/>\n                </xsl:attribute>\n            </object>\n        </createObject>\n    </xsl:template>\n</xsl:stylesheet>");
+		}
+			
+		childResourceNode.nodeId = childResourceNode@id;					
+		//Set above parent's id
+		childResourceNode.parentId = parentResourceNode@id;
+		childResourceNode.nodeType = artifactType;
+		return childResourceNode;
+	}
+}

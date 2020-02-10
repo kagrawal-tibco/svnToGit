@@ -1,0 +1,249 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<project name="WebStudio" default="build" basedir=".">
+	<!-- Configure path to GWT SDK -->
+	<!--<dirname property="be.basedir" file="${ant.file.be}/../../build" />-->
+
+	<taskdef resource="net/sf/antcontrib/antcontrib.properties" />
+
+	<!-- ##################### -->
+	<!-- Environment variables -->
+	<!-- ##################### -->
+
+	<property environment="env" />
+
+	<!-- ####################### -->
+	<!-- User defined properties -->
+	<!-- ####################### -->
+	<property name="gwt.sdk" value="${env.GWT_HOME}" />
+	<property name="webstudio.dir" value="${be.basedir}/../designtime/webstudio/WebStudio" />
+	<property name="newUI.src" value="${be.basedir}/../designtime/webstudio/ui" />
+
+	<fail unless="gwt.sdk" message="You must set the GWT_HOME environment variable to point to your GWT SDK" />
+
+	<path id="project.class.path">
+		<pathelement location="${webstudio.dir}/war/WEB-INF/classes" />
+		
+		<fileset dir="${gwt.sdk}">
+			<include name="gwt-user.jar" />
+			<include name="gwt-dev*.jar" />
+			<include name="validation-api-*.jar" />
+			<include name="gwt-servlet.jar"/>
+		</fileset>
+		
+		<!-- Add any additional non-server libs (such as JUnit) -->		
+		<fileset dir="${webstudio.dir}/war/WEB-INF/lib" includes="**/*.jar" />
+		
+		<fileset dir="${lib.exp}">
+			<include name="cep-base.jar" />
+			<include name="cep-common.jar" />
+			<include name="cep-kernel.jar" />
+			<include name="cep-ui-rt-common.jar" />
+			<include name="cep-interpreter.jar" />
+		</fileset>
+		
+		<fileset dir="${env.TRA_HOME}/${env.TRA_TAG}/${env.PORT}/lib">
+			<include name="*.jar" />
+		</fileset>
+		
+		<fileset dir="${studiobin.exp}/../eclipse/plugins">
+			<include name="com.tibco.cep.studio.util_*.jar" />
+			<include name="com.tibco.cep.decision.table*.jar" />
+			<include name="com.tibco.cep.bpmn.common*.jar" />
+		</fileset>
+		
+		<fileset dir="${env.ECLIPSE_EMF_HOME}/plugins">
+			<include name="org.eclipse.emf.ecore.xmi_*.jar" />
+			<include name="org.eclipse.emf.ecore_*.jar" />
+			<include name="org.eclipse.emf.common_*.jar" />
+		</fileset>
+		
+		<fileset dir="${env.ECLIPSE_MDT_HOME}/plugins">
+			<include name="org.eclipse.uml2.uml_*.jar" />
+		</fileset>
+		
+		<fileset dir="${env.TOMSAWYER_PERSPECTIVES_HOME}/lib">
+			<include name="*gwt*dev.jar" />
+		</fileset>
+		
+		<fileset dir="${env.TOMSAWYER_PERSPECTIVES_HOME}/lib/thirdparty">
+			<include name="*.jar" />
+            <exclude name="gwt-servlet.jar"/>
+            <exclude name="jena.jar"/>
+	     </fileset>
+	</path>
+	
+	<target name="libs" description="Copy only needed libs to WEB-INF/lib">
+		<copy todir="${webstudio.dir}/war/WEB-INF/lib" overwrite="true" verbose="true">
+		    <fileset dir="${env.SMARTGWT_EE_HOME}/lib">
+				<include name="commons-fileupload*.jar" />
+				<include name="isc-jakarta-oro-*.jar" />
+				<include name="isomorphic_assembly.jar" />
+				<include name="isomorphic_compression.jar" />
+				<include name="isomorphic_core_rpc.jar" />
+				<include name="isomorphic_tools.jar" />
+				<include name="smartgwt-skins.jar" />
+				<include name="smartgwtee.jar" />
+		    	<include name="commons-jxpath*.jar" />
+		    	<include name="commons-pool*.jar" />
+			</fileset>
+
+			<!--fileset dir="${LOG4J_LIB}">
+				<include name="log4j-${env.LOG4J_VERSION}.jar" />			    
+			</fileset-->
+		</copy>
+	</target>
+	
+
+	<target name="javac" depends="libs" description="Compile java source">
+		<delete dir="${webstudio.dir}/war/WEB-INF/classes" failonerror="false"/>
+		<mkdir dir="${webstudio.dir}/war/WEB-INF/classes" />
+		
+		<javac srcdir="${webstudio.dir}/src" includes="**" encoding="utf-8" destdir="${webstudio.dir}/war/WEB-INF/classes" source="1.5" target="1.5" nowarn="true" debug="true" debuglevel="lines,vars,source">
+			<classpath refid="project.class.path" />
+		</javac>
+		<copy todir="${webstudio.dir}/war/WEB-INF/classes">
+			<fileset dir="${webstudio.dir}/src" excludes="**/*.java" />
+		</copy>
+	</target>
+
+	<target name="gwtc" depends="javac" description="GWT compile to JavaScript">
+		<delete dir="${webstudio.dir}/war/webstudio" failonerror="false"/>
+		<java failonerror="true" fork="true" classname="com.google.gwt.dev.Compiler">
+			<classpath>
+				<pathelement location="${webstudio.dir}/src" />
+				<pathelement location="${env.SRC_ROOT}/common/com.tibco.cep.studio.common/src" />
+				<pathelement location="${env.SRC_ROOT}/common/com.tibco.cep.studio.util/src" />
+				<pathelement location="${env.SRC_ROOT}/designtime/studio/plugins/com.tibco.cep.diagramming/src" />
+				<pathelement location="${env.SRC_ROOT}/designtime/studio/plugins/com.tibco.cep.bpmn.core/src" />
+				<pathelement location="${env.SRC_ROOT}/designtime/studio/plugins/com.tibco.cep.bpmn.rt/src" />
+				<pathelement location="${env.SRC_ROOT}/designtime/studio/plugins/com.tibco.cep.bpmn.ui/src" />
+				<path refid="project.class.path" />
+			</classpath>
+			
+			<!-- add jvmarg -Xss16M or similar if you see a StackOverflowError -->
+			<jvmarg value="-Xms128M" />
+			<jvmarg value="-Xmx2048M" />
+			
+			<arg value="-war" />
+			<arg value="${webstudio.dir}/war" />
+			<arg value="-style" />
+			<arg value="PRETTY" />
+			<!-- Additional arguments like -style PRETTY or -logLevel DEBUG -->
+			<arg value="com.tibco.cep.webstudio.WebStudio" />
+		</java>
+	</target>
+
+	<target name="hosted" depends="javac" description="Run hosted mode">
+		<java failonerror="true" fork="true" classname="com.google.gwt.dev.DevMode">
+			<classpath>
+				<pathelement location="${webstudio.dir}/src" />
+				<pathelement location="${env.SRC_ROOT}/common/com.tibco.cep.studio.common/src" />
+				<pathelement location="${env.SRC_ROOT}/common/com.tibco.cep.studio.util/src" />
+				<pathelement location="${env.SRC_ROOT}/designtime/studio/plugins/com.tibco.cep.diagramming/src" />
+				<pathelement location="${env.SRC_ROOT}/designtime/studio/plugins/com.tibco.cep.bpmn.core/src" />
+				<pathelement location="${env.SRC_ROOT}/designtime/studio/plugins/com.tibco.cep.bpmn.rt/src" />
+				<pathelement location="${env.SRC_ROOT}/designtime/studio/plugins/com.tibco.cep.bpmn.ui/src" />
+				<path refid="project.class.path" />
+			</classpath>
+			<jvmarg value="-Xmx600M" />
+			<arg value="-startupUrl" />
+			<arg value="WebStudio.html" />
+			<arg value="-war" />
+			<arg value="${webstudio.dir}/war" />
+			<!-- Additional arguments like -style PRETTY or -logLevel DEBUG -->
+			<arg value="com.tibco.cep.webstudio.WebStudio" />
+		</java>
+	</target>
+
+	<target name="build" depends="gwtc" description="Build this project"/>
+
+	<target name="war" depends="webstudio-locales-jars, webstudio-jar, new-ui-war" description="Create a war file">
+		<delete file="${webstudio.dir}/../WebStudio.war" failonerror="false"/>
+		
+		<mkdir dir="${webstudio.dir}/war/new"/>
+		
+		<copy todir="${webstudio.dir}/war/new">
+			<fileset dir="${newUI.src}/dist">
+		    </fileset>
+		</copy>
+		
+		<zip destfile="${webstudio.dir}/../WebStudio.war">
+			<fileset dir="${webstudio.dir}/war">
+				<exclude name="ds/"/>
+				<exclude name="*.log"/>
+			</fileset>
+		</zip>
+		<delete dir="${webstudio.dir}/war/new"/>
+		<delete dir="${newUI.src}/dist"/>
+		<delete dir="${newUI.src}/node"/>
+	</target>
+	
+	<target name="new-ui-war">
+		<if>
+		   <equals arg1="${env.ISWINDOWS}" arg2="1" />
+			<then>
+				<exec dir="${newUI.src}" executable="cmd">
+					<env key="JAVA_HOME" value="${env.JAVA_HOME}"/>
+					<arg line="/c ${env.MAVEN_HOME}/bin/mvn clean package" />
+				</exec>
+			</then>
+			<else>
+				<exec dir="${newUI.src}" executable="sh">
+					<env key="JAVA_HOME" value="${env.JAVA_HOME}"/>
+					<arg line="-c '${env.MAVEN_HOME}/bin/mvn clean package'" />
+				</exec>
+			</else>
+		</if>
+	</target>
+	
+	<target name="webstudio-jar" depends="build" description="Create Webstudio jar">
+		<jar destfile="${webstudio.dir}/war/WEB-INF/classes/webstudio.jar" basedir="${webstudio.dir}/war/WEB-INF/classes"/>
+		
+		<mkdir dir="${rms.exp}/lib"/>
+		
+		<copy todir="${rms.exp}/lib">
+			<fileset dir="${webstudio.dir}/war/WEB-INF/classes">
+				<include name="webstudio.jar" />
+			</fileset>
+		</copy>
+		<delete dir="${webstudio.dir}/war/WEB-INF/classes" failonerror="false" />
+	</target>
+	
+	<target name="webstudio-locales-jars" depends="build" description="Create language packs">
+		<jar destfile="${webstudio.dir}/war/WEB-INF/classes/en_US.jar" basedir="${webstudio.dir}/war/WEB-INF/classes/com/tibco/cep/webstudio/client/i18n/en_US"/>
+		<!--
+		<jar destfile="${webstudio.dir}/war/WEB-INF/classes/de_DE.jar" basedir="${webstudio.dir}/war/WEB-INF/classes/com/tibco/cep/webstudio/client/i18n/de_DE"/>
+		<jar destfile="${webstudio.dir}/war/WEB-INF/classes/fr_FR.jar" basedir="${webstudio.dir}/war/WEB-INF/classes/com/tibco/cep/webstudio/client/i18n/fr_FR"/>
+		-->
+		
+		<mkdir dir="${rms.exp}/lib/locales"/>
+		
+		<copy todir="${rms.exp}/lib/locales">
+			<fileset dir="${webstudio.dir}/war/WEB-INF/classes">
+				<include name="en_US.jar" />
+				<!--
+				<include name="de_DE.jar" />
+				<include name="fr_FR.jar" />
+				-->
+			</fileset>
+		</copy>
+		<delete failonerror="false">
+		    <fileset dir="${webstudio.dir}/war/WEB-INF/classes">
+		        <include name="en_US.jar" />
+				<!--
+				<include name="de_DE.jar" />
+				<include name="fr_FR.jar" />
+				-->
+		    </fileset>
+		</delete>
+	</target>
+
+	<target name="clean" description="Cleans this project">
+		<delete failonerror="false">
+			<fileset dir="${webstudio.dir}/war/WEB-INF/lib" excludes=".svn" />
+		</delete>
+		<delete dir="${webstudio.dir}/war/WEB-INF/classes" failonerror="false" />
+		<delete dir="${webstudio.dir}/war/webstudio" failonerror="false" />
+	</target>
+
+</project>

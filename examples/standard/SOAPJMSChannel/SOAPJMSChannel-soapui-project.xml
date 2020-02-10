@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<con:soapui-project activeEnvironment="Default" name="SOAPJMSChannel" resourceRoot="${projectDir}" soapui-version="5.0.0" xmlns:con="http://eviware.com/soapui/config"><con:settings><con:setting id="ProjectSettings@hermesConfig">/opt/SmartBear/SoapUI-5.0.0/hermesJMS/cfg</con:setting></con:settings><con:interface xsi:type="con:WsdlInterface" wsaVersion="NONE" name="MathOpsBinding" type="wsdl" bindingName="{http://www.tibco.com/be/ontology/TestSOAP}MathOpsBinding" soapVersion="1_2" anonymous="optional" definition="JmsBindingMathOpsConcreteWSDL.wsdl" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:settings/><con:definitionCache type="TEXT" rootPart="file:/opt/SmartBear/SoapUI-5.0.0/bin/JmsBindingMathOpsConcreteWSDL.wsdl"><con:part><con:url>file:/opt/SmartBear/SoapUI-5.0.0/bin/JmsBindingMathOpsConcreteWSDL.wsdl</con:url><con:content><![CDATA[<!--Created by TIBCO WSDL-->
+<wsdl:definitions name="_TestSOAP" targetNamespace="http://www.tibco.com/be/ontology/TestSOAP" xmlns:tns="http://www.tibco.com/be/ontology/TestSOAP" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:ns0="http://www.tibco.com/TNT/webservices/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
+  <wsdl:types>
+    <s:schema targetNamespace="http://www.tibco.com/TNT/webservices/" elementFormDefault="unqualified" attributeFormDefault="unqualified" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:tm="http://microsoft.com/wsdl/mime/textMatching/" xmlns:s="http://www.w3.org/2001/XMLSchema" xmlns:tns="http://www.tibco.com/TNT/webservices/" xmlns:http="http://schemas.xmlsoap.org/wsdl/http/" xmlns:mime="http://schemas.xmlsoap.org/wsdl/mime/">
+      <s:element name="MathOpsRequest">
+        <s:complexType>
+          <s:sequence>
+            <s:element name="a" type="s:float"/>
+            <s:element name="b" type="s:float"/>
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="MathOpsResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element name="result" type="s:float"/>
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+    </s:schema>
+  </wsdl:types>
+  <wsdl:message name="AddRequestMsg">
+    <wsdl:part name="MathOpsRequestMsgPart" element="ns0:MathOpsRequest"/>
+  </wsdl:message>
+  <wsdl:message name="AddResponseMsg">
+    <wsdl:part name="MathOpsResponseMsgPart" element="ns0:MathOpsResponse"/>
+  </wsdl:message>
+  <wsdl:message name="MultiplyRequestMsg">
+    <wsdl:part name="MathOpsRequestMsgPart" element="ns0:MathOpsRequest"/>
+  </wsdl:message>
+  <wsdl:message name="MultiplyResponseMsg">
+    <wsdl:part name="MathOpsResponseMsgPart" element="ns0:MathOpsResponse"/>
+  </wsdl:message>
+  <wsdl:message name="SubtractRequestMsg">
+    <wsdl:part name="MathOpsRequestMsgPart" element="ns0:MathOpsRequest"/>
+  </wsdl:message>
+  <wsdl:message name="SubtractResponseMsg">
+    <wsdl:part name="MathOpsResponseMsgPart" element="ns0:MathOpsResponse"/>
+  </wsdl:message>
+  <wsdl:message name="DivideRequestMsg">
+    <wsdl:part name="MathOpsRequestMsgPart" element="ns0:MathOpsRequest"/>
+  </wsdl:message>
+  <wsdl:message name="DivideResponseMsg">
+    <wsdl:part name="MathOpsResponseMsgPart" element="ns0:MathOpsResponse"/>
+  </wsdl:message>
+  <wsdl:portType name="MathOps">
+    <wsdl:operation name="Add">
+      <wsdl:input message="tns:AddRequestMsg"/>
+      <wsdl:output message="tns:AddResponseMsg"/>
+    </wsdl:operation>
+    <wsdl:operation name="Multiply">
+      <wsdl:input message="tns:MultiplyRequestMsg"/>
+      <wsdl:output message="tns:MultiplyResponseMsg"/>
+    </wsdl:operation>
+    <wsdl:operation name="Subtract">
+      <wsdl:input message="tns:SubtractRequestMsg"/>
+      <wsdl:output message="tns:SubtractResponseMsg"/>
+    </wsdl:operation>
+    <wsdl:operation name="Divide">
+      <wsdl:input message="tns:DivideRequestMsg"/>
+      <wsdl:output message="tns:DivideResponseMsg"/>
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:service name="MathOpsService">
+    <wsdl:port name="MathOpsServicePort" binding="tns:MathOpsBinding">
+      <soap:address location=""/>
+      <ns1:connectionFactory xmlns:ns1="http://www.tibco.com/namespaces/ws/2004/soap/binding/JMS">QueueConnectionFactory</ns1:connectionFactory>
+      <ns1:targetAddress destination="queue" xmlns:ns1="http://www.tibco.com/namespaces/ws/2004/soap/binding/JMS">queue.mathops</ns1:targetAddress>
+    </wsdl:port>
+  </wsdl:service>
+  <wsdl:binding name="MathOpsBinding" type="tns:MathOps">
+    <soap:binding style="document" transport="http://www.tibco.com/namespaces/ws/2004/soap/binding/JMS"/>
+    <wsdl:operation name="Add">
+      <soap:operation soapAction="Add" style="document"/>
+      <wsdl:input>
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal"/>
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="Multiply">
+      <soap:operation soapAction="Multiply" style="document"/>
+      <wsdl:input>
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal"/>
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="Subtract">
+      <soap:operation soapAction="Subtract" style="document"/>
+      <wsdl:input>
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal"/>
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="Divide">
+      <soap:operation soapAction="Divide" style="document"/>
+      <wsdl:input>
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal"/>
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+</wsdl:definitions>]]></con:content><con:type>http://schemas.xmlsoap.org/wsdl/</con:type></con:part></con:definitionCache><con:endpoints><con:endpoint>jms://EMS::queue_queue.mathops::queue_queue.add.reply</con:endpoint><con:endpoint>jms://EMS::queue_queue.mathops::queue_queue.divide.reply</con:endpoint><con:endpoint>jms://EMS::queue_queue.mathops::queue_queue.multiply.reply</con:endpoint><con:endpoint>jms://EMS::queue_queue.mathops::queue_queue.subtract.reply</con:endpoint></con:endpoints><con:operation isOneWay="false" action="Add" name="Add" bindingOperationName="Add" type="Request-Response" inputName="" receivesAttachments="false" sendsAttachments="false" anonymous="optional"><con:settings/><con:call name="Request 1"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting></con:settings><con:encoding>UTF-8</con:encoding><con:endpoint>jms://EMS::queue_queue.mathops::queue_queue.add.reply</con:endpoint><con:request><![CDATA[<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:web="http://www.tibco.com/TNT/webservices/">
+   <soap:Header/>
+   <soap:Body>
+      <web:MathOpsRequest>
+         <a>3</a>
+         <b>44</b>
+      </web:MathOpsRequest>
+   </soap:Body>
+</soap:Envelope>]]></con:request><con:credentials><con:authType>No Authorization</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT" soapActionAdd="true"/><con:jmsPropertyConfig/><con:wsaConfig mustUnderstand="NONE" version="200508" action="http://www.tibco.com/be/ontology/TestSOAP/MathOps/AddRequest"/><con:wsrmConfig version="1.2"/></con:call></con:operation><con:operation isOneWay="false" action="Divide" name="Divide" bindingOperationName="Divide" type="Request-Response" inputName="" receivesAttachments="false" sendsAttachments="false" anonymous="optional"><con:settings/><con:call name="Request 1"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting></con:settings><con:encoding>UTF-8</con:encoding><con:endpoint>jms://EMS::queue_queue.mathops::queue_queue.divide.reply</con:endpoint><con:request><![CDATA[<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:web="http://www.tibco.com/TNT/webservices/">
+   <soap:Header/>
+   <soap:Body>
+      <web:MathOpsRequest>
+         <a>3</a>
+         <b>4</b>
+      </web:MathOpsRequest>
+   </soap:Body>
+</soap:Envelope>]]></con:request><con:credentials><con:authType>No Authorization</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT" soapActionAdd="true"/><con:jmsPropertyConfig/><con:wsaConfig mustUnderstand="NONE" version="200508" action="http://www.tibco.com/be/ontology/TestSOAP/MathOps/DivideRequest"/><con:wsrmConfig version="1.2"/></con:call></con:operation><con:operation isOneWay="false" action="Multiply" name="Multiply" bindingOperationName="Multiply" type="Request-Response" inputName="" receivesAttachments="false" sendsAttachments="false" anonymous="optional"><con:settings/><con:call name="Request 1"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting></con:settings><con:encoding>UTF-8</con:encoding><con:endpoint>jms://EMS::queue_queue.mathops::queue_queue.multiply.reply</con:endpoint><con:request><![CDATA[<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:web="http://www.tibco.com/TNT/webservices/">
+   <soap:Header/>
+   <soap:Body>
+      <web:MathOpsRequest>
+         <a>3</a>
+         <b>4</b>
+      </web:MathOpsRequest>
+   </soap:Body>
+</soap:Envelope>]]></con:request><con:credentials><con:authType>No Authorization</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT" soapActionAdd="true"/><con:jmsPropertyConfig/><con:wsaConfig mustUnderstand="NONE" version="200508" action="http://www.tibco.com/be/ontology/TestSOAP/MathOps/MultiplyRequest"/><con:wsrmConfig version="1.2"/></con:call></con:operation><con:operation isOneWay="false" action="Subtract" name="Subtract" bindingOperationName="Subtract" type="Request-Response" inputName="" receivesAttachments="false" sendsAttachments="false" anonymous="optional"><con:settings/><con:call name="Request 1"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting></con:settings><con:encoding>UTF-8</con:encoding><con:endpoint>jms://EMS::queue_queue.mathops::queue_queue.subtract.reply</con:endpoint><con:request><![CDATA[<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:web="http://www.tibco.com/TNT/webservices/">
+   <soap:Header/>
+   <soap:Body>
+      <web:MathOpsRequest>
+         <a>3</a>
+         <b>4</b>
+      </web:MathOpsRequest>
+   </soap:Body>
+</soap:Envelope>]]></con:request><con:credentials><con:authType>No Authorization</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT" soapActionAdd="true"/><con:jmsPropertyConfig/><con:wsaConfig mustUnderstand="NONE" version="200508" action="http://www.tibco.com/be/ontology/TestSOAP/MathOps/SubtractRequest"/><con:wsrmConfig version="1.2"/></con:call></con:operation></con:interface><con:properties/><con:wssContainer/><con:oAuth2ProfileContainer/></con:soapui-project>

@@ -1,0 +1,214 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+    <title> Overdraft Notifications
+
+        - TIBCO BusinessEvents&reg; WebStudio Examples</title>
+
+<meta http-equiv="Content-type" content="text/html; charset=iso-8859-1" />
+<meta http-equiv="Content-Language" content="en-us" />
+<link rel="Shortcut Icon" href="../../_resources/icon.gif" type="image/gif" />
+<style type="text/css" media="all">@import "../../_resources/examples.css";</style>
+<script type="text/javascript" src="../../_resources/examples.js" /></script>
+<script type="text/javascript">
+function buildForms() {
+ var form;
+
+ SendEventForm.setServer("http://localhost:8011");
+
+ form = SendEventForm.get("createAccountForm");
+ form.setDestinationPath("/Channels/HTTP/AllOps");
+ form.setEventPath("/Events/Create_Account");
+ form.addProperty("AccountID", "Bob");
+ form.addProperty("Deposit", "20000");
+ form.build();
+
+ form = SendEventForm.get("debitAccountForm");
+ form.setDestinationPath("/Channels/HTTP/AllOps");
+ form.setEventPath("/Events/Debit_Account");
+ form.addProperty("AccountID", "Bob");
+ form.addProperty("Amount", "30000");
+ form.build();
+
+ form = SendEventForm.get("creditAccountForm");
+ form.setDestinationPath("/Channels/HTTP/AllOps");
+ form.setEventPath("/Events/Credit_Account");
+ form.addProperty("AccountID", "Bob");
+ form.addProperty("Amount", "10000");
+ form.build();
+
+}
+</script>
+</head>
+
+<body onLoad="buildForms()">
+
+
+<h1>Overdraft Notifications</h1>
+
+<h2>Purpose of This Example</h2>
+
+<p>This example shows how to use WebStudio to develop, commit, approve, and deploy business rules. It also shows the execution of deployed business rules.
+In this example, we will create business rules to:</p>
+<ul>
+    <li>set the account type</li>
+    <li>set up when to generate overdraft notifications</li>
+</ul>
+
+
+<h2>How to Run the Example</h2>
+
+<ol>
+	<li><p>For Hot deployment settings - Update <i>BE_HOME</i>/rms/bin/RMS.cdd to set appropriate hot deployment parameters. Refer to property group namely - HotDeploy (go through the documentation for more details).</p>
+    </li>
+	
+	<li>Additionally update the cdd for overdraftnotifications, located at <i>BE_HOME</i>/examples/standard/WebStudio/OverdraftNotifications/Deployments to add property indicating where to look for artifacts to hot deploy. Typically this points to the shared location in RMS, i.e. for RTI, "be.cluster.ruletemplateinstances.deploy.dir" points to <i>BE_HOME</i>/rms/shared/OverdraftNotifications".
+	</li>
+
+    <li><p>Open a command window and at the command prompt,
+        start the TIBCO BusinessEvents engine to run the cache agent. Use the following command:
+        Substitute your actual value for <i>BE_HOME</i>.</p>
+<pre class="commands">
+cd <i>BE_HOME</i>/examples/standard/WebStudio
+<i>BE_HOME</i>/bin/be-engine --propFile <i>BE_HOME</i>\bin\be-engine.tra -u cache -c OverdraftNotifications/Deployments/overdraftnotifications.cdd OverdraftNotifications.ear
+</pre>
+
+        <p>Adapt these commands as needed.
+            For example, if you have customized the example project,
+            or are running it from a different directory.</p>
+    </li>
+
+    <li><p>Open a second command window and at the command prompt,
+        start the TIBCO BusinessEvents engine to run the inference agent. Use the following command:
+        Substitute your actual value for <i>BE_HOME</i>.</p>
+
+<pre class="commands">
+cd <i>BE_HOME</i>/examples/standard/WebStudio
+<i>BE_HOME</i>/bin/be-engine --propFile <i>BE_HOME</i>\bin\be-engine.tra -u default -c OverdraftNotifications/Deployments/overdraftnotifications.cdd OverdraftNotifications.ear
+</pre>
+        </li>
+
+	
+	
+    <li><p>Open a command window and at the command prompt, start the TIBCO BusinessEvents RMS using the following command.
+        Substitute your actual value for <i>BE_HOME</i>.</p>
+<pre class="commands">
+cd <i>BE_HOME</i>/rms/bin
+be-rms
+</pre>
+    </li>
+
+    <li><p>Launch the URL <code>http://localhost:8090/WebStudio/</code>
+        using your web browser.</p>
+    </li>
+
+    <li><p>Login to the dashboard using <code>admin</code> as Username
+        and <code>admin</code> as Password.</p>
+    </li>
+
+    <li><p>Checkout the <code>OverdraftNotifications</code> project.</p>
+        <p align="center"><image src="images/newUI/overdraftnotifications_checkout.png"/></p>
+    </li>
+
+    <li><p>Create a business rule named <code>setAccountTypeAsGold</code>
+        based on the rule template named <code>setAccountType</code>.
+        Set the values in the business rule as shown and save it.</p>
+        <p align="center"><image src="images/newUI/setAccountTypeAsGold.png"/></p>
+    </li>
+
+    <li><p>Commit the changes.</p>
+        <p align="center"><image src="images/newUI/setAccountTypeAsGold_Commit.png"/></p>
+    </li>
+
+    <li><p>Approve the changes.</p>
+        <p align="center"><image src="images/newUI/setAccountTypeAsGold_Approve.png"/></p>
+    </li>
+
+    <li><p>Build and deploy the changes.</p>
+        <p align="center"><image src="images/newUI/setAccountTypeAsGold_BuildAndDeploy.png"/></p>
+    </li>
+
+    <li><p>You will now find <code>setAccountTypeAsGold.ruletemplateinstance</code>
+        in <code><i>BE_HOME</i>/rms/shared/OverdraftNotifications/BusinessRules</code>.</p>
+    </li>
+
+    <li><p>Create a business rule named <code>onOverdraft_Gold</code>
+        based on the rule template named <code>onOverdraft</code>.
+        Configure the business rule as shown and save it.</p>
+        <p align="center"><image src="images/newUI/onOverdraft_Gold.png"/></p>
+    </li>
+
+    <li><p>Commit the changes.</p>
+        <p align="center"><image src="images/newUI/onOverdraft_Gold_Commit.png"/></p>
+    </li>
+
+    <li><p>Approve the changes.</p>
+        <p align="center"><image src="images/newUI/onOverdraft_Gold_Approve.png"/></p>
+    </li>
+	
+    <li><p>Build And Deploy the changes.</p>
+	<p align="center"><image src="images/newUI/onOverdraft_Gold_BuildAndDeploy.png"/></p>
+    </li>
+
+    <li><p>Now you can find <code>onOverdraft_Gold.ruletemplateinstance</code>
+        in <i>BE_HOME</i>/rms/shared/OverdraftNotifications/BusinessRules.</p>
+        
+    </li>
+
+    <li><p>Create an account and give it a deposit.
+        Enter a name in the ID field.
+        Enter, for example, 20000 in the Deposit.
+        Repeat this step to create multiple accounts, as desired.</p>
+
+        <form id="createAccountForm"></form>
+
+        <p>In the command window you see messages like this:
+
+        <pre class="logs">
+### Received Create Account Event[ID=Bob,Deposit=20000.0]
+### Account[id=Bob] was created with deposit of $20000.0
+### Setting account type as Gold for Account[id=Bob]
+</pre>
+    </li>
+
+    <li>
+        <p>Now debit the account.
+            In the ID field, enter one of the account names you specified above.
+            Enter the amount of the debit in the Amount field.
+            Then click Send.</p>
+        <form id="debitAccountForm"></form>
+        <p>In the command window you see messages like this:</p>
+
+<pre class="logs">
+### Received Debit Account Event[ID=Bob,Amount=30000.0]
+### Debiting Account[ID=Bob,Balance=20000.0]
+### Debited Account[ID=Bob,Balance=-10000.0]
+### Account[ID=Bob,Balance=-10000.0] Over Drafted 1 time(s)
+</pre>
+    </li>
+
+    <li>
+        <p>Now debit the same account two more times.</p>
+        <p>After the last debit event, you see messages like the following in the command window:</p>
+
+<pre class="logs">
+### Account[ID=Bob,Balance=-70000.0] Over Drafted 3 time(s)
+### Account[id=Bob] has over drafted...
+### Resetting over draft count on Account[ID=Bob,Balance=-70000.0]
+### Received OverDraft Nofitication for Account[id=Bob,type=Gold]
+</pre>
+    </li>
+
+</ol>
+
+<div class="footer">
+<p>TIBCO BusinessEvents&reg; 5.6<br />
+Copyright&copy; 2004-2019 TIBCO Software Inc. All rights reserved.</p>
+</div>
+
+</body>
+</html>

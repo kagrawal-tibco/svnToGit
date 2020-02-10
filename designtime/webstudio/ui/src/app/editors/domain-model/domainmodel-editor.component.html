@@ -1,0 +1,179 @@
+<div class="masterOut">
+    <mat-grid-list class="custom-mat-grid-list" cols="5" gutterSize='12.5px' rowHeight="2:1">
+        <mat-grid-tile colspan='3'>
+            <div class='full-top'>
+                <!-- <h6 mat-subheader>
+                    Domain Entries
+                </h6> -->
+                <mat-divider></mat-divider>
+                <mat-toolbar>
+                    <span>
+                        <span matTooltip="{{i18n('Add domain entry.')}}" i18n-matTooltip>
+                            <button mat-raised-button class="mat-icon-button custom-button" [disabled]='!canAdd()' (click)='addRow(this.data)'>
+                                <i class="material-icons add clickable" [class.active]='canAdd()'>add</i>
+                            </button>
+                        </span>
+                        <span  matTooltip="{{i18n('Delete domain entry.')}}" i18n-matTooltip>
+                            <button mat-raised-button class="mat-icon-button custom-button"  [disabled]='!canRemove()' (click)='removeRow(this.data)'>
+                                <i class="material-icons delete clickable" [class.active]='canRemove()'>delete</i>
+                            </button>
+                        </span>
+                        <span  matTooltip="{{i18n('Create duplicate domain entry.')}}" i18n-matTooltip>
+                            <button mat-raised-button class="mat-icon-button custom-button" [disabled]='!canDuplicate()' (click)='duplicateRow(this.data)'>
+                                <i class="material-icons duplicate clickable" [class.active]='canDuplicate()'>file_copy</i>
+                            </button>
+                        </span  >              
+                    </span>
+                </mat-toolbar>
+                <mat-divider></mat-divider>
+                <div style="margin-top: 5px;">
+                    <ag-grid-angular #agGrid style="height: calc(100vh - 450px); width: 100%;" class="ag-theme-balham"
+                    [gridOptions]="gridOptions"
+                    enableRtl="{{isRtl() ? 'true' : 'false'}}"
+                    [columnDefs]="columnDefs"
+                    [rowData]="rowData"
+                    groupHeaders
+                    rowHeight="22"
+                    rowSelection="multiple" 
+                    >
+                    </ag-grid-angular>
+                </div>
+            </div>
+        </mat-grid-tile>
+        <mat-grid-tile colspan='2'>
+            <div class='full-top'>
+                <!-- <h6 mat-subheader>
+                    Configuration
+                </h6> -->
+                <mat-divider></mat-divider> 
+                <mat-toolbar i18n>{{i18n('
+                    Configuration
+                ')}}</mat-toolbar>
+                <mat-divider class="custom-divider"></mat-divider> 
+                <mat-nav-list role="navigation">
+                    <mat-list-item class="custom-list-item">
+                        <mat-form-field appearance="legacy">
+                            <input
+                                matInput
+                                style="padding: 5px !important" 
+                                type="text" 
+                                name="mdescription" 
+                                [(ngModel)]="domainDescription" 
+                                placeholder="{{i18n('Domain description')}}"
+                                i18n-placeholder 
+                                (focusout)="focusOutFunction('description')" 
+                                (keyup)="onKey()"
+                            >
+                        </mat-form-field>
+                    </mat-list-item>
+                    <mat-list-item class="custom-list-item">
+                        <mat-form-field>
+                            <input
+                                matInput
+                                style="padding: 5px !important" 
+                                type="text" 
+                                name="dmType" 
+                                [(ngModel)]="selectedDataType.name"
+                                placeholder="{{i18n('Domain type')}}" 
+                                i18n-placeholder
+                                readonly
+                            >
+                        </mat-form-field>
+                    </mat-list-item>
+                    <mat-list-item class="custom-list-item">
+                            <mat-form-field>
+                                <mat-select
+                                    name = 'parentDomain' 
+                                    [(ngModel)]='this.newSuperDomainValue'
+                                    placeholder="{{i18n('Inherits from...')}}"
+                                    i18n-placeholder
+                                    (selectionChange)='this.selectSuperDomain()'
+                                    >
+                                    <mat-option [value]="undefined" i18n>Select</mat-option>
+                                    <mat-option *ngFor='let superDomain of this.domainsPath' [value]='superDomain'>
+                                        {{superDomain}}
+                                    </mat-option>
+                                </mat-select>
+                            </mat-form-field>
+                        </mat-list-item>
+                </mat-nav-list>
+            </div>
+        </mat-grid-tile>
+    </mat-grid-list>
+</div>
+<!-- <div class="masterOut">
+   <div class="outDiv">
+      <accordion>
+         <accordion-group  class="RTIWhenAccordion" heading="Configuration" isOpen='true'>
+            <div>
+               <table width="800">
+                  <tr>
+                     <td class="field"> Description
+                        <br>
+                        <input style="padding: 5px !important" type="text" name="mdescription" [(ngModel)]="domainDescription" size="80" placeholder="Domain description.." (focusout)="focusOutFunction('description')" (keyup)="onKey()">
+                     </td>
+                  </tr>
+                  <tr>
+                     <td class="field">
+                        Domain Type
+                        <br>
+                        <div>
+                           <select [(ngModel)]="selectedDataType.name" (input)="onInput($event)" disabled>
+                           <option *ngFor="let datatype of datatypes" value= {{datatype.name}}>{{datatype.name}}</option>
+                           </select> 
+                        </div>
+                     </td>
+                  </tr>
+                  <tr>
+                     <td class="field"> Inherits From
+                        <br>
+                        <input style="padding: 5px !important" type="text" name="minherit" [(ngModel)]="superDomainPath" size="80" class="inputForm" placeholder="Inherits from..." (focusout)="focusOutFunction('superDomain')" (keyup)="onKey()" disabled>
+                     </td>
+                     <td style="padding-top: 3%;">
+                     <button
+                         type="button"
+                         class="btn btn-outline-primary btn-sm btn-wide"
+                         (click)='selectSuperDomain()'
+                        >Select</button>
+                    </td>
+                  </tr>
+               </table>
+            </div>
+         </accordion-group>
+         <accordion-group  class="RTIThenAccordion" heading="Domain Entries" isOpen='true'>
+            <div class='row'>
+               <div class='col-sm-12'>
+                  <button
+                     type="button"
+                     class="btn btn-outline-primary btn-sm btn-wide"
+                     (click)='addRow(this.data)'
+                     [disabled]='!canAdd()'
+                     ><i class='fa fa-sm fa-plus'></i> Add</button>
+                  <button
+                     type="button"
+                     class="btn btn-outline-primary btn-sm btn-wide"
+                     (click)='removeRow(this.data)'
+                     [disabled]='!canRemove()'
+                     ><i class='fa fa-sm fa-trash'></i> Remove</button>
+                  <button
+                     type="button"
+                     class="btn btn-outline-primary btn-sm btn-wide"
+                     (click)='duplicateRow(this.data)'
+                     [disabled]='!canDuplicate()'
+                     ><i class='fa fa-sm fa-clone'></i> Duplicate</button>  
+               </div>
+            </div>
+            <div style="margin-top: 5px;">
+               <ag-grid-angular #agGrid style="height: 135px; width: 100%;" class="ag-theme-balham"
+               [gridOptions]="gridOptions"
+               [columnDefs]="columnDefs"
+               [rowData]="rowData"
+               groupHeaders
+               rowHeight="22"
+               rowSelection="multiple" >
+               </ag-grid-angular>
+            </div>
+         </accordion-group>
+      </accordion>
+   </div>
+</div> -->

@@ -1,0 +1,102 @@
+/**
+ * @description Contribute an artifact revision to committable delta associated with a user workspace.
+ */
+void rulefunction WebStudio.Core.RuleFunctions.Utils.Lifecycle.WS_RF_ContributeToCommittableDelta {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		//If null use default workspace id "WORKSPACE" + "@" + username
+		String workspaceName;
+		String username;
+		WebStudio.Core.Concepts.WS_C_UserArtifactRevision userArtifactRevision;
+		//Current operation executed.
+		WebStudio.Core.Concepts.Lifecycle.Ops.WS_C_AbstractOperation abstractOperation;
+		//Remove existing entry if true.
+		boolean removeEntry;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.Lifecycle.WS_RF_ContributeToCommittableDelta");
+		
+		Log.log(LOGGER, "Debug", "In ContributeToCommitableDelta");
+		
+		String wsName = workspaceName;
+		if (wsName == null) {
+			wsName = "WORKSPACE";
+		}
+		String workspaceExtId = WS_RF_CreateUserArtifactExtId(wsName, null, null, username, null, null);
+		//Already locked
+		WS_C_UserWorkspace userWorkspace = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(workspaceExtId, false, "/WebStudio/Core/Concepts/WS_C_UserWorkspace");
+		WS_C_WorkspaceCommittableDelta committableDelta = Instance.PropertyAtom.getContainedConcept(userWorkspace.committableDelta, 1L);
+		if (committableDelta == null) {
+			committableDelta = Instance.newInstance("/WebStudio/Core/Concepts/Lifecycle/WS_C_WorkspaceCommittableDelta", null);
+			Log.log(LOGGER, "Info", "Add new instanceof committable delta [%s] to workspace instance [%s]", committableDelta, userWorkspace);
+			Instance.PropertyAtom.setContainedConcept(userWorkspace.committableDelta, committableDelta, 1L);
+		} else {
+			Log.log(LOGGER, "Debug", "Commitable Delta already exists with count - %s", committableDelta.deltaEntry@length);
+		}
+		
+		WS_C_CommittableDeltaEntry committableDeltaEntry = WS_RF_QueryCommitableDeltaEntry(committableDelta, userArtifactRevision);
+		if (committableDeltaEntry != null && removeEntry) {
+			Log.log(LOGGER, "Info", "Removing existing entry from committable delta entries");
+			WS_C_UserArtifactRevision committableEntryRevision = Instance.PropertyAtom.getConceptReference(committableDeltaEntry.userArtifactRevision, 1L);
+			WS_C_UserArtifact committableUserArtifact = WS_RF_IsUserArtifact(committableEntryRevision.parentArtifactId, committableEntryRevision.parentArtifactType);
+			
+			WS_C_CommittableDeltaEntry[] committableEntries = Instance.PropertyArray.toArrayConcept(committableDelta.deltaEntry);
+			for (int loop = 0; loop < committableEntries@length; loop++) {
+				WS_C_CommittableDeltaEntry deltaEntry = committableEntries[loop];
+				WS_C_UserArtifactRevision entryRevision = Instance.PropertyAtom.getConceptReference(deltaEntry.userArtifactRevision, 1L);
+				WS_C_UserArtifact userArtifact = WS_RF_IsUserArtifact(entryRevision.parentArtifactId, entryRevision.parentArtifactType);
+			
+				if (committableEntryRevision.parentArtifactId == entryRevision.parentArtifactId ||
+				(String.equals(String.toLowerCase(userArtifact.artifactPath), String.toLowerCase(committableUserArtifact.artifactPath)) && String.equals(userArtifact.artifactType, committableUserArtifact.artifactType) && userArtifact.parentProjectId == committableUserArtifact.parentProjectId)) {
+					Log.log(LOGGER, "Info", "Removing commitable entry - %s", userArtifact.artifactPath);
+					Instance.PropertyArray.removeConceptReference(committableDelta.deltaEntry, deltaEntry);
+					
+					// Also need to remove the referenced concepts
+					if (deltaEntry.commitLifeCycleState != null) {
+						Log.log(LOGGER, "Debug", "Removing commitLifeCycleState[%s]", deltaEntry.commitLifeCycleState.stateName);
+						Instance.deleteInstance(deltaEntry.commitLifeCycleState);
+					}
+					
+					if (deltaEntry.operation != null) {
+						Log.log(LOGGER, "Debug", "Removing operation[%s]", deltaEntry.operation.opName);
+						Instance.deleteInstance(deltaEntry.operation);
+					}
+					
+					// remove it as well
+					Instance.deleteInstance(deltaEntry);
+				}
+			} 
+		} else {
+			Log.log(LOGGER, "Debug", "Current Operation - %s", abstractOperation.opName);
+			// Add to committable entry only if not a simple fetch operation
+			if (!(abstractOperation instanceof WS_C_FetchOperation)) {
+				//If null create a new entry.
+				if (committableDeltaEntry == null) {	
+					Log.log(LOGGER, "Info", "committableDeltaEntry is null, creating a new one...");
+					//Append this so that it becomes available for commit.
+					committableDeltaEntry = 
+						Instance.newInstance("/WebStudio/Core/Concepts/Lifecycle/WS_C_CommittableDeltaEntry", null);
+					//Append this delta entry to commitable delta for ws
+					Instance.PropertyArray.appendConceptReference(committableDelta.deltaEntry, committableDeltaEntry, 1L);	
+				}
+				//Append this latest revision.
+				Instance.PropertyAtom.setConceptReference(committableDeltaEntry.userArtifactRevision, userArtifactRevision, 1L);
+				//Assert it
+				WS.Common.assertInstance(abstractOperation, false);
+				
+				// check if existing operation value is set and if set remove it
+				if (committableDeltaEntry.operation != null) {
+					Log.log(LOGGER, "Debug", "Existing operation exists with Id - %s, while new abstractOperation has Id - %s", committableDeltaEntry.operation@id, abstractOperation@id);
+					if (committableDeltaEntry.operation@id != abstractOperation@id) {
+						Instance.deleteInstance(committableDeltaEntry.operation);
+					}
+				}
+				Instance.PropertyAtom.setConceptReference(committableDeltaEntry.operation, abstractOperation, 1L);
+			}
+		}
+		
+		Log.log(LOGGER, "Debug", "Total Commitable Count post operation - %s", committableDelta.deltaEntry@length);
+	}
+}

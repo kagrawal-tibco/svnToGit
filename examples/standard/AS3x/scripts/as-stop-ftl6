@@ -1,0 +1,84 @@
+#!/bin/bash
+#
+# Copyright (c) 2016-2019 TIBCO Software Inc.
+# All Rights Reserved. Confidential & Proprietary.
+# For more information, please contact:
+# TIBCO Software Inc., Palo Alto, California, USA
+#
+
+is_proc_running()
+{
+    running=`$TIBDG_ROOT/bin/tibdg -r $URL status 2>&1 | awk -v proc=$1 -v name=$2 '$1 == proc && $2 == name && $3 != "NOT" && $4 != "RUNNING" { print }'`
+    if [ ! -z "$running" ]; then
+    return 0
+    fi
+    return 1
+}
+
+stop_proc()
+{
+    if is_proc_running $1 $2; then
+    echo "stopping $1 $2"
+    $TIBDG_ROOT/bin/tibdg -r $URL $1 stop $2
+    return
+    fi
+}
+
+is_ftlserver_running()
+{
+    $TIBDG_ROOT/bin/urly -f GET $URL/api/v1/server > /dev/null 2>&1
+}
+
+stop_ftlserver()
+{
+    if is_ftlserver_running ; then
+        echo "Stopping FTL server"
+        $TIBDG_ROOT/ftl/bin/tibftladmin -rs $HOSTPORT --shutdown
+    fi
+}
+
+# main
+if [[ -z  $TIBDG_ROOT  ]]; then
+
+    if [[ -e "setup" ]]; then
+        . ./setup
+    fi
+
+    if [[ -z $TIBDG_ROOT ]]; then
+        echo "Missing required environment variable TIBDG_ROOT. Please set using the setup script in the samples directory."
+        exit
+    fi
+fi
+
+if [ $# -eq 0 ]
+then
+    HOSTPORT=localhost:5055
+elif  [ $# -eq 2 ]
+then
+    if [ "${1:0:2}" = "-r" ]
+    then
+    if [ "${2:0:7}" = "http://" ]
+    then
+        HOSTPORT=${2:7}
+    else
+        HOSTPORT=$2
+    fi
+    fi
+fi
+
+if [ -z "$HOSTPORT" ]
+then
+    echo "syntax: as-stop [-r host:port]"
+    exit
+fi
+
+URL=http://$HOSTPORT
+echo "Using FTL Server at ${URL} and grid name ${GRIDNAME}"
+
+stop_proc proxy p1
+
+stop_proc node n1
+
+stop_proc keeper k1
+
+stop_ftlserver

@@ -1,0 +1,70 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>Ticker Tracker - TIBCO BusinessEvents&reg; Examples</title>
+<meta http-equiv="Content-type" content="text/html; charset=iso-8859-1" />
+<meta http-equiv="Content-Language" content="en-us" />
+<link rel="Shortcut Icon" href="../../_resources/icon.gif" type="image/gif" />
+<style type="text/css" media="all">@import "../../_resources/examples.css";</style>
+<script type="text/javascript" src="../../_resources/examples.js" /></script>
+<script type="text/javascript">
+function buildForms() {
+ var form;
+
+ SendEventForm.setServer("http://localhost:8005");
+
+ form = SendEventForm.get("createTickerInfoForm");
+ form.setDestinationPath("/Channels/HTTP/AllOps");
+ form.setEventPath("/Events/Ticker");
+ form.addProperty("CompanyName", "TIBCO");
+ form.addProperty("Ticker", "TIBX");
+ form.addProperty("Price", "11.11");
+ form.addProperty("Volume", "4245000");
+ form.build();
+
+}
+</script>
+</head>
+<body onLoad="buildForms()">
+
+
+<h1>Ticker Tracker Dashboard</h1>
+
+
+<h2>Purpose of This Example</h2>
+<p>This example demonstrates a TIBCO BusinessEvents Views Dashboard in action. This readme provides input forms for the example's HTTP channel so you can send data to the Dashboard client. The dashboard displays one page with two charts. You can use the search page features to drill down into the data. This project also demonstrates the URL link feature.</p>
+
+<p>The TickerTracker example is documented in the <i>TIBCO BusinessEvents Views Getting Started</i>, with step-by-step instructions for building the project from scratch, as well as basic concepts. </p>
+
+<h2>How to Run the Example</h2>
+<ol>
+<li><p>Open a command window, change directories, and start the engine as follows.</p>
+<pre class="commands">
+cd <i>BE_HOME</i>/views/bin
+be-views -c <i>BE_HOME</i>/examples/views/TickerTracker/TickerTracker/deployments/TickerTracker.cdd -u default <i>BE_HOME</i>/examples/views/Tickertracker/TickerTracker.ear
+</pre>
+<p>Adapt the command as needed, for example, if you have customized the example project, or if you have copied the EAR and CDD files to a more convenient location.</p>
+</li>
+
+<li><p>Launch the URL <code>http://localhost:8181</code> using a supported browser.</p>
+<li><p>Log in to the dashboard using <code>admin</code> as Username and <code>admin</code> as Password.</p>
+
+<li><p>Enter details in the form below and click the Send button. Repeat this step sometimes using the same ticker symbols and sometimes using different ones, to generate ticker data you can explore in Dashboard.</p>
+<form id="createTickerInfoForm"></form>
+<p>In the Dashboard page you should see the charts update to reflect the incoming data. You can also click Dashboard menu options, short menu options, and hyperlinks to explore features such as drill-down, search, and URL link functionality. </p>
+</li>
+
+<li><p> To reset the data, restart the engine at the command line.</p>
+        </p>
+</li>
+
+</ol>
+
+<div class="footer">
+<p>TIBCO BusinessEvents&reg; 5.6 <br />
+Copyright&copy; 2004-2019 TIBCO Software Inc. All rights reserved.</p>
+</div>
+</body>
+</html>

@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Panel xmlns:mx="http://www.adobe.com/2006/mxml" 
+				   layout="horizontal" title="Thread Analyzer" 
+				   styleName="bttnPanelDialogStyle" horizontalAlign="center" paddingLeft="13" paddingRight="13">
+	<mx:states>
+		<mx:State name="OnToOff">
+			<mx:AddChild relativeTo="{vbox1}" position="lastChild">
+				<mx:Label text="Turn OFF" width="100%" styleName="labelStyle" 
+								color="0xFFFFFF" textAlign="center" fontSize="20"/>
+			</mx:AddChild>
+		</mx:State>
+		<mx:State name="OffToOn">
+			<mx:AddChild relativeTo="{threadAnalyzerForm}" position="lastChild">
+				<!-- FOR NOW WE DO NOT WANT TO EXPSE THE REPORT DIRECTORY. MAYBE IN THE FUTURE 
+				<mx:FormItem label="Report Directory:" width="100%">
+				    <mx:TextInput id="threadReportDir" width="100%"/>
+				</mx:FormItem> -->
+			</mx:AddChild>
+			<mx:AddChild relativeTo="{threadAnalyzerForm}" position="lastChild">
+				<mx:FormItem label="Time Interval:" width="100%">
+				    <mx:TextInput id="sampingInterval" styleName="textInputStyle" width="100%" />
+				</mx:FormItem>
+			</mx:AddChild>
+		</mx:State>
+	</mx:states>
+	
+	<mx:VBox width="100%" height="100%" id="vbox1">
+		<mx:Form id="threadAnalyzerForm" styleName="bttnPanelFormStyle" width="100%">
+			<mx:FormItem label="Host Name:" styleName="formLblStyle" width="100%" >
+                <mx:Label id="hostName" styleName="labelStyle" selectable="true"/>
+            </mx:FormItem>
+			<mx:FormItem label="IP:" width="100%">
+                <mx:Label id="ip" styleName="labelStyle" selectable="true"/>
+            </mx:FormItem>
+            <!-- added this to default -->
+			<mx:FormItem label="Username:" styleName="formLblStyle" width="100%" >
+			    <mx:TextInput id="username" styleName="textInputStyle" width="100%" />
+			</mx:FormItem>
+			<mx:FormItem label="Password:" styleName="formLblStyle" width="100%" >
+			    <mx:TextInput id="password" displayAsPassword="true" styleName="textInputStyle" width="100%" />
+			</mx:FormItem>
+		</mx:Form>
+	</mx:VBox>
+	
+	<mx:ControlBar styleName="bttnPanelControlBarStyle" width="100%" paddingLeft="13" paddingRight="13">
+		<mx:Spacer height="100%" width="100%"/>
+		<mx:Button id="btn_OK" label="OK" buttonMode="true" useHandCursor="true" styleName="loginBtnStyle"/>
+		<mx:Button id="btn_Cancel" label="Cancel" buttonMode="true" useHandCursor="true" styleName="loginBtnStyle"/>
+	</mx:ControlBar>
+	
+</mx:Panel>

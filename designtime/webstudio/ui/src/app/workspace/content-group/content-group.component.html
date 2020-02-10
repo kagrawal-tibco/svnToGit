@@ -1,0 +1,205 @@
+<div fxLayout="column" fxFlexFill class="sidebar" [@sidebarState]='sidebarState'>
+	<div fxFlex="grow" *ngIf='!docked' class="sidebar-main" heading="Group Contents" i18n-heading id="group-content">
+		<div *ngIf='!basicTreeNav()' class="top-pad sidebar-header">
+			<div class="button-row">
+				<button mat-button type="button" class="sidebar-header-button" tooltip="{{i18n('Refresh All Projects')}}"
+					placement="{{isRtl() ? 'left' : 'right' }}" container="body" containerClass="animated fadeIn" (click)='refreshAll()'>
+					<i class="fa fa-refresh"></i> <span class="sr-only" i18n>{{i18n('Navigation Style')}}</span>
+				</button>
+				<button mat-button [matMenuTriggerFor]="navModeMenu" class="sidebar-header-button"
+					tooltip="{{i18n('Change the navigation style')}}" i18n-tooltip placement="{{isRtl() ? 'left' : 'right' }}" container="body"
+					containerClass="animated fadeIn">
+					<i class="fa fa-ellipsis-v"></i>
+					<span class="sr-only" i18n>{{i18n('Navigation Style')}}</span>
+				</button>
+				<mat-menu #navModeMenu="matMenu">
+					<button mat-menu-item *ngFor="let navMode of navigationModes" (click)='setNavigationMode(navMode)'>
+						<a class="access-menu-link {{navMode.icon}}" href="#">
+							<span style="margin-left: 10px;padding-right: 10px;"
+								[class.menu__link-selected]='navMode.active'>
+								{{navMode.displayString}}
+							</span>
+						</a>
+					</button>
+				</mat-menu>
+			</div>
+			<nav class="menu__breadcrumbs">
+				<a *ngFor="let breadcrumb of breadcrumbs" href="#"
+					(click)="toggleBreadcrumb(breadcrumb)">{{breadcrumb}}</a>
+			</nav>
+			<mat-menu #addArtifactsMenu="matMenu" aria-labelledby="addArtifactsMenu">
+				<li mat-menu-item (click)='onCreateNewArtifact()'>
+					<a class="fa fa-plus access-menu-link" href="#">
+						<span style="margin-left: 10px;padding-right: 10px;" i18n>{{i18n('Create a new artifact')}}</span>
+					</a>
+				</li>
+				<li mat-menu-item (click)='onCheckoutArtifacts()'>
+					<a class="fa fa-download access-menu-link" href="#">
+						<span style="margin-left: 10px;padding-right: 10px;" i18n>{{i18n('Check out additional artifacts')}}</span>
+					</a>
+				</li>
+				<li mat-menu-item (click)='onImportProject()'>
+					<a class="fa fa-plus-circle access-menu-link" href="#">
+						<span style="margin-left: 10px;padding-right: 10px;" i18n>{{i18n('Create a new project')}}</span>
+					</a>
+				</li>
+			</mat-menu>
+			<button *ngIf='!isBEUI' style="background-color: #fd7821" id="addArtifacts" type="button"
+				class="button-primary-call" tooltip="{{addArtifactLabel}}" placement="{{isRtl() ? 'left' : 'right' }}" container="body"
+				containerClass="animated fadeIn" mat-mini-fab [matMenuTriggerFor]="addArtifactsMenu" type="button">
+				<i class="fa fa-plus"></i> <span class="sr-only">{{addArtifactLabel}}</span>
+			</button>
+			<!-- <button *ngIf='isBEUI'
+					style="background-color: #fd7821"
+					id="addArtifacts"
+					type="button"
+					mat-mini-fab class="button-primary-call"
+					tooltip="{{addArtifactLabel}}"
+					placement="right" container="body" containerClass="animated fadeIn"
+					type="button"
+					(click)='onCheckoutArtifacts()'>
+					<i class="fa fa-plus" ></i> <span
+						class="sr-only">{{addArtifactLabel}}</span>
+				</button> -->
+			<div *ngIf='isBEUI' class="tropos-create-buttons">
+				<div  *ngIf='user.isAdmin'>
+					<button *ngIf='isTCEUI' style="background-color: #fd7821; top: -1.0em;" id="addArtifacts" type="button" mat-mini-fab
+						class="button-primary-call" tooltip="{{addArtifactLabel}}" placement="{{isRtl() ? 'left' : 'right' }}" container="body"
+						containerClass="animated fadeIn" type="button" mat-button (click)='onCheckoutArtifacts()'>
+						<i class="fa fa-plus"></i>
+						<span class="sr-only">{{addArtifactLabel}}</span>
+					</button>
+					<button *ngIf='!isTCEUI' style="background-color: #fd7821; top: -1.0em;" id="addArtifacts" type="button" mat-mini-fab
+						class="button-primary-call" tooltip="{{addArtifactLabel}}" placement="{{isRtl() ? 'left' : 'right' }}" container="body"
+						containerClass="animated fadeIn" type="button" mat-button [matMenuTriggerFor]="menu">
+						<i class="fa fa-plus"></i>
+						<span class="sr-only">{{addArtifactLabel}}</span>
+					</button>
+					<mat-menu #menu="matMenu">
+						<button mat-menu-item (click)='onCheckoutArtifacts()'>
+							<mat-icon>cloud_download</mat-icon>
+							<ng-container i18n>{{i18n('Checkout Project')}}</ng-container>
+						</button>
+						<button mat-menu-item (click)='onImportBEProject()'>
+							<mat-icon>cloud_upload</mat-icon>
+							<ng-container i18n>{{i18n('Import Project')}}</ng-container>
+						</button>
+					</mat-menu>
+				</div>
+				<div *ngIf='!user.isAdmin'>
+					<button style="background-color: #fd7821; top: -1.0em;" id="addArtifacts" type="button" mat-mini-fab
+						class="button-primary-call" tooltip="{{addArtifactLabel}}" placement="{{isRtl() ? 'left' : 'right' }}" container="body"
+						containerClass="animated fadeIn" type="button" mat-button (click)='onCheckoutArtifacts()'>
+						<i class="fa fa-plus"></i>
+						<span class="sr-only">{{addArtifactLabel}}</span>
+					</button>
+				</div>
+			</div>
+		</div>
+		<div class="{{isRtl() ? 'filter-rtl' : 'filter' }} top-pad">
+			<div style="width: 85%">
+				<input-debounce [delay]="400" placeholder="{{placeholder}}" (value)="searchChanged($event)">
+				</input-debounce>
+			</div>
+			<button type="button" mat-button [matMenuTriggerFor]="recentlyOpenedMenu"
+				tooltip="{{i18n('Recently Opened Artifacts')}}" i18n-tooltip placement="{{isRtl() ? 'left' : 'right' }}" container="body" containerClass="animated fadeIn"
+				class="sidebar-filter-button sidebar-header-button" type="button">
+				<i class="fa fa-caret-down"></i> <span class="sr-only" i18n>{{i18n('Recently Opened')}}</span>
+			</button>
+			<mat-menu #recentlyOpenedMenu="matMenu">
+				<span class="dropdown-header access-menu-link">{{i18n('Recently Opened')}}</span>
+				<button mat-menu-item class="btn historyitem" style="width: 200px;" *ngFor='let e of getHistoryItems()'  matTooltip={{e.artifact.displayName()}}  matTooltipPosition="below" matTooltipClass="my-tooltip" (click)='openRecent(e)'>
+					{{e.artifact.displayName()}}
+				</button>
+			</mat-menu>
+			<button *ngIf='basicTreeNav()' mat-button [matMenuTriggerFor]="navModeMenu" class="sidebar-header-button"
+				tooltip="{{i18n('Change the navigation style')}}" i18n-tooltip placement="right" container="body"
+				containerClass="animated fadeIn">
+				<i class="fa fa-ellipsis-v"></i>
+				<span class="sr-only" i18n>{{i18n('Navigation Style')}}</span>
+			</button>
+			<mat-menu #navModeMenu="matMenu">
+				<button mat-menu-item *ngFor="let navMode of navigationModes" (click)='setNavigationMode(navMode)'>
+					<a class="access-menu-link {{navMode.icon}}" href="#">
+						<span style="margin-left: 10px;padding-right: 10px;"
+							[class.menu__link-selected]='navMode.active'>
+							{{navMode.displayString}}
+						</span>
+					</a>
+				</button>
+			</mat-menu>
+		</div>
+		<div class="project-explorer" *ngIf='basicTreeNav()'>
+			<tree-view (tree-view-event)='handleTreeEvent($event)' [input]='_projectExplorerService.roots'></tree-view>
+			<div id='context-menu' hidden='true'></div>
+		</div>
+		<nav *ngIf='!basicTreeNav()' id="ml-menu" class="menu">
+			<div class="menu__wrap"
+				infinite-scroll
+				[scrollWindow]="false"
+				[infiniteScrollDistance]="scrollDistance"
+				[infiniteScrollThrottle]="throttle"
+				(scrolled)="onScrollDown()"
+			>
+				<content-pane (tree-view-event)='handleTreeEvent($event)' [navMode]='navigationMode'
+					[input]='visibleItems'></content-pane>
+				<div id='context-menu' hidden='true'></div>
+			</div>
+		</nav>
+	</div>
+
+	<open-editors>
+	</open-editors>
+
+	<div *ngIf='!basicTreeNav()' class="sidebar-footer">
+		<div class="sidebar-footer-header sidebar-header">
+			<span (click)="toggleCgExpansion()" class="sidebar-footer-span" i18n>{{i18n('ARTIFACT GROUPS')}}</span>
+			<div droppable (onDrop)="addNewGroup($event)" class="pull-right">
+				<button (click)="addNewGroup($event)" tooltip="{{i18n('Create a new artifact group')}}" i18n-tooltip placement="top"
+					container="body" containerClass="animated fadeIn" mat-button type="button"
+					class="sidebar-header-button">
+					<i class="fa fa-plus-circle"></i> <span class="sr-only" i18n>{{i18n('Create New Artifact Group')}}</span>
+				</button>
+			</div>
+		</div>
+		<div [@expansionChanged]='cgExpanded' class="sidebar-actions">
+			<ul fxLayout="row wrap" fxLayoutAlign="space-around center" fxLayoutGap="5px">
+				<li fxFlex="45" droppable *ngFor="let group of _contentService.groups"
+					(onDrop)="addArtifactToGroup(group, $event)" class="action">
+					<button [class.toggle]='!group.active' [class.toggleActive]='group.active'
+						(click)="toggleGroup(group)" (contextmenu)="showGroupsContextMenu(group, $event)" type="button">
+					  <i class="fa fa-inbox"></i> <span tooltip={{group.groupName}} class="longGroupNames">{{group.groupName}}</span>
+						<span class="sr-only" i18n>{{i18n('Toggle Show Group Contents')}}</span>
+					</button>
+				</li>
+				<!--  move these to a different section -->
+				<!-- <li droppable (onDrop)="addNewGroup($event)" class="action">
+									<button (click)="addNewGroup()" type="button" class="toggle">
+										<i class="fa fa-plus-circle"></i> <span>Create
+											New Group</span> <span class="sr-only">Add New Group</span>
+									</button>
+								</li> -->
+			</ul>
+		</div>
+		<div id='group-context-menu' hidden='true'></div>
+	</div>
+	<div *ngIf='docked'>
+		<div class="{{isRtl() ? 'docked-rtl' : 'docked'}}">
+			<span *ngFor="let group of _contentService.groups">
+				<button mat-raised-button style="margin-bottom: 15px;margin-left: 5px" color="primary"
+					(contextmenu)="showGroupsContextMenu(group, $event)" [matMenuTriggerFor]="contents">
+					<!-- <i class="fa fa-inbox"></i>  -->
+					<span>{{group.groupName}}</span>
+					<span class="sr-only" i18n>{{i18n('Toggle Show Group')}}</span>
+				</button>
+				<mat-menu #contents="matMenu">
+					<button mat-menu-item *ngFor="let art of group.resources">{{art.displayName()}}</button>
+				</mat-menu>
+			</span>
+		</div>
+		<div id='group-context-menu' hidden='true'></div>
+	</div>
+	<!-- <div class="divider" style="width: calc(100% - 20px)">
+				</div> -->
+	<!-- TODO : make these sections resizable -->
+</div>

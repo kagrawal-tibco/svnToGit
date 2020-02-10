@@ -1,0 +1,79 @@
+/**
+ * @description 
+ */
+WebStudio.Core.Concepts.DataSources.WS_C_TemporaryReturnData rulefunction WebStudio.Core.RuleFunctions.Actions.WS_RF_ImportProject {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object servletRequest;
+		WebStudio.Security.Authn.Concepts.WS_C_LoggedInUser loggedInUser;
+		String projectName;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.WS_RF_ImportProject");
+	
+		int responseStatus = 0;
+		int recordCount = 0;
+		String errorCode = null;
+		String responseMessage = "";
+		WS_C_ResponseData responseData = Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/WS_C_ResponseData");
+		
+		WS_C_TemporaryReturnData tempReturnData = null;
+
+		if (!WS_RF_CheckHTTPMethod(servletRequest, "POST")) {
+			errorCode = "ERR_5101";
+			responseStatus = -1;
+			responseMessage = "Invalid HTTP Method, expect method is [POST].";
+			
+		} else {
+			boolean isAdmin = WS_RF_IsAdminRole(loggedInUser);
+			
+			if (isAdmin) {
+				Log.log(LOGGER, "Debug", "Importing Project - %s", projectName);
+				
+				Object multiPartData = HTTP.Servlet.Request.getMultipartContent(servletRequest);
+				
+				Object data = HTTP.Servlet.Request.getPartContent(multiPartData, "selectResource");
+				String subscriptionId = HTTP.Servlet.Request.getRequestParameter(servletRequest,"subscriptionId");
+				if (loggedInUser.jwtToken != null) subscriptionId = loggedInUser.jwtToken.sbsc;
+				
+				String userName = HTTP.Servlet.Request.getRequestParameter(servletRequest,"userName");
+				if (userName == null) userName = loggedInUser.username;
+				
+				String hasAdminRoleValue = HTTP.Servlet.Request.getRequestParameter(servletRequest,"isAdmin");
+				boolean isAdminRole = isAdmin;
+				if (hasAdminRoleValue != null && String.equals(hasAdminRoleValue, "true")) isAdminRole = true;
+				
+				String scsRootURL = System.getSystemPropertyAsString("ws.scs.rootURL", null);
+				WS.Common.unzipProject(scsRootURL, data, subscriptionId);
+				
+				String createACL = HTTP.Servlet.Request.getRequestParameter(servletRequest, "createACL");
+				if (createACL != null && String.equals(createACL, "true")) {
+					Log.log(LOGGER, "Debug", "Need to create ACL for project - %s", projectName);
+					
+					String aclFilePath = scsRootURL + "/";
+					if (subscriptionId != null) aclFilePath += (subscriptionId + "/");
+					aclFilePath += (projectName + ".ac");
+					
+					if (!File.fileExists(aclFilePath)) {
+						Log.log(LOGGER, "Debug", "Creating ACL file for project [%s] at [%s]",  projectName, aclFilePath);
+						WS_RF_CreateDefaultACLFile(projectName, subscriptionId, userName, isAdminRole);
+					} else {
+						Log.log(LOGGER, "Debug", "ACL file for project [%s] already exists at %s", projectName, aclFilePath); 
+					}
+				}
+				
+				responseMessage = "Project succesfully imported.";
+				WS_RF_AddAuditTrailEntry(userName, projectName, null, null, "IMPORT", responseMessage);
+				Log.log(LOGGER, "Debug", "Project [%s] imported successfully", projectName);
+			} else {
+				responseStatus = -1;
+				responseMessage = "User do not have this permission";
+			}
+		}
+		
+		tempReturnData = WS_RF_CreateTemporaryReturnData(responseStatus, recordCount, errorCode, responseMessage, responseData);
+		return tempReturnData;
+	}
+}

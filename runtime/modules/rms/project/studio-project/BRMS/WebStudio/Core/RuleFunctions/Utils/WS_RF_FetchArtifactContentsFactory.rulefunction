@@ -1,0 +1,41 @@
+/**
+ * @description 
+ */
+WebStudio.Core.Concepts.DataSources.WS_C_AnyArtifactDetails rulefunction WebStudio.Core.RuleFunctions.Utils.WS_RF_FetchArtifactContentsFactory {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String scsRootURL;
+		String userName;
+		String projectName;
+		String artifactPath;
+		String artifactExtn;
+		String userArtifactExtId;
+		String[] roles;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.WS_RF_FetchArtifactContentsFactory");
+	
+		if (String.equals(artifactExtn, "ruletemplate") || String.equals(artifactExtn, "ruletemplateinstance")) {
+			return WebStudio.Core.RuleFunctions.Utils.RT.WS_RF_FetchRuleTemplateContents(scsRootURL, userName, projectName, artifactPath, artifactExtn, userArtifactExtId, roles);
+		}		
+		else if (String.equals(artifactExtn, "rulefunction")) {
+			return WebStudio.Core.RuleFunctions.Utils.DT.WS_RF_FetchRuleFunctionContents(scsRootURL, userName, projectName, artifactPath, artifactExtn, userArtifactExtId);
+		} 
+		else if (String.equals(artifactExtn, "rulefunctionimpl")) {
+			return WebStudio.Core.RuleFunctions.Utils.DT.WS_RF_FetchDecisionTableContents(scsRootURL, userName, projectName, artifactPath, artifactExtn, userArtifactExtId, roles);	
+		}
+		else if (String.equals(artifactExtn, "beprocess")) {
+			return WebStudio.Core.RuleFunctions.Utils.Process.WS_RF_FetchProcessContents(scsRootURL, userName, projectName, artifactPath, artifactExtn);	
+		}
+		else if (String.equals(artifactExtn, "concept") || String.equals(artifactExtn, "event")) {
+			return WebStudio.Core.RuleFunctions.Utils.WS_RF_FetchEntityContentsFromSCS(scsRootURL, userName, projectName, artifactPath, artifactExtn, userArtifactExtId);	
+		} 
+		else if (String.equals(artifactExtn, "domain")) {
+			return WebStudio.Core.RuleFunctions.Utils.Domain.WS_RF_FetchDomainContentsFromSCS(scsRootURL, userName, projectName, artifactPath, artifactExtn, false);
+		}	 
+
+		return null;
+	}
+}

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<project name="post-install" default="post-install" basedir=".">
+	<property file="post-install.properties"/>
+	<import file="common-tasks.xml"/>
+
+	<taskdef resource="net/sf/antcontrib/antcontrib.properties"/>
+	
+	<target name="post-install" depends="backup-runtime-plugins">
+		<echo message="Done post-installation tasks." />
+	</target>
+
+	<target name="backup-runtime-plugins">
+			<echo message="Backing up runtime plugins" />
+			<if>
+				<available file="${tibco.home}/be/5.4/lib/eclipse/plugins/com.tibco.cep.bpmn.common_5.4.0.jar" type="file"/>
+				<then>
+					<mkdir dir="${tibco.home}/be/5.4/backup/5.4.1_pre/lib/eclipse/plugins" />
+					<move todir="${tibco.home}/be/5.4/backup/5.4.1_pre/lib/eclipse/plugins">
+						<fileset dir="${tibco.home}/be/5.4/lib/eclipse/plugins">
+							<include name="com.tibco.cep.bpmn.common_5.*.jar"/>
+							<exclude name="*5.4.1.jar"/>
+						</fileset>
+					</move>
+				</then>
+			</if>
+		</target>
+	
+</project>	

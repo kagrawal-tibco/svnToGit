@@ -1,0 +1,36 @@
+/**
+ * @description Rollback entire checkin including deleting files, consuming events, deleting concepts etc.
+ */
+void rulefunction Approval.Rules.RuleFunctions.ArtifactRuleFunctions.AMS_RF_RollbackArtifactsCommit {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Approval.Concepts.ArtifactsConcepts.AMS_C_Checkin ams_c_checkin;
+		String folderPath;
+	}
+	body {
+		String pathSeparator = "/";
+			
+		//Get all paths checked in
+        String[] checkinArtifactPaths = 
+        	Instance.PropertyArray.toArrayString(ams_c_checkin.artifactPaths);
+        
+        String patternId = ams_c_checkin.patternId;
+        
+        for (int loop = 0, length = checkinArtifactPaths@length; loop < length; loop++) {
+        	String extId = 
+        		String.concat(String.concat(patternId, "@"), checkinArtifactPaths[loop]);
+        	AMS_C_ArtifactCommited committed = Instance.getByExtIdByUri(extId, "/Approval/Concepts/ArtifactsConcepts/AMS_C_ArtifactCommited");
+        	//Delete this
+        	Instance.deleteInstance(committed);	
+        }
+        //Delete this folder and contents
+        boolean removed = File.fileRemove(folderPath);
+        if (removed) {
+        	System.debugOut("Cleared contents of " + folderPath);
+        }
+        //Remove this instance
+        Instance.deleteInstance(ams_c_checkin);
+	}
+}

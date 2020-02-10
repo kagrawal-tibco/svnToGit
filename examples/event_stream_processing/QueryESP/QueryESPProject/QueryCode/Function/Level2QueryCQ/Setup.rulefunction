@@ -1,0 +1,29 @@
+/**
+ * @description 
+ */
+void rulefunction QueryCode.Function.Level2QueryCQ.Setup {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		
+	}
+	body {
+		String queryName = "Level2QueryCQ";
+		
+		String queryText = 
+		                   "select sum(currentCount) as theSum" +
+		                   " from /QueryOntology/Level2QueryEvent" +
+		                   "            {policy: maintain last 25 seconds; accept: new} as l2q\n" +
+		                   " group by 1;";
+		
+		Query.create(queryName, queryText);
+		String statementName = queryName + "-S";
+		String listenerName = statementName + "-C";
+		Query.Statement.open(queryName, statementName);
+		Query.Statement.executeWithCallback(statementName, listenerName, 
+		                  "/QueryCode/Function/Level2QueryCQ/Callback", true, queryName);
+		
+		System.debugOut("Started query and listener: " + listenerName + ", text: " + queryText);
+	}
+}

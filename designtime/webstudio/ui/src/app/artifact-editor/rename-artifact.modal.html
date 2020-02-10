@@ -1,0 +1,35 @@
+<div class="card panel-sm">
+  <div class="card-header">
+    <ng-container i18n>{{i18n('Artifact Rename')}}</ng-container>
+    </div>
+  <div class="card-body">
+    <form #newName="ngForm">
+          <div class="form-group">
+            <label for="name" class='control-label control-label-normal' i18n>{{i18n('Name')}}</label>
+            <input type="text" name="name" 
+              #newNameInput
+              required
+              class='form-control'
+              autocomplete="false"
+              [(ngModel)]="form.name"
+              #name="ngModel"
+            >
+          </div>
+        </form>
+  </div>
+  
+</div>
+<div class="row left-pad right-pad bottom-pad top-pad">
+  <div class="col-sm-12">
+      <button
+        type="button"
+        class='btn btn-outline-primary btn-sm btn-narrow'
+        (click)='onCancel()'
+       i18n>{{i18n('Cancel')}}</button>
+      <button
+        class='btn btn-primary btn-sm btn-narrow pull-right'
+        (click)='onSubmit()'
+        [disabled]='!canRename()'
+        i18n>{{i18n('Confirm')}}</button>
+  </div>
+</div>

@@ -1,0 +1,149 @@
+/**
+ * @description 
+ * @author vpatil-MBP15
+ */
+rule WebStudio.Core.Rules.WS_R_UpdateAssociatedDomainModels {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		WebStudio.Core.Events.WS_E_UpdateAssociatedDomainModelEvent ws_e_updateAssociatedDMEvent;
+	}
+	when {
+		ws_e_updateAssociatedDMEvent.userName != null;
+	}
+	then {
+		Object LOGGER = Log.getLogger("WebStudio.Core.Rules.WS_R_UpdateAssociatedDomainModels");
+		
+		WS_C_ResponseData responseData = null;
+		int responseStatus = 0;
+		String errorCode = null;
+		String responseMessage = null;
+		int rowCount = 0;
+		
+		WS_C_AnyArtifactDetails  anyDetails = null;
+		WS_C_RuleTemplateArtifactDetails ruleTemplateDetails = null;
+		String responseDSXML = null;
+		
+		String[] roles = WS.Common.splitToStringArray(ws_e_updateAssociatedDMEvent.roleList, ",");
+		
+		WS_C_AnyArtifactDetails ruleTemplateInstance = Instance.getByExtIdByUri(ws_e_updateAssociatedDMEvent.ruleTemplateInstanceId, ws_e_updateAssociatedDMEvent.ruleTemplateInstanceType);
+		if (ruleTemplateInstance != null) {
+			responseData = Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/WS_C_ResponseData");
+			
+			if (ruleTemplateInstance instanceof WS_C_RuleTemplateInstanceBuilder) {
+				Log.log(LOGGER, "Debug", "Instance of Rule Template Builder, need to reload Domain models from symbols.");
+				
+				WS_C_RuleTemplateInstanceBuilder rtiBuilder = ruleTemplateInstance;
+				WS_C_Symbols wsSymbols = rtiBuilder.symbols;
+				
+				String IdToDomainModelList = System.nanoTime()+"";
+				Object domainModelIdList = WS.Common.Stack.create(IdToDomainModelList);
+				
+				WS_C_AbstractSymbolInfo[] symbolInfoList = Instance.PropertyArray.toArrayConcept(wsSymbols.symbolInfo);
+				WS_RF_ReloadDomainModelToBuilderAssociations(ws_e_updateAssociatedDMEvent.projectName, ws_e_updateAssociatedDMEvent.userName, roles, symbolInfoList, domainModelIdList);
+				
+				WS_C_Commands commands = rtiBuilder.commands;
+				WS_C_CommandInfo[] commandInfoList = Instance.PropertyArray.toArrayConcept(commands.commandInfo);
+				Log.log(LOGGER, "Debug", "Instance of Rule Template Builder, need to reload Domain models from commands.");
+				
+				String baseRTPath = rtiBuilder.implementsPath;
+				if (baseRTPath == null) {
+					baseRTPath = ws_e_updateAssociatedDMEvent.artifactPath;
+				}
+				Log.log(LOGGER, "Debug", "Base RT Path - %s", baseRTPath);
+				
+				WS_C_CommandInfo[] baseCommandInfoList = WS_RF_FetchBaseRuleTemplateCommands(baseRTPath, ws_e_updateAssociatedDMEvent.projectName, ws_e_updateAssociatedDMEvent.userName);
+				if (baseCommandInfoList != null) {
+					Log.log(LOGGER, "Debug", "Total commands found in the baseRT - [%s]", baseCommandInfoList@length);
+				}
+					
+				WS_C_Symbols cmdSymbols = null;
+				WS_C_AbstractSymbolInfo[] commandSymbolInfoList = null;
+				for (int i=0; i < commandInfoList@length; i++) {
+					WS_C_CommandInfo childCommand = commandInfoList[i];
+					
+					if (childCommand.symbols == null && baseCommandInfoList != null) {
+						for (int j=0; j < baseCommandInfoList@length; j++) {
+							WS_C_CommandInfo baseCommand = baseCommandInfoList[j];
+							if (String.equals(baseCommand.commandAlias, childCommand.commandAlias) && String.equals(baseCommand.type, childCommand.type) && String.equals(baseCommand.actionType, childCommand.actionType)) {
+								WS_C_Symbols baseRuleTemplateBuilderCommandSymbols = Instance.PropertyAtom.getConceptReference(baseCommand.symbols, 1L);
+								if (baseRuleTemplateBuilderCommandSymbols != null) {
+									//Set this in the child RTI instance
+									Instance.PropertyAtom.setConceptReference(childCommand.symbols, baseRuleTemplateBuilderCommandSymbols, 1L);
+									Log.log(LOGGER, "Debug", "Associated base RT command symbols to RTI command. Total Symbols [%s]", childCommand.symbols.symbolInfo@length);
+								}
+								break;
+							}
+						}
+					}
+					if (childCommand.symbols != null) {
+						cmdSymbols = childCommand.symbols;
+						commandSymbolInfoList = Instance.PropertyArray.toArrayConcept(cmdSymbols.symbolInfo);
+						WS_RF_ReloadDomainModelToBuilderAssociations(ws_e_updateAssociatedDMEvent.projectName, ws_e_updateAssociatedDMEvent.userName, roles, commandSymbolInfoList, domainModelIdList);
+					}
+				}
+				
+				// here add all the domainModeIds to the Domain Model Store
+				Object[] domainModelIds = WS.Common.Stack.toArray(domainModelIdList, "java.lang.String", null);
+				String domainModelIdsStr = WS.Common.joinStringArray(domainModelIds, ",");
+				Log.log(LOGGER, "Debug", "List Of Domain Ids to remove - %s",domainModelIdsStr);
+				
+				WS_E_DeleteStaleDomainModelEvent ws_e_deleteStaleDomainModelEvent = Event.createEvent("xslt://{{/WebStudio/Core/Events/WS_E_DeleteStaleDomainModelEvent}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" version=\"1.0\" exclude-result-prefixes=\"xsl xsd\">\n    <xsl:output method=\"xml\"/>\n    <xsl:param name=\"domainModelIdsStr\"/>\n    <xsl:template match=\"/\">\n        <createEvent>\n            <event>\n                <domainModelIds>\n                    <xsl:value-of select=\"$domainModelIdsStr\"/>\n                </domainModelIds>\n            </event>\n        </createEvent>\n    </xsl:template>\n</xsl:stylesheet>");
+				Cluster.scheduleEvent("DELETE_STALE_DOMAIN_MODEL_SCHEDULER", "WORK_KEY_"+System.nanoTime(), ws_e_deleteStaleDomainModelEvent, System.currentTimeMillis() + 2000);
+				
+				WS.Common.Stack.delete(IdToDomainModelList);
+				
+			} else if (ruleTemplateInstance instanceof WS_C_RuleTemplateInstanceView) {
+				Log.log(LOGGER, "Debug", "Instance of Rule Template View, need to reload Domain models.");
+				
+				WS_C_RuleTemplateInstanceView rtiView = ruleTemplateInstance;
+				
+				WS_C_BindingInfo[] bindingInfoList = Instance.PropertyArray.toArrayContainedConcept(rtiView.view.bindingInfo);
+				WS_RF_ReloadDomainModelToViewAssociations(ws_e_updateAssociatedDMEvent.projectName, ws_e_updateAssociatedDMEvent.userName, roles, bindingInfoList);
+			} else {
+				Log.log(LOGGER, "Debug", "Instance neither of Builder nor of View.");
+			}
+			
+			anyDetails = Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/WS_C_RuleTemplateArtifactDetails");
+			ruleTemplateDetails = anyDetails;
+					
+			//Manipulate using java references.
+			ruleTemplateDetails.artifactPath = ws_e_updateAssociatedDMEvent.artifactPath;
+			ruleTemplateDetails.artifactType = ws_e_updateAssociatedDMEvent.artifactFileExtn;
+	
+			Instance.PropertyAtom.setConceptReference(ruleTemplateDetails.artifactContent, ruleTemplateInstance, 1L);
+			
+			WS_C_AbstractDataSourceRecord abstractDataSourceRecord =
+							Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/Records/WS_C_ArtifactContentsDataSourceRecord");
+			WS_C_ArtifactContentsDataSourceRecord artifactContentsDataSourceRecord = abstractDataSourceRecord;	
+			Instance.PropertyAtom.setContainedConcept(artifactContentsDataSourceRecord.artifactDetails, anyDetails, 1L);
+			Instance.PropertyArray.appendContainedConcept(responseData.record, abstractDataSourceRecord, 1L);
+		} else {
+			responseStatus = -1;
+			responseMessage = "Element with ExtId[" + ws_e_updateAssociatedDMEvent.ruleTemplateInstanceId + "] and Type[" + ws_e_updateAssociatedDMEvent.ruleTemplateInstanceType + "] not found.";
+			errorCode = "ERR_2508";
+		}
+		
+		// Create RTI/RT serialized state
+		responseDSXML = WS_RF_CreateAndSerializeResponseDataSource(responseStatus, rowCount, errorCode, responseMessage, responseData, ws_e_updateAssociatedDMEvent.contentType);
+		if (anyDetails != null && anyDetails instanceof WS_C_RuleTemplateArtifactDetails) {
+			//Dereference it so that it can be referenced for next request if needed.
+			Instance.PropertyAtom.setConceptReference(ruleTemplateDetails.artifactContent, null, 1L);
+		}
+		Log.log(LOGGER, "Debug", "Data source response %s", responseDSXML);
+		
+		// process response
+		Object asyncContext = Util.HashMap.getObject(ws_e_updateAssociatedDMEvent.mapKey, ws_e_updateAssociatedDMEvent.asyncContextId);
+		//Clear it
+		Util.HashMap.removeObject(ws_e_updateAssociatedDMEvent.mapKey, ws_e_updateAssociatedDMEvent.asyncContextId);
+		Util.HashMap.deleteMap(ws_e_updateAssociatedDMEvent.mapKey);
+		Object servletResponse = HTTP.Servlet.getServletResponse(asyncContext);
+		
+		HTTP.Servlet.Response.setResponseHeader(servletResponse, "Content-type", ws_e_updateAssociatedDMEvent.contentType + ";charset=utf-8");	    										
+		HTTP.Servlet.Response.setResponseContent(asyncContext, responseDSXML, true);
+		
+		Event.consumeEvent(ws_e_updateAssociatedDMEvent);
+	}
+}

@@ -1,0 +1,23 @@
+/**
+ * @description 
+ * @author anpatil-T61
+ */
+rule Rules.onDashboardRequestEvent {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Events.DashboardRequestEvent requestEvent;
+	}
+	when {
+		
+	}
+	then {
+		Events.DashboardResponseEvent responseEvent = Dashboard.process(requestEvent@payload,"/Events/DashboardResponseEvent");
+		if (responseEvent@payload != null && String.length(responseEvent@payload) != 0){
+			Event.replyEvent(requestEvent,responseEvent);
+			Event.consumeEvent(requestEvent);
+		}
+	}
+}

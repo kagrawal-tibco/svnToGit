@@ -1,0 +1,33 @@
+/**
+ * @description 
+ * @author ajayapra-W510
+ */
+rule Router.Rules.OnTimeEventA {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Router.Entities.TimeEventA a;
+	}
+	when {
+		
+	}
+	then {
+		String senderId = Cluster.getAgentName() + ":" + Cluster.getAgentId();
+		String uniqueId = senderId + ":" + System.nanoTime();
+
+		Router.Entities.Counter c = Instance.getByExtId("the-only-counter");
+		
+		String routingKey = "from-timer-at [" + senderId + "] " + c.testEventACtr;
+		c.testEventACtr = (c.testEventACtr + 1) % 20;
+		
+		Entities.TestEventA tea = Entities.TestEventA.TestEventA(uniqueId, null, routingKey);
+
+		Object loadBalancer = Util.HashMap.getObject("AllLoadBalancers", "demoLB");
+		
+		System.debugOut("Sending event to remote receiver with name/routing key=" + tea.name);
+		LoadBalancer.Router.send(loadBalancer, tea, tea.name);
+		System.debugOut("Sent event to remote receiver");										
+	}
+}

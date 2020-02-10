@@ -1,0 +1,40 @@
+/**
+ * @description 
+ */
+WebStudio.Core.Concepts.RuleTemplateInstance.WS_C_AbstractRuleTemplate rulefunction WebStudio.Core.RuleFunctions.Utils.RT.WS_RF_FetchRuleTemplateContents {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String scsRootURL;
+		String userName;
+		String projectName;
+		String artifactPath;
+		String artifactExtn;
+		String userArtifactExtId;
+		String[] roles;
+	}
+	body {
+		
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.RT.WS_RF_FetchRuleTemplateContents");
+		
+		WS_C_AbstractRuleTemplate artifactDetails = null;
+		
+		Log.log(LOGGER, "Info", "Contents need to be loaded for artifact %s from SCS", artifactPath);
+		//Load from SCS
+		String artifactContents = WS_RF_FetchContentFromSCS(scsRootURL, projectName, artifactPath, artifactExtn, userName);
+		Log.log(LOGGER, "Debug", "Contents of artifact loaded from SCS %s", artifactContents);
+		Object ruleTemplateObject = WS.RT.getBaseRuleTemplate(projectName, artifactContents, artifactExtn);
+		//Get concept for it
+		//TODO fetch integration class for SCS.
+		artifactDetails = 
+			WebStudio.
+				Core.
+					RuleFunctions.
+						Utils.RT.WS_RF_CreateAbstractRuleTemplateConceptFromSCS(projectName, userName, null, scsRootURL, artifactPath, artifactExtn, ruleTemplateObject, roles);	
+		Log.log(LOGGER, "Debug", "Instance of Rule Template user artifact %s", userArtifactExtId);
+		
+		return artifactDetails;
+		
+	}
+}

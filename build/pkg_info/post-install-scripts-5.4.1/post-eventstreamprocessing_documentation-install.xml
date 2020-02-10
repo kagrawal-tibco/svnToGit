@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<project name="post-install" default="post-install" basedir=".">
+	<property file="post-install.properties"/>
+	<import file="common-tasks.xml"/>
+	
+    <taskdef resource="net/sf/antcontrib/antcontrib.properties"/>
+	
+	<target name="post-install" depends="import-wrappers,
+					     				set-subst-vars,
+										bkp-tra-files">
+		<echo message="Done post-installation tasks." />
+	</target>
+
+	<target name="import-wrappers">
+	</target>
+	
+	<target name="set-subst-vars">
+		<antcall target="substitute-variables-examples">
+			<param name="examples-path" value="${tibco.home}/be/${beVersionShort}/examples/event_stream_processing" />
+		</antcall>
+	</target>
+
+	
+	<target name="bkp-tra-files">
+		<echo message="Backing up tra files"/>
+		<mkdir dir="${tibco.home}/be/5.4/backup/5.4.1_pre/mm/bin" />
+	
+		<if>
+			<not>
+				<available file="${tibco.home}/be/5.4/backup/5.4.1_pre/mm/bin/be-mm.tra" type="file"/>
+			</not>
+			<then>
+				<echo message="Backing up tra ${tibco.home}/be/5.4/mm/bin/be-mm.tra"/>
+				<copy file="${tibco.home}/be/5.4/mm/bin/be-mm.tra" todir="${tibco.home}/be/5.4/backup/5.4.1_pre/mm/bin"/>
+			</then>
+		</if>
+		<if>
+			<not>
+				<available file="${tibco.home}/be/5.4/backup/5.4.1_pre/mm/bin/mm-tools.tra" type="file"/>
+			</not>
+			<then>
+				<echo message="Backing up tra ${tibco.home}/be/5.4/mm/bin/mm-tools.tra"/>
+				<copy file="${tibco.home}/be/5.4/mm/bin/mm-tools.tra" todir="${tibco.home}/be/5.4/backup/5.4.1_pre/mm/bin"/>
+			</then>
+		</if>
+	</target>	
+			
+	
+</project>	

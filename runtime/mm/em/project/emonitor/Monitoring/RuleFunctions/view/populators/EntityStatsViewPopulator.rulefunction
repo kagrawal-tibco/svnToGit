@@ -1,0 +1,49 @@
+/**
+ * @description 
+ */
+void rulefunction Monitoring.RuleFunctions.view.populators.EntityStatsViewPopulator {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object	eventArrayObj;
+	}
+	body {
+		if (eventArrayObj == null){
+		    return;
+		}
+		Object[] eventArray = eventArrayObj;
+		if (eventArray@length == 0){
+		    return;
+		}
+		QueryAgentMetricEvent metricevent = eventArray[0];
+		Shared.Concepts.AbstractMonitorView view = Instance.getByExtId(metricevent.name);
+		if (view == null) {
+		   throw Exception.newException("Warning","No View found matching "+metricevent.name,null);
+		}
+		String componentConfigMapId = getComponentConfigMapId(view.monitorable,view.type);
+		String[] seriesNames = Util.HashMap.getObject(componentConfigMapId,"seriesnames");
+		String timeInMillis = String.valueOfLong(DateTime.getTimeInMillis(metricevent.snapshottime));
+		for (int i = 0 ; i < seriesNames@length ; i = i + 1){
+		    String seriesName = seriesNames[i];
+		    Shared.Concepts.SeriesData series = Instance.getByExtId(metricevent.name+":"+seriesName);
+		    if (series == null) {
+		        throw Exception.newException("Warning","No series found matching "+metricevent.name+":"+seriesName,null);
+		    }
+		    series.categories[series.categories@length] = timeInMillis;
+		    if (seriesName == "Incoming Entity Count") {
+		        series.values[series.values@length] = String.valueOfLong(metricevent.newEntities);    
+		        series.rawValues[series.rawValues@length] = String.valueOfLong(metricevent.newEntities);    
+		    }
+		    else if (seriesName == "Local Cache Element Count") {
+		        series.values[series.values@length] = String.valueOfLong(metricevent.localCacheCurrentElements);    
+		        series.rawValues[series.rawValues@length] = String.valueOfLong(metricevent.localCacheCurrentElements);
+		    }
+		    else {
+		        Shared.RuleFunctions.log("inEntityStatsViewPopulator","WARNING","Unknown series ["+seriesName+"]");
+		        series.values[series.values@length] = "0";
+		        series.rawValues[series.rawValues@length] = "0";
+		    }
+		}
+	}
+}

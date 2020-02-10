@@ -1,0 +1,42 @@
+/**
+ * @description 
+ * @author 
+ */
+rule Monitoring.Rules.ComputedMetricsDataPopulators.onComputedMetricEvent {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Monitoring.Events.cmetrics.ComputedMetricEvent	computedmetricevent;
+		
+	}
+	when {
+		computedmetricevent.entityId != null && String.length(String.trim(computedmetricevent.entityId)) != 0 &&
+		computedmetricevent.parentEntityType != null && String.length(String.trim(computedmetricevent.parentEntityType)) != 0;
+		computedmetricevent.viewType != null && String.length(String.trim(computedmetricevent.viewType)) != 0;
+	}
+	then {
+		String LOG_NAME = "onComputedMetricEvent"; 
+		Shared.RuleFunctions.log(LOG_NAME,"DEBUG","Metric event for:" + 
+			"\n Entity ID = " + computedmetricevent.entityId + 
+			"\n viewType = " + computedmetricevent.viewType);
+		
+		Shared.Concepts.MonitorableEntity entity = Instance.getByExtId(computedmetricevent.entityId);
+		Shared.Concepts.MonitorableEntity parent = entity;
+		while (parent != null && parent.type != computedmetricevent.parentEntityType) {
+		    parent = parent.parent;
+		}
+		if (parent != null) {
+		    String parentFQName = getFQName(parent);
+		    String compName = getFQName(parent) + ":" + computedmetricevent.viewType;
+		    Shared.Concepts.AbstractMonitorView view = Instance.getByExtId(compName);
+		    if (view == null){
+		        view = createView(parent,computedmetricevent.viewType,compName);
+		    }
+		    view.monitorable = parent; //for CR 1-AO6MN6
+		    Monitoring.RuleFunctions.view.computedpopulators.delegateComputedMetricsViewPopulation(compName,computedmetricevent);
+		}
+		Event.consumeEvent(computedmetricevent);
+	}
+}

@@ -1,0 +1,118 @@
+/**
+ * @description 
+ */
+void rulefunction WebStudio.Core.RuleFunctions.Actions.WS_RF_ArtifactExportHelper {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String projectName;
+		String artifactExtn;
+		String[] artifactPaths;
+		WebStudio.Security.Authn.Concepts.WS_C_LoggedInUser loggedInUser; 
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.WS_RF_ArtifactExportHelper");
+		
+		String subscriptionId = null;
+		if (loggedInUser.jwtToken != null) subscriptionId = loggedInUser.jwtToken.sbsc;
+
+		for(int i=0 ; i < artifactPaths@length ; i++){
+			String artifactPath = artifactPaths[i];
+
+			Log.log(LOGGER, "Debug", "Project Name %s", projectName);
+
+			String scsRootURL = WS_RF_GetSCSRootURL(projectName, subscriptionId);
+			if (scsRootURL == null) {
+				throw Exception.newException(null, "Source control repository location not present. Set ws.scs.rootURL property", null);
+			}
+
+			Log.log(LOGGER, "Debug", "Artifact Path - [%s], Artifact Extn %s", artifactPath, artifactExtn);
+
+			Object responseContents = null;
+			int responseContentSize = 0;
+			boolean loadContentsFromSCS = false;
+
+			// retrieve the artifact name
+			String artifactName = String.substring(artifactPath, String.lastIndexOfString(artifactPath, 0, "/")+1, String.length(artifactPath));
+			artifactName += ("." + artifactExtn);
+
+			if (String.equals(artifactExtn, "ruletemplateinstance")) {
+				WebStudio.Core.Concepts.RuleTemplateInstance.WS_C_RuleTemplateInstanceUserArtifact ruleTemplateInstanceUserArtifact = null;
+
+				String userWorkspaceExtId = "WORKSPACE@" + loggedInUser.username;
+				boolean userWorkspaceLock = Cluster.DataGrid.Lock(userWorkspaceExtId, -1, false);
+				if (userWorkspaceLock) {
+					WebStudio.Core.Concepts.WS_C_UserWorkspace userWorkspace = Instance.getByExtIdByUri(userWorkspaceExtId, "/WebStudio/Core/Concepts/WS_C_UserWorkspace");
+					Log.log(LOGGER, "Debug", "Existing workspace concept id %s", userWorkspace@id);
+					if (userWorkspace != null) {
+						//Get project with this name
+						WebStudio.Core.Concepts.WS_C_UserProject userProject = Instance.getByExtIdByUri(projectName + "@" + loggedInUser.username, "/WebStudio/Core/Concepts/WS_C_UserProject");
+						Log.log(LOGGER, "Debug", "User project instance id %s", userProject@id);
+						//Get RT instance matching this in user project
+						WebStudio.Core.Concepts.WS_C_UserArtifact[] userArtifacts = Instance.PropertyArray.toArrayContainedConcept(userProject.userArtifacts);
+
+						for (int innerLoop = 0; innerLoop < userArtifacts@length; innerLoop++) {
+							WebStudio.Core.Concepts.WS_C_UserArtifact userArtifact = userArtifacts[innerLoop];
+							if (userArtifact instanceof WebStudio.Core.Concepts.RuleTemplateInstance.WS_C_RuleTemplateInstanceUserArtifact) {
+								//Check if path is same
+								if (String.equals(userArtifact.artifactPath, artifactPath)) {
+									Log.log(LOGGER, "Info", "Existing artifact found for %s in project %s", artifactPath, projectName);
+									ruleTemplateInstanceUserArtifact = userArtifact;
+									break;
+								}
+							}
+						}
+
+						if (ruleTemplateInstanceUserArtifact != null) {
+							//Get latest revision id
+							String[] revisionIds = Instance.PropertyArray.toArrayString(ruleTemplateInstanceUserArtifact.artifactRevisionIds);
+							if (revisionIds == null || revisionIds@length == 0) {
+								Log.log(LOGGER, "Info", "No artifact revision has been created yet for artifact %s", artifactPath);
+								loadContentsFromSCS = true;
+							} else {
+								//Load instance with this latest revision id
+								String latestRevisionId = revisionIds[revisionIds@length - 1];
+								WebStudio.Core.Concepts.WS_C_UserArtifactRevision userArtifactRevision = Instance.getByExtIdByUri(latestRevisionId, "/WebStudio/Core/Concepts/WS_C_UserArtifactRevision");
+
+								Concept artifactContentsConcept = WS_RF_GetArtifactContentInstance(userArtifactRevision.artifactContentsId, userArtifactRevision.parentArtifactType);
+								Object artifactEModel = WS_RF_CreateEMFObjectForArtifact(artifactContentsConcept, ruleTemplateInstanceUserArtifact, loggedInUser.username);
+								Object serializedRTIBytes = WS.RTI.serializeRuleTemplateInstance(artifactEModel);
+
+								responseContents = serializedRTIBytes;
+								responseContentSize = WS.Common.byteArrayLength(serializedRTIBytes);
+								WS.Common.updateExportedContent(artifactName, responseContents);
+
+								Log.log(LOGGER, "Debug", "Byte data for existing RI read, total bytes - %s", responseContentSize);
+							}
+						} else {
+							loadContentsFromSCS = true;
+						} 
+					}
+				}
+
+				if (loadContentsFromSCS) {
+					//Load from SCS
+					String artifactContents = WS_RF_FetchContentFromSCS(scsRootURL, projectName, artifactPath, artifactExtn, loggedInUser.username);
+					Log.log(LOGGER, "Debug", "Contents of artifact loaded from SCS %s", artifactContents);
+
+					responseContents = String.getBytes(artifactContents, "utf-8");
+					responseContentSize =  WS.Common.byteArrayLength(responseContents);
+					WS.Common.updateExportedContent(artifactName, responseContents);
+				}
+			} else if (String.equals(artifactExtn, "rulefunctionimpl")) {
+				//Export file name
+				int lastIndx = String.lastIndexOfString(artifactPath, 0, "/");
+				if (lastIndx != -1) {
+					artifactName = String.substring(artifactPath, lastIndx + 1, artifactPath@length);
+					artifactName = artifactName + ".xls"; 
+				} 				
+				//Get Excel contents, length & type 
+				responseContents = WS_RF_ExportDecisionTableToExcel(loggedInUser, scsRootURL, projectName, artifactPath, artifactExtn);
+				responseContentSize = WS.Common.byteArrayLength(responseContents);
+				WS.Common.updateExportedContent(artifactName, responseContents);	
+			}
+		}
+
+	}
+}

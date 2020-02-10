@@ -1,0 +1,21 @@
+/**
+ * @description 
+ * @author aathalye-t410
+ */
+rule Rules.ExceuteShipmentRule {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Concepts.Customer customer;
+		Concepts.Shipment shipment;
+	}
+	when {
+		customer.custId == shipment.custId
+		&& customer.shipmentEligibility == true;
+	}
+	then {
+		VirtualRuleFunctions.CheckShipmentDeliverVRF(shipment, customer);
+	}
+}

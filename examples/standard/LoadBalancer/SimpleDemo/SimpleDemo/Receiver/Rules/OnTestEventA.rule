@@ -1,0 +1,31 @@
+/**
+ * @description 
+ * @author ajayapra-lt
+ */
+rule Receiver.Rules.OnTestEventA {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Events.TestEventA test;
+	}
+	when {
+		
+	}
+	then {
+		System.debugOut("In OnTestEventA rule. Received Events.TestEventA:" 
+		+ "\n       Id                         " + test@id 
+		+ "\n       ExtId                      " + test@extId 
+		+ "\n       Name                       " + test.name 
+		+ "\n       JMSMessageID               " + test.JMSMessageID  
+		+ "\n       JMSRedelivered             " + test.JMSRedelivered 
+		+ "\n       JMSTimestamp               " + test.JMSTimestamp
+		+ "\n       __content_id__             " + test.__content_id__
+		+ "\n       __version_id__             " + test.__version_id__
+		+ "\n       __likely_dup_delivery__    " + test.__likely_dup_delivery__
+		+ "\n       __ack_expected__           " + test.__ack_expected__);
+		
+		Event.consumeEvent(test);
+	}
+}

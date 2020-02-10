@@ -1,0 +1,35 @@
+/**
+ * @description 
+ */
+WebStudio.Core.Concepts.DataSources.Records.WS_C_AbstractDataSourceRecord rulefunction WebStudio.Core.RuleFunctions.Actions.Lifecycle.Commit.WS_RF_CreateCommittableDataRecord {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		WebStudio.Core.Concepts.WS_C_UserArtifact userArtifact;
+		WebStudio.Core.Concepts.DataSources.WS_C_ResponseData responseData;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.Lifecycle.Commit.WS_RF_CreateCommittableDataRecord");
+		
+		WS_C_CommittableArtifactNamesDataSourceRecord committableArtifactNamesDataSourceRecord = null;
+		WS_C_AbstractDataSourceRecord workspaceArtifactsDataSourceRecord = 
+			Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/Records/WS_C_CommittableArtifactNamesDataSourceRecord");
+		committableArtifactNamesDataSourceRecord = workspaceArtifactsDataSourceRecord;
+		String artifactPath = userArtifact.artifactPath;
+		String artifactType = userArtifact.artifactType;
+		String fileExtension = userArtifact.artifactFileExtn;
+		
+		committableArtifactNamesDataSourceRecord.artifactPath = artifactPath;
+		committableArtifactNamesDataSourceRecord.artifactType = artifactType;
+		committableArtifactNamesDataSourceRecord.fileExtension = fileExtension;
+		
+		Log.log(LOGGER, "Debug", "Committable Artifact Path [%s] : Artifact Type [%s] : Artifact Extension [%s]", artifactPath, artifactType, fileExtension);
+		committableArtifactNamesDataSourceRecord.imageSrc = Util.HashMap.get("ARTIFACT_TYPE_IMAGES", userArtifact.artifactType);
+		Concept[] containedConceptArray = Instance.PropertyArray.toArrayContainedConcept(responseData.record);
+		committableArtifactNamesDataSourceRecord.no = "" + containedConceptArray@length;
+		
+		Instance.PropertyArray.appendContainedConcept(responseData.record, workspaceArtifactsDataSourceRecord, 1L);
+		return workspaceArtifactsDataSourceRecord;
+	}
+}

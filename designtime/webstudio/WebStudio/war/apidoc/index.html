@@ -1,0 +1,2978 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="content-type" content="text/html; charset=windows-1252">
+	<title>RMS Rest API</title>
+	<link rel="SHORTCUT ICON" href="images/favicon.ico">
+	<link rel="icon" href="images/favicon.ico" type="image/ico">
+	<link href="apidoc.css" rel="stylesheet" type="text/css">
+	<script type="text/javascript" src="apidoc.js"></script>
+</head>
+<body style="margin: 0px; width: 100%; text-align: left;" onload="init();">
+	<div class="headerBar">
+		<div class="pageContent">
+			<img height=38 src="images/tibcologo.png" style="cursor: pointer;" onclick="window.location = 'index.html';"/>
+			<span class="headerTitle">RMS Rest API</span>
+		</div>
+	</div>
+	<br/>
+	<div class="pageContent">
+		<div class="descriptionText">This API enables users to use RMS
+			via a REST based webservice. Check below documentation for more
+			details of various supported operations.</div>
+		<br/>
+		
+		<!-- Authentication group -->
+		<span class="groupTitle expanded">Authentication</span>
+		<div class="group expanded">
+			<!-- User login api -->
+			<div class="api requestType_xml httpGet" id="api_authentication_login">
+				<div class="apiTitle collapsed" id="api_authentication_login_title">User login<span class="methodName">GET</span></div>
+				<div class="apiContent collapsed" id="api_authentication_login_content">
+					<span class="apiDescription">Authenticates a user and creates a new session.</span>
+					<span class="apiContentSubHeading">URL format</span>
+					<div class="apiUrl">/ws/api/{userName}/login.<select class="requestType_selection" onchange="updateRequestType(this);"><option selected="selected" value="xml">xml</option><option value="json">json</option></select></div>
+					<span class="apiContentSubHeading">Parameters</span>
+					<form class="tryOutSection" action="/ws/api/{userName}/login.xml" method="GET">
+						<table class="paramsTable">
+							<tr><th width="12%">Parameter</th><th width="40%">Value</th><th width="8%">Type</th><th>Description</th></tr>
+							<tr><td>userName</td><td><input class="formField" type="text" name="userName" required="required" paramtype="path"></td><td>path</td><td>UserName of the user.</td></tr>
+							<tr><td>password</td><td><input class="formField" type="text" name="password" required="required" paramtype="query"></td><td>query</td><td>Base64 encoded password.</td></tr>
+							<tr><td>forceLogin</td><td><input class="formField" type="text" name="forceLogin" paramtype="query"></td><td>query</td><td>Optional field, when 'true' forces a new user session closing existing session (if any).</td></tr>
+						</table>
+						<input class="formSubmit" type="button" value="Try">
+						<div class="type_xml"> <a download="" href="xsd/Response.xsd" style="color:#222; font-size:0.8em;">Response XSD</a></div>
+						<div class="type_json"> <a download="" href="json_response/response_login.txt" style="color:#222; font-size:0.8em;">Sample JSON Response</a></div>
+						<div class="apiResponseSection collapsed">
+							<span class="apiContentSubHeading">Request URL</span>
+							<div class="apiUrl"></div>
+							<span class="apiContentSubHeading">Response body</span>
+							<div class="apiResponse"></div>
+						</div>
+					</form>
+				</div>
+			</div>
+			
+			<!-- User logout api -->
+			<div class="api requestType_xml httpGet" id="api_authentication_logout">
+				<div class="apiTitle collapsed" id="api_authentication_logout_title">User logout<span class="methodName">GET</span></div>
+				<div class="apiContent collapsed" id="api_authentication_logout_content">
+					<span class="apiDescription">Ends the user session.</span>
+					<span class="apiContentSubHeading">URL format</span>
+					<div class="apiUrl">/ws/api/{token}/logout.<select class="requestType_selection" onchange="updateRequestType(this);"><option selected="selected" value="xml">xml</option><option value="json">json</option></select></div>
+					<span class="apiContentSubHeading">Parameters</span>
+					<form class="tryOutSection" action="/ws/api/{token}/logout.xml" method="GET">
+						<table class="paramsTable">
+							<tr><th width="12%">Parameter</th><th width="40%">Value</th><th width="8%">Type</th><th>Description</th></tr>
+							<tr><td>token</td><td><input class="formField" type="text" name="token" required="required" paramtype="path"></td><td>path</td><td>Session token.</td></tr>
+						</table>
+						<input class="formSubmit" type="button" value="Try">
+						<div class="type_xml"> <a download="" href="xsd/Response.xsd" style="color:#222; font-size:0.8em;">Response XSD</a></div>
+						<div class="type_json"> <a download="" href="json_response/response_basic.txt" style="color:#222; font-size:0.8em;">Sample JSON Response</a></div>
+						<div class="apiResponseSection collapsed">
+							<span class="apiContentSubHeading">Request URL</span>
+							<div class="apiUrl"></div>
+							<span class="apiContentSubHeading">Response body</span>
+							<div class="apiResponse"></div>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div><!-- Authentication group ends -->
+		
+		
+		<!-- Lifecycle group -->
+		<span class="groupTitle expanded">Lifecycle</span>
+		<div class="group expanded">
+			<!-- Project Checkout api -->
+			<div class="api requestType_xml httpPost">
+				<div class="apiTitle collapsed">Project checkout<span class="methodName">POST</span></div>
+				<div class="apiContent collapsed">
+					<span class="apiDescription">Checkout a project with all or some artifacts.</span>
+					<span class="apiContentSubHeading">URL format</span>
+					<div class="apiUrl">/ws/api/{token}/projects/{projectName}/checkout.<select class="requestType_selection" onchange="updateRequestType(this);"><option selected="selected" value="xml">xml</option><option value="json">json</option></select></div>
+					<span class="apiContentSubHeading">Parameters</span>
+					<form class="tryOutSection" action="/ws/api/{token}/projects/{projectName}/checkout.xml" method="POST">
+						<table class="paramsTable">
+							<tr><th width="12%">Parameter</th><th width="40%">Value</th><th width="8%">Type</th><th>Description</th></tr>
+							<tr><td>token</td><td><input class="formField" type="text" name="token" required="required" paramtype="path"></td><td>path</td><td>Session token.</td></tr>
+							<tr><td>projectName</td><td><input class="formField" type="text" name="projectName" required="required" paramtype="path"></td><td>path</td><td>Name of the project eg: CreditCardApplication</td></tr>
+							<tr><td>body</td><td><textarea class="formField" name="body" required="required" paramtype="body"></textarea></td><td>body</td>
+								<td>
+									<div class="type_xml">XML defining project artifacts to be checkout. <a download="" href="xsd/Request.xsd">Request XSD</a> <span class="sampleDataLink" onclick="showSampleData('xml', this);">Sample</span></div>
+									<div class="type_json">JSON defining project artifacts to be checkout. <a download="" href="json_request/checkout.txt">Generic JSON Request</a> <span class="sampleDataLink" onclick="showSampleData('json', this);">Sample</span></div>
+								</td>
+							</tr>
+						</table>
+						<input class="formSubmit" type="button" value="Try">
+						<div class="type_xml"> <a download="" href="xsd/Response.xsd" style="color:#222; font-size:0.8em;">Response XSD</a></div>
+						<div class="type_json"> <a download="" href="json_response/response_checkout.txt" style="color:#222; font-size:0.8em;">Sample JSON Response</a></div>
+						<div class="apiResponseSection collapsed">
+							<span class="apiContentSubHeading">Request URL</span>
+							<div class="apiUrl"></div>
+							<span class="apiContentSubHeading">Response body</span>
+							<div class="apiResponse"></div>
+						</div>
+						<div class="hiddenSampleData">
+							<div class="type_xml">&lt;request&gt;
+  &lt;data&gt;
+    &lt;project&gt;
+      &lt;name&gt;CreditCardApplication&lt;/name&gt;
+      &lt;artifactItem&gt;
+        &lt;artifactPath&gt;/Virtual_RF/Applicant&lt;/artifactPath&gt;
+        &lt;artifactType&gt;rulefunctionimpl&lt;/artifactType&gt;
+        &lt;fileExtension&gt;rulefunctionimpl&lt;/fileExtension&gt;
+        &lt;baseArtifactPath&gt;/Virtual_RF/Applicant_VirtualRuleFunction.rulefunction&lt;/baseArtifactPath&gt;
+      &lt;/artifactItem&gt;
+      &lt;artifactItem&gt;
+        &lt;artifactPath&gt;/Virtual_RF/Applicant_Simple&lt;/artifactPath&gt;
+        &lt;artifactType&gt;rulefunctionimpl&lt;/artifactType&gt;
+        &lt;fileExtension&gt;rulefunctionimpl&lt;/fileExtension&gt;
+        &lt;baseArtifactPath&gt;/Virtual_RF/Applicant_VirtualRuleFunction.rulefunction&lt;/baseArtifactPath&gt;
+      &lt;/artifactItem&gt;
+    &lt;/project&gt;
+  &lt;/data&gt;
+&lt;/request&gt;</div>
+							<div class="type_json">{
+  "request": {
+    "data": {
+      "project": [{
+        "name": "CreditCardApplication",
+        "artifactItem": [{
+          "artifactPath": "/Virtual_RF/Applicant",
+          "artifactType": "rulefunctionimpl",
+          "fileExtension": "rulefunctionimpl",
+          "baseArtifactPath": "/Virtual_RF/Applicant_VirtualRuleFunction.rulefunction"
+        },
+        {
+          "artifactPath": "/Virtual_RF/Applicant_Simple",
+          "artifactType": "rulefunctionimpl",
+          "fileExtension": "rulefunctionimpl",
+          "baseArtifactPath": "/Virtual_RF/Applicant_VirtualRuleFunction.rulefunction"
+        }]
+      }]
+    }
+  }
+}</div>
+						</div>
+					</form>
+				</div>
+			</div>
+			
+			<!-- Project commit api -->
+			<div class="api requestType_xml httpPost" id="api_lifecycle_commit">
+				<div class="apiTitle collapsed" id="api_lifecycle_commit_title">Commit<span class="methodName">POST</span></div>
+				<div class="apiContent collapsed" id="api_lifecycle_commit_content">
+					<span class="apiDescription">Commit changes to repository.</span>
+					<span class="apiContentSubHeading">URL format</span>
+					<div class="apiUrl">/ws/api/{token}/projects/{projectName}/commit.<select class="requestType_selection" onchange="updateRequestType(this);"><option selected="selected" value="xml">xml</option><option value="json">json</option></select></div>
+					<span class="apiContentSubHeading">Parameters</span>
+					<form class="tryOutSection" action="/ws/api/{token}/projects/{projectName}/commit.xml" method="POST">
+						<table class="paramsTable">
+							<tr><th width="12%">Parameter</th><th width="40%">Value</th><th width="8%">Type</th><th>Description</th></tr>
+							<tr><td>token</td><td><input class="formField" type="text" name="token" required="required" paramtype="path"></td><td>path</td><td>Session token</td></tr>
+							<tr><td>projectName</td><td><input class="formField" type="text" name="projectName" required="required" paramtype="path"></td><td>path</td><td>Name of the Project eg: CreditCardApplication</td></tr>
+							<tr><td>body</td><td><textarea class="formField" name="body" required="required" paramtype="body"></textarea></td><td>body</td>
+								<td>
+									<div class="type_xml">XML defining project artifacts to be committed. <a download="" href="xsd/Request.xsd">Request XSD</a> <span class="sampleDataLink" onclick="showSampleData('xml', this);">Sample</span></div>
+									<div class="type_json">JSON defining project artifacts to be committed. <a download="" href="json_request/commit.txt">Generic JSON Request</a><span class="sampleDataLink" onclick="showSampleData('json', this);">Sample</span></div>
+								</td>
+							</tr>
+						</table>
+						<input class="formSubmit" type="button" value="Try">
+						<div class="type_xml"> <a download="" href="xsd/Response.xsd" style="color:#222; font-size:0.8em;">Response XSD</a></div>
+						<div class="type_json"> <a download="" href="json_response/response_commit.txt" style="color:#222; font-size:0.8em;">Sample JSON Response</a></div>
+						<div class="apiResponseSection collapsed">
+							<span class="apiContentSubHeading">Request URL</span>
+							<div class="apiUrl"></div>
+							<span class="apiContentSubHeading">Response body</span>
+							<div class="apiResponse"></div>
+						</div>
+						<div class="hiddenSampleData">
+							<div class="type_xml">&lt;request&gt;
+  &lt;data&gt;
+    &lt;commitComments&gt;test commit&lt;/commitComments&gt;
+    &lt;project&gt;
+      &lt;name&gt;CreditCardApplication&lt;/name&gt;
+      &lt;artifactItem&gt;
+        &lt;artifactPath&gt;/Virtual_RF/Applicant_Simple&lt;/artifactPath&gt;
+        &lt;artifactType&gt;rulefunctionimpl&lt;/artifactType&gt;
+      &lt;/artifactItem&gt;
+    &lt;/project&gt;
+  &lt;/data&gt;
+&lt;/request&gt;</div>
+							<div class="type_json">{
+  "request": {
+    "data": {
+      "commitComments": "test commit",
+      "project": [{
+        "name": "CreditCardApplication",
+        "artifactItem": [{
+          "artifactPath": "/Virtual_RF/Applicant_Simple",
+          "artifactType": "rulefunctionimpl"
+        }]
+      }]
+    }
+  }
+}</div>
+						</div>
+					</form>
+				</div>
+			</div>
+			
+			<!-- Project artifact revert api -->
+			<div class="api requestType_xml httpPost" id="api_lifecycle_revert">
+				<div class="apiTitle collapsed" id="api_lifecycle_revert_title">Revert<span class="methodName">POST</span></div>
+				<div class="apiContent collapsed" id="api_lifecycle_revert_content">
+					<span class="apiDescription">Reverts changes made to an artifact by the user.</span>
+					<span class="apiContentSubHeading">URL format</span>
+					<div class="apiUrl">/ws/api/{token}/projects/{projectName}/revert.<select class="requestType_selection" onchange="updateRequestType(this);"><option selected="selected" value="xml">xml</option><option value="json">json</option></select></div>
+					<span class="apiContentSubHeading">Parameters</span>
+					<form class="tryOutSection" action="/ws/api/{token}/projects/{projectName}/revert.xml" method="POST">
+						<table class="paramsTable">
+							<tr><th width="12%">Parameter</th><th width="40%">Value</th><th width="8%">Type</th><th>Description</th></tr>
+							<tr><td>token</td><td><input class="formField" type="text" name="token" required="required" paramtype="path"></td><td>path</td><td>Session token</td></tr>
+							<tr><td>projectName</td><td><input class="formField" type="text" name="projectName" required="required" paramtype="path"></td><td>path</td><td>Name of the Project eg: CreditCardApplication</td></tr>
+							<tr><td>body</td><td><textarea class="formField" name="body" required="required" paramtype="body"></textarea></td><td>body</td>
+								<td>
+									<div class="type_xml">XML defining project artifacts to be reverted. <a download="" href="xsd/Request.xsd">Request XSD</a> <span class="sampleDataLink" onclick="showSampleData('xml', this);">Sample</span></div>
+									<div class="type_json">JSON defining project artifacts to be reverted. <a download="" href="json_request/revert.txt">Generic JSON Request</a><span class="sampleDataLink" onclick="showSampleData('json', this);">Sample</span></div>
+								</td>
+							</tr>
+						</table>
+						<input class="formSubmit" type="button" value="Try">
+						<div class="type_xml"> <a download="" href="xsd/Response.xsd" style="color:#222; font-size:0.8em;">Response XSD</a></div>
+						<div class="type_json"> <a download="" href="json_response/response_revert.txt" style="color:#222; font-size:0.8em;">Sample JSON Response</a></div>
+						<div class="apiResponseSection collapsed">
+							<span class="apiContentSubHeading">Request URL</span>
+							<div class="apiUrl"></div>
+							<span class="apiContentSubHeading">Response body</span>
+							<div class="apiResponse"></div>
+						</div>
+						<div class="hiddenSampleData">
+							<div class="type_xml">&lt;request&gt;
+  &lt;data&gt;
+    &lt;project&gt;
+      &lt;name&gt;CreditCardApplication&lt;/name&gt;
+      &lt;artifactItem&gt;
+        &lt;artifactPath&gt;/Virtual_RF/Applicant_Simple&lt;/artifactPath&gt;
+        &lt;artifactType&gt;rulefunctionimpl&lt;/artifactType&gt;
+      &lt;/artifactItem&gt;
+    &lt;/project&gt;
+  &lt;/data&gt;
+&lt;/request&gt;</div>
+							<div class="type_json">{
+  "request": {
+    "data": {
+      "project": [{
+        "name": "CreditCardApplication",
+        "artifactItem": [{
+          "artifactPath": "/Virtual_RF/Applicant_Simple",
+          "artifactType": "rulefunctionimpl"
+        }]
+      }]
+    }
+  }
+}</div>
+						</div>
+					</form>
+				</div>
+			</div>
+			
+			<!-- Project artifact synchronize api -->
+			<div class="api requestType_xml httpPost" id="api_lifecycle_synchronize">
+				<div class="apiTitle collapsed" id="api_lifecycle_synchronize_title">Synchronize<span class="methodName">POST</span></div>
+				<div class="apiContent collapsed" id="api_lifecycle_synchronize_content">
+					<span class="apiDescription">Synchronizes artifacts of a project.</span>
+					<span class="apiContentSubHeading">URL format</span>
+					<div class="apiUrl">/ws/api/{token}/projects/{projectName}/synchronize.<select class="requestType_selection" onchange="updateRequestType(this);"><option selected="selected" value="xml">xml</option><option value="json">json</option></select></div>
+					<span class="apiContentSubHeading">Parameters</span>
+					<form class="tryOutSection" action="/ws/api/{token}/projects/{projectName}/synchronize.xml" method="POST">
+						<table class="paramsTable">
+							<tr><th width="12%">Parameter</th><th width="40%">Value</th><th width="8%">Type</th><th>Description</th></tr>
+							<tr><td>token</td><td><input class="formField" type="text" name="token" required="required" paramtype="path"></td><td>path</td><td>Session token</td></tr>
+							<tr><td>projectName</td><td><input class="formField" type="text" name="projectName" required="required" paramtype="path"></td><td>path</td><td>Name of the Project eg: CreditCardApplication</td></tr>
+							<tr><td>body</td><td><textarea class="formField" name="body" required="required" paramtype="body"></textarea></td><td>body</td>
+								<td>
+									<div class="type_xml">XML defining project artifacts to be synchronized. <a download="" href="xsd/Request.xsd">Request XSD</a> <span class="sampleDataLink" onclick="showSampleData('xml', this);">Sample</span></div>
+									<div class="type_json">JSON defining project artifacts to be synchronized. <a download="" href="json_request/synchronize.txt">Generic JSON Request</a><span class="sampleDataLink" onclick="showSampleData('json', this);">Sample</span></div>
+								</td>
+							</tr>
+						</table>
+						<input class="formSubmit" type="button" value="Try">
+						<div class="type_xml"> <a download="" href="xsd/Response.xsd" style="color:#222; font-size:0.8em;">Response XSD</a></div>
+						<div class="type_json"> <a download="" href="json_response/response_synchronize.txt" style="color:#222; font-size:0.8em;">Sample JSON Response</a></div>
+						<div class="apiResponseSection collapsed">
+							<span class="apiContentSubHeading">Request URL</span>
+							<div class="apiUrl"></div>
+							<span class="apiContentSubHeading">Response body</span>
+							<div class="apiResponse"></div>
+						</div>
+						<div class="hiddenSampleData">
+							<div class="type_xml">&lt;request&gt;
+  &lt;data&gt;
+    &lt;project&gt;
+      &lt;name&gt;CreditCardApplication&lt;/name&gt;
+      &lt;artifactItem&gt;
+        &lt;artifactPath&gt;/Virtual_RF/Applicant_Simple&lt;/artifactPath&gt;
+        &lt;artifactType&gt;rulefunctionimpl&lt;/artifactType&gt;
+        &lt;fileExtension&gt;rulefunctionimpl&lt;/fileExtension&gt;
+        &lt;changeType&gt;Modified&lt;/changeType&gt;
+      &lt;/artifactItem&gt;
+    &lt;/project&gt;
+  &lt;/data&gt;
+&lt;/request&gt;</div>
+							<div class="type_json">{
+  "request": {
+    "data": {
+      "project": [{
+        "name": "CreditCardApplication",
+        "artifactItem": [{
+          "artifactPath": "/Virtual_RF/Applicant_Simple",
+          "artifactType": "rulefunctionimpl",
+          "fileExtension": "rulefunctionimpl",
+          "changeType": "Modified"
+        }]
+      }]
+    }
+  }
+}</div>
+						</div>
+					</form>
+				</div>
+			</div>
+			
+		</div><!-- Lifecycle group ends -->
+		
+		<!-- Projects group -->
+		<span class="groupTitle expanded">Project</span>
+		<div class="group expanded">
+			<!-- Projects list api -->
+			<div class="api requestType_xml httpGet" id="api_projects_list">
+				<div class="apiTitle collapsed" id="api_projects_list_title">List available Projects<span class="methodName">GET</span></div>
+				<div class="apiContent collapsed" id="api_projects_list_content">
+					<span class="apiDescription">Fetches a list of all project that are available.</span>
+					<span class="apiContentSubHeading">URL format</span>
+					<div class="apiUrl">/ws/api/{token}/projects.<select class="requestType_selection" onchange="updateRequestType(this);"><option selected="selected" value="xml">xml</option><option value="json">json</option></select></div>
+					<span class="apiContentSubHeading">Parameters</span>
+					<form class="tryOutSection" action="/ws/api/{token}/projects.xml" method="GET">
+						<table class="paramsTable">
+							<tr><th width="12%">Parameter</th><th width="40%">Value</th><th width="8%">Type</th><th>Description</th></tr>
+							<tr><td>token</td><td><input class="formField" type="text" name="token" required="required" paramtype="path"></td><td>path</td><td>Session token.</td></tr>
+						</table>
+						<input class="formSubmit" type="button" value="Try">
+						<div class="type_xml"> <a download="" href="xsd/Response.xsd" style="color:#222; font-size:0.8em;">Response XSD</a></div>
+						<div class="type_json"> <a download="" href="json_response/response_projects.txt" style="color:#222; font-size:0.8em;">Sample JSON Response</a></div>
+						<div class="apiResponseSection collapsed">
+							<span class="apiContentSubHeading">Request URL</span>
+							<div class="apiUrl"></div>
+							<span class="apiContentSubHeading">Response body</span>
+							<div class="apiResponse"></div>
+						</div>
+					</form>
+				</div>
+			</div>
+			
+			<!-- Project artifacts list api -->
+			<div class="api requestType_xml httpGet" id="api_projects_artifacts">
+				<div class="apiTitle collapsed" id="api_projects_artifacts_title">List available artifacts of a Project<span class="methodName">GET</span></div>
+				<div class="apiContent collapsed" id="api_projects_artifacts_content">
+					<span class="apiDescription">Fetches a list of all artifacts available to checkout for a Project.</span>
+					<span class="apiContentSubHeading">URL format</span>
+					<div class="apiUrl">/ws/api/{token}/projects/{projectName}/artifacts.<select class="requestType_selection" onchange="updateRequestType(this);"><option selected="selected" value="xml">xml</option><option value="json">json</option></select></div>
+					<span class="apiContentSubHeading">Parameters</span>
+					<form class="tryOutSection" action="/ws/api/{token}/projects/{projectName}/artifacts.xml" method="GET">
+						<table class="paramsTable">
+							<tr><th width="12%">Parameter</th><th width="40%">Value</th><th width="8%">Type</th><th>Description</th></tr>
+							<tr><td>token</td><td><input class="formField" type="text" name="token" required="required" paramtype="path"></td><td>path</td><td>Session token.</td></tr>
+							<tr><td>projectName</td><td><input class="formField" type="text" name="projectName" required="required" paramtype="path"></td><td>path</td><td>Name of the project eg: CreditCardApplication</td></tr>
+						</table>
+						<input class="formSubmit" type="button" value="Try">
+						<div class="type_xml"> <a download="" href="xsd/Response.xsd" style="color:#222; font-size:0.8em;">Response XSD</a></div>
+						<div class="type_json"> <a download="" href="json_response/response_project_artifacts.txt" style="color:#222; font-size:0.8em;">Sample JSON Response</a></div>
+						<div class="apiResponseSection collapsed">
+							<span class="apiContentSubHeading">Request URL</span>
+							<div class="apiUrl"></div>
+							<span class="apiContentSubHeading">Response body</span>
+							<div class="apiResponse"></div>
+						</div>
+					</form>
+				</div>
+			</div>
+			
+			<!-- Project committables api -->
+			<div class="api requestType_xml httpPost" id="api_projects_committables">
+				<div class="apiTitle collapsed" id="api_projects_committables_title">List artifacts ready to be committed<span class="methodName">POST</span></div>
+				<div class="apiContent collapsed" id="api_projects_committables_content">
+					<span class="apiDescription">Fetches a list of all artifacts that has been modified and are ready to be committed for a specified Project.</span>
+					<span class="apiContentSubHeading">URL format</span>
+					<div class="apiUrl">/ws/api/{token}/projects/{projectName}/committables.<select class="requestType_selection" onchange="updateRequestType(this);"><option selected="selected" value="xml">xml</option><option value="json">json</option></select></div>
+					<span class="apiContentSubHeading">Parameters</span>
+					<form class="tryOutSection" action="/ws/api/{token}/projects/{projectName}/committables.xml" method="POST">
+						<table class="paramsTable">
+							<tr><th width="12%">Parameter</th><th width="40%">Value</th><th width="8%">Type</th><th>Description</th></tr>
+							<tr><td>token</td><td><input class="formField" type="text" name="token" required="required" paramtype="path"></td><td>path</td><td>Session token.</td></tr>
+							<tr><td>projectName</td><td><input class="formField" type="text" name="projectName" required="required" paramtype="path"></td><td>path</td><td>Name of the project eg: CreditCardApplication</td></tr>
+							<tr><td>body</td><td><textarea class="formField" name="body" required="required" paramtype="body"></textarea></td><td>body</td>
+								<td>
+									<div class="type_xml">XML defining project name. <span class="sampleDataLink" onclick="showSampleData('xml', this);">Sample</span></div>
+									<div class="type_json">JSON defining project name.<a download="" href="json_request/committables.txt">Generic JSON Request</a> <span class="sampleDataLink" onclick="showSampleData('json', this);">Sample</span></div>
+								</td>
+							</tr>
+						</table>
+						<input class="formSubmit" type="button" value="Try">
+						<div class="type_xml"> <a download="" href="xsd/Response.xsd" style="color:#222; font-size:0.8em;">Response XSD</a></div>
+						<div class="type_json"> <a download="" href="json_response/response_show_committables.txt" style="color:#222; font-size:0.8em;">Sample JSON Response</a></div>
+						<div class="apiResponseSection collapsed">
+							<span class="apiContentSubHeading">Request URL</span>
+							<div class="apiUrl"></div>
+							<span class="apiContentSubHeading">Response body</span>
+							<div class="apiResponse"></div>
+						</div>
+						<div class="hiddenSampleData">
+							<div class="type_xml">&lt;request&gt;
+  &lt;data&gt;
+    &lt;project&gt;
+      &lt;name&gt;CreditCardApplication&lt;/name&gt;
+    &lt;/project&gt;
+  &lt;/data&gt;
+&lt;/request&gt;</div>
+							<div class="type_json">{
+  "request": {
+    "data": {
+      "project": [{ "name": "CreditCardApplication" }]
+    }
+  }
+}</div>
+						</div>
+					</form>
+				</div>
+			</div>
+			
+			<!-- Project synchronizables api -->
+			<div class="api requestType_xml httpPost" id="api_projects_synchronizables">
+				<div class="apiTitle collapsed" id="api_projects_synchronizables_title">List artifacts that needs synchronization<span class="methodName">POST</span></div>
+				<div class="apiContent collapsed" id="api_projects_synchronizables_content">
+					<span class="apiDescription">Fetches a list of all artifacts that has been modified on the server and the user's copy needs synchronization.</span>
+					<span class="apiContentSubHeading">URL format</span>
+					<div class="apiUrl">/ws/api/{token}/projects/{projectName}/synchronizables.<select class="requestType_selection" onchange="updateRequestType(this);"><option selected="selected" value="xml">xml</option><option value="json">json</option></select></div>
+					<span class="apiContentSubHeading">Parameters</span>
+					<form class="tryOutSection" action="/ws/api/{token}/projects/{projectName}/synchronizables.xml" method="POST">
+						<table class="paramsTable">
+							<tr><th width="12%">Parameter</th><th width="40%">Value</th><th width="8%">Type</th><th>Description</th></tr>
+							<tr><td>token</td><td><input class="formField" type="text" name="token" required="required" paramtype="path"></td><td>path</td><td>Session token.</td></tr>
+							<tr><td>projectName</td><td><input class="formField" type="text" name="projectName" required="required" paramtype="path"></td><td>path</td><td>Name of the project eg: CreditCardApplication</td></tr>
+							<tr><td>body</td><td><textarea class="formField" name="body" required="required" paramtype="body"></textarea></td><td>body</td>
+								<td>
+									<div class="type_xml">XML defining project name. <span class="sampleDataLink" onclick="showSampleData('xml', this);">Sample</span></div>
+									<div class="type_json">JSON defining project name.<a download="" href="json_request/synchronizables.txt">Generic JSON Request</a> <span class="sampleDataLink" onclick="showSampleData('json', this);">Sample</span></div>
+								</td>
+							</tr>
+						</table>
+						<input class="formSubmit" type="button" value="Try">
+						<div class="type_xml"> <a download="" href="xsd/Response.xsd" style="color:#222; font-size:0.8em;">Response XSD</a></div>
+						<div class="type_json"> <a download="" href="json_response/response_show_synchronizables.txt" style="color:#222; font-size:0.8em;">Sample JSON Response</a></div>
+						<div class="apiResponseSection collapsed">
+							<span class="apiContentSubHeading">Request URL</span>
+							<div class="apiUrl"></div>
+							<span class="apiContentSubHeading">Response body</span>
+							<div class="apiResponse"></div>
+						</div>
+						<div class="hiddenSampleData">
+							<div class="type_xml">&lt;request&gt;
+  &lt;data&gt;
+    &lt;project&gt;
+      &lt;name&gt;CreditCardApplication&lt;/name&gt;
+    &lt;/project&gt;
+  &lt;/data&gt;
+&lt;/request&gt;</div>
+							<div class="type_json">{
+  "request": {
+    "data": {
+      "project": [{ "name": "CreditCardApplication" }]
+    }
+  }
+}</div>
+						</div>
+					</form>
+				</div>
+			</div>
+			
+			<!-- Project generateDeployable api -->
+			<div class="api requestType_xml httpGet" id="api_projects_generateDeployable">
+				<div class="apiTitle collapsed" id="api_projects_generateDeployable_title">Generate deployable<span class="methodName">GET</span></div>
+				<div class="apiContent collapsed" id="api_projects_generateDeployable_content">
+					<span class="apiDescription">Generates deployable for the specified project.</span>
+					<span class="apiContentSubHeading">URL format</span>
+					<div class="apiUrl">/ws/api/{token}/projects/{projectName}/generateDeployable.<select class="requestType_selection" onchange="updateRequestType(this);"><option selected="selected" value="xml">xml</option><option value="json">json</option></select></div>
+					<span class="apiContentSubHeading">Parameters</span>
+					<form class="tryOutSection" action="/ws/api/{token}/projects/{projectName}/generateDeployable.xml" method="GET">
+						<table class="paramsTable">
+							<tr><th width="12%">Parameter</th><th width="40%">Value</th><th width="8%">Type</th><th>Description</th></tr>
+							<tr><td>token</td><td><input class="formField" type="text" name="token" required="required" paramtype="path"></td><td>path</td><td>Session token.</td></tr>
+							<tr><td>projectName</td><td><input class="formField" type="text" name="projectName" required="required" paramtype="path"></td><td>path</td><td>Name of the project eg: CreditCardApplication</td></tr>
+						</table>
+						<input class="formSubmit" type="button" value="Try">
+						<div class="type_xml"> <a download="" href="xsd/Response.xsd" style="color:#222; font-size:0.8em;">Response XSD</a></div>
+						<div class="type_json"> <a download="" href="json_response/response_gen_deployable.txt" style="color:#222; font-size:0.8em;">Sample JSON Response</a></div>
+						<div class="apiResponseSection collapsed">
+							<span class="apiContentSubHeading">Request URL</span>
+							<div class="apiUrl"></div>
+							<span class="apiContentSubHeading">Response body</span>
+							<div class="apiResponse"></div>
+						</div>
+					</form>
+				</div>
+			</div>
+			
+			<!-- Project artifacts manage locks api -->
+			<div class="api requestType_xml httpGet" id="api_projects_artifactLocks">
+				<div class="apiTitle collapsed" id="api_projects_artifactLocks_title">Manage Locks<span class="methodName">GET</span></div>
+				<div class="apiContent collapsed" id="api_projects_artifactLocks_content">
+					<span class="apiDescription">Manages locks.</span>
+					<span class="apiContentSubHeading">URL format</span>
+					<div class="apiUrl">/ws/api/{token}/projects/{projectName}/locks.<select class="requestType_selection" onchange="updateRequestType(this);"><option selected="selected" value="xml">xml</option><option value="json">json</option></select></div>
+					<span class="apiContentSubHeading">Parameters</span>
+					<form class="tryOutSection" action="/ws/api/{token}/projects/{projectName}/locks.xml" method="GET">
+						<table class="paramsTable">
+							<tr><th width="12%">Parameter</th><th width="40%">Value</th><th width="8%">Type</th><th>Description</th></tr>
+							<tr><td>token</td><td><input class="formField" type="text" name="token" required="required" paramtype="path"></td><td>path</td><td>Session token.</td></tr>
+							<tr><td>projectName</td><td><input class="formField" type="text" name="projectName" required="required" paramtype="path"></td><td>path</td><td>Name of the project eg: CreditCardApplication</td></tr>
+						</table>
+						<input class="formSubmit" type="button" value="Try">
+						<div class="type_xml"> <a download="" href="xsd/Response.xsd" style="color:#222; font-size:0.8em;">Response XSD</a></div>
+						<div class="type_json"> <a download="" href="json_response/response_manage_locks.txt" style="color:#222; font-size:0.8em;">Sample JSON Response</a></div>
+						<div class="apiResponseSection collapsed">
+							<span class="apiContentSubHeading">Request URL</span>
+							<div class="apiUrl"></div>
+							<span class="apiContentSubHeading">Response body</span>
+							<div class="apiResponse"></div>
+						</div>
+					</form>
+				</div>
+			</div>
+			
+			<!-- Project import api -->
+			<div class="api requestType_xml httpPost" id="api_projects_import">
+				<div class="apiTitle collapsed" id="api_projects_import_title">Project import<span class="methodName">POST</span></div>
+				<div class="apiContent collapsed" id="api_project_import_content">
+					<span class="apiDescription">Import project in RMS.</span>
+					<span class="apiContentSubHeading">URL format</span>
+					<div class="apiUrl">/ws/api/{token}/projects/{projectName}/import.<select class="requestType_selection" onchange="updateRequestType(this);"><option selected="selected" value="xml">xml</option><option value="json">json</option></select></div>
+					<span class="apiContentSubHeading">Parameters</span>
+					<form class="tryOutSection" action="/ws/api/{token}/projects/{projectName}/import.xml" method="POST">
+						<table class="paramsTable">
+							<tr><th width="12%">Parameter</th><th width="40%">Value</th><th width="8%">Type</th><th>Description</th></tr>
+							<tr><td>token</td><td><input class="formField" type="text" name="token" required="required" paramtype="path"></td><td>path</td><td>Session token.</td></tr>
+							<tr><td>projectName</td><td><input class="formField" type="text" name="projectName" required="required" paramtype="path"></td><td>form</td><td>Name of the project eg: CreditCardApplication</td></tr>
+							<tr><td>createACL</td><td><input class="formField" type="text" name="createACL" required="required" paramtype="query"></td><td>form</td><td>Whether to create AC file or not. eg: true</td></tr>
+							<tr><td>selectResource</td><td><input class="formField" type="file" name="selectResource" required="required" paramtype="form"></td><td>form</td><td>Project zip to import</td></tr>
+						</table>
+						<input class="formSubmit" type="button" value="Try">
+						<div class="type_xml"> <a download="" href="xsd/Response.xsd" style="color:#222; font-size:0.8em;">Response XSD</a></div>
+						<div class="type_json"> <a download="" href="json_response/response_import_project.txt" style="color:#222; font-size:0.8em;">Sample JSON Response</a></div>
+						<div class="apiResponseSection collapsed">
+							<span class="apiContentSubHeading">Request URL</span>
+							<div class="apiUrl"></div>
+							<span class="apiContentSubHeading">Response body</span>
+							<div class="apiResponse"></div>
+						</div>
+					</form>
+				</div>
+			</div>
+
+                        <!-- Project export api-->
+			<div class="api requestType_xml httpPost" id="api_project_artifacts_export">
+				<div class="apiTitle collapsed" id="api_project_artifacts_export_title">Export project artifacts<span class="methodName">POST</span></div>
+				<div class="apiContent collapsed" id="api_project_artifacts_export_content">
+					<span class="apiDescription">Exports multiple artifacts from selected project.</span>
+					<span class="apiContentSubHeading">URL format</span>
+					<div class="apiUrl">/ws/api/{token}/projects/{projectName}/multiexport.<select class="requestType_selection" onchange="updateRequestType(this);"><option selected="selected" value="xml">xml</option><option value="json">json</option></select></div>
+					<span class="apiContentSubHeading">Parameters</span>
+					<form class="tryOutSection" action="/ws/api/{token}/projects/{projectName}/multiexport.xml" method="POST">
+						<span class="hidden_value" name="responseType" value="file"></span>
+						<table class="paramsTable">
+							<tr><th width="12%">Parameter</th><th width="40%">Value</th><th width="8%">Type</th><th>Description</th></tr>
+							<tr><td>token</td><td><input class="formField" type="text" name="token" required="required" paramtype="path"></td><td>path</td><td>Session token</td></tr>
+							<tr><td>projectName</td><td><input class="formField" type="text" name="projectName" required="required" paramtype="path"></td><td>query</td><td>Name of the project eg: CreditCardApplication</td></tr>
+							<tr><td>body</td><td><textarea class="formField" name="body" required="required" paramtype="body"></textarea></td><td>body</td>
+								<td>
+									<div class="type_xml">XML defining project artifacts to be exported. Use artifactPathDT and artifactPathRTI element to specify list of DT's and RTI's to be exported.  <a download="" href="xsd/Request.xsd">Request XSD</a> <span class="sampleDataLink" onclick="showSampleData('xml', this);">Sample</span></div>
+									<div class="type_json">JSON defining project artifacts to be exported. Use artifactPathDT and artifactPathRTI keys to specify list of DT's and RTI's to be exported.   <a download="" href="json_request/synchronize.txt">Generic JSON Request</a><span class="sampleDataLink" onclick="showSampleData('json', this);">Sample</span></div>
+								</td>
+							</tr>
+						</table>
+						<input class="formSubmit" type="button" value="Try">
+						<div class="apiResponseSection collapsed">
+							<span class="apiContentSubHeading">Request URL</span>
+							<div class="apiUrl"></div>
+							<span class="apiContentSubHeading">Response body</span>
+							<div class="apiResponse"></div>
+						</div>
+						<div class="hiddenSampleData">
+							<div class="type_xml">&lt;request&gt;
+  &lt;data&gt;
+        &lt;artifactPathDT&gt;/Virtual_RF/Applicant_Simple,/Virtual_RF/BU&lt;/artifactPathDT&gt;
+   &lt;/data&gt;
+&lt;/request&gt;</div>
+							<div class="type_json">{
+  "request": {
+    "data": {
+      "artifactPathDT": "/Virtual_RF/Applicant_Simple,/Virtual_RF/BU"
+    }
+  }
+}</div>
+						</div>
+					</form>
+				</div>
+			</div>
+			
+		</div><!-- Projects group ends -->
+		
+		<!-- Artifacts group -->
+		<span class="groupTitle expanded">Artifact</span>
+		<div class="group expanded">
+			<!-- Artifact fetch api -->
+			<div class="api requestType_xml httpGet" id="api_artifact_fetch">
+				<div class="apiTitle collapsed" id="api_artifact_fetch_title">Fetch artifact<span class="methodName">GET</span></div>
+				<div class="apiContent collapsed" id="api_artifact_fetch_content">
+					<span class="apiDescription">Fetches an artifact content.</span>
+					<span class="apiContentSubHeading">URL format</span>
+					<div class="apiUrl">/ws/api/{token}/artifact.<select class="requestType_selection" onchange="updateRequestType(this);"><option selected="selected" value="xml">xml</option><option value="json">json</option></select></div>
+					<span class="apiContentSubHeading">Parameters</span>
+					<form class="tryOutSection" action="/ws/api/{token}/artifact.xml" method="GET">
+						<table class="paramsTable">
+							<tr><th width="12%">Parameter</th><th width="40%">Value</th><th width="8%">Type</th><th>Description</th></tr>
+							<tr><td>token</td><td><input class="formField" type="text" name="token" required="required" paramtype="path"></td><td>path</td><td>Session token.</td></tr>
+							<tr><td>projectName</td><td><input class="formField" type="text" name="projectName" required="required" paramtype="query"></td><td>query</td><td>Name of the project eg: CreditCardApplication</td></tr>
+							<tr><td>artifactPath</td><td><input class="formField" type="text" name="artifactPath" required="required" paramtype="query"></td><td>query</td><td>Artifact path eg: /Virtual_RF/Applicant_Simple</td></tr>
+							<tr><td>artifactExtension</td><td><input class="formField" type="text" name="artifactExtension" required="required" paramtype="query"></td><td>query</td><td>Extension of the artifact eg: rulefunctionimpl</td></tr>
+						</table>
+						<input class="formSubmit" type="button" value="Try">
+						<div class="type_xml"> 
+							<a download="" href="xsd/FetchDTResponse.xsd" style="color:#222; font-size:0.8em;">Decision Table Response XSD </a><br/>
+							<a download="" href="xsd/FetchProcessResponse.xsd" style="color:#222; font-size:0.8em;">Process Response XSD </a><br/>
+							<a download="" href="xsd/FetchRTResponse.xsd" style="color:#222; font-size:0.8em;">RTI Builder Response XSD </a><br/>
+							<a download="" href="xsd/FetchRTViewResponse.xsd" style="color:#222; font-size:0.8em;">RTI View Response XSD </a><br/>
+							<a download="" href="xsd/FetchDMResponse.xsd" style="color:#222; font-size:0.8em;">Domain Model Response XSD </a><br/>
+						</div>
+						<div class="type_json"> <a download="" href="json_response/response_fetch_artifact.txt" style="color:#222; font-size:0.8em;">Sample JSON Response</a></div>
+						<div class="apiResponseSection collapsed">
+							<span class="apiContentSubHeading">Request URL</span>
+							<div class="apiUrl"></div>
+							<span class="apiContentSubHeading">Response body</span>
+							<div class="apiResponse"></div>
+						</div>
+					</form>
+				</div>
+			</div>
+			<!-- Artifact save api -->
+			<div class="api requestType_xml httpPost" id="api_artifact_save">
+				<div class="apiTitle collapsed" id="api_artifact_save_title">Save artifact<span class="methodName">POST</span></div>
+				<div class="apiContent collapsed" id="api_artifact_save_content">
+					<span class="apiDescription">Saves artifact contents.</span>
+					<span class="apiContentSubHeading">URL format</span>
+					<div class="apiUrl">/ws/api/{token}/artifact/save.<select class="requestType_selection" onchange="updateRequestType(this);"><option selected="selected" value="xml">xml</option><option value="json">json</option></select></div>
+					<span class="apiContentSubHeading">Parameters</span>
+					<form class="tryOutSection" action="/ws/api/{token}/artifact/save.xml" method="POST">
+						<table class="paramsTable">
+							<tr><th width="12%">Parameter</th><th width="40%">Value</th><th width="8%">Type</th><th>Description</th></tr>
+							<tr><td>token</td><td><input class="formField" type="text" name="token" required="required" paramtype="path"></td><td>path</td><td>Session token.</td></tr>
+							<tr><td>artifactContent</td><td><textarea class="formField" name="artifactContent" required="required" paramtype="body"></textarea></td><td>body</td>
+								<td>
+									<div class="type_xml">XML defining the artifact save request - <a download="" href="xsd/SaveRequest.xsd">Request XSD</a>.<br/>The artifactContent in it must conform to XSD - <a download="" href="xsd/artifactContent_DT.xsd">DT</a>, <a download="" href="xsd/artifactContent_Process.xsd">Process</a>, <a download="" href="xsd/artifactContent_RTIBuilder.xsd">RTI Builder</a>, <a download="" href="xsd/artifactContent_RTIView.xsd">RTI View</a>, and must be passed as encoded xml data within the artifact save request. <span class="sampleDataLink" onclick="showSampleData('xml', this);">Sample</span></div>
+									<div class="type_json">JSON defining the artifact save request.<a download="" href="json_request/save.txt">Generic JSON Request</a>.<br/>The artifactContent in it must conform to JSON - <a download="" href="json_request/artifactContent_DT.txt">DT</a>, <a download="" href="json_request/artifactContent_Process.txt">Process</a>, <a download="" href="json_request/artifactContent_RTIBuilder.txt">RTI Builder</a>, <a download="" href="json_request/artifactContent_RTIView.txt">RTI View</a>, and must be passed as json data within the artifact save request. <span class="sampleDataLink" onclick="showSampleData('json', this);">Sample</span></div>
+								</td>
+							</tr>
+						</table>
+						<input class="formSubmit" type="button" value="Try">
+						<div class="type_xml"> <a download="" href="xsd/Response.xsd" style="color:#222; font-size:0.8em;">Response XSD</a></div>
+						<div class="type_json"> <a download="" href="json_response/response_save_artifact.txt" style="color:#222; font-size:0.8em;">Sample JSON Response</a></div>
+						<div class="apiResponseSection collapsed">
+							<span class="apiContentSubHeading">Request URL</span>
+							<div class="apiUrl"></div>
+							<span class="apiContentSubHeading">Response body</span>
+							<div class="apiResponse"></div>
+						</div>
+						<div class="hiddenSampleData">
+							<div class="type_xml">&lt;request&gt;
+	&lt;data&gt;
+		&lt;project&gt;
+			&lt;name&gt;CreditCardApplication&lt;/name&gt;
+			&lt;artifactItem&gt;
+				&lt;artifactPath&gt;/Virtual_RF/DemoDT&lt;/artifactPath&gt;
+				&lt;artifactType&gt;rulefunctionimpl&lt;/artifactType&gt;
+				&lt;fileExtension&gt;rulefunctionimpl&lt;/fileExtension&gt;
+				&lt;implementsPath&gt;/Virtual_RF/Applicant_VirtualRuleFunction&lt;/implementsPath&gt;
+				&lt;isSyncMerge&gt;false&lt;/isSyncMerge&gt;
+				&lt;artifactContent&gt;&amp;lt;decisionTableSave&amp;gt;&amp;lt;metadata&amp;gt;&amp;lt;property&amp;gt;&amp;lt;name&amp;gt;EffectiveDate&amp;lt;/name&amp;gt;&amp;lt;type&amp;gt;DateTime&amp;lt;/type&amp;gt;&amp;lt;value&amp;gt;&amp;lt;/value&amp;gt;&amp;lt;/property&amp;gt;&amp;lt;property&amp;gt;&amp;lt;name&amp;gt;ExpiryDate&amp;lt;/name&amp;gt;&amp;lt;type&amp;gt;DateTime&amp;lt;/type&amp;gt;&amp;lt;value&amp;gt;&amp;lt;/value&amp;gt;&amp;lt;/property&amp;gt;&amp;lt;property&amp;gt;&amp;lt;name&amp;gt;SingleRowExecution&amp;lt;/name&amp;gt;&amp;lt;type&amp;gt;Boolean&amp;lt;/type&amp;gt;&amp;lt;value&amp;gt;false&amp;lt;/value&amp;gt;&amp;lt;/property&amp;gt;&amp;lt;property&amp;gt;&amp;lt;name&amp;gt;Priority&amp;lt;/name&amp;gt;&amp;lt;type&amp;gt;Integer&amp;lt;/type&amp;gt;&amp;lt;value&amp;gt;5&amp;lt;/value&amp;gt;&amp;lt;/property&amp;gt;&amp;lt;/metadata&amp;gt;&amp;lt;arguments&amp;gt;&amp;lt;argument&amp;gt;&amp;lt;direction&amp;gt;BOTH&amp;lt;/direction&amp;gt;&amp;lt;path&amp;gt;/Concepts/Applicant&amp;lt;/path&amp;gt;&amp;lt;argumentAlias&amp;gt;applicant&amp;lt;/argumentAlias&amp;gt;&amp;lt;resourceType&amp;gt;CONCEPT&amp;lt;/resourceType&amp;gt;&amp;lt;isArray&amp;gt;false&amp;lt;/isArray&amp;gt;&amp;lt;/argument&amp;gt;&amp;lt;argument&amp;gt;&amp;lt;direction&amp;gt;BOTH&amp;lt;/direction&amp;gt;&amp;lt;path&amp;gt;/Events/ApplicationReceived&amp;lt;/path&amp;gt;&amp;lt;argumentAlias&amp;gt;applicationreceived&amp;lt;/argumentAlias&amp;gt;&amp;lt;resourceType&amp;gt;EVENT&amp;lt;/resourceType&amp;gt;&amp;lt;isArray&amp;gt;false&amp;lt;/isArray&amp;gt;&amp;lt;/argument&amp;gt;&amp;lt;/arguments&amp;gt;&amp;lt;decisionTableColumns&amp;gt;&amp;lt;column&amp;gt;&amp;lt;columnId&amp;gt;1&amp;lt;/columnId&amp;gt;&amp;lt;name&amp;gt;applicant.Age&amp;lt;/name&amp;gt;&amp;lt;property&amp;gt;/Concepts/Applicant/Age&amp;lt;/property&amp;gt;&amp;lt;columnType&amp;gt;CONDITION&amp;lt;/columnType&amp;gt;&amp;lt;isArrayProperty&amp;gt;false&amp;lt;/isArrayProperty&amp;gt;&amp;lt;propertyType&amp;gt;1&amp;lt;/propertyType&amp;gt;&amp;lt;isSubstitution&amp;gt;false&amp;lt;/isSubstitution&amp;gt;&amp;lt;associatedDM&amp;gt;false&amp;lt;/associatedDM&amp;gt;&amp;lt;/column&amp;gt;&amp;lt;column&amp;gt;&amp;lt;columnId&amp;gt;2&amp;lt;/columnId&amp;gt;&amp;lt;name&amp;gt;applicant.Status&amp;lt;/name&amp;gt;&amp;lt;property&amp;gt;/Concepts/Applicant/Status&amp;lt;/property&amp;gt;&amp;lt;columnType&amp;gt;ACTION&amp;lt;/columnType&amp;gt;&amp;lt;isArrayProperty&amp;gt;false&amp;lt;/isArrayProperty&amp;gt;&amp;lt;propertyType&amp;gt;0&amp;lt;/propertyType&amp;gt;&amp;lt;isSubstitution&amp;gt;false&amp;lt;/isSubstitution&amp;gt;&amp;lt;associatedDM&amp;gt;false&amp;lt;/associatedDM&amp;gt;&amp;lt;/column&amp;gt;&amp;lt;/decisionTableColumns&amp;gt;&amp;lt;decisionTablePage&amp;gt;&amp;lt;pageNumber&amp;gt;1&amp;lt;/pageNumber&amp;gt;&amp;lt;tableRule&amp;gt;&amp;lt;ruleId&amp;gt;1&amp;lt;/ruleId&amp;gt;&amp;lt;ruleContents&amp;gt;&amp;amp;lt;TableRule id=&quot;1&quot;&amp;amp;gt;&amp;amp;lt;md/&amp;amp;gt;&amp;amp;lt;cond id=&quot;1_1&quot; colId=&quot;1&quot; expr=&quot;&amp;amp;amp;lt;18&quot;/&amp;amp;gt;&amp;amp;lt;act id=&quot;1_2&quot; colId=&quot;2&quot; expr=&quot;&amp;amp;amp;quot;Loan Rejected&amp;amp;amp;quot;&quot;/&amp;amp;gt;&amp;amp;lt;/TableRule&amp;amp;gt;&amp;lt;/ruleContents&amp;gt;&amp;lt;/tableRule&amp;gt;&amp;lt;/decisionTablePage&amp;gt;&amp;lt;exceptionTableColumns/&amp;gt;&amp;lt;exceptionTablePage&amp;gt;&amp;lt;pageNumber&amp;gt;1&amp;lt;/pageNumber&amp;gt;&amp;lt;/exceptionTablePage&amp;gt;&amp;lt;/decisionTableSave&amp;gt;&lt;/artifactContent&gt;
+			&lt;/artifactItem&gt;
+		&lt;/project&gt;
+	&lt;/data&gt;
+&lt;/request&gt;</div>
+							<div class="type_json">{
+	"request": {
+		"data": {
+			"project": [{
+				"name": "CreditCardApplication",
+				"artifactItem": [{
+				"artifactPath": "/Virtual_RF/CreateDTJSON",
+				"artifactType": "rulefunctionimpl",
+				"fileExtension": "rulefunctionimpl",
+				"implementsPath": "/Virtual_RF/Applicant_VirtualRuleFunction",
+				"isSyncMerge": "false",
+				"artifactContent":"{\"decisionTableSave\":{\"arguments\":{\"argument\":[{\"argumentAlias\":\"applicant\",\"direction\":\"BOTH\",\"isArray\":\"false\",\"path\":\"/Concepts/Applicant\",\"resourceType\":\"CONCEPT\"}]},\"decisionTableColumns\":{\"column\":[{\"associatedDM\":\"false\",\"columnAlias\":\"Name\",\"columnId\":\"1\",\"columnType\":\"CONDITION\",\"isArrayProperty\":\"false\",\"isSubstitution\":\"false\",\"name\":\"applicant.Name\",\"property\":\"/Concepts/Applicant/Name\",\"propertyType\":\"0\"},{\"associatedDM\":\"false\",\"columnAlias\":\"Age\",\"columnId\":\"2\",\"columnType\":\"CONDITION\",\"isArrayProperty\":\"false\",\"isSubstitution\":\"false\",\"name\":\"applicant.Age\",\"property\":\"/Concepts/Applicant/Age\",\"propertyType\":\"1\"},{\"associatedDM\":\"false\",\"columnAlias\":\"AAA\",\"columnId\":\"3\",\"columnType\":\"ACTION\",\"isArrayProperty\":\"false\",\"isSubstitution\":\"false\",\"name\":\"applicant.CreditLimit\",\"property\":\"/Concepts/Applicant/CreditLimit\",\"propertyType\":\"3\"}]},\"decisionTablePage\":{\"pageNumber\":\"1\",\"tableRule\":[{\"action\":[{\"columnId\":\"1_3\",\"expression\":\"2500\",\"isEnabled\":\"true\",\"ruleId\":\"1\"}],\"condition\":[{\"columnId\":\"1\",\"expression\":\"John\",\"isEnabled\":\"true\",\"ruleId\":\"1\",\"varId\":\"1_1\"},{\"columnId\":\"2\",\"expression\":\">=30\",\"isEnabled\":\"true\",\"ruleId\":\"1\",\"varId\":\"1_2\"}],\"ruleId\":\"1\"}]},\"exceptionTableColumns\":{\"column\":[{\"associatedDM\":\"false\",\"columnId\":\"5\",\"columnType\":\"CONDITION\",\"isArrayProperty\":\"false\",\"isSubstitution\":\"false\",\"name\":\"applicant.Name\",\"property\":\"/Concepts/Applicant/Name\",\"propertyType\":\"0\"}]},\"exceptionTablePage\":{\"pageNumber\":\"1\",\"tableRule\":[{\"condition\":[{\"columnId\":\"5\",\"expression\":\"aaaa\",\"isEnabled\":\"true\",\"ruleId\":\"2\",\"varId\":\"2_5\"}]}]},\"metadata\":{\"property\":[{\"name\":\"EffectiveDate\",\"type\":\"DataTime\"},{\"name\":\"ExpiryDate\",\"type\":\"DataTime\"},{\"name\":\"SingleRowExecution\",\"type\":\"boolean\",\"value\":\"false\"}]}}}"
+		  }]    
+		 }]  
+		}
+	}
+}
+							</div>
+						</div>
+					</form>
+				</div>
+			</div>
+			<!-- Artifact delete api -->
+			<div class="api requestType_xml httpDelete" id="api_artifact_delete">
+				<div class="apiTitle collapsed" id="api_artifact_delete_title">Delete artifact<span class="methodName">DELETE</span></div>
+				<div class="apiContent collapsed" id="api_artifact_delete_content">
+					<span class="apiDescription">Deletes artifact(s) or complete project(s).</span>
+					<span class="apiContentSubHeading">URL format</span>
+					<div class="apiUrl">/ws/api/{token}/artifact/delete.<select class="requestType_selection" onchange="updateRequestType(this);"><option selected="selected" value="xml">xml</option><option value="json">json</option></select></div>
+					<span class="apiContentSubHeading">Parameters</span>
+					<form class="tryOutSection" action="/ws/api/{token}/artifact/delete.xml" method="DELETE">
+						<table class="paramsTable">
+							<tr><th width="12%">Parameter</th><th width="40%">Value</th><th width="8%">Type</th><th>Description</th></tr>
+							<tr><td>token</td><td><input class="formField" type="text" name="token" required="required" paramtype="path"></td><td>path</td><td>Session token.</td></tr>
+							<tr><td>body</td><td><textarea class="formField" name="body" required="required" paramtype="body"></textarea></td><td>body</td>
+								<td>
+									<div class="type_xml">XML defining projects/artifacts to be deleted. <a download="" href="xsd/Request.xsd">Request XSD</a> <span class="sampleDataLink" onclick="showSampleData('xml', this);">Sample</span></div>
+									<div class="type_json">JSON defining projects/artifacts to be deleted.<a download="" href="json_request/delete.txt">Generic JSON Request</a> <span class="sampleDataLink" onclick="showSampleData('json', this);">Sample</span></div>
+								</td>
+							</tr>
+						</table>
+						<input class="formSubmit" type="button" value="Try">
+						<div class="type_xml"> <a download="" href="xsd/Response.xsd" style="color:#222; font-size:0.8em;">Response XSD</a></div>
+						<div class="type_json"> <a download="" href="json_response/response_delete_artifact.txt" style="color:#222; font-size:0.8em;">Sample JSON Response</a></div>
+						<div class="apiResponseSection collapsed">
+							<span class="apiContentSubHeading">Request URL</span>
+							<div class="apiUrl"></div>
+							<span class="apiContentSubHeading">Response body</span>
+							<div class="apiResponse"></div>
+						</div>
+						<div class="hiddenSampleData">
+							<div class="type_xml">&lt;request&gt;
+  &lt;data&gt;
+    &lt;project&gt;
+      &lt;name&gt;CreditCardApplication&lt;/name&gt;
+      &lt;artifactItem&gt;
+        &lt;artifactPath&gt;/Virtual_RF/Applicant_Simple&lt;/artifactPath&gt;
+        &lt;artifactType&gt;rulefunctionimpl&lt;/artifactType&gt;
+      &lt;/artifactItem&gt;
+    &lt;/project&gt;
+  &lt;/data&gt;
+&lt;/request&gt;</div>
+							<div class="type_json">{
+  "request": {
+    "data": {
+      "project": [{
+        "name": "CreditCardApplication",
+        "artifactItem": [{
+          "artifactPath": "/Virtual_RF/Applicant_Simple",
+          "artifactType": "rulefunctionimpl"
+        }]
+      }]
+    }
+  }
+}</div>
+						</div>
+					</form>
+				</div>
+			</div>
+			
+			<!-- Artifact rename api -->
+			<div class="api requestType_xml httpPut" id="api_artifact_rename">
+				<div class="apiTitle collapsed" id="api_artifact_rename_title">Rename artifact<span class="methodName">PUT</span></div>
+				<div class="apiContent collapsed" id="api_artifact_rename_content">
+					<span class="apiDescription">Renames an artifact.</span>
+					<span class="apiContentSubHeading">URL format</span>
+					<div class="apiUrl">/ws/api/{token}/artifact/rename.<select class="requestType_selection" onchange="updateRequestType(this);"><option selected="selected" value="xml">xml</option><option value="json">json</option></select></div>
+					<span class="apiContentSubHeading">Parameters</span>
+					<form class="tryOutSection" action="/ws/api/{token}/artifact/rename.xml" method="PUT">
+						<table class="paramsTable">
+							<tr><th width="12%">Parameter</th><th width="40%">Value</th><th width="8%">Type</th><th>Description</th></tr>
+							<tr><td>token</td><td><input class="formField" type="text" name="token" required="required" paramtype="path"></td><td>path</td><td>Session token.</td></tr>
+							<tr><td>projectName</td><td><input class="formField" type="text" name="projectName" required="required" paramtype="query"></td><td>query</td><td>Name of the project eg: CreditCardApplication</td></tr>
+							<tr><td>artifactPath</td><td><input class="formField" type="text" name="artifactPath" required="required" paramtype="query"></td><td>query</td><td>Artifact path eg: /Virtual_RF/Applicant_Simple</td></tr>
+							<tr><td>artifactExtension</td><td><input class="formField" type="text" name="artifactExtension" required="required" paramtype="query"></td><td>query</td><td>Extension of the artifact eg: rulefunctionimpl</td></tr>
+							<tr><td>artifactType</td><td><input class="formField" type="text" name="artifactType" required="required" paramtype="query"></td><td>query</td><td>Artifact type eg: rulefunctionimpl</td></tr>
+							<tr><td>artifactRenameToPath</td><td><input class="formField" type="text" name="artifactRenameToPath" required="required" paramtype="query"></td><td>query</td><td>New path with name for the artifact eg: /Virtual_RF/Applicant_Simple_2</td></tr>
+							<tr><td>implementsPath</td><td><input class="formField" type="text" name="implementsPath" paramtype="query"></td><td>query</td><td>Path of artifact that current artifact implements eg: /Virtual_RF/Applicant_VirtualRuleFunction</td></tr>
+						</table>
+						<input class="formSubmit" type="button" value="Try">
+						<div class="type_xml"> <a download="" href="xsd/Response.xsd" style="color:#222; font-size:0.8em;">Response XSD</a></div>
+						<div class="type_json"> <a download="" href="json_response/response_rename.txt" style="color:#222; font-size:0.8em;">Sample JSON Response</a></div>
+						<div class="apiResponseSection collapsed">
+							<span class="apiContentSubHeading">Request URL</span>
+							<div class="apiUrl"></div>
+							<span class="apiContentSubHeading">Response body</span>
+							<div class="apiResponse"></div>
+						</div>
+					</form>
+				</div>
+			</div>
+			
+			<!-- Artifact import api -->
+			<div class="api requestType_xml httpPost" id="api_artifact_import">
+				<div class="apiTitle collapsed" id="api_artifact_import_title">Import artifact<span class="methodName">POST</span></div>
+				<div class="apiContent collapsed" id="api_artifact_import_content">
+					<span class="apiDescription">Imports DT from an XLS file.</span>
+					<span class="apiContentSubHeading">URL format</span>
+					<div class="apiUrl">/ws/api/{token}/decisiontable/import.<select class="requestType_selection" onchange="updateRequestType(this);"><option selected="selected" value="xml">xml</option><option value="json">json</option></select></div>
+					<span class="apiContentSubHeading">Parameters</span>
+					<form class="tryOutSection" action="/ws/api/{token}/decisiontable/import.xml" method="POST">
+						<table class="paramsTable">
+							<tr><th width="12%">Parameter</th><th width="40%">Value</th><th width="8%">Type</th><th>Description</th></tr>
+							<tr><td>token</td><td><input class="formField" type="text" name="token" required="required" paramtype="path"></td><td>path</td><td>Session token.</td></tr>
+							<tr><td>projectName</td><td><input class="formField" type="text" name="projectName" required="required" paramtype="form"></td><td>form</td><td>Name of the project eg: CreditCardApplication</td></tr>
+							<tr><td>artifactPath</td><td><input class="formField" type="text" name="artifactPath" required="required" paramtype="form"></td><td>form</td><td>Parent artifact path eg: /Virtual_RF/Applicant_VirtualRuleFunction</td></tr>
+							<tr><td>artifactExtension</td><td><input class="formField" type="text" name="artifactExtension" required="required" paramtype="form"></td><td>form</td><td>Parent artifact extension eg: rulefunction</td></tr>
+							<tr><td>artifactType</td><td><input class="formField" type="text" name="artifactType" required="required" paramtype="form"></td><td>form</td><td>Parent artifact type eg: RULEFUNCTION</td></tr>
+							<tr><td>resourceName</td><td><input class="formField" type="text" name="resourceName" required="required" paramtype="form"></td><td>form</td><td>New resource name eg: Applicant_Simple1</td></tr>
+							<tr><td>resourceFolderPath</td><td><input class="formField" type="text" name="resourceFolderPath" required="required" paramtype="form"></td><td>form</td><td>Folder Path to create new resource eg: /Virtual_RF</td></tr>
+							<tr><td>overwrite</td><td><input class="formField" type="text" name="overwrite" required="required" paramtype="form"></td><td>form</td><td>Whether to overwrite if artifact already exists. eg: true</td></tr>
+							<tr><td>selectResource</td><td><input class="formField" type="file" name="selectResource" required="required" paramtype="form"></td><td>form</td><td>XLS file to import as DT</td></tr>
+						</table>
+						<input class="formSubmit" type="button" value="Try">
+						<div class="type_xml"> <a download="" href="xsd/Response.xsd" style="color:#222; font-size:0.8em;">Response XSD</a></div>
+						<div class="type_json"> <a download="" href="json_response/response_import_dt.txt" style="color:#222; font-size:0.8em;">Sample JSON Response</a></div>
+						<div class="apiResponseSection collapsed">
+							<span class="apiContentSubHeading">Request URL</span>
+							<div class="apiUrl"></div>
+							<span class="apiContentSubHeading">Response body</span>
+							<div class="apiResponse"></div>
+						</div>
+					</form>
+				</div>
+			</div>
+			
+			<!-- Artifact export api -->
+			<div class="api requestType_xml httpGet" id="api_artifact_export">
+				<div class="apiTitle collapsed" id="api_artifact_export_title">Export artifact<span class="methodName">GET</span></div>
+				<div class="apiContent collapsed" id="api_artifact_export_content">
+					<span class="apiDescription">Exports an artifact to XLS file and downloads it exported (XLS)file.</span>
+					<span class="apiContentSubHeading">URL format</span>
+					<div class="apiUrl">/ws/api/{token}/artifact/export.<select class="requestType_selection" onchange="updateRequestType(this);"><option selected="selected" value="xml">xml</option><option value="json">json</option></select></div>
+					<span class="apiContentSubHeading">Parameters</span>
+					<form class="tryOutSection" action="/ws/api/{token}/artifact/export.xml" method="GET">
+						<span class="hidden_value" name="responseType" value="file"></span>
+						<table class="paramsTable">
+							<tr><th width="12%">Parameter</th><th width="40%">Value</th><th width="8%">Type</th><th>Description</th></tr>
+							<tr><td>token</td><td><input class="formField" type="text" name="token" required="required" paramtype="path"></td><td>path</td><td>Session token</td></tr>
+							<tr><td>projectName</td><td><input class="formField" type="text" name="projectName" required="required" paramtype="query"></td><td>query</td><td>Name of the project eg: CreditCardApplication</td></tr>
+							<tr><td>artifactPath</td><td><input class="formField" type="text" name="artifactPath" required="required" paramtype="query"></td><td>query</td><td>Artifact path eg: /Virtual_RF/Applicant_Simple</td></tr>
+							<tr><td>artifactExtension</td><td><input class="formField" type="text" name="artifactExtension" required="required" paramtype="query"></td><td>query</td><td>Extension of the artifact eg: rulefunctionimpl</td></tr>
+							<tr><td>artifactType</td><td><input class="formField" type="text" name="artifactType" required="required" paramtype="query"></td><td>query</td><td>Type of the artifact eg: rulefunctionimpl</td></tr>
+						</table>
+						<input class="formSubmit" type="button" value="Try">
+						<div class="apiResponseSection collapsed">
+							<span class="apiContentSubHeading">Request URL</span>
+							<div class="apiUrl"></div>
+							<span class="apiContentSubHeading">Response body</span>
+							<div class="apiResponse"></div>
+						</div>
+					</form>
+				</div>
+			</div>
+			
+			<!-- Artifact lock api -->
+			<div class="api requestType_xml httpPost" id="api_artifact_lock">
+				<div class="apiTitle collapsed" id="api_artifact_lock_title">Lock artifact<span class="methodName">POST</span></div>
+				<div class="apiContent collapsed" id="api_artifact_lock_content">
+					<span class="apiDescription">Aquire a Lock on an artifact.</span>
+					<span class="apiContentSubHeading">URL format</span>
+					<div class="apiUrl">/ws/api/{token}/artifact/lock.<select class="requestType_selection" onchange="updateRequestType(this);"><option selected="selected" value="xml">xml</option><option value="json">json</option></select></div>
+					<span class="apiContentSubHeading">Parameters</span>
+					<form class="tryOutSection" action="/ws/api/{token}/artifact/lock.xml" method="POST">
+						<table class="paramsTable">
+							<tr><th width="12%">Parameter</th><th width="40%">Value</th><th width="8%">Type</th><th>Description</th></tr>
+							<tr><td>token</td><td><input class="formField" type="text" name="token" required="required" paramtype="path"></td><td>path</td><td>Session token</td></tr>
+							<tr><td>body</td><td><textarea class="formField" name="body" required="required" paramtype="body"></textarea></td><td>body</td>
+								<td>
+									<div class="type_xml">XML defining artifact(s) to be locked. <a download="" href="xsd/Request.xsd">Request XSD</a> <span class="sampleDataLink" onclick="showSampleData('xml', this);">Sample</span></div>
+									<div class="type_json">JSON defining artifact(s) to be locked. <a download="" href="json_request/lock.txt">Generic JSON Request</a><span class="sampleDataLink" onclick="showSampleData('json', this);">Sample</span></div>
+								</td>
+							</tr>
+						</table>
+						<input class="formSubmit" type="button" value="Try">
+						<div class="type_xml"> <a download="" href="xsd/LockArtifactResponse.xsd" style="color:#222; font-size:0.8em;">Response XSD</a></div>
+						<div class="type_json"> <a download="" href="json_response/response_lock_artifact.txt" style="color:#222; font-size:0.8em;">Sample JSON Response</a></div>
+						<div class="apiResponseSection collapsed">
+							<span class="apiContentSubHeading">Request URL</span>
+							<div class="apiUrl"></div>
+							<span class="apiContentSubHeading">Response body</span>
+							<div class="apiResponse"></div>
+						</div>
+						<div class="hiddenSampleData">
+							<div class="type_xml">&lt;request&gt;
+  &lt;data&gt;
+    &lt;actionForcibly&gt;false&lt;/actionForcibly&gt;
+    &lt;project&gt;
+      &lt;name&gt;CreditCardApplication&lt;/name&gt;
+      &lt;artifactItem&gt;
+        &lt;artifactPath&gt;/Virtual_RF/Applicant_Simple&lt;/artifactPath&gt;
+        &lt;artifactType&gt;rulefunctionimpl&lt;/artifactType&gt;
+        &lt;fileExtension&gt;rulefunctionimpl&lt;/fileExtension&gt;
+        &lt;lockRequestor&gt;admin&lt;/lockRequestor&gt;
+      &lt;/artifactItem&gt;
+    &lt;/project&gt;
+  &lt;/data&gt;
+&lt;/request&gt;</div>
+							<div class="type_json">{
+  "request": {
+    "data": {
+      "actionForcibly": "false",
+      "project": [{
+        "name": "CreditCardApplication",
+        "artifactItem": [{
+          "artifactPath": "/Virtual_RF/Applicant_Simple",
+          "artifactType": "rulefunctionimpl",
+          "fileExtension": "rulefunctionimpl",
+          "lockRequestor": "admin"
+        }]
+      }]
+    }
+  }
+}</div>
+						</div>
+					</form>
+				</div>
+			</div>
+			
+			<!-- Artifact unlock api -->
+			<div class="api requestType_xml httpPost" id="api_artifact_unlock">
+				<div class="apiTitle collapsed" id="api_artifact_unlock_title">Unlock artifact<span class="methodName">POST</span></div>
+				<div class="apiContent collapsed" id="api_artifact_unlock_content">
+					<span class="apiDescription">Releases a Lock that was aquired on an artifact.</span>
+					<span class="apiContentSubHeading">URL format</span>
+					<div class="apiUrl">/ws/api/{token}/artifact/unlock.<select class="requestType_selection" onchange="updateRequestType(this);"><option selected="selected" value="xml">xml</option><option value="json">json</option></select></div>
+					<span class="apiContentSubHeading">Parameters</span>
+					<form class="tryOutSection" action="/ws/api/{token}/artifact/unlock.xml" method="POST">
+						<table class="paramsTable">
+							<tr><th width="12%">Parameter</th><th width="40%">Value</th><th width="8%">Type</th><th>Description</th></tr>
+							<tr><td>token</td><td><input class="formField" type="text" name="token" required="required" paramtype="path"></td><td>path</td><td>Session token</td></tr>
+							<tr><td>body</td><td><textarea class="formField" name="body" required="required" paramtype="body"></textarea></td><td>body</td>
+								<td>
+									<div class="type_xml">XML defining artifact(s) to be unlocked. <a download="" href="xsd/LockArtifactResponse.xsd">Request XSD</a> <span class="sampleDataLink" onclick="showSampleData('xml', this);">Sample</span></div>
+									<div class="type_json">JSON defining artifact(s) to be unlocked. <a download="" href="json_request/unlock.txt">Generic JSON Request</a><span class="sampleDataLink" onclick="showSampleData('json', this);">Sample</span></div>
+								</td>
+							</tr>
+						</table>
+						<input class="formSubmit" type="button" value="Try">
+						<div class="type_xml"> <a download="" href="xsd/Response.xsd" style="color:#222; font-size:0.8em;">Response XSD</a></div>
+						<div class="type_json"> <a download="" href="json_response/response_unlock_artifact.txt" style="color:#222; font-size:0.8em;">Sample JSON Response</a></div>
+						<div class="apiResponseSection collapsed">
+							<span class="apiContentSubHeading">Request URL</span>
+							<div class="apiUrl"></div>
+							<span class="apiContentSubHeading">Response body</span>
+							<div class="apiResponse"></div>
+						</div>
+						<div class="hiddenSampleData">
+							<div class="type_xml">&lt;request&gt;
+  &lt;data&gt;
+    &lt;actionForcibly&gt;false&lt;/actionForcibly&gt;
+    &lt;project&gt;
+      &lt;name&gt;CreditCardApplication&lt;/name&gt;
+      &lt;artifactItem&gt;
+        &lt;artifactPath&gt;/Virtual_RF/Applicant_Simple&lt;/artifactPath&gt;
+        &lt;artifactType&gt;rulefunctionimpl&lt;/artifactType&gt;
+        &lt;fileExtension&gt;rulefunctionimpl&lt;/fileExtension&gt;
+        &lt;lockRequestor&gt;admin&lt;/lockRequestor&gt;
+      &lt;/artifactItem&gt;
+    &lt;/project&gt;
+  &lt;/data&gt;
+&lt;/request&gt;</div>
+							<div class="type_json">{
+  "request": {
+    "data": {
+      "actionForcibly": "false",
+      "project": [{
+        "name": "CreditCardApplication",
+        "artifactItem": [{
+          "artifactPath": "/Virtual_RF/Applicant_Simple",
+          "artifactType": "rulefunctionimpl",
+          "fileExtension": "rulefunctionimpl",
+          "lockRequestor": "admin"
+        }]
+      }]
+    }
+  }
+}</div>
+						</div>
+					</form>
+				</div>
+			</div>
+			
+			<!-- Fetch artifact arguments api -->
+			<div class="api requestType_xml httpGet" id="api_artifact_arguments">
+				<div class="apiTitle collapsed" id="api_artifact_arguments_title">Decision Table Arguments<span class="methodName">GET</span></div>
+				<div class="apiContent collapsed" id="api_artifact_arguments_content">
+					<span class="apiDescription">Fetches Decision Table arguments.</span>
+					<span class="apiContentSubHeading">URL format</span>
+					<div class="apiUrl">/ws/api/{token}/decisiontable/arguments.<select class="requestType_selection" onchange="updateRequestType(this);"><option selected="selected" value="xml">xml</option><option value="json">json</option></select></div>
+					<span class="apiContentSubHeading">Parameters</span>
+					<form class="tryOutSection" action="/ws/api/{token}/decisiontable/arguments.xml" method="GET">
+						<table class="paramsTable">
+							<tr><th width="12%">Parameter</th><th width="40%">Value</th><th width="8%">Type</th><th>Description</th></tr>
+							<tr><td>token</td><td><input class="formField" type="text" name="token" required="required" paramtype="path"></td><td>path</td><td>Session token</td></tr>
+							<tr><td>projectName</td><td><input class="formField" type="text" name="projectName" required="required" paramtype="query"></td><td>query</td><td>Name of the project eg: CreditCardApplication</td></tr>
+							<tr><td>artifactPath</td><td><input class="formField" type="text" name="artifactPath" required="required" paramtype="query"></td><td>query</td><td>Artifact path eg: /Virtual_RF/Applicant_Simple</td></tr>
+							<tr><td>artifactExtension</td><td><input class="formField" type="text" name="artifactExtension" required="required" paramtype="query"></td><td>query</td><td>Artifact extension eg: rulefunctionimpl</td></tr>
+							<tr><td>artifactType</td><td><input class="formField" type="text" name="artifactType" required="required" paramtype="query"></td><td>query</td><td>Artifact type eg: RULEFUNCTIONIMPL</td></tr>
+						</table>
+						<input class="formSubmit" type="button" value="Try">
+						<div class="type_xml"> <a download="" href="xsd/DTArguments.xsd" style="color:#222; font-size:0.8em;">Response XSD</a></div>
+						<div class="type_json"> <a download="" href="json_response/response_dt_arguments.txt" style="color:#222; font-size:0.8em;">Sample JSON Response</a></div>
+						<div class="apiResponseSection collapsed">
+							<span class="apiContentSubHeading">Request URL</span>
+							<div class="apiUrl"></div>
+							<span class="apiContentSubHeading">Response body</span>
+							<div class="apiResponse"></div>
+						</div>
+					</form>
+				</div>
+			</div>
+			
+			<!-- Artifact validate api -->
+			<div class="api requestType_xml httpGet" id="api_artifact_validate">
+				<div class="apiTitle collapsed" id="api_artifact_validate_title">Validate artifact<span class="methodName">GET</span></div>
+				<div class="apiContent collapsed" id="api_artifact_validate_content">
+					<span class="apiDescription">Validates an artifact.</span>
+					<span class="apiContentSubHeading">URL format</span>
+					<div class="apiUrl">/ws/api/{token}/artifact/validate.<select class="requestType_selection" onchange="updateRequestType(this);"><option selected="selected" value="xml">xml</option><option value="json">json</option></select></div>
+					<span class="apiContentSubHeading">Parameters</span>
+					<form class="tryOutSection" action="/ws/api/{token}/artifact/validate.xml" method="GET">
+						<table class="paramsTable">
+							<tr><th width="12%">Parameter</th><th width="40%">Value</th><th width="8%">Type</th><th>Description</th></tr>
+							<tr><td>token</td><td><input class="formField" type="text" name="token" required="required" paramtype="path"></td><td>path</td><td>Session token</td></tr>
+							<tr><td>projectName</td><td><input class="formField" type="text" name="projectName" required="required" paramtype="query"></td><td>query</td><td>Name of the project eg: CreditCardApplication</td></tr>
+							<tr><td>artifactPath</td><td><input class="formField" type="text" name="artifactPath" required="required" paramtype="query"></td><td>query</td><td>Artifact path eg: /Virtual_RF/Applicant_Simple</td></tr>
+							<tr><td>artifactExtension</td><td><input class="formField" type="text" name="artifactExtension" required="required" paramtype="query"></td><td>query</td><td>Artifact extension eg: rulefunctionimpl</td></tr>
+							<tr><td>artifactType</td><td><input class="formField" type="text" name="artifactType" required="required" paramtype="query"></td><td>query</td><td>Artifact type eg: RULEFUNCTIONIMPL</td></tr>
+						</table>
+						<input class="formSubmit" type="button" value="Try">
+						<div class="type_xml"> <a download="" href="xsd/AnalyzeDTResponse.xsd" style="color:#222; font-size:0.8em;">Response XSD</a></div>
+						<div class="type_json"> <a download="" href="json_response/response_validate_artifact.txt" style="color:#222; font-size:0.8em;">Sample JSON Response</a></div>
+						<div class="apiResponseSection collapsed">
+							<span class="apiContentSubHeading">Request URL</span>
+							<div class="apiUrl"></div>
+							<span class="apiContentSubHeading">Response body</span>
+							<div class="apiResponse"></div>
+						</div>
+					</form>
+				</div>
+			</div>
+			
+			<!-- Artifact analyzerValues api -->
+			<div class="api requestType_xml httpGet" id="api_artifact_analyzerValues">
+				<div class="apiTitle collapsed" id="api_artifact_analyzerValues_title">DT analyzer values<span class="methodName">GET</span></div>
+				<div class="apiContent collapsed" id="api_artifact_analyzerValues_content">
+					<span class="apiDescription">Decision Table analyzer values.</span>
+					<span class="apiContentSubHeading">URL format</span>
+					<div class="apiUrl">/ws/api/{token}/decisiontable/analyzerValues.<select class="requestType_selection" onchange="updateRequestType(this);"><option selected="selected" value="xml">xml</option><option value="json">json</option></select></div>
+					<span class="apiContentSubHeading">Parameters</span>
+					<form class="tryOutSection" action="/ws/api/{token}/decisiontable/analyzerValues.xml" method="GET">
+						<table class="paramsTable">
+							<tr><th width="12%">Parameter</th><th width="40%">Value</th><th width="8%">Type</th><th>Description</th></tr>
+							<tr><td>token</td><td><input class="formField" type="text" name="token" required="required" paramtype="path"></td><td>path</td><td>Session token</td></tr>
+							<tr><td>projectName</td><td><input class="formField" type="text" name="projectName" required="required" paramtype="query"></td><td>query</td><td>Name of the project eg: CreditCardApplication</td></tr>
+							<tr><td>artifactPath</td><td><input class="formField" type="text" name="artifactPath" required="required" paramtype="query"></td><td>query</td><td>Artifact path eg: /Virtual_RF/Applicant_Simple</td></tr>
+							<tr><td>artifactExtension</td><td><input class="formField" type="text" name="artifactExtension" required="required" paramtype="query"></td><td>query</td><td>Artifact extension eg: rulefunctionimpl</td></tr>
+						</table>
+						<input class="formSubmit" type="button" value="Try">
+						<div class="type_xml"> <a download="" href="xsd/DTAnalyzerResponse.xsd" style="color:#222; font-size:0.8em;">Response XSD</a></div>
+						<div class="type_json"> <a download="" href="json_response/response_dt_analyzerValues.txt" style="color:#222; font-size:0.8em;">Sample JSON Response</a></div>
+						<div class="apiResponseSection collapsed">
+							<span class="apiContentSubHeading">Request URL</span>
+							<div class="apiUrl"></div>
+							<span class="apiContentSubHeading">Response body</span>
+							<div class="apiResponse"></div>
+						</div>
+					</form>
+				</div>
+			</div>
+			
+			<!-- Artifact analyze api -->
+			<div class="api requestType_xml httpGet" id="api_artifact_analyze">
+				<div class="apiTitle collapsed" id="api_artifact_analyze_title">Analyze DT<span class="methodName">GET</span></div>
+				<div class="apiContent collapsed" id="api_artifact_analyze_content">
+					<span class="apiDescription">Analyzes a DT.</span>
+					<span class="apiContentSubHeading">URL format</span>
+					<div class="apiUrl">/ws/api/{token}/decisiontable/analyze.<select class="requestType_selection" onchange="updateRequestType(this);"><option selected="selected" value="xml">xml</option><option value="json">json</option></select></div>
+					<span class="apiContentSubHeading">Parameters</span>
+					<form class="tryOutSection" action="/ws/api/{token}/decisiontable/analyze.xml" method="GET">
+						<table class="paramsTable">
+							<tr><th width="12%">Parameter</th><th width="40%">Value</th><th width="8%">Type</th><th>Description</th></tr>
+							<tr><td>token</td><td><input class="formField" type="text" name="token" required="required" paramtype="path"></td><td>path</td><td>Session token</td></tr>
+							<tr><td>projectName</td><td><input class="formField" type="text" name="projectName" required="required" paramtype="query"></td><td>query</td><td>Name of the project eg: CreditCardApplication</td></tr>
+							<tr><td>artifactPath</td><td><input class="formField" type="text" name="artifactPath" required="required" paramtype="query"></td><td>query</td><td>Artifact path eg: /Virtual_RF/Applicant_Simple</td></tr>
+							<tr><td>artifactExtension</td><td><input class="formField" type="text" name="artifactExtension" required="required" paramtype="query"></td><td>query</td><td>Artifact extension eg: rulefunctionimpl</td></tr>
+							<tr><td>currentPage</td><td><input class="formField" type="text" name="currentPage" required="required" paramtype="query"></td><td>query</td><td>The DecisionTable page number to analyzed eg: 1</td></tr>
+						</table>
+						<input class="formSubmit" type="button" value="Try">
+						<div class="type_xml"> <a download="" href="xsd/AnalyzeDTResponse.xsd" style="color:#222; font-size:0.8em;">Response XSD</a></div>
+						<div class="type_json"> <a download="" href="json_response/response_dt_analyze.txt" style="color:#222; font-size:0.8em;">Sample JSON Response</a></div>
+						<div class="apiResponseSection collapsed">
+							<span class="apiContentSubHeading">Request URL</span>
+							<div class="apiUrl"></div>
+							<span class="apiContentSubHeading">Response body</span>
+							<div class="apiResponse"></div>
+						</div>
+					</form>
+				</div>
+			</div>
+			
+			<!-- Artifact diff/compare api -->
+			<div class="api requestType_xml httpGet" id="api_artifact_compare">
+				<div class="apiTitle collapsed" id="api_artifact_compare_title">Compare artifacts<span class="methodName">GET</span></div>
+				<div class="apiContent collapsed" id="api_artifact_compare_content">
+					<span class="apiDescription">Fetches two version of the artifact to be compared.</span>
+					<span class="apiContentSubHeading">URL format</span>
+					<div class="apiUrl">/ws/api/{token}/artifact/compare.<select class="requestType_selection" onchange="updateRequestType(this);"><option selected="selected" value="xml">xml</option><option value="json">json</option></select></div>
+					<span class="apiContentSubHeading">Parameters</span>
+					<form class="tryOutSection" action="/ws/api/{token}/artifact/compare.xml" method="GET">
+						<table class="paramsTable">
+							<tr><th width="12%">Parameter</th><th width="40%">Value</th><th width="8%">Type</th><th>Description</th></tr>
+							<tr><td>token</td><td><input class="formField" type="text" name="token" required="required" paramtype="path"></td><td>path</td><td>Session token</td></tr>
+							<tr><td>projectName</td><td><input class="formField" type="text" name="projectName" required="required" paramtype="query"></td><td>query</td><td>Name of the project eg: CreditCardApplication</td></tr>
+							<tr><td>artifactPath</td><td><input class="formField" type="text" name="artifactPath" required="required" paramtype="query"></td><td>query</td><td>Artifact path eg: /Virtual_RF/Applicant_Simple</td></tr>
+							<tr><td>artifactExtension</td><td><input class="formField" type="text" name="artifactExtension" required="required" paramtype="query"></td><td>query</td><td>Artifact extension eg: rulefunctionimpl</td></tr>
+							<tr><td>revisionId</td><td><input class="formField" type="text" name="revisionId" paramtype="query"></td><td>query</td><td>Id of the revision under which changes to an artifact are being compared. (Not needed while comparing user copy with the base copy)</td></tr>
+						</table>
+						<input class="formSubmit" type="button" value="Try">
+						<div class="type_xml"> 
+							<a download="" href="xsd/CompareRTIResponse.xsd" style="color:#222; font-size:0.8em;"> Compare RTI Builder</a><br/>
+							<a download="" href="xsd/CompareRTIViewResponse.xsd" style="color:#222; font-size:0.8em;"> Compare  RTI View </a><br/>
+							<a download="" href="xsd/CompareDTResponse.xsd" style="color:#222; font-size:0.8em;"> Compare  Decision Table </a><br/>
+						</div>
+						<div class="type_json"> <a download="" href="json_response/response_artifact_compare.txt" style="color:#222; font-size:0.8em;">Sample JSON Response</a></div>
+						<div class="apiResponseSection collapsed">
+							<span class="apiContentSubHeading">Request URL</span>
+							<div class="apiUrl"></div>
+							<span class="apiContentSubHeading">Response body</span>
+							<div class="apiResponse"></div>
+						</div>
+					</form>
+				</div>
+			</div>
+			
+			<!-- Artifact history api -->
+			<div class="api requestType_xml httpGet" id="api_artifact_history">
+				<div class="apiTitle collapsed" id="api_artifact_history_title">Artifact History<span class="methodName">GET</span></div>
+				<div class="apiContent collapsed" id="api_artifact_history_content">
+					<span class="apiDescription">Fetches checkin history of an artifact.</span>
+					<span class="apiContentSubHeading">URL format</span>
+					<div class="apiUrl">/ws/api/{token}/artifact/history.<select class="requestType_selection" onchange="updateRequestType(this);"><option selected="selected" value="xml">xml</option><option value="json">json</option></select></div>
+					<span class="apiContentSubHeading">Parameters</span>
+					<form class="tryOutSection" action="/ws/api/{token}/artifact/history.xml" method="GET">
+						<table class="paramsTable">
+							<tr><th width="12%">Parameter</th><th width="40%">Value</th><th width="8%">Type</th><th>Description</th></tr>
+							<tr><td>token</td><td><input class="formField" type="text" name="token" required="required" paramtype="path"></td><td>path</td><td>Session token</td></tr>
+							<tr><td>projectName</td><td><input class="formField" type="text" name="projectName" required="required" paramtype="query"></td><td>query</td><td>Name of the project eg: CreditCardApplication</td></tr>
+							<tr><td>artifactPath</td><td><input class="formField" type="text" name="artifactPath" required="required" paramtype="query"></td><td>query</td><td>Artifact path eg: /Virtual_RF/Applicant_Simple</td></tr>
+							<tr><td>artifactExtension</td><td><input class="formField" type="text" name="artifactExtension" required="required" paramtype="query"></td><td>query</td><td>Artifact extension eg: rulefunctionimpl</td></tr>
+						</table>
+						<input class="formSubmit" type="button" value="Try">
+						<div class="type_xml"> <a download="" href="xsd/ArtifactHistoryResponse.xsd" style="color:#222; font-size:0.8em;">Response XSD</a></div>
+						<div class="type_json"> <a download="" href="json_response/response_artifact_history.txt" style="color:#222; font-size:0.8em;">Sample JSON Response</a></div>
+						<div class="apiResponseSection collapsed">
+							<span class="apiContentSubHeading">Request URL</span>
+							<div class="apiUrl"></div>
+							<span class="apiContentSubHeading">Response body</span>
+							<div class="apiResponse"></div>
+						</div>
+					</form>
+				</div>
+			</div>
+			
+			<!-- Artifact DT Coverage api -->
+			<div class="api requestType_xml httpPost" id="api_artifact_coverage">
+				<div class="apiTitle collapsed" id="api_artifact_coverage_title">Analyzer Coverage<span class="methodName">POST</span></div>
+				<div class="apiContent collapsed" id="api_artifact_coverage_content">
+					<span class="apiDescription">Analyzes coverage.</span>
+					<span class="apiContentSubHeading">URL format</span>
+					<div class="apiUrl">/ws/api/{token}/decisiontable/coverage.<select class="requestType_selection" onchange="updateRequestType(this);"><option selected="selected" value="xml">xml</option><option value="json">json</option></select></div>
+					<span class="apiContentSubHeading">Parameters</span>
+					<form class="tryOutSection" action="/ws/api/{token}/decisiontable/coverage.xml" method="POST">
+						<table class="paramsTable">
+							<tr><th width="12%">Parameter</th><th width="40%">Value</th><th width="8%">Type</th><th>Description</th></tr>
+							<tr><td>token</td><td><input class="formField" type="text" name="token" required="required" paramtype="path"></td><td>path</td><td>Session token.</td></tr>
+							<tr><td>body</td><td><textarea class="formField" name="body" required="required" paramtype="body"></textarea></td><td>body</td>
+								<td>
+									<div class="type_xml">XML defining values to test coverage. <span class="sampleDataLink" onclick="showSampleData('xml', this);">Sample</span></div>
+									<div class="type_json">JSON defining values to test coverage. <a download="" href="json_request/coverage.txt">Generic JSON Request</a><span class="sampleDataLink" onclick="showSampleData('json', this);">Sample</span></div>
+								</td>
+							</tr>
+						</table>
+						<input class="formSubmit" type="button" value="Try">
+						<div class="type_xml"> <a download="" href="xsd/ShowCoverage.xsd" style="color:#222; font-size:0.8em;">Response XSD</a></div>
+						<div class="type_json"> <a download="" href="json_response/response_dt_coverage.txt" style="color:#222; font-size:0.8em;">Sample JSON Response</a></div>
+						<div class="apiResponseSection collapsed">
+							<span class="apiContentSubHeading">Request URL</span>
+							<div class="apiUrl"></div>
+							<span class="apiContentSubHeading">Response body</span>
+							<div class="apiResponse"></div>
+						</div>
+						<div class="hiddenSampleData">
+							<div class="type_xml">&lt;artifactItem&gt;
+  &lt;projectName&gt;CreditCardApplication&lt;/projectName&gt;
+  &lt;artifactPath&gt;/Virtual_RF/Applicant_Simple&lt;/artifactPath&gt;
+  &lt;filter&gt;
+    &lt;columnName&gt;applicant.Age&lt;/columnName&gt;
+    &lt;isRangeFilter&gt;true&lt;/isRangeFilter&gt;
+    &lt;minValue&gt;25&lt;/minValue&gt;
+    &lt;maxValue&gt;25&lt;/maxValue&gt;
+  &lt;/filter&gt;
+  &lt;filter&gt;
+    &lt;columnName&gt;applicant.Name&lt;/columnName&gt;
+    &lt;isRangeFilter&gt;false&lt;/isRangeFilter&gt;
+    &lt;value&gt;Jane Doe&lt;/value&gt;
+    &lt;value&gt;John Doe&lt;/value&gt;
+    &lt;value&gt;Prakash Y&lt;/value&gt;
+    &lt;value&gt;Sandra W&lt;/value&gt;
+  &lt;/filter&gt;
+&lt;/artifactItem&gt;</div>
+							<div class="type_json">{
+  "artifactItem": {
+    "projectName": "CreditCardApplication",
+    "artifactPath": "/Virtual_RF/Applicant_Simple",
+    "filter": [
+      {
+        "columnName": "applicant.Age",
+        "isRangeFilter": "true",
+        "minValue": "25",
+        "maxValue": "25"
+      },
+      {
+        "columnName": "applicant.Name",
+        "isRangeFilter": "false",
+        "value": [
+          "Jane Doe",
+          "John Doe",
+          "Prakash Y",
+          "Sandra W"
+        ]
+      }
+    ]
+  }
+}</div>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div><!-- Artifacts group ends -->
+		
+		
+		<!-- Workspace group -->
+		<span class="groupTitle expanded">Workspace</span>
+		<div class="group expanded">
+			<!-- Workspace projects api -->
+			<div class="api requestType_xml httpGet">
+				<div class="apiTitle collapsed">Workspace Projects<span class="methodName">GET</span></div>
+				<div class="apiContent collapsed">
+					<span class="apiDescription">Fetches a list checkedout projects.</span>
+					<span class="apiContentSubHeading">URL format</span>
+					<div class="apiUrl">/ws/api/{token}/workspace.<select class="requestType_selection" onchange="updateRequestType(this);"><option selected="selected" value="xml">xml</option><option value="json">json</option></select></div>
+					<span class="apiContentSubHeading">Parameters</span>
+					<form class="tryOutSection" action="/ws/api/{token}/workspace.xml" method="GET">
+						<table class="paramsTable">
+							<tr><th width="12%">Parameter</th><th width="40%">Value</th><th width="8%">Type</th><th>Description</th></tr>
+							<tr><td>token</td><td><input class="formField" type="text" name="token" required="required" paramtype="path"></td><td>path</td><td>Session token</td></tr>
+						</table>
+						<input class="formSubmit" type="button" value="Try">
+						<div class="type_xml"> <a download="" href="xsd/Response.xsd" style="color:#222; font-size:0.8em;">Response XSD</a></div>
+						<div class="type_json"> <a download="" href="json_response/response_workspace_projects.txt" style="color:#222; font-size:0.8em;">Sample JSON Response</a></div>
+						<div class="apiResponseSection collapsed">
+							<span class="apiContentSubHeading">Request URL</span>
+							<div class="apiUrl"></div>
+							<span class="apiContentSubHeading">Response body</span>
+							<div class="apiResponse"></div>
+						</div>
+					</form>
+				</div>
+			</div>
+			
+			<!-- Workspace recently opened artifacts api -->
+			<div class="api requestType_xml httpGet" id="api_workspace_recentArtifacts">
+				<div class="apiTitle collapsed" id="api_workspace_recentArtifacts_title">Recent artifacts<span class="methodName">GET</span></div>
+				<div class="apiContent collapsed" id="api_workspace_recentArtifacts_content">
+					<span class="apiDescription">Fetches a list of recently opened artifacts.</span>
+					<span class="apiContentSubHeading">URL format</span>
+					<div class="apiUrl">/ws/api/{token}/recentlyOpened.<select class="requestType_selection" onchange="updateRequestType(this);"><option selected="selected" value="xml">xml</option><option value="json">json</option></select></div>
+					<span class="apiContentSubHeading">Parameters</span>
+					<form class="tryOutSection" action="/ws/api/{token}/recentlyOpened.xml" method="GET">
+						<table class="paramsTable">
+							<tr><th width="12%">Parameter</th><th width="40%">Value</th><th width="8%">Type</th><th>Description</th></tr>
+							<tr><td>token</td><td><input class="formField" type="text" name="token" required="required" paramtype="path"></td><td>path</td><td>Session token</td></tr>
+						</table>
+						<input class="formSubmit" type="button" value="Try">
+						<div class="type_xml"> <a download="" href="xsd/Response.xsd" style="color:#222; font-size:0.8em;">Response XSD</a></div>
+						<div class="type_json"> <a download="" href="json_response/response_recent_artifacts.txt" style="color:#222; font-size:0.8em;">Sample JSON Response</a></div>
+						<div class="apiResponseSection collapsed">
+							<span class="apiContentSubHeading">Request URL</span>
+							<div class="apiUrl"></div>
+							<span class="apiContentSubHeading">Response body</span>
+							<div class="apiResponse"></div>
+						</div>
+					</form>
+				</div>
+			</div>
+			
+			<!-- Workspace add recently opened artifact api -->
+			<div class="api requestType_xml httpPut">
+				<div class="apiTitle collapsed">Add Recent artifact<span class="methodName">PUT</span></div>
+				<div class="apiContent collapsed">
+					<span class="apiDescription">Add artifact to recent artifacts.</span>
+					<span class="apiContentSubHeading">URL format</span>
+					<div class="apiUrl">/ws/api/{token}/recentlyOpened/add.<select class="requestType_selection" onchange="updateRequestType(this);"><option selected="selected" value="xml">xml</option><option value="json">json</option></select></div>
+					<span class="apiContentSubHeading">Parameters</span>
+					<form class="tryOutSection" action="/ws/api/{token}/recentlyOpened/add.xml" method="PUT">
+						<table class="paramsTable">
+							<tr><th width="12%">Parameter</th><th width="40%">Value</th><th width="8%">Type</th><th>Description</th></tr>
+							<tr><td>token</td><td><input class="formField" type="text" name="token" required="required" paramtype="path"></td><td>path</td><td>Session token</td></tr>
+							<tr><td>projectName</td><td><input class="formField" type="text" name="projectName" required="required" paramtype="query"></td><td>query</td><td>Name of the project eg: CreditCardApplication</td></tr>
+							<tr><td>artifactPath</td><td><input class="formField" type="text" name="artifactPath" required="required" paramtype="query"></td><td>query</td><td>Artifact path eg: /Virtual_RF/Applicant_Simple.rulefunctionimpl</td></tr>
+						</table>
+						<input class="formSubmit" type="button" value="Try">
+						<div class="type_xml"> <a download="" href="xsd/Response.xsd" style="color:#222; font-size:0.8em;">Response XSD</a></div>
+						<div class="type_json"> <a download="" href="json_response/response_add_recent.txt" style="color:#222; font-size:0.8em;">Sample JSON Response</a></div>
+						<div class="apiResponseSection collapsed">
+							<span class="apiContentSubHeading">Request URL</span>
+							<div class="apiUrl"></div>
+							<span class="apiContentSubHeading">Response body</span>
+							<div class="apiResponse"></div>
+						</div>
+					</form>
+				</div>
+			</div>
+			
+			<!-- Workspace list delegation roles api -->
+			<div class="api requestType_xml httpGet" id="api_workspace_delegateRoles">
+				<div class="apiTitle collapsed" id="api_workspace_delegateRoles_title">User roles<span class="methodName">GET</span></div>
+				<div class="apiContent collapsed" id="api_workspace_delegateRoles_content">
+					<span class="apiDescription">Fetches a list of all user roles available for worklist delegation.</span>
+					<span class="apiContentSubHeading">URL format</span>
+					<div class="apiUrl">/ws/api/{token}/delegateRoles.<select class="requestType_selection" onchange="updateRequestType(this);"><option selected="selected" value="xml">xml</option><option value="json">json</option></select></div>
+					<span class="apiContentSubHeading">Parameters</span>
+					<form class="tryOutSection" action="/ws/api/{token}/delegateRoles.xml" method="GET">
+						<table class="paramsTable">
+							<tr><th width="12%">Parameter</th><th width="40%">Value</th><th width="8%">Type</th><th>Description</th></tr>
+							<tr><td>token</td><td><input class="formField" type="text" name="token" required="required" paramtype="path"></td><td>path</td><td>Session token</td></tr>
+						</table>
+						<input class="formSubmit" type="button" value="Try">
+						<div class="type_xml"> <a download="" href="xsd/Response.xsd" style="color:#222; font-size:0.8em;">Response XSD</a></div>
+						<div class="type_json"> <a download="" href="json_response/response_user_roles.txt" style="color:#222; font-size:0.8em;">Sample JSON Response</a></div>
+						<div class="apiResponseSection collapsed">
+							<span class="apiContentSubHeading">Request URL</span>
+							<div class="apiUrl"></div>
+							<span class="apiContentSubHeading">Response body</span>
+							<div class="apiResponse"></div>
+						</div>
+					</form>
+				</div>
+			</div>
+			
+			<!-- Workspace list projects available for lock management api -->
+			<div class="api requestType_xml httpGet" id="api_workspace_projectsLockMgmt">
+				<div class="apiTitle collapsed" id="api_workspace_projectsLockMgmt_title">Projects for Lock Mgmt <span class="methodName">GET</span></div>
+				<div class="apiContent collapsed" id="api_workspace_projectsLockMgmt_content">
+					<span class="apiDescription">Fetches a list of projects available for locks management.</span>
+					<span class="apiContentSubHeading">URL format</span>
+					<div class="apiUrl">/ws/api/{token}/projectsLockMgmt.<select class="requestType_selection" onchange="updateRequestType(this);"><option selected="selected" value="xml">xml</option><option value="json">json</option></select></div>
+					<span class="apiContentSubHeading">Parameters</span>
+					<form class="tryOutSection" action="/ws/api/{token}/projectsLockMgmt.xml" method="GET">
+						<table class="paramsTable">
+							<tr><th width="12%">Parameter</th><th width="40%">Value</th><th width="8%">Type</th><th>Description</th></tr>
+							<tr><td>token</td><td><input class="formField" type="text" name="token" required="required" paramtype="path"></td><td>path</td><td>Session token</td></tr>
+						</table>
+						<input class="formSubmit" type="button" value="Try">
+						<div class="type_xml"> <a download="" href="xsd/Response.xsd" style="color:#222; font-size:0.8em;">Response XSD</a></div>
+						<div class="type_json"> <a download="" href="json_response/response_lockMgmt_projects.txt" style="color:#222; font-size:0.8em;">Sample JSON Response</a></div>
+						<div class="apiResponseSection collapsed">
+							<span class="apiContentSubHeading">Request URL</span>
+							<div class="apiUrl"></div>
+							<span class="apiContentSubHeading">Response body</span>
+							<div class="apiResponse"></div>
+						</div>
+					</form>
+				</div>
+			</div>
+			
+			<!-- Workspace check deployable api -->
+			<div class="api requestType_xml httpGet" id="api_workspace_checkDeployable">
+				<div class="apiTitle collapsed" id="api_workspace_checkDeployable_title">Check Deployable<span class="methodName">GET</span></div>
+				<div class="apiContent collapsed" id="api_workspace_checkDeployable_content">
+					<span class="apiDescription">Checks whether a deployable is created.</span>
+					<span class="apiContentSubHeading">URL format</span>
+					<div class="apiUrl">/ws/api/{token}/checkDeployable.<select class="requestType_selection" onchange="updateRequestType(this);"><option selected="selected" value="xml">xml</option><option value="json">json</option></select></div>
+					<span class="apiContentSubHeading">Parameters</span>
+					<form class="tryOutSection" action="/ws/api/{token}/checkDeployable.xml" method="GET">
+						<table class="paramsTable">
+							<tr><th width="12%">Parameter</th><th width="40%">Value</th><th width="8%">Type</th><th>Description</th></tr>
+							<tr><td>token</td><td><input class="formField" type="text" name="token" required="required" paramtype="path"></td><td>path</td><td>Session token</td></tr>
+							<tr><td>projectName</td><td><input class="formField" type="text" name="projectName" required="required" paramtype="query"></td><td>query</td><td>Name of the Project eg: CreditCardApplication</td></tr>
+						</table>
+						<input class="formSubmit" type="button" value="Try">
+						<div class="type_xml"> <a download="" href="xsd/Response.xsd" style="color:#222; font-size:0.8em;">Response XSD</a></div>
+						<div class="type_json"> <a download="" href="json_response/response_basic.txt" style="color:#222; font-size:0.8em;">Sample JSON Response</a></div>
+						<div class="apiResponseSection collapsed">
+							<span class="apiContentSubHeading">Request URL</span>
+							<div class="apiUrl"></div>
+							<span class="apiContentSubHeading">Response body</span>
+							<div class="apiResponse"></div>
+						</div>
+					</form>
+				</div>
+			</div>
+			
+			<!-- About api -->
+			<div class="api requestType_xml httpGet">
+				<div class="apiTitle collapsed">About<span class="methodName">GET</span></div>
+				<div class="apiContent collapsed">
+					<span class="apiDescription">Shows WebStudio About.</span>
+					<span class="apiContentSubHeading">URL format</span>
+					<div class="apiUrl">/ws/api/{token}/about.<select class="requestType_selection" onchange="updateRequestType(this);"><option selected="selected" value="xml">xml</option><option value="json">json</option></select></div>
+					<span class="apiContentSubHeading">Parameters</span>
+					<form class="tryOutSection" action="/ws/api/{token}/about.xml" method="GET">
+						<table class="paramsTable">
+							<tr><th width="12%">Parameter</th><th width="40%">Value</th><th width="8%">Type</th><th>Description</th></tr>
+							<tr><td>token</td><td><input class="formField" type="text" name="token" required="required" paramtype="path"></td><td>path</td><td>Session token</td></tr>
+						</table>
+						<input class="formSubmit" type="button" value="Try">
+						<div class="type_xml"> <a download="" href="xsd/WSAbout.xsd" style="color:#222; font-size:0.8em;">Response XSD</a></div>
+						<div class="type_json"> <a download="" href="json_response/response_about.txt" style="color:#222; font-size:0.8em;">Sample JSON Response</a></div>
+						<div class="apiResponseSection collapsed">
+							<span class="apiContentSubHeading">Request URL</span>
+							<div class="apiUrl"></div>
+							<span class="apiContentSubHeading">Response body</span>
+							<div class="apiResponse"></div>
+						</div>
+					</form>
+				</div>
+			</div>
+			
+		</div><!-- Workspace group ends -->
+		
+		
+		<!-- Worklist group -->
+		<span class="groupTitle expanded">Worklist</span>
+		<div class="group expanded">
+			<!-- Get Worklists api -->
+			<div class="api requestType_xml httpGet" id="api_worklist_worklists">
+				<div class="apiTitle collapsed" id="api_worklist_worklists_title">Get Worklists<span class="methodName">GET</span></div>
+				<div class="apiContent collapsed" id="api_worklist_worklists_content">
+					<span class="apiDescription">Fetches all worklist items.</span>
+					<span class="apiContentSubHeading">URL format</span>
+					<div class="apiUrl">/ws/api/{token}/worklist.<select class="requestType_selection" onchange="updateRequestType(this);"><option selected="selected" value="xml">xml</option><option value="json">json</option></select></div>
+					<span class="apiContentSubHeading">Parameters</span>
+					<form class="tryOutSection" action="/ws/api/{token}/worklist.xml" method="GET">
+						<table class="paramsTable">
+							<tr><th width="12%">Parameter</th><th width="40%">Value</th><th width="8%">Type</th><th>Description</th></tr>
+							<tr><td>token</td><td><input class="formField" type="text" name="token" required="required" paramtype="path"></td><td>path</td><td>Session token.</td></tr>
+						</table>
+						<input class="formSubmit" type="button" value="Try">
+						<div class="type_xml"> <a download="" href="xsd/Response.xsd" style="color:#222; font-size:0.8em;">Response XSD</a></div>
+						<div class="type_json"> <a download="" href="json_response/response_worklist.txt" style="color:#222; font-size:0.8em;">Sample JSON Response</a></div>
+						<div class="apiResponseSection collapsed">
+							<span class="apiContentSubHeading">Request URL</span>
+							<div class="apiUrl"></div>
+							<span class="apiContentSubHeading">Response body</span>
+							<div class="apiResponse"></div>
+						</div>
+					</form>
+				</div>
+			</div>
+			
+			<!-- Get Worklist item details -->
+			<div class="api requestType_xml httpGet" id="api_worklist_details">
+				<div class="apiTitle collapsed" id="api_worklist_details_title">Worklist item details<span class="methodName">GET</span></div>
+				<div class="apiContent collapsed" id="api_worklist_details_content">
+					<span class="apiDescription">Fetches details of artifacts in a worklist item.</span>
+					<span class="apiContentSubHeading">URL format</span>
+					<div class="apiUrl">/ws/api/{token}/worklist/{worlistItemId}/details.<select class="requestType_selection" onchange="updateRequestType(this);"><option selected="selected" value="xml">xml</option><option value="json">json</option></select></div>
+					<span class="apiContentSubHeading">Parameters</span>
+					<form class="tryOutSection" action="/ws/api/{token}/worklist/{worlistItemId}/details.xml" method="GET">
+						<table class="paramsTable">
+							<tr><th width="12%">Parameter</th><th width="40%">Value</th><th width="8%">Type</th><th>Description</th></tr>
+							<tr><td>token</td><td><input class="formField" type="text" name="token" required="required" paramtype="path"></td><td>path</td><td>Session token.</td></tr>
+							<tr><td>worlistItemId</td><td><input class="formField" type="text" name="worlistItemId" required="required" paramtype="path"></td><td>path</td><td>Worklist itemId to fetch details.</td></tr>
+						</table>
+						<input class="formSubmit" type="button" value="Try">
+						<div class="type_xml"> <a download="" href="xsd/WorkListItemDetailsResponse.xsd" style="color:#222; font-size:0.8em;">Response XSD</a></div>
+						<div class="type_json"> <a download="" href="json_response/response_worklist_details.txt" style="color:#222; font-size:0.8em;">Sample JSON Response</a></div>
+						<div class="apiResponseSection collapsed">
+							<span class="apiContentSubHeading">Request URL</span>
+							<div class="apiUrl"></div>
+							<span class="apiContentSubHeading">Response body</span>
+							<div class="apiResponse"></div>
+						</div>
+					</form>
+				</div>
+			</div>
+			
+			<!-- Approve/Reject Worklist item(s) -->
+			<div class="api requestType_xml httpPost">
+				<div class="apiTitle collapsed">Approve/Reject/Build & Deploy worklist item(s)<span class="methodName">POST</span></div>
+				<div class="apiContent collapsed">
+					<span class="apiDescription">Change status of worklist item(s).</span>
+					<span class="apiContentSubHeading">URL format</span>
+					<div class="apiUrl">/ws/api/{token}/worklist/statusChange.<select class="requestType_selection" onchange="updateRequestType(this);"><option selected="selected" value="xml">xml</option><option value="json">json</option></select></div>
+					<span class="apiContentSubHeading">Parameters</span>
+					<form class="tryOutSection" action="/ws/api/{token}/worklist/statusChange.xml" method="POST">
+						<table class="paramsTable">
+							<tr><th width="12%">Parameter</th><th width="40%">Value</th><th width="8%">Type</th><th>Description</th></tr>
+							<tr><td>token</td><td><input class="formField" type="text" name="token" required="required" paramtype="path"></td><td>path</td><td>Session token.</td></tr>
+							<tr><td>body</td><td><textarea class="formField" name="body" required="required" paramtype="body"></textarea></td><td>body</td>
+								<td>
+									<div class="type_xml">XML defining worklist review actions. <a download="" href="xsd/WorklistRequest.xsd">Request XSD</a> <span class="sampleDataLink" onclick="showSampleData('xml', this);">Sample</span></div>
+									<div class="type_json">JSON defining worklist review actions.<a download="" href="json_request/statusChange.txt">Generic JSON Request</a> <span class="sampleDataLink" onclick="showSampleData('json', this);">Sample</span></div>
+								</td>
+							</tr>
+						</table>
+						<input class="formSubmit" type="button" value="Try">
+						<div class="type_xml"> <a download="" href="xsd/Response.xsd" style="color:#222; font-size:0.8em;">Response XSD</a></div>
+						<div class="type_json"> <a download="" href="json_response/response_worklist_statusChange.txt" style="color:#222; font-size:0.8em;">Sample JSON Response</a></div>
+						<div class="apiResponseSection collapsed">
+							<span class="apiContentSubHeading">Request URL</span>
+							<div class="apiUrl"></div>
+							<span class="apiContentSubHeading">Response body</span>
+							<div class="apiResponse"></div>
+						</div>
+						<div class="hiddenSampleData">
+							<div class="type_xml">&lt;request&gt;
+  &lt;data&gt;
+    &lt;worklist&gt;
+      &lt;revisionId&gt;10000&lt;/revisionId&gt;
+      &lt;worklistItem&gt;
+        &lt;artifactPath&gt;/Virtual_RF/Applicant_Simple&lt;/artifactPath&gt;
+        &lt;artifactType&gt;rulefunctionimpl&lt;/artifactType&gt;
+        &lt;managedProjectName&gt;CreditCardApplication&lt;/managedProjectName&gt;
+        &lt;reviewStatus&gt;Approve&lt;/reviewStatus&gt;
+        &lt;reviewComments&gt;Approved the changes.&lt;/reviewComments&gt;
+      &lt;/worklistItem&gt;
+    &lt;/worklist&gt;
+    &lt;worklist&gt;
+      &lt;revisionId&gt;10001&lt;/revisionId&gt;
+      &lt;worklistItem&gt;
+        &lt;artifactPath&gt;/Virtual_RF/Applicant_Simple&lt;/artifactPath&gt;
+        &lt;artifactType&gt;rulefunctionimpl&lt;/artifactType&gt;
+        &lt;managedProjectName&gt;CreditCardApplication&lt;/managedProjectName&gt;
+        &lt;reviewStatus&gt;Reject&lt;/reviewStatus&gt;
+        &lt;worklistItem&gt;Rejecting this change.&lt;/worklistItem&gt;
+      &lt;/worklistItem&gt;
+    &lt;/worklist&gt;
+  &lt;/data&gt;
+&lt;/request&gt;</div>
+							<div class="type_json">{
+  "request": {
+    "data": {
+      "worklist": [
+        {
+          "revisionId": "10000",
+          "worklistItem": {
+            "artifactPath": "/Virtual_RF/Applicant_Simple",
+            "artifactType": "rulefunctionimpl",
+            "managedProjectName": "CreditCardApplication",
+            "reviewStatus": "Approve",
+            "reviewComments": "Approved the changes."
+          }
+        },
+        {
+          "revisionId": "10001",
+          "worklistItem": {
+            "artifactPath": "/Virtual_RF/Applicant_Simple",
+            "artifactType": "rulefunctionimpl",
+            "managedProjectName": "CreditCardApplication",
+            "reviewStatus": "Reject",
+            "worklistItem": "Rejecting this change."
+          }
+        }
+      ]
+    }
+  }
+}</div>
+						</div>
+					</form>
+				</div>
+			</div>
+			
+			<!-- Delegate Worklist item(s) -->
+			<div class="api requestType_xml httpPut" id="api_worklist_delegate">
+				<div class="apiTitle collapsed" id="api_worklist_delegate_title">Delegate worklist item(s)<span class="methodName">PUT</span></div>
+				<div class="apiContent collapsed" id="api_worklist_delegate_content">
+					<span class="apiDescription">Delegates worklist item(s) to other user(s).</span>
+					<span class="apiContentSubHeading">URL format</span>
+					<div class="apiUrl">/ws/api/{token}/worklist/delegate.<select class="requestType_selection" onchange="updateRequestType(this);"><option selected="selected" value="xml">xml</option><option value="json">json</option></select></div>
+					<span class="apiContentSubHeading">Parameters</span>
+					<form class="tryOutSection" action="/ws/api/{token}/worklist/delegate.xml" method="PUT">
+						<table class="paramsTable">
+							<tr><th width="12%">Parameter</th><th width="40%">Value</th><th width="8%">Type</th><th>Description</th></tr>
+							<tr><td>token</td><td><input class="formField" type="text" name="token" required="required" paramtype="path"></td><td>path</td><td>Session token.</td></tr>
+							<tr><td>body</td><td><textarea class="formField" name="body" required="required" paramtype="body"></textarea></td><td>body</td>
+								<td>
+									<div class="type_xml">XML defining worklist items to be delegated and the roles. <a download="" href="xsd/WorklistDeleteOrDelegate.xsd">Request XSD</a> <span class="sampleDataLink" onclick="showSampleData('xml', this);">Sample</span></div>
+									<div class="type_json">JSON defining worklist items to be delegated and the roles. <a download="" href="json_request/delegate.txt">Generic JSON Request</a> <span class="sampleDataLink" onclick="showSampleData('json', this);">Sample</span></div>
+								</td>
+							</tr>
+						</table>
+						<input class="formSubmit" type="button" value="Try">
+						<div class="type_xml"> <a download="" href="xsd/Response.xsd" style="color:#222; font-size:0.8em;">Response XSD</a></div>
+						<div class="type_json"> <a download="" href="json_response/response_worklist_delegate.txt" style="color:#222; font-size:0.8em;">Sample JSON Response</a></div>
+						<div class="apiResponseSection collapsed">
+							<span class="apiContentSubHeading">Request URL</span>
+							<div class="apiUrl"></div>
+							<span class="apiContentSubHeading">Response body</span>
+							<div class="apiResponse"></div>
+						</div>
+						<div class="hiddenSampleData">
+							<div class="type_xml">&lt;request&gt;
+  &lt;data&gt;
+    &lt;worklist&gt;
+      &lt;revisions&gt;
+        &lt;revisionId&gt;10000&lt;/revisionId&gt;
+        &lt;revisionId&gt;10001&lt;/revisionId&gt;
+      &lt;/revisions&gt;
+      &lt;roles&gt;
+        &lt;role&gt;Business-User&lt;/role&gt;
+        &lt;role&gt;Technical-User&lt;/role&gt;
+      &lt;/roles&gt;
+    &lt;/worklist&gt;
+  &lt;/data&gt;
+&lt;/request&gt;</div>
+							<div class="type_json">{
+  "request": {
+    "data": {
+      "worklist": {
+        "revisions": {
+          "revisionId": [
+            "10000",
+            "10001"
+          ]
+        },
+        "roles": {
+          "role": [
+            "Business-User",
+            "Technical-User"
+          ]
+        }
+      }
+    }
+  }
+}</div>
+						</div>
+					</form>
+				</div>
+			</div>
+			
+			<!-- Delete Worklist item(s) -->
+			<div class="api requestType_xml httpDelete" id="api_worklist_delete">
+				<div class="apiTitle collapsed" id="api_worklist_delete_title">Delete worklist item(s)<span class="methodName">DELETE</span></div>
+				<div class="apiContent collapsed" id="api_worklist_delete_content">
+					<span class="apiDescription">Delete worklist item(s).</span>
+					<span class="apiContentSubHeading">URL format</span>
+					<div class="apiUrl">/ws/api/{token}/worklist/delete.<select class="requestType_selection" onchange="updateRequestType(this);"><option selected="selected" value="xml">xml</option><option value="json">json</option></select></div>
+					<span class="apiContentSubHeading">Parameters</span>
+					<form class="tryOutSection" action="/ws/api/{token}/worklist/delete.xml" method="DELETE">
+						<table class="paramsTable">
+							<tr><th width="12%">Parameter</th><th width="40%">Value</th><th width="8%">Type</th><th>Description</th></tr>
+							<tr><td>token</td><td><input class="formField" type="text" name="token" required="required" paramtype="path"></td><td>path</td><td>Session token.</td></tr>
+							<tr><td>body</td><td><textarea class="formField" name="body" required="required" paramtype="body"></textarea></td><td>body</td>
+								<td>
+									<div class="type_xml">XML defining worklist items to be deleted. <a download="" href="xsd/WorklistDeleteOrDelegate.xsd">Request XSD</a> <span class="sampleDataLink" onclick="showSampleData('xml', this);">Sample</span></div>
+									<div class="type_json">JSON defining worklist items to be deleted. <a download="" href="json_request/deleteWorkList.txt">Generic JSON Request</a><span class="sampleDataLink" onclick="showSampleData('json', this);">Sample</span></div>
+								</td>
+							</tr>
+						</table>
+						<input class="formSubmit" type="button" value="Try">
+						<div class="type_xml"> <a download="" href="xsd/DeleteWorklistItemResponse.xsd" style="color:#222; font-size:0.8em;">Response XSD</a></div>
+						<div class="type_json"> <a download="" href="json_response/response_worklist_delete.txt" style="color:#222; font-size:0.8em;">Sample JSON Response</a></div>
+						<div class="apiResponseSection collapsed">
+							<span class="apiContentSubHeading">Request URL</span>
+							<div class="apiUrl"></div>
+							<span class="apiContentSubHeading">Response body</span>
+							<div class="apiResponse"></div>
+						</div>
+						<div class="hiddenSampleData">
+							<div class="type_xml">&lt;request&gt;
+  &lt;data&gt;
+    &lt;worklist&gt;
+      &lt;revisions&gt;
+        &lt;revisionId&gt;10000&lt;/revisionId&gt;
+        &lt;revisionId&gt;10001&lt;/revisionId&gt;
+      &lt;/revisions&gt;
+    &lt;/worklist&gt;
+  &lt;/data&gt;
+&lt;/request&gt;</div>
+							<div class="type_json">{
+  "request": {
+    "data": {
+      "worklist": {
+        "revisions": {
+          "revisionId": [
+            "10001",
+            "10000"
+          ]
+        }
+      }
+    }
+  }
+}</div>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div><!-- Worklist group ends -->
+		
+		
+		<!-- 'Artifact Groups' group -->
+		<span class="groupTitle expanded">Artifact Groups</span>
+		<div class="group expanded">
+			<!-- Fetch groups api -->
+			<div class="api requestType_xml httpGet">
+				<div class="apiTitle collapsed">Groups<span class="methodName">GET</span></div>
+				<div class="apiContent collapsed">
+					<span class="apiDescription">Fetches a list of all available artifact groups.</span>
+					<span class="apiContentSubHeading">URL format</span>
+					<div class="apiUrl">/ws/api/{token}/groups.<select class="requestType_selection" onchange="updateRequestType(this);"><option selected="selected" value="xml">xml</option><option value="json">json</option></select></div>
+					<span class="apiContentSubHeading">Parameters</span>
+					<form class="tryOutSection" action="/ws/api/{token}/groups.xml" method="GET">
+						<table class="paramsTable">
+							<tr><th width="12%">Parameter</th><th width="40%">Value</th><th width="8%">Type</th><th>Description</th></tr>
+							<tr><td>token</td><td><input class="formField" type="text" name="token" required="required" paramtype="path"></td><td>path</td><td>Session token</td></tr>
+						</table>
+						<input class="formSubmit" type="button" value="Try">
+						<div class="type_xml"> <a download="" href="xsd/Response.xsd" style="color:#222; font-size:0.8em;">Response XSD</a></div>
+						<div class="type_json"> <a download="" href="json_response/response_groups.txt" style="color:#222; font-size:0.8em;">Sample JSON Response</a></div>
+						<div class="apiResponseSection collapsed">
+							<span class="apiContentSubHeading">Request URL</span>
+							<div class="apiUrl"></div>
+							<span class="apiContentSubHeading">Response body</span>
+							<div class="apiResponse"></div>
+						</div>
+					</form>
+				</div>
+			</div>
+			
+			<!-- Add group api -->
+			<div class="api requestType_xml httpPost">
+				<div class="apiTitle collapsed">Create Group<span class="methodName">POST</span></div>
+				<div class="apiContent collapsed">
+					<span class="apiDescription">Creates a new artifact Group.</span>
+					<span class="apiContentSubHeading">URL format</span>
+					<div class="apiUrl">/ws/api/{token}/groups/{groupName}/add.<select class="requestType_selection" onchange="updateRequestType(this);"><option selected="selected" value="xml">xml</option><option value="json">json</option></select></div>
+					<span class="apiContentSubHeading">Parameters</span>
+					<form class="tryOutSection" action="/ws/api/{token}/groups/{newGroupName}/add.xml" method="POST">
+						<table class="paramsTable">
+							<tr><th width="12%">Parameter</th><th width="40%">Value</th><th width="8%">Type</th><th>Description</th></tr>
+							<tr><td>token</td><td><input class="formField" type="text" name="token" required="required" paramtype="path"></td><td>path</td><td>Session token.</td></tr>
+							<tr><td>groupName</td><td><input class="formField" type="text" name="groupName" required="required" paramtype="path"></td><td>path</td><td>Name for the new group.</td></tr>
+							<tr><td>body</td><td><textarea class="formField" name="body" required="required" paramtype="body"></textarea></td><td>body</td>
+								<td>
+									<div class="type_xml">XML defining new group name and its artifacts. <a download="" href="xsd/CreateGroupRequest.xsd">Request XSD</a> <span class="sampleDataLink" onclick="showSampleData('xml', this);">Sample</span></div>
+									<div class="type_json">JSON defining new group name and its artifacts. <a download="" href="json_request/createGroup.txt">Generic JSON Request</a><span class="sampleDataLink" onclick="showSampleData('json', this);">Sample</span></div>
+								</td>
+							</tr>
+						</table>
+						<input class="formSubmit" type="button" value="Try">
+						<div class="type_xml"> <a download="" href="xsd/Response.xsd" style="color:#222; font-size:0.8em;">Response XSD</a></div>
+						<div class="type_json"> <a download="" href="json_response/response_create_group.txt" style="color:#222; font-size:0.8em;">Sample JSON Response</a></div>
+						<div class="apiResponseSection collapsed">
+							<span class="apiContentSubHeading">Request URL</span>
+							<div class="apiUrl"></div>
+							<span class="apiContentSubHeading">Response body</span>
+							<div class="apiResponse"></div>
+						</div>
+						<div class="hiddenSampleData">
+							<div class="type_xml">&lt;request&gt;
+  &lt;data&gt;
+    &lt;userGroup&gt;
+      &lt;name&gt;MyGroup1&lt;/name&gt;
+      &lt;groupItem&gt;
+        &lt;artifact&gt;CreditCardApplication/Virtual_RF/Applicant_Simple.rulefunctionimpl&lt;/artifact&gt;
+        &lt;artifact&gt;CreditCardApplication/Virtual_RF/Applicant.rulefunctionimpl&lt;/artifact&gt;
+      &lt;/groupItem&gt;
+    &lt;/userGroup&gt;
+  &lt;/data&gt;
+&lt;/request&gt;</div>
+							<div class="type_json">{
+  "request": {
+    "data": {
+      "userGroup": {
+        "name": "MyGroup1",
+        "groupItem": {
+          "artifact": [
+            "CreditCardApplication/Virtual_RF/Applicant_Simple.rulefunctionimpl",
+            "CreditCardApplication/Virtual_RF/Applicant.rulefunctionimpl"
+          ]
+        }
+      }
+    }
+  }
+}</div>
+						</div>
+					</form>
+				</div>
+			</div>
+			
+			<!-- Delete group api -->
+			<div class="api requestType_xml httpDelete">
+				<div class="apiTitle collapsed">Delete Group<span class="methodName">DELETE</span></div>
+				<div class="apiContent collapsed">
+					<span class="apiDescription">Deletes an artifact group.</span>
+					<span class="apiContentSubHeading">URL format</span>
+					<div class="apiUrl">/ws/api/{token}/groups/{groupName}/delete.<select class="requestType_selection" onchange="updateRequestType(this);"><option selected="selected" value="xml">xml</option><option value="json">json</option></select></div>
+					<span class="apiContentSubHeading">Parameters</span>
+					<form class="tryOutSection" action="/ws/api/{token}/groups/{groupName}/delete.xml" method="DELETE">
+						<table class="paramsTable">
+							<tr><th width="12%">Parameter</th><th width="40%">Value</th><th width="8%">Type</th><th>Description</th></tr>
+							<tr><td>token</td><td><input class="formField" type="text" name="token" required="required" paramtype="path"></td><td>path</td><td>Session token.</td></tr>
+							<tr><td>groupName</td><td><input class="formField" type="text" name="groupName" required="required" paramtype="path"></td><td>path</td><td>Name for the group to delete.</td></tr>
+						</table>
+						<input class="formSubmit" type="button" value="Try">
+						<div class="type_xml"> <a download="" href="xsd/Response.xsd" style="color:#222; font-size:0.8em;">Response XSD</a></div>
+						<div class="type_json"> <a download="" href="json_response/response_delete_group.txt" style="color:#222; font-size:0.8em;">Sample JSON Response</a></div>
+						<div class="apiResponseSection collapsed">
+							<span class="apiContentSubHeading">Request URL</span>
+							<div class="apiUrl"></div>
+							<span class="apiContentSubHeading">Response body</span>
+							<div class="apiResponse"></div>
+						</div>
+					</form>
+				</div>
+			</div>
+			
+			<!-- Fetch Group-artifacts api -->
+			<div class="api requestType_xml httpGet">
+				<div class="apiTitle collapsed">Fetch Group Artifacts<span class="methodName">GET</span></div>
+				<div class="apiContent collapsed">
+					<span class="apiDescription">Fetches artifacts list of the specified group.</span>
+					<span class="apiContentSubHeading">URL format</span>
+					<div class="apiUrl">/ws/api/{token}/groups/{groupName}/artifacts.<select class="requestType_selection" onchange="updateRequestType(this);"><option selected="selected" value="xml">xml</option><option value="json">json</option></select></div>
+					<span class="apiContentSubHeading">Parameters</span>
+					<form class="tryOutSection" action="/ws/api/{token}/groups/{groupName}/artifacts.xml" method="GET">
+						<table class="paramsTable">
+							<tr><th width="12%">Parameter</th><th width="40%">Value</th><th width="8%">Type</th><th>Description</th></tr>
+							<tr><td>token</td><td><input class="formField" type="text" name="token" required="required" paramtype="path"></td><td>path</td><td>Session token.</td></tr>
+							<tr><td>groupName</td><td><input class="formField" type="text" name="groupName" required="required" paramtype="path"></td><td>path</td><td>Name for the group.</td></tr>
+							<tr><td>groupType</td><td><input class="formField" type="text" name="groupType" required="required" paramtype="query"></td><td>query</td><td>Artifact extension for the group.</td></tr>
+						</table>
+						<input class="formSubmit" type="button" value="Try">
+						<div class="type_xml"> <a download="" href="xsd/Response.xsd" style="color:#222; font-size:0.8em;">Response XSD</a></div>
+						<div class="type_json"> <a download="" href="json_response/response_group_artifacts.txt" style="color:#222; font-size:0.8em;">Sample JSON Response</a></div>
+						<div class="apiResponseSection collapsed">
+							<span class="apiContentSubHeading">Request URL</span>
+							<div class="apiUrl"></div>
+							<span class="apiContentSubHeading">Response body</span>
+							<div class="apiResponse"></div>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div><!-- 'Artifact Groups' group ends -->
+		
+		
+		<!-- Preferences group -->
+		<span class="groupTitle expanded">Preferences</span>
+		<div class="group expanded">
+			<!-- Get Preferences api -->
+			<div class="api requestType_xml httpGet" id="api_preferences_fetch">
+				<div class="apiTitle collapsed" id="api_preferences_fetch_title">Fetch Preferences<span class="methodName">GET</span></div>
+				<div class="apiContent collapsed" id="api_preferences_fetch_content">
+					<span class="apiDescription">Fetches details of the specified project.</span>
+					<span class="apiContentSubHeading">URL format</span>
+					<div class="apiUrl">/ws/api/{token}/preferences/user.<select class="requestType_selection" onchange="updateRequestType(this);"><option selected="selected" value="xml">xml</option><option value="json">json</option></select></div>
+					<span class="apiContentSubHeading">Parameters</span>
+					<form class="tryOutSection" action="/ws/api/{token}/preferences/user.xml" method="GET">
+						<table class="paramsTable">
+							<tr><th width="12%">Parameter</th><th width="40%">Value</th><th width="8%">Type</th><th>Description</th></tr>
+							<tr><td>token</td><td><input class="formField" type="text" name="token" required="required" paramtype="path"></td><td>path</td><td>Session token.</td></tr>
+						</table>
+						<input class="formSubmit" type="button" value="Try">
+						<div class="type_xml"> <a download="" href="xsd/Preferences.xsd" style="color:#222; font-size:0.8em;">Response XSD</a></div>
+						<div class="type_json"> <a download="" href="json_response/response_preferences.txt" style="color:#222; font-size:0.8em;">Sample JSON Response</a></div>
+						<div class="apiResponseSection collapsed">
+							<span class="apiContentSubHeading">Request URL</span>
+							<div class="apiUrl"></div>
+							<span class="apiContentSubHeading">Response body</span>
+							<div class="apiResponse"></div>
+						</div>
+					</form>
+				</div>
+			</div>
+			
+			<!-- Update Preferences api -->
+			<div class="api requestType_xml httpPut" id="api_preferences_update">
+				<div class="apiTitle collapsed" id="api_preferences_update_title">Update preferences<span class="methodName">PUT</span></div>
+				<div class="apiContent collapsed" id="api_preferences_update_content">
+					<span class="apiDescription">Updates user preferences.</span>
+					<span class="apiContentSubHeading">URL format</span>
+					<div class="apiUrl">/ws/api/{token}/preferences/user/update.<select class="requestType_selection" onchange="updateRequestType(this);"><option selected="selected" value="xml">xml</option><option value="json">json</option></select></div>
+					<span class="apiContentSubHeading">Parameters</span>
+					<form class="tryOutSection" action="/ws/api/{token}/preferences/user/update.xml" method="PUT">
+						<table class="paramsTable">
+							<tr><th width="12%">Parameter</th><th width="40%">Value</th><th width="8%">Type</th><th>Description</th></tr>
+							<tr><td>token</td><td><input class="formField" type="text" name="token" required="required" paramtype="path"></td><td>path</td><td>Session token.</td></tr>
+							<tr><td>preferenceContent</td><td><textarea class="formField" name="body" required="required" paramtype="body"></textarea></td><td>body</td>
+								<td>
+									<div class="type_xml">XML defining Prefrences with their values. <a download="" href="xsd/UpdatePrefRequest.xsd">Request XSD</a> <span class="sampleDataLink" onclick="showSampleData('xml', this);">Sample</span></div>
+									<div class="type_json">JSON defining Prefrences with their values. <a download="" href="json_request/updatePrefrence.txt">Generic JSON Request</a><span class="sampleDataLink" onclick="showSampleData('json', this);">Sample</span></div>
+								</td>
+							</tr>
+						</table>
+						<input class="formSubmit" type="button" value="Try">
+						<div class="type_xml"> <a download="" href="xsd/Response.xsd" style="color:#222; font-size:0.8em;">Response XSD</a></div>
+						<div class="type_json"> <a download="" href="json_response/response_update_preferences.txt" style="color:#222; font-size:0.8em;">Sample JSON Response</a></div>
+						<div class="apiResponseSection collapsed">
+							<span class="apiContentSubHeading">Request URL</span>
+							<div class="apiUrl"></div>
+							<span class="apiContentSubHeading">Response body</span>
+							<div class="apiResponse"></div>
+						</div>
+						<div class="hiddenSampleData">
+							<div class="type_xml">&lt;request&gt;
+  &lt;data&gt;
+    &lt;userPreference&gt;
+      &lt;userPreferenceItem&gt;
+        &lt;portalColumns&gt;2&lt;/portalColumns&gt;
+        &lt;favoriteArtifactLimit&gt;10&lt;/favoriteArtifactLimit&gt;
+        &lt;recentlyOpenedArtifactLimit&gt;5&lt;/recentlyOpenedArtifactLimit&gt;
+        &lt;customURL&gt;www.tibco.com&lt;/customURL&gt;
+        &lt;itemView&gt;List&lt;/itemView&gt;
+        &lt;decisionTablePageSize&gt;20&lt;/decisionTablePageSize&gt;
+        &lt;autoUnLockOnReview&gt;true&lt;/autoUnLockOnReview&gt;
+        &lt;dashboardPortlets&gt;
+          &lt;portlet&gt;
+            &lt;portletId&gt;TIBCO tibbr&lt;/portletId&gt;
+            &lt;col&gt;0&lt;/col&gt;
+            &lt;rw&gt;0&lt;/rw&gt;
+            &lt;height&gt;400&lt;/height&gt;
+            &lt;colSpan&gt;1&lt;/colSpan&gt;
+          &lt;/portlet&gt;
+          &lt;portlet&gt;
+            &lt;portletId&gt;My Projects&lt;/portletId&gt;
+            &lt;col&gt;1&lt;/col&gt;
+            &lt;rw&gt;0&lt;/rw&gt;
+            &lt;height&gt;250&lt;/height&gt;
+            &lt;colSpan&gt;1&lt;/colSpan&gt;
+          &lt;/portlet&gt;
+          &lt;portlet&gt;
+            &lt;portletId&gt;Groups&lt;/portletId&gt;
+            &lt;col&gt;0&lt;/col&gt;
+            &lt;rw&gt;1&lt;/rw&gt;
+            &lt;height&gt;250&lt;/height&gt;
+            &lt;colSpan&gt;1&lt;/colSpan&gt;
+          &lt;/portlet&gt;
+          &lt;portlet&gt;
+            &lt;portletId&gt;Worklist&lt;/portletId&gt;
+            &lt;col&gt;1&lt;/col&gt;
+            &lt;rw&gt;1&lt;/rw&gt;
+            &lt;height&gt;250&lt;/height&gt;
+            &lt;colSpan&gt;1&lt;/colSpan&gt;
+          &lt;/portlet&gt;
+          &lt;portlet&gt;
+            &lt;portletId&gt;Notifications&lt;/portletId&gt;
+            &lt;col&gt;0&lt;/col&gt;
+            &lt;rw&gt;2&lt;/rw&gt;
+            &lt;height&gt;250&lt;/height&gt;
+            &lt;colSpan&gt;1&lt;/colSpan&gt;
+          &lt;/portlet&gt;
+          &lt;portlet&gt;
+            &lt;portletId&gt;Recently Opened&lt;/portletId&gt;
+            &lt;col&gt;1&lt;/col&gt;
+            &lt;rw&gt;2&lt;/rw&gt;
+            &lt;height&gt;250&lt;/height&gt;
+            &lt;colSpan&gt;1&lt;/colSpan&gt;
+          &lt;/portlet&gt;
+        &lt;/dashboardPortlets&gt;
+      &lt;/userPreferenceItem&gt;
+    &lt;/userPreference&gt;
+  &lt;/data&gt;
+&lt;/request&gt;</div>
+							<div class="type_json">{
+  "request": {
+    "data": {
+      "userPreference": {
+        "userPreferenceItem": {
+          "portalColumns": "2",
+          "favoriteArtifactLimit": "10",
+          "recentlyOpenedArtifactLimit": "5",
+          "customURL": "www.tibco.com",
+          "itemView": "List",
+          "decisionTablePageSize": "20",
+          "autoUnLockOnReview": "true",
+          "dashboardPortlets": {
+            "portlet": [
+              {
+                "portletId": "TIBCO tibbr", "col": "0", "rw": "0", "height": "400", "colSpan": "1"
+              },
+              {
+                "portletId": "My Projects", "col": "1", "rw": "0", "height": "250", "colSpan": "1"
+              },
+              {
+                "portletId": "Groups", "col": "0", "rw": "1", "height": "250", "colSpan": "1"
+              },
+              {
+                "portletId": "Worklist", "col": "1", "rw": "1", "height": "250", "colSpan": "1"
+              },
+              {
+                "portletId": "Notifications", "col": "0", "rw": "2", "height": "250", "colSpan": "1"
+              },
+              {
+                "portletId": "Recently Opened", "col": "1", "rw": "2", "height": "250", "colSpan": "1"
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}</div>
+						</div>
+					</form>
+				</div>
+			</div>
+			
+		</div><!-- Preferences group ends -->
+		
+		<!-- Notifications group -->
+		<span class="groupTitle expanded">Notification Setting</span>
+		<div class="group expanded">
+			<!-- Get notifications api -->
+			<div class="api requestType_xml httpGet" id="api_notification_fetch">
+				<div class="apiTitle collapsed" id="api_notification_fetch_title">Fetch Notification Settings<span class="methodName">GET</span></div>
+				<div class="apiContent collapsed" id="api_notification_fetch_content">
+					<span class="apiDescription">Fetches existing notification settings</span>
+					<span class="apiContentSubHeading">URL format</span>
+					<div class="apiUrl">/ws/api/{token}/preferences/notify.<select class="requestType_selection" onchange="updateRequestType(this);"><option selected="selected" value="xml">xml</option><option value="json">json</option></select></div>
+					<span class="apiContentSubHeading">Parameters</span>
+					<form class="tryOutSection" action="/ws/api/{token}/preferences/notify.xml" method="GET">
+						<table class="paramsTable">
+							<tr><th width="12%">Parameter</th><th width="40%">Value</th><th width="8%">Type</th><th>Description</th></tr>
+							<tr><td>token</td><td><input class="formField" type="text" name="token" required="required" paramtype="path"></td><td>path</td><td>Session token.</td></tr>
+						</table>
+						<input class="formSubmit" type="button" value="Try">
+						<div class="type_xml"> <a download="" href="xsd/NotificationResponse.xsd" style="color:#222; font-size:0.8em;">Response XSD</a></div>
+						<div class="type_json"> <a download="" href="json_response/response_fetch_notification.txt" style="color:#222; font-size:0.8em;">Sample JSON Response</a></div>
+						<div class="apiResponseSection collapsed">
+							<span class="apiContentSubHeading">Request URL</span>
+							<div class="apiUrl"></div>
+							<span class="apiContentSubHeading">Response body</span>
+							<div class="apiResponse"></div>
+						</div>
+					</form>
+				</div>
+			</div>
+			
+			<!-- Update Notifications api -->
+			<div class="api requestType_xml httpPut" id="api_notification_update">
+				<div class="apiTitle collapsed" id="api_notification_update_title">Update Notification Settings<span class="methodName">PUT</span></div>
+				<div class="apiContent collapsed" id="api_notification_update_content">
+					<span class="apiDescription">Update new notification settings</span>
+					<span class="apiContentSubHeading">URL format</span>
+					<div class="apiUrl">/ws/api/{token}/preferences/notify/update.<select class="requestType_selection" onchange="updateRequestType(this);"><option selected="selected" value="xml">xml</option><option value="json">json</option></select></div>
+					<span class="apiContentSubHeading">Parameters</span>
+					<form class="tryOutSection" action="/ws/api/{token}/preferences/notify/update.xml" method="PUT">
+						<table class="paramsTable">
+							<tr><th width="12%">Parameter</th><th width="40%">Value</th><th width="8%">Type</th><th>Description</th></tr>
+							<tr><td>token</td><td><input class="formField" type="text" name="token" required="required" paramtype="path"></td><td>path</td><td>Session token.</td></tr>
+							<tr><td>preferenceContent</td><td><textarea class="formField" name="body" required="required" paramtype="body"></textarea></td><td>body</td>
+								<td>
+									<div class="type_xml">XML defining notification settings. <a download="" href="xsd/UpdateNotifyRequest.xsd">Request XSD</a> <span class="sampleDataLink" onclick="showSampleData('xml', this);">Sample</span></div>
+									<div class="type_json">JSON defining notification settings. <a download="" href="json_request/updateNotifications.txt">Generic JSON Request</a><span class="sampleDataLink" onclick="showSampleData('json', this);">Sample</span></div>
+								</td>
+							</tr>
+						</table>
+						<input class="formSubmit" type="button" value="Try">
+						<div class="type_xml"> <a download="" href="xsd/NotificationResponse.xsd" style="color:#222; font-size:0.8em;">Response XSD</a></div>
+						<div class="type_json"> <a download="" href="json_response/response_settingsUpdateSuccess.txt" style="color:#222; font-size:0.8em;">Sample JSON Response</a></div>
+						<div class="apiResponseSection collapsed">
+							<span class="apiContentSubHeading">Request URL</span>
+							<div class="apiUrl"></div>
+							<span class="apiContentSubHeading">Response body</span>
+							<div class="apiResponse"></div>
+						</div>
+						<div class="hiddenSampleData">
+							<div class="type_xml">&lt;request&gt;
+&lt;data&gt;
+  &lt;notificationPreference&gt;
+        &lt;notificationPreferenceItem&gt;
+           &lt;emailPreference&gt;
+              &lt;project&gt;CreditCardApplication&lt;/project&gt;
+              &lt;actions&gt;commit,approve,reject,deploy&lt;/actions&gt;
+              &lt;emailIds&gt;abc@gmail.com,xyz@gmail.com&lt;/emailIds&gt;
+           &lt;/emailPreference&gt;
+           &lt;emailPreference&gt;
+              &lt;project&gt;OrderManagement&lt;/project&gt;
+              &lt;actions&gt;commit,approve&lt;/actions&gt;
+              &lt;emailIds&gt;xyz@gmail.com&lt;/emailIds&gt;
+           &lt;/emailPreference&gt;
+           &lt;emailPreference&gt;
+              &lt;project&gt;OverdraftNotifications&lt;/project&gt;
+              &lt;actions&gt;commit&lt;/actions&gt;
+              &lt;emailIds /&gt;
+           &lt;/emailPreference&gt;
+        &lt;/notificationPreferenceItem&gt;
+     &lt;/notificationPreference&gt;
+  &lt;/data&gt;
+&lt;/request&gt;
+</div>
+<div class="type_json">{
+  "request": {
+    "data": {
+      "notificationPreference": {
+        "notificationPreferenceItem": {
+          "emailPreference": [
+            {
+              "project": "CreditCardApplication",
+              "actions": "commit,approve,reject,deploy",
+              "emailIds": "abc@gmail.com,xyz@gmail.com"
+            },
+            {
+              "project": "OrderManagement",
+              "actions": "commit,approve",
+              "emailIds": "xyz@gmail.com"
+            },
+            {
+              "project": "OverdraftNotifications",
+              "actions": "commit"
+            }
+          ]
+        }
+      }
+    }
+  }
+}</div>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div><!-- Notifications group ends -->
+		
+	
+		<!-- ACL setting group -->
+		<span class="groupTitle expanded">ACL Setting</span>
+		<div class="group expanded">
+		
+		    <!--  Check UserEntry api -->
+		    <div class="api requestType_xml httpGet" id="api_userdata_check_entry">
+				<div class="apiTitle collapsed" id="api_userdata_check_entry_title">Get User Entry<span class="methodName">GET</span></div>
+				<div class="apiContent collapsed" id="api_userdata_check_entry_content">
+					<span class="apiDescription">Check if user entry exist and return details if present</span>
+					<span class="apiContentSubHeading">URL format</span>
+					<div class="apiUrl">/ws/api/{token}/users/{username}.<select class="requestType_selection" onchange="updateRequestType(this);"><option selected="selected" value="xml">xml</option><option value="json">json</option></select></div>
+					<span class="apiContentSubHeading">Parameters</span>
+					<form class="tryOutSection" action="/ws/api/{token}/users/{username}.xml" method="GET">
+						<table class="paramsTable">
+							<tr><th width="12%">Parameter</th><th width="40%">Value</th><th width="8%">Type</th><th>Description</th></tr>
+							<tr><td>token</td><td><input class="formField" type="text" name="token" required="required" paramtype="path"></td><td>path</td><td>Session token.</td></tr>
+                            <tr><td>username</td><td><input class="formField" type="text" name="username" required="required" paramtype="path"></td><td>path</td><td>username</td></tr>
+                            <tr><td>subscriptionId</td><td><input class="formField" type="text" name="subscriptionId" paramtype="query"></td><td>query</td><td>subscriptionId.</td></tr>
+						</table>
+						<input class="formSubmit" type="button" value="Try">
+						<div class="apiResponseSection collapsed">
+							<span class="apiContentSubHeading">Request URL</span>
+							<div class="apiUrl"></div>
+							<span class="apiContentSubHeading">Response body</span>
+							<div class="apiResponse"></div>
+						</div>
+					</form>
+				</div>
+			</div>
+		    
+			<!-- Get UserData api -->
+			<div class="api requestType_xml httpGet" id="api_userdata_fetch">
+				<div class="apiTitle collapsed" id="api_userdata_fetch_title">Fetch Authentication Details<span class="methodName">GET</span></div>
+				<div class="apiContent collapsed" id="api_userdata_fetch_content">
+					<span class="apiDescription">Fetch authentication details for file based authentication</span>
+					<span class="apiContentSubHeading">URL format</span>
+					<div class="apiUrl">/ws/api/{token}/users.<select class="requestType_selection" onchange="updateRequestType(this);"><option selected="selected" value="xml">xml</option><option value="json">json</option></select></div>
+					<span class="apiContentSubHeading">Parameters</span>
+					<form class="tryOutSection" action="/ws/api/{token}/users.xml" method="GET">
+						<table class="paramsTable">
+							<tr><th width="12%">Parameter</th><th width="40%">Value</th><th width="8%">Type</th><th>Description</th></tr>
+							<tr><td>token</td><td><input class="formField" type="text" name="token" required="required" paramtype="path"></td><td>path</td><td>Session token.</td></tr>
+						</table>
+						<input class="formSubmit" type="button" value="Try">
+						<div class="type_xml"> <a download="" href="xsd/AuthenticationResponse.xsd" style="color:#222; font-size:0.8em;">Response XSD</a></div>
+						<div class="type_json"> <a download="" href="json_response/response_fetch_authentication.txt" style="color:#222; font-size:0.8em;">Sample JSON Response</a></div>
+						<div class="apiResponseSection collapsed">
+							<span class="apiContentSubHeading">Request URL</span>
+							<div class="apiUrl"></div>
+							<span class="apiContentSubHeading">Response body</span>
+							<div class="apiResponse"></div>
+						</div>
+					</form>
+				</div>
+			</div>
+			
+			<!-- Update UserData api -->
+			<div class="api requestType_xml httpPut" id="api_userData_update">
+				<div class="apiTitle collapsed" id="api_userData_update_title">Update Authentication Details<span class="methodName">PUT</span></div>
+				<div class="apiContent collapsed" id="api_userData_update_content">
+					<span class="apiDescription">Update Authentication Details.</span>
+					<span class="apiContentSubHeading">URL format</span>
+					<div class="apiUrl">/ws/api/{token}/users/update.<select class="requestType_selection" onchange="updateRequestType(this);"><option selected="selected" value="xml">xml</option><option value="json">json</option></select></div>
+					<span class="apiContentSubHeading">Parameters</span>
+					<form class="tryOutSection" action="/ws/api/{token}/users/update.xml" method="PUT">
+						<table class="paramsTable">
+							<tr><th width="12%">Parameter</th><th width="40%">Value</th><th width="8%">Type</th><th>Description</th></tr>
+							<tr><td>token</td><td><input class="formField" type="text" name="token" required="required" paramtype="path"></td><td>path</td><td>Session token.</td></tr>
+							<tr><td>body</td><td><textarea class="formField" name="body" required="required" paramtype="body"></textarea></td><td>body</td>
+								<td>
+									<div class="type_xml">XML defining authentication details.<a download="" href="xsd/UpdateAuthenticationDetails.xsd">Request XSD</a><span class="sampleDataLink" onclick="showSampleData('xml', this);">Sample</span></div>
+									<div class="type_json">JSON defining authentication details.<a download="" href="json_request/updateAuthDetails.txt">Generic JSON Request</a><span class="sampleDataLink" onclick="showSampleData('json', this);">Sample</span></div>
+								</td>
+							</tr>
+						</table>
+						<input class="formSubmit" type="button" value="Try">
+						<div class="type_xml"> <a download="" href="xsd/AuthenticationResponse.xsd" style="color:#222; font-size:0.8em;">Response XSD</a></div>
+						<div class="type_json"> <a download="" href="json_response/response_settingsUpdateSuccess.txt" style="color:#222; font-size:0.8em;">Sample JSON Response</a></div>
+						<div class="apiResponseSection collapsed">
+							<span class="apiContentSubHeading">Request URL</span>
+							<div class="apiUrl"></div>
+							<span class="apiContentSubHeading">Response body</span>
+							<div class="apiResponse"></div>
+						</div>
+						<div class="hiddenSampleData">
+							<div class="type_xml">&lt;request&gt;
+&lt;data&gt;
+    &lt;aclSettings&gt;
+         &lt;aclSettingsItem&gt;
+               &lt;authEntries&gt;
+                  &lt;authType&gt;file&lt;/authType&gt;
+                  &lt;authEntry&gt;
+                     &lt;userName&gt;jdoe&lt;/userName&gt;
+                     &lt;userPassword&gt;A31405D272B94E5D12E9A52A665D3BFE&lt;/userPassword&gt;
+                     &lt;roleName&gt;Business-User&lt;/roleName&gt;
+                  &lt;/authEntry&gt;
+                  &lt;authEntry&gt;
+                     &lt;userName&gt;test&lt;/userName&gt;
+                     &lt;userPassword&gt;098F6BCD4621D373CADE4E832627B4F6&lt;/userPassword&gt;
+                     &lt;roleName&gt;Technical-User&lt;/roleName&gt;
+                  &lt;/authEntry&gt;
+                  &lt;authEntry&gt;
+                     &lt;userName&gt;admin&lt;/userName&gt;
+                     &lt;userPassword&gt;21232f297a57a5a743894a0e4a801fc3&lt;/userPassword&gt;
+                     &lt;roleName&gt;Administrator&lt;/roleName&gt;
+                  &lt;/authEntry&gt;
+               &lt;/authEntries&gt;
+         &lt;/aclSettingsItem&gt;
+      &lt;/aclSettings&gt;
+   &lt;/data&gt;
+&lt;/request&gt;</div>
+<div class="type_json">{
+  "request": {
+    "data": {
+      "aclSettings": {
+        "aclSettingsItem": {
+          "authEntries": {
+            "authType": "file",
+            "authEntry": [
+              {
+                "userName": "jdoe",
+                "userPassword": "A31405D272B94E5D12E9A52A665D3BFE",
+                "roleName": "Business-User"
+              },
+              {
+                "userName": "test",
+                "userPassword": "098F6BCD4621D373CADE4E832627B4F6",
+                "roleName": "Technical-User"
+              },
+              {
+                "userName": "admin",
+                "userPassword": "21232f297a57a5a743894a0e4a801fc3",
+                "roleName": "Administrator"
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}</div>
+						</div>
+					</form>
+				</div>
+			</div>
+			
+			<!-- Get AclData api -->
+			<div class="api requestType_xml httpGet" id="api_acldata_fetch">
+				<div class="apiTitle collapsed" id="api_acldata_fetch_title">Fetch ACL Contents<span class="methodName">GET</span></div>
+				<div class="apiContent collapsed" id="api_acldata_fetch_content">
+					<span class="apiDescription">Fetches content of acl file specific to project</span>
+					<span class="apiContentSubHeading">URL format</span>
+					<div class="apiUrl">/ws/api/{token}/projects/{projectName}/acl.<select class="requestType_selection" onchange="updateRequestType(this);"><option selected="selected" value="xml">xml</option><option value="json">json</option></select></div>
+					<span class="apiContentSubHeading">Parameters</span>
+					<form class="tryOutSection" action="/ws/api/{token}/projects/{projectName}/acl.xml" method="GET">
+						<table class="paramsTable">
+							<tr><th width="12%">Parameter</th><th width="40%">Value</th><th width="8%">Type</th><th>Description</th></tr>
+							<tr><td>token</td><td><input class="formField" type="text" name="token" required="required" paramtype="path"></td><td>path</td><td>Session token.</td></tr>
+							<tr><td>projectName</td><td><input class="formField" type="text" name="projectName" required="required" paramtype="path"></td><td>path</td><td>Name of the project eg: CreditCardApplication</td></tr>
+						</table>
+						<input class="formSubmit" type="button" value="Try">
+						<div class="type_xml"> <a download="" href="xsd/ACLContentResponse.xsd" style="color:#222; font-size:0.8em;">Response XSD</a></div>
+						<div class="type_json"> <a download="" href="json_response/response_fetch_permissions.txt" style="color:#222; font-size:0.8em;">Sample JSON Response</a></div>
+						<div class="apiResponseSection collapsed">
+							<span class="apiContentSubHeading">Request URL</span>
+							<div class="apiUrl"></div>
+							<span class="apiContentSubHeading">Response body</span>
+							<div class="apiResponse"></div>
+						</div>
+					</form>
+				</div>
+			</div>
+			
+			<!-- Update Roles Permissions api -->
+			<div class="api requestType_xml httpPut" id="api_aclData_update">
+				<div class="apiTitle collapsed" id="api_aclData_update_title">Update Roles and Permissions<span class="methodName">PUT</span></div>
+				<div class="apiContent collapsed" id="api_aclData_update_content">
+					<span class="apiDescription">Update Roles and Permissions.</span>
+					<span class="apiContentSubHeading">URL format</span>
+					<div class="apiUrl">/ws/api/{token}/acl/update.<select class="requestType_selection" onchange="updateRequestType(this);"><option selected="selected" value="xml">xml</option><option value="json">json</option></select></div>
+					<span class="apiContentSubHeading">Parameters</span>
+					<form class="tryOutSection" action="/ws/api/{token}/acl/update.xml" method="PUT">
+						<table class="paramsTable">
+							<tr><th width="12%">Parameter</th><th width="40%">Value</th><th width="8%">Type</th><th>Description</th></tr>
+							<tr><td>token</td><td><input class="formField" type="text" name="token" required="required" paramtype="path"></td><td>path</td><td>Session token.</td></tr>
+							<tr><td>body</td><td><textarea class="formField" name="body" required="required" paramtype="body"></textarea></td><td>body</td>
+								<td>
+									<div class="type_xml">XML defining users and permissions with their values to update.<a download="" href="xsd/UpdatePermissionsRequest.xsd">Request XSD</a><span class="sampleDataLink" onclick="showSampleData('xml', this);">Sample</span></div>
+									<div class="type_json">JSON defining users and permissions with their values to update.<a download="" href="json_request/updatePermissinos.txt">Generic JSON Request</a><span class="sampleDataLink" onclick="showSampleData('json', this);">Sample</span></div>
+								</td>
+							</tr>
+						</table>
+						<input class="formSubmit" type="button" value="Try">
+						<div class="type_xml"> <a download="" href="xsd/ACLContentResponse.xsd" style="color:#222; font-size:0.8em;">Response XSD</a></div>
+						<div class="type_json"> <a download="" href="json_response/response_settingsUpdateSuccess.txt" style="color:#222; font-size:0.8em;">Sample JSON Response</a></div>
+						<div class="apiResponseSection collapsed">
+							<span class="apiContentSubHeading">Request URL</span>
+							<div class="apiUrl"></div>
+							<span class="apiContentSubHeading">Response body</span>
+							<div class="apiResponse"></div>
+						</div>
+						<div class="hiddenSampleData">
+							<div class="type_xml">&lt;request&gt;
+	   &lt;data&gt;
+	      &lt;aclSettings&gt;
+	         &lt;aclSettingsItem&gt;
+	            &lt;projectName&gt;CreditCardApplication&lt;/projectName&gt;
+	               &lt;aclData&gt;
+	                  &lt;entries&gt;
+	                     &lt;entry&gt;
+	                        &lt;permissions&gt;
+	                           &lt;permission&gt;
+	                              &lt;action&gt;
+	                                 &lt;type&gt;gen_deploy&lt;/type&gt;
+	                                 &lt;value&gt;ALLOW&lt;/value&gt;
+	                              &lt;/action&gt;
+	                              &lt;resourceref&gt;PRJ&lt;/resourceref&gt;
+	                           &lt;/permission&gt;
+	                           &lt;permission&gt;
+	                              &lt;action&gt;
+	                                 &lt;type&gt;read&lt;/type&gt;
+	                                 &lt;value&gt;ALLOW&lt;/value&gt;
+	                              &lt;/action&gt;
+	                              &lt;resourceref&gt;PR&lt;/resourceref&gt;
+	                           &lt;/permission&gt;
+	                           &lt;permission&gt;
+	                              &lt;action&gt;
+	                                 &lt;type&gt;read&lt;/type&gt;
+	                                 &lt;value&gt;ALLOW&lt;/value&gt;
+	                              &lt;/action&gt;
+	                              &lt;resourceref&gt;SC&lt;/resourceref&gt;
+	                           &lt;/permission&gt;
+	                           &lt;permission&gt;
+	                              &lt;action&gt;
+	                                 &lt;type&gt;del_impl&lt;/type&gt;
+	                                 &lt;value&gt;ALLOW&lt;/value&gt;
+	                              &lt;/action&gt;
+	                              &lt;resourceref&gt;RF&lt;/resourceref&gt;
+	                           &lt;/permission&gt;
+	                           &lt;permission&gt;
+	                              &lt;action&gt;
+	                                 &lt;type&gt;commit&lt;/type&gt;
+	                                 &lt;value&gt;DENY&lt;/value&gt;
+	                              &lt;/action&gt;
+	                              &lt;resourceref&gt;PRJ&lt;/resourceref&gt;
+	                           &lt;/permission&gt;
+	                           &lt;permission&gt;
+	                              &lt;action&gt;
+	                                 &lt;type&gt;checkout&lt;/type&gt;
+	                                 &lt;value&gt;ALLOW&lt;/value&gt;
+	                              &lt;/action&gt;
+	                              &lt;resourceref&gt;PRJ&lt;/resourceref&gt;
+	                           &lt;/permission&gt;
+	                        &lt;/permissions&gt;
+	                        &lt;role&gt;
+	                           &lt;name&gt;Administrator&lt;/name&gt;
+	                        &lt;/role&gt;
+	                     &lt;/entry&gt;
+	                     &lt;entry&gt;
+	                        &lt;permissions&gt;
+	                           &lt;permission&gt;
+	                              &lt;action&gt;
+	                                 &lt;type&gt;read&lt;/type&gt;
+	                                 &lt;value&gt;ALLOW&lt;/value&gt;
+	                              &lt;/action&gt;
+	                              &lt;resourceref&gt;C&lt;/resourceref&gt;
+	                           &lt;/permission&gt;
+	                           &lt;permission&gt;
+	                              &lt;action&gt;
+	                                 &lt;type&gt;read&lt;/type&gt;
+	                                 &lt;value&gt;ALLOW&lt;/value&gt;
+	                              &lt;/action&gt;
+	                              &lt;resourceref&gt;CN&lt;/resourceref&gt;
+	                           &lt;/permission&gt;
+	                           &lt;permission&gt;
+	                              &lt;action&gt;
+	                                 &lt;type&gt;read&lt;/type&gt;
+	                                 &lt;value&gt;ALLOW&lt;/value&gt;
+	                              &lt;/action&gt;
+	                              &lt;resourceref&gt;PR&lt;/resourceref&gt;
+	                           &lt;/permission&gt;
+	                           &lt;permission&gt;
+	                              &lt;action&gt;
+	                                 &lt;type&gt;read&lt;/type&gt;
+	                                 &lt;value&gt;ALLOW&lt;/value&gt;
+	                              &lt;/action&gt;
+	                              &lt;resourceref&gt;TABLE&lt;/resourceref&gt;
+	                           &lt;/permission&gt;
+	                        &lt;/permissions&gt;
+	                        &lt;role&gt;
+	                           &lt;name&gt;Business-User&lt;/name&gt;
+	                        &lt;/role&gt;
+	                     &lt;/entry&gt;
+	                  &lt;/entries&gt;
+	                  &lt;resources&gt;
+	                     &lt;resource&gt;
+	                        &lt;rid&gt;PRJ&lt;/rid&gt;
+	                        &lt;type&gt;PROJECT&lt;/type&gt;
+	                     &lt;/resource&gt;
+	                     &lt;resource&gt;
+	                        &lt;rid&gt;C&lt;/rid&gt;
+	                        &lt;type&gt;CONCEPT&lt;/type&gt;
+	                     &lt;/resource&gt;
+	                     &lt;resource&gt;
+	                        &lt;rid&gt;SC&lt;/rid&gt;
+	                        &lt;type&gt;SCORECARD&lt;/type&gt;
+	                     &lt;/resource&gt;
+	                     &lt;resource&gt;
+	                        &lt;rid&gt;DM&lt;/rid&gt;
+	                        &lt;type&gt;DOMAIN&lt;/type&gt;
+	                     &lt;/resource&gt;
+	                     &lt;resource&gt;
+	                        &lt;rid&gt;RU&lt;/rid&gt;
+	                        &lt;type&gt;RULE&lt;/type&gt;
+	                     &lt;/resource&gt;
+	                     &lt;resource&gt;
+	                        &lt;rid&gt;E&lt;/rid&gt;
+	                        &lt;type&gt;EVENT&lt;/type&gt;
+	                     &lt;/resource&gt;
+	                     &lt;resource&gt;
+	                        &lt;rid&gt;CN&lt;/rid&gt;
+	                        &lt;type&gt;CHANNEL&lt;/type&gt;
+	                     &lt;/resource&gt;
+	                     &lt;resource&gt;
+	                        &lt;rid&gt;RT&lt;/rid&gt;
+	                        &lt;type&gt;RULETEMPLATE&lt;/type&gt;
+	                     &lt;/resource&gt;
+	                     &lt;resource&gt;
+	                        &lt;rid&gt;RTV&lt;/rid&gt;
+	                        &lt;type&gt;RULETEMPLATEVIEW&lt;/type&gt;
+	                     &lt;/resource&gt;
+	                     &lt;resource&gt;
+	                        &lt;rid&gt;RTI&lt;/rid&gt;
+	                        &lt;type&gt;RULETEMPLATEINSTANCE&lt;/type&gt;
+	                     &lt;/resource&gt;
+	                     &lt;resource&gt;
+	                        &lt;rid&gt;TABLE&lt;/rid&gt;
+	                        &lt;type&gt;RULEFUNCTIONIMPL&lt;/type&gt;
+	                     &lt;/resource&gt;
+	                     &lt;resource&gt;
+	                        &lt;rid&gt;PR&lt;/rid&gt;
+	                        &lt;type&gt;PROPERTY&lt;/type&gt;
+	                     &lt;/resource&gt;
+	                     &lt;resource&gt;
+	                        &lt;rid&gt;RF&lt;/rid&gt;
+	                        &lt;type&gt;RULEFUNCTION&lt;/type&gt;
+	                     &lt;/resource&gt;
+	                     &lt;resource&gt;
+	                        &lt;rid&gt;CF&lt;/rid&gt;
+	                        &lt;type&gt;CATALOGFUNCTION&lt;/type&gt;
+	                     &lt;/resource&gt;
+	                     &lt;resource&gt;
+	                        &lt;rid&gt;WSL&lt;/rid&gt;
+	                        &lt;type&gt;WSDL&lt;/type&gt;
+	                     &lt;/resource&gt;
+	                     &lt;resource&gt;
+	                        &lt;rid&gt;BEP&lt;/rid&gt;
+	                        &lt;type&gt;BEPROCESS&lt;/type&gt;
+	                     &lt;/resource&gt;
+	                  &lt;/resources&gt;
+	               &lt;/aclData&gt;
+	         &lt;/aclSettingsItem&gt;
+	      &lt;/aclSettings&gt;
+	   &lt;/data&gt;
+	&lt;/request&gt;
+</div>
+<div class="type_json">{
+  "request": {
+    "data": {
+      "aclSettings": {
+        "aclSettingsItem": {
+          "projectName": "CreditCardApplication",
+          "aclData": {
+            "entries": {
+              "entry": [
+                {
+                  "permissions": {
+                    "permission": [
+                      {
+                        "action": {
+                          "type": "gen_deploy",
+                          "value": "ALLOW"
+                        },
+                        "resourceref": "PRJ"
+                      },
+                      {
+                        "action": {
+                          "type": "read",
+                          "value": "ALLOW"
+                        },
+                        "resourceref": "PR"
+                      },
+                      {
+                        "action": {
+                          "type": "read",
+                          "value": "ALLOW"
+                        },
+                        "resourceref": "SC"
+                      },
+                      {
+                        "action": {
+                          "type": "del_impl",
+                          "value": "ALLOW"
+                        },
+                        "resourceref": "RF"
+                      },
+                      {
+                        "action": {
+                          "type": "commit",
+                          "value": "DENY"
+                        },
+                        "resourceref": "PRJ"
+                      },
+                      {
+                        "action": {
+                          "type": "checkout",
+                          "value": "ALLOW"
+                        },
+                        "resourceref": "PRJ"
+                      }
+                    ]
+                  },
+                  "role": { "name": "Administrator" }
+                },
+                {
+                  "permissions": {
+                    "permission": [
+                      {
+                        "action": {
+                          "type": "read",
+                          "value": "ALLOW"
+                        },
+                        "resourceref": "C"
+                      },
+                      {
+                        "action": {
+                          "type": "read",
+                          "value": "ALLOW"
+                        },
+                        "resourceref": "CN"
+                      },
+                      {
+                        "action": {
+                          "type": "read",
+                          "value": "ALLOW"
+                        },
+                        "resourceref": "PR"
+                      },
+                      {
+                        "action": {
+                          "type": "read",
+                          "value": "ALLOW"
+                        },
+                        "resourceref": "TABLE"
+                      }
+                    ]
+                  },
+                  "role": { "name": "Business-User" }
+                }
+              ]
+            },
+            "resources": {
+              "resource": [
+                {
+                  "rid": "PRJ",
+                  "type": "PROJECT"
+                },
+                {
+                  "rid": "C",
+                  "type": "CONCEPT"
+                },
+                {
+                  "rid": "SC",
+                  "type": "SCORECARD"
+                },
+                {
+                  "rid": "DM",
+                  "type": "DOMAIN"
+                },
+                {
+                  "rid": "RU",
+                  "type": "RULE"
+                },
+                {
+                  "rid": "E",
+                  "type": "EVENT"
+                },
+                {
+                  "rid": "CN",
+                  "type": "CHANNEL"
+                },
+                {
+                  "rid": "RT",
+                  "type": "RULETEMPLATE"
+                },
+                {
+                  "rid": "RTV",
+                  "type": "RULETEMPLATEVIEW"
+                },
+                {
+                  "rid": "RTI",
+                  "type": "RULETEMPLATEINSTANCE"
+                },
+                {
+                  "rid": "TABLE",
+                  "type": "RULEFUNCTIONIMPL"
+                },
+                {
+                  "rid": "PR",
+                  "type": "PROPERTY"
+                },
+                {
+                  "rid": "RF",
+                  "type": "RULEFUNCTION"
+                },
+                {
+                  "rid": "CF",
+                  "type": "CATALOGFUNCTION"
+                },
+                {
+                  "rid": "WSL",
+                  "type": "WSDL"
+                },
+                {
+                  "rid": "BEP",
+                  "type": "BEPROCESS"
+                }
+              ]
+            }
+          }
+        }
+      }
+    }
+  }
+}</div>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div><!-- ACL setting group end -->
+		
+		<!-- Deployment Config group -->
+		<span class="groupTitle expanded">Deployment Config</span>
+		<div class="group expanded">
+			<!-- Get Deployment Configs api -->
+			<div class="api requestType_xml httpGet" id="api_deployconfig_fetch">
+				<div class="apiTitle collapsed" id="api_deployconfig_fetch_title">Fetch Deployment Configs<span class="methodName">GET</span></div>
+				<div class="apiContent collapsed" id="api_deployconfig_fetch_content">
+					<span class="apiDescription">Fetch existing deployment configs</span>
+					<span class="apiContentSubHeading">URL format</span>
+					<div class="apiUrl">/ws/api/{token}/deployConfigs.<select class="requestType_selection" onchange="updateRequestType(this);"><option selected="selected" value="xml">xml</option><option value="json">json</option></select></div>
+					<span class="apiContentSubHeading">Parameters</span>
+					<form class="tryOutSection" action="/ws/api/{token}/deployConfigs.xml" method="GET">
+						<table class="paramsTable">
+							<tr><th width="12%">Parameter</th><th width="40%">Value</th><th width="8%">Type</th><th>Description</th></tr>
+							<tr><td>token</td><td><input class="formField" type="text" name="token" required="required" paramtype="path"></td><td>path</td><td>Session token.</td></tr>
+						</table>
+						<input class="formSubmit" type="button" value="Try">
+						<div class="type_xml"> <a download="" href="xsd/deploymentconfig.xsd" style="color:#222; font-size:0.8em;">Response XSD</a></div>
+						<div class="type_json"> <a download="" href="json_response/response_deploymentconfig.txt" style="color:#222; font-size:0.8em;">Sample JSON Response</a></div>
+						<div class="apiResponseSection collapsed">
+							<span class="apiContentSubHeading">Request URL</span>
+							<div class="apiUrl"></div>
+							<span class="apiContentSubHeading">Response body</span>
+							<div class="apiResponse"></div>
+						</div>
+					</form>
+				</div>
+			</div>
+			
+			<!-- Add Deployment Config api -->
+			<div class="api requestType_xml httpPost" id="api_deploymentconfig_add">
+				<div class="apiTitle collapsed" id="api_deploymentconfig_add_title">Add Deployment Config<span class="methodName">POST</span></div>
+				<div class="apiContent collapsed" id="api_deploymentconfig_add_content">
+					<span class="apiDescription">Add new Deployment Config.</span>
+					<span class="apiContentSubHeading">URL format</span>
+					<div class="apiUrl">/ws/api/{token}/deployConfigs/add.<select class="requestType_selection" onchange="updateRequestType(this);"><option selected="selected" value="xml">xml</option><option value="json">json</option></select></div>
+					<span class="apiContentSubHeading">Parameters</span>
+					<form class="tryOutSection" action="/ws/api/{token}/deployConfigs/add.xml" method="POST">
+						<table class="paramsTable">
+							<tr><th width="12%">Parameter</th><th width="40%">Value</th><th width="8%">Type</th><th>Description</th></tr>
+							<tr><td>token</td><td><input class="formField" type="text" name="token" required="required" paramtype="path"></td><td>path</td><td>Session token.</td></tr>
+							<tr><td>body</td><td><textarea class="formField" name="body" required="required" paramtype="body"></textarea></td><td>body</td>
+								<td>
+									<div class="type_xml">XML defining users and permissions with their values to update.<a download="" href="xsd/DeploymentConfigRequest.xsd">Request XSD</a><span class="sampleDataLink" onclick="showSampleData('xml', this);">Sample</span></div>
+									<div class="type_json">JSON defining users and permissions with their values to update.<a download="" href="json_request/deploymentconfig.txt">Generic JSON Request</a><span class="sampleDataLink" onclick="showSampleData('json', this);">Sample</span></div>
+								</td>
+							</tr>
+						</table>
+						<input class="formSubmit" type="button" value="Try">
+						<div class="type_xml"> <a download="" href="xsd/Response.xsd" style="color:#222; font-size:0.8em;">Response XSD</a></div>
+						<div class="type_json"> <a download="" href="json_response/response_deploymentconfig_add.txt" style="color:#222; font-size:0.8em;">Sample JSON Response</a></div>
+						<div class="apiResponseSection collapsed">
+							<span class="apiContentSubHeading">Request URL</span>
+							<div class="apiUrl"></div>
+							<span class="apiContentSubHeading">Response body</span>
+							<div class="apiResponse"></div>
+						</div>
+						<div class="hiddenSampleData">
+							<div class="type_xml">&lt;request&gt;
+  &lt;data&gt;
+    &lt;deploymentConfig&gt;
+      &lt;deploymentConfigItem&gt;
+        &lt;agentName&gt;inference-class&lt;/agentName&gt;
+        &lt;name&gt;QA&lt;/name&gt;
+        &lt;clusterName&gt;cca-cluster&lt;/clusterName&gt;
+        &lt;enabled&gt;true&lt;/enabled&gt;
+        &lt;host&gt;localhost&lt;/host&gt;
+        &lt;port&gt;8888&lt;/port&gt;
+        &lt;inMemory&gt;false&lt;/inMemory&gt;
+        &lt;userName&gt;&lt;/userName&gt;
+        &lt;password&gt;&lt;/password&gt;
+        &lt;projectName&gt;CCA&lt;/projectName&gt;
+      &lt;/deploymentConfigItem&gt;
+    &lt;/deploymentConfig&gt;
+  &lt;/data&gt;
+&lt;/request&gt;</div>
+							<div class="type_json">{
+  "request": {
+    "data": {
+      "deploymentConfig": {
+        "deploymentConfigItem": {
+          "agentName": "inference-class",
+          "name": "QA",
+          "clusterName": "cca-cluster",
+          "enabled": "true",
+          "host": "localhost",
+          "port": "8888",
+          "inMemory": "false",
+          "userName": "",
+          "password": "",
+          "projectName": "CCA"
+        }
+      }
+    }
+  }
+}</div>
+						</div>
+					</form>
+				</div>
+			</div>
+			
+			<!-- Update Deployment Config api -->
+			<div class="api requestType_xml httpPut" id="api_deploymentconfig_update">
+				<div class="apiTitle collapsed" id="api_deploymentconfig_update_title">Update Deployment Config<span class="methodName">PUT</span></div>
+				<div class="apiContent collapsed" id="api_deploymentconfig_update_content">
+					<span class="apiDescription">Update existing Deployment Config.</span>
+					<span class="apiContentSubHeading">URL format</span>
+					<div class="apiUrl">/ws/api/{token}/deployConfigs/update.<select class="requestType_selection" onchange="updateRequestType(this);"><option selected="selected" value="xml">xml</option><option value="json">json</option></select></div>
+					<span class="apiContentSubHeading">Parameters</span>
+					<form class="tryOutSection" action="/ws/api/{token}/deployConfigs/update.xml" method="PUT">
+						<table class="paramsTable">
+							<tr><th width="12%">Parameter</th><th width="40%">Value</th><th width="8%">Type</th><th>Description</th></tr>
+							<tr><td>token</td><td><input class="formField" type="text" name="token" required="required" paramtype="path"></td><td>path</td><td>Session token.</td></tr>
+							<tr><td>Project Name</td><td><input class="formField" type="text" name="projectName" required="required" paramtype="query"></td><td>path</td><td>Previous Project Name.</td></tr>
+							<tr><td>Config Name</td><td><input class="formField" type="text" name="name" required="required" paramtype="query"></td><td>path</td><td>Previous Deployment Config Name.</td></tr>
+							<tr><td>body</td><td><textarea class="formField" name="body" required="required" paramtype="body"></textarea></td><td>body</td>
+								<td>
+									<div class="type_xml">XML defining users and permissions with their values to update.<a download="" href="xsd/DeploymentConfigRequest.xsd">Request XSD</a><span class="sampleDataLink" onclick="showSampleData('xml', this);">Sample</span></div>
+									<div class="type_json">JSON defining users and permissions with their values to update.<a download="" href="json_request/deploymentconfig.txt">Generic JSON Request</a><span class="sampleDataLink" onclick="showSampleData('json', this);">Sample</span></div>
+								</td>
+							</tr>
+						</table>
+						<input class="formSubmit" type="button" value="Try">
+						<div class="type_xml"> <a download="" href="xsd/Response.xsd" style="color:#222; font-size:0.8em;">Response XSD</a></div>
+						<div class="type_json"> <a download="" href="json_response/response_deploymentconfig_update.txt" style="color:#222; font-size:0.8em;">Sample JSON Response</a></div>
+						<div class="apiResponseSection collapsed">
+							<span class="apiContentSubHeading">Request URL</span>
+							<div class="apiUrl"></div>
+							<span class="apiContentSubHeading">Response body</span>
+							<div class="apiResponse"></div>
+						</div>
+						<div class="hiddenSampleData">
+							<div class="type_xml">&lt;request&gt;
+  &lt;data&gt;
+    &lt;deploymentConfig&gt;
+      &lt;deploymentConfigItem&gt;
+        &lt;agentName&gt;inference-class&lt;/agentName&gt;
+        &lt;name&gt;QA&lt;/name&gt;
+        &lt;clusterName&gt;cca-cluster&lt;/clusterName&gt;
+        &lt;enabled&gt;true&lt;/enabled&gt;
+        &lt;host&gt;localhost&lt;/host&gt;
+        &lt;port&gt;8888&lt;/port&gt;
+        &lt;inMemory&gt;false&lt;/inMemory&gt;
+        &lt;userName&gt;&lt;/userName&gt;
+        &lt;password&gt;&lt;/password&gt;
+        &lt;projectName&gt;CCA&lt;/projectName&gt;
+      &lt;/deploymentConfigItem&gt;
+    &lt;/deploymentConfig&gt;
+  &lt;/data&gt;
+&lt;/request&gt;</div>
+							<div class="type_json">{
+  "request": {
+    "data": {
+      "deploymentConfig": {
+        "deploymentConfigItem": {
+          "agentName": "inference-class",
+          "name": "QA",
+          "clusterName": "cca-cluster",
+          "enabled": "true",
+          "host": "localhost",
+          "port": "8888",
+          "inMemory": "false",
+          "userName": "",
+          "password": "",
+          "projectName": "CCA"
+        }
+      }
+    }
+  }
+}</div>
+						</div>
+					</form>
+				</div>
+			</div>
+			
+			<!-- Delete Deployment Config api -->
+			<div class="api requestType_xml httpDelete" id="api_deploymentconfig_delete">
+				<div class="apiTitle collapsed" id="api_deploymentconfig_delete_title">Delete Deployment Config<span class="methodName">DELETE</span></div>
+				<div class="apiContent collapsed" id="api_deploymentconfig_delete_content">
+					<span class="apiDescription">Delete existing Deployment Config.</span>
+					<span class="apiContentSubHeading">URL format</span>
+					<div class="apiUrl">/ws/api/{token}/deployConfigs/delete.<select class="requestType_selection" onchange="updateRequestType(this);"><option selected="selected" value="xml">xml</option><option value="json">json</option></select></div>
+					<span class="apiContentSubHeading">Parameters</span>
+					<form class="tryOutSection" action="/ws/api/{token}/deployConfigs/delete.xml" method="DELETE">
+						<table class="paramsTable">
+							<tr><th width="12%">Parameter</th><th width="40%">Value</th><th width="8%">Type</th><th>Description</th></tr>
+							<tr><td>token</td><td><input class="formField" type="text" name="token" required="required" paramtype="path"></td><td>path</td><td>Session token.</td></tr>
+							<tr><td>Project Name</td><td><input class="formField" type="text" name="projectName" required="required" paramtype="query"></td><td>path</td><td>Previous Project Name.</td></tr>
+							<tr><td>Config Name</td><td><input class="formField" type="text" name="name" required="required" paramtype="query"></td><td>path</td><td>Previous Deployment Config Name.</td></tr>
+						</table>
+						<input class="formSubmit" type="button" value="Try">
+						<div class="type_xml"> <a download="" href="xsd/Response.xsd" style="color:#222; font-size:0.8em;">Response XSD</a></div>
+						<div class="type_json"> <a download="" href="json_response/response_deploymentconfig_delete.txt" style="color:#222; font-size:0.8em;">Sample JSON Response</a></div>
+						<div class="apiResponseSection collapsed">
+							<span class="apiContentSubHeading">Request URL</span>
+							<div class="apiUrl"></div>
+							<span class="apiContentSubHeading">Response body</span>
+							<div class="apiResponse"></div>
+						</div>
+					</form>
+				</div>
+			</div>
+		
+		<!-- Audit Trails Start -->
+		<span class="groupTitle expanded">Audit Trail</span>
+		<div class="group expanded">
+		<div class="api requestType_xml httpGet">
+				<div class="apiTitle collapsed">Get Audit Trails<span class="methodName">GET</span></div>
+				<div class="apiContent collapsed">
+					<span class="apiDescription">Audit trails</span>
+					<span class="apiContentSubHeading">URL format</span>
+					<div class="apiUrl">/ws/api/{token}/auditTrail.<select class="requestType_selection" onchange="updateRequestType(this);"><option selected="selected" value="xml">xml</option><option value="json">json</option></select></div>
+					<span class="apiContentSubHeading">Parameters</span>
+					<form class="tryOutSection" action="/ws/api/{token}/auditTrail.xml" method="GET">
+						<table class="paramsTable">
+							<tr><th width="12%">Parameter</th><th width="40%">Value</th><th width="8%">Type</th><th>Description</th></tr>
+							<tr><td>token</td><td><input class="formField" type="text" name="token" required="required" paramtype="path"></td><td>path</td><td>Session token.</td></tr>
+							<tr><td>userName</td><td><input class="formField" type="text" name="userName" paramtype="query"></td><td>query</td><td>Name of the user eg. admin</td></tr>
+							<tr><td>projectName</td><td><input class="formField" type="text" name="projectName" paramtype="query"></td><td>query</td><td>Name of the project eg: CreditCardApplication</td></tr>
+							<tr><td>artifactPath</td><td><input class="formField" type="text" name="artifactPath" paramtype="query"></td><td>query</td><td>Artifact path eg: /Virtual_RF/Applicant_Simple</td></tr>
+							<tr><td>artifactExtension</td><td><input class="formField" type="text" name="artifactType" paramtype="query"></td><td>query</td><td>Artifact type eg: rulefunctionimpl</td></tr>
+							<tr><td>actionType</td><td><input class="formField" type="text" name="actionType" paramtype="query"></td><td>query</td><td>Users action eg: LOGIN, APPROVE etc</td></tr>
+						</table>
+						<input class="formSubmit" type="button" value="Try">
+						<div class="type_xml"> <a download="" href="xsd/AuditTrailResponse.xsd" style="color:#222; font-size:0.8em;">Response XSD</a></div>
+						<div class="type_json"> <a download="" href="json_response/audit_trail_sample_json.txt" style="color:#222; font-size:0.8em;">Sample JSON Response</a></div>
+						<div class="apiResponseSection collapsed">
+							<span class="apiContentSubHeading">Request URL</span>
+							<div class="apiUrl"></div>
+							<span class="apiContentSubHeading">Response body</span>
+							<div class="apiResponse"></div>
+						</div>
+					</form>
+				</div>
+			</div>
+	    </div>
+	    
+	    <div class="group expanded">
+		<div class="api requestType_xml httpGet">
+				<div class="apiTitle collapsed">Download Audit Trail File<span class="methodName">GET</span></div>
+				<div class="apiContent collapsed">
+					<span class="apiDescription">Get Audit Trails logs.</span>
+					<span class="apiContentSubHeading">URL format</span>
+					<div class="apiUrl">/ws/api/{token}/auditTrail.<select class="requestType_selection" onchange="updateRequestType(this);"><option selected="selected" value="xml">xml</option><option value="json">json</option></select></div>
+					<span class="apiContentSubHeading">Parameters</span>
+					<form class="tryOutSection" action="/ws/api/{token}/auditTrail.xml" method="GET">
+					<span class="hidden_value" name="responseType" value="file"></span>
+						<table class="paramsTable">
+							<tr><th width="12%">Parameter</th><th width="40%">Value</th><th width="8%">Type</th><th>Description</th></tr>
+							<tr><td>token</td><td><input class="formField" type="text" name="token" required="required" paramtype="path"></td><td>path</td><td>Session token.</td></tr>
+							<tr><td>userName</td><td><input class="formField" type="text" name="userName" paramtype="query"></td><td>path</td><td>Name of the user eg. admin</td></tr>
+							<tr><td>projectName</td><td><input class="formField" type="text" name="projectName" paramtype="query"></td><td>query</td><td>Name of the project eg: CreditCardApplication</td></tr>
+							<tr><td>artifactPath</td><td><input class="formField" type="text" name="artifactPath" paramtype="query"></td><td>query</td><td>Artifact path eg: /Virtual_RF/Applicant_Simple</td></tr>
+							<tr><td>artifactExtension</td><td><input class="formField" type="text" name="artifactType" paramtype="query"></td><td>query</td><td>Artifact type eg: rulefunctionimpl</td></tr>
+							<tr><td>actionType</td><td><input class="formField" type="text" name="actionType" paramtype="query"></td><td>query</td><td>Users action eg: LOGIN, APPROVE etc</td></tr>
+							<tr><td>logFile</td><td><input class="formField" type="text" name="logFile" value="true" paramtype="query" disabled></td><td>query</td><td>Download log file</td></tr>
+						</table>
+						<input class="formSubmit" type="button" value="Try">
+						<div class="apiResponseSection collapsed">
+							<span class="apiContentSubHeading">Request URL</span>
+							<div class="apiUrl"></div>
+							<span class="apiContentSubHeading">Response body</span>
+							<div class="apiResponse"></div>
+						</div>
+					</form>
+				</div>
+			</div>
+	    </div>
+	    
+	    <!-- Audit Trails End -->		
+		
+		<br/><br/>
+	</div>
+</body>
+</html>

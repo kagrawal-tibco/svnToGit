@@ -1,0 +1,41 @@
+/**
+ * @description 
+ */
+String rulefunction WebStudio.Core.RuleFunctions.Utils.DT.Analyzer.WS_RF_BuildDecisionTableAnalyzerResponseDSXML {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		WebStudio.Core.Concepts.DataSources.Problems.WS_C_TableAnalyzerProblemsResponse analyzerProblemsResponse; 
+		int responseStatus;
+		int recordCount;
+		String errorCode;
+		String responseMessage;
+		String contentType;			
+	}
+	body {
+
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.DT.Analyzer.WS_RF_BuildDecisionTableAnalyzerResponseDSXML");
+
+		WS_C_ResponseData responseData = Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/WS_C_ResponseData");
+		if (errorCode == null) {							
+			WS_C_AbstractDataSourceRecord abstractDataSourceRecord = 
+											Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/Records/WS_C_ArtifactContentsDataSourceRecord");
+	
+			WS_C_ArtifactContentsDataSourceRecord artifactContentsDataSourceRecord = abstractDataSourceRecord;
+			
+			WS_C_AnyArtifactDetails responseDetails = analyzerProblemsResponse;
+			Instance.PropertyAtom.setContainedConcept(artifactContentsDataSourceRecord.artifactDetails, responseDetails, 1L);	
+
+			Instance.PropertyArray.appendContainedConcept(responseData.record, abstractDataSourceRecord, 1L);
+		}	
+
+		String responseDSXML = WebStudio.
+    							Core.
+    								RuleFunctions.
+	    								Utils.
+	    									WS_RF_CreateAndSerializeResponseDataSource(responseStatus, recordCount, errorCode, responseMessage, responseData, contentType);
+								
+		return responseDSXML;		
+	}
+}

@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beviewsconfig:ChartComponent xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:beviewsconfig="http://www.tibco.com/be/designer" xmlns:designtime="http:///com/tibco/cep/designtime/core/model/designtime_ontology.ecore" namespace="/Dashboards/" folder="/Dashboards/" name="C_TopTenAccountsByBalance" description="Show top ten accounts by Balance with Last Credit and Last Debit information" GUID="84A54E8D-0CAB-F636-2209-A1C249290B34" ownerProjectName="FraudDetectionDashboard" version="1304549743645" displayName="Top Ten Accounts By Balance" componentColorSetIndex="0" seriesColorIndex="0">
+  <extendedProperties>
+    <properties xsi:type="designtime:SimpleProperty" name="Category">
+      <extendedProperties>
+        <properties xsi:type="designtime:SimpleProperty" name="Accnt001"/>
+        <properties xsi:type="designtime:SimpleProperty" name="Accnt002"/>
+        <properties xsi:type="designtime:SimpleProperty" name="Accnt003"/>
+        <properties xsi:type="designtime:SimpleProperty" name="Accnt004"/>
+        <properties xsi:type="designtime:SimpleProperty" name="Accnt005"/>
+        <properties xsi:type="designtime:SimpleProperty" name="Accnt006"/>
+        <properties xsi:type="designtime:SimpleProperty" name="Accnt007"/>
+        <properties xsi:type="designtime:SimpleProperty" name="Acnnt008"/>
+        <properties xsi:type="designtime:SimpleProperty" name="Accnt009"/>
+        <properties xsi:type="designtime:SimpleProperty" name="Acnt010"/>
+      </extendedProperties>
+    </properties>
+    <properties xsi:type="designtime:SimpleProperty" name="MaxValue" value="50"/>
+    <properties xsi:type="designtime:SimpleProperty" name="MinValue" value="10"/>
+  </extendedProperties>
+  <visualization xsi:type="beviewsconfig:BarChartVisualization" namespace="/Dashboards/" folder="/Dashboards/" name="Visualization_" description="" GUID="6510C745-5E19-BED1-D3ED-AF4AB6831FB6" ownerProjectName="FraudDetectionDashboard" version="1304549743645" width="10" topCapThickness="0.5" overlapPercentage="0" orientation="vertical">
+    <seriesConfig xsi:type="beviewsconfig:ChartSeriesConfig" namespace="/Dashboards/" folder="/Dashboards/" name="Credit" description="" GUID="772ED34D-6885-51F3-398C-58312669BE36" ownerProjectName="FraudDetectionDashboard" version="1304549743645" anchor="Q1">
+      <actionRule namespace="/Dashboards/" folder="/Dashboards/" name="Series__AR" description="" GUID="355B4DC8-3839-C1AA-A2D9-3653AA93C7BA" ownerProjectName="FraudDetectionDashboard" version="1304549743645" threshold="10" thresholdUnit="count">
+        <dataSource href="DS_AccountsByDescendingBalance.datasource#/"/>
+        <drillableFields href="M_Accounts.metric#//@properties.0"/>
+      </actionRule>
+      <valueDataConfig xsi:type="beviewsconfig:ChartValueDataConfig">
+        <extractor>
+          <sourceField href="M_Accounts.metric#//@properties.3"/>
+        </extractor>
+        <formatter xsi:type="beviewsconfig:TextFieldFormat" toolTipFormat="{AccountID}={LastCredit}" displayFormat="{LastCredit}" showLabel="true">
+          <formatStyle fontSize="10" fontStyle="normal"/>
+        </formatter>
+      </valueDataConfig>
+      <categoryDataConfig xsi:type="beviewsconfig:ChartCategoryDataConfig">
+        <extractor>
+          <sourceField href="M_Accounts.metric#//@properties.0"/>
+        </extractor>
+        <formatter xsi:type="beviewsconfig:TextFieldFormat" displayFormat="{AccountID}"/>
+      </categoryDataConfig>
+    </seriesConfig>
+    <seriesConfig xsi:type="beviewsconfig:ChartSeriesConfig" namespace="/Dashboards/" folder="/Dashboards/" name="Debit" description="" GUID="6BBF02B0-BAF4-120D-69BF-7569E15DD825" ownerProjectName="FraudDetectionDashboard" version="1304549743645" anchor="Q1">
+      <actionRule namespace="/Dashboards/" folder="/Dashboards/" name="Series__AR" description="" GUID="FE83027E-C3BE-19DD-00C1-4F428610090C" ownerProjectName="FraudDetectionDashboard" version="1304549743645" threshold="10" thresholdUnit="count">
+        <dataSource href="DS_AccountsByDescendingBalance.datasource#/"/>
+        <drillableFields href="M_Accounts.metric#//@properties.0"/>
+      </actionRule>
+      <valueDataConfig xsi:type="beviewsconfig:ChartValueDataConfig">
+        <extractor>
+          <sourceField href="M_Accounts.metric#//@properties.4"/>
+        </extractor>
+        <formatter xsi:type="beviewsconfig:TextFieldFormat" toolTipFormat="{AccountID}={LastDebit}" displayFormat="{LastDebit}" showLabel="true">
+          <formatStyle fontSize="10" fontStyle="normal"/>
+        </formatter>
+      </valueDataConfig>
+      <categoryDataConfig xsi:type="beviewsconfig:ChartCategoryDataConfig">
+        <extractor>
+          <sourceField href="M_Accounts.metric#//@properties.0"/>
+        </extractor>
+        <formatter xsi:type="beviewsconfig:TextFieldFormat" displayFormat="{AccountID}"/>
+      </categoryDataConfig>
+    </seriesConfig>
+  </visualization>
+  <visualization xsi:type="beviewsconfig:ScatterPlotChartVisualization" namespace="/Dashboards/" folder="/Dashboards/" name="Visualization_" description="" GUID="98A62A46-ADB1-FEA3-8125-50BE4AD82BC3" ownerProjectName="FraudDetectionDashboard" version="1304549743645" plotShape="circle" plotShapeDimension="3"/>
+  <visualization xsi:type="beviewsconfig:LineChartVisualization" namespace="/Dashboards/" folder="/Dashboards/" name="Visualization_" description="" GUID="C8EC6122-F07C-2190-FF15-2DDFA474B49F" ownerProjectName="FraudDetectionDashboard" version="1304549743645" lineThickness="3" dataPlotting="all" plotShape="circle" plotShapeDimension="3">
+    <seriesConfig xsi:type="beviewsconfig:ChartSeriesConfig" namespace="/Dashboards/" folder="/Dashboards/" name="Balance" description="" GUID="875B058B-279E-BA8E-D876-AF2DC9ADA095" ownerProjectName="FraudDetectionDashboard" version="1304549743646" anchor="Q1">
+      <actionRule namespace="/Dashboards/" folder="/Dashboards/" name="Series__AR" description="" GUID="9310C7B0-1EF9-7224-8490-E1B3A3DCBED8" ownerProjectName="FraudDetectionDashboard" version="1304549743646" threshold="10" thresholdUnit="count">
+        <dataSource href="DS_AccountsByDescendingBalance.datasource#/"/>
+        <drillableFields href="M_Accounts.metric#//@properties.0"/>
+      </actionRule>
+      <valueDataConfig xsi:type="beviewsconfig:ChartValueDataConfig">
+        <extractor>
+          <sourceField href="M_Accounts.metric#//@properties.2"/>
+        </extractor>
+        <formatter xsi:type="beviewsconfig:TextFieldFormat" toolTipFormat="{AccountID}={Balance}" displayFormat="{Balance}" showLabel="true">
+          <formatStyle fontSize="10" fontStyle="normal"/>
+        </formatter>
+      </valueDataConfig>
+      <categoryDataConfig xsi:type="beviewsconfig:ChartCategoryDataConfig">
+        <extractor>
+          <sourceField href="M_Accounts.metric#//@properties.0"/>
+        </extractor>
+        <formatter xsi:type="beviewsconfig:TextFieldFormat" displayFormat="{AccountID}"/>
+      </categoryDataConfig>
+    </seriesConfig>
+  </visualization>
+  <layoutConstraint xsi:type="beviewsconfig:FlowLayoutConstraint" componentRowSpan="2" componentColSpan="2"/>
+  <relatedElement href="C_DailySuspendedAccountsInfo.chart#/"/>
+  <relatedElement href="C_DebitTraffic.chart#/"/>
+  <plotArea>
+    <foreground line="both"/>
+  </plotArea>
+  <legend orientation="horizontal" anchor="north"/>
+  <categoryGuidelineConfig headerName="Accounts" sortOrder="unsorted">
+    <headerFormatStyle fontSize="10" fontStyle="normal"/>
+    <labelFormatStyle fontSize="10" fontStyle="normal"/>
+  </categoryGuidelineConfig>
+  <valueGuidelineConfig headerName="Amount" scale="normal" division="5">
+    <headerFormatStyle fontSize="10" fontStyle="normal"/>
+    <labelFormatStyle fontSize="10" fontStyle="normal"/>
+  </valueGuidelineConfig>
+</beviewsconfig:ChartComponent>

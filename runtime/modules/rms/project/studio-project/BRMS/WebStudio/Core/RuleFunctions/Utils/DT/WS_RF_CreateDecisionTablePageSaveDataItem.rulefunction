@@ -1,0 +1,99 @@
+/**
+ * @description 
+ */
+String rulefunction WebStudio.Core.RuleFunctions.Utils.DT.WS_RF_CreateDecisionTablePageSaveDataItem {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String userName;
+		String projectName;		
+		Object decisionTableObject;
+		String contentType;
+		String[] roles;
+	}
+	body {		
+		String scsRootURL = WS_RF_GetSCSRootURL(projectName, WS_RF_GetSubscriptionId(userName));
+		if (scsRootURL == null) {
+			throw Exception.newException(null, "Source control repository location not present. Set ws.scs.rootURL property", null);
+		}
+		String scsIntegrationType = System.getSystemPropertyAsString("ws.scs.impl.type", null);
+		
+		WS_C_DecisionTablePageSaveDataItem dtSaveDataItem = Instance.newTransientInstance("/WebStudio/Core/Concepts/Decision/Pagination/WS_C_DecisionTablePageSaveDataItem");
+
+		//Table Metadata
+		WS_C_TableMetadata metadata = Instance.newTransientInstance("/WebStudio/Core/Concepts/Decision/Pagination/WS_C_TableMetadata"); 
+		Object[] metadataPropsObject = WS.Decision.TableModel.MetaData.getProperties(decisionTableObject);
+		for (int i = 0; i < metadataPropsObject@length; i++) {
+			WS_C_MetadataProperty property = Instance.newTransientInstance("/WebStudio/Core/Concepts/Decision/Pagination/WS_C_MetadataProperty");
+			property.name = WS.Decision.TableModel.MetaData.getPropertyName(metadataPropsObject[i]);
+			property.type = WS.Decision.TableModel.MetaData.getPropertyType(metadataPropsObject[i]);
+			property.value = WS.Decision.TableModel.MetaData.getPropertyValue(metadataPropsObject[i]);
+	 		Instance.PropertyArray.appendContainedConcept(metadata.property, property, 1L);
+		}
+		Instance.PropertyAtom.setConceptReference(dtSaveDataItem.metadata, metadata, 1L);
+
+		//Table Arguments				
+		WS_C_DecisionTableArguments arguments = Instance.newTransientInstance("/WebStudio/Core/Concepts/Decision/Pagination/WS_C_DecisionTableArguments");
+		Object[] argumentObjects = WS.Decision.TableModel.getArguments(decisionTableObject);
+		for (int i = 0; i < argumentObjects@length; i++) {
+			WS_C_DecisionTableArgument argument = Instance.newTransientInstance("/WebStudio/Core/Concepts/Decision/Pagination/WS_C_DecisionTableArgument");
+			argument.argumentAlias = WS.Decision.TableModel.Arguments.getAlias(argumentObjects[i]);
+			argument.direction = WS.Decision.TableModel.Arguments.getDirection(argumentObjects[i]);
+			argument.path = WS.Decision.TableModel.Arguments.getPath(argumentObjects[i]);
+			argument.resourceType = WS.Decision.TableModel.Arguments.getResourceType(argumentObjects[i]);
+			argument.isArray = WS.Decision.TableModel.Arguments.isArray(argumentObjects[i]);
+	 		Instance.PropertyArray.appendContainedConcept(arguments.argument, argument, 1L);
+		}
+		Instance.PropertyAtom.setConceptReference(dtSaveDataItem.arguments, arguments, 1L);
+
+		//Decision Table columns
+		Object[] decisionTableColumnObjects = WS.Decision.TableModel.getDecisionTableColumns(decisionTableObject);	
+		WS_C_TableColumns decisionTableColumns = WS_RF_GetDecisionTableColumns(projectName, userName, scsRootURL, scsIntegrationType, argumentObjects, decisionTableColumnObjects, roles, true);
+		Instance.PropertyAtom.setConceptReference(dtSaveDataItem.decisionTableColumns, decisionTableColumns, 1L);
+
+		//Decision Table Page
+		WebStudio.Core.Concepts.Decision.Pagination.WS_C_TablePage decisionTablePage = Instance.newTransientInstance("/WebStudio/Core/Concepts/Decision/Pagination/WS_C_TablePage");
+		Object[] decisionTableRuleObjects = WS.Decision.TableModel.getDecisionTableRules(decisionTableObject);			
+		for (int ruleCount = 0; ruleCount < decisionTableRuleObjects@length; ruleCount++) {
+			WebStudio.Core.Concepts.Decision.Pagination.WS_C_TableRule tableRule = WebStudio.Core.RuleFunctions.Utils.DT.WS_RF_CreateTableRuleInstanceFromEMFObject(decisionTableRuleObjects[ruleCount], true);  	
+	    		Instance.PropertyArray.appendContainedConcept(decisionTablePage.tableRule, tableRule, 1L);		    			
+		}		
+		Instance.PropertyAtom.setConceptReference(dtSaveDataItem.decisionTablePage, decisionTablePage, 1L);
+
+		//Exception Table columns
+		Object[] exceptionTableColumnObjects = WS.Decision.TableModel.getExceptionTableColumns(decisionTableObject);
+		WS_C_TableColumns exceptionTableColumns = Instance.newTransientInstance("/WebStudio/Core/Concepts/Decision/Pagination/WS_C_TableColumns");
+		for (int i = 0; i < exceptionTableColumnObjects@length; i++) {
+			WS_C_TableColumn tableColumn = Instance.newTransientInstance("/WebStudio/Core/Concepts/Decision/Pagination/WS_C_TableColumn");
+			tableColumn.columnId = 	WS.Decision.TableModel.Columns.getID(exceptionTableColumnObjects[i]);
+			tableColumn.name = WS.Decision.TableModel.Columns.getName(exceptionTableColumnObjects[i]);
+			tableColumn.columnAlias = WS.Decision.TableModel.Columns.getAlias(exceptionTableColumnObjects[i]);
+			tableColumn.columnType = WS.Decision.TableModel.Columns.getColumnType(exceptionTableColumnObjects[i]);			
+			tableColumn.property = WS.Decision.TableModel.Columns.getPropertyPath(exceptionTableColumnObjects[i]);
+			tableColumn.propertyType = WS.Decision.TableModel.Columns.getPropertyType(exceptionTableColumnObjects[i]);
+			tableColumn.isArrayProperty = WS.Decision.TableModel.Columns.isArrayProperty(exceptionTableColumnObjects[i]);
+			Instance.PropertyArray.appendContainedConcept(exceptionTableColumns.column, tableColumn, 1L);
+		}
+		Instance.PropertyAtom.setConceptReference(dtSaveDataItem.exceptionTableColumns, exceptionTableColumns, 1L);
+
+		//Exception Table Page
+		WebStudio.Core.Concepts.Decision.Pagination.WS_C_TablePage exceptionTablePage = Instance.newTransientInstance("/WebStudio/Core/Concepts/Decision/Pagination/WS_C_TablePage");
+		Object[] exceptionTableRuleObjects = WS.Decision.TableModel.getExceptionTableRules(decisionTableObject);		
+		for (int ruleCount = 0; ruleCount < exceptionTableRuleObjects@length; ruleCount++) {
+			WebStudio.Core.Concepts.Decision.Pagination.WS_C_TableRule tableRule = WebStudio.Core.RuleFunctions.Utils.DT.WS_RF_CreateTableRuleInstanceFromEMFObject(exceptionTableRuleObjects[ruleCount], true);  	
+	    		Instance.PropertyArray.appendContainedConcept(exceptionTablePage.tableRule, tableRule, 1L);		    			
+		}		
+		Instance.PropertyAtom.setConceptReference(dtSaveDataItem.exceptionTablePage, exceptionTablePage, 1L);
+		
+		String saveDataItemContents = null;
+		if (String.equals(contentType, System.getGlobalVariableAsString("WebStudio/CONTENT_TYPE/XML", "application/xml"))) {
+			saveDataItemContents = Instance.serializeUsingDefaults(dtSaveDataItem);
+		} else {
+			saveDataItemContents = Instance.serializeToJSON(dtSaveDataItem, false, null);
+		}
+
+		return saveDataItemContents;
+		 
+	}
+}

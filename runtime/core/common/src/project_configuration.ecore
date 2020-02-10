@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" name="configuration" nsURI="http:///com/tibco/cep/studio/common/configuration/model/project_configuration.ecore"
+    nsPrefix="configuration">
+  <eClassifiers xsi:type="ecore:EClass" name="StudioProjectConfiguration">
+    <eOperations name="getEntriesByType">
+      <eGenericType eClassifier="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EEList">
+        <eTypeArguments eClassifier="#//BuildPathEntry"/>
+      </eGenericType>
+      <eParameters name="type" eType="#//LIBRARY_PATH_TYPE"/>
+    </eOperations>
+    <eOperations name="removeEntriesByType" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean">
+      <eParameters name="element" eType="#//BuildPathEntry"/>
+      <eParameters name="type" eType="#//LIBRARY_PATH_TYPE"/>
+    </eOperations>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="thirdpartyLibEntries" upperBound="-1"
+        eType="#//ThirdPartyLibEntry" containment="true" eKeys="#//BuildPathEntry/path"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="coreInternalLibEntries"
+        upperBound="-1" eType="#//CoreJavaLibEntry" transient="true" containment="true"
+        eKeys="#//BuildPathEntry/path"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="customFunctionLibEntries"
+        upperBound="-1" eType="#//CustomFunctionLibEntry" containment="true" eKeys="#//BuildPathEntry/path"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="projectLibEntries" upperBound="-1"
+        eType="#//ProjectLibraryEntry" containment="true" eKeys="#//BuildPathEntry/path"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="javaClasspathEntries" upperBound="-1"
+        eType="#//JavaClasspathEntry" containment="true"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="javaSourceFolderEntries"
+        upperBound="-1" eType="#//JavaSourceFolderEntry" containment="true"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="enterpriseArchiveConfiguration"
+        eType="#//EnterpriseArchiveEntry" containment="true"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="bpmnProcessSettings" eType="#//BpmnProcessSettings"
+        containment="true"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="name" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="version" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="build" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="fileTimeStamp" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//ELong"
+        transient="true"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="xpathVersion" eType="#//XPATH_VERSION"
+        defaultValueLiteral="1.0"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="ProjectConfigurationEntry"/>
+  <eClassifiers xsi:type="ecore:EEnum" name="LIBRARY_PATH_TYPE">
+    <eLiterals name="PROJECT_LIBRARY" literal="Project Library"/>
+    <eLiterals name="CUSTOM_FUNCTION_LIBRARY" value="1" literal="Custom Functions"/>
+    <eLiterals name="THIRD_PARTY_LIBRARY" value="2" literal="Third Party"/>
+    <eLiterals name="CORE_INTERNAL_LIBRARY" value="3" literal="Core"/>
+    <eLiterals name="BPMN_PALETTE_LIBRARY" value="4" literal="Bpmn Palette"/>
+    <eLiterals name="BPMN_PROCESS_PATH_LIBRARY" value="5" literal="Bpmn Process Path"/>
+    <eLiterals name="JAVA_NATIVE_LIBRARY" value="6" literal="JNI Library Path"/>
+    <eLiterals name="JAVA_CLASSPATH_ENTRY" value="7"/>
+    <eLiterals name="JAVA_SOURCE_FOLDER" value="8"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EEnum" name="XPATH_VERSION">
+    <eLiterals name="XPATH_1_0" literal="1.0"/>
+    <eLiterals name="XPATH_2_0" value="1" literal="2.0"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EEnum" name="JAVA_CLASSPATH_ENTRY_TYPE">
+    <eLiterals name="CPE_SOURCE" literal="CPE_SOURCE"/>
+    <eLiterals name="CPE_LIBRARY" value="1"/>
+    <eLiterals name="CPE_VARIABLE" value="2"/>
+    <eLiterals name="CPE_PROJECT" value="3"/>
+    <eLiterals name="CPE_CONTAINER" value="4"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="BuildPathEntry" eSuperTypes="#//ProjectConfigurationEntry">
+    <eOperations name="getPath" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString">
+      <eParameters name="resolve" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+    </eOperations>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="entryType" eType="#//LIBRARY_PATH_TYPE"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="path" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="timestamp" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//ELong"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="var" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"
+        defaultValueLiteral="false"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="readOnly" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"
+        defaultValueLiteral="false"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="deprecated" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"
+        defaultValueLiteral="false"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="resolvedPath" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"
+        transient="true"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="ProjectLibraryEntry" eSuperTypes="#//BuildPathEntry"/>
+  <eClassifiers xsi:type="ecore:EClass" name="ThirdPartyLibEntry" eSuperTypes="#//JavaLibEntry"/>
+  <eClassifiers xsi:type="ecore:EClass" name="JavaLibEntry" eSuperTypes="#//BuildPathEntry">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="nativeLibraryLocation"
+        eType="#//NativeLibraryPath" containment="true"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="CoreJavaLibEntry" eSuperTypes="#//JavaLibEntry"/>
+  <eClassifiers xsi:type="ecore:EClass" name="CustomFunctionLibEntry" eSuperTypes="#//JavaLibEntry"/>
+  <eClassifiers xsi:type="ecore:EClass" name="EnterpriseArchiveEntry" eSuperTypes="#//ProjectConfigurationEntry">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="name" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"
+        defaultValueLiteral=""/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="author" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"
+        defaultValueLiteral=""/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="description" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"
+        defaultValueLiteral=""/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="version" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EInt"
+        defaultValueLiteral="0"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="path" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"
+        defaultValueLiteral=""/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="includeServiceLevelGlobalVars"
+        eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean" defaultValueLiteral="true"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="debug" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"
+        defaultValueLiteral="true"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="tempOutputPath" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"
+        defaultValueLiteral=""/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="overwrite" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="deleteTempFiles" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"
+        defaultValueLiteral="true"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="buildClassesOnly" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"
+        defaultValueLiteral="true"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="BpmnProcessSettings">
+    <eOperations name="getNamePrefixMap">
+      <eGenericType eClassifier="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EMap">
+        <eTypeArguments eClassifier="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+        <eTypeArguments eClassifier="#//NamePrefix"/>
+      </eGenericType>
+    </eOperations>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="buildFolder" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="palettePathEntries" upperBound="-1"
+        eType="#//BpmnPalettePathEntry" containment="true"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="selectedProcessPaths" upperBound="-1"
+        eType="#//BpmnProcessPathEntry" containment="true"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="processPrefix" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="rulePrefix" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="ruleFunctionPrefix" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="conceptPrefix" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="eventPrefix" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="timeEventPrefix" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="scorecardPrefix" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="namePrefixes" upperBound="-1"
+        eType="#//NamePrefix" containment="true" eKeys="#//NamePrefix/name"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="BpmnPalettePathEntry" eSuperTypes="#//BuildPathEntry"/>
+  <eClassifiers xsi:type="ecore:EClass" name="BpmnProcessPathEntry" eSuperTypes="#//BuildPathEntry"/>
+  <eClassifiers xsi:type="ecore:EClass" name="NamePrefix">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="name" lowerBound="1" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"
+        iD="true"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="prefix" lowerBound="1"
+        eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="NativeLibraryPath" eSuperTypes="#//BuildPathEntry"/>
+  <eClassifiers xsi:type="ecore:EClass" name="JavaClasspathEntry" eSuperTypes="#//BuildPathEntry">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="classpathEntryType" eType="#//JAVA_CLASSPATH_ENTRY_TYPE"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="sourceFolder" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="inclusionPattern" upperBound="-1"
+        eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="exclusionPattern" upperBound="-1"
+        eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="outputLocation" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="sourceAttachmentPath" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="sourceAttachmentRootPath"
+        eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="JavaSourceFolderEntry" eSuperTypes="#//BuildPathEntry"/>
+</ecore:EPackage>

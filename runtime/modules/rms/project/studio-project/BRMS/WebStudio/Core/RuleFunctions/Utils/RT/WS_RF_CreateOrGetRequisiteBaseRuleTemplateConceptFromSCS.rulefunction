@@ -1,0 +1,75 @@
+/**
+ * @description Create base RT concept when RT is not present in ws and needs to be loaded for RTI to be fetched.
+ */
+ WebStudio.Core.Concepts.RuleTemplateInstance.WS_C_RuleTemplateInstanceUserArtifact rulefunction WebStudio.Core.RuleFunctions.Utils.RT.WS_RF_CreateOrGetRequisiteBaseRuleTemplateConceptFromSCS {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		//Builder or View
+		String RTIType;
+		String scsIntegrationType;
+		String scsRootURL;
+		String username;
+		String projectName;
+		String baseRTPath;
+		String[] roles;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.RT.WS_RF_CreateOrGetRequisiteBaseRuleTemplateConceptFromSCS");
+		
+		Log.log(LOGGER, "Debug", "Implemented RuleTemplate in %s form not found in Workspace. Need to load from SCS", RTIType);
+		//Load contents from SCS
+		String artifactContents = 
+			WS_RF_FetchContentFromSCS(scsRootURL, projectName, baseRTPath, "ruletemplate", username);
+		Object baseRuleTemplateEObject = WS.RT.getBaseRuleTemplate(projectName, artifactContents, "ruletemplate");
+		
+		//Load base RT with this extId.
+        WS_C_RuleTemplateInstanceUserArtifact baseRuleTemplateInstanceUserArtifact = null;
+        
+        //Create extId to look for base Rule template
+		String baseRTExtId = WS_RF_CreateUserArtifactExtId(null, baseRTPath, projectName, username, null, null);
+		boolean baseRTLock = Cluster.DataGrid.Lock(baseRTExtId, -1, false);
+		if (baseRTLock) {
+			//Move this code to common location since this is also used for view part.
+			baseRuleTemplateInstanceUserArtifact = Instance.getByExtIdByUri(baseRTExtId, "/WebStudio/Core/Concepts/RuleTemplateInstance/WS_C_RuleTemplateInstanceUserArtifact");
+			if (baseRuleTemplateInstanceUserArtifact == null) {
+				//Get project with this name
+				String projectExtId = WS_RF_CreateUserArtifactExtId(null, null, projectName, username, null, null);
+				WS_C_UserProject userProject = Instance.getByExtIdByUri(projectExtId, "/WebStudio/Core/Concepts/WS_C_UserProject");
+					
+				baseRuleTemplateInstanceUserArtifact = WS_RF_UserArtifactCreationFactory(baseRTExtId, baseRTPath, "ruletemplate", "ruletemplate", userProject@extId);
+				
+				//Perform desiderata like creating revision etc.
+				WebStudio.
+					Core.
+						RuleFunctions.Utils.
+							RT.WS_RF_CreateOrGetRequisiteRuleTemplateConceptDesiderata(RTIType, scsIntegrationType, scsRootURL, username, projectName, baseRTPath, baseRuleTemplateEObject, baseRuleTemplateInstanceUserArtifact, roles);								
+				
+				String userWorkspaceExtId = WS_RF_CreateUserArtifactExtId("WORKSPACE", null, null, username, null, null);
+				//No need to lock as Fetch**FromStore has already locked workspace.
+				
+				WS_C_UserWorkspace userWorkspace = Instance.getByExtIdByUri(userWorkspaceExtId, "/WebStudio/Core/Concepts/WS_C_UserWorkspace");
+				Log.log(LOGGER, "Debug", "Existing workspace concept id %s", userWorkspace@id);
+				if (userWorkspace != null) {
+					//Append the base RT to it
+					WS_C_UserArtifact userArtifact = baseRuleTemplateInstanceUserArtifact;
+		
+					Instance.
+						PropertyArray.
+							appendContainedConcept(userProject.userArtifacts, userArtifact, 1L);
+							
+				}
+			} else {
+				//Check if contents are loaded.
+				String[] revisionIds = Instance.PropertyArray.toArrayString(baseRuleTemplateInstanceUserArtifact.artifactRevisionIds);
+				if (revisionIds == null || revisionIds@length == 0) {
+					//This requires modification of existing concept. Move 
+					Log.log(LOGGER, "Info", "No artifact revision has been created yet for artifact %s", baseRTPath);
+					WS_RF_CreateOrGetRequisiteRuleTemplateConceptDesiderata(RTIType, scsIntegrationType, scsRootURL, username, projectName, baseRTPath, baseRuleTemplateEObject, baseRuleTemplateInstanceUserArtifact, roles);
+				}
+			}
+		}
+		return baseRuleTemplateInstanceUserArtifact;	
+	}
+}

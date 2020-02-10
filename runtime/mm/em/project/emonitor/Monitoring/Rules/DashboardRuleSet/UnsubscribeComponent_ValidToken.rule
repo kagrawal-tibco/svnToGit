@@ -1,0 +1,52 @@
+/**
+ * @description 
+ * @author 
+ */
+rule Monitoring.Rules.DashboardRuleSet.UnsubscribeComponent_ValidToken {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Monitoring.Events.request.ComponentUnsubscribeRequestEvent	requestevent;
+		
+	}
+	when {
+		requestevent.token != null && String.length(requestevent.token) != 0;
+	}
+	then {
+		Shared.Concepts.LoggedInUser user = Instance.getByExtId(requestevent.token);
+		if (user == null) {
+		    Shared.Events.reqres.FailureResponseEvent event = Shared.Events.reqres.FailureResponseEvent.FailureResponseEvent(null,null,"001","Invalid token");
+		    Event.replyEvent(requestevent, event);
+		}
+		else {
+		    user.lastAccessTime = System.currentTimeMillis();
+		    String mId = requestevent.monitorableid;
+		    Shared.Concepts.MonitorableEntity monitorable = Instance.getByExtId(mId);
+		    if (monitorable == null) {
+		        Shared.Events.reqres.FailureResponseEvent event = Shared.Events.reqres.FailureResponseEvent.FailureResponseEvent(null,null,"010","Invalid monitor id");
+		        Event.replyEvent(requestevent, event);
+		    }
+		    else {
+		        String fqName = getFQName(monitorable);
+		        String compName = fqName + ":" + requestevent.type;
+		        Shared.Concepts.AbstractMonitorView view = Instance.getByExtId(compName);
+		        if (view == null) {
+		            Shared.Events.reqres.FailureResponseEvent event = Shared.Events.reqres.FailureResponseEvent.FailureResponseEvent(null,null,"010","Invalid component type");
+		            Event.replyEvent(requestevent, event);
+		            return;
+		        }
+		        boolean removed = Instance.PropertyArray.removeConceptReference(user.monitorView,view);
+		        view.lastAccessTime = System.currentTimeMillis();
+		        //we do not perform unsubscribe since we want to keep updating the charts
+		        //unsubscribeView(view);
+		        String msg = compName+" successfully unsubscribed...";
+		        Shared.RuleFunctions.log("UnsubscribeComponent_ValidToken","DEBUG",msg);
+		        Shared.Events.reqres.SuccessSimpleResponseEvent event = Shared.Events.reqres.SuccessSimpleResponseEvent.SuccessSimpleResponseEvent(null,null,msg,null);
+		        Event.replyEvent(requestevent, event);
+		    }
+		}
+		Event.consumeEvent(requestevent);
+	}
+}

@@ -1,0 +1,104 @@
+/**
+ * @description 
+ */
+WebStudio.Core.Concepts.Decision.Pagination.WS_C_TableRuleSet rulefunction WebStudio.Core.RuleFunctions.Utils.DT.WS_RF_CreateTableInstanceConcept {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String projectName;
+		String userName;
+		WebStudio.Core.Concepts.Decision.Pagination.WS_C_TableRuleSet baseTableRuleSetInstanceConcept;
+		WebStudio.Core.Concepts.Decision.Pagination.WS_C_DecisionTableArguments arguments;
+		WebStudio.Core.Concepts.Decision.Pagination.WS_C_TableColumns updatedTableColumns;
+		WebStudio.Core.Concepts.Decision.Pagination.WS_C_TablePage updatedTablePage;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.DT.WS_RF_CreateTableInstanceConcept");
+		
+		WebStudio.Core.Concepts.Decision.Pagination.WS_C_TableRuleSet tableRuleSet = Instance.newTransientInstance("/WebStudio/Core/Concepts/Decision/Pagination/WS_C_TableRuleSet");
+		WS.Common.setExtId(tableRuleSet, "TABLE_RULESET_" + System.nanoTime());
+		
+		if (updatedTableColumns != null) {
+ 			Instance.PropertyAtom.setContainedConcept(tableRuleSet.columns, updatedTableColumns, 1L);
+ 			Log.log(LOGGER, "Debug", "Updated Table Columns."); 			
+		} else {
+			WS_C_TableColumns baseTableColumns = Instance.PropertyAtom.getContainedConcept(baseTableRuleSetInstanceConcept.columns, 1L);
+			WS_C_TableColumn[] tableColumnArray = Instance.PropertyArray.toArrayContainedConcept(baseTableColumns.column);
+			
+			WS_C_TableColumns tableColumns = Instance.newTransientInstance("/WebStudio/Core/Concepts/Decision/Pagination/WS_C_TableColumns");			
+			for (int i = 0; i < tableColumnArray@length; i++) {
+				WS_C_TableColumn tableColumn = Instance.newTransientInstance("/WebStudio/Core/Concepts/Decision/Pagination/WS_C_TableColumn");
+				tableColumn.columnId = 	tableColumnArray[i].columnId;
+				tableColumn.name = tableColumnArray[i].name;
+				tableColumn.columnAlias = tableColumnArray[i].columnAlias;
+				tableColumn.columnType = tableColumnArray[i].columnType;
+				
+				tableColumn.property = tableColumnArray[i].property;
+				tableColumn.propertyType = tableColumnArray[i].propertyType;
+				tableColumn.isArrayProperty= tableColumnArray[i].isArrayProperty;
+				tableColumn.associatedDM = tableColumnArray[i].associatedDM;
+				tableColumn.isSubstitution = tableColumnArray[i].isSubstitution;				
+				Instance.PropertyArray.appendContainedConcept(tableColumns.column, tableColumn, 1L);
+			}
+			Instance.PropertyAtom.setContainedConcept(tableRuleSet.columns, tableColumns, 1L);
+			Log.log(LOGGER, "Debug", "Copied Table Columns of previous version.");					
+		}
+		
+		WS_C_TablePage[] baseTablePagesArray = Instance.PropertyArray.toArrayContainedConcept(baseTableRuleSetInstanceConcept.tablePage);
+		
+		if (updatedTablePage@extId == null) WS.Common.setExtId(updatedTablePage, "TABLE_PAGE_" + System.nanoTime());
+
+		long lastRuleId = 0;
+		if (updatedTablePage != null && (updatedTablePage.pageNumber == 0)) {
+			Instance.PropertyAtom.setInt(updatedTablePage.pageNumber, 1, 1L);
+			Instance.PropertyArray.appendContainedConcept(tableRuleSet.tablePage, updatedTablePage, 1L);
+			Instance.PropertyArray.appendString(tableRuleSet.tablePageIds, updatedTablePage@extId, 1L);
+			WebStudio.Core.Concepts.Decision.Pagination.WS_C_TableRule[] tableRulesArray = Instance.PropertyArray.toArrayContainedConcept(updatedTablePage.tableRule);
+			for (int j = 0; j < tableRulesArray@length; j++) {
+				WebStudio.Core.Concepts.Decision.Pagination.WS_C_TableRule tableRule = tableRulesArray[j];
+				lastRuleId = Math.maxLong(lastRuleId, tableRule.ruleId); 	
+			}
+		} else {	 
+			for (int i = 0; i < baseTablePagesArray@length; i++) {
+				WS_C_TablePage baseTablePage = baseTablePagesArray[i];						
+				
+				if (updatedTablePage != null && (updatedTablePage.pageNumber == baseTablePage.pageNumber)) {				
+					Instance.PropertyArray.appendContainedConcept(tableRuleSet.tablePage, updatedTablePage, 1L);
+					Instance.PropertyArray.appendString(tableRuleSet.tablePageIds, updatedTablePage@extId, 1L);
+					WebStudio.Core.Concepts.Decision.Pagination.WS_C_TableRule[] tableRulesArray = Instance.PropertyArray.toArrayContainedConcept(updatedTablePage.tableRule);
+					for (int j = 0; j < tableRulesArray@length; j++) {
+						WebStudio.Core.Concepts.Decision.Pagination.WS_C_TableRule tableRule = tableRulesArray[j];
+						lastRuleId = Math.maxLong(lastRuleId, tableRule.ruleId); 	
+					}
+					
+					WebStudio.Core.Concepts.Decision.Pagination.WS_C_TableRule[] newTableRulesArray = Instance.PropertyArray.toArrayConcept(updatedTablePage.newTableRule);
+					for (int j = 0; j < newTableRulesArray@length; j++) {
+						WebStudio.Core.Concepts.Decision.Pagination.WS_C_TableRule tableRule = newTableRulesArray[j];
+						//Refs, so need to be explicitly asserted.
+						WS.Common.assertInstance(tableRule, false);					
+						lastRuleId = Math.maxLong(lastRuleId, tableRule.ruleId); 	
+					}
+						 			
+					Log.log(LOGGER, "Debug", "Table Page to be updated %s", baseTablePage.pageNumber);
+				} else {
+					WS_C_TablePage tablePage = Instance.newTransientInstance("/WebStudio/Core/Concepts/Decision/Pagination/WS_C_TablePage");
+					WS.Common.setExtId(tablePage, "TABLE_PAGE_" + System.nanoTime());
+					Instance.PropertyAtom.setInt(tablePage.pageNumber, baseTablePage.pageNumber, 1L); 					
+					Instance.PropertyArray.appendContainedConcept(tableRuleSet.tablePage, tablePage, 1L);
+					Instance.PropertyArray.appendString(tableRuleSet.tablePageIds, tablePage@extId, 1L); 
+					int maxRuleId = WS_RF_CreateTableRuleInstanceConcepts(baseTablePage, tablePage, false);				
+					int maxRuleId2 = WS_RF_CreateTableRuleInstanceConcepts(baseTablePage, tablePage, true);
+					lastRuleId = Math.maxLong(lastRuleId, maxRuleId);
+					lastRuleId = Math.maxLong(lastRuleId, maxRuleId2);
+					
+					Log.log(LOGGER, "Debug", "Copied Table Page %s of previous version.", tablePage.pageNumber);
+				}							
+			}
+		}
+		Instance.PropertyAtom.setLong(tableRuleSet.lastRuleId, lastRuleId, 1L);
+		Instance.PropertyAtom.setInt(tableRuleSet.totalPages, baseTableRuleSetInstanceConcept.totalPages, 1L);
+		
+		return tableRuleSet;
+	}
+}

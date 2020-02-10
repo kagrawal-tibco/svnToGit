@@ -1,0 +1,62 @@
+/**
+ * @description 
+ */
+void rulefunction WebStudio.Core.RuleFunctions.Utils.RT.Builder.WS_RF_ReloadDomainModelToBuilderAssociations {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String projectName;
+		String username;
+		String[] roles;	
+		
+		WebStudio.Core.Concepts.RuleTemplateInstance.Builder.WS_C_AbstractSymbolInfo[] symbolInfoList;
+		Object domainModelIdList;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.RT.WS_RF_ReloadDomainModelAssociations");
+		
+		WS_C_Domain domainToReload = null;
+		for (int i = 0; i < symbolInfoList@length; i++) {
+			WS_C_AbstractSymbolInfo symbolInfo = symbolInfoList[i];
+			if (symbolInfo instanceof WS_C_ComplexSymbolInfo) {
+				WS_C_ComplexSymbolInfo complexSymbolInfo = symbolInfo;
+				if (complexSymbolInfo.symbolInfo != null) {
+					Log.log(LOGGER, "Debug", "Complex Symbol processing Id[%s], Alias[%s] & type[%s]", complexSymbolInfo@id, complexSymbolInfo.symbolAlias, complexSymbolInfo.type);
+					WS_RF_ReloadDomainModelToBuilderAssociations(projectName, username, roles, Instance.PropertyArray.toArrayConcept(complexSymbolInfo.symbolInfo), domainModelIdList);
+				}
+			} else if (symbolInfo.domainInfo != null) {
+				Log.log(LOGGER, "Debug", "SymbolInfo Id[%s], Alias[%s] & Type[%s]", symbolInfo@id, symbolInfo.symbolAlias, symbolInfo.type);
+				WS_C_Domain[] domainInfoList = Instance.PropertyArray.toArrayConcept(symbolInfo.domainInfo);
+				if (domainInfoList != null && domainInfoList@length > 0) {
+					for (int j=0; j<domainInfoList@length; j++) {
+						domainToReload = domainInfoList[j];
+					}
+				} else {
+					Log.log(LOGGER, "Debug", "domainInfoList@length = [%s]", domainInfoList@length);
+				}
+				
+				if (domainToReload != null) {
+					String domainPath = domainToReload.folder + domainToReload.name;
+					Log.log(LOGGER, "Debug", "Reloading the domain model [%s] containing [%s] single & [%s] range domain entries.", domainPath, domainToReload.singleEntry@length, domainToReload.rangeEntry@length);
+					String existingId = symbolInfo.domainInfo[0]@extId;
+					
+					Instance.PropertyArray.removeConceptReference(symbolInfo.domainInfo, domainToReload);
+					WS.Common.Stack.push(domainModelIdList, domainToReload@extId + "");
+					domainToReload = null;
+
+					WS_C_Domain newDomain = WS_RF_FetchDomainEntries(username, roles, projectName, domainPath, "domain", true);
+					Instance.PropertyArray.appendConceptReference(symbolInfo.domainInfo, newDomain, 1L); 
+					WS.Common.assertInstance(newDomain, false);
+					
+					Log.log(LOGGER, "Debug", "Existing Domain Id [%s] and Updated Id [%s]", existingId, symbolInfo.domainInfo[0]@id);
+					
+					Log.log(LOGGER, "Debug", "Domain model [%s] reloaded, now new set containing [%s] single & [%s] range domain entries.", domainPath, newDomain.singleEntry@length, newDomain.rangeEntry@length);
+					Log.log(LOGGER, "Debug", "Total Domain Models in SymbolInfo after processing [%s].", symbolInfo.domainInfo@length);
+				}
+			} else {
+				Log.log(LOGGER, "Debug", "symbolInfo.domainInfo == null");
+			}
+		}
+	}
+}

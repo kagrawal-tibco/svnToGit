@@ -1,0 +1,30 @@
+/**
+ * @description 
+ */
+WebStudio.Core.Concepts.Decision.Pagination.WS_C_DecisionTable rulefunction WebStudio.Core.RuleFunctions.Utils.DT.WS_RF_FetchDecisionTableContents {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String scsRootURL;
+		String userName;
+		String projectName;
+		String artifactPath;
+		String artifactExtn;
+		String userArtifactExtId;
+		String[] roles;		
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.DT.WS_RF_FetchDecisionTableContents");
+		
+		Log.log(LOGGER, "Info", "Contents need to be loaded for Decision Table %s from SCS", artifactPath);
+		String artifactContents = WS_RF_FetchContentFromSCS(scsRootURL, projectName, artifactPath, artifactExtn, userName);
+		Log.log(LOGGER, "Debug", "Contents of artifact loaded from SCS %s", artifactContents);
+
+		Object decisionTableEMFObject = WS.Decision.createDecisionTableEMFObject(artifactContents);
+		Log.log(LOGGER, "Debug", "Decision Table EMF Object Created");
+		WS_C_DecisionTable decisionTableArtifact = WS_RF_CreateDecisionTableConceptFromSCS(projectName, userName, artifactPath, decisionTableEMFObject, roles);
+		Log.log(LOGGER, "Debug", "decisionTableArtifact Object Created, id - %s", decisionTableArtifact@id);
+		return decisionTableArtifact;		
+	}
+}

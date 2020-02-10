@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute" width="600" height="400" title="Insight Log Window" showCloseButton="true" creationComplete="init()">
+	<mx:Script>
+		<![CDATA[
+			import mx.collections.ArrayCollection;
+			import mx.collections.IList;
+			
+			import mx.controls.Alert;
+			import mx.utils.StringUtil;
+			
+			private var loggingClassNamesDataProvider : IList;
+			
+			private function init() : void {
+				loggingClassNamesDataProvider = new ArrayCollection();
+				loggingClassesList.dataProvider = loggingClassNamesDataProvider;
+			}
+			
+			private function startLogging() : void {
+				startLoggingBtn.enabled = false;
+				stopLoggingBtn.enabled = true;
+				//add new localconnection appender to logger
+			}
+			
+			private function stopLogging() : void {
+				startLoggingBtn.enabled = true;
+				stopLoggingBtn.enabled = false;
+				//remove the localconnection appended from logger
+			}
+			
+			private function processLoggingClassNameTxtFldEvents(event:Event) : void {
+				addLoggingClassNameBtn.enabled = StringUtil.trim(loggingClassNameTxtFld.text).length != 0;
+			}		
+			
+			private function processLoggingClassesListEvents(event:Event) : void {
+				removeLoggingClassNameBtn.enabled = loggingClassesList.selectedIndices.length != 0;
+			}			
+			
+			private function addClassNameToLogging() : void {
+				var className : String = loggingClassNameTxtFld.text;
+				trace(className);
+				trace(encodeURI(className));
+				var matchFound : Boolean = false;
+				for each (var item : String in loggingClassNamesDataProvider) {
+					if (item == className) {
+						matchFound = true;
+						break;
+					}
+				}
+				if (matchFound == false) {
+					loggingClassNamesDataProvider.addItem(className);
+				}
+			}
+			
+			private function removeClassNameFromLogging() : void {
+				var selectedIndices : Array = loggingClassesList.selectedIndices
+				for (var i:int = 0 ; i < selectedIndices.length ; i++) {
+					loggingClassNamesDataProvider.removeItemAt(selectedIndices[i]);
+				}
+				removeLoggingClassNameBtn.enabled = loggingClassesList.selectedIndices.length != 0;
+			}			
+								
+		]]>
+	</mx:Script>
+		
+	<mx:Accordion width="100%" height="100%">
+		<mx:Canvas label="Configuration" width="100%" height="100%">
+			<mx:Grid width="100%"  height="100%">
+				<mx:GridRow width="100%" height="100%">
+				</mx:GridRow>			
+				<mx:GridRow width="100%" height="100%">
+					<mx:GridItem width="100%" height="100%" horizontalAlign="center" verticalAlign="middle">
+					</mx:GridItem>
+					<mx:GridItem width="100%" height="100%" horizontalAlign="center" verticalAlign="middle">
+						<mx:Button label="Start Logging" id="startLoggingBtn" enabled="true" click="startLogging();"/>
+						<mx:Button label="Stop Logging" id="stopLoggingBtn" enabled="false" click="stopLogging();"/>
+					</mx:GridItem>
+					<mx:GridItem width="100%" height="100%" horizontalAlign="center" verticalAlign="middle">
+					</mx:GridItem>
+				</mx:GridRow>
+				<mx:GridRow width="100%" height="100%">
+					<mx:GridItem width="227" height="100%" horizontalAlign="right" verticalAlign="middle">
+						<mx:Label text="Logging Class Name : "/>
+					</mx:GridItem>
+					<mx:GridItem width="100%" height="100%" horizontalAlign="left" verticalAlign="middle">
+						<mx:TextInput width="100%" id="loggingClassNameTxtFld" editable="true" enabled="true" change="processLoggingClassNameTxtFldEvents(event);"/>
+					</mx:GridItem>
+					<mx:GridItem width="100%" height="100%" horizontalAlign="left" verticalAlign="middle">
+						<mx:Button label="Add" id="addLoggingClassNameBtn" click="addClassNameToLogging();" enabled="false"/>
+					</mx:GridItem>
+				</mx:GridRow>
+				<mx:GridRow width="100%" height="100%">
+					<mx:GridItem width="100%" height="100%" horizontalAlign="right" verticalAlign="top">
+						<mx:Label text="Current Logged Classes : "/>
+					</mx:GridItem>
+					<mx:GridItem width="100%" height="100%" horizontalAlign="left" verticalAlign="middle">
+						<mx:List width="100%" id="loggingClassesList" enabled="true" editable="false" change="processLoggingClassesListEvents(event);" allowMultipleSelection="true"></mx:List>
+					</mx:GridItem>
+					<mx:GridItem width="100%" height="100%">
+						<mx:Button label="Remove" id="removeLoggingClassNameBtn" enabled="false" click="removeClassNameFromLogging();"/>
+					</mx:GridItem>
+				</mx:GridRow>
+				<mx:GridRow width="100%" height="100%">
+				</mx:GridRow>
+			</mx:Grid>
+		</mx:Canvas>
+		<mx:Canvas label="Messages" width="100%" height="100%">
+			<mx:TextArea x="0" y="0" width="100%" height="100%" id="logsTxtArea" wordWrap="true" editable="false" enabled="true"/>
+		</mx:Canvas>		
+	</mx:Accordion>
+	
+</mx:TitleWindow>

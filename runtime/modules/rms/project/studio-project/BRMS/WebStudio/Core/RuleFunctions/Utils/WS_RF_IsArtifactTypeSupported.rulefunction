@@ -1,0 +1,21 @@
+/**
+ * @description 
+ */
+boolean rulefunction WebStudio.Core.RuleFunctions.Utils.WS_RF_IsArtifactTypeSupported {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String EXTENSION;
+		String[] artifactTypesSupported;
+	}
+	body {
+		for (int loop = 0, length = artifactTypesSupported@length; loop < length; loop++) {
+			String artifactTypeSupported = artifactTypesSupported[loop];
+			if (String.equals(artifactTypeSupported, EXTENSION)) {
+				return true;
+			}
+		}	
+		return false;		
+	}
+}

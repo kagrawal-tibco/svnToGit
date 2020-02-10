@@ -1,0 +1,22 @@
+/**
+ * @description 
+ */
+double rulefunction RuleFunctions.CheckBalance {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Concepts.Order o;
+	}
+	body {
+		 System.debugOut("#### Checking balance...");
+		 Concepts.Customer c = Instance.getByExtId(o.name);
+		 if(c != null) {
+		 	Concepts.Account a = c.account;
+		 	return a.balance - o.value;
+		 } else {
+		 	System.debugOut("Customer :"+o.name+" not found");
+		 	return 0;
+		 }
+	}
+}

@@ -1,0 +1,94 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>     Internal Time Event Example
+
+- TIBCO BusinessEvents&reg; Examples
+</title>
+<meta http-equiv="Content-type" content="text/html; charset=iso-8859-1" />
+<meta http-equiv="Content-Language" content="en-us" />
+<link rel="Shortcut Icon" href="../../_resources/icon.gif" type="image/gif" />
+<style type="text/css" media="all">@import "../../_resources/examples.css";</style>
+<script type="text/javascript" src="../../_resources/examples.js" /></script>
+<script type="text/javascript">
+function buildForms() {
+ var form;
+
+
+ SendEventForm.setServer("http://localhost:8104");
+
+
+ form = SendEventForm.get("createAccountForm");
+ form.setDestinationPath("/Channels/HTTP/AllOps");
+ form.setEventPath("/Events/CreateAccount");
+ form.addProperty("AccountId", "Bob");
+ form.addProperty("Balance", "20000");
+ form.addProperty("AvgMonthlyBalance", "10000");
+ form.build();
+
+
+
+}
+</script>
+</head>
+<body onLoad="buildForms()">
+
+
+<h1>Internal Time Event Example</h1>
+
+
+<h2>Purpose of This Example</h2>
+
+<p>This example demonstrates how to use TIBCO BusinessEvents&reg; to create scheduled time events and rule-based time events and execute rules triggered by them. In this example, two rules simply print "hello world" messages to the console: </p>
+<ul>
+<li>
+<p>The InternalTimeEvent event asserts one event every five seconds. Each such event triggers the HelloWorld rule, which prints a message to the console.</p>
+</li><li>
+<p>The RuleBasedTimeEvent event is asserted using its ontology function, which is in the startup rule function. Its assertion triggers the HelloWorldForRuleBasedTimeEvent rule, which prints one message to the console. </p>
+</li>
+</ul>
+<p>You can examine the project in TIBCO BusinessEvents Studio to understand the setup. Read the chapter on time events in <i>TIBCO BusinessEvents Developer's Guide</i> for details on the use of time events.</p>
+<h2>Instructions</h2>
+
+<p>Before you begin, ensure that the example EAR file is in the <i>BE_HOME</i><code>/examples/standard/InternalTimeEvent</code> folder, where this readme is also stored. </p>
+
+
+<ol>
+<li>
+Open a command window and navigate to <i>BE_HOME</i>/examples/standard/InternalTimeEvent.
+
+</li>
+<li>
+At the command prompt, start the TIBCO BusinessEvents engine using the following command. Substitute your actual value for <i>BE_HOME</i>.
+</li>
+
+<pre class="commands">
+cd <i>BE_HOME</i>/examples/standard/InternalTimeEvent
+<i>BE_HOME</i>/bin/be-engine --propFile <i>BE_HOME</i>/bin/be-engine.tra -u default -c InternalTimeEvent/InternalTimeEventProj.cdd InternalTimeEvent.ear
+</pre>
+
+<p>Adapt the command as needed, for example, if you have customized the example project, or are running it from a different directory.</p>
+</li>
+</ol>
+<br>
+
+<p>Among other trace messages from the engine, the following line should print every 5 seconds for scheduled time events:</p>
+<p>
+<pre class="logs">############### Hello world every 5 seconds, from the scheduled time event ###############</pre>
+</p>
+<p>The following line should print one time for the  rule-based time event:</p>
+<p>
+<pre class="logs">############### Hello world one time only, from the rule based time event ###############
+</pre>
+</p>
+
+
+
+<div class="footer">
+<p>TIBCO BusinessEvents&reg; 5.6<br />
+Copyright&copy; 2004-2019 TIBCO Software Inc. All rights reserved.</p>
+</div>
+</body>
+</html>

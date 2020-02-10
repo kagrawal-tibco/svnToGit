@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+<extension
+         point="org.eclipse.ui.editors">
+      <editor
+            class="com.tibco.cep.studio.tester.ui.editor.data.TestDataEditor"
+            contributorClass="com.tibco.cep.studio.tester.ui.editor.data.TestEditorContributor"
+            default="true"
+            extensions="concepttestdata"
+            icon="icons/conceptTestData.png"
+            id="com.tibco.cep.studio.tester.ui.editor.data.concepttestdataeditor"
+            name="Concept Test Data Editor">
+      </editor>
+        <editor
+            class="com.tibco.cep.studio.tester.ui.editor.data.TestDataEditor"
+            contributorClass="com.tibco.cep.studio.tester.ui.editor.data.TestEditorContributor"
+            default="false"
+            extensions="eventtestdata"
+            icon="icons/eventTestData.png"
+            id="com.tibco.cep.studio.tester.ui.editor.data.eventtestdataeditor"
+            name="Event Test Data Editor">
+      </editor>    
+     <editor
+            class="com.tibco.cep.studio.tester.ui.editor.data.TestDataEditor"
+            contributorClass="com.tibco.cep.studio.tester.ui.editor.data.TestEditorContributor"
+            default="true"
+            extensions="scorecardtestdata"
+            icon="icons/scorecardTestData.png"
+            id="com.tibco.cep.studio.tester.ui.editor.data.scorecardtestdataeditor"
+            name="Scorecard Test Data Editor">
+      </editor>
+      <editor
+            class="com.tibco.cep.studio.tester.ui.editor.result.TestResultEditor"
+            default="false"
+            extensions="resultdata"
+            icon="icons/test.gif"
+            id="com.tibco.cep.studio.tester.ui.result.editor"
+            name="Test Result">
+      </editor>
+      <editor
+            class="com.tibco.cep.studio.tester.ui.editor.result.WMResultEditor"
+            default="false"
+            icon="icons/wm_17x16.png"
+            id="com.tibco.cep.studio.tester.ui.wm.result.editor"
+            name="WM Result">
+      </editor>
+   </extension>
+ <!--<extension
+         point="org.eclipse.ui.popupMenus">
+      <objectContribution
+            adaptable="false"
+            id="com.tibco.cep.studio.tester.ui.conceptTestDataObjectContribution"
+            nameFilter="*.concept"
+            objectClass="org.eclipse.core.resources.IFile">
+         <action
+               class="com.tibco.cep.studio.tester.ui.actions.GenerateTestDataActionDelegate"
+               icon="icons/conceptTestData.png"
+               id="com.tibco.cep.studio.tester.ui.action.conceptTestData"
+               label="Create Test Data"
+               menubarPath="additions">
+         </action>
+      </objectContribution>
+       <objectContribution
+            adaptable="false"
+            id="com.tibco.cep.studio.tester.ui.eventTestDataObjectContribution"
+            nameFilter="*.event"
+            objectClass="org.eclipse.core.resources.IFile">
+         <action
+               class="com.tibco.cep.studio.tester.ui.actions.GenerateTestDataActionDelegate"
+               icon="icons/eventTestData.png"
+               id="com.tibco.cep.studio.tester.ui.action.eventTestData"
+               label="Create Test Data"
+               menubarPath="additions">
+         </action>
+      </objectContribution>
+       <objectContribution
+            adaptable="false"
+            id="com.tibco.cep.studio.tester.ui.scorecardTestDataObjectContribution"
+            nameFilter="*.scorecard"
+            objectClass="org.eclipse.core.resources.IFile">
+         <action
+               class="com.tibco.cep.studio.tester.ui.actions.GenerateTestDataActionDelegate"
+               icon="icons/scorecardTestData.png"
+               id="com.tibco.cep.studio.tester.ui.action.acorecardTestData"
+               label="Create Test Data"
+               menubarPath="additions">
+         </action>
+      </objectContribution>
+   </extension> -->
+ <extension
+       point="org.eclipse.ui.menus">
+    <menuContribution
+          locationURI="menu:project?after=additions">
+          <menu
+                icon="icons/wm_17x16.png"
+                id="com.tibco.cep.studio.tester.ui.showWMResultsMenuCommand"
+                label="Show Working Memory Contents">
+             <dynamic
+                   class="com.tibco.cep.studio.tester.ui.actions.ShowWMDynamicContribution"
+                   id="com.tibco.cep.studio.tester.ui.showWMresults.dynamic">
+             </dynamic>
+          </menu>
+    </menuContribution>
+    <!--menuContribution
+          locationURI="toolbar:org.eclipse.ui.main.toolbar?after=additions">
+       <toolbar
+             id="com.tibco.cep.studio.tester.ui.toolbar">
+              <command
+                    commandId="com.tibco.cep.studio.tester.ui.startTestCommand"
+                    icon="icons/starttest.gif"
+                    label="Start Test"
+                    mode="FORCE_TEXT"
+                    style="push"
+                    tooltip="Start Test">
+          </command>
+       </toolbar>
+    </menuContribution-->
+ </extension>
+ <extension
+       point="org.eclipse.ui.commands">
+    <command
+          defaultHandler="com.tibco.cep.studio.tester.ui.actions.ShowWMActionDelegate"
+          description="Show working memory entities"
+          id="com.tibco.cep.studio.tester.ui.showWMCommand"
+          name="Show Working Memory">
+    </command>
+ </extension>
+ <extension
+       point="org.eclipse.ui.actionSets">
+    <actionSet
+          id="com.tibco.cep.studio.tester.ui.actionSet"
+          label="Tester"
+          visible="true">
+       <action
+             class="com.tibco.cep.studio.tester.ui.actions.ShowWMActionDelegate"
+             icon="icons/wm_17x16.png"
+             id="com.tibco.cep.studio.tester.ui.showWMResultsaction"
+             label="Working Memory Contents"
+             style="pulldown"
+             toolbarPath="Normal/additions">
+       </action>
+    </actionSet>
+ </extension>
+ <extension
+       point="org.eclipse.ui.preferencePages">
+    <page
+          category="com.tibco.cep.studio.tester.testerPreferencePage"
+          class="com.tibco.cep.studio.tester.ui.preferences.TesterAppearancePreferencePage"
+          id="com.tibco.cep.studio.tester.ui.testAppearancePage"
+          name="Appearance">
+    </page>
+ </extension>
+ <extension
+       point="org.eclipse.core.runtime.preferences">
+    <initializer
+          class="com.tibco.cep.studio.tester.ui.preferences.TesterPreferenceInitializer">
+    </initializer>
+ </extension>
+ <extension
+       point="com.tibco.cep.studio.debug.ui.debugInputTab">
+    <InputTab
+          Tab="com.tibco.cep.studio.tester.ui.view.TesterInputTab">
+    </InputTab>
+ </extension>
+ <extension
+       point="org.eclipse.ui.newWizards">
+    <wizard
+          category="com.tibco.cep.studio.ui.category"
+          class="com.tibco.cep.studio.tester.ui.wizards.NewBEUnitTestWizard"
+          icon="icons/test.gif"
+          id="com.tibco.cep.studio.tester.ui.wizards.NewBEUnitTestWizard"
+          name="BEUnit Test Suite">
+          <description>
+            Create a new BEUnit Test Suite.
+         </description>
+    </wizard>
+ </extension>
+</plugin>

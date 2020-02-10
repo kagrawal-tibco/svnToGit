@@ -1,0 +1,75 @@
+/**
+ * @description Transform old checkin model and extract info into new one.
+ */
+WebStudio.Core.Concepts.Lifecycle.WS_C_UserCheckin rulefunction Approval.Rules.RuleFunctions.Adapters.AMS_RF_TransformCheckinModel {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Approval.Concepts.ArtifactsConcepts.AMS_C_Checkin artifactCheckinCompletion;
+	}
+	body {
+		Object LOGGER = Log.getLogger("Approval.Rules.RuleFunctions.Adapters.AMS_RF_TransformCheckinModel");
+		String patternId = artifactCheckinCompletion.patternId;
+		
+		String checkinId = "CHECKIN@" + patternId;
+		WS_C_UserCheckin userWSCheckin = Instance.newInstance("/WebStudio/Core/Concepts/Lifecycle/WS_C_UserCheckin", checkinId);
+		artifactCheckinCompletion.newCheckinModelId = userWSCheckin@id;
+		userWSCheckin.checkinTime = artifactCheckinCompletion.checkinTime;
+		userWSCheckin.checkinComments = artifactCheckinCompletion.checkinComments;
+		userWSCheckin.checkinCorrelationId = artifactCheckinCompletion.patternId;
+		userWSCheckin.managedProjectName = artifactCheckinCompletion.projectName;
+		userWSCheckin.revisionId = Number.longValue(artifactCheckinCompletion.revisionId, 10);
+		userWSCheckin.username = artifactCheckinCompletion.username;
+		
+		//Get artifact paths
+		String[] artifactPaths = Instance.PropertyArray.toArrayString(artifactCheckinCompletion.artifactPaths);
+		
+		String username = userWSCheckin.username;
+		String workspaceExtId = WS_RF_CreateUserArtifactExtId("WORKSPACE", null, null, username, null, null);
+		//Already locked
+		WS_C_UserWorkspace userWorkspace = Instance.getByExtIdByUri(workspaceExtId, "/WebStudio/Core/Concepts/WS_C_UserWorkspace");
+		WS_C_WorkspaceCommittableDelta workspaceCommittableDelta = Instance.PropertyAtom.getContainedConcept(userWorkspace.committableDelta, 1L);
+		
+		WS_C_CommittableDeltaEntry[] committableDeltaEntries = Instance.PropertyArray.toArrayConcept(workspaceCommittableDelta.deltaEntry);
+		
+		for (int loop = 0; loop < artifactPaths@length; loop++) {
+			String artifactPath = artifactPaths[loop];
+			Log.log(LOGGER, "Debug", "Artifact path in checkin [%s]", artifactPath);
+			
+			for (int innerLoop = 0; innerLoop < committableDeltaEntries@length; innerLoop++) {
+				WS_C_CommittableDeltaEntry committableDeltaEntry = committableDeltaEntries[innerLoop];
+				WS_C_UserArtifactRevision committableEntryRevision = Instance.PropertyAtom.getConceptReference(committableDeltaEntry.userArtifactRevision, 1L);
+				
+				WS_C_UserArtifact userArtifact = WS_RF_IsUserArtifact(committableEntryRevision.parentArtifactId, committableEntryRevision.parentArtifactType);
+				String committedArtifactPath = userArtifact.artifactPath;
+				if (committedArtifactPath == artifactPath) {
+					//Match found
+					Log.log(LOGGER, "Debug", "Removing from workspace committables, committable entry for artifact revision [%s]", committableEntryRevision);
+					//Remove this from ws committable delta
+					Instance.PropertyArray.removeConceptReference(workspaceCommittableDelta.deltaEntry, committableDeltaEntry);
+					
+					WS_C_CommittableDeltaEntry matchingDeltaEntryclone = 
+						Instance.newInstance("/WebStudio/Core/Concepts/Lifecycle/WS_C_CommittableDeltaEntry", null);
+					//Attach lifecycle stages concept.	
+					AMS_C_ApplicableStages applicableStages = 
+						Approval.Concepts.ArtifactsConcepts.AMS_C_ApplicableStages.AMS_C_ApplicableStages("STAGES_" + WS.Common.generateUUID(), null);	
+					Instance.PropertyAtom.setConceptReference(matchingDeltaEntryclone.userArtifactRevision, committableDeltaEntry.userArtifactRevision, 1L);
+					Instance.PropertyAtom.setConceptReference(matchingDeltaEntryclone.commitLifeCycleState, WS_RF_ArtifactStateCreationFactory("Committed"), 1L);
+					matchingDeltaEntryclone.operation = committableDeltaEntry.operation;
+					matchingDeltaEntryclone.applicableStagesConceptId = applicableStages@extId;
+					matchingDeltaEntryclone.parentCheckinId = userWSCheckin@extId;
+					
+					WS_RF_SetApplicableStagesForCommittable(matchingDeltaEntryclone, null);	
+					Instance.PropertyArray.appendConceptReference(userWSCheckin.committables, matchingDeltaEntryclone, 1L);
+					
+					//Maintain bookkeeping info
+					WS_RF_MaintainArtifactCheckinBookkeepingInfo(committableDeltaEntry, userWSCheckin, null);
+					
+					break;
+				}
+			}
+		} 
+		return userWSCheckin;
+	}
+}

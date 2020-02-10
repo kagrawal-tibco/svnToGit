@@ -1,0 +1,191 @@
+/**
+ * @description Commit operation execution for user workspace artifacts.
+ */
+WebStudio.Core.Concepts.DataSources.WS_C_TemporaryReturnData rulefunction WebStudio.Core.RuleFunctions.Actions.Lifecycle.Commit.WS_RF_CommitWorkspaceArtifacts {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object servletRequest;
+		WebStudio.Security.Authn.Concepts.WS_C_LoggedInUser loggedInUser;
+		String contentType;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.Lifecycle.Commit.WS_RF_CommitWorkspaceArtifacts");
+		
+		String responseMessage = null;
+		String errorCode = null;
+		int recordCount = 1;
+		int responseStatus = 0;
+			
+		if (!WS_RF_CheckHTTPMethod(servletRequest, "POST")) {
+			responseStatus = -1;
+			recordCount = 0;
+			errorCode = "ERR_5101";
+			responseMessage = "Invalid HTTP Method, expect method is [POST].";
+		} else {
+			String username = loggedInUser.username;
+			Object requestDataBytes = HTTP.Servlet.Request.getRequestContent(servletRequest);
+			String requestData = String.convertByteArrayToString(requestDataBytes, "UTF-8");
+			
+			Log.log(LOGGER, "Debug", "Request data received - %s", requestData);
+			
+			//Get post data
+			WS_C_CommitRequest commitRequest = null;
+			if (String.equals(contentType, System.getGlobalVariableAsString("WebStudio/CONTENT_TYPE/XML", "application/xml"))) {
+				commitRequest = Instance.createTransientInstanceFromXML("/WebStudio/Core/Concepts/Request/Usecases/Lifecycle/Commit/WS_C_CommitRequest", requestData);
+			} else {
+				commitRequest = Instance.createTransientInstanceFromJSON("/WebStudio/Core/Concepts/Request/Usecases/Lifecycle/Commit/WS_C_CommitRequest", requestData);
+			}
+		
+			Log.log(LOGGER, "Debug", "Request concept deserialized %s", commitRequest);
+			
+			WS_C_CommitRequestData requestContainedData = commitRequest.data;
+			String checkinComments = requestContainedData.commitComments;
+			if (checkinComments == null) {
+				checkinComments = "";
+			}
+			Log.log(LOGGER, "Debug", "Checkin comments made %s", checkinComments);
+			
+			String subscriptionId = null;
+			if (loggedInUser.jwtToken != null) subscriptionId = loggedInUser.jwtToken.sbsc;
+				
+			WS_C_CommitRequestProject[] projects = Instance.PropertyArray.toArrayContainedConcept(requestContainedData.project);
+			
+			String workspaceExtId = WS_RF_CreateUserArtifactExtId("WORKSPACE", null, null, username, null, null);
+			boolean userWorkspaceLock = Cluster.DataGrid.Lock(workspaceExtId, -1, false);
+							
+			if (userWorkspaceLock) {
+				String committedRevisionsMapId = username + "@COMMITTED_REVISIONS_" + System.nanoTime();
+				Util.HashMap.createMap(committedRevisionsMapId);
+				for (int projectLoop = 0; projectLoop < projects@length; projectLoop++) {
+					WS_C_CommitRequestProject commitProject = projects[projectLoop];
+					String projectName = commitProject.name;
+					Log.log(LOGGER, "Debug", "Project Name Request value Received %s", projectName);
+					//Get committable artifacts
+					WS_C_CommitArtifactDataItem[] commitArtifactItems = Instance.PropertyArray.toArrayContainedConcept(commitProject.artifactItem);
+					
+					if (commitArtifactItems@length > 0) {
+						String uniqueCorrelationId = WS.Common.generateUUID();
+						String checkinId = "CHECKIN@" + uniqueCorrelationId;
+						
+						WS_C_UserCheckin userCheckin = Instance.newInstance("/WebStudio/Core/Concepts/Lifecycle/WS_C_UserCheckin", checkinId);
+						userCheckin.checkinComments = checkinComments;
+						userCheckin.username = username;
+						if (loggedInUser.jwtToken != null) userCheckin.username = loggedInUser.jwtToken.fn;
+						userCheckin.checkinCorrelationId = uniqueCorrelationId;
+						//TODO Get real managed project name.
+						userCheckin.managedProjectName = projectName;
+						userCheckin.checkinTime = DateTime.now();
+						//Find this artifact in committable delta
+						WS_C_UserWorkspace userWorkspace = 
+							Cluster.DataGrid.CacheLoadConceptByExtIdByUri(workspaceExtId, true, "/WebStudio/Core/Concepts/WS_C_UserWorkspace");
+
+						//Create stack for Notification
+						String stackID = username + "@COMMITTED_ITEMS_" + System.nanoTime();
+						Object commitedArtifactsStack = WS.Common.Stack.create(stackID);
+						WS.Common.Stack.clear(commitedArtifactsStack);
+						
+						if (userWorkspace != null) {
+							Log.log(LOGGER, "Debug", "Existing workspace concept id %s", userWorkspace@id);
+							//Get committable delta
+							WS_C_WorkspaceCommittableDelta committableDelta = Instance.PropertyAtom.getContainedConcept(userWorkspace.committableDelta, 1L);
+							if (committableDelta != null) {
+								WS_C_CommittableDeltaEntry[] artifactRevisionsCommittableEntries = Instance.PropertyArray.toArrayConcept(committableDelta.deltaEntry);
+								//Check for this in committable entries. There should be only 1 entry
+								for (int commitArtifactItemLoop = 0; commitArtifactItemLoop < commitArtifactItems@length; commitArtifactItemLoop++) {
+									WS_C_CommitArtifactDataItem commitArtifactItem = commitArtifactItems[commitArtifactItemLoop];
+									WS_C_CommittableDeltaEntry matchingDeltaEntry = WS_RF_GetMatchingCommittableDeltaEntry(commitArtifactItem.artifactPath, artifactRevisionsCommittableEntries);
+									//Perform side activities													
+									//Add this to checkin
+									if (matchingDeltaEntry != null) {
+										//Perform pre-conditions check
+										String[] returnValue = WS_RF_ExecutePreconditionsForCommit(projectName, matchingDeltaEntry, loggedInUser.username);
+										errorCode = returnValue[0];
+										responseStatus = Number.intValue(returnValue[1], 10);
+										responseMessage = returnValue[2];
+										Log.log(LOGGER, "Debug", "Error code [%s] and response message [%s] from preconditions check for commit", errorCode, responseMessage);
+										
+										if (errorCode == null) { 
+											//Clone it since original one will be removed.
+											WS_C_CommittableDeltaEntry matchingDeltaEntryclone = 
+												Instance.newInstance("/WebStudio/Core/Concepts/Lifecycle/WS_C_CommittableDeltaEntry", null);
+											//Attach lifecycle stages concept.	
+											AMS_C_ApplicableStages applicableStages = 
+												Approval.Concepts.ArtifactsConcepts.AMS_C_ApplicableStages.AMS_C_ApplicableStages("STAGES_" + WS.Common.generateUUID(), null);	
+											Instance.PropertyAtom.setConceptReference(matchingDeltaEntryclone.userArtifactRevision, matchingDeltaEntry.userArtifactRevision, 1L);
+											Instance.PropertyAtom.setConceptReference(matchingDeltaEntryclone.commitLifeCycleState, WS_RF_ArtifactStateCreationFactory("Committed"), 1L);
+											matchingDeltaEntryclone.operation = matchingDeltaEntry.operation;
+											matchingDeltaEntryclone.applicableStagesConceptId = applicableStages@extId;
+											Instance.PropertyArray.appendConceptReference(userCheckin.committables, matchingDeltaEntryclone, 1L);
+											matchingDeltaEntryclone.parentCheckinId = userCheckin@extId;
+											
+											Log.log(LOGGER, "Debug", "CheckInCorrelationId - %s & matchingDeltaEntryClone - %s", userCheckin.checkinCorrelationId, matchingDeltaEntryclone);
+											//Create equivalent old model
+											WS_RF_TransformCheckinModel(userCheckin.checkinCorrelationId, matchingDeltaEntryclone);
+											//Add to stack for Notification
+											WS.Common.Stack.push(commitedArtifactsStack, matchingDeltaEntryclone);
+											
+											WS_RF_UpdateProjectSummary(projectName, loggedInUser.username, "COMMIT");
+											WS_RF_AddAuditTrailEntry(loggedInUser.username, projectName, commitArtifactItem.artifactPath, commitArtifactItem.artifactType, "COMMIT", checkinComments);
+										} else {
+											//Terminate loop here.
+											//TODO rollback the entire check
+											//WS_C_Rollback
+											break;
+										}
+									}
+								}
+							}
+						}
+						if (errorCode == null) {
+							long revisionId = -1;
+						    AMS_C_RevisionNumber revisionNumberC = WS_RF_GetRevisionNumber(subscriptionId);
+						    if (revisionNumberC != null) revisionId = revisionNumberC.revisionNumber;
+
+							WS_RF_SetupReviewSink();
+							
+							//Get the User roles
+							String[] roles = Instance.PropertyArray.toArrayString(loggedInUser.roles);
+							String allRoles = WS.Common.joinStringArray(roles, ",");
+							
+							WS_E_CommitOpCompletionEvent commitCompletionEvent = 
+								Event.createEvent("xslt://{{/WebStudio/Core/Events/Lifecycle/WS_E_CommitOpCompletionEvent}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"2.0\" exclude-result-prefixes=\"xsl xsd\"><xsl:output method=\"xml\"/><xsl:param name=\"userWorkspace\"/><xsl:param name=\"userCheckin\"/><xsl:param name=\"allRoles\"/><xsl:param name=\"subscriptionId\"/><xsl:template name=\"Function\" match=\"/\"><createEvent><event><xsl:if test=\"$userWorkspace/@extId\"><userWorkspaceExtId><xsl:value-of select=\"$userWorkspace/@extId\"/></userWorkspaceExtId></xsl:if><xsl:if test=\"$userCheckin/@extId\"><userCheckinExtId><xsl:value-of select=\"$userCheckin/@extId\"/></userCheckinExtId></xsl:if><roles><xsl:value-of select=\"$allRoles\"/></roles><subscriptionId><xsl:value-of select=\"$subscriptionId\"/></subscriptionId></event></createEvent></xsl:template></xsl:stylesheet>");
+							
+							if (revisionId != -1) {	
+								commitCompletionEvent.isCommitSuccessful = true;
+							} else {
+								commitCompletionEvent.isCommitSuccessful = false;
+							}
+							commitCompletionEvent.newRevisionId = revisionId;						
+							Event.assertEvent(commitCompletionEvent);
+																			
+							responseMessage = String.format("Checkin Sucessful with Revision Id [%s]", revisionId);
+							String revisionIdStr = String.valueOfLong(revisionId);
+							//Get the array of entries
+							WS_C_CommittableDeltaEntry[] committedArtifacts = 
+								WS.Common.Stack.toArray(commitedArtifactsStack, "be.gen.WebStudio.Core.Concepts.Lifecycle.WS_C_CommittableDeltaEntry", "com.tibco.cep.runtime.service.loader.BEClassLoader");
+							//clear the stack
+							WS.Common.Stack.clear(commitedArtifactsStack);
+							WS.Common.Stack.delete(stackID);	
+							Util.HashMap.putObject(committedRevisionsMapId, revisionIdStr, committedArtifacts);
+						} else {
+							//TODO Handle failure case.
+						}										
+					} else {
+						responseMessage = "No items found in checkin list.";
+						errorCode = "ERR_1120";
+						recordCount = 0;
+						responseStatus = -1;
+					}
+				}
+				//Send state change notification
+				WS_RF_SendCommitNotification(loggedInUser, committedRevisionsMapId, servletRequest);
+				Util.HashMap.clear(committedRevisionsMapId);
+				Util.HashMap.deleteMap(committedRevisionsMapId);
+			}
+		}
+
+		return WS_RF_CreateTemporaryReturnData(responseStatus, 0, errorCode, responseMessage, null);
+	}
+}

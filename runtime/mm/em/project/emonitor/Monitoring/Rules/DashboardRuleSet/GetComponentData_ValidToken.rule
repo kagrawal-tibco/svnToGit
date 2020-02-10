@@ -1,0 +1,61 @@
+/**
+ * @description 
+ * @author 
+ */
+rule Monitoring.Rules.DashboardRuleSet.GetComponentData_ValidToken {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Monitoring.Events.request.ComponentDataRequestEvent	requestevent;
+		
+	}
+	when {
+		requestevent.token != null && String.length(requestevent.token) != 0;
+	}
+	then {
+		Shared.Concepts.LoggedInUser user = Instance.getByExtId(requestevent.token);
+		if (user == null) {
+		    Shared.Events.reqres.FailureResponseEvent event = Shared.Events.reqres.FailureResponseEvent.FailureResponseEvent(null,null,"001","Invalid token");
+		    Event.replyEvent(requestevent, event);
+		    Event.consumeEvent(requestevent);
+		}
+		else {
+		    user.lastAccessTime = System.currentTimeMillis();
+		    String mId = requestevent.monitorableid;
+		    Shared.Concepts.MonitorableEntity monitorable = Instance.getByExtId(mId);
+		    if (monitorable == null) {
+		        Shared.Events.reqres.FailureResponseEvent event = Shared.Events.reqres.FailureResponseEvent.FailureResponseEvent(null,null,"010","Invalid monitor id");
+		        Event.replyEvent(requestevent, event);
+		    }
+		    else {
+		        String fqName = getFQName(monitorable);
+		        String compName = fqName + ":" + requestevent.type;
+		        Shared.RuleFunctions.log("GetComponentData_ValidToken","DEBUG","Attempting to get data for "+compName+" under User[token="+user@extId+",username="+user.userName+"]");
+		        Shared.Concepts.AbstractMonitorView view = Instance.getByExtId(compName);
+		        if (view == null) {
+		            view = createView(monitorable,requestevent.type,compName);
+		            if(view == null){
+		        		Shared.Events.reqres.SuccessXMLResponseEvent event =Shared.Events.reqres.SuccessXMLResponseEvent.SuccessXMLResponseEvent(null,"");
+		        		Event.replyEvent(requestevent, event);	
+		        		Event.consumeEvent(requestevent);	
+		        		return;            
+		            }
+		            fetchData(view);
+		        }
+		        if(monitorable.name == "Monitored Objects"){
+	           		fetchData(view);
+		        }
+                                                                      
+		        view.lastAccessTime = System.currentTimeMillis();
+		        user.monitorView[user.monitorView@length] = view;    
+		        String dataXML = toDataXML(view);
+		        Shared.RuleFunctions.log("GetComponentData_ValidToken","DEBUG","Sending "+dataXML+" for "+compName+" under User[token="+user@extId+",username="+user.userName+"]");
+		        Shared.Events.reqres.SuccessXMLResponseEvent event =Shared.Events.reqres.SuccessXMLResponseEvent.SuccessXMLResponseEvent(null,dataXML);
+		        Event.replyEvent(requestevent, event);
+		    }
+		}
+		Event.consumeEvent(requestevent);
+	}
+}

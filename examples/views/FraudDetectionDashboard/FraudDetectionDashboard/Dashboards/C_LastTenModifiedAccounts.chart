@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beviewsconfig:TextComponent xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:beviewsconfig="http://www.tibco.com/be/designer" xmlns:designtime="http:///com/tibco/cep/designtime/core/model/designtime_ontology.ecore" namespace="/Dashboards/" folder="/Dashboards/" name="C_LastTenModifiedAccounts" description="Shows the last ten accounts modified" GUID="2059A241-11D0-7AAF-4C9F-23D119CB7B3F" ownerProjectName="FraudDetectionDashboard" version="1376348588877" displayName="Last Ten Accounts" componentColorSetIndex="0">
+  <extendedProperties>
+    <properties xsi:type="designtime:SimpleProperty" name="Category">
+      <extendedProperties>
+        <properties xsi:type="designtime:SimpleProperty" name="Accnt001"/>
+        <properties xsi:type="designtime:SimpleProperty" name="Accnt002"/>
+        <properties xsi:type="designtime:SimpleProperty" name="Accnt003"/>
+        <properties xsi:type="designtime:SimpleProperty" name="Accnt004"/>
+        <properties xsi:type="designtime:SimpleProperty" name="Accnt005"/>
+        <properties xsi:type="designtime:SimpleProperty" name="Accnt006"/>
+        <properties xsi:type="designtime:SimpleProperty" name="Accnt007"/>
+        <properties xsi:type="designtime:SimpleProperty" name="Accnt008"/>
+        <properties xsi:type="designtime:SimpleProperty" name="Accnt009"/>
+        <properties xsi:type="designtime:SimpleProperty" name="Accnt010"/>
+      </extendedProperties>
+    </properties>
+    <properties xsi:type="designtime:SimpleProperty" name="MaxValue" value="50"/>
+    <properties xsi:type="designtime:SimpleProperty" name="MinValue" value="10"/>
+    <properties xsi:type="designtime:SimpleProperty" name="subtype" value="SingleMeasure"/>
+  </extendedProperties>
+  <visualization xsi:type="beviewsconfig:TextVisualization" namespace="/Dashboards/" folder="/Dashboards/" name="TCV_" description="" GUID="15F6CBB8-6A6B-98BB-AC46-147183ADB8CF" ownerProjectName="FraudDetectionDashboard" version="1376348588877" showHeader="true">
+    <seriesConfig xsi:type="beviewsconfig:TextSeriesConfig" namespace="/Dashboards/" folder="/Dashboards/" name="Balance" description="" GUID="C9380FE2-0872-5969-5949-EB5B39A72CB0" ownerProjectName="FraudDetectionDashboard" version="1376348588877">
+      <actionRule namespace="/Dashboards/" folder="/Dashboards/" name="Series__AR" description="" GUID="DCF77110-C070-E37B-FDC2-F84D24C76A00" ownerProjectName="FraudDetectionDashboard" version="1376348588878" threshold="10" thresholdUnit="count">
+        <dataSource href="DS_AccountsByLastModifiedDate.datasource#/"/>
+        <drillableFields href="M_Accounts.metric#//@properties.0"/>
+      </actionRule>
+      <valueDataConfig xsi:type="beviewsconfig:TextValueDataConfig" headerName="Balance" width="20" alignment="right">
+        <extractor>
+          <sourceField href="M_Accounts.metric#//@properties.2"/>
+        </extractor>
+        <formatter xsi:type="beviewsconfig:TextFieldFormat" toolTipFormat="{AccountID}={Balance}" displayFormat="{Balance}" showLabel="true">
+          <formatStyle fontSize="10" fontStyle="normal"/>
+        </formatter>
+      </valueDataConfig>
+      <categoryDataConfig xsi:type="beviewsconfig:TextCategoryDataConfig">
+        <extractor>
+          <sourceField href="M_Accounts.metric#//@properties.0"/>
+        </extractor>
+        <formatter xsi:type="beviewsconfig:TextFieldFormat" displayFormat="{AccountID}"/>
+      </categoryDataConfig>
+    </seriesConfig>
+    <seriesConfig xsi:type="beviewsconfig:TextSeriesConfig" namespace="/Dashboards/" folder="/Dashboards/" name="Credit" description="" GUID="49406892-AD25-26A1-9871-881EBF7911EF" ownerProjectName="FraudDetectionDashboard" version="1376348588878">
+      <actionRule namespace="/Dashboards/" folder="/Dashboards/" name="Series__AR" description="" GUID="8DE59593-3D1A-77D0-3AC0-9AD77511BF0F" ownerProjectName="FraudDetectionDashboard" version="1376348588878" threshold="10" thresholdUnit="count">
+        <dataSource href="DS_AccountsByLastModifiedDate.datasource#/"/>
+        <drillableFields href="M_Accounts.metric#//@properties.0"/>
+      </actionRule>
+      <valueDataConfig xsi:type="beviewsconfig:TextValueDataConfig" headerName="Credit" width="20" alignment="right">
+        <extractor>
+          <sourceField href="M_Accounts.metric#//@properties.3"/>
+        </extractor>
+        <formatter xsi:type="beviewsconfig:TextFieldFormat" toolTipFormat="{AccountID}={LastCredit}" displayFormat="{LastCredit}" showLabel="true">
+          <formatStyle fontSize="10" fontStyle="normal"/>
+        </formatter>
+      </valueDataConfig>
+      <categoryDataConfig xsi:type="beviewsconfig:TextCategoryDataConfig">
+        <extractor>
+          <sourceField href="M_Accounts.metric#//@properties.0"/>
+        </extractor>
+        <formatter xsi:type="beviewsconfig:TextFieldFormat" displayFormat="{AccountID}"/>
+      </categoryDataConfig>
+    </seriesConfig>
+    <seriesConfig xsi:type="beviewsconfig:TextSeriesConfig" namespace="/Dashboards/" folder="/Dashboards/" name="Debit" description="" GUID="FB238184-2EF0-07EA-B589-27B85BF8920E" ownerProjectName="FraudDetectionDashboard" version="1376348588878">
+      <actionRule namespace="/Dashboards/" folder="/Dashboards/" name="Series__AR" description="" GUID="D67FE58E-B21C-5E14-3A35-FCD73E58DADF" ownerProjectName="FraudDetectionDashboard" version="1376348588878" threshold="10" thresholdUnit="count">
+        <dataSource href="DS_AccountsByLastModifiedDate.datasource#/"/>
+        <drillableFields href="M_Accounts.metric#//@properties.0"/>
+      </actionRule>
+      <valueDataConfig xsi:type="beviewsconfig:TextValueDataConfig" headerName="Debit" width="20" alignment="right">
+        <extractor>
+          <sourceField href="M_Accounts.metric#//@properties.4"/>
+        </extractor>
+        <formatter xsi:type="beviewsconfig:TextFieldFormat" toolTipFormat="{AccountID}={LastDebit}" displayFormat="{LastDebit}" showLabel="true">
+          <formatStyle fontSize="10" fontStyle="normal"/>
+        </formatter>
+      </valueDataConfig>
+      <categoryDataConfig xsi:type="beviewsconfig:TextCategoryDataConfig">
+        <extractor>
+          <sourceField href="M_Accounts.metric#//@properties.0"/>
+        </extractor>
+        <formatter xsi:type="beviewsconfig:TextFieldFormat" displayFormat="{AccountID}"/>
+      </categoryDataConfig>
+    </seriesConfig>
+    <valueGuidelineConfig xsi:type="beviewsconfig:TextValueGuidelineConfig" headerAlignment="right">
+      <headerFormatStyle fontSize="10" fontStyle="bold"/>
+    </valueGuidelineConfig>
+    <categoryGuidelineConfig xsi:type="beviewsconfig:TextCategoryGuidelineConfig" headerName="Account" sortOrder="unsorted" headerAlignment="left" labelAlignment="left" width="40">
+      <headerFormatStyle fontSize="10" fontStyle="bold"/>
+      <labelFormatStyle fontSize="10" fontStyle="normal"/>
+    </categoryGuidelineConfig>
+  </visualization>
+  <layoutConstraint xsi:type="beviewsconfig:FlowLayoutConstraint" componentRowSpan="2" componentColSpan="2"/>
+</beviewsconfig:TextComponent>

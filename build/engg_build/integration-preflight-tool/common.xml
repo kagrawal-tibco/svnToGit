@@ -1,0 +1,101 @@
+<project name="IS" basedir=".">
+
+	<target name="setConditions">
+		<condition property="isWindows">
+			<os family="windows" />
+		</condition>
+
+		<condition property="isLinux">
+			<os name="Linux" />
+		</condition>
+
+		<condition property="isMac">
+			<os family="mac"/>
+		</condition>
+	</target>
+
+	<target name="setwin" if="isWindows">
+		<echo> ***************************** IN HERE ******************************** </echo>
+		<property name="ostype" value="win_x86"/>
+		<property name="ecpreflighttool" value="ecclientpreflight.exe"/>
+		<property name="ectool" value="ectool.exe"/>
+		<copy file="${ostype}/ectool.exe" tofile="ectool.exe"/>
+		<copy file="${ostype}/ecclientpreflight.exe" tofile="ecclientpreflight.exe"/>
+	</target>
+
+	<target name="setlnx" if="isLinux">
+		<property name="ostype" value="linux_x86"/>
+		<property name="ecpreflighttool" value="ecclientpreflight"/>
+		<property name="ectool" value="ectool"/>
+		<antcall target="copyunixfiles" />
+	</target>
+
+	<target name="setmac" if="isMac">
+		<property name="ostype" value="mac_x86"/>
+		<property name="ecpreflighttool" value="ecclientpreflight"/>
+		<property name="ectool" value="ectool"/>
+		<antcall target="copyunixfiles" />
+	</target>
+
+	<target name="copyunixfiles">
+		<copy file="${ostype}/ectool" tofile="ectool"/>
+		<copy file="${ostype}/ecclientpreflight" tofile="ecclientpreflight"/>
+		<chmod file="ectool" perm="755"/>
+		<chmod file="ecclientpreflight" perm="755"/>
+	</target>
+
+
+<macrodef name="commanderprocedure">
+	<attribute name="svnpath"/>              
+	<attribute name="ecpreflighttool"/>              
+	<attribute name="buildType"/>              
+	<sequential>
+		<echo>svnpath=@{svnpath}</echo>
+		<exec executable="@{ecpreflighttool}">
+			<arg value="--server"/>
+			<arg value="reldist.na.tibco.com"/>
+			<arg value="--username"/>
+			<arg value="intbuild"/>
+			<arg value="--projectName"/>
+			<arg value="RU_Test"/>
+			<arg value="--procedureName"/>
+			<arg value="ru_build-3"/>
+			<arg value="--scmType"/>
+			<arg value="subversion"/>
+			<arg value="--svnpath"/>
+			<arg value="@{svnpath}"/>
+			<arg value="-c"/>
+			<arg value="ru.xml"/>
+			<arg value="-p"/>
+			<arg value="buildType=@{buildType}"/>
+		</exec>
+	</sequential>
+</macrodef>
+
+
+
+<target name="integration-target" depends="setConditions,setwin,setlnx,setmac" >
+	<echo> ostype ${ostype} </echo>
+	<antcall target="login" />
+	<commanderprocedure svnpath="${basedir}" ecpreflighttool="${ecpreflighttool}" buildType="integration"/>
+	<echo> Please see status of job at https://reldist.na.tibco.com:5443/commander/jobs.php </echo>
+</target>
+
+<target name="preflight-target" depends="setConditions,setwin,setlnx,setmac" >
+	<echo> ostype ${ostype} </echo>
+	<antcall target="login" />
+	<commanderprocedure svnpath="${basedir}" ecpreflighttool="${ecpreflighttool}" buildType="preflight"/>
+	<echo> Please see status of job at https://reldist.na.tibco.com:5443/commander/jobs.php </echo>
+</target>
+
+<target name="login">
+	<exec executable="${ostype}/ectool">
+		<arg value="--server"/>
+		<arg value="reldist.na.tibco.com"/>
+		<arg value="login"/>
+		<arg value="intbuild"/>
+		<arg value="T1b3ngbuild"/>
+	</exec>
+</target>
+
+</project>

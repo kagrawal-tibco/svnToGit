@@ -1,0 +1,67 @@
+/**
+ * @description 
+ */
+WebStudio.Core.Concepts.Decision.Pagination.WS_C_DecisionTable rulefunction WebStudio.Core.RuleFunctions.Utils.DT.WS_RF_CreateDecisionTableConceptFromSCS {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String projectName;
+		String userName;
+		String artifactPath;
+		Object decisionTableObject;	
+		String[] roles;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.DT.WS_RF_CreateDecisionTableConceptFromSCS");
+		
+		WS_C_DecisionTable decisionTableArtifact = Instance.newInstance("/WebStudio/Core/Concepts/Decision/Pagination/WS_C_DecisionTable", "DT_" + WS.Common.generateUUID());
+		decisionTableArtifact.name = WS.Decision.TableModel.getName(decisionTableObject);
+		decisionTableArtifact.folder = WS.Decision.TableModel.getFolder(decisionTableObject); 
+		decisionTableArtifact.implementsPath = WS.Decision.TableModel.getImplementsPath(decisionTableObject);
+
+		WS_C_TableMetadata metadata = Instance.newInstance("/WebStudio/Core/Concepts/Decision/Pagination/WS_C_TableMetadata", null); 
+		Object[] metadataPropsObject = WS.Decision.TableModel.MetaData.getProperties(decisionTableObject);
+		for (int i = 0; i < metadataPropsObject@length; i++) {
+			WS_C_MetadataProperty property = Instance.newInstance("/WebStudio/Core/Concepts/Decision/Pagination/WS_C_MetadataProperty", null);
+			property.name = WS.Decision.TableModel.MetaData.getPropertyName(metadataPropsObject[i]);
+			property.type = WS.Decision.TableModel.MetaData.getPropertyType(metadataPropsObject[i]);
+			property.value = WS.Decision.TableModel.MetaData.getPropertyValue(metadataPropsObject[i]);
+	 		Instance.PropertyArray.appendContainedConcept(metadata.property, property, 1L);
+		}
+		Instance.PropertyAtom.setContainedConcept(decisionTableArtifact.metadata, metadata, 1L);
+		
+		WS_C_DecisionTableArguments arguments = Instance.newInstance("/WebStudio/Core/Concepts/Decision/Pagination/WS_C_DecisionTableArguments", null);
+		Object[] argumentObjects = WS.Decision.TableModel.getArguments(decisionTableObject);
+		for (int i = 0; i < argumentObjects@length; i++) {
+			WS_C_DecisionTableArgument argument = Instance.newInstance("/WebStudio/Core/Concepts/Decision/Pagination/WS_C_DecisionTableArgument", null);
+			argument.argumentAlias = WS.Decision.TableModel.Arguments.getAlias(argumentObjects[i]);
+			argument.direction = WS.Decision.TableModel.Arguments.getDirection(argumentObjects[i]);
+			argument.path = WS.Decision.TableModel.Arguments.getPath(argumentObjects[i]);
+			argument.resourceType = WS.Decision.TableModel.Arguments.getResourceType(argumentObjects[i]);
+			argument.isArray = WS.Decision.TableModel.Arguments.isArray(argumentObjects[i]);
+	 		Instance.PropertyArray.appendContainedConcept(arguments.argument, argument, 1L);
+		}
+		Instance.PropertyAtom.setContainedConcept(decisionTableArtifact.arguments, arguments, 1L);
+
+		Object[] decisionTableColumnObjects = WS.Decision.TableModel.getDecisionTableColumns(decisionTableObject); 					
+		Object[] decisionTableRuleObjects = WS.Decision.TableModel.getDecisionTableRules(decisionTableObject);	
+		WebStudio.Core.Concepts.Decision.Pagination.WS_C_TableRuleSet decisionTableRS = 
+								WebStudio.Core.RuleFunctions.Utils.DT.
+									WS_RF_PerformDecisionTablePagination(projectName, userName, artifactPath, "DECISION_TABLE", argumentObjects, decisionTableColumnObjects, decisionTableRuleObjects, roles);
+		Instance.PropertyAtom.setContainedConcept(decisionTableArtifact.decisionTable, decisionTableRS, 1L);
+
+		Object[] exceptionTableColumnObjects = WS.Decision.TableModel.getExceptionTableColumns(decisionTableObject);
+		Object[] exceptionTableRuleObjects = WS.Decision.TableModel.getExceptionTableRules(decisionTableObject);
+		WebStudio.Core.Concepts.Decision.Pagination.WS_C_TableRuleSet exceptionTableRS =
+								WebStudio.Core.RuleFunctions.Utils.DT.
+									WS_RF_PerformDecisionTablePagination(projectName, userName, artifactPath, "EXCEPTION_TABLE", argumentObjects, exceptionTableColumnObjects, exceptionTableRuleObjects, roles);
+		Instance.PropertyAtom.setConceptReference(decisionTableArtifact.exceptionTable, exceptionTableRS, 1L);
+		
+		//Refs, so need to be explicitly asserted.
+		//Commenting this line because these rule set instances are already asserted in WM. 
+		//WS.Common.assertInstance(exceptionTableRS, false);
+				
+		return decisionTableArtifact;
+	}
+}

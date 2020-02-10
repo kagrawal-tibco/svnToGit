@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema
+        xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+        targetNamespace="http://www.tibco.com/com.tibco.cep.runtime.channel#drivers.xsd"
+        xmlns:tns="http://www.tibco.com/com.tibco.cep.runtime.channel#drivers.xsd"
+        elementFormDefault="qualified"
+        attributeFormDefault="unqualified"
+        >
+    <xsd:annotation>
+        <xsd:documentation>
+            Schema for the drivers.xml files, which describe BusinessEvent drivers. Each driver has
+            - a type identifier,
+            - a version string in the format n.n.n,
+            - an implementing class name,
+            - a list of serializer classes for transforming input data into events,
+            - a list of properties available to channels of the driver type,
+            - and a list of properties available to the destinations in these channels.
+            <!-- TODO "references" -->
+        </xsd:documentation>
+    </xsd:annotation>
+
+    <xsd:element name="drivers">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element maxOccurs="unbounded" ref="tns:driver"/>
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+    <xsd:element name="driver">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element ref="tns:type" minOccurs="1" maxOccurs="1"/>
+                <xsd:element ref="tns:label" minOccurs="0" maxOccurs="1"/>
+                <xsd:element ref="tns:class" minOccurs="1" maxOccurs="1"/>
+                <xsd:element ref="tns:description" minOccurs="1" maxOccurs="1"/>
+                <xsd:element ref="tns:version" minOccurs="1" maxOccurs="1"/>
+                <xsd:element ref="tns:extendedConfiguration" minOccurs="0" maxOccurs="1"/>
+                <xsd:element ref="tns:properties"/>
+                <xsd:element ref="tns:destinations" minOccurs="1" maxOccurs="1"/>
+                <xsd:element ref="tns:references" minOccurs="1" maxOccurs="1"/>
+                <xsd:element ref="tns:serializers" minOccurs="1" maxOccurs="1"/>
+                <xsd:element ref="tns:configuration" minOccurs="0" />
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+    <xsd:element name="label" type="xsd:string"/>
+    <xsd:element name="class" type="xsd:string"/>
+    <xsd:element name="description" type="xsd:string"/>
+    <xsd:element name="version" type="xsd:NMTOKEN"/>
+    <xsd:element name="extendedConfiguration">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element ref="tns:properties"/>
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+    <xsd:element name="destinations">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element maxOccurs="unbounded" ref="tns:property"/>
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+    <xsd:element name="references">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element minOccurs="0" maxOccurs="unbounded" ref="tns:type"/>
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+    <xsd:element name="serializers">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element maxOccurs="unbounded" ref="tns:serializer"/>
+            </xsd:sequence>
+            <xsd:attribute name="userdefined" use="required" type="xsd:boolean"/>
+        </xsd:complexType>
+    </xsd:element>
+    <xsd:element name="serializer">
+        <xsd:complexType>
+            <xsd:attribute name="class" use="required">
+                <xsd:annotation>
+                    <xsd:documentation>
+                        -Specify java implementation class to deserialize raw message to BE event
+                        and event to raw message.
+                        -This class should implement com.tibco.cep.runtime.channel.EventSerializer interface.
+                    </xsd:documentation>
+                </xsd:annotation>
+            </xsd:attribute>
+            <xsd:attribute name="default" type="xsd:boolean"/>
+            <xsd:attribute name="type" use="required" type="xsd:NCName"/>
+        </xsd:complexType>
+    </xsd:element>
+    <xsd:element name="configuration">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element maxOccurs="unbounded" ref="tns:property"/>
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+    <xsd:element name="type" type="xsd:NCName"/>
+    <xsd:element name="properties">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element minOccurs="0" maxOccurs="unbounded" ref="tns:property"/>
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+    <xsd:element name="property">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:sequence minOccurs="0">
+                    <xsd:element ref="tns:name"/>
+                    <xsd:element ref="tns:parent"/>
+                    <xsd:element ref="tns:type">
+                        <xsd:annotation>
+                            <xsd:documentation>
+                                Specify UI component type to render this property.
+                                For instance combo-box.
+                            </xsd:documentation>
+                        </xsd:annotation>
+                    </xsd:element>
+                </xsd:sequence>
+                <xsd:element minOccurs="0" ref="tns:choices"/>
+            </xsd:sequence>
+            <xsd:attribute name="default"/>
+            <xsd:attribute name="name"/>
+            <xsd:attribute name="displayName" use="optional">
+                <xsd:annotation>
+                    <xsd:documentation>
+                        Specify an optional user-friendly display name for this property.
+                    </xsd:documentation>
+                </xsd:annotation>
+            </xsd:attribute>
+            <xsd:attribute name="mandatory" type="xsd:boolean"/>
+            <xsd:attribute name="pattern"/>
+            <xsd:attribute name="type" type="xsd:NCName">
+                <xsd:annotation>
+                    <xsd:documentation>
+                        Specify a data-type for the property. (e.g : String | Boolean | Integer etc.).
+                    </xsd:documentation>
+                </xsd:annotation>
+            </xsd:attribute>
+            <xsd:attribute name="mask" type="xsd:boolean"/>
+        </xsd:complexType>
+    </xsd:element>
+    <xsd:element name="name" type="xsd:NCName"/>
+    <xsd:element name="parent" type="xsd:NCName"/>
+    <xsd:element name="choices">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element maxOccurs="unbounded" ref="tns:choice"/>
+            </xsd:sequence>
+            <xsd:attribute name="default" type="xsd:NMTOKEN"/>
+        </xsd:complexType>
+    </xsd:element>
+    <xsd:element name="choice">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element minOccurs="0" ref="extendedConfiguration"/>
+            </xsd:sequence>
+            <xsd:attribute name="displayed" use="required"/>
+            <xsd:attribute name="value" use="required" type="xsd:NMTOKEN"/>
+        </xsd:complexType>
+    </xsd:element>
+</xsd:schema>

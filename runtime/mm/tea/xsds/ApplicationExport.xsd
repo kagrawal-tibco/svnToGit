@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+	xmlns:jxb="http://java.sun.com/xml/ns/jaxb" jxb:version="2.0">
+
+	<xsd:element name="name" type="xsd:string"></xsd:element>
+
+	<xsd:element name="host">
+		<xsd:complexType>
+			<xsd:sequence>
+				<xsd:element ref="name"></xsd:element>
+				<xsd:element name="ipaddress" type="xsd:string"></xsd:element>
+				<xsd:element ref="be" maxOccurs="unbounded" minOccurs="1"></xsd:element>
+				<xsd:element name="sshport" type="xsd:string"></xsd:element>
+				<xsd:element name="sshusername" type="xsd:string"></xsd:element>
+				<xsd:element name="sshpassword" type="xsd:string"></xsd:element>
+				<xsd:element name="deploymentpath" type="xsd:string"></xsd:element>
+				<xsd:element name="os" type="xsd:string"></xsd:element>
+				<xsd:element ref="instances" maxOccurs="1" minOccurs="1">
+				</xsd:element>
+			</xsd:sequence>
+		</xsd:complexType>
+	</xsd:element>
+
+	<xsd:element name="application">
+		<xsd:complexType>
+			<xsd:sequence>
+				<xsd:element ref="name"></xsd:element>
+				<xsd:element name="clustername" type="xsd:string"></xsd:element>
+				<xsd:element name="cddversion" type="xsd:string"></xsd:element>
+				<xsd:element name="author" type="xsd:string"></xsd:element>
+				<xsd:element ref="hosts" maxOccurs="1" minOccurs="0">
+				</xsd:element>
+				<xsd:element name="defaultProfile" type="xsd:string"
+					maxOccurs="1" minOccurs="0">
+				</xsd:element>
+				<xsd:element ref="profiles" maxOccurs="1" minOccurs="0">
+
+				</xsd:element>
+				<xsd:element ref="hostTraConfigs" maxOccurs="1"
+					minOccurs="0"></xsd:element>
+			</xsd:sequence>
+		</xsd:complexType>
+	</xsd:element>
+	<xsd:element name="profile">
+		<xsd:complexType>
+			<xsd:sequence>
+				<xsd:element ref="name"></xsd:element>
+			</xsd:sequence>
+		</xsd:complexType>
+	</xsd:element>
+	<xsd:element name="profiles">
+		<xsd:complexType>
+			<xsd:sequence>
+				<xsd:element ref="profile" maxOccurs="unbounded"
+					minOccurs="0"></xsd:element>
+			</xsd:sequence>
+		</xsd:complexType>
+	</xsd:element>
+
+	<xsd:element name="instance">
+		<xsd:complexType>
+			<xsd:sequence>
+				<xsd:element ref="name"></xsd:element>
+				<xsd:element name="pu" type="xsd:string"></xsd:element>
+				<xsd:element name="jmxport" type="xsd:string"></xsd:element>
+				<xsd:element name="jmxusername" type="xsd:string"></xsd:element>
+				<xsd:element name="jmxpassword" type="xsd:string"></xsd:element>
+				<xsd:element name="deploymentpath" type="xsd:string"></xsd:element>
+				<xsd:element name="beId" type="xsd:string"></xsd:element>
+				<xsd:element ref="deploymentVariables" maxOccurs="unbounded"
+					minOccurs="0">
+				</xsd:element>
+				<xsd:element ref="agents" maxOccurs="1" minOccurs="0"></xsd:element>
+			</xsd:sequence>
+		</xsd:complexType>
+	</xsd:element>
+
+	<xsd:element name="agent">
+		<xsd:complexType>
+			<xsd:sequence>
+				<xsd:element ref="name"></xsd:element>
+				<xsd:element name="type" type="xsd:string"></xsd:element>
+			</xsd:sequence>
+		</xsd:complexType>
+	</xsd:element>
+	<xsd:element name="deploymentVariables">
+		<xsd:complexType>
+			<xsd:sequence>
+				<xsd:element name="type" type="xsd:string" />
+				<xsd:element name="nameValuePairs" type="NameValuePairs" />
+			</xsd:sequence>
+		</xsd:complexType>
+	</xsd:element>
+
+	<xsd:complexType name="NameValuePairs">
+		<xsd:sequence>
+			<xsd:element name="nameValuePair" type="NameValuePair"
+				minOccurs="0" maxOccurs="unbounded" />
+		</xsd:sequence>
+	</xsd:complexType>
+
+	<xsd:complexType name="NameValuePair">
+		<xsd:sequence>
+			<xsd:element name="name" type="xsd:string" maxOccurs="1"
+				minOccurs="1" />
+			<xsd:element name="description" type="xsd:string"
+				minOccurs="0" />
+			<!-- <xsd:element name="state" type="State"/> -->
+			<xsd:element name="defaultValue" type="xsd:string"
+				minOccurs="0" maxOccurs="1" />
+			<xsd:element name="value" type="xsd:string" minOccurs="1"
+				maxOccurs="1" />			
+
+		</xsd:sequence>
+	</xsd:complexType>
+
+
+	<xsd:element name="hosts">
+		<xsd:complexType>
+			<xsd:sequence>
+				<xsd:element ref="host" maxOccurs="unbounded" minOccurs="0"></xsd:element>
+			</xsd:sequence>
+		</xsd:complexType>
+	</xsd:element>
+
+	<xsd:element name="instances">
+		<xsd:complexType>
+			<xsd:sequence>
+				<xsd:element ref="instance" maxOccurs="unbounded"
+					minOccurs="1"></xsd:element>
+			</xsd:sequence>
+		</xsd:complexType>
+	</xsd:element>
+
+
+	<xsd:element name="agents">
+		<xsd:complexType>
+			<xsd:sequence>
+				<xsd:element ref="agent" maxOccurs="unbounded"
+					minOccurs="0"></xsd:element>
+			</xsd:sequence>
+		</xsd:complexType>
+	</xsd:element>
+	<xsd:element name="be">
+		<xsd:complexType>
+			<xsd:sequence>
+				<xsd:element name="behome" type="xsd:string"></xsd:element>
+				<xsd:element name="betrapath" type="xsd:string"></xsd:element>
+				<xsd:element name="version" type="xsd:string" />
+			</xsd:sequence>
+			<xsd:attribute name="id" type="xsd:string"></xsd:attribute>
+		</xsd:complexType>
+	</xsd:element>
+
+	<xsd:element name="hostTraConfigs">
+		<xsd:complexType>
+			<xsd:sequence>
+				<xsd:element ref="hostTraConfig" maxOccurs="unbounded"
+					minOccurs="0"></xsd:element>
+			</xsd:sequence>
+		</xsd:complexType>
+	</xsd:element>
+
+	<xsd:element name="hostTraConfig">
+		<xsd:complexType>
+			<xsd:sequence>
+				<xsd:element ref="hostId"></xsd:element>
+				<xsd:element ref="traPath"></xsd:element>
+			</xsd:sequence>
+		</xsd:complexType>
+	</xsd:element>
+
+	<xsd:element name="hostId" type="xsd:string"></xsd:element>
+
+	<xsd:element name="traPath" type="xsd:string"></xsd:element>
+	<xsd:attribute name="id" type="xsd:string"></xsd:attribute>
+</xsd:schema>

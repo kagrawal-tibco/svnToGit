@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beviewsconfig:ChartComponent xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:beviewsconfig="http://www.tibco.com/be/designer" xmlns:designtime="http:///com/tibco/cep/designtime/core/model/designtime_ontology.ecore" namespace="/Dashboards/" folder="/Dashboards/" name="C_DebitTraffic" description="Shows Account Debit Traffic" GUID="C36EC31F-BBB1-0D1A-46B8-EB4A2EEF22AC" ownerProjectName="FraudDetectionDashboard" version="1304549732435" displayName="Debit Traffic" componentColorSetIndex="0" seriesColorIndex="0">
+  <extendedProperties>
+    <properties xsi:type="designtime:SimpleProperty" name="Category">
+      <extendedProperties>
+        <properties xsi:type="designtime:SimpleProperty" name="03:00"/>
+        <properties xsi:type="designtime:SimpleProperty" name="03:10"/>
+        <properties xsi:type="designtime:SimpleProperty" name="03:20"/>
+        <properties xsi:type="designtime:SimpleProperty" name="03:30"/>
+        <properties xsi:type="designtime:SimpleProperty" name="03:40"/>
+        <properties xsi:type="designtime:SimpleProperty" name="04:00"/>
+      </extendedProperties>
+    </properties>
+    <properties xsi:type="designtime:SimpleProperty" name="MaxValue" value="20.0"/>
+    <properties xsi:type="designtime:SimpleProperty" name="MinValue" value="0.0"/>
+  </extendedProperties>
+  <visualization xsi:type="beviewsconfig:LineChartVisualization" namespace="/Dashboards/" folder="/Dashboards/" name="TCV_" description="" GUID="942B0C2A-C9B8-672B-044F-2171A850F3D3" ownerProjectName="FraudDetectionDashboard" version="1304549732435" lineThickness="3" dataPlotting="all" plotShape="circle" plotShapeDimension="3">
+    <seriesConfig xsi:type="beviewsconfig:ChartSeriesConfig" namespace="/Dashboards/" folder="/Dashboards/" name="Debits" description="" GUID="786DF630-963E-0607-D149-69EA019E9EDA" ownerProjectName="FraudDetectionDashboard" version="1304549732435" anchor="Q1">
+      <actionRule namespace="/Dashboards/" folder="/Dashboards/" name="Series__AR" description="" GUID="7C3DECD1-58F8-687B-C6D5-25C462EEC4C4" ownerProjectName="FraudDetectionDashboard" version="1304549732436" threshold="-1" thresholdUnit="hour">
+        <dataSource href="DS_DebitTrafficByMin.datasource#/"/>
+        <drillableFields href="M_DebitTrafficByMin.metric#//@properties.0"/>
+        <params namespace="/Dashboards/" folder="/Dashboards/" name="startofday" description="" GUID="D6CE1073-0FA6-D9BC-959A-7D4C77B23A8D" ownerProjectName="FraudDetectionDashboard" version="1304549732436" value="${SYS:STARTOFDAY}" type="DateTime"/>
+        <params namespace="/Dashboards/" folder="/Dashboards/" name="endofday" description="" GUID="E5F1338E-B4CD-27DD-8D6F-352FEB58C957" ownerProjectName="FraudDetectionDashboard" version="1304549732436" value="${SYS:ENDOFDAY}" type="DateTime"/>
+      </actionRule>
+      <valueDataConfig xsi:type="beviewsconfig:ChartValueDataConfig">
+        <extractor>
+          <sourceField href="M_DebitTrafficByMin.metric#//@properties.1"/>
+        </extractor>
+        <formatter xsi:type="beviewsconfig:TextFieldFormat" toolTipFormat="{SnapshotTime}={Requests}" displayFormat="{Requests}" showLabel="true">
+          <formatStyle fontSize="10" fontStyle="normal"/>
+        </formatter>
+      </valueDataConfig>
+      <categoryDataConfig xsi:type="beviewsconfig:ChartCategoryDataConfig">
+        <extractor>
+          <sourceField href="M_DebitTrafficByMin.metric#//@properties.0"/>
+        </extractor>
+        <formatter xsi:type="beviewsconfig:TextFieldFormat" displayFormat="{SnapshotTime,date,hh:mm}"/>
+      </categoryDataConfig>
+    </seriesConfig>
+  </visualization>
+  <layoutConstraint xsi:type="beviewsconfig:FlowLayoutConstraint" componentRowSpan="1" componentColSpan="3"/>
+  <plotArea>
+    <foreground line="both"/>
+  </plotArea>
+  <categoryGuidelineConfig headerName="Time" sortOrder="unsorted">
+    <headerFormatStyle fontSize="10" fontStyle="normal"/>
+    <labelFormatStyle fontSize="10" fontStyle="normal"/>
+  </categoryGuidelineConfig>
+  <valueGuidelineConfig headerName="Debits" scale="normal" division="5">
+    <headerFormatStyle fontSize="10" fontStyle="normal"/>
+    <labelFormatStyle fontSize="10" fontStyle="normal"/>
+  </valueGuidelineConfig>
+</beviewsconfig:ChartComponent>

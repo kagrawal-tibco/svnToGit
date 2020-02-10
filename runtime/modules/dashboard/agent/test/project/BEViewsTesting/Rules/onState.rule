@@ -1,0 +1,21 @@
+/**
+ * @description 
+ * @author mwiley-dt
+ */
+rule Rules.onState {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Events.StateEvent stateEvent;
+	}
+	when {
+		
+	}
+	then {
+		System.debugOut("Received E_StateEvent[state="+stateEvent.state+",indicator="+stateEvent.indicator+",content="+stateEvent.content+"]");
+		Dashboards.Metrics.PMState metric = Dashboards.Metrics.PMState.compute(stateEvent.state,stateEvent.indicator,stateEvent.content);
+		System.debugOut("Computed M_PMState[state="+metric.state+",indicator="+metric.indicator+",content="+metric.content+"]");
+	}
+}

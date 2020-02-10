@@ -1,0 +1,132 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>     ActiveSpaces Channel
+
+- TIBCO BusinessEvents&reg; Examples
+</title>
+<meta http-equiv="Content-type" content="text/html; charset=iso-8859-1" />
+<meta http-equiv="Content-Language" content="en-us" />
+<link rel="Shortcut Icon" href="../../_resources/icon.gif" type="image/gif" />
+<style type="text/css" media="all">@import "../../_resources/examples.css";</style>
+</head>
+<body onLoad="buildForms()">
+
+
+<h1>ActiveSpaces Channel</h1>
+
+
+<h2>Purpose of This Example</h2>
+
+<p>The ActiveSpaces Channel example demonstrates how TIBCO BusinessEvents&reg; uses an ActiveSpaces channel to put, get and take tuples using TIBCO ActiveSpaces&reg;. You can examine the project in TIBCO BusinessEvents Studio to understand the setup, and refer to <i>TIBCO BusinessEvents Developer's Guide</i> for details on channel configuration. </p>
+
+<h2>Instructions</h2>
+
+<h3>Configure the Example</h3>
+<p>Before running the example, do the following. </p>
+
+<ol>
+<li><p> Add <i>AS_HOME</i><code>/lib</code> in the following classpath in <i>BE_HOME</i><code>/bin/be-engine.tra</code> to point to your ActiveSpaces installation:
+<pre>tibco.env.STD_EXT_CP</i></pre>
+</li>
+
+<li><p> Insure that <i>AS_HOME</i><code>/lib</code> is in the environment variable <code>PATH</code> on Windows&reg; platform and <code>LD_LIBRARY_PATH</code> on Unix-like	platform.
+</li>
+</ol>
+
+<h3>Run the Example</h3>
+
+<ol>
+
+<li><p>Open a command window to create and initialize the Metaspace and Spaces of ActiveSpaces using the following command.</p>
+<pre class="commands">
+cd <i>BE_HOME</i>/examples/standard/ASChannel
+java -cp as-channel-demo-utils.jar;<i>AS_HOME</i>\lib\as-common.jar InitializeMetaspace -ms ms1 -dUrl "tibpgm://8023/0.0.0.0;239.8.8.8"
+</pre>
+</li>
+
+<li><p>Open another command window and at the command prompt, start the TIBCO BusinessEvents engine using the following command.</p>
+<pre class="commands">
+cd <i>BE_HOME</i>/examples/standard/ASChannel
+<i>BE_HOME</i>/bin/be-engine --propFile <i>BE_HOME</i>/bin/be-engine.tra -u default -c ASChannel/ASChannel.cdd ASChannel.ear
+</pre>
+</li>
+
+<li><p>Make sure the command window showing the TIBCO BusinessEvents engine is visible, and that the text at the bottom is similar to <code>BE Engine <i>host-user</i> started</code>. Then open the third command window to put a tuple into <code>myspace</code> using the following command.</p>
+<pre class="commands">
+java -cp as-channel-demo-utils.jar;<i>AS_HOME</i>\lib\as-common.jar PutTupleIntoMyspace -ms ms1 -dUrl "tibpgm://8023/0.0.0.0;239.8.8.8" -id 501 -value "Hello, BE AS Channel!"
+</pre>
+</li>
+
+<li>
+<p>A message arriving at the destination <code>MyspaceWithEntryBrowserLeechType</code> within the ActiveSpaces channel (<code>aschannel</code>) is transformed into an <code>MyspaceDefEvent</code> which is asserted. The rule <code>PrintMyspaceTupleAndPutANewTupleToOutSpace</code> executes on assertion of this event. It prints the details of the message to the command window. For example:</p>
+<p>
+<pre class="logs">2012 Mar 26 13:50:11:756 GMT +8 192.168.67.104 Info [$default.be.mt$.Thread.1] - [user] [GetTupleFromMyspaceWithEntryBrowser] Print Tuple And Put Another Tuple Rule: MyspaceDefEvent ID: 501
+2012 Mar 26 13:50:11:756 GMT +8 192.168.67.104 Info [$default.be.mt$.Thread.1] - [user] [GetTupleFromMyspaceWithEntryBrowser] Print Tuple And Put Another Tuple Rule: MyspaceDefEvent VALUE: Hello, BE AS Channel!
+2012 Mar 26 13:50:11:756 GMT +8 192.168.67.104 Info [$default.be.mt$.Thread.1] - [user] [GetTupleFromMyspaceWithEntryBrowser] Print Tuple And Put Another Tuple Rule: MyspaceDefEvent CONSUMPTION MODE: EntryBrowser
+2012 Mar 26 13:50:11:756 GMT +8 192.168.67.104 Info [$default.be.mt$.Thread.1] - [user] [GetTupleFromMyspaceWithEntryBrowser] Print Tuple And Put Another Tuple Rule: MyspaceDefEvent BROWSER TYPE: GET</pre>
+</p>
+</li>
+
+<li><p>Make sure the command window showing the TIBCO BusinessEvents engine is visible, and that the text at the bottom is similar to <code>BE Engine <i>host-user</i> started</code>. Then open the fourth command window to put a locked tuple into <code>myspace</code> using the following command.</p>
+<pre class="commands">
+java -cp as-channel-demo-utils.jar;<i>AS_HOME</i>\lib\as-common.jar PutTupleIntoMyspace -ms ms1 -dUrl "tibpgm://8023/0.0.0.0;239.8.8.8" -id 168 -value "Hello, BE AS Channel!"
+</pre>
+</li>
+
+<li>
+<p>A message arriving at the destination <code>MyspaceWithEntryBrowserLeechType</code> within the ActiveSpaces channel (<code>aschannel</code>) is transformed into an <code>MyspaceDefEvent</code> which is asserted. The rule <code>PrintMyspaceTupleAndPutANewTupleToOutSpace</code> executes on assertion of this event. It prints the details of the message to the command window. For example:</p>
+<p>
+<pre class="logs">2012 Mar 26 13:51:13:626 GMT +8 192.168.67.104 Info [$default.be.mt$.Thread.1] - [user] [ListenMyspace] Listen Myspace Tuple Rule: MyspaceDefEvent ID: 168
+2012 Mar 26 13:51:13:626 GMT +8 192.168.67.104 Info [$default.be.mt$.Thread.1] - [user] [Locking] Lock Tuple Rule: Lock the tuple with id 168
+2012 Mar 26 13:51:13:626 GMT +8 192.168.67.104 Info [$default.be.mt$.Thread.1] - [user] [ListenMyspace] Listen Myspace Tuple Rule: MyspaceDefEvent VALUE: Hello, BE ASChannel!"</pre>
+</p>
+</li>
+
+
+<li><p>Make sure the command window showing the TIBCO BusinessEvents engine is visible, and that the text at the bottom is similar to <code>BE Engine <i>host-user</i> started</code>. Then open the fifth command window to put a unlocked tuple into <code>myspace</code> using the following command.</p>
+<pre class="commands">
+java -cp as-channel-demo-utils.jar;<i>AS_HOME</i>\lib\as-common.jar PutTupleIntoMyspace -ms ms1 -dUrl "tibpgm://8023/0.0.0.0;239.8.8.8" -id 66 -value "Hello, BE ASChannel!"
+</pre>
+</li>
+
+<li>
+<p>A message arriving at the destination <code>MyspaceWithEntryBrowserLeechType</code> within the ActiveSpaces channel (<code>aschannel</code>) is transformed into an <code>MyspaceDefEvent</code> which is asserted. The rule <code>PrintMyspaceTupleAndPutANewTupleToOutSpace</code> executes on assertion of this event. It prints the details of the message to the command window. For example:</p>
+<p>
+<pre class="logs">
+2012 Mar 26 13:53:16:367 GMT +8 192.168.67.104 Info [$default.be.mt$.Thread.2] - [user] [ListenMyspace] Listen Myspace Tuple Rule: MyspaceDefEvent ID: 66
+2012 Mar 26 13:53:16:368 GMT +8 192.168.67.104 Info [$default.be.mt$.Thread.2] - [user] [ListenMyspace] Listen Myspace Tuple Rule: MyspaceDefEvent VALUE: Hello, BE ASChannel!"
+2012 Mar 26 13:53:16:412 GMT +8 192.168.67.104 Info [$default.be.mt$.Thread.1] - [user] [Unlocking] Unlock Tuple Rule: Unlock the tuple with id 168.
+2012 Mar 26 13:53:16:422 GMT +8 192.168.67.104 Info [$default.be.mt$.Thread.2] - [user] [ListenMyspace] Listen Myspace Tuple Rule: MyspaceDefEvent CONSUMPTION MODE: EventListener
+2012 Mar 26 13:53:16:512 GMT +8 192.168.67.104 Info [$default.be.mt$.Thread.2] - [user] [ListenMyspace] Listen Myspace Tuple Rule: MyspaceDefEvent EVENT TYPE: PutEvent
+2012 Mar 26 13:53:16:535 GMT +8 192.168.67.104 Info [$default.be.mt$.Thread.1] - [user] [Unlocking] Unlock Tuple Rule: The tuple with id 168 is unlocked.
+2012 Mar 26 13:53:16:747 GMT +8 192.168.67.104 Info [$default.be.mt$.Thread.2] - [user] [ListenMyspace] Listen Myspace Tuple Rule: If exists Tuples with ID > 15000 and ID <= 20000 in Outspace: false</pre>
+</p>
+</li>
+
+<li><p>And then take a tuple from <code>outspace</code> using the following command.</p>
+<pre class="commands">
+java -cp as-channel-demo-utils.jar;<i>AS_HOME</i>\lib\as-common.jar RetrieveTuple -ms ms1 -dUrl "tibpgm://8023/0.0.0.0;239.8.8.8" -sname outspace -id 10501 -rtype take
+</pre>
+</li>
+
+<li>
+<p>The new tuple put into <code>OutspaceOutBound</code> by <code>PrintMyspaceTupleAndPutANewTupleToOutSpace</code> will be retrieved with ActiveSpaces channel demo utility, and print information. For example:</p>
+<p>
+<pre class="logs">Result:
+datetime:       2012-03-26T05:50:11GMT
+value:          TEXT PAYLOAD Hello, BE AS Channel!
+id:             10501</pre>
+</p>
+</li>
+
+</ol>
+
+<div class="footer">
+<p>TIBCO BusinessEvents&trade; 5.6<br />
+Copyright&copy; 2004-2019 TIBCO Software Inc. All rights reserved.</p>
+</div>
+</body>
+</html>

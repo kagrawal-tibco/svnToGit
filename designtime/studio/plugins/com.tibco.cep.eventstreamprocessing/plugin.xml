@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="com.tibco.cep.rt.functionCatalogProvider">
+      <functionCatalog
+            provider="com.tibco.cep.eventstreamprocessing.ESPFunctionCatalogProvider">
+      </functionCatalog>
+   </extension>
+   <extension
+         point="com.tibco.cep.tpcl.runtimeBundleClasspathProvider">
+      <RuntimeBundle
+            classpathProvider="com.tibco.cep.eventstreamprocessing.ESPRuntimeClasspathProvider">
+      </RuntimeBundle>
+   </extension>
+   <extension
+         point="org.eclipse.ui.activities">
+      <activity
+            description="Develop event stream processing applications"
+            id="com.tibco.cep.eventstreamprocessing.development"
+            name="Event Stream Processing Development">
+      </activity>
+      <activityRequirementBinding
+            activityId="com.tibco.cep.eventstreamprocessing.development"
+            requiredActivityId="com.tibco.cep.standard.development">
+      </activityRequirementBinding>         
+      <categoryActivityBinding
+            activityId="com.tibco.cep.eventstreamprocessing.development"
+            categoryId="com.tibco.cep.standard.category">
+      </categoryActivityBinding>
+      <activityPatternBinding
+            activityId="com.tibco.cep.eventstreamprocessing.development"
+            pattern="com\.tibco\.cep\.eventstreamprocessing/.*">
+      </activityPatternBinding>
+      <defaultEnablement
+            id="com.tibco.cep.eventstreamprocessing.development">
+      </defaultEnablement>
+
+	</extension>
+	   <extension
+         point="com.tibco.cep.rt.addonContributor">
+      <addon
+            class="com.tibco.cep.eventstreamprocessing.EventStreamProcessingAddOnLoader">
+      </addon>
+   </extension>
+</plugin>

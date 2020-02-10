@@ -1,0 +1,97 @@
+/**
+ * @description Acquire artifact Lock
+ */
+WebStudio.Core.Concepts.Lifecycle.Lock.WS_C_ArtifactLockResponse rulefunction WebStudio.Core.RuleFunctions.Actions.Lifecycle.Lock.WS_RF_GetMasterArtifactLock {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String projectName;
+		String artifactPath;
+		String artifactType;
+		String fileExtension;
+		String lockRequestForUser;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.Lifecycle.Lock.WS_RF_GetMasterArtifactLock");
+		
+		Log.log(LOGGER, "Debug", "Request to acquire lock on artifact %s for User %s.", artifactPath, lockRequestForUser);
+		
+		WS_C_AcquireArtifactLockResponse artifactLockResponse  = Instance.newTransientInstance("/WebStudio/Core/Concepts/Lifecycle/Lock/WS_C_AcquireArtifactLockResponse");
+		artifactLockResponse.projectName = projectName;
+		artifactLockResponse.artifactPath = artifactPath;
+		artifactLockResponse.requestor = lockRequestForUser;
+		artifactLockResponse.artifactType = artifactType;
+		artifactLockResponse.fileExtension = fileExtension;
+		
+		boolean lockingEnabled = System.getSystemPropertyAsBoolean("ws.scs.locking.enable", false);
+		artifactLockResponse.lockingEnabled = lockingEnabled;
+		
+		String subscriptionId = WS_RF_GetSubscriptionId(lockRequestForUser);
+		
+		if (artifactLockResponse.lockingEnabled) {
+			String masterArtifactExtId = WS_RF_CreateUserArtifactExtId(null, artifactPath, projectName, null, subscriptionId, null);
+			String masterArtifactLockExtId = WS_RF_CreateUserArtifactExtId("LOCK", null, null, null, null, masterArtifactExtId); 
+			WS_C_MasterArtifactLock artifactLock = null;
+			boolean locked = Cluster.DataGrid.Lock(masterArtifactLockExtId, -1, false);
+			if (locked) {
+				boolean lockfreshlyAcquired = false;
+				boolean lockTimedout = false;						
+				artifactLock = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(masterArtifactLockExtId, false, "/WebStudio/Core/Concepts/Lifecycle/WS_C_MasterArtifactLock");
+				if (artifactLock == null) {
+					Log.log(LOGGER, "Debug", "Creating new Artifact Lock entry for artifact %s", artifactPath);
+					artifactLock = 
+						Instance.createInstance("xslt://{{/WebStudio/Core/Concepts/Lifecycle/WS_C_MasterArtifactLock}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" version=\"1.0\" exclude-result-prefixes=\"xsl xsd\">\n    <xsl:output method=\"xml\"/>\n    <xsl:param name=\"masterArtifactLockExtId\"/>\n    <xsl:param name=\"artifactPath\"/>\n    <xsl:param name=\"projectName\"/>\n    <xsl:param name=\"artifactType\"/>\n    <xsl:template match=\"/\">\n        <createObject>\n            <object>\n                <xsl:attribute name=\"extId\">\n                    <xsl:value-of select=\"$masterArtifactLockExtId\"/>\n                </xsl:attribute>\n                <artifactPath>\n                    <xsl:value-of select=\"$artifactPath\"/>\n                </artifactPath>\n                <managedProjectName>\n                    <xsl:value-of select=\"$projectName\"/>\n                </managedProjectName>\n                <artifactType>\n                    <xsl:value-of select=\"$artifactType\"/>\n                </artifactType>\n            </object>\n        </createObject>\n    </xsl:template>\n</xsl:stylesheet>");					
+					lockfreshlyAcquired = true;
+					artifactLockResponse.lockAcquired = true;
+					artifactLockResponse.lockOwner = lockRequestForUser;
+				} else { 				
+					Log.log(LOGGER, "Debug", "Found existing Artifact Lock entry for artifact %s", artifactPath);
+					if (artifactLock.locked) {
+						if (WS_RF_IsArtifactLockTimedout(artifactLock)) {
+							lockTimedout = true;							
+						}							
+						if (String.equals(lockRequestForUser, artifactLock.lockedBy)) {
+							if (lockTimedout) {
+								artifactLockResponse.lockAcquired = false;
+								artifactLockResponse.lockOwner = null;
+								Log.log(LOGGER, "Info", "The lock held on artifact %s by user %s has timedout, releasing the lock.", artifactPath, artifactLock.lockedBy);									
+							} else {	
+								artifactLockResponse.lockAcquired = true;
+								artifactLockResponse.lockOwner = artifactLock.lockedBy;
+								Log.log(LOGGER, "Info", "The artifact %s is already locked by user %s. No need to relock.", artifactPath, lockRequestForUser);
+							}	
+						} else {
+							if (lockTimedout) {
+								lockfreshlyAcquired = true; //freshly acquired by requestor 
+								artifactLockResponse.lockAcquired = true;
+								artifactLockResponse.lockOwner = lockRequestForUser;
+								Log.log(LOGGER, "Info", "The lock held on artifact %s by user %s has timedout, lock will now be acquired by user %s", artifactPath, artifactLock.lockedBy, lockRequestForUser);																	
+							} else {							
+								artifactLockResponse.lockAcquired = false;
+								artifactLockResponse.lockOwner = artifactLock.lockedBy;
+								Log.log(LOGGER, "Info", "The artifact %s is already locked by user %s, lock couldn't be acquired for user %s.", artifactPath, artifactLock.lockedBy, lockRequestForUser);
+							}						
+						}			
+					} else {					
+						lockfreshlyAcquired = true;
+						artifactLockResponse.lockAcquired = true;
+						artifactLockResponse.lockOwner = lockRequestForUser;
+						Log.log(LOGGER, "Info", "Acquired lock on artifact %s for user %s", artifactPath, lockRequestForUser);
+					}
+				}
+				
+				if (lockfreshlyAcquired || lockTimedout) { //Need to update lock concept and/or project locks registry concept
+					WS_E_UpdateMasterArtrifactLockEvent updateLockEvent = Event.createEvent("xslt://{{/WebStudio/Core/Events/Lifecycle/WS_E_UpdateMasterArtrifactLockEvent}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" version=\"1.0\" exclude-result-prefixes=\"xsl xsd\">\n    <xsl:output method=\"xml\"/>\n    <xsl:param name=\"masterArtifactLockExtId\"/>\n    <xsl:param name=\"lockfreshlyAcquired\"/>\n    <xsl:param name=\"lockRequestForUser\"/>\n    <xsl:param name=\"projectName\"/>\n    <xsl:template match=\"/\">\n        <createEvent>\n            <event>\n                <masterArtifactLockExtId>\n                    <xsl:value-of select=\"$masterArtifactLockExtId\"/>\n                </masterArtifactLockExtId>\n                <acquireLock>\n                    <xsl:value-of select=\"$lockfreshlyAcquired\"/>\n                </acquireLock>\n                <lockRequestForUser>\n                    <xsl:value-of select=\"$lockRequestForUser\"/>\n                </lockRequestForUser>\n                <managedProjectName>\n                    <xsl:value-of select=\"$projectName\"/>\n                </managedProjectName>\n            </event>\n        </createEvent>\n    </xsl:template>\n</xsl:stylesheet>");
+					Event.assertEvent(updateLockEvent);					
+				}	
+			}					
+		} else {
+			artifactLockResponse.lockAcquired = false;
+			artifactLockResponse.lockOwner = null;
+			Log.log(LOGGER, "Debug", "Locking is not enabled. No lock acquired on Artifact %s.", artifactPath);			
+		}
+		
+		return artifactLockResponse;
+	}
+}

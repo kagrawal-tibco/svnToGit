@@ -1,0 +1,34 @@
+ <div class="ruleCreationContainer">
+ 	<form name="genForm" novalidate style="height : 92%;">
+ 		<div class="form-horizontal ruleGeneralInfoPanel">
+ 			<div class="control-group">
+          		<label class="control-label">Name:</label>
+             	<div class="controls">
+                   <input ng-if="isRuleCreate" name="ruleNameInput" type="text" placeholder="RuleName" id="ruleNameTextField" ng-model="$parent.ruleObj.name"
+                            required  autofocus autocomplete="off">
+                   <input ng-if="!isRuleCreate" name="ruleNameInput" type="text" placeholder="RuleName" id="ruleNameTextField" ng-model="$parent.ruleObj.name.split('$')[2]"
+                            required disabled>
+              	</div>   
+			  	<label class="control-label">Monitored Entity: </label>
+			  	<div class="controls" >					
+					<select ng-model="$parent.ruleObj.entity" ng-disabled="!isRuleCreate" ng-change="changeEntity($parent.ruleObj.entity)" required>
+						<option ng-repeat="(key,value) in ruleEntityAndAttibutes | orderObjectBy : 'index'" value="{{value.newKey}}" ng-selected = "value.newKey == $parent.ruleObj.entity">{{value.displayName}}</option>
+					</select>
+		     	</div>
+		     	<label class="control-label">Description: </label>
+		     	<div class="controls">
+		     		<textarea ng-model="$parent.ruleObj.description" rows="4" cols="50"></textarea>
+		     	</div>
+    		</div>
+ 		</div>
+ 		<div class="ruleCreationFooter" >
+ 			<div ng-show="$parent.isError" class="pull-left">
+				<span class="fileuploadError">*{{$parent.errorMessage}}</span>
+			</div>
+         	<button class="btn btn-primary" ng-disabled="genForm.$invalid" ng-click="nextStep()">Next</button>
+         	<button type="button" data-dismiss="modal" aria-hidden="true" class="btn tbt-btn secondary-btn" ng-click="close()">
+		  	 	Cancel
+	    	</button>
+   		</div>
+ 	</form>
+ </div>

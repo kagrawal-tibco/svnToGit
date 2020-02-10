@@ -1,0 +1,34 @@
+/**
+ * @description
+ * @author anpatil-dt
+ */
+ruletemplate BusinessRules.setAccountType {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	views{
+		BusinessRules.setAccountTypeView;
+	}
+	bindings{
+		int minimumDeposit;
+		int maximumDeposit;
+		String type(Domains.AccountTypes);
+	}
+	declare {
+		Concepts.Account account;
+	}
+	when {
+		account.AccountType == null;
+		account.AccountBalance >= minimumDeposit;
+		account.AccountBalance <= maximumDeposit;
+	}
+	actionContext {
+		//log to indicate rule template is executing  
+		System.debugOut("### Account[id="+account.AccountID+"] was created with deposit of $"+account.AccountBalance);
+		//log to indicate rule template instance information used when executing 
+		System.debugOut("### Setting account type as "+type+" for Account[id="+account.AccountID+"]");
+		//simple update of a concept 
+		account.AccountType = type;
+	}
+}

@@ -1,0 +1,184 @@
+<div
+  *ngIf='isReady'
+  class='editor-container '
+>
+
+  <!--  Property Editor -->
+  <div class='property-area' >
+    <div class="row">
+      <div class="form-group col-sm-3" >
+        <ng-template #effectiveTimeOldValue>{{propertyDecorationText('EffectiveDate')}}</ng-template>
+     <!--    <label
+          for="dt-effective-time"
+          [ngClass]="labelClasses('EffectiveDate')"
+          [class.clickable]='isPropertyLabelClickable("EffectiveDate")'
+          (click)='onPropertyLabelClick("EffectiveDate")'
+          [tooltip]="showTooltip('EffectiveDate') ? effectiveTimeOldValue: null"
+          container='body'
+          ><span class="property-label">Effective Date/Time</span></label> -->
+        <datetime-editor
+          [hint]="showTooltip('EffectiveDate') ? propertyDecorationText('EffectiveDate'): null"
+          floatLabel="{{i18n('Effective Date/Time')}}"
+          i18n-floatLabel
+          [edit]='editable'
+          [hideTimezone]='true'
+          [(value)]='effectiveDatetime'
+        ></datetime-editor>
+      </div>
+      <div class="form-group col-sm-3">
+        <ng-template #expiryTimeOldValue>{{propertyDecorationText('ExpiryDate')}}</ng-template>
+       <!--  <label
+          for="dt-expiry-time"
+          [ngClass]="labelClasses('ExpiryDate')"
+          [class.clickable]='isPropertyLabelClickable("ExpiryDate")'
+          (click)='onPropertyLabelClick("ExpiryDate")'
+          [tooltip]="showTooltip('ExpiryDate') ? expiryTimeOldValue: null"
+          container='body'
+          ><span class="property-label">Expiration Date/Time</span></label> -->
+        <datetime-editor
+          [edit]='editable'
+          [hint]="showTooltip('ExpiryDate') ? propertyDecorationText('ExpiryDate'): null"
+          floatLabel="{{i18n('Expiration Date/Time')}}"
+          i18n-floatLabel
+          [hideTimezone]='true'
+          [(value)]='expirationDatetime'
+        ></datetime-editor>
+      </div>
+      <div class="col-sm-1">
+        <ng-template #priorityOldValue>{{propertyDecorationText('Priority')}}</ng-template>
+<!--         <label
+          for="dt-priority"
+          [ngClass]="labelClasses('Priority')"
+          [class.clickable]='isPropertyLabelClickable("Priority")'
+          (click)='onPropertyLabelClick("Priority")'
+          [tooltip]="showTooltip('Priority') ? priorityOldValue : null"
+          container='body'
+          ><span class="property-label">Priority</span></label> -->
+        <mat-form-field style="width: inherit">
+	        <mat-select
+	          [disabled]="!editable"
+	          id="dt-priority"
+            placeholder="{{i18n('Priority')}}"
+            i18n-placeholder
+	          [(ngModel)]="priority"
+	          name='priority'
+	          >
+	          <mat-option
+	            *ngFor="let i of priorityOptions"
+	            [value]='i.toString()'>
+	            {{i}}
+	          </mat-option>
+	        </mat-select>
+        </mat-form-field>
+      </div>
+      <div class="form-group col-sm-2 top-pad">
+        <ng-template #singleRowExecOldValue>{{propertyDecorationText('SingleRowExecution')}}</ng-template>
+        <mat-slide-toggle
+          [color]="'primary'"
+          [disabled]='!editable'
+          [(ngModel)]='singleExec'
+          id='dt-single-row-execution'>
+          <ng-container i18n>{{i18n('Single Row Execution')}}</ng-container>
+        </mat-slide-toggle>
+       <!--  <label
+          for="dt-single-row-execution"
+          [ngClass]="labelClasses('SingleRowExecution')"
+          [class.clickable]='isPropertyLabelClickable("SingleRowExecution")'
+          (click)='onPropertyLabelClick("SingleRowExecution")'
+          [tooltip]="showTooltip('SingleRowExecution') ? singleRowExecOldValue: null"
+          container='body'
+          ><span class="property-label">Single Row Execution</span></label>
+        <br>
+        <toggle-switch
+          [size]='"mini"'
+          [readonly]='!editable'
+          [(value)]='singleExec'
+          id='dt-single-row-execution'
+        ></toggle-switch> -->
+      </div>
+  <div class="col-sm-3" *ngIf="this.showLegend">
+    <div class="pull-right-legends">
+      <span class="ws-diff-legend-descrip"><span class="ws-diff-legend ws-diff-background-add"></span><ng-container i18n>{{i18n(' Added ')}}</ng-container></span>
+      <span class="ws-diff-legend-descrip"><span class="ws-diff-legend ws-diff-background-delete"></span><ng-container i18n>{{i18n(' Deleted ')}}</ng-container></span>
+      <span class="ws-diff-legend-descrip"><span class="ws-diff-legend ws-diff-background-modify"></span><ng-container i18n>{{i18n(' Modified ')}}</ng-container></span>
+    </div>
+  </div>
+
+      <!--<div class="form-group col-sm-2">
+        <ng-template #timestampAsUTCOldValue>{{propertyDecorationText('TimestampAsUTC')}}</ng-template>
+        <label
+          for="dt-timestamp-as-utc"
+          [ngClass]="labelClasses('TimestampAsUTC')"
+          [class.clickable]='isPropertyLabelClickable("TimestampAsUTC")'
+          (click)='onPropertyLabelClick("TimestampAsUTC")'
+          [tooltip]="showTooltip('TimestampAsUTC') ? timestampAsUTCOldValue: null"
+          container='body'
+          ><span class="property-label">Timestamp As UTC</span></label>
+        <br>
+        <toggle-switch
+          [size]='"mini"'
+          [readonly]='!editable'
+          [(value)]='timestampAsUTC'
+          id='dt-timestamp-as-utc'
+        ></toggle-switch>
+      </div>-->
+    </div>
+  </div>
+
+
+  <div class="table-area">
+    <div class="table-edit-control">
+      <div *ngIf='editable' class='row'>
+        <div class='col-sm-12'>
+          <button
+            type="button"
+            class="btn btn-outline-primary btn-xs btn-wide"
+            (click)='onAddColumn()'
+            ><i class='fa fa-sm fa-table'></i><ng-container i18n>{{i18n(' Add Column')}}</ng-container></button>
+          <button
+            type="button"
+            class="btn btn-outline-primary btn-xs btn-wide"
+            (click)='onAddRule()'
+            ><i class='fa fa-sm fa-plus'></i><ng-container i18n>{{i18n(' Add Row')}}</ng-container></button>
+          <button
+            type="button"
+            class="btn btn-outline-primary btn-xs btn-wide"
+            (click)="onEditSchema()" i18n
+          >{{i18n('Edit Schema')}}</button>
+
+			<div class="btn-group">
+			  <button type="button" class="btn btn-primary btn-xs dropdown-toggle pull-right" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" i18n>
+			    {{i18n('Change Look and Feel
+          ')}}</button>
+			  <div class="dropdown-menu">
+			    <a (click)='setLookAndFeel("ag-theme-balham")' class="dropdown-item" href="#" i18n>{{i18n('Default')}}</a><br>
+			    <a (click)='setLookAndFeel("ag-theme-balham-dark")' class="dropdown-item" href="#" i18n>{{i18n('Default Dark')}}</a><br>
+			    <a (click)='setLookAndFeel("ag-theme-material")' class="dropdown-item" href="#" i18n>{{i18n('Material')}}</a><br>
+			    <a (click)='setLookAndFeel("ag-theme-blue")' class="dropdown-item" href="#" i18n>{{i18n('Blue')}}</a><br>
+			    <a (click)='setLookAndFeel("ag-theme-fresh")' class="dropdown-item" href="#" i18n>{{i18n('Fresh')}}</a><br>
+			    <a (click)='setLookAndFeel("ag-theme-dark")' class="dropdown-item" href="#" i18n>{{i18n('Dark')}}</a><br>
+			    <a (click)='setLookAndFeel("ag-theme-bootstrap")' class="dropdown-item" href="#" i18n>{{i18n('Bootstrap')}}</a><br>
+			  </div>
+			</div>
+
+        </div>
+      </div>
+    </div>
+    <div class='ag-grid-table'>
+      <ag-grid-angular #agGrid style="width: 100%; height: 100%" class="{{themeClass}}"
+          [gridOptions]="gridOptions"
+          [columnDefs]="columnDefs"
+          enableRtl="{{isRtl() ? 'true' : 'false'}}"
+          [defaultColDef]="defaultColDef"
+          [sideBar]="true"
+          [rowData]="rowData"
+          [toolPanelSuppressRowGroups]='true'
+          [stopEditingWhenGridLosesFocus]='true'
+          [singleClickEdit]='true'
+          (gridReady)="onGridReady($event)"
+          rowSelection="multiple"
+      >
+      </ag-grid-angular>
+    </div>
+  </div>
+</div>

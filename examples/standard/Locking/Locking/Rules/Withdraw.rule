@@ -1,0 +1,32 @@
+/**
+ * @description 
+ * @author 
+ */
+rule Rules.Withdraw {
+	
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	
+	declare {
+		Concepts.Account  account;
+		Events.Withdraw   e;
+	}
+	
+	when {
+		account@extId == e.accountNumber;
+	}
+	
+	then {
+		// Withdraws
+		account.balance = account.balance - e.amount;		
+		System.debugOut(" ######### Withdrew " + e.amount
+			+ " from account '" + account@extId
+			+ "'.  New balance = " + account.balance);
+			
+		// Simulates a long operation.
+		Engine.sleep(1000 * Math.random());
+	}
+	
+}

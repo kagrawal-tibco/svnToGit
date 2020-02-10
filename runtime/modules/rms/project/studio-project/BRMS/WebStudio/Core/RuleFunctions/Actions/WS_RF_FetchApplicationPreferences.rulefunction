@@ -1,0 +1,73 @@
+/**
+ * @description 
+ */
+WebStudio.Core.Concepts.DataSources.WS_C_TemporaryReturnData rulefunction WebStudio.Core.RuleFunctions.Actions.WS_RF_FetchApplicationPreferences {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object servletRequest;
+		WebStudio.Security.Authn.Concepts.WS_C_LoggedInUser loggedInUser;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.WS_RF_FetchApplicationPreferences");
+		
+		WS_C_ResponseData responseData = null;
+		int responseStatus = 0;
+		int recordCount = 0;
+		String errorCode = null;
+		String responseMessage = null;
+		
+		WS_C_TemporaryReturnData tempReturnData = null;
+		
+		if (!WS_RF_CheckHTTPMethod(servletRequest, "GET")) {
+			responseStatus = -1;
+			recordCount = 0;
+			errorCode = "ERR_5101";
+			responseMessage = "Invalid HTTP Method, expect method is [GET].";
+			
+			tempReturnData = WS_RF_CreateTemporaryReturnData(responseStatus, recordCount, errorCode, responseMessage, responseData);
+		} else {
+			//	Lock and load User Preferences concept
+			String subscriptionId = null;
+			if (loggedInUser.jwtToken != null) subscriptionId = loggedInUser.jwtToken.sbsc;
+			String applicationPreferencesExtId = WS_RF_CreateUserArtifactExtId("APPLICATION_PREFERENCES", null, null, null, subscriptionId, null);
+			Log.log(LOGGER, "Debug", "Trying to acquire lock on User Preference space with ExtId - %s", applicationPreferencesExtId);
+			boolean appPreferencesLock = Cluster.DataGrid.Lock(applicationPreferencesExtId, -1, false);
+			if (appPreferencesLock) {
+				Log.log(LOGGER, "Debug", "Lock acquired for Application Preference space.");
+				WS_C_ApplicationPreferences applicationPreferences = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(applicationPreferencesExtId, false, "/WebStudio/Core/Concepts/WS_C_ApplicationPreferences");
+				
+				if (applicationPreferences == null) {
+					Log.log(LOGGER, "Debug", "User Preference Space not created yet for this user. Creating one.");
+					applicationPreferences = Instance.newInstance("/WebStudio/Core/Concepts/WS_C_ApplicationPreferences", applicationPreferencesExtId);
+				}
+				
+				responseData = 
+					Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/WS_C_ResponseData");
+				
+				WS_C_AbstractDataSourceRecord applicationPreferencesDataSourceRecord = 
+					Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/Records/WS_C_ApplicationPrefDataSourceRecord");
+				WS_C_ApplicationPrefDataSourceRecord applicationPreferenceDSRecord = applicationPreferencesDataSourceRecord;
+				
+				for(int count = 0 ; count < applicationPreferences.operatorPreference@length; count++ ) {
+					WS_C_OperatorPreference op = Instance.newTransientInstance("/WebStudio/Core/Concepts/WS_C_OperatorPreference");
+					WS_C_AbstractOperatorPreference operatorPreference = applicationPreferences.operatorPreference[count];
+					op.fieldType = operatorPreference.fieldType;
+					for(int filterOpCnt = 0; filterOpCnt < operatorPreference.filterOperators@length; filterOpCnt++) {
+						Instance.PropertyArray.appendString(op.filterOperators,operatorPreference.filterOperators[filterOpCnt],1L);
+					}
+					for(int cmdOpCnt = 0; cmdOpCnt < operatorPreference.commandOperators@length; cmdOpCnt++) {
+						Instance.PropertyArray.appendString(op.commandOperators,operatorPreference.commandOperators[cmdOpCnt],1L);
+					}
+					Instance.PropertyArray.appendContainedConcept(applicationPreferenceDSRecord.operatorPreferences,op,1L);
+				}
+				Instance.PropertyArray.appendContainedConcept(responseData.record, applicationPreferencesDataSourceRecord, 1L);
+				
+				
+				recordCount = 1;
+			}
+		}
+		return WS_RF_CreateTemporaryReturnData(responseStatus, recordCount, errorCode, responseMessage, responseData);			
+	}
+}

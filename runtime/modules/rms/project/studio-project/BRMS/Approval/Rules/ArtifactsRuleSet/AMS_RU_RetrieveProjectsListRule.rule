@@ -1,0 +1,54 @@
+/**
+ * @description Fetch list of all projects served by this RMS
+ * @author aathalye-lt
+ */
+rule Approval.Rules.ArtifactsRuleSet.AMS_RU_RetrieveProjectsListRule {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Approval.Events.ArtifactEvents.Checkout.AMS_E_ProjectsListRequestEvent projectsListRequestEvent;
+	}
+	when {
+		
+	}
+	then {
+		Object LOGGER = Log.getLogger("Approval.Rules.ArtifactsRuleSet.AMS_RU_RetrieveProjectsListRule");
+		
+		AMS_C_LoggedInUser loggedInUser = AMS_RF_ValidateUsername(projectsListRequestEvent);
+		if (loggedInUser != null) {
+			String[] roles = Instance.PropertyArray.toArrayString(loggedInUser.roles);
+			
+			//Hopefully the instance would be in memory now
+			WS_C_ManagedProjects baseManagedProjects = Instance.getByExtIdByUri("MANAGED_PROJECTS", "/WebStudio/Core/Concepts/WS_C_ManagedProjects");
+			Log.log(LOGGER, "Debug", "Total projects under Managed Projects - %s", baseManagedProjects.managedProjectNames@length);
+
+			// filter projects based of user roles			
+			AMS_C_ServedProjects managedProjects = Instance.newTransientInstance("/Approval/Concepts/ArtifactsConcepts/AMS_C_ServedProjects");
+			WS_C_ProjectEntry[] managedProjectEntries = Instance.PropertyArray.toArrayContainedConcept(baseManagedProjects.managedProjectNames);
+			for (int loop = 0; loop < managedProjectEntries@length; loop++) {
+				WS_C_ProjectEntry projectEntry = managedProjectEntries[loop];
+				String projectName = projectEntry.name;
+				boolean hasAccess = RMS.Authorization.ensureAccess(projectName, null, roles, null, "PROJECT", "checkout");
+				Log.log(LOGGER, "Debug", "Checkout access for project [%s] - [%s]", projectName, hasAccess);
+				if (hasAccess) {
+					Instance.PropertyArray.appendString(managedProjects.projectNames, projectEntry.name, 1L);
+				}
+			}
+			
+			Log.log(LOGGER, "Debug", "Filtered projects under Managed Projects - %s", managedProjects.projectNames@length);
+			
+			AMS_E_ProjectsListResponseEvent response = Event.createEvent("xslt://{{/Approval/Events/ArtifactEvents/Checkout/AMS_E_ProjectsListResponseEvent}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" xmlns:tns=\"www.tibco.com/be/ontology/Approval/Concepts/ArtifactsConcepts/AMS_C_ServedProjects\" version=\"2.0\"><xsl:param name=\"managedProjects\"/><xsl:template name=\"Function\" match=\"/\"><createEvent><event><payload><tns:AMS_C_ServedProjects><xsl:for-each select=\"$managedProjects/projectNames\"><projectNames><xsl:value-of select=\".\"/></projectNames></xsl:for-each></tns:AMS_C_ServedProjects></payload></event></createEvent></xsl:template></xsl:stylesheet>");
+		    
+		    Event.consumeEvent(projectsListRequestEvent);    
+		    Event.replyEvent(projectsListRequestEvent, response);
+		} else {
+			String errorMessage = String.format("The user [%s] is not logged in", projectsListRequestEvent.loggedInUserName);
+			AMS_E_ErrorEvent errorEvent = 
+				Approval.CommonServices.AMS_RF_CreateErrorEvent("PROJECTS_LIST_FETCH_ERROR", errorMessage, null);
+			Event.replyEvent(projectsListRequestEvent, errorEvent);
+			Event.consumeEvent(projectsListRequestEvent);
+		}
+	}
+}

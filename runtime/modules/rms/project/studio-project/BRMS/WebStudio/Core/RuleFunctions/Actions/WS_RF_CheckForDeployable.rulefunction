@@ -1,0 +1,84 @@
+/**
+ * @description Checks if project EAR is present and is in sync with project resources
+ */
+WebStudio.Core.Concepts.DataSources.WS_C_TemporaryReturnData rulefunction WebStudio.Core.RuleFunctions.Actions.WS_RF_CheckForDeployable {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object servletRequest;
+		WebStudio.Security.Authn.Concepts.WS_C_LoggedInUser loggedInUser;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.WS_RF_ValidateDecisionTable");
+		
+		String responseMessage = null;
+		String errorCode = null;
+		int recordCount = 0;
+		int responseStatus = 0;
+		
+		if (!WS_RF_CheckHTTPMethod(servletRequest, "GET")) {
+			responseStatus = -1;
+			recordCount = 0;
+			errorCode = "ERR_5101";
+			responseMessage = "Invalid HTTP Method, expect method is [GET].";
+		} else {		
+			String pathSeparator = "/";				
+			String sharedLocation = System.getSystemPropertyAsString("ws.artifact.deploy.location", null);					
+			String[] projectNames = HTTP.Servlet.Request.getRequestParameterValues(servletRequest, "projectName");
+			
+			if (projectNames != null) {
+				String subscriptionId = WS_RF_GetSubscriptionId(loggedInUser.username);
+				
+				String deployStateExtId = "Deploy@";
+				Object errorResponseBuffer = String.createBuffer(0);
+				for (int  k = 0; k < projectNames@length ; k++) {
+					String projectName = projectNames[k];
+				    Log.log(LOGGER, "Debug", "Project Name %s", projectName);			
+					
+					Object reusableBuffer = String.createBuffer(0);					
+					String.append(reusableBuffer, sharedLocation);
+					String.append(reusableBuffer, pathSeparator);
+					if (subscriptionId != null && !String.equals(subscriptionId, "")) {
+						String.append(reusableBuffer, subscriptionId);
+						String.append(reusableBuffer, pathSeparator);
+					}
+					String.append(reusableBuffer, projectName);
+					String.append(reusableBuffer, pathSeparator);
+					String.append(reusableBuffer, projectName);
+					String.append(reusableBuffer, ".ear");						
+					String archivePath = String.convertBufferToString(reusableBuffer);
+					String.clearBuffer(reusableBuffer);
+					
+					deployStateExtId += projectName;
+					if (subscriptionId != null) deployStateExtId += ("@" + subscriptionId);
+					Approval.Concepts.ArtifactsConcepts.AMS_C_DeployableState deployableState = Instance.getByExtIdByUri(deployStateExtId, "/Approval/Concepts/ArtifactsConcepts/AMS_C_DeployableState");
+								
+					if (!File.fileExists(archivePath)) {
+						if (responseStatus == -1) {
+							String.append(errorResponseBuffer, ", ");						
+						}	
+						String.append(errorResponseBuffer, projectName);
+						responseStatus = -1;
+					} 
+					else if (deployableState == null || deployableState.dirty) {
+						Log.log(LOGGER, "Debug", "DeployableState is null or dirty for project - %s", projectName);
+						if (responseStatus == -1) {
+							String.append(errorResponseBuffer, ", ");						
+						}	
+						String.append(errorResponseBuffer, projectName);
+						responseStatus = -1;
+					}			
+				}
+				
+				if (responseStatus == -1) {
+					errorCode = "ERR_1152";
+					responseMessage = String.convertBufferToString(errorResponseBuffer);
+					responseMessage = String.format("Ear for projects: %s either not present or not in sync at deploy location.", responseMessage);
+				}
+			}	
+		}
+
+		return WS_RF_CreateTemporaryReturnData(responseStatus, recordCount, errorCode, responseMessage, null);																			
+	}
+}

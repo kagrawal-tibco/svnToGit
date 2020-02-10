@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<xsd:schema xmlns:tns="http://tibco.com/be/shared/jms"
+	xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+	targetNamespace="http://tibco.com/be/shared/jms"
+	xmlns:aems="http://www.tibco.com/xmlns/aemeta/services/2002"
+	elementFormDefault="qualified"
+	xmlns:bt="http://tibco.com/be/shared/basetypes">
+
+    <xsd:import schemaLocation="basetypes.xsd" namespace="http://tibco.com/be/shared/basetypes"></xsd:import>
+    <xsd:import namespace="http://www.tibco.com/xmlns/aemeta/services/2002"
+		schemaLocation="aemeta-services-2002.xsd"></xsd:import>
+		
+	<xsd:element name="BWSharedResource" type="tns:BWSharedResourceType" />
+
+	<xsd:complexType name="BWSharedResourceType">
+		<xsd:sequence>
+			<xsd:element name="name" type="xsd:string" minOccurs="1"
+				maxOccurs="1" >
+			</xsd:element>
+			<xsd:element name="resourceType" minOccurs="1" maxOccurs="1">
+				<xsd:simpleType>
+					<xsd:restriction base="xsd:string">
+						<xsd:enumeration value="ae.shared.JMSConnectionKey">
+						</xsd:enumeration>
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:element>
+			<xsd:element name="description" type="xsd:string"
+				minOccurs="0" maxOccurs="1">
+			</xsd:element>
+
+			<xsd:element name="config" maxOccurs="1" minOccurs="1"
+				type="tns:configType">
+
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+
+	<xsd:complexType name="JNDIPropertiesType">
+		<xsd:sequence minOccurs="0" maxOccurs="unbounded">
+			<xsd:element name="row" maxOccurs="unbounded" minOccurs="0"
+				type="tns:JNDIPropertiesRowType">
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+
+	<xsd:complexType name="configType">
+		<xsd:sequence>
+			<xsd:element minOccurs="1" maxOccurs="1" name="NamingEnvironment"
+				type="tns:NamingEnvironmentType">
+			</xsd:element>
+			<xsd:element minOccurs="1" maxOccurs="1"
+				name="ConnectionAttributes" type="tns:ConnectionAttributesType">
+			</xsd:element>
+			<xsd:element minOccurs="1" maxOccurs="1" name="UseXACF"
+				type="bt:booleanOrGVs">
+			</xsd:element>
+			<xsd:element minOccurs="0" maxOccurs="1" name="useSsl"
+				type="bt:booleanOrGVs">
+			</xsd:element>
+			<xsd:element ref="aems:ssl" minOccurs="0"
+				maxOccurs="1">
+			</xsd:element>
+			<xsd:element minOccurs="0" maxOccurs="1" name="JNDIProperties"
+				type="tns:JNDIPropertiesType">
+			</xsd:element>
+			<xsd:element name="UseSharedJndiConfig"
+				type="bt:booleanOrGVs" maxOccurs="1" minOccurs="0">
+			</xsd:element>
+			<xsd:element name="JndiSharedConfiguration" type="xsd:string"
+				maxOccurs="1" minOccurs="0"></xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="NamingEnvironmentType">
+		<xsd:sequence>
+			<xsd:element minOccurs="1" maxOccurs="1" name="UseJNDI"
+				type="bt:booleanOrGVs">
+			</xsd:element>
+			<xsd:element minOccurs="1" maxOccurs="1" name="ProviderURL"
+				type="xsd:string">
+			</xsd:element>
+			<xsd:element minOccurs="1" maxOccurs="1" name="NamingURL"
+				type="xsd:string">
+			</xsd:element>
+			<xsd:element minOccurs="1" maxOccurs="1"
+				name="NamingInitialContextFactory" type="xsd:string">
+			</xsd:element>
+			<xsd:element minOccurs="1" maxOccurs="1" name="TopicFactoryName"
+				type="xsd:string">
+			</xsd:element>
+			<xsd:element minOccurs="1" maxOccurs="1" name="QueueFactoryName"
+				type="xsd:string">
+			</xsd:element>
+			<xsd:element minOccurs="1" maxOccurs="1" name="NamingPrincipal"
+				type="xsd:string">
+			</xsd:element>
+			<xsd:element minOccurs="1" maxOccurs="1" name="NamingCredential"
+				type="xsd:string">
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+
+	<xsd:complexType name="ConnectionAttributesType">
+		<xsd:sequence>
+			<xsd:element minOccurs="1" maxOccurs="1" name="username"
+				type="xsd:string">
+			</xsd:element>
+			<xsd:element minOccurs="1" maxOccurs="1" name="password"
+				type="xsd:string">
+			</xsd:element>
+			<xsd:element minOccurs="1" maxOccurs="1" name="clientID"
+				type="xsd:string">
+			</xsd:element>
+			<xsd:element minOccurs="1" maxOccurs="1"
+				name="autoGenClientID" type="bt:booleanOrGVs">
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+
+	<xsd:complexType name="JNDIPropertiesRowType">
+		<xsd:sequence>
+			<xsd:element minOccurs="1" maxOccurs="1" name="Name"
+				type="xsd:string">
+			</xsd:element>
+			<xsd:element minOccurs="1" maxOccurs="1" name="Type" type="bt:typeNameOrGVs">
+			</xsd:element>
+			<xsd:element minOccurs="1" maxOccurs="1" name="Value"
+				type="xsd:string">
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+
+</xsd:schema>

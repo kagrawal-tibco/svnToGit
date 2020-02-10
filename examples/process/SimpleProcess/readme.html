@@ -1,0 +1,125 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>     Simple Process
+
+- TIBCO BusinessEvents&reg; Examples
+</title>
+<meta http-equiv="Content-type" content="text/html; charset=iso-8859-1" />
+<meta http-equiv="Content-Language" content="en-us" />
+<link rel="Shortcut Icon" href="../../_resources/icon.gif" type="image/gif" />
+<style type="text/css" media="all">@import "../../_resources/examples.css";</style>
+<script type="text/javascript" src="../../_resources/examples.js" /></script>
+<script type="text/javascript">
+function buildForms() {
+ var form;
+
+
+ SendEventForm.setServer("http://localhost:8090");
+
+
+ form = SendEventForm.get("createCustomerForm");
+ form.setDestinationPath("/Channels/HTTP/createcustomer");
+ form.setEventPath("/Events/CreateCustomerEvent");
+ form.addProperty("name", "Bob");
+ form.addProperty("balance", "20000");
+ form.build();
+
+
+ form = SendEventForm.get("createOrderForm");
+ form.setDestinationPath("/Channels/HTTP/createorder");
+ form.setEventPath("/Events/CreateOrderEvent");
+ form.addProperty("name", "Bob");
+ form.addProperty("value", "1000");
+ form.build();
+
+ form = SendEventForm.get("closeOrderForm");
+ form.setDestinationPath("/Channels/HTTP/closeorder");
+ form.setEventPath("/Events/CloseOrderEvent");
+ form.addProperty("jobKey", "Bob");
+ form.addProperty("message", "Closing");
+ form.build();
+
+}
+</script>
+</head>
+<body onLoad="buildForms()">
+
+
+<h1>Simple Process</h1>
+<img src="../../_resources/SimpleProcess.png" alt="" />
+<p><strong>Note</strong>&nbsp; &nbsp;This example uses Process Orchestration to do credit/debit order operations on an customer account</p>
+
+<h2>Purpose of This Example</h2>
+
+<p>This example shows how process orchestration is used to do simple credit/debit order operations on a customer account.
+<ul><li>The first message is sent via the HTTP channel using the browser from this example page to create a customer account using the create customer process.</li>
+<li>The second message starts a order process in which the account is verified and waits for the third message to proceed </li>
+<li>The third message wakes the process from wait state and closes the operations </li>
+</ul>
+
+
+
+<h2>How to Run the Example</h2>
+<ol>
+
+<li>
+<p>Open a  command window and at the command prompt, start the TIBCO BusinessEvents engine using the following command, to run the process agent. Substitute your actual value for <i>BE_HOME</i>.</p>
+
+<pre class="commands">
+cd <i>BE_HOME</i>/examples/process/SimpleProcess
+<i>BE_HOME</i>/bin/be-engine --propFile <i>BE_HOME</i>\bin\be-engine.tra -u default -c SimpleProcess/Deployments/SimpleProcess.cdd SimpleProcess.ear
+</pre>
+</li>
+<li>
+<p>Create an account and give it a balance and an average monthly balance. Enter a name in the Account ID field. Enter, for example, 10000 in the Balance, and 20000 in the AvgMonthlyBalance fields. Repeat this step to create multiple accounts, as desired.</p>
+
+<form id="createCustomerForm"></form>
+
+<p>In the command window you see a message like this:
+<span class="logs">
+#### Creating customer:Bob with balance:20000.0
+#### Adding deposit to account:Bob for $1000
+#### Deposit added to account:Bob Balance:21000.0</span></p>
+</li>
+
+
+<li>
+<p>Now debit the account. In the AccountId field, enter one of the account names you specified above. Enter the amount of the debit in the Amount field. Then click Send.</p>
+
+<form id="createOrderForm"></form>
+
+<p>In the command window you see messages like this:
+<span class="logs">
+#### Checking customer...
+#### Checking balance...
+#### Executing Order...</span></p>
+</li>
+
+<li>
+<p>Now close the transaction by sending a closing message for the account name specified above. In the jobKey field, enter one of the account names you specified above. Enter the closing message in the message field. Then click Send.</p>
+
+<form id="closeOrderForm"></form>
+
+<p>In the command window you see messages like this:
+<span class="logs">
+#### Executed order for customer:Bob Remaining balance:20000</span></p>
+</li>
+
+
+<li>
+<p> To reset the data, restart the engine running the process agent at the command line.</p>
+</li>
+
+</ol>
+
+
+
+<div class="footer">
+<p>TIBCO BusinessEvents&reg; 5.6<br />
+Copyright&copy; 2004-2019 TIBCO Software Inc. All rights reserved.</p>
+</div>
+</body>
+</html>

@@ -1,0 +1,37 @@
+/**
+ * @description 
+ * @author dbtsai-HP-Pavilion-dv6-Notebook-PC
+ */
+rule Rules.Predict2 {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Events.Predict2 request;
+	}
+	when {
+	}
+	then {
+		String NephritisOfRenalPelvisOriginResult = Analytics.Terr.callParsModel("PredictNephritisOfRenalPelvisOrigin", Object[] 
+			{
+				request.TemperatureOfPatient,
+				request.OccurrenceOfNausea,
+				request.LumbarPain,
+				request.UrinePushing,
+				request.MicturitionPains,
+				request.BurningOfUrethra
+			});	
+
+//		System.debugOut("Nephritis of Renal Pelvis Origin Result: " + NephritisOfRenalPelvisOriginResult);
+//		System.debugOut("######");
+//		System.debugOut("Temperature of Patient: " + request.TemperatureOfPatient);
+//		System.debugOut("Occurrence of Nausea: " + request.OccurrenceOfNausea);
+//		System.debugOut("Lumbar Pain: " + request.LumbarPain);
+//		System.debugOut("Urine Pushing: " + request.UrinePushing);
+//		System.debugOut("Micturition Pains: " + request.MicturitionPains);
+//		System.debugOut("Burning of Urethra: " + request.BurningOfUrethra);
+		
+		Event.consumeEvent(request);				
+	}
+}

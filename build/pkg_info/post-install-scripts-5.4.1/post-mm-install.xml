@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<project name="post-install" default="post-install" basedir=".">
+	<property file="post-install.properties"/>
+	<import file="common-tasks.xml"/>
+	
+	<taskdef resource="net/sf/antcontrib/antcontrib.properties"/>
+	
+	<target name="post-install" depends="import-wrappers,
+										 bkp-tra-files,
+										 set-subst-vars,
+										 copy-mm-cdd,
+										 create-deployment-dir">
+		<echo message="Done post-installation tasks." />
+	</target>
+
+	<target name="import-wrappers">
+		<echo message="Copying be-mm wrapper..." />
+		<copy file="${tibco.home}/tools/wrapper/wrap${tibco.wrapper.extension}"
+			tofile="${tibco.home}/be/${beVersionShort}/mm/bin/be-mm${tibco.wrapper.extension}" />
+		<chmod file="${tibco.home}/be/${beVersionShort}/mm/bin/be-mm${tibco.wrapper.extension}" perm="755" />
+		<echo message="Copying mm-tools wrapper..." />
+		<copy file="${tibco.home}/tools/wrapper/wrap${tibco.wrapper.extension}"
+			tofile="${tibco.home}/be/${beVersionShort}/mm/bin/mm-tools${tibco.wrapper.extension}" />
+		<chmod file="${tibco.home}/be/${beVersionShort}/mm/bin/mm-tools${tibco.wrapper.extension}" perm="755" />
+	</target>
+	
+	<target name="set-subst-vars">
+		<antcall target="substitute-variables">
+			<param name="out.file" value="${tibco.home}/be/${beVersionShort}/mm/bin/be-mm.tra"/>
+		</antcall>
+		<antcall target="substitute-variables">
+			<param name="out.file" value="${tibco.home}/be/${beVersionShort}/mm/bin/mm-tools.tra"/>
+		</antcall>
+		<antcall target="substitute-variables">
+			<param name="out.file" value="${tibco.home}/be/${beVersionShort}/mm/project/emonitor/.beproject"/>
+		</antcall>
+		<antcall target="substitute-variables">
+			<param name="out.file" value="${tibco.home}/be/${beVersionShort}/mm/project/emonitor/MM.cdd"/>
+		</antcall>
+		<antcall target="substitute-variables">
+			<param name="out.file" value="${tibco.home}/be/${beVersionShort}/mm/project/emonitor/MM_InMem.cdd"/>
+		</antcall>
+	</target>
+	
+	<target name="copy-mm-cdd">
+		<if>
+			<equals arg1="${be.product.standard.installed}" arg2="true"/>
+			<then>
+				<copy file="${tibco.home}/be/${beVersionShort}/mm/project/emonitor/MM.cdd" tofile ="${tibco.home}/be/${beVersionShort}/mm/bin/MM.cdd"/>			
+				<delete file="${tibco.home}/be/${beVersionShort}/mm/project/emonitor/MM_InMem.cdd"/>
+			</then>
+			<else>
+				<copy file="${tibco.home}/be/${beVersionShort}/mm/project/emonitor/MM_InMem.cdd" tofile ="${tibco.home}/be/${beVersionShort}/mm/bin/MM.cdd"/>
+				<delete file="${tibco.home}/be/${beVersionShort}/mm/project/emonitor/MM.cdd"/>
+				<move file="${tibco.home}/be/${beVersionShort}/mm/project/emonitor/MM_InMem.cdd" tofile="${tibco.home}/be/${beVersionShort}/mm/project/emonitor/MM.cdd"/>
+			</else>
+		</if>
+	 </target>
+
+	<target name="create-deployment-dir">
+		<mkdir dir="${tibco.home}/be/${beVersionShort}/mm/deployment"/>
+	</target>
+	
+	
+	<target name="bkp-tra-files">
+		<echo message="Backing up tra files"/>
+		<mkdir dir="${tibco.home}/be/5.4/backup/5.4.1_pre/mm/bin" />
+		<if>
+			<not>
+				<available file="${tibco.home}/be/5.4/backup/5.4.1_pre/mm/bin/be-mm.tra" type="file"/>
+			</not>
+			<then>
+				<echo message="Backing up tra ${tibco.home}/be/5.4/mm/bin/be-mm.tra"/>
+				<copy file="${tibco.home}/be/5.4/mm/bin/be-mm.tra" todir="${tibco.home}/be/5.4/backup/5.4.1_pre/mm/bin"/>
+			</then>
+		</if>
+		<if>
+			<not>
+				<available file="${tibco.home}/be/5.4/backup/5.4.1_pre/mm/bin/mm-tools.tra" type="file"/>
+			</not>
+			<then>
+				<echo message="Backing up tra ${tibco.home}/be/5.4/mm/bin/mm-tools.tra"/>
+				<copy file="${tibco.home}/be/5.4/mm/bin/mm-tools.tra" todir="${tibco.home}/be/5.4/backup/5.4.1_pre/mm/bin"/>
+			</then>
+		</if>
+	</target>	
+	
+</project>	

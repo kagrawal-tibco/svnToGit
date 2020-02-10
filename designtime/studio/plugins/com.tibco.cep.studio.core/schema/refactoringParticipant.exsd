@@ -1,0 +1,109 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!-- Schema file written by PDE -->
+<schema targetNamespace="com.tibco.cep.studio.core" xmlns="http://www.w3.org/2001/XMLSchema">
+<annotation>
+      <appInfo>
+         <meta.schema plugin="com.tibco.cep.studio.core" id="refactoringParticipant" name="Studio Refactoring Participant"/>
+      </appInfo>
+      <documentation>
+         Allows plugins to contribute refactoring participants that participate in refactoring for studio elements.  For instance, renaming a concept, a property, etc.&lt;br&gt;&lt;br&gt;
+
+Each participant is notified when a refactoring operation is taking place and can add refactoring changes based on that operation.  For instance, if a property definition is being renamed, a RuleRefactoringParticipant would want to check all rules to see if that property is being used.  If so, the participant should create text file changes to update the rules with the new property name.
+      </documentation>
+   </annotation>
+
+   <element name="extension">
+      <annotation>
+         <appInfo>
+            <meta.element />
+         </appInfo>
+      </annotation>
+      <complexType>
+         <sequence>
+            <element ref="refactoringParticipant" minOccurs="1" maxOccurs="unbounded"/>
+         </sequence>
+         <attribute name="point" type="string" use="required">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="id" type="string">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="name" type="string">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+               <appInfo>
+                  <meta.attribute translatable="true"/>
+               </appInfo>
+            </annotation>
+         </attribute>
+      </complexType>
+   </element>
+
+   <element name="refactoringParticipant">
+      <complexType>
+         <attribute name="participant" type="string" use="required">
+            <annotation>
+               <documentation>
+                  The class that particpates in the refactoring, extending org.eclipse.ltk.core.refactoring.participants.RefactoringParticipant.  This participant is responsible for reacting to refactoring operations by potentially making workspace changes, for instance if a property definition is rename, a RuleRefactoringParticipant would be responsible for making changes to rules, and a ConceptRefactoringParticipant would make changes to concepts based on that property definition change.
+               </documentation>
+               <appInfo>
+                  <meta.attribute kind="java" basedOn="org.eclipse.ltk.core.refactoring.participants.RefactoringParticipant:"/>
+               </appInfo>
+            </annotation>
+         </attribute>
+      </complexType>
+   </element>
+
+   <annotation>
+      <appInfo>
+         <meta.section type="since"/>
+      </appInfo>
+      <documentation>
+         [Enter the first release in which this extension point appears.]
+      </documentation>
+   </annotation>
+
+   <annotation>
+      <appInfo>
+         <meta.section type="examples"/>
+      </appInfo>
+      <documentation>
+         &lt;extension
+         point=&quot;com.tibco.cep.studio.core.refactoringParticipant&quot;&gt;
+      &lt;refactoringParticipant
+            participant=&quot;com.tibco.cep.studio.core.refactoring.ConceptRefactoringParticipant&quot;&gt;
+      &lt;/refactoringParticipant&gt;
+   &lt;/extension&gt;
+      </documentation>
+   </annotation>
+
+   <annotation>
+      <appInfo>
+         <meta.section type="apiinfo"/>
+      </appInfo>
+      <documentation>
+         [Enter API information here.]
+      </documentation>
+   </annotation>
+
+   <annotation>
+      <appInfo>
+         <meta.section type="implementation"/>
+      </appInfo>
+      <documentation>
+         [Enter information about supplied implementation of this extension point.]
+      </documentation>
+   </annotation>
+
+
+</schema>

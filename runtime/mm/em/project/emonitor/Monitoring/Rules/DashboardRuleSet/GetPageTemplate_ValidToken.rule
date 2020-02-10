@@ -1,0 +1,49 @@
+/**
+ * @description 
+ * @author 
+ */
+rule Monitoring.Rules.DashboardRuleSet.GetPageTemplate_ValidToken {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Monitoring.Events.request.PageTemplateRequestEvent	requestevent;
+		
+	}
+	when {
+		requestevent.token != null && String.length(requestevent.token) != 0;
+	}
+	then {
+		Shared.Concepts.LoggedInUser user = Instance.getByExtId(requestevent.token);
+		if (user == null) {
+		    Shared.Events.reqres.FailureResponseEvent event = Shared.Events.reqres.FailureResponseEvent.FailureResponseEvent(null,null,"001","Invalid token");
+		    Event.replyEvent(requestevent, event);
+		}
+		else {
+		    user.lastAccessTime = System.currentTimeMillis();
+		    String mId = requestevent.monitorableid;
+		    Shared.Concepts.MonitorableEntity monitorable = Instance.getByExtId(mId);
+		    if (monitorable == null) {
+		        Shared.Events.reqres.FailureResponseEvent event = Shared.Events.reqres.FailureResponseEvent.FailureResponseEvent(null,null,"010","Invalid monitor id");
+		        Event.replyEvent(requestevent, event);
+		    }
+		    else {
+		        user.monitoring = monitorable;
+		        monitorable.lastMonitoredTime = System.currentTimeMillis();
+		        String type = monitorable.type;
+		        Shared.RuleFunctions.log("GetPageTemplate_ValidToken","DEBUG","Got type as "+type+" for "+getFQName(monitorable));
+		        String templateXML = BEMM.dashboard.getPageLayout(type);
+		        if (templateXML == null || String.length(String.trim(templateXML)) == 0) {
+		            Shared.RuleFunctions.log("GetPageTemplate_ValidToken","WARNING","No template found for "+getFQName(monitorable));
+		        }
+		        else {
+		           Shared.RuleFunctions.log("GetPageTemplate_ValidToken","DEBUG","Sending "+templateXML+" for "+getFQName(monitorable));
+		        }
+		        Shared.Events.reqres.SuccessXMLResponseEvent event = Shared.Events.reqres.SuccessXMLResponseEvent.SuccessXMLResponseEvent(null,templateXML);
+		        Event.replyEvent(requestevent, event);
+		    }
+		}
+		Event.consumeEvent(requestevent);
+	}
+}

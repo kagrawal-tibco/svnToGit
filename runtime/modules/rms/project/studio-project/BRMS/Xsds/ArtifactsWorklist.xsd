@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema xmlns="http://www.w3.org/2001/XMLSchema" targetNamespace="www.tibco.com/be/rms/ArtifactsWorklist"
+	xmlns:tns="www.tibco.com/be/rms/ArtifactsWorklist" elementFormDefault="qualified"
+	xmlns:Q1="www.tibco.com/be/ontology/rms/Approval/Concepts/ArtifactsConcepts/AMS_C_Checkin" 
+	xmlns:Q2="www.tibco.com/be/rms/RoleWorkflowStages">
+    <import schemaLocation="RoleWorkflowStages.xsd" namespace="www.tibco.com/be/rms/RoleWorkflowStages"></import>
+    <import schemaLocation="Approval/Concepts/ArtifactsConcepts/AMS_C_Checkin.xsd"
+		namespace="www.tibco.com/be/ontology/rms/Approval/Concepts/ArtifactsConcepts/AMS_C_Checkin" />
+	<complexType name="TaskSummary">
+		<sequence>
+			<element name="task" type="tns:Task" maxOccurs="unbounded"
+				minOccurs="0" />
+		</sequence>
+	</complexType>
+
+	<element name="TaskSummary" type="tns:TaskSummary" />
+
+    <complexType name="Task">
+    	<sequence>
+    		<element name="taskId" type="string"/>
+    		<element name="referencedCheckin" type="Q1:AMS_C_Checkin"/>
+    	</sequence>
+    </complexType>
+</schema>

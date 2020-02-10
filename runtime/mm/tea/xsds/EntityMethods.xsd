@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+	elementFormDefault="qualified">
+	<xs:element name="agent">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="methods" />
+			</xs:sequence>
+			<xs:attribute name="type" type="xs:string" use="required" />
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="process_methods">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="methods" />
+			</xs:sequence>
+			<xs:attribute name="type" type="xs:string" use="required" />
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="methods">
+		<xs:complexType>
+			<xs:sequence maxOccurs="unbounded" minOccurs="1">
+				<xs:element ref="methodgroup" />
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="methodgroup">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="method" maxOccurs="unbounded" minOccurs="0" />
+			</xs:sequence>
+			<xs:attribute name="group" type="xs:string" use="required" />
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="method">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="annotation" type="xs:string" />
+				<xs:element ref="arg" maxOccurs="unbounded" minOccurs="0" />
+			</xs:sequence>
+			<xs:attribute name="name" type="xs:string" use="required" />
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="arg">
+		<xs:complexType>
+			<xs:attribute name="name" type="xs:string" use="required" />
+			<xs:attribute name="type" type="xs:string" use="required" />
+			<xs:attribute name="desc" type="xs:string" use="required" />
+			<xs:attribute name="defaultvalue" type="xs:string" use="required" />
+			<xs:attribute name="required" type="xs:boolean" use="required" />
+		</xs:complexType>
+	</xs:element>
+
+
+	<xs:element name="operationResult">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="rows" maxOccurs="1" minOccurs="1"/>
+				<xs:element ref="headers" maxOccurs="1" minOccurs="1"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+
+	<xs:element name="headers">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="header" maxOccurs="unbounded" minOccurs="1"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+
+	<xs:element name="header">
+		<xs:complexType>
+			<xs:attribute name="value" type="xs:string" use="required" />
+		</xs:complexType>
+	</xs:element>
+
+	<xs:element name="rows">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="row" maxOccurs="unbounded" minOccurs="0"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+
+	<xs:element name="row">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="columns" maxOccurs="1" minOccurs="1"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+
+	<xs:element name="columns">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="column" maxOccurs="unbounded" minOccurs="1"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+
+	<xs:element name="column">
+		<xs:complexType>
+			<xs:attribute name="value" type="xs:string" use="required" />
+		</xs:complexType>
+	</xs:element>
+</xs:schema>

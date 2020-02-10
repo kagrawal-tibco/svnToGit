@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml" width="100%" 
+	creationComplete="init()" height="45" styleName="headerStyle">
+	<mx:Script>
+		<![CDATA[
+			[Bindable]
+			public var username:String;
+			
+			[Bindable]
+			private var _logoURL:String = AppConfig.instance.companyLogoURL;
+			
+			private var _controller:HeaderController;
+			
+			private function init():void {
+				_controller = new HeaderController(this);
+				_controller.addEventListener(Event.CLOSE,handleClose);
+				_controller.init();
+			}
+			
+			private function handleClose(event:Event):void {
+				_controller.removeEventListener(Event.CLOSE,handleClose);
+				_controller = null;
+				dispatchEvent(new Event(Event.CLOSE));
+			}
+		]]>
+	</mx:Script>
+	<mx:Image id="img_CompanyLogo" source="{_logoURL}" maxHeight="32" maxWidth="32"/>
+	<mx:Label text="Welcome {username}" styleName="headerLabelStyle"/>
+	<mx:Spacer width="100%" height="100%"/>
+	<mx:LinkButton id="signOutBtn" label="Sign Out" styleName="signOutBtnStyle"/>
+</mx:HBox>

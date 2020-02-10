@@ -1,0 +1,57 @@
+/**
+ * @description Basic information on root data source for response.
+ */
+String rulefunction WebStudio.Core.RuleFunctions.Utils.WS_RF_CreateAndSerializeResponseDataSource {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		int status;
+		int numberOfRows;
+		String errorCode;
+		String responseMessage;
+		WebStudio.Core.Concepts.DataSources.WS_C_ResponseData responseData;
+		String contentType;
+	}
+	body {
+		WS_C_ResponseDataSource response = null;
+		
+		if (errorCode == null && status == 0) {
+			WS_C_SuccessResponseDataSource successResponse  = Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/WS_C_SuccessResponseDataSource");
+			if (responseData != null) {
+				Instance.PropertyAtom.setContainedConcept(successResponse.data, responseData, 1L);
+			}
+			if (responseMessage != null) {
+				Instance.PropertyAtom.setString(successResponse.responseMessage, responseMessage, -1);
+			}
+			response = successResponse;
+		} else {
+			WS_C_FailureResponseDataSource failureResponse = Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/WS_C_FailureResponseDataSource");
+			if (responseData != null) {
+				Instance.PropertyAtom.setConceptReference(failureResponse.errors,responseData,1L);
+			}
+			if (responseMessage != null) {
+				Instance.PropertyAtom.setString(failureResponse.data, responseMessage, -1);
+			}
+			response = failureResponse;
+		}
+			
+		response.status = "" + status;
+		response.errorCode = errorCode;
+		response.startRow = 0;		
+		
+		if (numberOfRows >= 0) {	
+			response.totalRows = numberOfRows;
+			response.endRow = response.totalRows;
+		}
+		
+		String serializedResponse = null;
+		if (String.equals(contentType, System.getGlobalVariableAsString("WebStudio/CONTENT_TYPE/XML", "application/xml"))) {
+			serializedResponse = Instance.serialize(response, false, "", "response");
+		} else {
+			serializedResponse = Instance.serializeToJSON(response, true, "response");
+		}
+		
+		return serializedResponse;
+	}
+}

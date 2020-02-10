@@ -1,0 +1,56 @@
+/**
+ * @description 
+ */
+WebStudio.Core.Concepts.Process.FlowElements.WS_C_FlowElement rulefunction WebStudio.Core.RuleFunctions.Utils.Process.WS_RF_FlowNodeCreationFactory {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object flowNode;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.Process.WS_RF_FlowNodeCreationFactory");
+		
+		WS_C_TaskElement flowElement = null;
+		
+		String flowNodeType = WS.Process.FlowNode.getFlowNodeType(flowNode);
+		Log.log(LOGGER, "Debug", "Flow Node Type - %s", flowNodeType);
+		
+		String flowNodeClass = null;
+		if (flowNodeType != null) {
+			if (String.equals(flowNodeType, "StartEvent")) {
+				flowNodeClass = "/WebStudio/Core/Concepts/Process/FlowElements/WS_C_StartElement";
+			} else if (String.equals(flowNodeType, "EndEvent")) {
+				flowNodeClass = "/WebStudio/Core/Concepts/Process/FlowElements/WS_C_EndElement";
+			} else if (String.equals(flowNodeType, "SendTask")) {
+				flowNodeClass = "/WebStudio/Core/Concepts/Process/FlowElements/WS_C_SendMessageElement";
+			} else if (String.equals(flowNodeType, "ReceiveTask")) {
+				flowNodeClass = "/WebStudio/Core/Concepts/Process/FlowElements/WS_C_ReceiveMessageElement";
+			} else if (String.equals(flowNodeType, "ScriptTask")) {
+				flowNodeClass = "/WebStudio/Core/Concepts/Process/FlowElements/WS_C_ScriptElement";
+			} else if (String.equals(flowNodeType, "BusinessRuleTask")) {
+				flowNodeClass = "/WebStudio/Core/Concepts/Process/FlowElements/WS_C_BusinessRuleElement";
+			} else if (String.equals(flowNodeType, "ServiceTask")) {
+				flowNodeClass = "/WebStudio/Core/Concepts/Process/FlowElements/WS_C_ServiceElement";
+			} else if(String.equals(flowNodeType, "JavaTask")) {
+				flowNodeClass = "/WebStudio/Core/Concepts/Process/FlowElements/WS_C_JavaElement";
+			} else if (String.equals(flowNodeType, "InferenceTask")) {
+				flowNodeClass = "/WebStudio/Core/Concepts/Process/FlowElements/WS_C_InferenceElement";
+			} else if (String.equals(flowNodeType, "TextAnnotation")) {
+				flowNodeClass = "/WebStudio/Core/Concepts/Process/FlowElements/WS_C_AnnotationElement";
+			} else if (String.equals(flowNodeType, "ParallelGateway") || String.equals(flowNodeType, "ExclusiveGateway")) {
+				flowNodeClass = "/WebStudio/Core/Concepts/Process/FlowElements/WS_C_GatewayElement";
+			} else if (String.equals(flowNodeType, "Task") || String.equals(flowNodeType, "CallActivity") || String.equals(flowNodeType, "RuleFunctionTask")) {
+				flowNodeClass = "/WebStudio/Core/Concepts/Process/FlowElements/WS_C_TaskElement";
+			}
+		} else {
+			flowElement = Instance.newInstance("/WebStudio/Core/Concepts/Process/FlowElements/WS_C_FlowElement", null);
+		}
+		
+		Log.log(LOGGER, "Debug", "Selected Flow Element Class - %s", flowNodeClass);
+		flowElement = Instance.newInstance(flowNodeClass, null);
+		Instance.PropertyAtom.setString(flowElement.elementType, flowNodeType, 1L);
+		
+		return flowElement;
+	}
+}

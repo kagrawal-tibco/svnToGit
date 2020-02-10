@@ -1,0 +1,199 @@
+/**
+ * @description 
+ */
+boolean rulefunction Shared.RuleFunctions.topology.discoverInMemChildren {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Shared.Concepts.MonitorableEntity	entity;         //In the first call the entity is of type cluster. Then it is a recursive fn on its children
+		String	idPrefix;
+	}
+	body {
+        String LOG_NAME = "discoverInMemChildren";
+        
+		boolean foundChild = false;
+		String fqName = getFQName(entity);
+
+		Shared.RuleFunctions.log(LOG_NAME,"DEBUG","Discovering children under "+ entity.type + " " + fqName);
+		
+		if(entity.type == "process" && entity.active == false) {
+		    Shared.RuleFunctions.log(LOG_NAME,"DEBUG","Skipping children discovery for INACTIVE process '"+fqName+"'...");
+		    return foundChild; //value is false
+		}
+
+        //it's agent level. It's the lower level of the topology tree. No need to do recursion.
+        if(entity.parent.type == "process") {
+        	String[] props = BEMM.topology.getProperties(String.split(getFQName(entity),":"));
+        	String agentNameAgentId = props[props@length-2]+"#"+props[props@length-1];
+
+			Shared.RuleFunctions.log(LOG_NAME,"DEBUG","Setting properties for: " + 
+				"\n entity.type = " + entity.type + 
+				"\n entity.name = " + entity.name + 
+				"\n fqn = " + fqName);
+
+            for (int k = 0 ; k < props@length ; k = k + 1) {
+                    entity.properties[k] = props[k];
+					Shared.RuleFunctions.log(LOG_NAME,"DEBUG","entity.properties[" + k + "] = " + entity.properties[k]);
+            }
+            
+            if (props@length == 6 || props@length == 7) {
+            	//Append the Agent ID preceeded by the # token in order for the JMX 
+            	//methods at the agent level to work when invoked from the MM UI
+            	
+            	String agentName = props[props@length-2];
+            	String agentId = props[props@length-1]; 
+            	
+            	entity.name = agentName + "#" + agentId;
+            }
+
+            foundChild = entity.parent.active;
+            Shared.RuleFunctions.log(LOG_NAME,"DEBUG","Parent process of agent '"+getFQName(entity)+"' has state ACTIVE = " + foundChild);
+            return foundChild;
+        }
+
+		Shared.Concepts.MonitorableEntity child;
+        Shared.RuleFunctions.log(LOG_NAME,"DEBUG","Found "+entity.children@length+" children under "+fqName+"...");
+
+        for (int j = 0 ; j < entity.children@length ; j = j + 1) {  //iterates over all of this entity's children that are in the ST file ==>
+                                                                    //==> previously loaded in the topology tree.
+            child = entity.children[j];
+			String childFQName = getFQName(child);
+
+            boolean isPingerActive = BEMM.topology.registerPinger(String.split(childFQName,":"),"/Shared/Events/topology/FailedPingEvent");
+
+            Shared.RuleFunctions.log(LOG_NAME,"DEBUG","child.type = " + child.type +
+            						 " child.active = " + child.active +
+            						 " child.previousActiveState = " + child.previousActiveState +
+            						 " isPingerActive = " + isPingerActive);
+
+            boolean previousState = child.active;
+
+            if (!isPingerActive) {
+                if (child.type == "process") {
+                 	String machineFqn = getFQName(child.parent);
+                       
+                    //Update Machine Processes Count
+                	if (Util.HashMap.get(machineFqn, childFQName) != null) {
+                        Util.HashMap.remove(machineFqn, childFQName);
+                        Shared.RuleFunctions.log(LOG_NAME,"DEBUG","Removed process " + childFQName + " from map");
+                	}
+                	    
+                	if (child.active) {
+	                    Shared.RuleFunctions.log(LOG_NAME,"INFO","Setting process " + childFQName + " to INACTIVE");
+	                    
+	                    child.active = false;
+	                    
+	                    //The property nameWithProcId is only used In-Memory mode
+	                    child.nameWithProcId = child.topologyProps[0]+"\"";
+	                    
+	                    Shared.Events.topology.FailedPingEvent event = 
+	                    	Shared.Events.topology.FailedPingEvent.FailedPingEvent(null,null,childFQName);
+                        foundChild = false;
+			            Event.assertEvent(event);
+                	}
+                }
+            } else {
+
+                if (previousState == false && child.aggregated == true)
+                    child.previousActiveState = "false";
+
+                child.active = true;
+                
+                String[] props = BEMM.topology.getProperties(String.split(childFQName,":"));
+
+                for (int k = 0 ; k < props@length ; k = k + 1) {
+                    child.properties[k] = props[k];
+                }
+
+                if(child.type == "process") {
+                	String processId = String.split(props[1],"@")[0];
+                	
+                	//to avoid temprary () to show up in the topology tree
+                	if (processId != null && String.length(String.trim(processId)) != 0)
+                		child.nameWithProcId = child.topologyProps[0]+"("+processId+")"+"\"";                	
+
+                    //child.deployed = true;
+                    
+                    //Update Map with Machine Active Processes Count
+                    String machineFqn = getFQName(child.parent);
+                    
+                    if (Util.HashMap.getMap(machineFqn) == null)
+                    	Util.HashMap.createMap(machineFqn);
+                    
+                    if (Util.HashMap.get(machineFqn, childFQName) == null) {
+                		Util.HashMap.put(machineFqn, childFQName, "active");
+                    	Shared.RuleFunctions.log(LOG_NAME,"DEBUG","Added process " + childFQName + " to map");
+                	}
+                    
+                	Shared.RuleFunctions.log(LOG_NAME, "DEBUG", "FOUND " + Util.HashMap.size(machineFqn) + 
+    							" ACTIVE processes for Machine: " + machineFqn);
+                	
+                    //if process is active, therefore the Parent machine is also active
+                	child.parent.active = true;
+                	foundChild = true;
+                }
+                
+                if(child.initialized == false) {
+                    configureAlerts(child);
+                    //This messy code is a consequence of the messy legacy code it depends upon
+                    if(child.type == "process" && child.active && !child.parent.initialized)
+                    	configureAlerts(child.parent);
+                }
+
+                Shared.RuleFunctions.log(LOG_NAME,"DEBUG","Health pinger is ACTIVE for "+childFQName);
+            }
+
+            String newHealthLevel = determinePropertyValue(child,"healthLevel",null);
+            if(child.aggregated == true){
+                if (child.healthLevel != newHealthLevel) {
+                    Shared.RuleFunctions.log(LOG_NAME,"DEBUG","Setting child.previousHealthLevel = " +
+                                             child.healthLevel);
+
+                    child.previousHealthLevel = child.healthLevel;
+                    child.healthLevel = newHealthLevel;
+                }
+            } else {
+                child.healthLevel = newHealthLevel;
+            }
+
+            discoverInMemChildren(child,child@extId);
+        }
+        
+        
+        if (entity.type == "cluster") {
+        	String clustName = getFQName(entity);
+        	Shared.RuleFunctions.log(LOG_NAME, "DEBUG", "Checking for active entities in cluster: " + clustName); 
+        	int numMachInactive = 0;
+        	
+            for (int m=0; m < entity.children@length; m++) { //iterates over all machines
+            	MonitorableEntity machine = entity.children[m];
+                String machineFqn = getFQName(machine);
+                Shared.RuleFunctions.log(LOG_NAME, "DEBUG", "Machine '" + machineFqn + "'is active = " + machine.active );
+
+                if (machine.active) {
+                	if (Util.HashMap.getMapKeys(machineFqn) == null || 
+                		Util.HashMap.getMapKeys(machineFqn)@length == 0) {
+		            	numMachInactive++;
+
+		            	Shared.RuleFunctions.log(LOG_NAME, "DEBUG", "No active processes found for "
+                                + machine.type + ": " + machineFqn + ". About to send FailedPingEvent...");
+			            
+			            Shared.Events.topology.FailedPingEvent event = 
+			            	Shared.Events.topology.FailedPingEvent.FailedPingEvent(null,null,machineFqn);
+			            Event.assertEvent(event);	
+		            }          	
+                } else { 
+                	numMachInactive++;
+                } 
+            }
+            if (numMachInactive != entity.children@length) {
+            	Shared.RuleFunctions.log(LOG_NAME, "DEBUG", "Number of child machines = " + entity.children@length);
+            	Shared.RuleFunctions.log(LOG_NAME, "DEBUG", "Number of inactive machines = " + numMachInactive);
+            	foundChild = true;
+            }
+        }
+        
+        return foundChild;
+	}
+}

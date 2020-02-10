@@ -1,0 +1,129 @@
+/**
+ * @description Handle locking requests
+ * @author aathalye-lt
+ */
+rule Approval.Rules.ArtifactsRuleSet.AMS_RU_ArtifactLockRequestRule {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Approval.Events.ArtifactEvents.Lock.AMS_E_ArtifactLockRequestEvent ams_e_artifactlockrequestevent;
+	}
+	when {
+		ams_e_artifactlockrequestevent.projectname != null &&
+		ams_e_artifactlockrequestevent.username != null &&
+		ams_e_artifactlockrequestevent.artifactPath != null;
+	}
+	then {
+		if (ams_e_artifactlockrequestevent.username != null) {
+			ams_e_artifactlockrequestevent.username = HTTP.decodeURL(ams_e_artifactlockrequestevent.username, "UTF-8");
+		}
+		String project = ams_e_artifactlockrequestevent.projectname;
+		String artifactPath = ams_e_artifactlockrequestevent.artifactPath;
+		//Comments will come in as a string payload
+		String comments = ams_e_artifactlockrequestevent@payload;
+		System.debugOut("Comments with request >>> " + comments);
+		//Look for concept with extId
+		String extId = project + "@" + artifactPath;
+		Approval.Concepts.ArtifactsConcepts.ArtifactLockConcepts.AMS_C_LockableArtifact lockableArtifact = 
+			Instance.getByExtIdByUri(extId, "/Approval/Concepts/ArtifactsConcepts/ArtifactLockConcepts/AMS_C_LockableArtifact");
+		
+		if (lockableArtifact == null) {
+			//Create one for an approved artifact of this project only
+			Approval.Concepts.ArtifactsConcepts.AMS_C_ApprovedArtifacts approvedArtifacts = Instance.getByExtIdByUri(project, "/Approval/Concepts/ArtifactsConcepts/AMS_C_ApprovedArtifacts");
+			if (approvedArtifacts == null) {
+				//This means no artifact is approved yet so anyway locking cannot be done.
+				System.debugOut("Cannot lock this artifact yet");
+				Approval.Events.ArtifactEvents.AMS_E_ErrorEvent errorEvent = 
+					Event.createEvent("xslt://{{/Approval/Events/ArtifactEvents/AMS_E_ErrorEvent}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:ns=\"www.tibco.com/be/ontology/Approval/Events/ArtifactEvents/AMS_E_ErrorEvent\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"1.0\" exclude-result-prefixes=\"xsl ns xsd\">\n    <xsl:output method=\"xml\"/>\n    <xsl:param name=\"project\"/>\n    <xsl:template match=\"/\">\n        <createEvent>\n            <event>\n                <payload>\n                    <ns:error>\n                        <errorDetail>\n                            <xsl:value-of select=\"concat(&quot;No Lockable Artifacts Found For >>> &quot;, $project)\"/>\n                        </errorDetail>\n                        <errorString>\n                            <xsl:value-of select=\"&quot;Cannot Lock Artifact&quot;\"/>\n                        </errorString>\n                        <errorCode>\n                            <xsl:value-of select=\"&quot;LOCK_ERROR&quot;\"/>\n                        </errorCode>\n                    </ns:error>\n                </payload>\n            </event>\n        </createEvent>\n    </xsl:template>\n</xsl:stylesheet>");
+				Event.replyEvent(ams_e_artifactlockrequestevent, errorEvent);
+			} else {
+				//Check if this artifact exists
+				int index = Instance.PropertyArray.indexOfString(approvedArtifacts.approvedArtifacts, artifactPath);
+				if (index == -1) {
+					//This artifact cannot be locked
+					System.debugOut("Cannot lock this artifact yet");
+					Approval.Events.ArtifactEvents.AMS_E_ErrorEvent errorEvent = Approval.
+																					CommonServices.
+																						AMS_RF_CreateErrorEvent("LOCK_ERROR", "Cannot lock Artifact", "Lockable resource not found for >>> " + project + " for specified path >>> " + artifactPath);
+					Event.replyEvent(ams_e_artifactlockrequestevent, errorEvent);
+				} else {
+					//Try locking
+					System.debugOut("Acquiring lock on >>> " + artifactPath);
+				
+					System.debugOut("Lock request accepted on >>> " + artifactPath + " for user >>> " + ams_e_artifactlockrequestevent.username);
+					//Generate Request id
+					String lockRequestId = RMS.Approval.generateRequestId(ams_e_artifactlockrequestevent.username);
+					System.debugOut("Generated Lock Request ID >>> " + lockRequestId);
+					
+					//Create LockableArtifact 
+					lockableArtifact = 
+						Instance.createInstance("xslt://{{/Approval/Concepts/ArtifactsConcepts/ArtifactLockConcepts/AMS_C_LockableArtifact}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"1.0\" exclude-result-prefixes=\"xsd\">\n    <xsl:output method=\"xml\"/>\n    <xsl:param name=\"extId\"/>\n    <xsl:param name=\"artifactPath\"/>\n    <xsl:template match=\"/\">\n        <createObject>\n            <object>\n                <xsl:attribute name=\"extId\">\n                    <xsl:value-of select=\"$extId\"/>\n                </xsl:attribute>\n                <artifactPath>\n                    <xsl:value-of select=\"$artifactPath\"/>\n                </artifactPath>\n            </object>\n        </createObject>\n    </xsl:template>\n</xsl:stylesheet>");
+					//Create the Concept here
+					AMS_C_ApplicableStages applicableStages = 
+						Approval.Concepts.ArtifactsConcepts.AMS_C_ApplicableStages.AMS_C_ApplicableStages("STAGES_" + WS.Common.generateUUID(), null);
+					Approval.Concepts.ArtifactsConcepts.ArtifactLockConcepts.AMS_C_LockArtifactRequest lockRequestConcept = 
+						Approval.Concepts.ArtifactsConcepts.ArtifactLockConcepts.AMS_C_LockArtifactRequest.AMS_C_LockArtifactRequest("LOCK_ARTIFACT_REQUEST" + WS.Common.generateUUID(), 
+						                         																					 ams_e_artifactlockrequestevent.username,
+						                         																					 artifactPath,
+						                         																					 project,
+						                         																					 lockRequestId,
+						                         																					 "PENDING_GRANT_LOCK",
+						                         																					 applicableStages@extId,
+						                         																					 comments);
+											                         																					 
+					
+					//This will start the SM	
+					Approval.Events.ArtifactEvents.Lock.AMS_E_ArtifactLockResponseEvent responseEvent = 
+						Approval.Events.ArtifactEvents.Lock.AMS_E_ArtifactLockResponseEvent.AMS_E_ArtifactLockResponseEvent(null, null, lockRequestId);
+					//Send success response
+					Event.replyEvent(ams_e_artifactlockrequestevent, responseEvent);		
+					
+				}
+			}
+		} else {
+			//Check whether it is already locked
+			boolean locked = lockableArtifact.locked;
+			
+			if (locked) {
+				//Check if requestor is same as locker
+				String lockedBy = lockableArtifact.lockedBy;
+				if (String.equals(lockedBy, ams_e_artifactlockrequestevent.username)) {
+					//Reentrant lock
+					System.debugOut("Artifact >>> " + artifactPath + " has already been locked by >>> " + lockedBy);
+					Approval.Events.ArtifactEvents.Lock.AMS_E_ArtifactLockResponseEvent responseEvent = 
+						Approval.Events.ArtifactEvents.Lock.AMS_E_ArtifactLockResponseEvent.AMS_E_ArtifactLockResponseEvent(null, null, "ALREADY_LOCKED");
+					//Send success response
+					Event.replyEvent(ams_e_artifactlockrequestevent, responseEvent);	
+				} 
+			} else {
+				System.debugOut("Trying to acquire lock on >>> " + artifactPath + " for user >>> " + ams_e_artifactlockrequestevent.username);
+				
+				//Generate Request id
+				String lockRequestId = 
+					RMS.Approval.generateRequestId(ams_e_artifactlockrequestevent.username);
+				System.debugOut("Generated Lock Request ID >>> " + lockRequestId);
+				
+				//Create the Concept here
+				AMS_C_ApplicableStages applicableStages = 
+						Approval.Concepts.ArtifactsConcepts.AMS_C_ApplicableStages.AMS_C_ApplicableStages(null, null);
+				Approval.Concepts.ArtifactsConcepts.ArtifactLockConcepts.AMS_C_LockArtifactRequest lockRequestConcept = 
+					Approval.Concepts.ArtifactsConcepts.ArtifactLockConcepts.AMS_C_LockArtifactRequest.AMS_C_LockArtifactRequest("LOCK_ARTIFACT_REQUEST" + WS.Common.generateUUID(), 
+					                         																					 ams_e_artifactlockrequestevent.username,
+					                         																					 artifactPath,
+					                         																					 project,
+					                         																					 lockRequestId,
+					                         																					 "PENDING_GRANT_LOCK",
+					                         																					 applicableStages@extId,
+					                         																					 comments);
+				
+				
+				Approval.Events.ArtifactEvents.Lock.AMS_E_ArtifactLockResponseEvent responseEvent = 
+						Approval.Events.ArtifactEvents.Lock.AMS_E_ArtifactLockResponseEvent.AMS_E_ArtifactLockResponseEvent(null, null, lockRequestId);
+				//Send success response
+				Event.replyEvent(ams_e_artifactlockrequestevent, responseEvent);
+			}
+		}		
+	}
+}

@@ -1,0 +1,57 @@
+/**
+ * @description Fired upon each individual artifact
+ * @author aathalye-lt
+ */
+rule Approval.Rules.ArtifactsRuleSet.AMS_RU_CheckinArtifactsRule {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Approval.Events.ArtifactEvents.Commit.AMS_E_CheckinRequestEvent ams_e_checkinrequestevent;
+	}
+	when {
+		ams_e_checkinrequestevent.patternId != null;
+	}
+	then {
+		Object LOGGER = Log.getLogger("Approval.Rules.ArtifactsRuleSet.AMS_RU_CheckinArtifactsRule");
+		AMS_C_ApplicableStages applicableStages = 
+			Approval.Concepts.ArtifactsConcepts.AMS_C_ApplicableStages.AMS_C_ApplicableStages("STAGES_" + WS.Common.generateUUID(), null);
+		
+		String payload = ams_e_checkinrequestevent@payload;
+		AMS_C_ArtifactCommited artifactCommitted = 
+			Instance.createInstanceFromXML("/Approval/Concepts/ArtifactsConcepts/AMS_C_ArtifactCommited", payload);
+		artifactCommitted.applicableStagesConceptId = applicableStages@extId;	
+		
+		// fetch logged-in user roles
+		AMS_C_LoggedInUser loggedInUser = Instance.getByExtIdByUri(ams_e_checkinrequestevent.loggedInUserName, "/AAA/Concepts/AMS_C_LoggedInUser");
+		String[] roles = null;
+		if (loggedInUser != null) {
+			roles = Instance.PropertyArray.toArrayString(loggedInUser.roles);
+		}
+
+		WS_C_CheckArtifactLockResponse artifactLockStatus 
+							= WebStudio.Core.RuleFunctions.Actions.Lifecycle.Lock.WS_RF_CheckMasterArtifactLock(ams_e_checkinrequestevent.projectname, artifactCommitted.artifactPath, loggedInUser.username);
+		if (artifactLockStatus.holdsLock || artifactLockStatus.lockOwner == null) {	//User holds the lock or not locked	
+			//Map this to new WS model
+			AMS_RF_AdaptCommitableModelToWS(ams_e_checkinrequestevent.projectname, ams_e_checkinrequestevent.loggedInUserName, artifactCommitted, roles);
+			
+			String stackID = ams_e_checkinrequestevent.patternId;
+	        	Object stack = WS.Common.Stack.create(stackID);
+	        	WS.Common.Stack.push(stack, ams_e_checkinrequestevent);
+	        		
+			AMS_E_CheckinResponseEvent response = 
+		        Event.createEvent("xslt://{{/Approval/Events/ArtifactEvents/Commit/AMS_E_CheckinResponseEvent}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" xmlns:ns=\"www.tibco.com/be/ontology/Approval/Concepts/ArtifactsConcepts/AMS_C_ArtifactCommited\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" version=\"1.0\" exclude-result-prefixes=\"xsl ns xsd\">\n    <xsl:output method=\"xml\"/>\n    <xsl:param name=\"artifactCommitted\"/>\n    <xsl:template match=\"/\">\n        <createEvent>\n            <event>\n                <xsl:if test=\"$artifactCommitted/artifactPath\">\n                    <artifactPath>\n                        <xsl:value-of select=\"$artifactCommitted/artifactPath\"/>\n                    </artifactPath>\n                </xsl:if>\n                <xsl:if test=\"$artifactCommitted/commitVersion\">\n                    <commitVersion>\n                        <xsl:value-of select=\"$artifactCommitted/commitVersion\"/>\n                    </commitVersion>\n                </xsl:if>\n            </event>\n        </createEvent>\n    </xsl:template>\n</xsl:stylesheet>");
+		        
+		    Event.replyEvent(ams_e_checkinrequestevent, response);
+
+		} else {
+			String responseMessage = String.format("The artifact [%s] in project [%s] is locked by user [%s] and cannot be committed.", artifactCommitted.artifactPath, ams_e_checkinrequestevent.projectname, artifactLockStatus.lockOwner); 
+			AMS_E_ErrorEvent errorEvent = Approval.CommonServices.AMS_RF_CreateErrorEvent("COMMIT_ERROR", responseMessage, null);
+			Event.replyEvent(ams_e_checkinrequestevent, errorEvent);
+			//Consume the event so that RTC is not triggered
+			Event.consumeEvent(ams_e_checkinrequestevent);
+			Log.log(LOGGER, "Warn", responseMessage);
+		}	
+	}
+}

@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<xsd:schema
+    ecore:documentRoot="SharedHttpRoot" 
+	ecore:nsPrefix="sharedhttp"
+	ecore:package="com.tibco.be.util.config.sharedresources.sharedhttp"
+	elementFormDefault="unqualified"
+	targetNamespace="www.tibco.com/shared/HTTPConnection"
+	xml:lang="en"
+	xmlns:aems="http://www.tibco.com/xmlns/aemeta/services/2002"
+	xmlns:bt="http://tibco.com/be/basetypes"
+	xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore"
+	xmlns:tns="www.tibco.com/shared/HTTPConnection"
+	xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+	
+	<xsd:import namespace="http://www.eclipse.org/emf/2002/Ecore"
+		schemaLocation="platform:/plugin/org.eclipse.emf.ecore/model/Ecore.xsd" />
+    <xsd:import namespace="http://tibco.com/be/basetypes"
+    	schemaLocation="basetypes.xsd" />
+    <xsd:import namespace="http://www.tibco.com/xmlns/aemeta/services/2002"
+    	schemaLocation="aemetaservices.xsd"/>
+
+	<xsd:element name="httpSharedResource" type="tns:httpSharedResourceType" />
+
+	<xsd:complexType ecore:name="HttpSharedResource" name="httpSharedResourceType">
+		<xsd:sequence>
+			<xsd:element name="config" maxOccurs="1" minOccurs="1"
+				type="tns:configType">
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+
+	<xsd:complexType ecore:name="Config" name="configType">
+		<xsd:sequence>
+			<xsd:element minOccurs="1" maxOccurs="1" name="Host" ecore:name="host"
+				type="xsd:string">
+			</xsd:element>
+			<xsd:element minOccurs="1" maxOccurs="1" name="Port" ecore:name="port"
+				type="bt:intOrGVs-type">
+			</xsd:element>
+			<xsd:element minOccurs="1" maxOccurs="1"
+				name="enableLookups" type="bt:booleanOrGVs-type">
+			</xsd:element>
+
+			<xsd:element minOccurs="0" maxOccurs="1" name="useSsl"
+				type="bt:booleanOrGVs-type">
+			</xsd:element>
+			<xsd:element ref="aems:ssl" minOccurs="0" ecore:name="ssl"
+				maxOccurs="1">
+			</xsd:element>
+			<xsd:element name="description" type="xsd:string" maxOccurs="1" minOccurs="0"></xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	
+</xsd:schema>

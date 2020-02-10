@@ -1,0 +1,190 @@
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" 
+		   xmlns:jxb="http://java.sun.com/xml/ns/jaxb"
+		   xmlns:xjc="http://java.sun.com/xml/ns/jaxb/xjc" 
+		   jxb:extensionBindingPrefixes="xjc"
+		   jxb:version="2.0" 
+		   xmlns="http://www.tibco.com/cep/bemm/monitoring/metric/view/config"  
+		   targetNamespace="http://www.tibco.com/cep/bemm/monitoring/metric/view/config"  
+		   xmlns:tns="http://www.tibco.com/cep/bemm/monitoring/metric/view/config"
+		   elementFormDefault="qualified">
+     
+     <xsd:annotation>
+	  <xsd:appinfo>
+	    <jxb:globalBindings generateIsSetMethod="true">
+        	<xjc:serializable uid="33333"/>
+      	</jxb:globalBindings>
+	  </xsd:appinfo>
+	</xsd:annotation>
+     
+     
+     <xsd:element name="MetricsViewConfig">
+       <xsd:complexType>
+         <xsd:sequence>
+           <xsd:element name="section" type="Section" minOccurs="0" maxOccurs="unbounded"/>
+         </xsd:sequence>
+       </xsd:complexType>
+     </xsd:element>
+     
+      <xsd:complexType name="Section">
+         <xsd:sequence>
+           <xsd:element name="chart" type="Chart" minOccurs="0" maxOccurs="unbounded"/>
+	   	   <xsd:element name="table" type="Table" minOccurs="0" maxOccurs="unbounded"/>
+         </xsd:sequence>
+       <xsd:attribute   name="sectionId" type="xsd:int" use="required"/>
+	   <xsd:attribute   name="displayName" type="xsd:string" use="required"/>
+     </xsd:complexType>
+   	 
+     <xsd:complexType name="MetricsView">
+		<xsd:sequence>
+			<xsd:element name="id" type="xsd:int"/>
+			<xsd:element name="chartType" type="xsd:string"/>
+			<xsd:element name="entity" type="xsd:string"/>
+        	<xsd:element name="name" type="xsd:string"/>		
+        	<xsd:element name="description" type="xsd:string"/>
+        	<xsd:element name="displayName" type="xsd:string"/>
+        	<xsd:element name="isBucketed" type="xsd:boolean"/>
+        	<xsd:element name="threshold" type="xsd:long" minOccurs="0"/>
+        	<xsd:element name="timeDimension" type="xsd:string" minOccurs="0"/>
+        	<xsd:element name="maxDataPoints" type="xsd:int" minOccurs="0" maxOccurs="1" />
+        </xsd:sequence>	     
+     </xsd:complexType>
+     
+     <xsd:complexType name="attributeConfig">
+     	<xsd:sequence>
+         <xsd:element name="type" type="xsd:string" />
+         <xsd:element name="title" type="xsd:string" />
+         <xsd:element name="precision" type="xsd:int" />
+        </xsd:sequence> 
+	 </xsd:complexType>
+     
+	 <xsd:complexType name="Chart">
+	   <xsd:complexContent>
+	     <xsd:extension base="MetricsView">
+          <xsd:sequence>
+          	<xsd:element name="xConfig" type="tns:attributeConfig" />
+          	<xsd:element name="yConfig" type="tns:attributeConfig" />
+	        <xsd:element name="series" type="ChartSeries" minOccurs="1" maxOccurs="unbounded"/>
+			<xsd:element name="poller" type="RefreshPoller" minOccurs="1" maxOccurs="unbounded"/>
+          </xsd:sequence>	   
+		 </xsd:extension>
+       </xsd:complexContent>
+     </xsd:complexType>
+	
+	 <xsd:complexType name="Table">
+	   <xsd:complexContent>
+	     <xsd:extension base="MetricsView">
+	       <xsd:sequence>
+	       	 <xsd:element name="schema" type="xsd:string" />
+	         <xsd:element name="cube" type="xsd:string" />
+			 <xsd:element name="hierarchy" type="xsd:string" />
+			 <xsd:element name="filter" type="xsd:string" />
+			 <xsd:element name="columns" type="TableColumns" minOccurs="1" maxOccurs="unbounded"/>
+			 <xsd:element name="poller" type="RefreshPoller" minOccurs="1" maxOccurs="unbounded"/>
+			 <xsd:element name="query" type="xsd:anyType" minOccurs="0" maxOccurs="1" nillable="true"/>
+	       </xsd:sequence>
+		 </xsd:extension>
+       </xsd:complexContent>
+     </xsd:complexType>
+     
+	 
+
+	 	 
+	 <xsd:complexType name="ChartSeries">
+       <xsd:sequence>
+           <xsd:element name="name" type="xsd:string" minOccurs="0" maxOccurs="1" />
+           <xsd:element name="displayName" type="xsd:string" minOccurs="0" maxOccurs="1" />
+           <xsd:element name="schema" type="xsd:string" minOccurs="0" maxOccurs="1" nillable="true" />
+           <xsd:element name="cube" type="xsd:string" minOccurs="0" maxOccurs="1"  />
+		   <xsd:element name="hierarchy" type="xsd:string"  minOccurs="0" maxOccurs="1" />
+		   <xsd:element name="dimLevel" type="xsd:string" minOccurs="0" maxOccurs="1" />
+		   <xsd:element name="filters" type="Filters" minOccurs="0" maxOccurs="1"/>
+		   <xsd:element name="xAttribute" type="xsd:string" minOccurs="0" maxOccurs="1" />
+		   <xsd:element name="yAttribute" type="xsd:string" minOccurs="0" maxOccurs="1" />
+		   <xsd:element name="color" type="xsd:string" minOccurs="0" maxOccurs="1" />
+		   <xsd:element name="orderBy" type="xsd:string"   nillable="true" minOccurs="0" maxOccurs="1" />
+		   <xsd:element name="sortOrder" type="xsd:string" nillable="true" minOccurs="0" maxOccurs="1" />
+		   <xsd:element name="query" type="xsd:anyType"    nillable="true" minOccurs="0" maxOccurs="1" />
+       </xsd:sequence>
+       <xsd:attribute name="type" type="xsd:string" />  <!-- [single,multiple] -->
+       <xsd:attribute name="dim"  type="xsd:string" />	<!-- Applicable only for multiple series.Is the dimension over which multiple series wil be generated -->
+     </xsd:complexType>
+	 	 
+	 <xsd:complexType name="TableColumns">
+       <xsd:sequence>
+		   <xsd:element name="column" type="TableColumn"  minOccurs="1" maxOccurs="unbounded"/>
+       </xsd:sequence>
+     </xsd:complexType>
+	 
+	 <xsd:complexType name="TableColumn">
+       <xsd:sequence>
+		   <xsd:element name="columnName" type="xsd:string" />
+		   <xsd:element name="columnAttribute" type="xsd:string" />
+       </xsd:sequence>
+     </xsd:complexType>
+	 
+	 <xsd:complexType name="RefreshPoller">
+       <xsd:sequence>
+		   <xsd:element name="pollingInterval" type="xsd:int" />
+		   <xsd:element name="maxPolls" type="xsd:int"/>
+       </xsd:sequence>
+     </xsd:complexType>
+     	
+      <xsd:complexType name="FilterDef">
+		<xsd:sequence>
+			<xsd:element name="qualifier" type="xsd:string" />
+			<xsd:element name="name" type="xsd:string" />
+			<xsd:element name="value" type="xsd:string" />
+			<xsd:element name="datatype" type="xsd:string" />
+			<xsd:element name="type" type="xsd:string" />					<!-- [MetricQualifier,FilterKeyQualifier] -->
+		</xsd:sequence>
+     </xsd:complexType>	
+     
+      <xsd:complexType name="EqFilterDef">
+		<xsd:complexContent>
+	     <xsd:extension base="FilterDef">
+			<xsd:sequence/>
+		</xsd:extension >	
+		</xsd:complexContent>
+     </xsd:complexType>
+	 
+	 <xsd:complexType name="GtFilterDef">
+		<xsd:complexContent>
+	        <xsd:extension base="FilterDef">
+			    <xsd:sequence/>
+		    </xsd:extension >	
+		</xsd:complexContent>
+     </xsd:complexType>
+	 
+	 <xsd:complexType name="LtFilterDef">
+		<xsd:complexContent>
+	        <xsd:extension base="FilterDef">
+			    <xsd:sequence/>
+		    </xsd:extension >	
+		</xsd:complexContent>
+     </xsd:complexType>
+	
+	  <xsd:complexType name="Filters">
+		<xsd:sequence>
+			<xsd:element name="andFilter" type="AndFilterDef" minOccurs="0" maxOccurs="unbounded" />
+			<xsd:element name="orFilter" type="OrFilterDef" minOccurs="0" maxOccurs="unbounded" />
+		</xsd:sequence>	
+     </xsd:complexType>
+	 	 
+	 <xsd:complexType name="AndFilterDef">
+		<xsd:sequence>
+			<xsd:element name="eqFilter" type="EqFilterDef" minOccurs="0" maxOccurs="unbounded" />
+			<xsd:element name="gtFilter" type="GtFilterDef" minOccurs="0" maxOccurs="unbounded" />
+			<xsd:element name="ltFilter" type="LtFilterDef" minOccurs="0" maxOccurs="unbounded" />
+		</xsd:sequence>
+     </xsd:complexType>
+	 
+	 <xsd:complexType name="OrFilterDef">
+		<xsd:sequence>
+			<xsd:element name="eqFilter" type="EqFilterDef" minOccurs="0" maxOccurs="unbounded" />
+			<xsd:element name="gtFilter" type="GtFilterDef" minOccurs="0" maxOccurs="unbounded" />
+			<xsd:element name="ltFilter" type="LtFilterDef" minOccurs="0" maxOccurs="unbounded" />
+		</xsd:sequence>	
+     </xsd:complexType>
+     
+     
+</xsd:schema>

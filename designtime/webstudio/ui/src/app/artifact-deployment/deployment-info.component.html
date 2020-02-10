@@ -1,0 +1,92 @@
+<div>
+  <tabset>
+    <tab
+    >
+      <ng-template tabHeading >
+        <small i18n>{{i18n('Status')}}</small>
+      </ng-template>
+      <div class='left-pad top-pad'>
+        <div class='row scroll-y page-col'>
+          <div class='col-sm-12'>
+            <div [class]='labelStyle'>
+              <div class='row'>
+                <div class='col-sm-11'>
+                  <span [class]='summaryStyle'>
+                    {{ summary }}
+                    <br>
+                    <div [ngSwitch]='input.deployStatus'>
+                      <span *ngSwitchCase='"PENDING"'>
+                        It will start in <span>{{duration | async}}</span>.
+                      </span>
+                      <span *ngSwitchCase='"IN_PROGRESS"'>
+                        It has been in progress for <span>{{duration | async}}</span>.
+                      </span>
+                      <span *ngSwitchCase='"FAILURE"'>
+                        It took <span>{{duration | async }}</span> to complete the attempt.
+                      </span>
+                      <span *ngSwitchCase='"SUCCESS"'>
+                         It took <span>{{duration | async}}</span>to complete the deployment.
+                      </span>
+                      <span *ngSwitchCase='"CANCELLED"'>
+                        It was in pending for  <span>{{duration | async}}</span>.
+                      </span>
+                    </div>
+                  </span>
+                </div>
+              </div>
+              <div class='row top-pad'>
+                <div class='col-sm-11'>
+                  <dl class="dl-horizontal">
+                    <dt i18n>{{i18n('Status')}}</dt>
+                    <dd><i [class]='indicator'></i> {{status}}</dd>
+                    <dt i18n>')}}Artifact')}}</dt>
+                    <dd>{{input.deploymentDescriptor.amsDecisionTablePath}}</dd>
+                    <dt i18n>{{i18n('Revision')}}</dt>
+                    <dd>
+                      <a (click)='onViewContent()' >{{revision}}</a>
+                    </dd>
+                    <dt i18n>{{i18n('Initiator')}}</dt>
+                    <dd>{{input.user}}</dd>
+                    <dt i18n>{{i18n('Initiate Time')}}</dt>
+                    <dd>{{createTime}}</dd>
+                    <dt i18n>{{i18n('Deploy Time')}}</dt>
+                    <dd>{{targetTime}}</dd>
+                    <dt *ngIf='isComplete' i18n>{{i18n('Complete Time')}}</dt>
+                    <dd *ngIf='isComplete'>{{ lastUpdateTime }}</dd>
+                    <dt *ngIf='!isPending' i18n>{{i18n('Duration')}}</dt>
+                    <dd *ngIf='!isPending'>{{duration | async}}</dd>
+                  </dl>
+                    <label *ngIf='isFailure' i18n>Failure Reason</label>
+                    <div *ngIf='isFailure' class='monospace card' style="overflow: scroll;">{{ failureReason}}</div>
+                </div>
+              </div>
+            </div>
+            <div class='row top-pad divider-top' *ngIf='isPending'>
+              <div class='col-sm-12'>
+                <button type="button" class='btn btn-sm btn-danger' (click)='onCancelDeployment()' i18n>{{i18n('Cancel Deployment')}}</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </tab>
+    
+    <tab
+    >
+      <ng-template
+        tabHeading
+      >
+      <small i18n>{{i18n('Descriptor')}}</small>
+      </ng-template>
+      <div class='row top-pad'>
+        <div class='col-sm-10'>
+          <descriptor-info
+            [edit]='false'
+            [input]='input.deploymentDescriptor'
+            [artifactId]='artifactId'
+          ></descriptor-info>
+        </div>
+      </div>
+    </tab>
+  </tabset>
+</div>   

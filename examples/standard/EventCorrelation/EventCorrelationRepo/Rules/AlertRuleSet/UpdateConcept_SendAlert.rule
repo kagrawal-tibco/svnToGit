@@ -1,0 +1,29 @@
+/**
+ * @description Update the timestamp of the concept
+ * @author 
+ */
+rule Rules.AlertRuleSet.UpdateConcept_SendAlert {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Events.InputAlertEvent	inputalertevent;
+		AlertConcept	alertconcept;
+		
+	}
+	when {
+		alertconcept.NodeId==inputalertevent.NodeId;
+		alertconcept.CategoryId==inputalertevent.CategoryId;
+	}
+	then {
+		System.debugOut("AlertId: " + inputalertevent.AlertId + " : Node Id : " + inputalertevent.NodeId 
+		    + " : Concept exists.... created before last 5 second...send output event and consume input event");
+		alertconcept.Timestamp=inputalertevent.Timestamp;
+		alertconcept.AlertId=inputalertevent.AlertId;
+		//Event.sendEvent(Event.createEvent("xslt://{{/Events/OutputAlertEvent}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"1.0\" exclude-result-prefixes=\"xsd xsl\">\n    <xsl:output method=\"xml\"/>\n    <xsl:param name=\"inputalertevent\"/>\n    <xsl:template match=\"/\">\n        <createEvent>\n            <event>\n                <xsl:if test=\"$inputalertevent/AlertId\">\n                    <AlertId>\n                        <xsl:value-of select=\"$inputalertevent/AlertId\"/>\n                    </AlertId>\n                </xsl:if>\n                <xsl:if test=\"$inputalertevent/NodeId\">\n                    <NodeId>\n                        <xsl:value-of select=\"$inputalertevent/NodeId\"/>\n                    </NodeId>\n                </xsl:if>\n                <xsl:if test=\"$inputalertevent/CategoryId\">\n                    <CategoryId>\n                        <xsl:value-of select=\"$inputalertevent/CategoryId\"/>\n                    </CategoryId>\n                </xsl:if>\n                <xsl:if test=\"$inputalertevent/Timestamp\">\n                    <Timestamp>\n                        <xsl:value-of select=\"$inputalertevent/Timestamp\"/>\n                    </Timestamp>\n                </xsl:if>\n            </event>\n        </createEvent>\n    </xsl:template>\n</xsl:stylesheet>"));
+		Rules.RuleFunctions.AlertFunction(Event.createEvent("xslt://{{/Events/OutputAlertEvent}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"1.0\" exclude-result-prefixes=\"xsd xsl\">\n    <xsl:output method=\"xml\"/>\n    <xsl:param name=\"inputalertevent\"/>\n    <xsl:template match=\"/\">\n        <createEvent>\n            <event>\n                <xsl:if test=\"$inputalertevent/AlertId\">\n                    <AlertId>\n                        <xsl:value-of select=\"$inputalertevent/AlertId\"/>\n                    </AlertId>\n                </xsl:if>\n                <xsl:if test=\"$inputalertevent/NodeId\">\n                    <NodeId>\n                        <xsl:value-of select=\"$inputalertevent/NodeId\"/>\n                    </NodeId>\n                </xsl:if>\n                <xsl:if test=\"$inputalertevent/CategoryId\">\n                    <CategoryId>\n                        <xsl:value-of select=\"$inputalertevent/CategoryId\"/>\n                    </CategoryId>\n                </xsl:if>\n                <xsl:if test=\"$inputalertevent/Timestamp\">\n                    <Timestamp>\n                        <xsl:value-of select=\"$inputalertevent/Timestamp\"/>\n                    </Timestamp>\n                </xsl:if>\n            </event>\n        </createEvent>\n    </xsl:template>\n</xsl:stylesheet>"));
+		
+		Event.consumeEvent(inputalertevent);
+	}
+}

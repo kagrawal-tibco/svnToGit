@@ -1,0 +1,51 @@
+/**
+ * @description Validates and loads ACL configuration for project
+ */
+void rulefunction WebStudio.Core.RuleFunctions.Startup.WS_RF_ValidateACLConfig {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		boolean isStartupTime;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Startup.WS_RF_ValidateACLConfig");
+		
+		String aclFileLocation = System.getSystemPropertyAsString("ws.projects.acl.location", null);
+		
+		Object outputMap = WS_RF_GetProjectListPayload(null, null);
+
+		if (outputMap != null) {
+			Object iterator = Collections.iterator(Collections.Map.entrySet(outputMap));
+			while (Collections.Iterator.hasNext(iterator)) {
+				Object entry = Collections.Iterator.next(iterator);
+				String output = Collections.Map.Entry.getValue(entry);
+				
+				String pathsXpath = "count($var//entry[@kind='dir'])";
+				double numberOfProjects = Number.doubleValue(XPath.execute(pathsXpath, output, ""));
+				Log.log(LOGGER, "Debug", "Number of managed projects for url[%s] - %s", Collections.Map.Entry.getKey(entry), numberOfProjects);
+				
+			    for (int i = 0; i < numberOfProjects; i = i + 1) {
+					int loop = i + 1;
+					String project = XPath.execute("$var//entry[@kind='dir'][" + loop + "]/path/text()", output, "");									
+					String aclFilePath = aclFileLocation + "/" + project + ".ac";
+					Log.log(LOGGER, "Debug", "ACL config file for project %s - %s", project, aclFilePath);
+					
+					if (File.fileExists(aclFilePath)) {
+						try {
+							RMS.Authorization.validateACLConfig(project, aclFilePath, null);
+						} catch (Exception exception) {
+							Log.logException(LOGGER, "ERROR", "Error validating Access Control Config file - %s", exception, aclFilePath);
+						}									
+					} else {
+						if (isStartupTime) {
+						   Log.log(LOGGER, "Warn", "Couldn't find the Access Control Config file for Project - %s", project);
+						}
+					}					
+			    }
+			}
+		} else {
+			Log.log(LOGGER, "Warn", "Output Map for project list is null !!");
+		}
+	}
+}

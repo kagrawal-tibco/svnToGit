@@ -1,0 +1,45 @@
+/**
+ * @description 
+ */
+void rulefunction WebStudio.Core.RuleFunctions.Utils.RT.View.WS_RF_FetchDomainModelForView {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String username;
+		String[] roles;
+		String projectName;
+		Object[] rtBindings;
+		WebStudio.Core.Concepts.RuleTemplateInstance.View.WS_C_BindingInfo selectedBindingInfo;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.RT.View.WS_RF_FetchDomainModelForView");
+		
+		WS_C_Domain[] baseRTDomainInfos = Instance.PropertyArray.toArrayConcept(selectedBindingInfo.domainInfo);
+		Log.log(LOGGER, "Debug", "Total Domain Items available - %s", baseRTDomainInfos@length);
+		
+		if (baseRTDomainInfos@length == 0) {
+			Log.log(LOGGER, "Debug", "Loading domaininfo from base RT, since not found int BaseRT concept.");
+			
+			Object rtBinding = null;
+			for (int loop = 0; loop < rtBindings@length; loop++) {
+				rtBinding = rtBindings[loop];
+				String bindingIdName = WS.RT.View.getBindingId(rtBinding);
+				
+				if (String.equals(bindingIdName, selectedBindingInfo.bindingId)) {
+					break;
+				}
+			}
+			
+			//Get and set domains into the selected bindingInfo object
+			String[] domainPaths = WS.RT.View.getDomainPathsForBinding(rtBinding);
+			for (int domainLoop = 0; domainLoop < domainPaths@length; domainLoop++) {
+				WS_C_Domain domainInfoConcept = WS_RF_FetchDomainEntries(username, roles, projectName, domainPaths[domainLoop], "domain", true);
+				//Append to binding concept
+				Instance.PropertyArray.appendConceptReference(selectedBindingInfo.domainInfo, domainInfoConcept, 1L);
+				WS.Common.assertInstance(domainInfoConcept, false);
+				Log.log(LOGGER, "Debug", "Added Domain Entry for type - %s", domainInfoConcept.dataType);
+			}	
+		} 
+	}
+}

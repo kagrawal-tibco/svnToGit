@@ -1,0 +1,15 @@
+<project default="backup-all">
+
+	<target name="init">
+		<tstamp>
+			<format property="today" pattern="MM.dd.yyyy"/>
+		</tstamp>
+	</target>
+		
+    <target name="backup-all" depends="init" description="Backs up the dashboard folder">
+        <zip destfile="dashboard-${today}.zip" comment="${backup.comments}">
+        	<fileset dir="." excludes="**/*.class"/>
+        </zip>
+    </target>
+
+</project>

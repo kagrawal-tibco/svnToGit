@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<AbstractDateDisplayComponent xmlns="com.tibco.be.views.user.components.drilldown.querymanager.view.*" 
+	xmlns:mx="http://www.adobe.com/2006/mxml"
+	
+>
+
+	<mx:Script>
+		<![CDATA[
+			import mx.events.ValidationResultEvent;
+			import mx.validators.ValidationResult;
+			import mx.formatters.DateFormatter;
+			import mx.collections.ArrayCollection;
+			import com.tibco.be.views.user.components.drilldown.querymanager.view.DateConditionEditor;
+			import com.tibco.be.views.user.components.drilldown.querymanager.CustomDateFormatter;
+			
+			private var currentConditions:ArrayCollection;
+			private var index:int;
+			private var editor:DateConditionEditor;
+			private var operator:String;	
+			private var readableDate:String;
+			
+			private var dateParser:CustomDateFormatter;
+			private var dateFormatter:DateFormatter;
+			[Bindable]
+			private var validationErrMsg:String;
+			
+			public function initDateComponent(date:Date, conditions:ArrayCollection, index:int, editor:DateConditionEditor, operator:String,fieldName:String):void{
+				this.currentConditions = conditions;
+				this.index = index;
+				this.editor = editor;
+				this.operator = operator;
+				this.validationErrMsg = fieldName+": date should be in the format 'yyyy-mm-dd'";
+				//trace("Year: "+date.getFullYear()+", Month: "+(date.getMonth()+1)+", Day: "+date.getDate()+", hrs: "+date.getHours()+", min:"+date.getMinutes())+", millisec: "+date.getMilliseconds();
+				datefield.selectedDate = null;
+				datefield.selectedDate = date;
+				datefield.text = DateField.dateToString(date,"YYYY-MM-DD");
+				var hrs:Number = date.getHours();
+				var min:Number = date.getMinutes();
+				var hrsIn12:Number = 12;
+				if(hrs == 12) { // special case for 12
+					am.selected = false;
+					pm.selected = true;
+//					am.enabled = false;
+//					pm.enabled = true;
+				}
+				else if(hrs == 0) { // special case for 0
+					hrsIn12 = 0;
+					am.selected = true;
+					pm.selected = false;
+//					am.enabled = true;
+//					pm.enabled = false;
+				}
+				else {
+					hrsIn12 = hrs % 12;
+					am.selected = hrs < 12;
+					pm.selected = hrs > 12;
+				}
+				
+				hourStepper.value = hrsIn12;
+				minStepper.value = date.getMinutes();
+				secStepper.value = date.getSeconds();
+				
+				dateParser = new CustomDateFormatter();
+				dateParser.formatString = 'YYYY-MM-DD KK:NN:SS A';
+
+				dateFormatter = new DateFormatter();
+				dateFormatter.formatString = "YYYY-MM-DD LL:NN:SS A";	
+				
+				readableDate = dateFormatter.format(date);
+			}
+			
+			private function dateChange(event:Event):void{
+				var dateStr:String = "";
+				
+				if(event.currentTarget is NumericStepper && event.currentTarget.id == "hourStepper") {
+					var hrStepper:NumericStepper = NumericStepper(event.currentTarget);
+					switch(hrStepper.value) {
+						case 0:
+					 	am.enabled = true;
+						pm.enabled = false;					 	
+					 	am.selected = true;
+					 	pm.selected = false;
+					 	break;
+						
+						case 12:
+						am.enabled = false;
+						pm.enabled = true;
+						am.selected = false;
+						pm.selected = true;
+						break;
+						
+						default:
+						am.enabled = true;
+						pm.enabled = true;	
+					}
+				}
+				var selectedDate:Date = new Date();
+				if(stringDateV.validate().results != null && stringDateV.validate().results.length > 0){
+					return;
+				}
+				selectedDate.time = datefield.selectedDate.time;
+				var isAM:Boolean = false;
+				if(event.currentTarget is RadioButtonGroup) {
+					var group:RadioButtonGroup = event.currentTarget as RadioButtonGroup;
+					isAM = group.selection.label == "AM";
+					trace(datefield.text+" "+hourStepper.value+":"+minStepper.value +":"+secStepper.value + " "+group.selection.label);
+					dateStr = datefield.text+" "+hourStepper.value+":"+minStepper.value +":"+secStepper.value +  " "+group.selection.label; 
+				}
+				else {
+					isAM = am.selected;
+					dateStr = datefield.text+" "+hourStepper.value+":"+minStepper.value + ":"+secStepper.value + " "+(am.selected == true?"AM":"PM");
+				}
+				//hours
+				if(hourStepper.value == 12) {
+					selectedDate.hours = hourStepper.value;
+				}
+				else {
+					selectedDate.hours = hourStepper.value + (isAM == true ? 0 : 12);
+				}				
+				//mins
+				selectedDate.minutes = minStepper.value;
+				//seconds
+				selectedDate.seconds = secStepper.value;
+//				
+//				readableDate = dateStr;
+//				var dateFormatter:CustomDateFormatter = new CustomDateFormatter();
+//				dateFormatter.formatString = 'YYYY-MM-DD KK:NN:SS A';
+//				var parsedDate:Date = dateFormatter.parseDate(dateStr);
+//				var parsedDate:Date = dateParser.parseDate(dateStr);
+//				var timeinmilli:Number = parsedDate.time;
+//				readableDate = dateFormatter.format(parsedDate);
+				var timeinmilli:Number = selectedDate.time;
+				readableDate = dateFormatter.format(selectedDate);
+				
+//				if(currentConditions.length -1 < index){
+//					currentConditions.addItem(new String(timeinmilli));
+//				}
+//				else{
+//					if(currentConditions.length > 0){
+//						currentConditions[0] = String(timeinmilli);
+//					}
+//				}
+				
+				switch(index){
+					case -1:
+						if(operator != "Is Today" && operator != "Is Any" && operator != "Is Null" && operator != "Is Not Null"){
+							editor.conditionAsString = operator + " "+readableDate;							
+						}
+						if(currentConditions.length < 1){
+							currentConditions.addItem(new String(timeinmilli));
+						}
+						else{
+							currentConditions[0] = String(timeinmilli); 
+						}
+						
+						break;
+					case 0:
+						editor.changeDateDisplay(readableDate, 0);
+						currentConditions[0] = String(timeinmilli);
+						break;
+					case 1:
+					  	editor.changeDateDisplay(readableDate, 1);
+					  	if(currentConditions.length < 2){
+					  		currentConditions.addItem(new String(timeinmilli));
+					  	}
+					  	else {
+					  		currentConditions[1]= String(timeinmilli);
+					  	}
+					  	break;
+				}
+				
+			}
+			
+			public override function doValidation():ValidationResultEvent {
+				return stringDateV.validate();
+			}
+		]]>
+	</mx:Script>
+    <mx:DateValidator id="stringDateV" 
+       	source="{datefield}" property="text" 
+       	inputFormat="yyyy-mm-dd"
+       	formatError="{validationErrMsg}"
+       	requiredFieldError="{validationErrMsg}"
+    />
+	<mx:Tile id="myFlow"
+		height="100" width="100%"
+		direction="horizontal"
+		borderStyle="none" 
+		paddingBottom="0" 
+		paddingTop="10" 
+		paddingLeft="0"
+		verticalScrollPolicy="off" 
+		horizontalScrollPolicy="off"
+		>
+		<mx:DateField id="datefield"
+			editable="true" 
+			width="100%"
+			formatString="YYYY-MM-DD"
+			change="dateChange(event);"/>
+		<mx:HBox horizontalGap="2">
+			<mx:NumericStepper id="hourStepper" stepSize="1" maximum="12" width="45" valueCommit="dateChange(event)"/>
+			<mx:Label text=":" width="10"/>
+			<mx:NumericStepper id="minStepper" stepSize="1" maximum="60" width="45" valueCommit="dateChange(event)"/>
+			<mx:Label text=":" width="10"/>
+			<mx:NumericStepper id="secStepper" stepSize="1" maximum="60" width="45" valueCommit="dateChange(event)"/>							
+		</mx:HBox>
+	<!--	<mx:HBox horizontalGap="2">
+			<mx:Label text=":" width="10"/>
+			<mx:NumericStepper id="secStepper" stepSize="1" maximum="60" width="45" valueCommit="dateChange(event)"/>				
+		</mx:HBox> -->
+		<mx:RadioButtonGroup id="ampm"
+        	    change="dateChange(event);" />
+		<mx:HBox>
+			<mx:RadioButton group="{ampm}"
+				id="am"
+				label="AM"
+				selected="true"/>
+			<mx:RadioButton group="{ampm}"
+				id="pm"
+				label="PM"/>
+		</mx:HBox>		
+	</mx:Tile>
+</AbstractDateDisplayComponent>

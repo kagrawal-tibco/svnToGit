@@ -1,0 +1,18 @@
+/**
+ * @description Set checkpoint revision concept referencefor a parent artifact.
+ */
+void rulefunction WebStudio.Core.RuleFunctions.Utils.Lifecycle.WS_RF_SetCheckpointRevisionConceptReference {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		//The base artifact
+		WebStudio.Core.Concepts.WS_C_UserArtifact parentUserArtifact;
+		//The revision concept instance to be set as checkpoint.
+		WebStudio.Core.Concepts.WS_C_UserArtifactRevision artifactRevision;
+	}
+	body {
+		//Set this revision as checkpoint revision.
+		Instance.PropertyAtom.setConceptReference(parentUserArtifact.checkpointRevision, artifactRevision, 1L);
+	}
+}

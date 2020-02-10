@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox
+	xmlns:mx="http://www.adobe.com/2006/mxml"
+	width="100%"
+	height="100%"
+	verticalGap="0"
+>
+	<mx:Script>
+		<![CDATA[
+			import com.tibco.be.views.core.ui.dashboard.BEVComponent;
+			
+			public function set component(value:BEVComponent):void{
+				componentContainer.removeAllChildren();
+				componentContainer.addChild(value);
+			}
+			
+			public function addChangeComponentListener(listener:Function):void{
+				chooseDifferentComponentLink.addEventListener(MouseEvent.CLICK, listener);
+			}
+			
+			public function removeChangeComponentListener(listener:Function):void{
+				chooseDifferentComponentLink.removeEventListener(MouseEvent.CLICK, listener);
+			}
+			
+		]]>
+	</mx:Script>
+	<mx:VBox id="componentContainer" width="100%" height="100%" />
+	<mx:HBox id="actionsContainer" width="100%" height="20" borderSides="top" borderStyle="solid">
+		<mx:LinkButton id="chooseDifferentComponentLink" label="Choose a different component" />
+	</mx:HBox>
+</mx:VBox>

@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cdd:cluster xmlns:cdd="http://tibco.com/businessevents/configuration/5.1">
+    <cdd:revision>
+        <cdd:version>4</cdd:version>
+        <cdd:author>ibanerje</cdd:author>
+        <cdd:date>2010-03-24 16:33:30</cdd:date>
+        <cdd:comment>Automatic import of version 3. EAR file location was set to: c:\temp\smnpe.ear</cdd:comment>
+    </cdd:revision>
+    <cdd:name>BE_Archive</cdd:name>
+    <cdd:object-management>
+        <cdd:memory-manager/>
+    </cdd:object-management>
+    <cdd:rulesets/>
+    <cdd:function-groups/>
+    <cdd:destination-groups/>
+    <cdd:log-configs>
+        <cdd:log-config id="logConfig">
+            <cdd:enabled>true</cdd:enabled>
+            <cdd:roles>*:info</cdd:roles>
+            <cdd:files>
+                <cdd:enabled>true</cdd:enabled>
+                <cdd:dir>logs</cdd:dir>
+                <cdd:max-number>10</cdd:max-number>
+                <cdd:max-size>10000000</cdd:max-size>
+                <cdd:append>true</cdd:append>
+            </cdd:files>
+        </cdd:log-config>
+    </cdd:log-configs>
+    <cdd:agent-classes>
+        <cdd:inference-agent-class id="BusinessEvents_Archive">
+            <cdd:rules>
+                <cdd:uri>/</cdd:uri>
+            </cdd:rules>
+            <cdd:destinations>
+                <cdd:destination id="Destination-N1638404">
+                    <cdd:uri>/BusinessEvents/Channels/SimpleRVChannel/Destination</cdd:uri>
+                    <cdd:pre-processor/>
+                    <cdd:threading-model>workers</cdd:threading-model>
+                    <cdd:thread-count>1</cdd:thread-count>
+                    <cdd:queue-size>0</cdd:queue-size>
+                </cdd:destination>
+                <cdd:destination id="IncomeIncrementDestination-N1638408">
+                    <cdd:uri>/BusinessEvents/Channels/SimpleRVChannel/IncomeIncrementDestination</cdd:uri>
+                    <cdd:pre-processor/>
+                    <cdd:threading-model>shared-queue</cdd:threading-model>
+                    <cdd:queue-size>0</cdd:queue-size>
+                </cdd:destination>
+                <cdd:destination id="NotificationDestination-N1638412">
+                    <cdd:uri>/BusinessEvents/Channels/AutomationNotificationChannel/NotificationDestination</cdd:uri>
+                    <cdd:pre-processor/>
+                    <cdd:threading-model>workers</cdd:threading-model>
+                    <cdd:thread-count>1</cdd:thread-count>
+                    <cdd:queue-size>0</cdd:queue-size>
+                </cdd:destination>
+                <cdd:destination id="KillerDestination-N1638416">
+                    <cdd:uri>/BusinessEvents/Channels/AutomationNotificationChannel/KillerDestination</cdd:uri>
+                    <cdd:pre-processor/>
+                    <cdd:threading-model>workers</cdd:threading-model>
+                    <cdd:thread-count>1</cdd:thread-count>
+                    <cdd:queue-size>0</cdd:queue-size>
+                </cdd:destination>
+            </cdd:destinations>
+            <cdd:startup>
+                <cdd:uri>/BusinessEvents/Rules/AutomationNotificationRuleFunction</cdd:uri>
+            </cdd:startup>
+            <cdd:shutdown/>
+            <cdd:concurrent-rtc>false</cdd:concurrent-rtc>
+        </cdd:inference-agent-class>
+    </cdd:agent-classes>
+    <cdd:processing-units>
+        <cdd:processing-unit id="default">
+            <cdd:agents>
+                <cdd:agent>
+                    <cdd:ref>BusinessEvents_Archive</cdd:ref>
+                </cdd:agent>
+            </cdd:agents>
+            <cdd:logs>logConfig</cdd:logs>
+        </cdd:processing-unit>
+    </cdd:processing-units>
+    <cdd:property-group name="misc"/>
+</cdd:cluster>

@@ -1,0 +1,96 @@
+/**
+ * @description Create view part for RULETEMPLATEINSTANCE loaded from SCS.
+ * Create a concept with all sub concepts and such.
+ * This will be called when the RTI view type entity will be fetched
+ * from workspace. Since all its children are not persisted in the 
+ * RTI itself, domains and other info is brought always from the 
+ * parent RT loaded in Workspace or SCS.
+ */
+WebStudio.Core.Concepts.RuleTemplateInstance.View.WS_C_RuleTemplateInstanceView rulefunction WebStudio.Core.RuleFunctions.Utils.RT.View.Ops.Fetch.WS_RF_CreateRuleTemplateInstanceViewConceptFromSCS {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String projectName;
+		String username;
+		String scsIntegrationType;
+		String scsRootURL;
+		String artifactPath;
+		//the EModel for the RTI
+		Object ruleTemplateObject;
+		String[] roles;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.RT.View.Ops.Fetch.WS_RF_CreateRuleTemplateInstanceViewConceptFromSCS");
+		
+		String implementsPath = WS.RTI.getRuleTemplateInstanceImplementsPath(ruleTemplateObject);
+		Log.log(LOGGER, "Debug", "Path of implemented Rule Template %s by Instance %s", implementsPath, artifactPath);
+		
+		//Create a concept now
+        WS_C_RuleTemplateInstanceView ruleTemplateInstanceView = 
+        	Instance.newInstance("/WebStudio/Core/Concepts/RuleTemplateInstance/View/WS_C_RuleTemplateInstanceView", "RTI_VIEW_" + WS.Common.generateUUID());
+		ruleTemplateInstanceView.implementsPath = implementsPath;
+		
+		int rulePriority = WS.RTI.getRuleTemplateInstancePriority(ruleTemplateObject);
+		ruleTemplateInstanceView.rulePriority = rulePriority;
+		
+		WS_C_View viewPart = 
+        	Instance.newInstance("/WebStudio/Core/Concepts/RuleTemplateInstance/View/WS_C_View", null);
+        //Load base RT with this extId.
+        WS_C_RuleTemplateInstanceUserArtifact baseRuleTemplateInstanceUserArtifact = 
+        	WebStudio.Core.RuleFunctions.Utils.RT.WS_RF_CreateOrGetRequisiteBaseRuleTemplateConceptFromSCS("View", scsIntegrationType, scsRootURL, username, projectName, implementsPath, roles);
+        
+		String[] revisionIds = Instance.PropertyArray.toArrayString(baseRuleTemplateInstanceUserArtifact.artifactRevisionIds);
+		//Load instance with this latest revision id
+		String latestRevisionId = revisionIds[0];
+		WS_C_UserArtifactRevision userArtifactRevision = Instance.getByExtIdByUri(latestRevisionId, "/WebStudio/Core/Concepts/WS_C_UserArtifactRevision");
+		
+		Log.log(LOGGER, "Debug", "Artifact Content ID for %s", userArtifactRevision.artifactContentsId);
+		//Either builder or view
+		Concept baseRuleTemplateContainedConcept = WS_RF_GetArtifactContentInstance(userArtifactRevision.artifactContentsId, userArtifactRevision.parentArtifactType);
+		
+		if (baseRuleTemplateContainedConcept instanceof WS_C_RuleTemplateInstanceView) {
+			WS_C_RuleTemplateInstanceView baseRuleTemplateInstanceView = baseRuleTemplateContainedConcept;
+			WS_C_View baseContainedView = Instance.PropertyAtom.getContainedConcept(baseRuleTemplateInstanceView.view, 1L);
+			//Get these things from the RT in WS.
+			WS_C_BindingInfo[] baseRTBindingInfos = Instance.PropertyArray.toArrayContainedConcept(baseContainedView.bindingInfo);
+	        Instance.PropertyAtom.setContainedConcept(ruleTemplateInstanceView.view, viewPart, 1L);	            	
+			//Get bindings from RTI EModel.
+			//These may be lesser in number 
+			Object[] RTIBindings = WS.RTI.getRuleTemplateInstanceBindings(ruleTemplateObject);
+					
+			for (int loop = 0; loop < RTIBindings@length; loop++) {
+				Object RTIBinding = RTIBindings[loop];
+				String bindingIdName = WS.RTI.getBindingId(RTIBinding);
+				String bindingExpression = WS.RTI.getBindingValue(RTIBinding);
+				//Create concept for each
+				WS_C_BindingInfo RTIbindingConcept = 
+					Instance.newInstance("/WebStudio/Core/Concepts/RuleTemplateInstance/View/WS_C_BindingInfo", null);
+				RTIbindingConcept.bindingId = bindingIdName;
+				RTIbindingConcept.value = bindingExpression;	
+				//Search for binding with same id in parent RT bindings
+				WS_C_BindingInfo parentRTBindingInfo = WS_RF_GetBindingInfoFromId(baseRTBindingInfos, bindingIdName);
+				if (parentRTBindingInfo != null) {
+					//Set the child RTIs binding type
+					String bindingType = parentRTBindingInfo.type;
+					RTIbindingConcept.type = bindingType;
+				
+					Instance.PropertyArray.appendContainedConcept(viewPart.bindingInfo, RTIbindingConcept, 1L);
+					//Get all domains as well
+					WS_C_Domain[] allDomainsForBinding = Instance.PropertyArray.toArrayConcept(parentRTBindingInfo.domainInfo);
+					for (int domainLoop = 0; domainLoop < allDomainsForBinding@length; domainLoop++) {
+						String domainPath = allDomainsForBinding[domainLoop].folder + allDomainsForBinding[domainLoop].name;
+						WS_C_Domain newDomainInfo = WS_RF_FetchDomainEntries(username, roles, projectName, domainPath, "domain", true);
+						//Attach that as reference to new binding in RTI.
+						Instance.PropertyArray.appendConceptReference(RTIbindingConcept.domainInfo, newDomainInfo, 1L);
+						WS.Common.assertInstance(newDomainInfo, false);
+					}
+				}						
+			}
+			//Get presentation text
+			String basePresentationText = baseContainedView.htmlText;
+			viewPart.htmlText = basePresentationText;
+		}
+		return ruleTemplateInstanceView; 
+	}
+}

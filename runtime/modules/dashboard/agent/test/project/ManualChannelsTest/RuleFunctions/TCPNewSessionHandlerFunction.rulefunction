@@ -1,0 +1,25 @@
+/**
+ * @description 
+ */
+void rulefunction RuleFunctions.TCPNewSessionHandlerFunction {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String serverNickName;
+		String sessionNickName;
+	}
+	body {
+		try { 
+			Events.DashboardRequestEvent event = TCP.readIntoPayloadFully(sessionNickName,"/Events/DashboardRequestEvent");
+			if (event != null){
+				Dashboard.startStreaming(sessionNickName,"/Events/DashboardResponseEvent",event@payload);
+			}
+			else {
+				throw Exception.newException("FATAL","could not read client request from "+sessionNickName+" on "+serverNickName,null);
+			}
+		} finally {
+			TCP.endRead(sessionNickName);
+		}
+	}
+}

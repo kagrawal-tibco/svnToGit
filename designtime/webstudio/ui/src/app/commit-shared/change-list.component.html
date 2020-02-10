@@ -1,0 +1,38 @@
+<div class="card panel-xs">
+  <div class="card-header">
+    <div class="{{isRtl() ? 'pull-right' : 'pull-left'}}">
+    {{title}} 
+  </div>
+  </div>
+  <div class="list-group" *ngIf='candidates && candidates.length > 0'>
+    <a *ngFor='let c of candidates' class="list-group-scroll" [ngClass]='setClasses(c)' >
+      <div class="row {{isRtl() ? 'pull-right' : 'pull-left'}}">
+          <span class='candidate-select' [class.clickable]='isClickable' [class.disabled-candidate]='!isEntryNormal(c)'>
+            <input type="checkbox" class="{{isRtl() ? 'pull-right' : 'pull-left'}}" *ngIf='enableSelect' [disabled]='!isEntryNormal(c)' [(ngModel)]='c.selected'>
+            <div class='item-title' class="{{isRtl() ? 'pull-right' : 'pull-left'}}" [class.line-cross]='c.disposed'  (click)='onClick(c)'> {{getDescription(c)}}</div>
+          </span>
+
+          <label class='control-label control-label-normal' *ngIf='enableTCEUI && showLastDeployMessage(c)'><ng-container i18n>{{i18n('deployed')}}</ng-container> by <a>{{c.deployerName}}</a> {{ccToDeployTimeMessage.get(c.id)}} </label>
+          <label class='control-label control-label-normal' *ngIf='!enableTCEUI && showLastDeployMessage(c)'>deployed to <b> {{c.deployEnvironments}}</b> by <a>{{c.deployerName}}</a> {{ccToDeployTimeMessage.get(c.id)}} </label>
+      </div>
+
+      <button class='btn btn-warning btn-xs btn-narrow' *ngIf='showDeployOptions(c)' [disabled]='isDeployInProgress()' (click)='onDeploy(c, comment)' i18n>{{i18n('Deploy')}}</button>
+      <span *ngIf='!isBtnEnabled(c)' i18n>{{i18n('Up to date')}}</span>
+    </a>
+  </div>
+  <div class="card-body" *ngIf='!candidates'>
+    <i class='fa fa-refresh fa-spin'></i><ng-container i18n>{{i18n(' Loading... ')}}</ng-container>
+  </div>
+  <div class="card-body" *ngIf='candidates && candidates.length === 0'>
+    {{emptyMsg}}
+  </div>
+</div>
+<div *ngIf='enableSelect && candidates && candidates.length > 1' class='control-group'>
+    <mat-slide-toggle [(ngModel)]="selectAll" color="primary">
+        {{i18n('Select All')}}
+    </mat-slide-toggle> 
+    <small [hidden]='mode !== "COMMIT"' i18n>{{i18n('Modified artifacts are selected by default')}}</small>
+  <!-- <label for="select-all" class='control-label control-label-normal clickable' i18n>{{i18n('Select All: ')}}</label>
+  <toggle-switch [size]='"mini"' [(value)]='selectAll'></toggle-switch><small [hidden]='mode !== "COMMIT"' i18n>{{i18n('Modified artifacts are selected by default')}}</small> -->
+</div>
+

@@ -1,0 +1,26 @@
+/**
+ * @description 
+ */
+String rulefunction Shared.RuleFunctions.topology.getPuNameWithProcId {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		
+		Shared.Concepts.MonitorableEntity monitorable;
+	}
+	body {
+		if(monitorable.active == true) {
+			if (BEMM.topology.getCacheProvider() == "In-Memory") {
+				return " name=\""+monitorable.nameWithProcId;
+			}
+			
+			//For Coherence/AS cache mode. In cache mode, because the discovery is done
+			//using the ManagementTable, monitorable.name is assigned to the Process ID
+			//Therefore this statement is equivalent to the statement above.
+			return " name=\""+monitorable.topologyProps[0]+"("+monitorable.name+")"+"\"";
+		} 
+		
+		return " name=\""+monitorable.topologyProps[0]+"\"";
+	}
+}

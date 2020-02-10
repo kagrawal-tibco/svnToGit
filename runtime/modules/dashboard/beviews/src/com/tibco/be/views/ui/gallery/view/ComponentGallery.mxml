@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox 
+	xmlns:mx="http://www.adobe.com/2006/mxml"
+	width="100%" 
+	height="100%" 
+	horizontalScrollPolicy="off"
+	styleName="componentGallery"
+	creationComplete="init()"
+>
+
+	<mx:Script>
+		<![CDATA[
+			import com.tibco.be.views.ui.gallery.controller.ComponentGalleryController;
+			
+//			[Bindable]
+//			[Embed("assets/images/gallery/leftScroller.png")]
+//			private var ScrollLeftButton:Class;
+//			
+//			[Bindable]
+//			[Embed("assets/images/gallery/rightScroller.png")]
+//			private var ScrollRightButton:Class;
+		
+			private var _controller:ComponentGalleryController;
+//			private var _rightScroller:Timer;
+//			private var _leftScroller:Timer;
+			
+			public function init():void{
+				_controller = new ComponentGalleryController(this);
+				_controller.init();
+//				hb_ComponentsView.width = hb_GalleryContent.width - 2*btn_ScrollLeft.width;
+				hb_ComponentsView.width = hb_GalleryContent.width;
+//				_rightScroller = new Timer(10);
+//				_leftScroller = new Timer(10);
+//				_rightScroller.addEventListener(TimerEvent.TIMER, doRightScroll);
+//				_leftScroller.addEventListener(TimerEvent.TIMER, doLeftScroll);
+			}
+			
+			private function get contentContainerHeight():int{ return parent.height-46; }
+			
+			public function destroy():void{
+				_controller.destroy();
+			}
+			
+//			private function scrollRight():void{
+//				btn_ScrollRight.alpha = 1;
+//				_rightScroller.start();
+//			}
+//			
+//			private function scrollLeft():void{
+//				btn_ScrollLeft.alpha = 1;
+//				_leftScroller.start();
+//			}
+//			
+//			private function quantumScrollRight():void{
+//				_rightScroller.stop();
+//				hb_ComponentsView.horizontalScrollPosition += 165; //ComponentGalleryMetric width + spacer
+//			}
+//			
+//			private function quantumScrollLeft():void{
+//				_leftScroller.stop();
+//				hb_ComponentsView.horizontalScrollPosition -= 165; //ComponentGalleryMetric width - spacer
+//			}
+//			
+//			private function stopRightScroll():void{
+//				btn_ScrollRight.alpha = 0.6;
+//				_rightScroller.stop();
+//			}
+//			
+//			private function stopLeftScroll():void{
+//				btn_ScrollLeft.alpha = 0.6;
+//				_leftScroller.stop();
+//			}
+//			
+//			private function doRightScroll(event:TimerEvent):void{
+//				hb_ComponentsView.horizontalScrollPosition += 2;
+//			}
+//			
+//			private function doLeftScroll(event:TimerEvent):void{
+//				hb_ComponentsView.horizontalScrollPosition -= 2;
+//			}
+			
+			
+		]]>
+	</mx:Script>
+	<mx:HBox id="hb_BreadCrumbsBar" horizontalGap="0" width="100%" height="20" borderStyle="none" verticalAlign="middle">
+
+	</mx:HBox>
+	<mx:Container id="hb_GalleryContent" width="820" height="100%" horizontalScrollPolicy="off" verticalScrollPolicy="off">
+		<!--mx:Image id="btn_ScrollLeft" x="1" y="1" width="27" height="194" source="{ScrollLeftButton}" alpha=".6" rollOver="scrollLeft()" rollOut="stopLeftScroll()" click="quantumScrollLeft()"/-->
+		<mx:HBox id="hb_ComponentsView" x="0" y="1" height="200" horizontalScrollPolicy="on" paddingLeft="5" paddingRight="5" horizontalGap="10" verticalAlign="middle" backgroundColor="0xFFFFFF" borderStyle="none"/>
+		<!--mx:Image id="btn_ScrollRight" x="793" y="1" width="27" height="194" source="{ScrollRightButton}" alpha=".6" rollOver="scrollRight()" rollOut="stopRightScroll()" click="quantumScrollRight()"/-->
+	</mx:Container>
+	
+</mx:VBox>

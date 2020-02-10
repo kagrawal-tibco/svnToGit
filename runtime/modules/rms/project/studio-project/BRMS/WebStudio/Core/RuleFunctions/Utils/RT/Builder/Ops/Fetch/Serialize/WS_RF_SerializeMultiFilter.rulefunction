@@ -1,0 +1,63 @@
+/**
+ * @description Serialize multi filter to concept model.
+ */
+void rulefunction WebStudio.Core.RuleFunctions.Utils.RT.Builder.Ops.Fetch.Serialize.WS_RF_SerializeMultiFilter {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object multiFilterEModel;
+		//Keep generic
+		Concept containerConcept;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.RT.Builder.Ops.Fetch.Serialize.WS_RF_SerializeMultiFilter");
+		
+		String matchType = WS.RTI.getMatchType(multiFilterEModel);
+		Log.log(LOGGER, "Debug", "Match Type for multi filter - %s", matchType);
+		//A multi filter can be child of conditions, or another multi filter, or an action command.
+		WS_C_AbstractConditionsFilter filterConcept = 
+			Instance.newInstance("/WebStudio/Core/Concepts/RuleTemplateInstance/Builder/WS_C_AbstractConditionsFilter", null);
+		filterConcept.matchType = matchType;
+		
+		// set Filter Id
+		filterConcept.filterId = WS.RTI.getFilterId(multiFilterEModel);
+			
+		if (containerConcept instanceof WS_C_Conditions) {
+			Log.log(LOGGER, "Debug", "Appending filter to conditions");
+			WS_C_Conditions conditions = containerConcept;
+			//Append this as a reference
+			Instance.PropertyArray.appendConceptReference(conditions.filter, filterConcept, 1L);
+		} else if (containerConcept instanceof WS_C_AbstractConditionsFilter) {
+			Log.log(LOGGER, "Debug", "Appending filter to parent multi filter");
+			WS_C_AbstractConditionsFilter containerFilter = containerConcept;
+			//Append this as a reference
+			Instance.PropertyArray.appendConceptReference(containerFilter.filter, filterConcept, 1L);
+		} else if (containerConcept instanceof WS_C_CommandInfo) {
+			Log.log(LOGGER, "Debug", "Appending filter to action command");
+			WS_C_CommandInfo containerCommand = containerConcept;
+			//Append this as a reference
+			Instance.PropertyArray.appendConceptReference(containerCommand.filter, filterConcept, 1L);
+		}
+		//Process children if any
+		Object[] filterChildren = WS.RTI.getChildFilterObjects(multiFilterEModel);
+		Log.log(LOGGER, "Debug", "Number of children for this multi filter - %s", filterChildren@length);
+		
+		for (int loop = 0; loop < filterChildren@length; loop++) {
+			Object filterChild = filterChildren[loop];
+			//See if it is simple
+			if (WS.RTI.isMultiFilter(filterChild)) {
+				Log.log(LOGGER, "Debug", "Processing nested multi filter - %s", filterChild);
+				//Recursively call this function
+				WebStudio.
+					Core.
+						RuleFunctions.Utils.RT.Builder.Ops.Fetch.Serialize.WS_RF_SerializeMultiFilter(filterChild, filterConcept);
+			} else {
+				Log.log(LOGGER, "Debug", "Processing single filter - %s", filterChild);
+				WebStudio.
+					Core.
+						RuleFunctions.Utils.RT.Builder.Ops.Fetch.Serialize.WS_RF_SerializeSingleFilter(filterChild, filterConcept);
+			}
+		}
+	}
+}

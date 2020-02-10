@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cdd:cluster xmlns:cdd="http://tibco.com/businessevents/configuration/5.1">
+    <cdd:revision>
+        <cdd:version>276</cdd:version>
+        <cdd:author>cmix</cdd:author>
+        <cdd:date>2010-04-26 12:27:14</cdd:date>
+        <cdd:comment>Automatic import of version 275. EAR file location was set to: c:\tibco\be\3.0\bin\workshop.ear</cdd:comment>
+    </cdd:revision>
+    <cdd:name>workshoptest</cdd:name>
+    <cdd:object-management>
+    	<!--
+        <cdd:berkeley-db-manager>
+            <cdd:checkpoint-interval>30</cdd:checkpoint-interval>
+            <cdd:checkpoint-ops-limit>1000</cdd:checkpoint-ops-limit>
+            <cdd:db-dir>C:\Temp\BerkeleyDB</cdd:db-dir>
+            <cdd:delete-retracted>true</cdd:delete-retracted>
+            <cdd:skip-recovery>false</cdd:skip-recovery>
+            <cdd:property-cache-size>10000</cdd:property-cache-size>
+        </cdd:berkeley-db-manager>
+        -->
+    </cdd:object-management>
+    <cdd:rulesets/>
+    <cdd:function-groups/>
+    <cdd:destination-groups/>
+    <cdd:log-configs>
+        <cdd:log-config id="logConfig">
+            <cdd:enabled>true</cdd:enabled>
+            <cdd:roles>*:info</cdd:roles>
+            <cdd:files>
+                <cdd:enabled>true</cdd:enabled>
+                <cdd:dir>logs</cdd:dir>
+                <cdd:max-number>10</cdd:max-number>
+                <cdd:max-size>10000000</cdd:max-size>
+                <cdd:append>true</cdd:append>
+            </cdd:files>
+        </cdd:log-config>
+    </cdd:log-configs>
+    <cdd:agent-classes>
+        <cdd:inference-agent-class id="Inference">
+            <cdd:rules>
+                <cdd:uri>/Rules/MOJO</cdd:uri>
+                <cdd:uri>/Rules/TestCreation</cdd:uri>
+            </cdd:rules>
+            <cdd:destinations>
+                <cdd:destination id="MOJORequests-N1769476">
+                    <cdd:uri>/Channels/LocalChannel/MOJORequests</cdd:uri>
+                    <cdd:pre-processor>/Functions/onMojoRequest</cdd:pre-processor>
+                    <cdd:threading-model>shared-queue</cdd:threading-model>
+                    <cdd:queue-size>0</cdd:queue-size>
+                </cdd:destination>
+                <cdd:destination id="NetcoolEventDestination-N1769480">
+                    <cdd:uri>/Channels/JMSChannel/NetcoolEventDestination</cdd:uri>
+                    <cdd:pre-processor>/Functions/onNetcoolEvent</cdd:pre-processor>
+                    <cdd:threading-model>shared-queue</cdd:threading-model>
+                    <cdd:queue-size>0</cdd:queue-size>
+                </cdd:destination>
+            </cdd:destinations>
+            <cdd:startup>
+                <cdd:uri>/Functions/startup</cdd:uri>
+            </cdd:startup>
+            <cdd:shutdown/>
+            <cdd:concurrent-rtc>false</cdd:concurrent-rtc>
+        </cdd:inference-agent-class>
+    </cdd:agent-classes>
+    <cdd:processing-units>
+        <cdd:processing-unit id="default">
+            <cdd:agents>
+                <cdd:agent>
+                    <cdd:ref>Inference</cdd:ref>
+                </cdd:agent>
+            </cdd:agents>
+            <cdd:logs>logConfig</cdd:logs>
+        </cdd:processing-unit>
+    </cdd:processing-units>
+    <cdd:property-group name="misc">
+        <cdd:property-group name="coherence">
+            <!--
+                <cdd:property name="tangosol.coherence.clusteraddress" value="224.3.5.2"/>
+                <cdd:property name="tangosol.coherence.clusterport" value="35463"/>
+                <cdd:property name="tangosol.coherence.localhost" value="localhost"/>
+                <cdd:property name="tangosol.coherence.ttl" value="4"/>-->
+        </cdd:property-group>
+    </cdd:property-group>
+</cdd:cluster>

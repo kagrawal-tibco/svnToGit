@@ -1,0 +1,57 @@
+/**
+ * @description Load existing concepts if any here.
+ */
+void rulefunction AAA.Rules.AuthenRules.RuleFunctions.Preprocessors.AMS_RFP_AuthenticationPP {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		AAA.Events.AuthenEvents.AMS_E_LoginRequestEvent ams_e_loginrequestevent;
+	}
+	body {
+		Object LOGGER = Log.getLogger("AAA.Rules.AuthenRules.RuleFunctions.Preprocessors.AMS_RFP_AuthenticationPP");
+		if (ams_e_loginrequestevent.username != null) {
+			ams_e_loginrequestevent.username = HTTP.decodeURL(ams_e_loginrequestevent.username, "UTF-8");
+		}
+		String username = ams_e_loginrequestevent.username;
+		String password = ams_e_loginrequestevent.password;
+		Log.log(LOGGER, "Info", "Attempting login for user %s", ams_e_loginrequestevent.username);
+		
+		String token = Authentication.authenticate(username, password);
+		//Load concept from cache if any after taking lock on this key.
+		//Since we need to modify this in rule, it is required to lock.
+		if (token != null) {
+			//Set token in the event
+			ams_e_loginrequestevent.loginToken = token;
+			username = XPath.execute("string($var/token/authen/user/attribute::username)", token, "");
+			ams_e_loginrequestevent.username = username;
+			boolean locked = Cluster.DataGrid.Lock(username, -1, false);
+			if (locked) {
+				//This is a cache-only concept, and needs to be loaded in this PP.
+				AMS_C_LoggedInUser loggedInUser = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(username, false, "/AAA/Concepts/AMS_C_LoggedInUser");
+				if (loggedInUser == null) {
+					//Create a logged in user entry
+					Log.log(LOGGER, "Debug", "Creating new loggedin user entry for username %s", username);
+					loggedInUser = 
+						Instance.createInstance("xslt://{{/AAA/Concepts/AMS_C_LoggedInUser}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"1.0\" exclude-result-prefixes=\"xsl xsd\">\n    <xsl:output method=\"xml\"/>\n    <xsl:param name=\"username\"/>\n    <xsl:template match=\"/\">\n        <createObject>\n            <object>\n                <xsl:attribute name=\"extId\">\n                    <xsl:value-of select=\"$username\"/>\n                </xsl:attribute>\n                <username>\n                    <xsl:value-of select=\"$username\"/>\n                </username>\n                <loginTime>\n                    <xsl:value-of select=\"current-dateTime()\"/>\n                </loginTime>\n                <accessTimeStamp>\n                    <xsl:value-of select=\"current-dateTime()\"/>\n                </accessTimeStamp>\n            </object>\n        </createObject>\n    </xsl:template>\n</xsl:stylesheet>");
+					//Update Scorecard
+					boolean loggedInUsersLock = Cluster.DataGrid.Lock("LOGGEDIN_USERS", -1, false);
+					AMS_C_LoggedInUsers loggedInUsers = null;
+					if (loggedInUsersLock) {
+						loggedInUsers = Cluster.DataGrid.CacheLoadConceptByExtIdByUri("LOGGEDIN_USERS", false, "/Approval/Scorecards/AMS_C_LoggedInUsers");
+						if (loggedInUsers == null) {
+							//Create one
+							Log.log(LOGGER, "Debug", "No instance of LoggedInUsers found. Creating one");
+							loggedInUsers = Instance.createInstance("xslt://{{/Approval/Scorecards/AMS_C_LoggedInUsers}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"1.0\" exclude-result-prefixes=\"xsl xsd\">\n    <xsl:output method=\"xml\"/>\n    <xsl:template match=\"/\">\n        <createObject>\n            <object>\n                <xsl:attribute name=\"extId\">\n                    <xsl:value-of select=\"&quot;LOGGEDIN_USERS&quot;\"/>\n                </xsl:attribute>\n            </object>\n        </createObject>\n    </xsl:template>\n</xsl:stylesheet>");
+						}
+					}
+					AMS_C_LoggedInUserEntry newLoggedInUserEntry = Instance.createInstance("xslt://{{/Approval/Scorecards/AMS_C_LoggedInUserEntry}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" version=\"1.0\" exclude-result-prefixes=\"xsl xsd\">\n    <xsl:output method=\"xml\"/>\n    <xsl:param name=\"username\"/>\n    <xsl:template match=\"/\">\n        <createObject>\n            <object>\n                <userExtId>\n                    <xsl:value-of select=\"$username\"/>\n                </userExtId>\n            </object>\n        </createObject>\n    </xsl:template>\n</xsl:stylesheet>");		
+					Instance.PropertyArray.appendContainedConcept(loggedInUsers.loggedInUsers, newLoggedInUserEntry, 1L);	
+				} else {
+					//Already exists. Update accesstimestamp
+					loggedInUser.accessTimeStamp = DateTime.now();
+				}
+			}
+		}
+	}
+}

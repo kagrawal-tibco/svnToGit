@@ -1,0 +1,130 @@
+/**
+ * @description Create an instance of builder part of RTI based on contained input in save request.
+ */
+WebStudio.Core.Concepts.RuleTemplateInstance.Builder.WS_C_RuleTemplateInstanceBuilder rulefunction WebStudio.Core.RuleFunctions.Utils.RT.Builder.Ops.Save.WS_RF_CreateRuleTemplateInstanceContainedBuilder {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String username;
+		String projectName;
+		String artifactContent;
+		String artifactType; 
+		String implementsPath;
+		//The base RuleTemplate user artifact created during entity details fetch after checkout.
+		WebStudio.Core.Concepts.RuleTemplateInstance.WS_C_RuleTemplateInstanceUserArtifact baseRuleTemplateInstanceUserArtifact;
+		String contentType;
+		int rulePriority;
+		String description;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.RT.Builder.Ops.Save.WS_RF_CreateRuleTemplateInstanceContainedBuilder");
+		
+		WS_C_RuleTemplateInstanceBuilder ruleTemplateInstanceContainedBuilder = null;
+		if (String.equals(contentType, System.getGlobalVariableAsString("WebStudio/CONTENT_TYPE/XML", "application/xml"))) {
+			ruleTemplateInstanceContainedBuilder = Instance.
+					createTransientInstanceFromXML("/WebStudio/Core/Concepts/RuleTemplateInstance/Builder/WS_C_RuleTemplateInstanceBuilder", artifactContent);
+		} else {
+			ruleTemplateInstanceContainedBuilder = Instance.
+					createTransientInstanceFromJSON("/WebStudio/Core/Concepts/RuleTemplateInstance/Builder/WS_C_RuleTemplateInstanceBuilder", artifactContent);
+		}
+		Log.log(LOGGER, "Debug", "Transient instance of rule template instance builder [%s] from content [%s]", ruleTemplateInstanceContainedBuilder, artifactContent);					
+		ruleTemplateInstanceContainedBuilder.implementsPath = implementsPath;
+		ruleTemplateInstanceContainedBuilder.rulePriority = rulePriority;
+		ruleTemplateInstanceContainedBuilder.description = description;
+		
+		// set the extId
+		WS.Common.setExtId(ruleTemplateInstanceContainedBuilder, "RTI_BUILDER_" + WS.Common.generateUUID());
+		
+		Log.log(LOGGER, "Debug", "Transient instance of rule template instance builder details, Implements Path[%s], RulePriority[%s], Description[%s]", implementsPath, rulePriority, description);
+		
+		//Get base symbols reference from RT 	
+		String[] baseRTRevisionIds = Instance.PropertyArray.toArrayString(baseRuleTemplateInstanceUserArtifact.artifactRevisionIds);
+		//Get first
+		String baseRTRevisionId = baseRTRevisionIds[0];
+		WS_C_UserArtifactRevision artifactRevision = Instance.getByExtIdByUri(baseRTRevisionId, "/WebStudio/Core/Concepts/WS_C_UserArtifactRevision");
+		//Look for contained RT builder
+		WS_C_RuleTemplateInstanceBuilder baseRuleTemplateContainedBuilder = WS_RF_GetArtifactContentInstance(artifactRevision.artifactContentsId, artifactRevision.parentArtifactType);
+		if (baseRuleTemplateContainedBuilder != null) {
+			//Attach its symbol reference so that during fetch post save this can be retrieved.
+			WS_C_Symbols baseRTSymbols = Instance.PropertyAtom.getConceptReference(baseRuleTemplateContainedBuilder.symbols, 1L);
+			Instance.PropertyAtom.setConceptReference(ruleTemplateInstanceContainedBuilder.symbols, baseRTSymbols, 1L);
+			
+			WS_C_Commands baseRTCommands = Instance.PropertyAtom.getContainedConcept(baseRuleTemplateContainedBuilder.commands, 1L);
+			//Add base RT commands
+			WS_C_CommandInfo[] baseRTCommandInfos = WS.Common.toArrayConcept(baseRTCommands.commandInfo);
+			
+			WS_C_Commands childRTICommands = WS.Common.getContainedConcept(ruleTemplateInstanceContainedBuilder.commands);
+			WS_C_CommandInfo[] childRTICommandInfos = Instance.PropertyArray.toArrayConcept(childRTICommands.commandInfo);
+			
+			// first clear all RTI commands, need to put them in order
+			Instance.PropertyArray.clear(childRTICommands.commandInfo);
+			
+			Log.log(LOGGER, "Debug", "Base Commands [%s] & Child Commands [%s]", baseRTCommandInfos@length, childRTICommandInfos@length);
+			
+			// add commands as per order in RTI
+			boolean matchingCmdFound = false;			
+			for (int baseCommandCnt=0; baseCommandCnt < baseRTCommandInfos@length; baseCommandCnt++) {
+				WS_C_CommandInfo baseCommand = baseRTCommandInfos[baseCommandCnt];
+				
+				matchingCmdFound = false;
+				for (int childCommandCnt=0; childCommandCnt < childRTICommandInfos@length; childCommandCnt++) {
+					WS_C_CommandInfo childCommand = childRTICommandInfos[childCommandCnt];
+					
+					if (String.equals(baseCommand.commandAlias, childCommand.commandAlias) && String.equals(baseCommand.type, childCommand.type) && String.equals(baseCommand.actionType, childCommand.actionType)){
+						//Get symbols from base command info
+						WS_C_Symbols baseRuleTemplateBuilderCommandSymbols = Instance.PropertyAtom.getConceptReference(baseCommand.symbols, 1L);
+						if (baseRuleTemplateBuilderCommandSymbols != null) {
+							//Set this in the child RTI instance
+							Instance.PropertyAtom.setConceptReference(childCommand.symbols, baseRuleTemplateBuilderCommandSymbols, 1L);
+						}
+						
+						if (childCommand.filter != null && childCommand.filter@length > 0) {
+							WS_C_AbstractConditionsFilter[] containedFilterList = Instance.PropertyArray.toArrayConcept(childCommand.filter);
+							WS_RF_SetUniqueIDToRTIBuilder(containedFilterList);
+						}
+						
+						Instance.PropertyArray.appendConceptReference(childRTICommands.commandInfo, childCommand, 1L);
+						//These are refs and need to explicitly assert.
+						WS.Common.assertInstance(childCommand, false);
+						
+						matchingCmdFound = true;
+						break;
+					}
+				}
+				
+				if (!matchingCmdFound) {
+					Log.log(LOGGER, "Debug", "Matching child command not found so adding a new one !!");
+					WS_C_CommandInfo missingCommandInfo = Instance.createInstance("xslt://{{/WebStudio/Core/Concepts/RuleTemplateInstance/Builder/WS_C_CommandInfo}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" version=\"1.0\" exclude-result-prefixes=\"xsl xsd\">\n    <xsl:output method=\"xml\"/>\n    <xsl:param name=\"baseCommand\"/>\n    <xsl:template match=\"/\">\n        <createObject>\n            <object>\n                <xsl:if test=\"$baseCommand/commandAlias\">\n                    <commandAlias>\n                        <xsl:value-of select=\"$baseCommand/commandAlias\"/>\n                    </commandAlias>\n                </xsl:if>\n                <xsl:if test=\"$baseCommand/type\">\n                    <type>\n                        <xsl:value-of select=\"$baseCommand/type\"/>\n                    </type>\n                </xsl:if>\n                <xsl:if test=\"$baseCommand/actionType\">\n                    <actionType>\n                        <xsl:value-of select=\"$baseCommand/actionType\"/>\n                    </actionType>\n                </xsl:if>\n                <symbols>\n                    <xsl:if test=\"$baseCommand/symbols/@ref\">\n                        <xsl:attribute name=\"ref\">\n                            <xsl:value-of select=\"$baseCommand/symbols/@ref\"/>\n                        </xsl:attribute>\n                    </xsl:if>\n                </symbols>\n            </object>\n        </createObject>\n    </xsl:template>\n</xsl:stylesheet>");
+					Instance.PropertyArray.appendConceptReference(childRTICommands.commandInfo, missingCommandInfo, 1L);
+				}
+			}
+			
+			// add unique Id's to filters under Rule Template Instance Builder
+			Log.log(LOGGER, "Debug", "======= Adding Filter Id's");
+			WS_C_Conditions rtiConditions = ruleTemplateInstanceContainedBuilder.conditions;
+			if (rtiConditions != null) {
+				if (rtiConditions.filterId == null || String.equals(rtiConditions.filterId, "")) {
+					rtiConditions.filterId = WS.Common.getUniqueId();
+				}
+				Log.log(LOGGER, "Debug", "======= Unique Filter Id to Condition - %s", rtiConditions.filterId);
+				if (rtiConditions.filter != null && rtiConditions.filter@length > 0) {
+					WS_C_AbstractConditionsFilter[] containedFilterList = Instance.PropertyArray.toArrayConcept(rtiConditions.filter);
+					WS_RF_SetUniqueIDToRTIBuilder(containedFilterList);
+				}
+			}
+			
+			// finally add display properties if any
+			if (ruleTemplateInstanceContainedBuilder.displayProperties == null) {
+				Log.log(LOGGER, "Debug", "Empty Display properties for ruleTemplateInstanceContainedBuilder, will be adding");
+				
+				if (baseRuleTemplateContainedBuilder.displayProperties != null) {
+					Log.log(LOGGER, "Debug", "baseRuleTemplateContainedBuilder has display properties set");
+					Instance.PropertyAtom.setConceptReference(ruleTemplateInstanceContainedBuilder.displayProperties, baseRuleTemplateContainedBuilder.displayProperties, 1L);
+				}
+			}
+			
+		}
+		return ruleTemplateInstanceContainedBuilder;
+	}
+}

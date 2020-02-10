@@ -1,0 +1,750 @@
+group ExecutionPlan;
+
+
+FQName ::= [
+    "AbstractQueryExecutionPlan":"com.tibco.cep.query.exec.codegen.AbstractQueryExecutionPlan",
+    "AggregateItemInfo":"com.tibco.cep.query.stream.aggregate.AggregateItemInfo",
+    "BindVariableEvaluator":"com.tibco.cep.query.stream.impl.expression.bindvar.BindVariableEvaluator",
+    "Bridge":"com.tibco.cep.query.stream.query.snapshot.Bridge",
+    "Comparisons":"com.tibco.cep.query.exec.util.Comparisons",
+    "ComplexAndExpression":"com.tibco.cep.query.stream.expression.ComplexAndExpression",
+    "ComplexExpression":"com.tibco.cep.query.stream.expression.ComplexExpression",
+    "ComplexOrExpression":"com.tibco.cep.query.stream.expression.ComplexOrExpression",
+    "ComplexOrExpression":"com.tibco.cep.query.stream.expression.ComplexOrExpression",
+    "Concept":"com.tibco.cep.runtime.model.element.Concept",
+    "ConstantValueEvaluator":"com.tibco.cep.query.stream.impl.expression.ConstantValueEvaluator",
+    "EqualsExpression":"com.tibco.cep.query.stream.impl.rete.join.EqualsExpression",
+    "Expression":"com.tibco.cep.query.stream.expression.Expression",
+    "GroupAggregateInfo":"com.tibco.cep.query.stream.group.GroupAggregateInfo",
+    "GroupAggregateItemInfo":"com.tibco.cep.query.stream.group.GroupAggregateItemInfo",
+    "GroupItemInfo":"com.tibco.cep.query.stream.group.GroupItemInfo",
+    "HeavyReteEntityInfo":"com.tibco.cep.query.exec.prebuilt.HeavyReteEntities.HeavyReteEntityInfo",
+    "HeavyJoinedTuple":"com.tibco.cep.query.stream.join.HeavyJoinedTuple",
+    "HeavyJoinedTupleInfo":"com.tibco.cep.query.exec.prebuilt.HeavyJoinedTuples.HeavyJoinedTupleInfo",
+    "HeavyTuple":"com.tibco.cep.query.stream.tuple.HeavyTuple",
+    "HeavyTupleInfo":"com.tibco.cep.query.exec.prebuilt.HeavyTuples.HeavyTupleInfo",
+    "JoinedTupleInfo":"com.tibco.cep.query.stream.join.JoinedTupleInfo",
+    "LogLevel":"com.tibco.cep.query.stream.monitor.Logger.LogLevel",
+    "NotExpression":"com.tibco.cep.query.stream.expression.NotExpression",
+    "PropertyArray":"com.tibco.cep.runtime.model.element.PropertyArray",
+    "PropertyAtom":"com.tibco.cep.runtime.model.element.PropertyAtom",
+    "QueryContext":"com.tibco.cep.query.stream.context.QueryContext",
+    "ResourceId":"com.tibco.cep.query.stream.monitor.ResourceId",
+    "Sink":"com.tibco.cep.query.stream.core.Sink",
+    "SlidingWindowInfo":"com.tibco.cep.query.stream.partition.SlidingWindowInfo",
+    "SortInfo":"com.tibco.cep.query.stream.sort.SortInfo",
+    "SortItemInfo":"com.tibco.cep.query.stream.sort.SortItemInfo",
+    "Stream":"com.tibco.cep.query.stream.core.Stream",
+    "TimeEvent":"com.tibco.cep.runtime.model.element.TimeEvent",
+    "TimeWindowInfo":"com.tibco.cep.query.stream.partition.TimeWindowInfo",
+    "TransformInfo":"com.tibco.cep.query.stream.transform.TransformInfo",
+    "TransformItemInfo":"com.tibco.cep.query.stream.transform.TransformItemInfo",
+    "TumblingWindowInfo":"com.tibco.cep.query.stream.partition.TumblingWindowInfo",
+    "Tuple":"com.tibco.cep.query.stream.tuple.Tuple",
+    "TupleInfo":"com.tibco.cep.query.stream.tuple.TupleInfo",
+    "TupleValueExtractor":"com.tibco.cep.query.stream.expression.TupleValueExtractor",
+    "TypeHelper":"com.tibco.cep.query.utils.TypeHelper"
+]
+
+
+AttributeGetMethod ::= [
+    "closure":"getClosure()",
+    "extId":"getExtId()",
+    "id":"getId()",
+    "interval":"getInterval()",
+    "isSet":"isSet()",
+    "length":"length()",
+    "parent":"getParent()",
+    "payload":"getPayloadAsString()",
+    "scheduledTime":"getScheduledTime()",
+    "ttl":"getTTL()"
+]
+
+
+addAggregateItemInfo(mapName, name, aggregatorClassName) ::=<<
+<!
+    grpAggrMap_0123.put("a1", new GroupAggregateItemInfo(new AggregateItemInfo(CountAggregator.class, null)));
+!>
+    <mapName>.put(<name>, new <FQName.GroupAggregateItemInfo>(new <FQName.AggregateItemInfo>(
+        <aggregatorClassName>, (<FQName.TupleValueExtractor>) null)));
+>>
+
+
+addAggregateItemInfoWithTve(mapName, name, aggregatorClassName, tveName) ::=<<
+<!
+    grpAggrMap_0123.put("a1", new GroupAggregateItemInfo(new AggregateItemInfo(SumAggregator.class, TVE_0007)));
+!>
+    <mapName>.put(<name>, new <FQName.GroupAggregateItemInfo>(new <FQName.AggregateItemInfo>(<aggregatorClassName>, <tveName>)));
+>>
+
+
+addGroupItemInfo(mapName, name, tveName) ::=<<
+<!
+    grpAggrMap_0123.put("a1", new GroupAggregateItemInfo(new GroupItemInfo(TVE_0007)));
+!>
+    <mapName>.put(<name>, new <FQName.GroupAggregateItemInfo>(new <FQName.GroupItemInfo>(<tveName>)));
+>>
+
+
+buildAggregation(id, valueName, tupleInfoName, streamName, emitFull, groupAggregateInfoName, windowBuilderName) ::=<<
+<!
+    final Stream aggr0004 = this.buildAggregation("a", join0003, TUPLE_INFO_0037, false, GRPAGGR_0038, WINBLD_0039);
+!>
+    final <FQName.Stream> <valueName> = this.buildAggregation(<id>, <streamName>, <tupleInfoName>,
+        <emitFull>, <groupAggregateInfoName>, <windowBuilderName>);
+>>
+
+
+
+buildBridgePassThrough(id, valueName, streamName, setupStreamName) ::=<<
+<!
+    final Bridge bridge0001 = this.buildPassThroughBridge(String id, "bridge", transf_00122, sink_00123);
+!>
+    final <FQName.Bridge> <valueName> = this.buildPassThroughBridge(<id>, <streamName>, <setupStreamName>);
+>>
+
+
+buildBridgeSimple(id, valueName, streamName, setupStreamName) ::=<<
+<!
+    final Bridge bridge0001 = this.buildSimpleBridge("bridge", transf_00122, sort_00123);
+!>
+    final <FQName.Bridge> <valueName> = this.buildSimpleBridge(<id>, <streamName>, <setupStreamName>);
+>>
+
+
+buildBridgeSorted(id, valueName, streamName, setupStreamName, sortInfoName, extractorsName, comparatorsName) ::=<<
+<!
+    final Bridge bridge0001 = this.buildSortedBridge("bridge", transf_00122, sort_00123, sortInfo, extrs, cmps);
+!>
+    final <FQName.Bridge> <valueName> = this.buildSortedBridge(<id>, <streamName>, <setupStreamName>,
+        <sortInfoName>, <extractorsName>, <comparatorsName>);
+>>
+
+
+buildBridgeTruncated(id, valueName, streamName, setupStreamName) ::=<<
+<!
+    final Bridge bridge0001 = this.buildTruncatedBridge("bridge", transf_00122, sort_00123);
+!>
+    final <FQName.Bridge> <valueName> = this.buildTruncatedBridge(<id>, <streamName>, <setupStreamName>);
+>>
+
+
+buildDeleted(id, valueName, streamName) ::=<<
+<!
+    final Stream del_0456 = this.buildDeleted("d", join0003);
+!>
+    final <FQName.Stream> <valueName> = this.buildDeleted(<id>, <streamName>);
+>>
+
+
+buildDistinct(id, valueName, streamName) ::=<<
+<!
+    final Stream distinct0032 = this.buildDistinct("dst123", transf0005);
+!>
+    final <FQName.Stream> <valueName> = this.buildDistinct(<id>, <streamName>);
+>>
+
+
+buildFilter(id, valueName, streamName, exprName) ::=<<
+<!
+    final Stream filter0004 = this.buildFilter("a", join0003, EXPR_0039, false);
+!>
+    final <FQName.Stream> <valueName> = this.buildFilter(<id>, <streamName>, <exprName>);
+>>
+
+
+buildInsert(id, valueName, streamName) ::=<<
+<!
+    final Stream insert0456 = this.buildInsert("a", join0003);
+!>
+    final <FQName.Stream> <valueName> = this.buildInsert(<id>, <streamName>);
+>>
+
+
+buildJoin(joinId, valueName, tupleInfoName, streamNames, cplxExprName) ::=<<
+<!
+    final Stream join0003 = this.buildJoin(new ResourceId("j"), new Stream[]{source0001, source0002}, AND_EXPR_0001, TUPLE_INFO_0003);
+!>
+    final <FQName.Stream> <valueName> = this.buildJoin(<joinId>,
+        new <FQName.Stream>[]{<streamNames:{streamName | <streamName>}; separator=", ">},
+        <cplxExprName>, <tupleInfoName>);
+>>
+
+
+
+buildLimit(id, valueName, streamName, limitFirst, limitOffset) ::=<<
+<!
+    final Stream limit0006 = this.buildLimit("limit1", sort0005, 100, 0);
+!>
+    final <FQName.Stream> <valueName> = this.buildLimit(<id>, <streamName>, <limitFirst>, <limitOffset>);
+>>
+
+
+buildPartition(id, valueName, tupleInfoName, streamName, groupAggregateInfoName, windowInfoName, windowBuilderName) ::=<<
+<!
+    final Stream partition0004 = this.buildPartition("p", join0003, TUPLE_INFO_0037, GRPAGGR_0038, WINBLD_0039);
+!>
+    final <FQName.Stream> <valueName> = this.buildPartition(<id>, <streamName>, <tupleInfoName>,
+        <groupAggregateInfoName>, <windowInfoName>, <windowBuilderName>);
+>>
+
+
+buildProxy(id, valueName, streamName) ::=<<
+<!
+    final Stream source0002 = this.buildProxy("proxy10001", source0001);
+!>
+    final <FQName.Stream> <valueName> = this.buildProxy(<id>, <streamName>);
+>>
+
+
+buildSink(sinkName, id, streamName, tupleInfoName) ::=<<
+    final <FQName.Sink> <sinkName> = this.buildSink(<id>, <streamName>, <tupleInfoName>);
+>>
+
+
+buildSort(id, valueName, streamName, sortInfoName, extractorsName, comparatorsName) ::=<<
+<!
+    final Stream sort0005 = this.buildSort("sort1", transf0004, myExtractors, myComparators);
+!>
+    final <FQName.Stream> <valueName> = this.buildSort(<id>, <streamName>, <sortInfoName>, <extractorsName>, <comparatorsName>);
+>>
+
+
+buildSortWithDecoration(id, valueName, streamName, sortInfoName, extractorsName, comparatorsName) ::=<<
+<!
+    final Stream sort0005 = this.buildSort("sort1", transf0004, myExtractors, myComparators);
+!>
+    final <FQName.Stream> <valueName> = this.buildSortWithDecoration(<id>, <streamName>, <sortInfoName>, <extractorsName>, <comparatorsName>);
+>>
+
+
+buildSource(sourceId, valueName, tupleInfoName, alias) ::=<<
+<!
+    final Stream source0001 = this.buildSource("source0001", TUPLE_INFO_0001, "x");
+!>
+    final <FQName.Stream> <valueName> = this.buildSource(<sourceId>, <tupleInfoName>, <alias>);
+>>
+
+
+buildStaticSink(sinkName, id, streamName, tupleInfoName) ::=<<
+    final <FQName.Sink> <sinkName> = this.buildStaticSink(<id>, <streamName>, <tupleInfoName>);
+>>
+
+
+buildTransform(id, valueName, tupleInfoName, streamName, transfInfoName) ::=<<
+<!
+    final Stream transf0005 = this.buildTransform("t", aggr0004, TRANSFINFO_0001, TUPLE_INFO_0004);
+!>
+    final <FQName.Stream> <valueName> = this.buildTransform(<id>, <streamName>, <transfInfoName>, <tupleInfoName>);
+>>
+
+
+buildWithdrawableSource(sourceId, valueName, tupleInfoName, alias) ::=<<
+<!
+    final Stream source0001 = this.buildWithdrawableSource("source0001", TUPLE_INFO_0001, "x");
+!>
+    final <FQName.Stream> <valueName> = this.buildWithdrawableSource(<sourceId>, <tupleInfoName>, <alias>);
+>>
+
+
+
+buildSlidingWindowBuilder(varName, inputTupleInfoName, outputTupleInfoName, insertDeleteBoth, includesAggregates) ::=<<
+<!
+    final WindowBuilder wb0001 = buildSlidingWindowBuilder(TI001, TU002, InsertDeleteBoth.INSERT, false);
+!>
+    final <FQName.WindowBuilder> <varName> = this.buildSlidingWindowBuilder(
+        <inputTupleInfoName>, <outputTupleInfoName>, <insertDeleteBoth>, <includesAggregates>);
+>>
+
+
+
+buildTimeWindowBuilder(varName, inputTupleInfoName, outputTupleInfoName, insertDeleteBoth, includesAggregates) ::=<<
+<!
+    final WindowBuilder wb0001 = buildTimeWindowBuilder(TI001, TU002, InsertDeleteBoth.INSERT, false);
+!>
+    final <FQName.WindowBuilder> <varName> = this.buildTimeWindowBuilder(
+        <inputTupleInfoName>, <outputTupleInfoName>, <insertDeleteBoth>, <includesAggregates>);
+>>
+
+
+
+buildTumblingWindowBuilder(varName, inputTupleInfoName, outputTupleInfoName, insertDeleteBoth, includesAggregates) ::=<<
+<!
+    final WindowBuilder wb0001 = buildTumblingWindowBuilder(TI001, TU002, InsertDeleteBoth.INSERT, false);
+!>
+    final <FQName.WindowBuilder> <varName> = this.buildTumblingWindowBuilder(
+        <inputTupleInfoName>, <outputTupleInfoName>, <insertDeleteBoth>, <includesAggregates>);
+>>
+
+
+
+functionCall(fnClassName, fnName, args) ::=<<
+<!  MyFuncClass.myFunction("blah", 3)    !>
+<fnClassName>.<fnName>(<args : {arg | <arg>}; separator=", ">)
+>>
+
+
+getArrayAccess(valueClassName, array, index) ::=<<
+<!  ((java.lang.Integer) ((PropertyArray) g0002.getProperty("x")).get(3)).getValue())   !>
+((<valueClassName>) <array>.get(<index>).getValue())
+>>
+
+
+getAttributeValue(container, attributeName) ::=<<
+<!  g0002.getAttribute("id")    !>
+<container>.<AttributeGetMethod.(attributeName)>
+>>
+
+
+getBetween(expr, bound1, bound2) ::=<<
+<!  Comparisons.isBetween(EXPR0001, 14, EXPR0123)    !>
+<FQName.Comparisons>.isBetween(<expr>, <bound1>, <bound2>)
+>>
+
+
+getBindingVariableAsBoolean(queryContextName, prefixedLabel) ::=<<
+<!  TypeHelper.toBoolean(queryContext.getGenericStore().get("BV$var123"))   !>
+<FQName.TypeHelper>.toBoolean(<queryContextName>.getGenericStore().get(<prefixedLabel>))
+>>
+
+
+getBindingVariableAsDateTime(queryContextName, prefixedLabel) ::=<<
+<FQName.TypeHelper>.toDateTime(<queryContextName>.getGenericStore().get(<prefixedLabel>))
+>>
+
+
+getBindingVariableAsDouble(queryContextName, prefixedLabel) ::=<<
+<FQName.TypeHelper>.toDouble(<queryContextName>.getGenericStore().get(<prefixedLabel>))
+>>
+
+
+getBindingVariableAsInteger(queryContextName, prefixedLabel) ::=<<
+<FQName.TypeHelper>.toInteger(<queryContextName>.getGenericStore().get(<prefixedLabel>))
+>>
+
+
+getBindingVariableAsLong(queryContextName, prefixedLabel) ::=<<
+<FQName.TypeHelper>.toLong(<queryContextName>.getGenericStore().get(<prefixedLabel>))
+>>
+
+
+getBindingVariableAsString(queryContextName, prefixedLabel) ::=<<
+<FQName.TypeHelper>.toString(<queryContextName>.getGenericStore().get(<prefixedLabel>))
+>>
+
+
+getEQ(arg1, arg2) ::=<<
+<FQName.Comparisons>.equalTo(<arg1>, <arg2>)
+>>
+
+
+getGE(arg1, arg2) ::=<<
+<FQName.Comparisons>.greaterThanOrEqualTo(<arg1>, <arg2>)
+>>
+
+
+getGT(arg1, arg2) ::=<<
+<FQName.Comparisons>.greaterThan(<arg1>, <arg2>)
+>>
+
+
+getIn(expr, setName) ::=<<
+<!  SET0001.contains("qwerty")    !>
+<setName>.contains(<expr>)
+>>
+
+
+getLE(arg1, arg2) ::=<<
+<FQName.Comparisons>.lessThanOrEqualTo(<arg1>, <arg2>)
+>>
+
+
+getLT(arg1, arg2) ::=<<
+<FQName.Comparisons>.lessThan(<arg1>, <arg2>)
+>>
+
+
+getNE(arg1, arg2) ::=<<
+<FQName.Comparisons>.notEqualTo(<arg1>, <arg2>)
+>>
+
+
+
+getProperty(valueClassName, container, escapedPropertyName) ::=<<
+<!  ((java.lang.Integer) g0002.getProperty("x"))   !>
+((<valueClassName>) <container>.getProperty(<escapedPropertyName>))
+>>
+
+
+
+getPropertyAtom(valueClassName, container, escapedPropertyName) ::=<<
+<!  ((PropertyAtomInt) g0002.getProperty("x"))   !>
+ ((<valueClassName>) <container>.getProperty(<escapedPropertyName>))
+>>
+
+
+
+getPropertyAtomValue(valueClassName, container, escapedPropertyName) ::=<<
+<!  ((java.util.GregorianCalendar) ((PropertyAtom) g0002.getProperty("x")).getValue())   !>
+((<valueClassName>) ((<FQName.PropertyAtom>) <container>.getProperty(<escapedPropertyName>)).getValue())
+>>
+
+
+
+getPropertyArray(container, escapedPropertyName) ::=<<
+<!  ((PropertyArray) g0002.getProperty("x"))   !>
+((<FQName.PropertyArray>) <container>.getProperty(<escapedPropertyName>))
+>>
+
+
+
+getTupleColumnValue(valueClassName, tuple, escapedColumnName) ::=<<
+<!  ((SimpleEvent) t0001.getColumn(2))  !>
+((<valueClassName>) <tuple>.getColumn(<escapedColumnName>))
+>>
+
+
+getTupleFromAliasMap(valueClassName, map, escapedKey) ::=<<
+<!  ((Tuple) aliasMap.get("J1"))    !>
+((<valueClassName>) <map>.get(<escapedKey>))
+>>
+
+
+methodBodyForSimpleExpressionEvaluate(mapName, queryContextName, expressionCode) ::=<<
+{
+    final <FQName.QueryContext> <queryContextName> = $2;
+    final java.util.Map <mapName> = $3;
+    try {
+        return <expressionCode>;
+    } catch (java.lang.Exception e) {
+        <FQName.AbstractQueryExecutionPlan>.getLogger().log(<FQName.LogLevel>.DEBUG,
+            "Failed to evaluate: " + SOURCE, e);
+        if (e instanceof java.lang.RuntimeException) {
+            throw e;
+        } else {
+            throw new java.lang.RuntimeException(e);
+        }
+    }
+}
+>>
+
+
+
+methodBodyForTveExtract(tupleName, queryContextName, expressionCode) ::=<<
+{
+    final <FQName.QueryContext> <queryContextName> = $2;
+    final <FQName.Tuple> <tupleName> = $3;
+    try {
+        return <expressionCode>;
+    } catch (java.lang.Exception e) {
+        <FQName.AbstractQueryExecutionPlan>.getLogger().log(<FQName.LogLevel>.DEBUG,
+            "Failed to evaluate: " + SOURCE, e);
+        if (e instanceof java.lang.RuntimeException) {
+            throw e;
+        } else {
+            throw new java.lang.RuntimeException(e);
+        }
+    }
+}
+>>
+
+
+newSortItemInfo(direction) ::=<<
+<!
+    new SortItemInfo(true)
+!>
+new <FQName.SortItemInfo>(<direction>)
+>>
+
+
+newSortItemInfoWithLimit(direction, limitFirst, limitOffset) ::=<<
+<!
+    new SortItemInfo(true, 2, 0)
+!>
+new <FQName.SortItemInfo>(<direction>, <limitFirst>, <limitOffset>)
+>>
+
+
+newStaticAliasMap(mapName, aliasToTypeNames) ::=<<
+<!
+        ALIASES0001 = new HashMap<String, Class>();
+        ALIASES0001.put("example1", Tuples.T91.class);
+        ALIASES0001.put("example2", Tuples.T92.class);
+!>
+    <mapName> = new java.util.HashMap();
+    <aliasToTypeNames:{ aliasToTypeName | <mapName>.put(<aliasToTypeName.alias>, <aliasToTypeName.typeName>.class);
+}>
+>>
+
+
+
+newStaticAndExpression(exprName, operandNames) ::=<<
+<!
+    AND_EXPR_0001 = new ComplexAndExpression(new Expression[]{EXPR_0001, EXPR_0002});
+!>
+    <exprName> = new <FQName.ComplexAndExpression>(new <FQName.Expression>[]{
+        <operandNames:{ opName | <opName>}; separator=", "> });
+>>
+
+
+newStaticBindVariableEvaluator(fieldName, bindVarNameAsString) ::=<<
+<!
+    EVAL_0123 = new BindVariableEvaluator("MyGV");
+!>
+   <fieldName> = new <FQName.BindVariableEvaluator>(<bindVarNameAsString>);
+>>
+
+
+newStaticComparatorsList(listName, listLength, comparatorNames) ::=<<
+<!
+    CMPR_0123 = new ArrayList(2);
+    CMPR_0123.add(new my.comparator1());
+    CMPR_0123.add(new my.comparator2());
+!>
+    <listName> = new java.util.ArrayList(<listLength>); <comparatorNames:{ name |
+    <listName>.add(<name>);}>
+>>
+
+
+newStaticConstantEvaluator(fieldName, valueAsObject) ::=<<
+<!
+    EVAL_0124 = new ConstantValueEvaluator(new Integer(37));
+!>
+   <fieldName> = new <FQName.ConstantValueEvaluator>(<valueAsObject>);
+>>
+
+
+newStaticEmptyAndExpression(exprName) ::=<<
+<!
+    AND_EXPR_0001 = new ComplexAndExpression(new Expression[0]);
+!>
+    <exprName> = new <FQName.ComplexAndExpression>(new <FQName.Expression>[0]);
+>>
+
+
+
+newStaticEqualsExpression(exprName, leftName, rightName) ::=<<
+<!
+    EQUALS_EXPR_0001 = new EqualsExpression(EXPR_0001, EXPR_0002);
+!>
+    <exprName> = new <FQName.EqualsExpression>(<leftName>, <rightName>);
+>>
+
+
+newStaticExpression(exprName, exprClassName) ::=<<
+<!
+    EXPR_0001 = new Expressions.E0001();
+!>
+    <exprName> = new <exprClassName>();
+>>
+
+
+
+newStaticExtractorsArray(arrayName, extractorNames) ::=<<
+<!
+    TVES_0002 = new TupleValueExtractor[]{ TVE_00030, TVE_00031 };
+!>
+    <arrayName> = new <FQName.TupleValueExtractor>[]{
+        <extractorNames:{ name | <name> }; separator=", ">};
+>>
+
+
+
+newGroupAggregateInfoMap(name) ::=<<
+<!
+    final LinkedHashMap grpAggrMap_0123 = new LinkedHashMap();
+!>
+    final java.util.LinkedHashMap <name> = new java.util.LinkedHashMap();
+>>
+
+
+newStaticGroupAggregateInfo(name, mapName) ::=<<
+<!
+    GRPAGGR_0124 = new GroupAggregateInfo(grpAggrMap_0123);
+!>
+    <name> = new <FQName.GroupAggregateInfo>(<mapName>);
+>>
+
+
+
+newStaticLiteralBoolean(fieldName, value) ::=<<
+<!  LITERAL_5432 = false; !>
+    <fieldName> = <value>;
+>>
+
+
+newStaticLiteralByte(fieldName, value) ::=<<
+<!  LITERAL_5432 = (byte) 4; !>
+    <fieldName> = (byte) <value>;
+>>
+
+
+newStaticLiteralCharacter(fieldName, valueAsChar) ::=<<
+<!  LITERAL_5432 = 'a'; !>
+    <fieldName> = <valueAsChar>;
+>>
+
+
+newStaticLiteralDateTime(fieldName, timeZoneIdAsString, timeInMillis) ::=<<
+<!
+    LITERAL_5432 = new GregorianCalendar(TimeZone.getTimeZone("America/Los_Angeles"));
+    LITERAL_5432.setTimeInMillis(123456789);
+!>
+    <fieldName> = new java.util.GregorianCalendar(java.util.TimeZone.getTimeZone(<timeZoneIdAsString>));
+    <fieldName>.setTimeInMillis(<timeInMillis>);
+>>
+
+
+newStaticLiteralDouble(fieldName, value) ::=<<
+<!  LITERAL_5432 = (double) 1.2e34; !>
+    <fieldName> = (double) <value>;
+>>
+
+
+newStaticLiteralFloat(fieldName, value) ::=<<
+<!  LITERAL_5432 = (float) 4.5; !>
+    <fieldName> = (float) <value>;
+>>
+
+
+newStaticLiteralInteger(fieldName, value) ::=<<
+<!  LITERAL_5432 = (int) 123456789; !>
+    <fieldName> = (int) <value>;
+>>
+
+
+newStaticLiteralLong(fieldName, value) ::=<<
+<!  LITERAL_5432 = (long) 123456789012345; !>
+    <fieldName> = (long) <value>;
+>>
+
+
+newStaticLiteralShort(fieldName, value) ::=<<
+<!  LITERAL_5432 = (short) 4; !>
+    <fieldName> = (short) <value>;
+>>
+
+
+newStaticLiteralString(fieldName, valueAsString) ::=<<
+<!  LITERAL_5432 = "She said \"hi!\""; !>
+    <fieldName> = <valueAsString>;
+>>
+
+
+
+newStaticNotExpression(exprName, operandName) ::=<<
+<!
+    NOT_EXPR_0001 = new NotExpression(EXPR_0001);
+!>
+    <exprName> = new <FQName.NotExpression>(<operandName>);
+>>
+
+
+
+newStaticOrExpression(exprName, operandNames) ::=<<
+<!
+    OR_EXPR_0001 = new ComplexOrExpression(new Expression[]{EXPR_0001, EXPR_0002});
+!>
+    <exprName> = new <FQName.ComplexOrExpression>(new <FQName.Expression>[]{
+        <operandNames:{ opName | <opName>}; separator=", "> });
+>>
+
+
+
+newStaticRFWrapper(valueName, className) ::=<<
+    <valueName> = new <className>();
+>>
+
+
+
+newStaticSet(varName, members) ::=<<
+<!
+        SET0001 = new HashSet();
+        SET0001.add("Abc");
+        SET0001.add("Def");
+!>
+    <varName> = new java.util.HashSet();
+    <members:{ member | <varName>.add(<member>);
+}>
+>>
+
+
+
+newStaticSlidingWindowInfo(varName, size) ::=<<
+<!
+        SLIDWI_0001 = new SlidingWindowInfo(3);
+!>
+    <varName> = new <FQName.SlidingWindowInfo>(<size>);
+>>
+
+
+
+newStaticSortInfo(sortInfoName, sortItemInfoNames) ::=<<
+<!
+    SORT_INFO_0001 = new SortInfo(new SortItemInfo[] { sortItemInfo1, sortItemInfo12};
+!>
+    <sortInfoName> = new <FQName.SortInfo>(new <FQName.SortItemInfo>[]{<sortItemInfoNames:{ name |
+        <name>}; separator=", ">});
+>>
+
+
+
+newStaticTimeWindowInfo(varName, size, time) ::=<<
+<!
+        TIMEWI_0001 = new TimeWindowInfo(3, someTimeInMs);
+!>
+    <varName> = new <FQName.TimeWindowInfo>(<size>, <time>);
+>>
+
+
+
+newStaticTransformationInfo(name, transformationMapName) ::=<<
+<!
+      TRANSFINFO_0001 = new TransformInfo(TRANSFMAP_0001);
+!>
+    <name> = new <FQName.TransformInfo>(<transformationMapName>);
+>>
+
+
+
+newStaticTransformationMap(name, aliasToTupleValueExtractors) ::=<<
+<!
+        TRANSFMAP_0001 = new LinkedHashMap<String, TransformItemInfo>();
+        TRANSFMAP_0001.put("blah", new TransformItemInfo(VXTR_0001));
+!>
+    <name> = new java.util.LinkedHashMap();
+    <aliasToTupleValueExtractors : {item | <name>.put(<item.alias>, new <FQName.TransformItemInfo>(<item.tve>));
+} >
+>>
+
+
+
+newStaticTumblingWindowInfo(varName, size) ::=<<
+<!
+        TUMBLWI_0001 = new TumblingWindowInfo(3);
+!>
+    <varName> = new <FQName.TumblingWindowInfo>(<size>);
+>>
+
+
+
+newStaticTupleInfo(valueName, className, typeIndex, columnNames, columnClasses) ::=<<
+    <valueName> = new <className>(
+        new String[]{ <columnNames:{ name | <name> }; separator=", "> },
+        new Class[]{ <columnClasses:{ name | <name>.class }; separator=", "> },
+        <typeIndex>);
+>>
+
+
+
+newStaticTupleValueExtractor(name, className) ::=<<
+    <name> = new <className>();
+>>
+
+
+
+ruleFunctionCall(wrapperName, boxedReturnType, boxedArgs) ::=<<
+<!  ((int) (new MyFuncClass().invoke(new Object[]{"blah", "bleh"})))    !>
+((<boxedReturnType>) (<wrapperName>.invoke(new Object[]{<boxedArgs : {arg | <arg>}; separator=", ">})))
+>>
+

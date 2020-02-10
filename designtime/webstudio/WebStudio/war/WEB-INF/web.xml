@@ -1,0 +1,331 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE web-app
+    PUBLIC "-//Sun Microsystems, Inc.//DTD Web Application 2.3//EN"
+    "http://java.sun.com/dtd/web-app_2_3.dtd">
+
+<web-app version="3.0" metadata-complete="true">
+
+	<servlet>
+		<servlet-name>I18nService</servlet-name>
+		<servlet-class>com.tibco.cep.webstudio.server.I18nServiceImpl</servlet-class>
+		<init-param>
+      		<param-name>localeDir</param-name>
+      		<param-value>%TIBCO_BE_HOME_ESC%/rms/lib/locales</param-value>
+    	</init-param>
+	</servlet>
+
+	<servlet-mapping>
+		<servlet-name>I18nService</servlet-name>
+		<url-pattern>/webstudio/locale</url-pattern>
+	</servlet-mapping>
+	
+	<filter>
+		<filter-name>CompressionFilter</filter-name>
+		<filter-class>com.isomorphic.servlet.CompressionFilter</filter-class>
+	</filter>
+	
+	<!-- CompressionFilter for dynamic compression -->
+	<filter-mapping>
+		<filter-name>CompressionFilter</filter-name>
+		<url-pattern>/*</url-pattern>
+	</filter-mapping>
+	<!-- //<FileLoader -->
+
+	<!-- The IDACall servlet handles all Built-in DataSource operations -->
+	<servlet>
+		<servlet-name>IDACall</servlet-name>
+		<servlet-class>com.isomorphic.servlet.IDACall</servlet-class>
+	</servlet>
+
+	<!-- The DataSourceLoader servlet returns Javascript representations of 
+		the dataSources whose ID's are passed to it - it is an alternative to using 
+		the <loadDS> JSP tag -->
+	<servlet>
+		<servlet-name>DataSourceLoader</servlet-name>
+		<servlet-class>com.isomorphic.servlet.DataSourceLoader</servlet-class>
+	</servlet>
+	<!-- Servlets -->
+
+	<servlet>
+		<servlet-name>webstudioHttpProxy</servlet-name>
+		<servlet-class>com.isomorphic.servlet.HttpProxyServlet</servlet-class>
+	</servlet>
+
+	<servlet-mapping>
+		<servlet-name>webstudioHttpProxy</servlet-name>
+		<url-pattern>/webstudio/sc/HttpProxy</url-pattern>
+	</servlet-mapping>
+
+	<!-- RPCManager uses this URL by default for Built-in DataSource operations -->
+	<servlet-mapping>
+		<servlet-name>IDACall</servlet-name>
+		<url-pattern>/webstudio/sc/IDACall/*</url-pattern>
+	</servlet-mapping>
+
+	<!-- DataSourceLoader requests -->
+	<servlet-mapping>
+		<servlet-name>DataSourceLoader</servlet-name>
+			<url-pattern>/webstudio/sc/DataSourceLoader</url-pattern>
+	</servlet-mapping>
+	
+	<!-- remote logging -->
+	<servlet>
+    	<servlet-name>remoteLogging</servlet-name>
+    	<servlet-class>com.tibco.cep.webstudio.server.logging.WebStudioRemoteLoggingService</servlet-class>
+    	<init-param>
+      		<param-name>symbolMapsDir</param-name>
+      		<param-value>WEB-INF/deploy/webstudio/symbolMaps</param-value> <!-- This path should be as is in the war file. -->
+    	</init-param>
+	</servlet>
+	<servlet-mapping>
+    	<servlet-name>remoteLogging</servlet-name>
+    	<url-pattern>/webstudio/remote_logging</url-pattern>
+	</servlet-mapping>
+	
+	<!-- Tomsawyer Perspectives -->
+	<listener>
+        <listener-class>
+            com.tomsawyer.visualization.gwt.server.bootstrap.TSServletContainerBootstrap
+        </listener-class>
+    </listener>
+    
+	<!-- Listener handles session cleanup. -->
+	<listener>
+		<listener-class>
+			com.tomsawyer.web.server.TSSessionCleanupListener
+		</listener-class>
+	</listener>
+
+	<context-param>
+		<param-name>visualization.factory.impl</param-name>
+		<param-value>com.tomsawyer.web.server.TSPVisualizationFactoryImpl</param-value>
+	</context-param>
+	 
+	<!-- 	Expects to find a session attribute named 'csrf_token' provided by the framework per session -->
+	<context-param>
+		<param-name>com.tomsawyer.util.server.xsrf.TSXsrfTokenProvider</param-name>
+		<param-value>com.tomsawyer.util.server.xsrf.TSCsrfHeaderTokenProvider</param-value>
+		<description>XSRF token is tied to a token provider.</description>
+	</context-param>
+
+	<!-- Servlets -->
+	<servlet>
+		<servlet-name>tsXsrfServlet</servlet-name>
+		<servlet-class>
+			com.tomsawyer.util.server.xsrf.TSXsrfTokenServiceServlet
+		</servlet-class>
+	</servlet>
+
+	<servlet-mapping>
+		<servlet-name>tsXsrfServlet</servlet-name>
+		<url-pattern>/webstudio/xsrf</url-pattern>
+	</servlet-mapping>
+	
+	<servlet>
+		<servlet-name>tsWebViewServlet</servlet-name>
+		<servlet-class>
+			com.tomsawyer.web.server.TSWebViewServiceImpl
+		</servlet-class>
+	</servlet>
+
+	<servlet-mapping>
+		<servlet-name>tsWebViewServlet</servlet-name>
+		<url-pattern>/webstudio/tswebview</url-pattern>
+	</servlet-mapping>
+
+	<servlet>
+		<servlet-name>tsGetImageServlet</servlet-name>
+		<servlet-class>
+			com.tomsawyer.web.server.util.TSGetImageServlet
+		</servlet-class>
+	</servlet>
+
+	<servlet-mapping>
+		<servlet-name>tsGetImageServlet</servlet-name>
+		<url-pattern>/webstudio/TSGetImage</url-pattern>
+	</servlet-mapping>
+
+	<servlet>
+		<servlet-name>tsGetMapMarkerImageServlet</servlet-name>
+		<servlet-class>
+            com.tomsawyer.web.server.map.marker.TSGetMapMarkerImageServlet
+		</servlet-class>
+
+        <init-param>
+            <param-name>markerImagesFolder</param-name>
+            <param-value>/webstudio/images/marker</param-value>
+        </init-param>
+
+        <init-param>
+            <param-name>shadowImagesFolder</param-name>
+            <param-value>/webstudio/images/shadow</param-value>
+        </init-param>
+	</servlet>
+
+	<servlet-mapping>
+		<servlet-name>tsGetMapMarkerImageServlet</servlet-name>
+		<url-pattern>/webstudio/TSGetMapMarkerImage</url-pattern>
+	</servlet-mapping>
+
+	<servlet>
+		<servlet-name>tsSaveImageServlet</servlet-name>
+		<servlet-class>
+			com.tomsawyer.web.server.util.TSSaveImageServlet
+		</servlet-class>
+	</servlet>
+
+	<servlet-mapping>
+		<servlet-name>tsSaveImageServlet</servlet-name>
+		<url-pattern>/webstudio/TSSaveImage</url-pattern>
+	</servlet-mapping>
+
+	<servlet>
+		<servlet-name>tsExportServlet</servlet-name>
+		<servlet-class>
+			com.tomsawyer.web.server.util.TSExportServlet
+		</servlet-class>
+	</servlet>
+
+	<servlet-mapping>
+		<servlet-name>tsExportServlet</servlet-name>
+		<url-pattern>/webstudio/TSExportToTSV</url-pattern>
+	</servlet-mapping>
+
+	<servlet>
+		<servlet-name>tsGetPrintPreviewServlet</servlet-name>
+		<servlet-class>
+			com.tomsawyer.web.server.util.TSGetPrintPreviewServlet
+		</servlet-class>
+	</servlet>
+
+	<servlet-mapping>
+		<servlet-name>tsGetPrintPreviewServlet</servlet-name>
+		<url-pattern>/webstudio/TSGetPrintPreview</url-pattern>
+	</servlet-mapping>
+
+	<servlet>
+		<servlet-name>tsWebLicensingServlet</servlet-name>
+		<servlet-class>
+			com.tomsawyer.licensing.server.TSLicensingServiceImpl
+		</servlet-class>
+	</servlet>
+
+	<servlet-mapping>
+		<servlet-name>tsWebLicensingServlet</servlet-name>
+		<url-pattern>/webstudio/TSLicensingService</url-pattern>
+	</servlet-mapping>
+
+	<servlet>
+		<servlet-name>tsVisualizationServiceImpl</servlet-name>
+		<servlet-class>com.tomsawyer.visualization.gwt.server.TSVisualizationServiceImpl</servlet-class>
+	</servlet>
+
+	<servlet-mapping>
+		<servlet-name>tsVisualizationServiceImpl</servlet-name>
+		<url-pattern>/webstudio/TSVisualizationService</url-pattern>
+	</servlet-mapping>
+
+	<servlet>
+		<servlet-name>tsGetImageSourceServlet</servlet-name>
+		<servlet-class>
+			com.tomsawyer.visualization.gwt.server.TSGetImageSourceServlet
+		</servlet-class>
+	</servlet>
+
+	<servlet-mapping>
+		<servlet-name>tsGetImageSourceServlet</servlet-name>
+		<url-pattern>/webstudio/TSGetImageSource</url-pattern>
+	</servlet-mapping>
+	
+
+	<servlet>
+	    <servlet-name>paletteToolbarServiceImpl</servlet-name>
+        <servlet-class>com.tibco.cep.webstudio.server.PaletteToolbarServiceImpl</servlet-class>
+     </servlet>
+     
+     <servlet-mapping>
+  		<servlet-name>paletteToolbarServiceImpl</servlet-name>
+  		<url-pattern>/webstudio/PaletteToolbarService</url-pattern>
+	</servlet-mapping>
+	
+    <servlet>
+		<servlet-name>ProcessLogService</servlet-name>
+		<servlet-class>
+			com.tibco.cep.webstudio.server.logging.WebStudioProcessLogServiceImpl		
+		</servlet-class>	
+		 <init-param>
+       	 	<param-name>tsLoglevel</param-name>
+        	<param-value>Info</param-value>
+        </init-param>
+	</servlet>
+
+	<servlet-mapping>
+		<servlet-name>ProcessLogService</servlet-name>
+		<url-pattern>/webstudio/logService</url-pattern>	
+	</servlet-mapping>
+	
+	<!-- Filters -->
+	<!-- The tsXsrfSessionTokenCreationFilter is only required if
+		if you do not have your own token creation code -->
+ 	<filter>
+		<filter-name>tsXsrfSessionTokenCreationFilter</filter-name>
+		<filter-class>
+			com.tomsawyer.util.server.xsrf.TSXsrfSessionTokenCreationFilter
+		</filter-class>
+	</filter>
+
+	<filter-mapping>
+		<filter-name>tsXsrfSessionTokenCreationFilter</filter-name>
+		<url-pattern>/webstudio/*</url-pattern>
+	</filter-mapping>
+	
+	<filter>
+		<filter-name>tsLicensingFilter</filter-name>
+		<filter-class>
+			com.tomsawyer.licensing.server.TSLicensingFilter
+		</filter-class>
+	</filter>
+
+	<filter-mapping>
+		<filter-name>tsLicensingFilter</filter-name>
+		<url-pattern>/webstudio/tswebview</url-pattern>
+	</filter-mapping>
+
+	<filter-mapping>
+		<filter-name>tsLicensingFilter</filter-name>
+		<url-pattern>/webstudio/TSGetImage</url-pattern>
+	</filter-mapping>
+
+	<filter-mapping>
+		<filter-name>tsLicensingFilter</filter-name>
+		<url-pattern>/webstudio/TSGetPrintPreview</url-pattern>
+	</filter-mapping>
+
+	<filter-mapping>
+		<filter-name>tsLicensingFilter</filter-name>
+		<url-pattern>/webstudio/tsfileupload</url-pattern>
+	</filter-mapping>
+
+	<filter-mapping>
+		<filter-name>tsLicensingFilter</filter-name>
+		<url-pattern>/webstudio/TSVisualizationService</url-pattern>
+	</filter-mapping>
+	
+	
+	<!-- Mime type mapping -->
+	<mime-mapping>
+		<extension>js</extension>
+		<mime-type>text/javascript</mime-type>
+	</mime-mapping>
+
+	<!-- General config -->
+	<session-config>
+		<session-timeout>300</session-timeout>
+	</session-config>
+
+	<!-- Default page to serve -->
+	<welcome-file-list>
+		<welcome-file>new/index.html</welcome-file>
+	</welcome-file-list>
+
+</web-app>

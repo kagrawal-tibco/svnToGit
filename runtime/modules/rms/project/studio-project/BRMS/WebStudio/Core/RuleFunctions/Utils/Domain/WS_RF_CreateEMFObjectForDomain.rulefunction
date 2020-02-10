@@ -1,0 +1,33 @@
+/**
+ * @description 
+ */
+Object rulefunction WebStudio.Core.RuleFunctions.Utils.Domain.WS_RF_CreateEMFObjectForDomain {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		WebStudio.Core.Concepts.Domain.WS_C_Domain domain;
+	}
+	body {
+		
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.Domain.WS_RF_CreateEMFObjectForDomain");
+
+		Log.log(LOGGER, "Debug", "Creating EMF object for Domain %s%s", domain.folder, domain.name);
+		Object domainEMFObject = WS.Domain.createDomainEMFObject(domain.name, domain.ownerProjectName, domain.folder, domain.dataType);
+		WS.Domain.setDescription(domainEMFObject, domain.description);
+		WS.Domain.setNamespace(domainEMFObject, domain.namespace);
+		WS.Domain.setSuperDomain(domainEMFObject, domain.superDomainPath);  
+		WebStudio.Core.Concepts.Domain.WS_C_DomainEntry[] singleEntries = Instance.PropertyArray.toArrayContainedConcept(domain.singleEntry);
+		for(int loop = 0; loop < singleEntries@length; loop++) {
+			WS.Domain.addSingleEntryToDomain(domainEMFObject, singleEntries[loop].value, singleEntries[loop].description);	
+		}			
+		
+		WebStudio.Core.Concepts.Domain.WS_C_RangeEntry[] rangeEntries = Instance.PropertyArray.toArrayContainedConcept(domain.rangeEntry);
+		for(int loop = 0; loop < rangeEntries@length; loop++) {
+			WS_C_RangeEntry rangeEntry = rangeEntries[loop];
+			WS.Domain.addRangeEntryToDomain(domainEMFObject, rangeEntry.lowerInclusive, rangeEntry.lower, rangeEntry.upperInclusive, rangeEntry.upper, rangeEntry.description);
+		}			
+		
+		return domainEMFObject;
+	}
+}

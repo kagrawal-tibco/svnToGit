@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ConditionEditor 
+	xmlns="com.tibco.be.views.user.components.drilldown.querymanager.view.*"
+	xmlns:mx="http://www.adobe.com/2006/mxml"
+	xmlns:querymanager="com.tibco.be.views.user.components.drilldown.querymanager.*"
+	width="100%" height="100%"
+	paddingLeft="10"
+	paddingTop="10"
+	paddingBottom="10"
+	paddingRight="10"
+	dropShadowEnabled="false"
+	creationPolicy="all"
+	xmlns:validators="com.tibco.be.views.user.components.drilldown.querymanager.validators.*">
+	<mx:Script>
+		<![CDATA[
+			import mx.binding.utils.BindingUtils;
+			import mx.events.ValidationResultEvent;
+			
+			override public function init(fieldID:String, fieldName:String, fieldDataType:String,sOperator:String, conditions:ArrayCollection):void{
+				super.init(fieldID, fieldName, fieldDataType, sOperator, conditions);
+				this.initialize();
+				conditionsCB.selectedItem = sOperator;			
+				conditionTextBox.text = _defaultConditions[0];
+				if(sOperator == "Is Any"){
+					conditionTextBox.editable = false;
+					conditionTextBox.enabled = false;
+				}
+			}
+			
+			override public function redraw(operator:String, conditions:ArrayCollection):void{
+				// disable everything first
+				conditionTextBox.editable = false;
+				conditionTextBox.enabled = false;
+				// now show relevant 
+				conditionsCB.selectedItem = operator;
+				if(operator == "Is" || operator =="Contains" || operator == "Is Not"|| operator =="Starts With" || operator == "Ends With"){
+					conditionTextBox.editable = true;
+					conditionTextBox.enabled = true;
+					conditionTextBox.text = conditions[0];
+					if(_currentConditions.length == 0){
+						_currentConditions.addItem(conditionTextBox.text);
+					}
+					//headerRenderer.lblCondition.text = " "+operator+ " "+conditionTextBox.text;
+					_conditionAsString = operator+ " "+conditionTextBox.text;
+					_currentOperator = operator;
+				}
+				else if(operator == "Is Any"){
+					//headerRenderer.lblCondition.text = " "+operator;
+					_conditionAsString = operator;
+					_currentOperator = operator;
+					conditionTextBox.errorString = "";
+				}
+			}
+			
+			override public function doValidation():ValidationResultEvent{
+				if(this._currentOperator == "Is Any"){
+					return null;
+				}
+				var validationResult:ValidationResultEvent = conditionValidator.validate(conditionTextBox.text);
+				return validationResult;
+			}
+			
+			private function changeEvt(event:Event):void{
+				var selectedOp:String = event.currentTarget.selectedItem;
+				_currentOperator = selectedOp;
+				var list:ArrayCollection = new ArrayCollection();
+				list.addItem(conditionTextBox.text);
+				redraw(selectedOp, list);
+			}
+			
+			private function valueChange(event:Event):void{
+				_currentConditions[0] = conditionTextBox.text;
+				if(conditionsCB.selectedItem == "Is Any"){
+					_conditionAsString = String(conditionsCB.selectedItem);					
+				}
+				else{
+					_conditionAsString = conditionsCB.selectedItem+ " "+conditionTextBox.text;
+				}
+			}
+		
+		]]>
+	</mx:Script>
+	
+	<validators:CustomStringValidator id="conditionValidator" property="text" listener="{conditionTextBox}" fieldName="{_fieldName}"/>
+	<mx:ComboBox id="conditionsCB" change="changeEvt(event);" width="75%">
+		<mx:ArrayCollection>
+			<mx:String>Is</mx:String>
+			<mx:String>Contains</mx:String>
+			<mx:String>Is Not</mx:String>
+			<mx:String>Starts With</mx:String>
+			<mx:String>Ends With</mx:String>
+			<mx:String>Is Any</mx:String>
+		</mx:ArrayCollection>
+	</mx:ComboBox>
+	<mx:TextInput id="conditionTextBox" width="100%" change="valueChange(event)"/> <!--valueCommit="valueChange(event)" -->
+	
+</ConditionEditor>

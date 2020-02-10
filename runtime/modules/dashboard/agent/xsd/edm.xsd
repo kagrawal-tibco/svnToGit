@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- edited with XMLSpy v2007 rel. 3 sp1 (http://www.altova.com) by Anand Patil (Syndera) -->
+<!-- edited with XMLSPY v5 rel. 4 U (http://www.xmlspy.com) by Syndera Corporation (Syndera Corporation) -->
+<schema xmlns="http://www.w3.org/2001/XMLSchema" xmlns:edm="http://tibco.com/businessevents/views/edm" xmlns:ogl="http://tibco.com/businessevents/views/ogl" targetNamespace="http://tibco.com/businessevents/views/edm" elementFormDefault="unqualified" attributeFormDefault="unqualified">
+	<import namespace="http://tibco.com/businessevents/views/ogl" schemaLocation="ogl.xsd"/>
+	<attributeGroup name="BasicAttributes">
+		<annotation>
+			<documentation>the id and the name for each element</documentation>
+		</annotation>
+		<attribute name="id" type="string" use="required">
+			<annotation>
+				<documentation>The id of the element</documentation>
+			</annotation>
+		</attribute>
+		<attribute name="value" type="string" use="required">
+			<annotation>
+				<documentation>The name of the element</documentation>
+			</annotation>
+		</attribute>
+	</attributeGroup>
+	<element name="filtermdl">
+		<annotation>
+			<documentation>Represents the model for the filter editor</documentation>
+		</annotation>
+		<complexType>
+			<sequence>
+				<element ref="edm:dim" maxOccurs="unbounded"/>
+			</sequence>
+		</complexType>
+	</element>
+	<element name="dim">
+		<annotation>
+			<documentation>Represents the dimension of a metric (in other words the field)</documentation>
+		</annotation>
+		<complexType>
+			<sequence>
+				<element ref="edm:dim" minOccurs="0"/>
+				<element name="dataset">
+					<annotation>
+						<documentation>Represents the content assist data for a specific dimension category</documentation>
+					</annotation>
+					<complexType>
+						<sequence>
+							<element name="value" type="string" minOccurs="0" maxOccurs="unbounded">
+								<annotation>
+									<documentation>Represents a value of a dimension</documentation>
+								</annotation>
+							</element>
+						</sequence>
+						<attribute name="maxsize" type="int" use="required"/>
+					</complexType>
+				</element>
+			</sequence>
+			<attribute name="id" type="string" use="required">
+				<annotation>
+					<documentation>Represents the name of the dimension</documentation>
+				</annotation>
+			</attribute>
+			<attribute name="name" type="string" use="required"/>
+			<attribute name="value" type="string" use="optional"/>
+			<attribute name="datatype" type="string" use="required"/>
+		</complexType>
+	</element>
+	<element name="qmgrmdl">
+		<annotation>
+			<documentation>Represents the model for the query manager</documentation>
+		</annotation>
+		<complexType>
+			<sequence>
+				<element name="entity" maxOccurs="unbounded">
+					<annotation>
+						<documentation>Represents the entity which can be queried</documentation>
+					</annotation>
+					<complexType>
+						<sequence>
+							<element name="field" minOccurs="0" maxOccurs="unbounded">
+								<annotation>
+									<documentation>Represents the field of an entity which can be queried</documentation>
+								</annotation>
+								<complexType>
+									<choice>
+										<element name="defaultcondition" type="edm:FieldCondition">
+											<annotation>
+												<documentation>Represents the default condition of the field</documentation>
+											</annotation>
+										</element>
+										<element name="condition" type="edm:FieldCondition">
+											<annotation>
+												<documentation>Represents the user entered condition of the field</documentation>
+											</annotation>
+										</element>
+									</choice>
+									<attribute name="id" type="string" use="required">
+										<annotation>
+											<documentation>The id of the field</documentation>
+										</annotation>
+									</attribute>
+									<attribute name="name" type="string">
+										<annotation>
+											<documentation>The name of the field</documentation>
+										</annotation>
+									</attribute>
+									<attribute name="datatype" type="ogl:DataType">
+										<annotation>
+											<documentation>The datatype of the field</documentation>
+										</annotation>
+									</attribute>
+								</complexType>
+							</element>
+						</sequence>
+						<attribute name="id" type="string" use="required">
+							<annotation>
+								<documentation>The id of the entity</documentation>
+							</annotation>
+						</attribute>
+						<attribute name="name" type="string">
+							<annotation>
+								<documentation>The name of the entity</documentation>
+							</annotation>
+						</attribute>
+					</complexType>
+				</element>
+			</sequence>
+			<attribute name="selectedentityid" type="string" default="-1">
+				<annotation>
+					<documentation>The id of the entity which is been selected for querying</documentation>
+				</annotation>
+			</attribute>
+		</complexType>
+	</element>
+	<complexType name="FieldCondition">
+		<annotation>
+			<documentation>Represents the condition on a field of an entity as set using query manager</documentation>
+		</annotation>
+		<sequence>
+			<element name="value" type="string" maxOccurs="unbounded">
+				<annotation>
+					<documentation>Represents the value in the condition</documentation>
+				</annotation>
+			</element>
+		</sequence>
+		<attribute name="operator" type="string">
+			<annotation>
+				<documentation>The condition operator</documentation>
+			</annotation>
+		</attribute>
+	</complexType>
+	<element name="dialogoptions">
+		<annotation>
+			<documentation>Represents general purpose default options for a dialog</documentation>
+		</annotation>
+		<complexType>
+			<sequence>
+				<element name="option" maxOccurs="unbounded">
+					<complexType>
+						<simpleContent>
+							<extension base="string">
+								<attribute name="name" type="string"/>
+								<attribute name="datatype" type="ogl:DataType"/>
+							</extension>
+						</simpleContent>
+					</complexType>
+				</element>
+			</sequence>
+		</complexType>
+	</element>
+</schema>

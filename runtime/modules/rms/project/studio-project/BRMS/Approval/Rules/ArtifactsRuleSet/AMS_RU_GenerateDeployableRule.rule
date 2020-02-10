@@ -1,0 +1,120 @@
+/**
+ * @description Generate deployable (Build Archive generally) for the project
+ * @author aathalye-lt
+ */
+rule Approval.Rules.ArtifactsRuleSet.AMS_RU_GenerateDeployableRule {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Approval.Events.ArtifactEvents.Deployable.AMS_E_GenerateDeployableRequestEvent ams_e_gneratedeployablerequestevent;
+	}
+	when {
+		ams_e_gneratedeployablerequestevent.projectname != null;
+	}
+	then {
+		Object LOGGER = Log.getLogger("Approval.Rules.ArtifactsRuleSet.AMS_RU_GenerateDeployableRule");
+		String pathSeparator = "/";
+		String scsRootURL = WS_RF_GetSCSRootURL(ams_e_gneratedeployablerequestevent.projectname, null);
+		String sharedLocation = System.getSystemPropertyAsString("ws.artifact.deploy.location", null);
+			
+		String projectName = ams_e_gneratedeployablerequestevent.projectname;
+		//Project path		
+		Object reusableBuffer = String.createBuffer(0);
+		reusableBuffer = String.append(reusableBuffer, scsRootURL);
+		reusableBuffer = String.append(reusableBuffer, pathSeparator);
+		reusableBuffer = String.append(reusableBuffer, projectName);		
+		String projectPath = String.convertBufferToString(reusableBuffer);		
+		String.clearBuffer(reusableBuffer);        		
+		//Output Directory			
+		reusableBuffer = String.append(reusableBuffer, sharedLocation);
+		reusableBuffer = String.append(reusableBuffer, pathSeparator);
+		reusableBuffer = String.append(reusableBuffer, projectName);
+		String outputDirectory = String.convertBufferToString(reusableBuffer);
+		//Ear Path								
+		reusableBuffer = String.append(reusableBuffer, pathSeparator);
+		reusableBuffer = String.append(reusableBuffer, projectName);
+		reusableBuffer = String.append(reusableBuffer, ".ear");					
+		String earPath = String.convertBufferToString(reusableBuffer);				
+		String.clearBuffer(reusableBuffer);
+		//Exteded classpath		
+		String customLibsPath = System.getSystemPropertyAsString("ws.projects.customLib.location", null);	
+		reusableBuffer = String.append(reusableBuffer, customLibsPath);
+		reusableBuffer = String.append(reusableBuffer, pathSeparator);
+		reusableBuffer = String.append(reusableBuffer, projectName);
+		String libPath = String.convertBufferToString(reusableBuffer);
+		String.clearBuffer(reusableBuffer);		
+		Log.log(LOGGER, "Debug", "Libray path in lib dir %s", libPath);
+		String extendedClasspath = 
+			Approval.Rules.RuleFunctions.ArtifactRuleFunctions.AMS_RF_CreateClasspath(libPath);		
+		Log.log(LOGGER, "Debug", "Extended Classpath %s", extendedClasspath);
+		
+		// if to use legacy compilation
+		boolean useLegacyCompilation = System.getSystemPropertyAsBoolean("be.codegen.useLegacyCompilation", false);
+		
+		//Call Build ear if buildClassesOnly is false
+		boolean buildClassesOnly = ams_e_gneratedeployablerequestevent.buildClassesOnly;
+		boolean earBuilt = false;
+		if (!buildClassesOnly) {
+			try {
+				boolean locked = Cluster.DataGrid.Lock(projectName + "@GEN_DEPLOY", -1, false);
+				if (locked) {
+					earBuilt = StudioUtil.buildEar(projectName, 
+					                               projectPath,
+					                               earPath,
+					                               extendedClasspath,
+					                               useLegacyCompilation);
+				}
+			} catch (Exception e) {
+				Exception ex = 
+				Exception.newException("Ear generation failed", "Could not generate ear for project " + projectName, null);
+				Approval.Events.ArtifactEvents.AMS_E_ErrorEvent	errorEvent = 
+					Approval.CommonServices.AMS_RF_CreateErrorEvent("GENERATE_DEPLOYABLE_FAILURE", "Could not generate ear for project " + projectName, null);
+				Event.replyEvent(ams_e_gneratedeployablerequestevent, errorEvent);
+			}
+		} else {			
+			try {
+				boolean locked = Cluster.DataGrid.Lock(projectName + "@GEN_DEPLOY", -1, false);
+				if (locked) {				
+					earBuilt = StudioUtil.buildClasses(projectName, 
+					                               projectPath,
+					                               outputDirectory,
+					                               extendedClasspath,
+					                               useLegacyCompilation);
+				}
+				Log.log(LOGGER, "Debug", "Classes Built %s", earBuilt);
+			} catch (Exception e) {
+				Exception ex = 
+					Exception.newException("Deployable generation failed", "Could not generate classes for project " + projectName, null);
+				Approval.Events.ArtifactEvents.AMS_E_ErrorEvent	errorEvent = 
+					Approval.CommonServices.AMS_RF_CreateErrorEvent("GENERATE_DEPLOYABLE_FAILURE", "Could not generate ear for project " + projectName, null);
+				Event.replyEvent(ams_e_gneratedeployablerequestevent, errorEvent);
+			}			                                   
+		}
+		
+		Log.log(LOGGER, "Debug", "Deployment Status - %s", earBuilt);
+		
+		if (earBuilt) {
+			//If ear gen is successful, update the dirty state of concept deployablestate to false
+			AMS_C_DeployableState deployableState = Instance.getByExtIdByUri("Deploy@" + projectName, "/Approval/Concepts/ArtifactsConcepts/AMS_C_DeployableState");
+			//We have already created it in PP.
+			if (deployableState != null) {					
+				deployableState.dirty = false;
+				Log.log(LOGGER, "Debug", "Current Deployable Dirty State - %s", deployableState.dirty);
+			}
+			Approval.Events.ArtifactEvents.Deployable.AMS_E_GenerateDeployableResponseEvent generateDeployableResponseEvent =
+				Approval.Events.ArtifactEvents.Deployable.AMS_E_GenerateDeployableResponseEvent.AMS_E_GenerateDeployableResponseEvent(null, null, earBuilt);
+			Event.replyEvent(ams_e_gneratedeployablerequestevent, generateDeployableResponseEvent);
+		} else {
+			Exception ex = 
+				Exception.newException("Ear generation failed", "Could not generate ear for project " + projectName, null);
+			AMS_E_ErrorEvent errorEvent = 
+				Approval.CommonServices.AMS_RF_CreateErrorEvent("GENERATE_DEPLOYABLE_FAILURE", "Could not generate ear for project " + projectName, null);
+			Event.replyEvent(ams_e_gneratedeployablerequestevent, errorEvent);
+		}	
+
+		Log.log(LOGGER, "Debug", "Consuming deployable event");
+		Event.consumeEvent(ams_e_gneratedeployablerequestevent);
+	}
+}

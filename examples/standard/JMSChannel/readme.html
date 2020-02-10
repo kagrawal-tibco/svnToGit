@@ -1,0 +1,100 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>     JMS Channel
+
+- TIBCO BusinessEvents&reg; Examples
+</title>
+<meta http-equiv="Content-type" content="text/html; charset=iso-8859-1" />
+<meta http-equiv="Content-Language" content="en-us" />
+<link rel="Shortcut Icon" href="../../_resources/icon.gif" type="image/gif" />
+<style type="text/css" media="all">@import "../../_resources/examples.css";</style>
+<script type="text/javascript" src="../../_resources/examples.js" /></script>
+<script type="text/javascript">
+function buildForms() {
+ var form;
+
+
+ SendEventForm.setServer("http://localhost:8104");
+
+
+ form = SendEventForm.get("createAccountForm");
+ form.setDestinationPath("/Channels/HTTP/AllOps");
+ form.setEventPath("/Events/CreateAccount");
+ form.addProperty("AccountId", "Bob");
+ form.addProperty("Balance", "20000");
+ form.addProperty("AvgMonthlyBalance", "10000");
+ form.build();
+
+
+
+}
+</script>
+</head>
+<body onLoad="buildForms()">
+
+
+<h1>JMS Channel</h1>
+
+
+<h2>Purpose of This Example</h2>
+
+<p>The JMSChannel example demonstrates how TIBCO BusinessEvents&reg; uses a JMS channel to send and receive events using TIBCO Enterprise Message Service&#0174. You can examine the project in TIBCO BusinessEvents Studio to understand the setup, and refer to <i>TIBCO BusinessEvents Developer's Guide</i> for details on channel configuration. </p>
+
+<h2>Instructions</h2>
+
+<h3>Configure the Example</h3>
+<p>Before running the example, do the following. </p>
+
+<ol>
+<li><p> Add <code>jms.jar</code> and <code>tibjms.jar</code> in the following classpath in <i>BE_HOME</i><code>/bin/be-engine.tra</code> to point to your EMS installation:
+<pre>tibco.env.STD_EXT_CP</i></pre>
+</li>
+<li><p>At a command prompt, go to <i>TIB_EMS_HOME</i>/samples/java folder and run the following commands to set up the environment and compile the class.</p>
+<pre class="commands">setup
+javac tibjmsMsgProducer.java</i>.</pre>
+</li>
+</ol>
+<p>Keep this command window open.</p>
+<h3>Run the Example</h3>
+
+<ol>
+<li>
+<p>Open another command window and at the command prompt, start the TIBCO BusinessEvents engine using the following command.</p>
+
+<pre class="commands">
+cd <i>BE_HOME</i>/examples/standard/JMSChannel
+<i>BE_HOME</i>/bin/be-engine --propFile <i>BE_HOME</i>/bin/be-engine.tra -u default -c JMSChannel/JMS.cdd JMSChannel.ear
+</pre>
+
+<p>Adapt the command as needed, for example, if you have customized the example project, or are running it from a different directory.</p>
+</li>
+
+<li><p>Make sure the command window showing the TIBCO BusinessEvents engine is visible, and that the text at the bottom is similar to <code>BE Engine <i>host-user</i> started</code>. Then in the first command window you opened, run the Java class, as shown below, to send the JMS Message.</p>
+<pre class="commands">
+cd <i>TIB_EMS_HOME</i>/samples/java
+java tibjmsMsgProducer -server tcp://localhost:7222 -queue "Subject.BookData" "Hello"
+</pre>
+</li>
+
+<li>
+<p>A message arriving at the <code>BookDataDestination</code> destination within the JMS channel (<code>JMSChannel</code>) is transformed into a <code>BookDataEvent</code> which is asserted. The <code>BookInformationRule</code> executes on assertion of this event. It prints the details of the message to the command window. For example:</p>
+<p>
+<pre class="logs">#########Publishing Book Information##########
+Book 'Succeed in Life' is written by 'Ima Success'.
+Its market price is just $123</pre>
+</p>
+</li>
+
+</ol>
+
+
+
+<div class="footer">
+<p>TIBCO BusinessEvents&reg; 5.6<br />
+Copyright&copy; 2004-2019 TIBCO Software Inc. All rights reserved.</p>
+</div>
+</body>
+</html>

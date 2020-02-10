@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<project name="pre-uninstall" default="pre-uninstall" basedir=".">
+	<property file="post-install.properties"/>
+	<import file="common-tasks.xml"/>
+	<target name="pre-uninstall" depends="restore-eclipse-configuration">
+		<delete dir="${tibco.home.esc}/be{beVersionShort}/eclipse-platform/eclipse/p2/org.eclipse.equinox.p2.engine/profileRegistry" />
+		<echo message="Done pre-uninstallation tasks." />
+	</target>
+	
+	<target name="restore-eclipse-configuration" depends="restore-eclipse-platform">
+		<echo message="Restoring eclipse configuration" />
+		<if>
+			<available file="${tibco.home}/be/${beVersionShort}/backup/${beVersion}_pre/eclipse-platform/eclipse/configuration/org.eclipse.equinox.simpleconfigurator/bundles.info" type="file"/>
+			<then>
+				<move todir="${tibco.home}/be/${beVersionShort}/eclipse-platform/eclipse/configuration/org.eclipse.equinox.simpleconfigurator">
+					<fileset dir="${tibco.home}/be/${beVersionShort}/backup/${beVersion}_pre/eclipse-platform/eclipse/configuration/org.eclipse.equinox.simpleconfigurator">
+						<include name="bundles.info" />
+					</fileset>
+				</move>
+			</then>
+		</if>	
+	</target>
+	
+	<target name="restore-eclipse-platform">
+		<if>
+			<available file="${tibco.home}/be/${beVersionShort}/eclipse-platform-bkup" type="dir"/>
+			<then>
+				<delete dir="${tibco.home}/be/${beVersionShort}/eclipse-platform/eclipse"/>
+				<move file="${tibco.home}/be/${beVersionShort}/eclipse-platform-bkup/eclipse" todir="${tibco.home}/be/${beVersionShort}/eclipse-platform"/> 
+			</then>
+		</if>
+	</target>
+	
+</project>	

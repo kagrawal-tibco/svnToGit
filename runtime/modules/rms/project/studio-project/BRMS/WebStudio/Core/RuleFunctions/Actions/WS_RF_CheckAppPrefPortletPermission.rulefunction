@@ -1,0 +1,41 @@
+/**
+ * @description 
+ */
+WebStudio.Core.Concepts.DataSources.WS_C_TemporaryReturnData rulefunction WebStudio.Core.RuleFunctions.Actions.WS_RF_CheckAppPrefPortletPermission {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object servletRequest;
+		WebStudio.Security.Authn.Concepts.WS_C_LoggedInUser loggedInUser;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.WS_RF_UpadateApplicationPreferences");
+		
+		WS_C_ResponseData responseData = null;
+		String responseMessage = null;
+		String errorCode = null;
+		int recordCount = 0;
+		int responseStatus = 0;
+		
+		boolean isAdmin = false;
+		if (!WS_RF_CheckHTTPMethod(servletRequest, "GET")) {
+			responseStatus = -1;
+			recordCount = 0;
+			errorCode = "ERR_5101";
+			responseMessage = "Invalid HTTP Method, expect method is [GET].";
+			
+		} else {
+			isAdmin = WS_RF_IsAdminRole(loggedInUser);
+		 }
+		
+		if (!isAdmin) {
+			responseStatus = -1;
+			recordCount = 0;
+			errorCode = "ERR_1109";
+			responseMessage = "User does not have permission to view Application Preference Portlet.";
+		}
+		
+		return WS_RF_CreateTemporaryReturnData(responseStatus, recordCount, errorCode, responseMessage, responseData);
+	}
+}

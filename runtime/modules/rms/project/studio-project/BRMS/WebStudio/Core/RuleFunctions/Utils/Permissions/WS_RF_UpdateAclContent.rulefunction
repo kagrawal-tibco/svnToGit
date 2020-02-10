@@ -1,0 +1,77 @@
+/**
+ * @description 
+ */
+WebStudio.Core.Concepts.DataSources.WS_C_TemporaryReturnData rulefunction WebStudio.Core.RuleFunctions.Utils.Permissions.WS_RF_UpdateAclContent {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object asyncContextObject;
+		WebStudio.Security.Authn.Concepts.WS_C_LoggedInUser loggedInUser;
+		String contentType;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.Permissions.WS_RF_UpdateUserandAclContent");
+		
+		//TODO - why are we passing asyncContextObject instead of servletRequest
+		Object servletRequest = HTTP.Servlet.getServletRequest(asyncContextObject);
+		
+		int responseStatus = 0;
+		int recordCount = 0;
+		String errorCode = null;
+		String responseMessage = null;
+		
+		boolean isAdmin = WS_RF_IsAdminRole(loggedInUser);
+		
+		WS_C_TemporaryReturnData tempReturnData = null;
+		
+		if (!WS_RF_CheckHTTPMethod(servletRequest, "PUT")) {
+			responseStatus = -1;
+			errorCode = "ERR_5101";
+			responseMessage = "Invalid HTTP Method, expect method is [PUT].";
+			
+			tempReturnData = WS_RF_CreateTemporaryReturnData(responseStatus, recordCount, errorCode, responseMessage, null);
+			
+		} else if (isAdmin) {
+			String subscriptionId = HTTP.Servlet.Request.getRequestParameter(servletRequest, "subscriptionId");
+			if (subscriptionId == null && loggedInUser.jwtToken != null) {
+				subscriptionId = loggedInUser.jwtToken.sbsc;
+				Log.log(LOGGER, "Debug", "Setting SubscriptionId off currently loggedIn user [%s]", loggedInUser.username); 
+			}
+			
+			String requestPostParam = System.getGlobalVariableAsString("WebStudio/requestPostParameter", "data");
+			String requestData = HTTP.Servlet.Request.getRequestParameter(servletRequest, requestPostParam);
+			  
+			if (requestData == null) {
+				Object requestDataBytes = HTTP.Servlet.Request.getRequestContent(servletRequest);
+				requestData = String.convertByteArrayToString(requestDataBytes, "UTF-8");
+				requestData = WS.Common.cleanupRequestData(requestData);
+			}
+			
+			WebStudio.Core.Concepts.Request.Usecases.ACLSettings.WS_C_ACLSettingsBaseRequest aclSettingBaseRequest = null;
+			
+			if (String.equals(contentType, System.getGlobalVariableAsString("WebStudio/CONTENT_TYPE/XML", "application/xml"))) {
+			    aclSettingBaseRequest = Instance.createTransientInstanceFromXML("/WebStudio/Core/Concepts/Request/Usecases/ACLSettings/WS_C_ACLSettingsBaseRequest", requestData);
+			} else {
+				aclSettingBaseRequest = Instance.createTransientInstanceFromJSON("/WebStudio/Core/Concepts/Request/Usecases/ACLSettings/WS_C_ACLSettingsBaseRequest", requestData);
+			}
+			
+			WebStudio.Core.Concepts.Request.Usecases.ACLSettings.WS_C_ACLSettingsRequestData requestContainedData1 = aclSettingBaseRequest.data;
+			WebStudio.Core.Concepts.Request.Usecases.ACLSettings.WS_C_AclDataItem aclDataItem = requestContainedData1.aclSettings.aclSettingsItem;
+			
+			WS_C_Acl aclData = aclDataItem.aclData;
+			if (aclData.entries != null) {
+				String projectName = aclDataItem.projectName;
+				WebStudio.Core.RuleFunctions.Utils.Permissions.WS_RF_SaveAclData(aclData, projectName, subscriptionId);
+				responseMessage = "Acl updated successfully";
+				WS_RF_AddAuditTrailEntry(loggedInUser.username, projectName, null, null, "ACL", responseMessage);
+				tempReturnData = WS_RF_CreateTemporaryReturnData(responseStatus, recordCount, errorCode, responseMessage, null);
+			}
+		} else {
+			responseStatus = -1;
+			responseMessage = "User do not have this permission";
+			tempReturnData = WS_RF_CreateTemporaryReturnData(responseStatus, recordCount, errorCode, responseMessage, null);
+		}
+		return tempReturnData;
+	}
+}

@@ -1,0 +1,159 @@
+<html lang="en">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=EmulateIE8" />
+		<title>${title}</title>
+		<link rel="stylesheet" type="text/css" href="history/history.css" />
+		<script src="history/history.js" language="javascript"></script>
+		<script src="scripts/AC_OETags.js" language="javascript"></script>
+		<script src="scripts/windowtracker.js"></script>
+		<script src="scripts/commandhandlers.js"></script>
+		<style>
+			body { margin: 0px; overflow:hidden }
+		</style>
+		<script language="JavaScript" type="text/javascript">
+			<!--
+			var requiredMajorVersion = ${version_major};
+			var requiredMinorVersion = ${version_minor};
+			var requiredRevision = ${version_revision};
+			var wmode = "window";
+			
+			var isIE = (navigator.appName && navigator.appName.indexOf("Microsoft") != -1);
+			var isWindows = (navigator.userAgent && navigator.userAgent.indexOf("Windows") != -1);
+			
+			/**
+			  * Handles all fscommand calls from dashboard movie (in Internet Explorer)
+			  */
+			if(isIE && isWindows){
+				document.write('<script language=\"VBScript\"\>\n');
+				document.write('On Error Resume Next\n');
+				document.write('Sub BEViews_FSCommand(ByVal command, ByVal args)\n');
+				document.write('    Call BEViews_DoFSCommand(command, args)\n');
+				document.write('End Sub\n');
+				document.write('</script\>\n');
+			}
+			
+			/**
+			  * Adjust wmode to help set focus on the login dialog's username entry field
+			  */
+			if(isIE || !isWindows){
+				//keep default "window"
+			}
+			else{
+				wmode = "opaque";
+			}
+			
+			/**
+			  * Handles all fscommand calls from dashboard movie (in firefox)
+			  * @param command the command passed by dashboard movie
+			  * @param args the argument passed by dashboard movie
+			  */
+			function ${application}_DoFSCommand(command, args) {
+				//alert("Command = "+command+"\nargs = "+args);
+				if (command == "showlink"){
+					showLink(args);
+				}
+				else if (command == "showexternallink"){
+					window.open(args);
+				}
+				else if (command == "handledisconnect"){
+					handleDisconnect(args);
+				}
+				else if (command == "handletimeout"){
+					handleTimeOut(args);
+				}
+				else if (command == "userloggingout"){
+					closeAll();
+				}
+				else if (command == "userolechanging"){
+					closeAll();
+				}
+			}
+			
+			function setFocusOnFlash(){
+				var f = document.getElementById("BEViews");
+				if(f){
+					if(isWindows && !isIE){
+						f.tabIndex = 0;
+						f.focus();
+					}
+					else{
+						f.focus();
+					}
+				}
+			}
+			//-->
+		</script>
+	</head>
+	<body scroll="no">
+		<script language="JavaScript" type="text/javascript">
+		<!--
+		var hasProductInstall = DetectFlashVer(6, 0, 65);
+		var hasRequestedVersion = DetectFlashVer(requiredMajorVersion, requiredMinorVersion, requiredRevision);
+		if(hasProductInstall && !hasRequestedVersion){
+			var MMPlayerType = (isIE == true) ? "ActiveX" : "PlugIn";
+			var MMredirectURL = window.location;
+			document.title = document.title.slice(0, 47) + " - Flash Player Installation";
+			var MMdoctitle = document.title;
+			AC_FL_RunContent(
+				"src", "playerProductInstall",
+				"FlashVars", "MMredirectURL="+MMredirectURL+'&MMplayerType='+MMPlayerType+'&MMdoctitle='+MMdoctitle+"",
+				"width", "${width}",
+				"height", "${height}",
+				"align", "middle",
+				"id", "${application}",
+				"quality", "high",
+				"bgcolor", "${bgcolor}",
+				"name", "${application}",
+				"allowScriptAccess","sameDomain",
+				"type", "application/x-shockwave-flash",
+				"pluginspage", "http://www.adobe.com/go/getflashplayer"
+			);
+		}
+		else if(hasRequestedVersion){
+			// if we've detected an acceptable version
+			// embed the Flash Content SWF when all tests are passed
+			AC_FL_RunContent(
+					"src", "${swf}",
+					"width", "${width}",
+					"height", "${height}",
+					"align", "middle",
+					"id", "${application}",
+					"quality", "high",
+					"wmode", wmode,
+					"bgcolor", "${bgcolor}",
+					"name", "${application}",
+					"allowScriptAccess","always",
+					"type", "application/x-shockwave-flash",
+					"pluginspage", "http://www.adobe.com/go/getflashplayer"
+			);
+			setFocusOnFlash();
+		  }
+		  else{  // flash is too old or we can't detect the plugin
+			var alternateContent = 'TIBCO BEViews requires the Adobe Flash Player.<br />'
+			+ 'To get the latest version of Flash Player, please visit <a href=http://www.adobe.com/go/getflash/>Adobe</a>.';
+			document.write(alternateContent);  // insert non-flash content
+		  }
+		// -->
+		</script>
+		<noscript>
+			<object classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000"
+					id="${application}" width="${width}" height="${height}"
+					codebase="http://fpdownload.macromedia.com/get/flashplayer/current/swflash.cab">
+					<param name="movie" value="${swf}.swf" />
+					<param name="quality" value="high" />
+					<param name="bgcolor" value="${bgcolor}" />
+					<param name="allowScriptAccess" value="sameDomain" />
+					<embed src="${swf}.swf" bgcolor="${bgcolor}"
+						width="${width}" height="${height}" name="${application}" align="middle"
+						play="true"
+						loop="false"
+						quality="high"
+						allowScriptAccess="always"
+						type="application/x-shockwave-flash"
+						pluginspage="http://www.adobe.com/go/getflashplayer">
+					</embed>
+			</object>
+		</noscript>
+	</body>
+</html>

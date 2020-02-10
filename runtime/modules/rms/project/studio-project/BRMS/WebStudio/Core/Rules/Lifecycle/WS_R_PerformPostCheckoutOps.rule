@@ -1,0 +1,49 @@
+/**
+ * @description Perform any post checkout ops.
+ * @author aathalye-T410
+ */
+rule WebStudio.Core.Rules.Lifecycle.WS_R_PerformPostCheckoutOps {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		WebStudio.Core.Concepts.WS_C_UserProject userProject;
+		WebStudio.Core.Events.Lifecycle.WS_E_CheckoutProjectCompletionEvent checkoutProjectCompletionEvent;
+	}
+	when {
+		userProject.name != null &&
+		checkoutProjectCompletionEvent.username != null;
+	}
+	then {
+		Object LOGGER = Log.getLogger("WebStudio.Core.Rules.Lifecycle.WS_R_PerformPostCheckoutOps");
+		
+		String username = checkoutProjectCompletionEvent.username;
+		
+		Log.log(LOGGER, "Debug", "Username [%s]", username);
+		String userWorkspaceExtId = WS_RF_CreateUserArtifactExtId("WORKSPACE", null, null, username, null, null);
+		
+		WS_C_UserWorkspace userWorkspace = Instance.getByExtIdByUri(userWorkspaceExtId, "/WebStudio/Core/Concepts/WS_C_UserWorkspace");
+		if (userWorkspace != null && userProject != null) {
+			// additional check to verify if the both the workspace and project ExtId have the username in their extId
+			if (String.indexOfString(userWorkspace@extId,0,username) != -1 && String.indexOfString(userProject@extId,0,username) != -1) {
+				//Append this to workspace
+				Instance.
+					PropertyArray.
+						appendContainedConcept(userWorkspace.userProjects, userProject, 1L);
+			} else {
+				Log.log(LOGGER, "Debug", "Username [%s] does not match the ExtIds for workspace [%s] & project [%s]", username, userWorkspace@extId, userProject@extId);
+			}
+		}
+		
+		//Set the parent project id on the user artifact if not set, 
+		//to handle case of Studio -> Checkout -> modify & commit DT, and then WS checkout 
+		WS_C_UserArtifact[] userArtifacts = Instance.PropertyArray.toArrayContainedConcept(userProject.userArtifacts);
+		for (int loop = 0; loop < userArtifacts@length; loop++) {
+			WS_C_UserArtifact userArtifact = userArtifacts[loop];
+			if (!String.equals(userArtifact.parentProjectId,userProject@extId)) {
+				userArtifact.parentProjectId = userProject@extId;
+			}	
+		}					
+	}
+}

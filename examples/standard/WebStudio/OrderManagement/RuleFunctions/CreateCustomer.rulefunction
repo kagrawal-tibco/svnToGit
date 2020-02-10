@@ -1,0 +1,39 @@
+/**
+ * @description This function creates the customer using the information received CreateCustomer event.
+ */
+Concepts.Customer rulefunction RuleFunctions.CreateCustomer {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String customerName;
+		String customerBalance;
+		String customerType;
+	}
+	body {
+			Concepts.Customer customer = Instance.getByExtId("CUST-"+customerName);
+			
+			if(null!=customer)
+			{
+				 System.debugOut("#### Customer of given name : "+customer.name +" is already exist.");  
+				 return null;
+			}
+			else
+			{
+				customer =Instance.createInstance("xslt://{{/Concepts/Customer}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" version=\"2.0\" exclude-result-prefixes=\"xsl xsd\"><xsl:output method=\"xml\"/><xsl:param name=\"customerName\"/><xsl:param name=\"customerBalance\"/><xsl:template name=\"Function\" match=\"/\"><createObject><object><xsl:attribute name=\"extId\"><xsl:value-of select=\"concat(&quot;CUST-&quot;,$customerName)\"/></xsl:attribute><name><xsl:value-of select=\"$customerName\"/></name><balance><xsl:value-of select=\"xsd:double($customerBalance)\"/></balance><type><xsl:value-of select=\"&quot;Basic&quot;\"/></type></object></createObject></xsl:template></xsl:stylesheet>");	
+				
+				//Set Customer Type
+				if(null!=customerType && String.length(String.trim(customerType)) > 0){
+					if(String.equals("Super",customerType)){
+						customer.type ="Super";
+					}else if(String.equals("Premium",customerType)){
+						customer.type ="Premium";
+					}else if(String.equals("Standard",customerType)){
+						customer.type ="Standard";
+					}
+				}
+				System.debugOut("#### Creating customer: "+customer.name +" with balance "+customer.balance);				
+			}
+		return customer;	
+	}
+}

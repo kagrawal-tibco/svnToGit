@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Label xmlns:mx="http://www.adobe.com/2006/mxml"
+	textAlign="center"
+    selectable="true"
+    truncateToFit="true">
+   
+    <mx:Script>
+        <![CDATA[
+        	import mx.effects.easing.Back;
+        	import com.tibco.be.views.user.components.chart.DataColumn;
+        	import flash.utils.getQualifiedClassName;
+			
+			protected var _columnId:String;
+			protected var _alignment:String;
+			protected var _color:Number;
+			protected var _fontSize:Number;
+			protected var _fontStyle:String;
+			
+			private var _processFillColor:Boolean;
+			
+			public function set processFillColor(processFillColor:Boolean):void {
+				this._processFillColor = processFillColor;
+			} 
+			
+			public function get processFillColor():Boolean {
+				return this._processFillColor;
+			}
+			
+        	public function configure(headerConfig:XML, columnConfig:XML):void{
+				_columnId = "";
+        		
+        		if(columnConfig != null){
+					_columnId = new String(columnConfig.@id);
+					_alignment = new String(columnConfig.@align);
+					_color = parseInt(columnConfig.@fontcolor, 16);
+					_fontSize = new Number(columnConfig.@fontsize);
+					_fontStyle = new String(columnConfig.@fontstyle);
+        		}
+					
+				if(_alignment == null || _alignment == ""){
+					if(headerConfig != null){
+						_alignment = new String(headerConfig.@align);
+					}
+					else{
+						_alignment = "center";
+					}
+				}
+				setStyle("textAlign",_alignment);
+				
+				if(isNaN(_color) || _color < 0){
+					if(headerConfig != null){
+						_color = parseInt(headerConfig.@fontcolor);
+					}
+					if(isNaN(_color) || _color < 0){
+						_color = 0xA9A9A9;
+					}
+				}
+				setStyle("color",_color);
+				
+				if(isNaN(_fontSize) || _fontSize <= 0){
+					if(headerConfig != null){
+						_fontSize = new Number(headerConfig.@fontsize);
+					}
+					if(isNaN(_fontSize) || _fontSize < 0){
+						_fontSize = 10;
+					}
+				}
+				setStyle("fontSize",_fontSize);
+				
+				if(_fontStyle == null){
+					if(headerConfig != null){
+						_fontStyle = new String(headerConfig.@fontstyle);
+					}
+					if(_fontStyle == null){
+						_fontStyle = "bold";
+					}
+				}
+				if(_fontStyle.indexOf("bold") > -1){
+					setStyle("fontWeight", "bold");
+				}
+				if(_fontStyle.indexOf("italic") > -1){
+					setStyle("fontStyle", "italic");
+				}
+				
+				//enable process fill color by default 
+				processFillColor = true;					
+        	}
+        	
+        	override public function set data(value:Object):void{
+        		super.data = value;
+        		var columnData:DataColumn = null;
+        		
+        		if (value != null && _columnId != ""){ 
+					columnData = data[_columnId] as DataColumn;
+        		}
+        		
+				if(columnData == null){
+					text = "";
+					toolTip = "";
+					setStyle("color", _color);
+					setStyle("fontStyle", "normal");
+					setStyle("fontWeight", "normal");
+					opaqueBackground = null;
+					useHandCursor = false;
+					buttonMode = false;
+					mouseChildren = true;					
+					return;
+				}
+				
+				//set text 				
+				text = columnData.displayValue;
+				
+				//set tooltip
+				if(columnData.tooltip != null && columnData.tooltip != ""){
+					toolTip = columnData.tooltip;
+				}
+				else{
+					toolTip = text;
+				}
+				
+				//update font color 
+				var fontColor:uint = columnData.fontColor == DataColumn.COLOR_NONE ? _color : columnData.fontColor;
+				setStyle("color", fontColor);
+				
+				//update font style
+				var fontStyle:String = columnData.fontStyle == null ? _fontStyle : columnData.fontStyle;
+				if(fontStyle.indexOf("italic") >= 0){ 
+					setStyle("fontStyle", "italic"); 
+				}
+				else{
+					setStyle("fontStyle", "normal");
+				}
+				if(fontStyle.indexOf("bold") >= 0){ 
+					setStyle("fontWeight", "bold"); 
+				}
+				else{
+					setStyle("fontWeight", "normal");
+				}
+				
+				//update fill colors
+				if (_processFillColor == true) {
+					if (columnData.fillColors != null) {
+						if (columnData.fillColors.baseColor != null) {
+							opaqueBackground = new String(columnData.fillColors.baseColor);
+						}
+						else {
+							opaqueBackground = null;
+						}
+					}
+					else {
+						opaqueBackground = null;
+					}
+				}
+
+				//decide if we need to behave like hyper link
+				mouseChildren = false;
+				if (columnData.link != null && columnData.link != "") {
+					buttonMode = true;
+				}
+				else {
+					buttonMode = false;
+        		}				
+        	}
+
+        ]]>
+    </mx:Script>
+</mx:Label>

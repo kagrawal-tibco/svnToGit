@@ -1,0 +1,105 @@
+/**
+ * @description Fetch tasks list for a set of roles.
+ * @author aathalye-lt
+ */
+rule Approval.Rules.ArtifactsRuleSet.AMS_RU_RetrieveTaskListRule {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Approval.Events.ArtifactEvents.Worklist.AMS_E_TaskListRequestEvent ams_e_tasklistrequestevent;
+	}
+	when {
+		ams_e_tasklistrequestevent.role != null;
+	}
+	then {
+		if (ams_e_tasklistrequestevent.loggedInUserName != null) {
+			ams_e_tasklistrequestevent.loggedInUserName = HTTP.decodeURL(ams_e_tasklistrequestevent.loggedInUserName, "UTF-8");
+		}
+		Object LOGGER = Log.getLogger("Approval.Rules.ArtifactsRuleSet.AMS_RU_RetrieveTaskListRule");
+		String roleString = ams_e_tasklistrequestevent.role;
+		//Split role string using delimiter ;
+		String[] allRoles = String.split(roleString, ";");
+		Object serializedBuffer = String.createBuffer(0);	
+		String.append(serializedBuffer, "<ns1:TaskSummary xmlns:ns1=\"www.tibco.com/be/rms/ArtifactsWorklist\">\n");
+		//Get all registered roles since they are already loaded in cache.
+		AMS_C_ConfiguredRoles configuredRoles = Instance.getByExtIdByUri("CFG-ROLES", "/AAA/Concepts/AMS_C_ConfiguredRoles");
+		Log.log(LOGGER, "Debug", "Configured roles %s", configuredRoles);
+
+		for (int outerLoop = 0; outerLoop < allRoles@length; outerLoop++) {
+			String roleName = allRoles[outerLoop];
+			Log.log(LOGGER, "Debug", "Role Name %s", roleName);
+			//Lock and load role concept
+			boolean roleLock = Cluster.DataGrid.Lock(roleName, -1, false);
+			if (roleLock) {
+				Log.log(LOGGER, "Debug", "Lock Obtained on key %s", roleName);
+				AMS_C_Role role = Cluster.DataGrid.CacheLoadConceptByExtId(roleName, false);
+				Log.log(LOGGER, "Debug", "Role concept from cache %s", role);
+				if (role != null) {
+					String[] reviewTasksExtIds = Instance.PropertyArray.toArrayString(role.reviewTasksExtIds);
+					for (int loop = 0, length = reviewTasksExtIds@length; loop < length; loop++) {
+						//Lock and load review task concept.
+						boolean reviewTaskLock = Cluster.DataGrid.Lock(reviewTasksExtIds[loop], -1, false);
+						if (reviewTaskLock) { 
+							Log.log(LOGGER, "Debug", "Review Task Id %s", reviewTasksExtIds[loop]);
+							AMS_C_ReviewTask reviewTask = Cluster.DataGrid.CacheLoadConceptByExtId(reviewTasksExtIds[loop], false);
+							Log.log(LOGGER, "Debug", "Referenced Checkin Id %s", reviewTask.referencedCheckinId);
+							//Lock and Load matching concept
+							boolean referencedCheckinLock = Cluster.DataGrid.Lock("" + reviewTask.referencedCheckinId, -1, false);
+							if (referencedCheckinLock) {
+								AMS_C_Checkin referencedCheckin = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(reviewTask.referencedCheckinId, false, "/Approval/Concepts/ArtifactsConcepts/AMS_C_Checkin");
+								
+								boolean isCheckinComplete = true;
+								if (ams_e_tasklistrequestevent.clearApprovedTasks) {
+									isCheckinComplete = Approval.Rules.RuleFunctions.ArtifactRuleFunctions.AMS_RF_ClearApprovedTaskListItems(referencedCheckin, role, reviewTasksExtIds[loop]);
+									Log.log(LOGGER, "Debug", "Is Checkin Complete %s", isCheckinComplete);
+								}
+								
+								if (!ams_e_tasklistrequestevent.clearApprovedTasks || (ams_e_tasklistrequestevent.clearApprovedTasks && !isCheckinComplete)) {
+									String temp = "<ns1:Task>\n <TaskId>" + reviewTasksExtIds[loop] + "</TaskId>";
+						            String.append(serializedBuffer, temp);
+						            String serializedConcept = Instance.serializeUsingDefaults(referencedCheckin);
+								    String.append(serializedBuffer, serializedConcept);
+								    String.append(serializedBuffer, "\n</ns1:Task>\n");
+								}
+							}
+						}
+					}
+				}
+				//Unlock previously locked role.
+				Cluster.DataGrid.UnLock(roleName, false);
+			}
+		}
+		
+		String.append(serializedBuffer, "<DelegationRoles xmlns = \"www.tibco.com/be/ontology/AAA/Concepts/AMS_C_ConfiguredRoles\">\n");
+		AMS_C_Role[] delegationRoles = Instance.PropertyArray.toArrayConcept(configuredRoles.configuredRoles);
+		for (int rolesLoop = 0; rolesLoop < delegationRoles@length; rolesLoop++) {
+			boolean serialize = true;
+			AMS_C_Role delegationRole = delegationRoles[rolesLoop];
+			//Check that logged in user's roles is not one among these
+			String delegationRoleName = delegationRole@extId;
+			for (int innerRolesLoop = 0; innerRolesLoop < allRoles@length; innerRolesLoop++) {
+				if (String.equals(delegationRoleName, allRoles[innerRolesLoop])) {
+					serialize = false;
+					break;
+				}
+			}
+			if (serialize) {
+				String.append(serializedBuffer, "  <delegationRole>");
+				String.append(serializedBuffer, delegationRoleName);
+				String.append(serializedBuffer, "</delegationRole>\n");
+			}
+		}
+		String.append(serializedBuffer, "</DelegationRoles>");
+		String.append(serializedBuffer, "\n</ns1:TaskSummary>");
+		String serialized = String.convertBufferToString(serializedBuffer);
+		String.clearBuffer(serializedBuffer);
+		
+		serialized = String.replaceAll(serialized, "\\<\\?xml (.*)\\?\\>", "");	
+		Approval.Events.ArtifactEvents.Worklist.AMS_E_TaskListResponseEvent responseEvent =
+			Approval.Events.ArtifactEvents.Worklist.AMS_E_TaskListResponseEvent.AMS_E_TaskListResponseEvent(null, serialized);
+		
+		Event.replyEvent(ams_e_tasklistrequestevent, responseEvent);
+	}
+}

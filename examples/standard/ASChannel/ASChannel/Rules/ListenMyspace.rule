@@ -1,0 +1,58 @@
+/**
+ * @description 
+ * @author huabin-lt
+ */
+rule Rules.ListenMyspace {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		
+		Events.MyspaceDefEvent myspaceDefEvent;
+	}
+	when {
+		
+	}
+	then {
+		System.debugOut("Listen Myspace Tuple Rule: MyspaceDefEvent ID: " + myspaceDefEvent.eid);
+		System.debugOut("Listen Myspace Tuple Rule: MyspaceDefEvent VALUE: " + myspaceDefEvent.value);
+		System.debugOut("Listen Myspace Tuple Rule: MyspaceDefEvent CONSUMPTION MODE: " + AS.getConsumptionMode(myspaceDefEvent));
+		System.debugOut("Listen Myspace Tuple Rule: MyspaceDefEvent EVENT TYPE: " + AS.getEventType(myspaceDefEvent));
+
+		String asChannel = System.getGlobalVariableAsString("aschannel", "/Channels/aschannel");
+		String outspaceOutbound = System.getGlobalVariableAsString("aschannel.outspace.outbound", "/Channels/aschannel/OutspaceOutBound");
+
+		// take snapshot
+		Object[] result = AS.takeSnapshot(outspaceOutbound, null, "get", "all", 0, 1000, "eid > 15000 AND eid <=20000");
+		boolean gt15000 = false;
+		if (result != null && result@length > 0) {
+			for (int i=0; i<result@length; i++) {
+				Object[] tuple = result[i];
+				for (int j=0; j<tuple@length; j++) {
+					Object[] keyValue = tuple[j];
+					System.debugOut("Listen Myspace Tuple Rule: ResultY "+i+","+j+" is "+keyValue[0]);
+					System.debugOut("Listen Myspace Tuple Rule: ResultY "+i+","+j+" is "+keyValue[1]);
+				}
+			}
+			gt15000 = true;
+		}
+		System.debugOut("Listen Myspace Tuple Rule: If exists Tuples with ID > 15000 and ID <= 20000 in Outspace: " + gt15000);
+		Util.HashMap.createMap("asContext");
+		Object tid = Util.HashMap.getObject("asContext", "tid1");
+		System.debugOut("Listen Myspace Tuple Rule: TransactionID = "+tid);
+		if (tid != null) {
+			AS.takeTransaction(asChannel, tid);
+			if (gt15000) {
+				// commit transaction
+				AS.commitTransaction(asChannel);
+				System.debugOut("Listen Myspace Tuple Rule: Commit Transaction");
+			} else {
+				// rollback transaction
+				AS.rollbackTransaction(asChannel);
+				System.debugOut("Listen Myspace Tuple Rule: Rollback Transaction");
+			}
+			Util.HashMap.removeObject("asContext", "tid1");
+		}
+	}
+}

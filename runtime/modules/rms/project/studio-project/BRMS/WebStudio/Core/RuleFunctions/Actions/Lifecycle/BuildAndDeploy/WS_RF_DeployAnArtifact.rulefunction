@@ -1,0 +1,294 @@
+/**
+ * @description Carry out deployment of artifact based on its type and return the status.
+ * 0 is success and 1 is failure.
+ */
+WebStudio.Core.Concepts.Lifecycle.WS_C_ArtifactDeployStatus rulefunction WebStudio.Core.RuleFunctions.Actions.Lifecycle.BuildAndDeploy.WS_RF_DeployAnArtifact {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String loggedInUsername;
+		String managedProjectName;
+		WebStudio.Core.Concepts.Lifecycle.WS_C_CommittableDeltaEntry committableDeltaEntry;
+		String deployEnvironments;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.Lifecycle.BuildAndDeploy.WS_RF_DeployAnArtifact");
+				
+		WS_C_ArtifactBaseState commitLifeCycleState = 
+			Instance.PropertyAtom.getConceptReference(committableDeltaEntry.commitLifeCycleState, 1L);
+		int statusCode = 0;
+		String statusMessage = null;	
+		
+		WS_C_ArtifactDeployStatus deployStatus = null;
+		
+		Log.log(LOGGER, "Debug", "Current LifeCycle State - %s", commitLifeCycleState.stateName);
+		if (commitLifeCycleState instanceof WS_C_ArtifactDeployedState) {
+			Log.log(LOGGER, "Debug", "Getting ready to Deploy"); 
+			WS_C_UserArtifactRevision referencedRevision = Instance.PropertyAtom.getConceptReference(committableDeltaEntry.userArtifactRevision, 1L);
+			
+			//Get parent artifact
+			WS_C_UserArtifact parentUserArtifact = WS_RF_IsUserArtifact(referencedRevision.parentArtifactId, referencedRevision.parentArtifactType);
+			String artifactType = parentUserArtifact.artifactType;
+			
+			String subscriptionId = WS_RF_GetSubscriptionId(loggedInUsername);
+			
+			String scsRootURL = WS_RF_GetSCSRootURL(managedProjectName, subscriptionId);
+			if (scsRootURL == null) {
+				statusCode = -1;
+				statusMessage = "Source control repository location not present. Set 'ws.scs.rootURL' property.";
+			} else {
+				String sharedLocation = System.getSystemPropertyAsString("ws.artifact.deploy.location", null);
+				if (sharedLocation == null) {
+					statusCode = -1;
+					statusMessage = String.format("Shared location [%s] not present. Set 'ws.artifact.deploy.location' property", sharedLocation);
+				} else {
+					if (!File.fileExists(sharedLocation)) {
+						statusCode = -1;
+						statusMessage = String.format("Shared location [%s] does not exist", sharedLocation);
+					} else {
+						WS_C_LifecycleMetadata lifecycleMetadata = Instance.PropertyAtom.getContainedConcept(referencedRevision.lifecycleMetadata, 1L);
+						WS_C_AbstractOperation lastOperationPerformed = Instance.PropertyAtom.getConceptReference(lifecycleMetadata.lastOperation, 1L);
+						
+						Log.log(LOGGER, "Debug", "Last Operation performed - %s", lastOperationPerformed.opName);
+						
+						AMS_C_DeployableState earDeployableState = null;
+						
+						// check if the file exists in the first place, applies to both RTI and DT
+						Object baseDestinationPathBuffer = String.createBuffer(0);
+						String.append(baseDestinationPathBuffer, sharedLocation);
+						String.append(baseDestinationPathBuffer, "/");
+						String.append(baseDestinationPathBuffer, managedProjectName);
+						String baseDestinationPath = String.convertBufferToString(baseDestinationPathBuffer);
+						String.clearBuffer(baseDestinationPathBuffer);
+						
+						String baseVRFFolder = null;
+						
+						if (artifactType == "ruletemplateinstance") {
+							try {
+								if (!(lastOperationPerformed instanceof WS_C_DeleteOperation)) {
+									deployStatus = WS_RF_DeployRuleTemplateInstance(scsRootURL, sharedLocation, managedProjectName, lastOperationPerformed, parentUserArtifact, loggedInUsername);
+								} else {
+									String rtiFilePath = baseDestinationPath + parentUserArtifact.artifactPath + "." + parentUserArtifact.artifactFileExtn;
+									if (!File.fileExists(rtiFilePath)) {
+										Log.log(LOGGER, "Debug", "Artifact[%s] not found for deployment, so pulling the details from associated revision[%s]", parentUserArtifact.artifactPath, referencedRevision@extId);
+										WS_RF_LoadContentFromRevisionForDeploy(referencedRevision, managedProjectName, sharedLocation, scsRootURL, loggedInUsername);
+									}
+								}
+							} catch(Exception e) {
+								deployStatus = null;
+								statusCode = -1;
+								statusMessage = e@message;
+							}
+						} else if (artifactType == "rulefunctionimpl") {
+							try {
+								// check if ear if generatd
+								if (earDeployableState == null) {
+									earDeployableState = Instance.getByExtIdByUri("Deploy@" + managedProjectName, "/Approval/Concepts/ArtifactsConcepts/AMS_C_DeployableState");
+								}
+								if (earDeployableState == null) {
+									Log.log(LOGGER, "Debug", "DeployableState is null");
+									statusCode = -1;
+									statusMessage = String.format("Generate ear for project %s.", managedProjectName);
+									Log.log(LOGGER, "Debug", statusMessage);
+									
+								} else if (earDeployableState.dirty) { //If it is dirty, the ear would need to be generated
+									statusCode = -1;
+									statusMessage = String.format("Ear for project %s not in sync, regenerate ear.", managedProjectName);
+									Log.log(LOGGER, "Debug", "DeployableState is dirty. %s", statusMessage);
+									
+								} else {
+									// get the base VRF Name
+									String baseVRFName = parentUserArtifact.baseArtifactPath;
+									if (baseVRFName != null && String.contains(baseVRFName, ".")) {
+										baseVRFName = String.substringBefore(baseVRFName, ".");
+									}
+									if (baseVRFName == null || baseVRFName == "") {
+										baseVRFName = WS_RF_GetImplementsPath(loggedInUsername, managedProjectName, parentUserArtifact.artifactPath, parentUserArtifact.artifactFileExtn, scsRootURL);								
+									}
+									String dtName = parentUserArtifact.artifactPath;
+									int lastSeparatorIndex = String.lastIndexOfString(parentUserArtifact.artifactPath, 0, "/");
+									if (lastSeparatorIndex > -1) {
+										dtName = String.substring(dtName, lastSeparatorIndex + 1, dtName@length);
+									}
+									Log.log(LOGGER, "Debug", "VRF - [%s], DT - [%s]", baseVRFName, dtName);
+											
+									String pathSeparator = "/";
+									Object reusableBuffer = String.createBuffer(0);
+									String.append(reusableBuffer, sharedLocation);
+									String.append(reusableBuffer, pathSeparator);
+									String.append(reusableBuffer, managedProjectName);
+									String.append(reusableBuffer, pathSeparator);
+									String.append(reusableBuffer, "Decision_Tables");
+									String.append(reusableBuffer, pathSeparator);
+									String.append(reusableBuffer, "be");
+									String.append(reusableBuffer, pathSeparator);
+									String.append(reusableBuffer, "gen");
+									String.append(reusableBuffer, baseVRFName + "$vrf_impls$");
+									String.append(reusableBuffer, pathSeparator);
+									
+									baseVRFFolder = String.convertBufferToString(reusableBuffer);
+									String.clearBuffer(reusableBuffer);
+									
+									if (!(lastOperationPerformed instanceof WS_C_DeleteOperation)) {
+										deployStatus = WS_RF_DeployDecisionTable(scsRootURL, sharedLocation, managedProjectName, loggedInUsername, lastOperationPerformed, parentUserArtifact);
+									} else {
+										if (!File.fileExists(baseVRFFolder)) {
+											// Case for Deleted artifact being deployed again to a different enivonment
+											Log.log(LOGGER, "Debug", "Artifact[%s] not found for deployment, so pulling the details from associated revision[%s]", parentUserArtifact.artifactPath, referencedRevision@extId);
+											WS_RF_LoadContentFromRevisionForDeploy(referencedRevision, managedProjectName, sharedLocation, scsRootURL, loggedInUsername);
+										}
+									}
+								}
+							} catch(Exception e) {
+								deployStatus = null;
+								statusCode = -1;
+								statusMessage = e@message;
+							}
+						}
+						
+						Log.log(LOGGER, "Debug", "Deploy Environments - %s", deployEnvironments);
+						
+						String[] environments = {};
+						if (deployEnvironments != null && !String.equals(deployEnvironments, ""))  environments = String.split(deployEnvironments, ",");
+						Log.log(LOGGER, "Debug", "Total Environments to deploy to - %s", environments@length);
+
+						String selectedEnvironment = null;	
+						for (int i=0; i<environments@length; i++) {
+							selectedEnvironment = environments[i];
+							Log.log(LOGGER, "Debug", "Performing Hot Deployment for environment[%s]", selectedEnvironment);
+							
+							String deployConfigExtId = WS_RF_CreateUserArtifactExtId("DEPLOYMENT_CONFIG", null, managedProjectName, null, null, selectedEnvironment);
+							WS_C_DeploymentConfig dc = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(deployConfigExtId, false, "/WebStudio/Core/Concepts/Lifecycle/WS_C_DeploymentConfig");
+							if (dc != null) {
+								Log.log(LOGGER, "Debug", "Deployment Config for enviroment[%s] found !!", selectedEnvironment);
+								if (dc.enabled) {					
+									Log.log(LOGGER, "Debug", "JMX details to be used of invocation Host[%s], Port[%s] with User[%s]", dc.host, dc.port, dc.userName);
+								
+									if (dc.host == null || dc.port == 0) {
+										statusCode = -1;
+										statusMessage = "Host/port for hot deployment not specified. Set host/port for deployment config '" + selectedEnvironment + "'.";
+									} else {								
+										if (artifactType == "ruletemplateinstance") {
+											String agentName = dc.agentName;
+											if (agentName == null || String.equals(agentName, "")) {
+												statusCode = -1;
+												statusMessage = "Agent name for hot deployment not specified. Set agent name for deployment config '" + selectedEnvironment + "'.";
+											} else {
+												try {
+													String rtiFilePath = baseDestinationPath + parentUserArtifact.artifactPath + "." + parentUserArtifact.artifactFileExtn;
+													if (dc.enabled) {
+														if (!File.fileExists(rtiFilePath)) {
+															deployStatus = null;
+															statusCode = -1;
+															statusMessage = String.format("Artifact[%s] not found for deployment or has been already undeployed.", parentUserArtifact.artifactPath);
+														} else {
+															// Deploy if operation is not Delete, else undeploy
+															if (!(lastOperationPerformed instanceof WS_C_DeleteOperation)) {
+																WS.JMX.loadAndDeployRTISecurely(dc.host, dc.port, dc.userName, dc.password, dc.agentName, managedProjectName, parentUserArtifact.artifactPath, dc.inMemory);
+															} else {
+																WS.JMX.unDeployRTISecurely(dc.host, dc.port, dc.userName, dc.password, dc.agentName, managedProjectName, parentUserArtifact.artifactPath, dc.inMemory);
+															}
+														}
+													}
+												} catch(Exception e) {
+													deployStatus = null;
+													statusCode = -1;
+													statusMessage = e@message;
+												}
+											}
+										} else if (artifactType == "rulefunctionimpl") {
+											String clusterName = dc.clusterName;
+											if ((clusterName == null || String.equals(clusterName, "")) && !dc.inMemory) {
+												statusCode = -1;
+												statusMessage = "Cluster name for hot deployment not specified. Set cluster name for deployment config '" + selectedEnvironment + "'.";
+											} else {
+												try {
+													// check if ear if generatd
+													if (earDeployableState == null) {
+														earDeployableState = Instance.getByExtIdByUri("Deploy@" + managedProjectName, "/Approval/Concepts/ArtifactsConcepts/AMS_C_DeployableState");
+													}
+													if (earDeployableState == null) {
+														Log.log(LOGGER, "Debug", "DeployableState is null");
+														statusCode = -1;
+														statusMessage = String.format("Generate ear for project %s.", managedProjectName);
+														Log.log(LOGGER, "Debug", statusMessage);
+														
+													} else if (earDeployableState.dirty) { //If it is dirty, the ear would need to be generated
+														statusCode = -1;
+														statusMessage = String.format("Ear for project %s not in sync, regenerate ear.", managedProjectName);
+														Log.log(LOGGER, "Debug", "DeployableState is dirty. %s", statusMessage);
+														
+													} else {
+														// get the base VRF Name
+														String baseVRFName = parentUserArtifact.baseArtifactPath;
+														if (baseVRFName != null && String.contains(baseVRFName, ".")) {
+															baseVRFName = String.substringBefore(baseVRFName, ".");
+														}
+														if (baseVRFName == null || baseVRFName == "") {
+															baseVRFName = WS_RF_GetImplementsPath(loggedInUsername, managedProjectName, parentUserArtifact.artifactPath, parentUserArtifact.artifactFileExtn, scsRootURL);								
+														}
+														String dtName = parentUserArtifact.artifactPath;
+														int lastSeparatorIndex = String.lastIndexOfString(parentUserArtifact.artifactPath, 0, "/");
+														if (lastSeparatorIndex > -1) {
+															dtName = String.substring(dtName, lastSeparatorIndex + 1, dtName@length);
+														}
+														
+														if (dc.enabled) {	
+															if (!File.fileExists(baseVRFFolder)) {
+																deployStatus = null;
+																statusCode = -1;
+																statusMessage = String.format("Artifact[%s] not found for deployment or has been already undeployed.", parentUserArtifact.artifactPath);
+															} else {
+																// Deploy if operation is not Delete, else undeploy
+																if (!(lastOperationPerformed instanceof WS_C_DeleteOperation)) {
+																	WS.JMX.loadAndDeployVRFSecurely(dc.host, dc.port, dc.userName, dc.password, dc.clusterName, baseVRFName, dtName, dc.inMemory);
+																} else {
+																	WS.JMX.unDeployVRFSecurely(dc.host, dc.port, dc.userName, dc.password, dc.clusterName, baseVRFName, dtName, dc.inMemory);
+																}
+															}
+														}
+													}
+												} catch(Exception e) {
+													deployStatus = null;
+													statusCode = -1;
+													statusMessage = e@message;
+												}
+											}
+										}
+									}
+								}
+							} else {
+								Log.log(LOGGER, "Debug", "Deployment Config for enviroment[%s] not found !!", selectedEnvironment);
+								statusCode = -1;
+								statusMessage = "No Deployment configuration found for environment '" + selectedEnvironment + "' for project '" + managedProjectName + "'";
+							}
+							
+							// if there are issues with the first iteration itself no point in traversing further
+							if (statusCode == -1) break;
+						}
+						
+						// makes sense to do shared location cleanup only once for all environments
+						if ((lastOperationPerformed instanceof WS_C_DeleteOperation) && statusCode == 0) {
+							if (artifactType == "ruletemplateinstance") {
+								deployStatus = WS_RF_DeployRuleTemplateInstance(scsRootURL, sharedLocation, managedProjectName, lastOperationPerformed, parentUserArtifact, loggedInUsername);
+							} else if (artifactType == "rulefunctionimpl") {
+								deployStatus = WS_RF_DeployDecisionTable(scsRootURL, sharedLocation, managedProjectName, loggedInUsername, lastOperationPerformed, parentUserArtifact);
+							}
+						}
+						
+						if (committableDeltaEntry != null && statusCode == 0) committableDeltaEntry.lastDeployTime = DateTime.now();
+					}
+				}
+			}
+			
+			if (deployStatus == null) {
+				deployStatus = 
+					Instance.newTransientInstance("/WebStudio/Core/Concepts/Lifecycle/WS_C_ArtifactDeployStatus");
+				deployStatus.statusCode = statusCode;
+				deployStatus.statusMessage = statusMessage;
+			}
+		}
+		return deployStatus;
+	}
+}

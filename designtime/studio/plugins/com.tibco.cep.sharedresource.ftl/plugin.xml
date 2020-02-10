@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+
+   <extension
+         point="org.eclipse.ui.editors">
+      <editor
+            class="com.tibco.cep.sharedresource.ftl.FTLEditor"
+            default="true"
+            extensions="ftl"
+            icon="icons/ftl.gif"
+            id="com.tibco.cep.sharedresource.ftl.FTLEditor"
+            name="FTL Editor">
+      </editor>
+	</extension>
+   <extension
+         point="org.eclipse.ui.newWizards">
+		<category
+	         id="com.tibco.cep.sharedresource.ui.category"
+	         name="TIBCO Shared Resources">
+		</category>
+		<wizard
+	           canFinishEarly="false"
+	           category="com.tibco.cep.sharedresource.ui.category"
+	           class="com.tibco.cep.sharedresource.ui.wizards.NewFTLWizard"
+	           finalPerspective="com.tibco.cep.studio.application.perspective"
+	           icon="icons/ftl.gif"
+	           id="com.tibco.cep.studio.ui.newFTLWizard"
+	           name="FTL Connection">
+	        <description>
+	           Create a new FTL Connection resource
+	        </description>
+		</wizard>
+	</extension>			      
+    <extension
+         point="com.tibco.cep.studio.core.projectResourceValidator">
+      <validator
+            Validator="com.tibco.cep.sharedresource.validation.FTLSharedResourceValidator"
+            extensions="ftl">
+      </validator>
+	</extension>
+    <extension
+         point="com.tibco.cep.studio.core.refactoringParticipant">
+      <refactoringParticipant
+            participant="com.tibco.cep.sharedresource.refactor.FTLRefactoringParticipant">
+      </refactoringParticipant>
+	</extension>
+    <extension
+          point="com.tibco.cep.sharedresource.sharedResourcePropertyProvider">
+       <SharedResource
+             sharedResourcePropertyProvider="com.tibco.cep.sharedresource.ftl.DefaultSharedResourcePropertyProvider"></SharedResource>
+    </extension> 
+
+</plugin>

@@ -1,0 +1,87 @@
+/**
+ * @description 
+ */
+WebStudio.Core.Concepts.DataSources.WS_C_TemporaryReturnData rulefunction WebStudio.Core.RuleFunctions.Actions.WS_RF_DecisionTableAnalyzeAction {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object servletRequest;
+		WebStudio.Security.Authn.Concepts.WS_C_LoggedInUser loggedInUser;
+		String contentType;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.WS_RF_DecisionTableAnalyzeAction");
+
+		String responseMessage = null;
+		String errorCode = null;
+		int recordCount = 1;
+		int responseStatus = 0;
+
+		String projectName = HTTP.Servlet.Request.getRequestParameter(servletRequest, "projectName");
+		String artifactPath = HTTP.Servlet.Request.getRequestParameter(servletRequest, "artifactPath");
+		String artifactExtn = HTTP.Servlet.Request.getRequestParameter(servletRequest, "artifactExtension");
+		String currentPageStr = HTTP.Servlet.Request.getRequestParameter(servletRequest, "currentPage");
+		int currentPageNum = Number.valueOfString(currentPageStr, 10);
+		Log.log(LOGGER, "Debug", "Project Name %s, DT Path %s, Current Page %s", projectName, artifactPath, currentPageNum);
+						
+		WebStudio.Core.Concepts.DataSources.Problems.WS_C_TableAnalyzerProblemsResponse analyzerProblemsResponse = null;		
+		if (!WS_RF_CheckHTTPMethod(servletRequest, "GET")) {
+			responseStatus = -1;
+			recordCount = 0;
+			errorCode = "ERR_5101";
+			responseMessage = "Invalid HTTP Method, expect method is [GET].";
+		} else {
+			String username = loggedInUser.username;			
+			//Get the User roles
+			String[] roles = Instance.PropertyArray.toArrayString(loggedInUser.roles);
+			
+			//Get the Decision Table artifact contents from Users workspace 
+			WS_C_ResponseTransferObjectData fetchedResponseData = WebStudio.Core.RuleFunctions.Utils.WS_RF_GetArtifactContentsFromStore(username, roles, projectName, artifactPath, artifactExtn);			
+			WS_C_AnyArtifactDetails artifactContents = fetchedResponseData.artifactContents;
+			//Create the Decision Table EMF object			
+			Object decisionTableEMFObj = WebStudio.Core.RuleFunctions.Utils.DT.WS_RF_CreateEMFObjectForDecisionTable(artifactContents);
+
+			//Get the rule Ids from the page
+			WebStudio.Core.Concepts.Decision.Pagination.WS_C_DecisionTable decisionTable = artifactContents; 
+			Object ruleIdsList = Collections.List.createArrayList();
+			WebStudio.Core.Concepts.Decision.Pagination.WS_C_TableRuleSet decisionTableRuleSet = Instance.PropertyAtom.getContainedConcept(decisionTable.decisionTable, 1L);
+			String[] tablePageIds = Instance.PropertyArray.toArrayString(decisionTableRuleSet.tablePageIds);
+			WebStudio.Core.Concepts.Decision.Pagination.WS_C_TablePage decisionTablePage = Instance.getByExtIdByUri(tablePageIds[currentPageNum - 1], "/WebStudio/Core/Concepts/Decision/Pagination/WS_C_TablePage");
+			WebStudio.Core.Concepts.Decision.Pagination.WS_C_TableRule[] tableRulesArray = Instance.PropertyArray.toArrayContainedConcept(decisionTablePage.tableRule);
+			for (int j = 0; j < tableRulesArray@length; j++) {
+				WebStudio.Core.Concepts.Decision.Pagination.WS_C_TableRule tableRule = tableRulesArray[j];
+				String ruleIdStr = String.valueOfLong(tableRule.ruleId);
+				Collections.add(ruleIdsList, ruleIdStr);
+			}
+			
+			WebStudio.Core.Concepts.Decision.Pagination.WS_C_TableRule[] newTableRulesArray = Instance.PropertyArray.toArrayConcept(decisionTablePage.newTableRule);
+			for (int j = 0; j < newTableRulesArray@length; j++) {
+				WebStudio.Core.Concepts.Decision.Pagination.WS_C_TableRule tableRule = newTableRulesArray[j];
+				String ruleIdStr = String.valueOfLong(tableRule.ruleId);
+				Collections.add(ruleIdsList, ruleIdStr);	
+			}
+			
+			Object[] problemEvents = {};
+			if (Collections.size(ruleIdsList) > 0) {
+				Object[] ruleIds = Collections.toArray(ruleIdsList);
+				//Analyze the Decision Table for a subset of rules (.i.e current page)
+				problemEvents = WS.Decision.TableAnalyzer.analyze(decisionTableEMFObj, ruleIds);			
+			}
+	
+			//Build the TableAnalyzer response concept
+			analyzerProblemsResponse = WS_RF_BuildDecisionTableAnalyzerResponse(projectName, artifactPath, problemEvents, currentPageStr);						
+		}
+		
+		String responseDSXML = WebStudio.
+								Core.
+									RuleFunctions.
+										Utils.DT.Analyzer.
+											WS_RF_BuildDecisionTableAnalyzerResponseDSXML(analyzerProblemsResponse, responseStatus, recordCount, errorCode, responseMessage, contentType);
+		
+		WS_C_TemporaryReturnData tempReturnData = WS_RF_CreateTemporaryReturnData(responseStatus, recordCount, errorCode, responseMessage, null);
+		tempReturnData.serializedData = responseDSXML;
+		
+		return tempReturnData;				
+	}
+}

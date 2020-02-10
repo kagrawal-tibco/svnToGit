@@ -1,0 +1,601 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas 
+	xmlns:mx="http://www.adobe.com/2006/mxml"
+	xmlns:view="com.tibco.be.views.user.components.processmodel.view.*"
+	xmlns:buttons="com.tibco.be.views.ui.buttons.*"
+	implements="com.tibco.be.views.user.components.processmodel.IPMEdgeContainer, com.tibco.be.views.core.ui.actions.IActionContextProvider"
+>
+	<mx:Script>
+		<![CDATA[
+			import com.tibco.be.views.utils.BEVUtils;
+			import com.tibco.be.views.user.components.processmodel.event.PMNodeClickEvent;
+			import com.tibco.be.views.user.components.chart.DataColumn;
+			import com.tibco.be.views.user.actions.LaunchExternalLinkAction;
+			import com.tibco.be.views.core.events.EventBus;
+			import com.tibco.be.views.core.events.logging.DefaultLogEvent;
+			import com.tibco.be.views.core.ui.DynamicParamsResolver;
+			import com.tibco.be.views.core.ui.actions.ActionContext;
+			import com.tibco.be.views.core.ui.controls.BEVIconMenuButton;
+			import com.tibco.be.views.core.ui.dashboard.BEVComponent;
+			import com.tibco.be.views.ui.shapes.LEDIndicator;
+			import com.tibco.be.views.user.components.processmodel.BEVProcessModelComponent;
+			import com.tibco.be.views.user.components.processmodel.IPMEdgeContainer;
+			import com.tibco.be.views.user.components.processmodel.PMUtils;
+			import com.tibco.be.views.user.components.processmodel.model.PMConfigProvider;
+			import com.tibco.be.views.user.components.processmodel.model.PMNodeConfig;
+			import com.tibco.be.views.user.dashboard.BEVChartComponentHolder;
+			import com.tibco.be.views.user.utils.UserUtils;
+			import com.tibco.be.views.utils.Logger;
+			
+			import mx.core.UIComponent;
+			import mx.controls.Label;
+			import mx.events.EffectEvent;
+			import mx.events.FlexEvent;
+			import mx.effects.Fade;
+			import mx.effects.Effect;
+			import mx.effects.Resize;
+			import mx.effects.Move;
+			import mx.effects.Parallel;
+			
+			public static const DATA_ITEM_CLICK_EVENT:String = "dataItemClicked";
+			
+			private static const HEADER_HEIGHT:int = 15;
+			private static const H_PAD:int = 2;
+			private static const V_PAD:int = HEADER_HEIGHT + 3;
+			private static const FAKE_FILTERS:Array = [new BlurFilter(0,0)]; //to avoid embedded fonts
+			
+			[Bindable]
+			protected var _title:String;
+			
+			protected var _config:PMNodeConfig;
+			protected var _menuButton:BEVIconMenuButton;
+			protected var _textContent:Label;
+			protected var _progressContent:PMNodeProgressBar;
+			protected var _indicator:LEDIndicator;
+			protected var _contentId:String;
+			protected var _indicatorId:String;
+			protected var _contentMap:Dictionary = new Dictionary();
+			protected var _edges:Array = new Array();
+			protected var _absoluteX:int;
+			protected var _absoluteY:int;
+			
+			private var _contentDefaultFontColor:uint;
+			private var _contentDefaultFontStyle:String;
+			
+			override public function get id():String{ return _config == null ? null:_config.id; }
+			
+			public function get config():PMNodeConfig{ return _config == null ? null:_config; }
+			public function get title():String{ return _config == null ? null:_config.title; }
+			public function get edges():Array{ return _edges; }
+			public function get absoluteX():int{ return _absoluteX; }
+			public function get absoluteY():int{ return _absoluteY; }
+			
+			public function get isExpanded():Boolean{ return btn_ExpandCollapse.expanded; }
+			public function get parentPMContainer():IPMEdgeContainer{
+				if(parent is PMNodeContentHolder){
+					return parent.parent as IPMEdgeContainer;
+				}
+				return parent as IPMEdgeContainer;
+			}
+			public function get parentPMComponent():BEVProcessModelComponent{
+				var component:DisplayObject = parent;
+				while(component != null && !(component is BEVProcessModelComponent)){
+					component = component.parent;
+				}
+				return component as BEVProcessModelComponent;
+			}
+			
+			public function set edges(value:Array):void{ _edges = value; }
+			
+			public function setConfig(nodeConfig:PMNodeConfig, parentContainer:IPMEdgeContainer):void{
+				_config = nodeConfig;
+				if(_config == null){
+					Logger.log(DefaultLogEvent.WARNING, "PMNode.config (set) - null config.");
+					return;
+				}
+				_absoluteX = _config.x;
+				_absoluteY = _config.y;
+				if(parentContainer != null){
+					x = _absoluteX - parentContainer.absoluteX;
+					y = _absoluteY - parentContainer.absoluteY;
+				}
+				else{
+					Logger.log(DefaultLogEvent.WARNING, "PMNode.setConfig - PMNode has null parent PM continer.");
+				}
+				width = _config.width;
+				height = _config.height;
+				
+				_title = _config.title;
+				createMenu(_config.actionConfig);
+				for each(var colXML:XML in _config.columnConfig){
+					switch(String(colXML.@type)){
+						case("text"):
+							createTextContent(colXML);
+							break;
+						case("indicator"):
+							createIndicator(colXML);
+							break;
+						case("progress"):
+							createProgressContent(colXML);
+							break;
+						default:
+							break;
+					}
+				}
+				if(headerBar == null){
+					addEventListener(FlexEvent.CREATION_COMPLETE, handleViewCreationComplete);
+				}
+				else{
+					handleViewCreationComplete(null);
+				}
+			}
+			
+			override protected function updateDisplayList(unscaledWidth:Number, unscaledHeight:Number):void{
+				draw(unscaledWidth, unscaledHeight);
+				lbl_Title.width = unscaledWidth - LEDIndicator.SIZE - BEVIconMenuButton.SIZE;
+				if(config.expandable){
+					lbl_Title.width = lbl_Title.width - 5 - ExpandCollapseButton.SIZE;
+				}
+				else{
+					lbl_Title.width = lbl_Title.width - 2;
+				}
+				super.updateDisplayList(unscaledWidth, unscaledHeight);
+			}
+			
+			override public function addChild(child:DisplayObject):DisplayObject{
+				if(child is PMNode || child is PMEdge){
+					if(child is PMNode){
+						child.x -= content.x;
+						child.y -= content.y;
+					}
+					else if(child is PMEdge){
+						(child as PMEdge).adjustTo(content);
+					}
+					return content.addChild(child);
+				}
+				return super.addChild(child);
+			}
+			
+			public function draw(w:int, h:int):void{
+				graphics.clear();
+				graphics.lineStyle();
+				graphics.beginFill(0xB9B9B9,1); 
+				graphics.drawRect(0, 0, w, h);
+				graphics.endFill();
+			}
+			
+			private function buildID(configXML:XML):String{
+				var id:String = "";
+				var parent:XML = configXML;
+				while(parent != null && parent.name() == "activityconfig"){
+					id = parent.@id + "/" + id;
+					parent = parent.parent().parent() as XML;
+				}
+				return id.substr(0,id.length-1);
+			}
+			
+			private function handleViewCreationComplete(event:FlexEvent):void{
+				filters = [getDropShadow()];
+				if(_menuButton != null){
+					_menuButton.x = headerBar.width - BEVIconMenuButton.SIZE;
+					if(_indicator != null){ _menuButton.x -= (LEDIndicator.SIZE + 1); }
+					headerBar.addChild(_menuButton);
+				}
+				if(_indicator != null){
+					_indicator.x = headerBar.width - 10;
+					headerBar.addChild(_indicator);
+				}
+				lbl_Title.x = 2;
+				if(config.expandable){ lbl_Title.x = 5 + ExpandCollapseButton.SIZE; }
+				lbl_Title.y = -1;
+				lbl_Title.height = 19;
+				
+				addEventListener(Event.REMOVED_FROM_STAGE, handleViewRemoved);
+				btn_ExpandCollapse.visible = _config.expandable;
+				btn_ExpandCollapse.addEventListener(ExpandCollapseButton.EXPANSION_TOGGLE_EVENT, handleExpansionToggle);
+			}
+			
+			public function setData(dataXML:XML):void{
+				//set assumes clearing of existing data
+				addDataContent(box_NoData);
+				resetIndicator();
+				if(dataXML == null || dataXML.datacolumn == undefined || dataXML.datacolumn.length() == 0){
+					Logger.log(DefaultLogEvent.DEBUG, BEVUtils.getClassName(this) + ".setData - set empty or invalid data.");
+					invalidateDisplayList();
+					return;
+				}
+				for each(var contentData:XML in dataXML.datacolumn){
+					var contentId:String = new String(contentData.@id);
+					var contentItem:UIComponent = _contentMap[contentId];
+					if(contentItem is LEDIndicator){
+						_indicatorId = contentId;
+						updateIndicator(contentData);
+					}
+					else{
+						_contentId = contentId;
+					}
+					if(!isExpanded){ //model will have data to use once this node is collapsed
+						if(contentItem is PMNodeProgressBar){
+							updateProgressContent(contentData);
+							addDataContent(_progressContent);
+						}
+						else if(contentItem is Label){
+							updateTextContent(contentData);
+							addDataContent(_textContent);
+						}
+					}
+				}
+				invalidateDisplayList();
+			}
+			
+			public function addEdge(edge:PMEdge):void{
+				if(edge == null){ return; }
+				_edges.push(edge);
+				addChild(edge);
+			}
+			
+			protected function createIndicator(configXML:XML):void{
+				if(_indicator != null && headerBar.contains(_indicator)){
+					headerBar.removeChild(_indicator);
+					removeFromContentMap(_indicator);
+				} 
+				_indicator = new LEDIndicator();
+				_indicator.y = HEADER_HEIGHT/2 - LEDIndicator.SIZE/2;
+				_indicator.addEventListener(MouseEvent.CLICK, handleIndicatorClick);
+				
+				addToContentMap(new String(configXML.@id), _indicator);
+			}
+			
+			protected function updateIndicator(dataXML:XML):void{
+				if(_indicator == null){ return; }
+				var color:uint = 0xAAAAAA;
+				var dataColumn:DataColumn = new DataColumn(dataXML);
+				//-1 means none , -2 means blank (we cannot support blank right now - Anand 2/11/2011)
+				if(dataColumn.fillColors != null){
+					var baseColor:Number = dataColumn.fillColors.baseColor as Number;
+					if(baseColor != DataColumn.COLOR_NONE){
+						color = baseColor;
+					}
+				}
+				_indicator.color = color;
+				
+				_indicator.toolTip = new String(dataColumn.tooltip);
+				
+				var showHand:Boolean = dataColumn.link != null;
+				_indicator.useHandCursor = showHand;
+				_indicator.buttonMode = showHand;
+								
+				_indicator.invalidateDisplayList();
+			}
+			
+			protected function resetIndicator():void{
+				if(_indicator == null){ return; }
+				_indicator.color = 0xAAAAAA;
+				_indicator.toolTip = null;
+				_indicator.useHandCursor = false;
+				_indicator.buttonMode = false;
+				_indicator.invalidateDisplayList();
+			}
+			
+			protected function createTextContent(configXML:XML):void{
+				removeFromContentMap(_textContent);
+				
+				_textContent = new Label();
+				_textContent.filters = [new BlurFilter(0,0)]; //trick to avoid embedded fonts
+				_textContent.setStyle("horizontalCenter", 0);
+				_textContent.setStyle("verticalCenter", 0);
+				
+				var fontSize:int = parseInt(configXML.@fontsize);
+				if(isNaN(fontSize) || fontSize == 0){ fontSize = 10; }
+				_textContent.setStyle("fontSize", fontSize);
+				
+				_contentDefaultFontColor = parseInt(configXML.@fontcolor, 16);
+				if(isNaN(_contentDefaultFontColor)){ _contentDefaultFontColor = 0x000000; }
+				_textContent.setStyle("color", _contentDefaultFontColor);
+				
+				_contentDefaultFontStyle = configXML.@fontstyle;
+				if(_contentDefaultFontStyle.indexOf("italic") >= 0){ _textContent.setStyle("fontStyle", "italic"); }
+				if(_contentDefaultFontStyle.indexOf("bold") >= 0){ _textContent.setStyle("fontWeight", "bold"); }
+
+				_textContent.addEventListener(MouseEvent.CLICK, handleContentClick);
+				
+				addToContentMap(new String(configXML.@id), _textContent);
+				//addChild done on set data
+			}
+			
+			protected function updateTextContent(dataXML:XML):void{
+				if(_textContent == null){ return; }
+				var dataColumn:DataColumn = new DataColumn(dataXML);
+				_textContent.text = dataColumn.displayValue;
+				_textContent.toolTip = dataColumn.tooltip;
+				
+				//update the font color
+				var fontColor:uint = dataColumn.fontColor == DataColumn.COLOR_NONE ? _contentDefaultFontColor : dataColumn.fontColor;
+				_textContent.setStyle("color", fontColor);
+				
+				//update the font style 	
+				var fontStyle:String = dataColumn.fontStyle == null ? _contentDefaultFontStyle : dataColumn.fontStyle;
+				if(fontStyle.indexOf("italic") >= 0){ 
+					_textContent.setStyle("fontStyle", "italic"); 
+				}
+				else{
+					_textContent.setStyle("fontStyle", "normal");
+				}
+				if(fontStyle.indexOf("bold") >= 0){ 
+					_textContent.setStyle("fontWeight", "bold"); 
+				}
+				else{
+					_textContent.setStyle("fontWeight", "normal");
+				}
+				
+				//update the fill colors
+				if(dataColumn.fillColors != null && dataColumn.fillColors.baseColor != null){
+					content.updateColors(PMNodeContentHolder.DEFAULT_TOP_GRADIENT_COLOR,dataColumn.fillColors.baseColor);	
+				}
+				else{
+					content.resetColors();
+				}
+				
+				var showHand:Boolean = dataColumn.link != null;
+				_textContent.useHandCursor = showHand;
+				_textContent.buttonMode = showHand;
+				_textContent.mouseChildren = !showHand;
+				
+			}
+			
+			protected function createProgressContent(configXML:XML):void{
+				removeFromContentMap(_progressContent);
+				
+				_progressContent = new PMNodeProgressBar();
+				
+				var fontSize:int = parseInt(configXML.@fontsize);
+				if(isNaN(fontSize) || fontSize == 0){ fontSize = 9; }
+				_progressContent.setStyle("fontSize", fontSize);
+				
+				_contentDefaultFontColor = parseInt(configXML.@fontcolor, 16);
+				if(isNaN(_contentDefaultFontColor)){ _contentDefaultFontColor = 0x000000; }
+				_progressContent.setStyle("color", _contentDefaultFontColor);
+				
+				_contentDefaultFontStyle = configXML.@fontstyle;
+				if(_contentDefaultFontStyle.indexOf("italic") >= 0){ _progressContent.setStyle("fontStyle", "italic"); }
+				if(_contentDefaultFontStyle.indexOf("bold") >= 0){ _progressContent.setStyle("fontWeight", "bold"); }	
+							
+				//**Ignoring typespecificattributes as they're not set in studio.
+				
+				_progressContent.addEventListener(MouseEvent.CLICK, handleContentClick);
+
+				addToContentMap(new String(configXML.@id), _progressContent);
+				//addChild done on set data
+			}
+			
+			protected function updateProgressContent(dataXML:XML):void{
+				if(_progressContent == null){ return; }
+				var dataColumn:DataColumn = new DataColumn(dataXML);
+				
+				_progressContent.setProgress(dataColumn.value, 100);
+				
+				_progressContent.label = dataColumn.displayValue;
+				_progressContent.toolTip = dataColumn.tooltip;
+				
+				//update the font color
+				var fontColor:uint = dataColumn.fontColor == DataColumn.COLOR_NONE ? _contentDefaultFontColor : dataColumn.fontColor;
+				_progressContent.setStyle("color", fontColor);
+				
+				//update the font style 	
+				var fontStyle:String = dataColumn.fontStyle == null ? _contentDefaultFontStyle : dataColumn.fontStyle;
+				if(fontStyle.indexOf("italic") >= 0){ 
+					_progressContent.setStyle("fontStyle", "italic"); 
+				}
+				else{
+					_progressContent.setStyle("fontStyle", "normal");
+				}
+				if(fontStyle.indexOf("bold") >= 0){ 
+					_progressContent.setStyle("fontWeight", "bold"); 
+				}
+				else{
+					_progressContent.setStyle("fontWeight", "normal");
+				}
+				
+				if(dataColumn.fillColors != null && dataColumn.fillColors.baseColor != null){
+					_progressContent.setStyle("themeColor", dataColumn.fillColors.baseColor as Number);
+				}
+				
+				var showHand:Boolean = dataColumn.link != null;
+				_progressContent.useHandCursor = showHand;
+				_progressContent.buttonMode = showHand;
+				_progressContent.mouseChildren = !showHand;
+			}
+			
+			protected function addDataContent(contentItem:UIComponent):void{
+				if(isExpanded){ return; }
+				if(!content.contains(contentItem)){
+					content.removeAllChildren();
+					content.addChild(contentItem);
+				}
+			}
+			
+			protected function handleIndicatorClick(event:MouseEvent):void{
+				_config.setDataActionMode(PMNodeConfig.INDICATOR_DATA_ACTION_MODE);
+				var pmNodeEvent:PMNodeClickEvent = new PMNodeClickEvent(_indicatorId, event);
+				dispatchEvent(pmNodeEvent);
+			}
+			
+			protected function handleContentClick(event:MouseEvent):void{
+				_config.setDataActionMode(PMNodeConfig.CONTENT_DATA_ACTION_MODE);
+				var pmNodeEvent:PMNodeClickEvent = new PMNodeClickEvent(_contentId, event);
+				dispatchEvent(pmNodeEvent);;
+			}
+			
+			protected function createMenu(menuConfig:XML):void{
+				_menuButton = new BEVIconMenuButton(this);
+				//_menuButton.visible = false;
+				_menuButton.styleName = "processModelMenu";
+				if(menuConfig != null && menuConfig.actionconfig.length() > 0){
+					_menuButton.menuConfig = menuConfig[0];
+					_menuButton.visible = true;
+				}
+				else{
+					//_menuButton.visible = false;	
+				}
+			}
+		
+			protected function addToContentMap(key:String, o:Object):void{
+				_contentMap[key] = o;
+				_contentMap[o] = key;
+			}
+			
+			protected function removeFromContentMap(o:Object):void{
+				if(_contentMap[o] == undefined){ return; }
+				var key:String = _contentMap[o];
+				delete _contentMap[key];
+				delete _contentMap[o];
+			}
+			
+			protected function getDropShadow():BitmapFilter{
+	            return new DropShadowFilter(1, 45, 0x0, 0.8, 0, 0, 0.65, BitmapFilterQuality.HIGH, false, false);
+			}
+			
+			public function buildClearEffects(effects:Parallel):void{
+				//fade out all content children
+				for each(var obj:UIComponent in content.getChildren()){
+					var fadeOut:Fade = PMUtils.buildDefaultFadeOut(obj);
+					fadeOut.addEventListener(EffectEvent.EFFECT_END, removeEffectComponent);
+					effects.addChild(fadeOut);
+				}
+			}
+			
+			public function buildUpdateEffects(newConfig:PMNodeConfig, effects:Parallel):void{
+				if(x != newConfig.x || y != newConfig.y){
+					var move:Move = new Move(this);
+					_absoluteX = newConfig.x;
+					_absoluteY = newConfig.y;
+					if(parentPMContainer != null){
+						move.xTo = _absoluteX - parentPMContainer.absoluteX - parent.x;
+						move.yTo = _absoluteY - parentPMContainer.absoluteY - parent.y;
+					}
+					else{
+						Logger.log(DefaultLogEvent.WARNING, "PMNode.buildUpdateEffects - PMNode has null parent PM continer.");
+					}
+					effects.addChild(move);
+				}
+				if(width != newConfig.width || height != newConfig.height){
+					var resize:Resize = new Resize(this);
+					resize.widthTo = newConfig.width;
+					resize.heightTo = newConfig.height;
+					effects.addChild(resize);
+					if(_indicator != null){
+						var indicatorMove:Move = new Move(_indicator);
+						indicatorMove.xTo = newConfig.width-H_PAD-10;
+						effects.addChild(indicatorMove);
+					}
+					if(_menuButton != null){
+						var menuMove:Move = new Move(_menuButton);
+						menuMove.xTo = newConfig.width - BEVIconMenuButton.SIZE - (_indicator == null ? 0:LEDIndicator.SIZE+3);
+						effects.addChild(menuMove);
+					}
+				}
+			}
+			
+			public function buildChildrenEffects(effects:Parallel, currentData:XML=null):void{
+				//expansion shows child node graph
+				if(isExpanded){
+					//fade in all content children
+					for each(var obj:UIComponent in content.getChildren()){
+						effects.addChild(PMUtils.buildDefaultFadeIn(obj));
+					}
+					return;
+				}
+				//collapse shows data content which may have changed while hidden, so update it if need be
+				var contentPresent:Boolean = false; //flags need to add "No Data" in content
+				if(currentData != null){
+					for each(var contentData:XML in currentData.datacolumn){
+						var contentItem:UIComponent = _contentMap[String(contentData.@id)];
+						if(contentItem == _indicator){
+							//indicator should be up to date as it still updates while node is expanded
+							continue;
+						}
+						if(contentItem is LEDIndicator){
+							Logger.log(DefaultLogEvent.DEBUG, "PMNode.buildChildrenEffects - Unknown Inidcator in Children");
+						}
+						contentItem.alpha = 0;
+						var fadeIn:Fade = PMUtils.buildDefaultFadeIn(contentItem);
+						if(contentItem == _progressContent){
+							updateProgressContent(contentData);
+							fadeIn.addEventListener(EffectEvent.EFFECT_START, function():void{
+								content.addChild(contentItem);
+							});
+						}
+						else if(contentItem == _textContent){
+							updateTextContent(contentData);
+							content.addChild(contentItem);
+						}
+						effects.addChild(fadeIn);
+						contentPresent = true; //note this will not happen if currentData.datacolumn only has indicator data
+					}
+				}
+				if(!contentPresent){
+					box_NoData.alpha = 0.0;
+					content.addChild(box_NoData);
+					effects.addChild(PMUtils.buildDefaultFadeIn(box_NoData));
+				}
+			}
+			
+			public function removeEffectComponent(event:EffectEvent):void{
+				//event.target is the effect .target is the component
+				try{
+					if(contains(event.target.target)){
+						content.removeChild(event.target.target);
+					}
+				}
+				catch(error:Error){
+					Logger.log(DefaultLogEvent.WARNING, "PMNode.removeEffectComponent - " + error.message);
+				}
+			}
+			
+			protected function handleExpansionToggle(event:MouseEvent):void{
+				content.expanded = btn_ExpandCollapse.expanded;
+			}
+			
+			protected function handleViewRemoved(event:Event):void{
+				removeEventListener(Event.REMOVED_FROM_STAGE, handleViewRemoved);
+			}
+			
+			public function addExpandCollapseListener(listener:Function):void{
+				btn_ExpandCollapse.addEventListener(ExpandCollapseButton.EXPANSION_TOGGLE_EVENT, listener);
+			}
+			
+			public function removeExpandCollapseListener(listener:Function):void{
+				btn_ExpandCollapse.removeEventListener(ExpandCollapseButton.EXPANSION_TOGGLE_EVENT, listener);
+			}
+			
+			public function getActionContext(parentActionConfig:XML, actionConfig:XML):ActionContext{
+				var resolvingMap:DynamicParamsResolver = new DynamicParamsResolver();
+				var component:BEVComponent = parentPMComponent;
+				if(component != null){ 
+				 	var seriesID:String = new String(actionConfig.param.(@name=="seriesid")[0]);
+				 	resolvingMap.setDynamicParamValue(DynamicParamsResolver.CURRENTPANEL_ID_PARAM, component.componentContainer.containerId);
+				 	resolvingMap.setDynamicParamValue(DynamicParamsResolver.CURRENTPAGE_ID_PARAM, UserUtils.getParentDashboard(component.componentContainer).containerId);
+				 	resolvingMap.setDynamicParamValue(DynamicParamsResolver.CURRENTCOMPONENT_ID_PARAM, component.componentId);
+				 	resolvingMap.setDynamicParamValue(DynamicParamsResolver.CURRENTCOMPONENT_TITLE_PARAM, component.componentTitle);
+				 	resolvingMap.setDynamicParamValue(DynamicParamsResolver.CURRENTCOMPONENT_HELP_PARAM, component.componentHelp);
+				 	resolvingMap.setDynamicParamValue(DynamicParamsResolver.CURRENTSERIES_ID_PARAM, seriesID == "null" ? "":seriesID);
+				}
+				else{
+					Logger.log(DefaultLogEvent.WARNING, "PMNode.getActionContext - Could not resolve parent Process Model Component");
+					return new ActionContext(this, resolvingMap);
+				}
+			 	return new ActionContext(component, resolvingMap);
+			}
+			
+		]]>
+	</mx:Script>
+	<view:PMNodeHeaderBar id="headerBar" x="1" y="1" width="{width-H_PAD}" height="{HEADER_HEIGHT}">
+		<buttons:ExpandCollapseButton id="btn_ExpandCollapse" x="2" y="{HEADER_HEIGHT/2-ExpandCollapseButton.SIZE/2}"/>
+		<mx:Label id="lbl_Title" text="{_title}" styleName="processModelTitle" truncateToFit="true"/>
+	</view:PMNodeHeaderBar>
+	<view:PMNodeContentHolder id="content" x="1" y="17" width="{width-H_PAD}" height="{height-V_PAD}" borderStyle="none" >
+		<mx:Box id="box_NoData" filters="{FAKE_FILTERS}" horizontalCenter="0" verticalCenter="0">
+			<mx:Label text="No Data" fontFamily="Arial" fontSize="10"/>
+		</mx:Box>
+	</view:PMNodeContentHolder>
+</mx:Canvas>

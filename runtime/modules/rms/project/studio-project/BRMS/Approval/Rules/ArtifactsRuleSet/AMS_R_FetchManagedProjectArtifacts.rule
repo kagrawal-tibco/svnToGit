@@ -1,0 +1,103 @@
+/**
+ * @description Fetch artifacts for managed project from WS-SCS.
+ * @author aathalye-T410
+ */
+rule Approval.Rules.ArtifactsRuleSet.AMS_R_FetchManagedProjectArtifacts {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Approval.Events.ArtifactEvents.Checkout.AMS_E_RetrieveArtifactNamesRequestEvent ams_e_retrieveartifactnamesrequestevent;
+	}
+	when {
+		ams_e_retrieveartifactnamesrequestevent.projectname != null;
+	}
+	then {
+		Object LOGGER = Log.getLogger("Approval.Rules.ArtifactsRuleSet.AMS_R_FetchManagedProjectArtifacts");
+		
+		String projectName = ams_e_retrieveartifactnamesrequestevent.projectname;
+		
+		String scsRootURL = ams_e_retrieveartifactnamesrequestevent.scsRootURL;
+		String scsIntegrationType = ams_e_retrieveartifactnamesrequestevent.scsIntegrationClass;
+		String filterClass = ams_e_retrieveartifactnamesrequestevent.filterClass;
+		String username = ams_e_retrieveartifactnamesrequestevent.loggedInUserName;
+		
+		Object artifactNamesStack = WS.Common.Stack.create("ARTIFACt_NAMES");
+		WS.Common.Stack.clear(artifactNamesStack);
+
+		AMS_C_LoggedInUser loggedInUser = Instance.getByExtIdByUri(username, "/AAA/Concepts/AMS_C_LoggedInUser");
+
+		if (loggedInUser != null) {
+			//Get all roles of logged in user
+			String[] roles = Instance.PropertyArray.toArrayString(loggedInUser.roles);	
+			boolean isDecisionManagerClient = ams_e_retrieveartifactnamesrequestevent.isDecisionManagerClient;
+			Log.log(LOGGER, "Info", "Is Stand alone DM client %s ", isDecisionManagerClient);
+			
+			// fetch the preferences for SCS userName/password details
+			String[] scsCredentials = WS_RF_GetSCSCredentials(username);
+		
+			//Execute script
+			String output = WS.SCS.listManagedProjectArtifacts(scsIntegrationType, scsRootURL, projectName, null, scsCredentials[0], scsCredentials[1], filterClass, null); 
+			Log.log(LOGGER, "Debug", "XML output %s", output);
+			
+			// fetch the list of supported artifact types
+			WS_C_SupportedArtifactTypesConfig supportedArtifactsConfig = Cluster.DataGrid.CacheLoadConceptByExtIdByUri("WS_SUPP_ARTIFACTS_CFG", false, "/WebStudio/Core/Concepts/WS_C_SupportedArtifactTypesConfig");
+			String[] artifactTypesSupported = Instance.PropertyArray.toArrayString(supportedArtifactsConfig.artifactTypes);
+			
+			String artifactType, artifactPath, artifactFileExtn, artifactImageSrc, EXTENSION;
+			boolean isSupported, hasAccess;
+			// make sure output is not empty
+			if (output != null && !String.equals(output, "")) {
+				//Convert to concept model
+				WS_C_SCSProjectContents scsProjectContents = Instance.createTransientInstanceFromXML("/WebStudio/Core/Concepts/Common/WS_C_SCSProjectContents", output);
+				WS_C_ProjectArtifacts projectArtifacts = scsProjectContents.projectArtifacts;
+				WS_C_Artifact[] artifacts = Instance.PropertyArray.toArrayContainedConcept(projectArtifacts.artifact);
+				Log.log(LOGGER, "Debug", "Project Artifact Size - %s", artifacts@length);
+				
+				WS_C_ProjectArtifactNamesDataSourceRecord projectArtifactDataSourceRecord = null;
+				for (int i = 0; i < artifacts@length; i++) {
+					artifactType = artifacts[i].artifactType;
+			    	artifactPath = artifacts[i].artifactPath;
+			    	artifactFileExtn = artifactType;
+					artifactImageSrc = Util.HashMap.get("ARTIFACT_TYPE_IMAGES", artifactType);
+					if (artifactImageSrc == null) artifactImageSrc = "file.png";
+					
+					EXTENSION = String.toUpperCase(artifactFileExtn);
+					isSupported = WS_RF_IsArtifactTypeSupported(EXTENSION, artifactTypesSupported);						
+					if (isSupported) {						
+						hasAccess = true; 
+						if (isDecisionManagerClient) {
+							hasAccess = RMS.Authorization.ensureAccess(projectName, null, roles, artifactPath, EXTENSION, "read");
+						}	
+		
+						if (hasAccess) {					
+							WS_C_AbstractDataSourceRecord projectArtifactsDataSourceRecord = 
+								Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/Records/WS_C_ProjectArtifactNamesDataSourceRecord");
+							projectArtifactDataSourceRecord = projectArtifactsDataSourceRecord;
+							projectArtifactDataSourceRecord.artifactPath = artifactPath;
+							projectArtifactDataSourceRecord.artifactType = artifactType;
+							projectArtifactDataSourceRecord.fileExtension = artifactFileExtn;
+							projectArtifactDataSourceRecord.imageSrc = artifactImageSrc;
+							projectArtifactDataSourceRecord.no = (i+1) + "";
+							projectArtifactDataSourceRecord.changeType = "Added";
+							
+							WS.Common.Stack.push(artifactNamesStack, projectArtifactDataSourceRecord);
+						}															
+						Log.log(LOGGER, "Debug", "Artifact Details -> [Path:%s] [Type:%s] [Extension:%s] [ImageSrc:%s] [HasAccess:%s]", artifactType, artifactPath, artifactFileExtn, artifactImageSrc, hasAccess);
+					}
+			    }
+			}
+		}
+		    
+	    WS_C_ProjectArtifactNamesDataSourceRecord[] records = 
+	    	WS.Common.Stack.toArray(artifactNamesStack, "be.gen.WebStudio.Core.Concepts.DataSources.Records.WS_C_ProjectArtifactNamesDataSourceRecord", "com.tibco.cep.runtime.service.loader.BEClassLoader");
+	    	
+	    	// can delete now that we are done
+	    	WS.Common.Stack.delete("ARTIFACt_NAMES");
+	    	
+	    AMS_E_RetrieveArtifactNamesResponseEvent responseEvent = 
+	    	Event.createEvent("xslt://{{/Approval/Events/ArtifactEvents/Checkout/AMS_E_RetrieveArtifactNamesResponseEvent}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" xmlns:ns=\"www.tibco.com/be/ontology/WebStudio/Core/Concepts/DataSources/WS_C_ResponseData\" xmlns:ns1=\"www.tibco.com/be/ontology/Approval/Events/ArtifactEvents/Checkout/AMS_E_RetrieveArtifactNamesResponseEvent\" xmlns:ns2=\"www.tibco.com/be/ontology/WebStudio/Core/Concepts/DataSources/Records/WS_C_ProjectArtifactNamesDataSourceRecord\" version=\"2.0\" exclude-result-prefixes=\"xsl ns xsd\"><xsl:output method=\"xml\"/><xsl:param name=\"records\"/><xsl:template name=\"Function\" match=\"/\"><createEvent><event><payload><ns1:ArtifactNames><xsl:for-each select=\"$records/elements\"><ns2:WS_C_ProjectArtifactNamesDataSourceRecord><xsl:if test=\"@extId\"><xsl:attribute name=\"extId\"><xsl:value-of select=\"@extId\"/></xsl:attribute></xsl:if><xsl:if test=\"@Id\"><xsl:attribute name=\"Id\"><xsl:value-of select=\"@Id\"/></xsl:attribute></xsl:if><xsl:if test=\"no\"><no><xsl:value-of select=\"no\"/></no></xsl:if><xsl:if test=\"artifactPath\"><artifactPath><xsl:value-of select=\"artifactPath\"/></artifactPath></xsl:if><xsl:if test=\"artifactType\"><artifactType><xsl:value-of select=\"artifactType\"/></artifactType></xsl:if><xsl:if test=\"fileExtension\"><fileExtension><xsl:value-of select=\"fileExtension\"/></fileExtension></xsl:if><xsl:if test=\"imageSrc\"><imageSrc><xsl:value-of select=\"imageSrc\"/></imageSrc></xsl:if><xsl:if test=\"artifactId\"><artifactId><xsl:value-of select=\"artifactId\"/></artifactId></xsl:if><xsl:if test=\"parentId\"><parentId><xsl:value-of select=\"parentId\"/></parentId></xsl:if><xsl:if test=\"changeType\"><changeType><xsl:value-of select=\"changeType\"/></changeType></xsl:if></ns2:WS_C_ProjectArtifactNamesDataSourceRecord></xsl:for-each></ns1:ArtifactNames></payload></event></createEvent></xsl:template></xsl:stylesheet>");
+	    Event.replyEvent(ams_e_retrieveartifactnamesrequestevent, responseEvent);  
+	}
+}

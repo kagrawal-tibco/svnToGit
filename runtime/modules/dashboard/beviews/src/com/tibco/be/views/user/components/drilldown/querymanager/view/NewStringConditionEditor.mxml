@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ConditionEditor xmlns="com.tibco.be.views.user.components.drilldown.querymanager.view.*" 
+	xmlns:mx="http://www.adobe.com/2006/mxml"
+	xmlns:querymanager="com.tibco.be.views.user.components.drilldown.querymanager.*" 
+	width="100%" height="100%"
+	dropShadowEnabled="false" 
+	paddingLeft="10"
+	paddingTop="10"
+	paddingBottom="10"
+	paddingRight="10"
+	creationPolicy="all"	
+	xmlns:validators="com.tibco.be.views.user.components.drilldown.querymanager.validators.*"
+	creationComplete="handleCreationComplete()"
+	>
+	<mx:Script>
+		<![CDATA[
+			import com.tibco.be.views.user.components.drilldown.querymanager.validators.CustomStringValidator;
+			import mx.events.ValidationResultEvent;
+			import mx.events.FlexEvent;
+			import mx.controls.Text;
+			import mx.collections.ArrayCollection;
+			import com.tibco.be.views.user.components.drilldown.querymanager.events.ConditionUpdatedEvent;
+			
+			private static const NO_PARAMETER_STATE:String = "noParameterState";
+			private static const ONE_PARAMETER_STATE:String = "oneParameterState";
+			
+			private function handleCreationComplete():void{
+				if(_currentOperator == "Is Any" || _currentOperator == "Is Null" || _currentOperator == "Is Not Null"){
+					currentState = NO_PARAMETER_STATE;
+				}
+				else{
+					currentState = ONE_PARAMETER_STATE;
+				}
+			}
+			
+			override public function redraw(operator:String, conditions:ArrayCollection):void{
+				// now show relevant 
+				conditionsCB.selectedItem = operator;
+				
+				if(operator == "Is" || operator =="Contains" || operator == "Is Not"
+				|| operator =="Starts With" || operator == "Ends With") {
+					currentState = ONE_PARAMETER_STATE;
+					if(conditions && conditions.length >= 1){
+						txtCondition.text = conditions[0];
+					}
+					if(_currentConditions.length == 0) {
+						_currentConditions.addItem(txtCondition.text);
+					}
+					//headerRenderer.lblCondition.text = " "+operator+ " "+txtCondition.text;
+					_conditionAsString = operator+ " "+txtCondition.text;;
+					dispatchHeaderChangeEvent(new ConditionUpdatedEvent(ConditionUpdatedEvent.IS_HEADER_CHANGED,true,true,_conditionAsString));
+				}
+				else if(operator == "Is Any" || operator == "Is Null" || operator == "Is Not Null"){
+					//headerRenderer.lblCondition.text = " "+operator;
+					currentState = NO_PARAMETER_STATE;
+					_conditionAsString = operator;
+					dispatchHeaderChangeEvent(new ConditionUpdatedEvent(ConditionUpdatedEvent.IS_HEADER_CHANGED,true,true,_conditionAsString));
+				}
+			}
+			
+			private function handleOperatorSelected():void{
+				_currentOperator = conditionsCB.selectedItem as String;
+//				var selectedOp:String = event.currentTarget.selectedItem;
+				var list:ArrayCollection = new ArrayCollection();
+				list.addItem(txtCondition != null ? txtCondition.text:"");
+				redraw(_currentOperator, list);
+			}
+			
+			private function valueChange(event:Event):void{
+				var txtInput:TextInput = TextInput(event.currentTarget);
+				_currentConditions.removeAll();
+				
+				if(currentState == ONE_PARAMETER_STATE){
+					_currentConditions.addItem(txtCondition.text);
+					_conditionAsString = _currentOperator+ " "+txtCondition.text;
+					dispatchHeaderChangeEvent(new ConditionUpdatedEvent(ConditionUpdatedEvent.IS_HEADER_CHANGED,true,true,_conditionAsString));
+				}
+			}
+			
+			private function handleNoParameterStateEntered():void{
+				if(conditionsCB){
+					conditionsCB.selectedItem = _currentOperator;
+				}
+			}
+			
+			private function handleOneParameterStateEntered():void{
+				if(txtCondition && _currentConditions.length >= 1){
+					txtCondition.text = _currentConditions[0];
+				}
+			}
+						
+			override public function doValidation():ValidationResultEvent {
+				if(currentState == ONE_PARAMETER_STATE){
+					return conditionValidator.validate(txtCondition.text);
+				}
+				return null;
+			}
+		
+		]]>
+	</mx:Script>
+
+	<validators:CustomStringValidator 
+		id="conditionValidator" 
+		property="text" 
+		source="{txtCondition}"
+		fieldName="{_fieldName}"
+	/>
+	
+	<states>
+		<mx:State name="{NO_PARAMETER_STATE}" enterState="handleNoParameterStateEntered()" >
+			<mx:AddChild creationPolicy="all">
+				<querymanager:CustomComboBox id="conditionsCB" width="75%" change="handleOperatorSelected()">	
+					<mx:ArrayCollection>
+						<mx:String>Is</mx:String>
+						<mx:String>Contains</mx:String>
+						<mx:String>Is Not</mx:String>
+						<mx:String>Starts With</mx:String>
+						<mx:String>Ends With</mx:String>	
+						<mx:String>Is Null</mx:String>						
+						<mx:String>Is Not Null</mx:String>
+						<mx:String>Is Any</mx:String>
+					</mx:ArrayCollection>
+				</querymanager:CustomComboBox>
+			</mx:AddChild>
+		</mx:State>
+		<mx:State name="{ONE_PARAMETER_STATE}" basedOn="{NO_PARAMETER_STATE}" enterState="handleOneParameterStateEntered()">
+			<mx:AddChild creationPolicy="all">
+				<mx:TextInput id="txtCondition" width="100%" change="valueChange(event)"/>
+			</mx:AddChild>
+			<mx:SetProperty target="{txtCondition}" name="text" />
+		</mx:State>
+	</states>
+</ConditionEditor>

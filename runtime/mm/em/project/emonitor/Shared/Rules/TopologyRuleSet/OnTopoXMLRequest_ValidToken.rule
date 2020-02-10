@@ -1,0 +1,42 @@
+/**
+ * @description 
+ * @author Nick-PC
+ */
+rule Shared.Rules.TopologyRuleSet.OnTopoXMLRequest_ValidToken {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		
+		Shared.Events.topology.TopologyXmlFileRequestEvent topologyxmlfilerequestevent;
+	}
+	when {
+		topologyxmlfilerequestevent.token != null || String.length(topologyxmlfilerequestevent.token) != 0;
+	}
+	then {
+		try {
+			Shared.Concepts.LoggedInUser user = Instance.getByExtId(topologyxmlfilerequestevent.token);
+			if (user == null) {
+		    	Shared.Events.reqres.FailureResponseEvent event = Shared.Events.reqres.FailureResponseEvent.FailureResponseEvent(null,null,"001","Invalid token");
+		    	Event.replyEvent(topologyxmlfilerequestevent, event);
+		    	Event.consumeEvent(topologyxmlfilerequestevent);
+		    	return;
+			}
+			String xmlContent = BEMM.topology.getTopoXMLContent();
+			if(xmlContent == null || String.length(xmlContent) == 0){
+				Shared.RuleFunctions.log("OnTopoXMLRequest","DEBUG","Could not get Topology XML content");
+				Event.consumeEvent(topologyxmlfilerequestevent);
+				return;
+			}
+			Shared.RuleFunctions.log("OnTopoXMLRequest","DEBUG","Get Topology xml content: "+xmlContent);
+			Shared.Events.reqres.SuccessXMLResponseEvent event = Shared.Events.reqres.SuccessXMLResponseEvent.SuccessXMLResponseEvent(null,xmlContent);
+			Event.replyEvent(topologyxmlfilerequestevent, event);	
+		}
+		catch(Exception e){
+			Shared.RuleFunctions.log("OnTopoXMLRequest","DEBUG","Exception: "+e@message);
+			Shared.RuleFunctions.log("OnTopoXMLRequest","DEBUG","Stack trace: "+e@stackTrace);
+		}	
+		Event.consumeEvent(topologyxmlfilerequestevent);	
+	}
+}

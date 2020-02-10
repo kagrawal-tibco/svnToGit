@@ -1,0 +1,61 @@
+/**
+ * @description 
+ */
+WebStudio.Core.Concepts.Decision.Pagination.WS_C_TableRule rulefunction WebStudio.Core.RuleFunctions.Utils.DT.WS_RF_CreateTableRuleInstance {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		WebStudio.Core.Concepts.Decision.Pagination.WS_C_TableRule prevTableRule;
+	}
+	body {
+		WebStudio.Core.Concepts.Decision.Pagination.WS_C_TableRule tableRule = Instance.newTransientInstance("/WebStudio/Core/Concepts/Decision/Pagination/WS_C_TableRule");
+		tableRule.ruleId = prevTableRule.ruleId; 		
+    	
+		WS_C_TableRuleMetadata metadata = Instance.newTransientInstance("/WebStudio/Core/Concepts/Decision/Pagination/WS_C_TableRuleMetadata");
+
+		WS_C_TableRuleMetadata prevMetadata = Instance.PropertyAtom.getContainedConcept(prevTableRule.metadata, 1L);
+		if (prevMetadata != null) {
+			WS_C_MetadataProperty[] prevMetadataProps = Instance.PropertyArray.toArrayContainedConcept(prevMetadata.property); 
+		    	for (int k = 0; k < prevMetadataProps@length; k++) {
+					WS_C_MetadataProperty prevProperty = prevMetadataProps[k];
+					WS_C_MetadataProperty property = Instance.newTransientInstance("/WebStudio/Core/Concepts/Decision/Pagination/WS_C_MetadataProperty");
+					property.name = prevProperty.name;
+					property.value = prevProperty.value;
+					property.type = prevProperty.type;
+					Instance.PropertyArray.appendContainedConcept(metadata.property, property, 1L);									    		
+		    	}
+		}	
+    		Instance.PropertyAtom.setContainedConcept(tableRule.metadata, metadata, 1L); 			
+
+		WS_C_TableRuleCondition[] prevConditions = Instance.PropertyArray.toArrayContainedConcept(prevTableRule.condition);				 		
+	    	for (int k = 0; k < prevConditions@length; k++) { 
+				WS_C_TableRuleCondition condition = Instance.newTransientInstance("/WebStudio/Core/Concepts/Decision/Pagination/WS_C_TableRuleCondition");				 
+				WS_C_TableRuleCondition prevCondition = prevConditions[k];	
+				condition.ruleId = tableRule.ruleId;
+				condition.varId = prevCondition.varId;
+				condition.columnId = prevCondition.columnId;
+				condition.expression = prevCondition.expression;
+				condition.displayValue = prevCondition.displayValue;
+				condition.isEnabled = prevCondition.isEnabled;
+				condition.comment = prevCondition.comment;								
+	    		Instance.PropertyArray.appendContainedConcept(tableRule.condition, condition, 1L);	    		
+	    	}	    			
+
+		WS_C_TableRuleAction[] prevActions = Instance.PropertyArray.toArrayContainedConcept(prevTableRule.action);	
+	    	for (int k = 0; k < prevActions@length; k++) { 
+				WS_C_TableRuleAction action = Instance.newTransientInstance("/WebStudio/Core/Concepts/Decision/Pagination/WS_C_TableRuleAction");				 
+				WS_C_TableRuleAction prevAction = prevActions[k];	
+				action.ruleId = tableRule.ruleId;
+				action.varId = prevAction.varId;
+				action.columnId = prevAction.columnId;
+				action.expression = prevAction.expression;
+				action.displayValue = prevAction.displayValue;
+				action.isEnabled = prevAction.isEnabled;
+				action.comment = prevAction.comment;								
+	    		Instance.PropertyArray.appendContainedConcept(tableRule.action, action, 1L);	    		
+	    	}
+	    	    	
+		return tableRule;
+	}
+}

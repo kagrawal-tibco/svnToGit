@@ -1,0 +1,44 @@
+/**
+ * @description Convert the value part of the filter to EMF for persistence.
+ */
+void rulefunction WebStudio.Core.RuleFunctions.Utils.RT.Builder.Ops.Save.WS_RF_ConvertFilterValueToEMF {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object filterEModel;
+		WebStudio.Core.Concepts.RuleTemplateInstance.Builder.WS_C_AbstractConditionsFilter rootConditionsFilter;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.RT.Builder.Ops.Save.WS_RF_ConvertFilterValueToEMF");
+		
+		WS_C_FilterValue filterValue = WS.Common.getContainedConcept(rootConditionsFilter.value);
+		if (filterValue != null) {
+			//Create EModel
+			Object filterValueEModel = null;
+			String simpleValue = filterValue.simple;
+			Log.log(LOGGER, "Debug", "Filter simple value obtained %s", simpleValue);
+			if (simpleValue == null) {
+				filterValueEModel = WS.RTI.createComplexValue();
+				//This should contain links
+				WS_C_Link[] valueLinks = Instance.PropertyArray.toArrayConcept(filterValue.link);
+				for (int loop = 0; loop < valueLinks@length; loop++) {
+					WS_C_Link valueLink = valueLinks[loop];
+					//Assert explicitly to maintain reverse refs in cache.
+					WS.Common.assertInstance(valueLink, false);
+					//TODO process this
+					WebStudio.
+						Core.
+							RuleFunctions.
+								Utils.RT.Builder.
+									Ops.Save.
+										WS_RF_ConvertValueLinkToEMF(filterValueEModel, valueLink);
+					
+				}
+			} else {
+				filterValueEModel = WS.RTI.createSimpleValue(simpleValue);
+			}
+			WS.RTI.addValueToFilter(filterEModel, filterValueEModel);
+		}
+	}
+}

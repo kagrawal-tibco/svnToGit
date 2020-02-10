@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox
+	xmlns:mx="http://www.adobe.com/2006/mxml" 
+	xmlns:controls="com.tibco.be.views.core.ui.controls.*"
+	horizontalAlign="left"
+	horizontalScrollPolicy="off"
+	verticalScrollPolicy="off"
+	initialize="init()"
+>
+	<mx:Script>
+		<![CDATA[
+			import mx.collections.IList;
+			
+			public static const USER_PROMPT_STATE:String = "userPromptState";
+			public static const ROLE_SELECT_STATE:String = "roleSelectionState";
+			public static const OPENING_DASHBOARD_STATE:String = "openingDashboardState";
+			
+			[Bindable]
+			private var _prompt:String = "Please enter a username and password";
+			
+			[Bindable]
+			private var _title:String = "Welcome";
+			
+			private var _controller:PortletLoginDialogController;
+			
+			public function set prompt(value:String):void{ _prompt = value; }
+			public function set title(value:String):void{ _title = value; }
+			
+			private function init():void{
+				_controller = new PortletLoginDialogController(this);
+				_controller.init();
+			}
+						
+			protected function getDropShadow():BitmapFilter{
+	            return new DropShadowFilter(4, 45, 0x0, 0.8, 4, 4, 0.8, BitmapFilterQuality.HIGH, false, false);
+			}
+			
+			public function addCompletionListener(listener:Function):void{
+				_controller.addEventListener(Event.COMPLETE, listener);
+			}
+			
+			public function removeCompletionListener(listener:Function):void{
+				_controller.removeEventListener(Event.COMPLETE, listener);
+			}
+			
+		]]>
+	</mx:Script>
+	<mx:states>
+		<mx:State name="{USER_PROMPT_STATE}">
+			<mx:AddChild relativeTo="{form_Login}" position="lastChild">
+				<mx:FormItem id="usernameformitem" label="Username:" horizontalAlign="left" indicatorGap="2" styleName="loginFormLabel" >
+					<mx:TextInput id="tb_Username" width="180" height="25" fontFamily="Arial" fontWeight="normal" fontSize="14" color="#7D7E80" themeColor="#6AABF8"/>
+				</mx:FormItem>				
+			</mx:AddChild>
+			<mx:AddChild relativeTo="{form_Login}" position="lastChild">
+				<mx:FormItem id="passwordformitem" label="Password:" horizontalAlign="left" indicatorGap="2" styleName="loginFormLabel" >
+					<mx:TextInput id="tb_Password" width="180" height="25" displayAsPassword="true" fontFamily="Arial" fontWeight="normal" fontSize="14" color="#7D7E80" themeColor="#6AABF8"/>
+				</mx:FormItem>			
+			</mx:AddChild>			
+			<mx:AddChild relativeTo="{form_Login}" position="lastChild">
+				<mx:FormItem id="loginbtnformitem" indicatorGap="122" >
+					<mx:Button id="loginBtn" width="60" label="Login" fillAlphas="[1, 1]" styleName="loginButton"/>
+				</mx:FormItem>	
+			</mx:AddChild>			
+		</mx:State>	
+		<mx:State name="{ROLE_SELECT_STATE}">
+			<mx:AddChild relativeTo="{form_Login}" position="lastChild">
+				<mx:FormItem id="rolesformitem" horizontalAlign="left" alpha="1.0" styleName="loginFormLabel" >
+					<mx:ComboBox id="rolesComboBox" width="180" color="#7D7E80" fontFamily="Arial" fontSize="12" themeColor="#6AABF8"/>
+				</mx:FormItem>
+			</mx:AddChild>
+		</mx:State>
+		<mx:State name="{OPENING_DASHBOARD_STATE}">
+			<mx:SetProperty target="{lbl_Prompt}" name="text" value="Opening Dashboard..." />
+			<mx:SetProperty target="{lbl_Prompt}" name="x" value="200" />
+			<mx:AddChild position="lastChild" >
+				<mx:HBox id="loadingSpinner" x="224" y="135" borderStyle="none">
+					<controls:Spinner size="55" tickWidth="7" numTicks="10" speed="1000" tickColor="#315468" />
+				</mx:HBox>
+			</mx:AddChild>
+		</mx:State>
+	</mx:states>
+	<mx:transitions>
+		<mx:Transition id="userpromptToRoleTransition" fromState="{USER_PROMPT_STATE}" toState="{ROLE_SELECT_STATE}">
+			<mx:Sequence targets="{[usernameformitem, passwordformitem, loginBtn, rolesformitem]}">
+				<mx:Fade alphaFrom="1.0" alphaTo="0.0" targets="{[usernameformitem, passwordformitem, loginBtn]}"/>
+				<mx:RemoveChildAction target="{usernameformitem}"/>
+				<mx:RemoveChildAction target="{passwordformitem}"/>
+				<mx:RemoveChildAction target="{loginBtn}"/>
+				<mx:Pause duration="500"/>
+				<mx:AddChildAction target="{rolesformitem}"/>
+				<mx:Fade alphaFrom="0.0" alphaTo="1.0" target="{rolesformitem}"/>
+			</mx:Sequence>															
+		</mx:Transition>
+		<mx:Transition id="roleToUserpromptTransition" fromState="{ROLE_SELECT_STATE}" toState="{USER_PROMPT_STATE}">
+			<mx:Sequence targets="{[usernameformitem, passwordformitem, loginBtn, rolesformitem]}">
+				<mx:Fade alphaFrom="1.0" alphaTo="0.0" target="{rolesformitem}"/>
+				<mx:RemoveChildAction target="{rolesformitem}"/>
+				<mx:Pause duration="500"/>
+				<mx:AddChildAction target="{usernameformitem}"/>
+				<mx:AddChildAction target="{passwordformitem}"/>
+				<mx:AddChildAction target="{loginBtn}"/>
+				<mx:Fade alphaFrom="0.0" alphaTo="1.0" targets="{[usernameformitem, passwordformitem, loginBtn]}"/>
+			</mx:Sequence>															
+		</mx:Transition>
+		<mx:Transition id="userpromptToOpeningTransition" fromState="{USER_PROMPT_STATE}" toState="{OPENING_DASHBOARD_STATE}">
+			<mx:Sequence targets="{[usernameformitem, passwordformitem, loginBtn, loadingSpinner]}">
+				<mx:Fade alphaFrom="1.0" alphaTo="0.0" targets="{[usernameformitem, passwordformitem, loginBtn]}"/>
+				<mx:RemoveChildAction target="{usernameformitem}"/>
+				<mx:RemoveChildAction target="{passwordformitem}"/>
+				<mx:RemoveChildAction target="{loginBtn}"/>
+				<mx:Pause duration="500"/>
+				<mx:AddChildAction target="{loadingSpinner}"/>
+				<mx:Fade alphaFrom="0.0" alphaTo="1.0" target="{loadingSpinner}"/>
+			</mx:Sequence>															
+		</mx:Transition>
+		<mx:Transition id="roleToOpeningTransition" fromState="{ROLE_SELECT_STATE}" toState="{OPENING_DASHBOARD_STATE}">
+			<mx:Sequence targets="{[form_Login, loadingSpinner]}">
+				<mx:RemoveChildAction target="{form_Login}" />
+				<mx:AddChildAction target="{loadingSpinner}"/>
+			</mx:Sequence>															
+		</mx:Transition>
+	</mx:transitions>
+		<mx:Label id="lbl_Title" textAlign="left" color="#7D7E80" fontFamily="Arial" fontSize="26" fontWeight="bold" text="{_title}" truncateToFit="true" />
+		<mx:Label id="lbl_Prompt" text="{_prompt}" textAlign="left" fontWeight="bold" fontSize="10" color="#AAAAAA"/>
+		<mx:Form id="form_Login" defaultButton="{loginBtn}" indicatorGap="10" verticalGap="9" paddingBottom="0" paddingTop="0" paddingLeft="0" paddingRight="0" />
+</mx:VBox>

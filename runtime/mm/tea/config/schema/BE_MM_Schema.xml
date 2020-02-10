@@ -1,0 +1,946 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema name="BE_MM">
+	<retention-policies>
+              <retention-policy type="fact" period="1" unit="WEEK" purge-time-of-day="1200"  purge-frequency-period="86400000"/>
+			  <retention-policy type="BEMMCube/instancehealthhierarchy" period="1" unit="WEEK" purge-time-of-day="1200"  purge-frequency-period="86400000"/>
+			  <retention-policy type="BEMMCube/eventhealthhierarchy" period="1" unit="WEEK" purge-time-of-day="1200"  purge-frequency-period="86400000"/>
+			  <retention-policy type="BEMMCube/clusterhealthhierarchy" period="1" unit="WEEK" purge-time-of-day="1200"  purge-frequency-period="86400000"/>
+			  <retention-policy type="BEMMCube/rulehealthhierarchy" period="1" unit="WEEK" purge-time-of-day="1200"  purge-frequency-period="86400000"/>
+			  <retention-policy type="BEMMCube/inferencehealthhierarchy" period="1" unit="WEEK" purge-time-of-day="1200"  purge-frequency-period="86400000"/>
+			  <retention-policy type="BEMMCube/queryhealthhierarchy" period="1" unit="WEEK" purge-time-of-day="1200"  purge-frequency-period="86400000"/>
+			  <retention-policy type="BEMMCube/dashboardhealthhierarchy" period="1" unit="WEEK" purge-time-of-day="1200"  purge-frequency-period="86400000"/>
+			  <retention-policy type="BEMMCube/processhealthhierarchy" period="1" unit="WEEK" purge-time-of-day="1200"  purge-frequency-period="86400000"/>
+			  <retention-policy type="BEMMCube/cachehealthhierarchy" period="1" unit="WEEK" purge-time-of-day="1200"  purge-frequency-period="86400000"/>
+    </retention-policies>
+	<attributes>
+		<!-- Dimension Attributes -->
+		<attribute datatype="STRING" name="appName" />
+		<attribute datatype="STRING" name="puName" />
+		<attribute datatype="STRING" name="instanceName"/>
+		<attribute datatype="STRING" name="agentType"/>
+		<attribute datatype="STRING" name="agentName"/>
+		<attribute datatype="STRING" name="host"/>
+		<attribute datatype="STRING" name="dummyapp"/>
+		<attribute datatype="STRING" name="entity"/>
+		<attribute datatype="STRING" name="entityType"/>
+		<!--=======================================-->
+		
+		<!-- ENTITY RELATED ATTRIBUTES  -->
+		<attribute datatype="INTEGER" name="instancecount"/>
+		<attribute datatype="INTEGER" name="agentcount"/>
+		<attribute datatype="INTEGER" name="instanceisactive"/>
+		<attribute datatype="STRING" name="apphealth"/>
+		<attribute datatype="STRING" name="instancehealth"/>
+		<attribute datatype="STRING" name="agenthealth"/>
+		<!--=======================================-->
+		
+		<!-- RAW STATS ATTRIBUTES  -->
+		<attribute datatype="LONG" name="timestamp"/>									
+		<attribute datatype="LONG" name="jvmuptime"/>									
+		<attribute datatype="INTEGER" name="cpucount"/>								
+		<attribute datatype="LONG" name="cputime"/>										
+		<attribute datatype="DOUBLE" name="cpuusage"/>									
+		<attribute datatype="DOUBLE" name="initmemsize"/>								
+		<attribute datatype="DOUBLE" name="usedmemsize"/>								
+		<attribute datatype="DOUBLE" name="committedmemsize"/>							
+		<attribute datatype="DOUBLE" name="maxmemsize"/>
+		<attribute datatype="INTEGER" name="threadcount"/>
+		<attribute datatype="INTEGER" name="deadlockedthreadcount"/>
+		<!--=======================================-->
+
+		<!-- RTC Transaction related attributes -->
+		<attribute datatype="LONG" name="totalsuccessfultxn" />
+		<attribute datatype="LONG" name="totalsuccessfuldbtxn" />
+		<attribute datatype="LONG" name="successfultxn" />
+		<attribute datatype="DOUBLE" name="avgsuctxntime" />
+		<attribute datatype="DOUBLE" name="avgtimepertxn" />
+		<attribute datatype="LONG" name="pendingcachewrites" />
+		<attribute datatype="LONG" name="pendingdbwrites" />
+		<attribute datatype="LONG" name="pendinglockstorelease" />
+		<attribute datatype="LONG" name="pendingactions" />
+		<attribute datatype="DOUBLE" name="avgactiontxntime" />
+		<attribute datatype="LONG" name="transactionerrors" />
+		
+		<attribute datatype="DOUBLE" name="avgcachequeuewaittime" />
+		<attribute datatype="DOUBLE" name="avgcachetxntime" />
+		<attribute datatype="DOUBLE" name="avgdbopsbatchsize" />
+		<attribute datatype="DOUBLE" name="avgdbqueuewaittime" />
+		<attribute datatype="DOUBLE" name="avgdbtxntime" />
+		<attribute datatype="LONG"   name="lastdbbatchsize" />
+		<attribute datatype="LONG"   name="pendingeventstoack" />
+		<!--=======================================-->
+		
+		<!-- Locks related attributes -->
+		<attribute datatype="LONG" name="totallocksheld"/>
+		<attribute datatype="LONG" name="locallocksheld"/>
+		<attribute datatype="LONG" name="clusterwidelocksheld"/>
+		<!--=======================================-->
+		
+		<!-- BE Entity related attributes  -->
+		<attribute datatype="LONG"   name="putcount" />
+		<attribute datatype="LONG"   name="assertcount" />
+		<attribute datatype="STRING"   name="event" />
+		<attribute datatype="LONG"   	name="eventreceiverate" />
+		<attribute datatype="LONG"   	name="eventsentrate" />
+		<attribute datatype="STRING"    name="destination" />
+		<attribute datatype="DOUBLE"   	name="avgexecutiontime" />
+		<attribute datatype="STRING"    name="rule" />
+		
+		<!-- Asset Attributes -->
+		<attribute datatype="INTEGER"    name="asset_status" />
+		<attribute datatype="STRING"     name="asset_name" />
+		
+		
+		
+	</attributes>
+
+	<dimensions>
+		<dimension name="app" attribute-ref="appName" >
+			<properties>
+				<property name="alert-token" value="application.name" />
+			</properties>		
+		</dimension>
+		<dimension name="instance" attribute-ref="instanceName" >
+			<properties>
+				<property name="alert-token" value="instance.name" />
+			</properties>		
+		</dimension> 
+		<dimension name="pu" attribute-ref="puName" >
+			<properties>
+				<property name="alert-token" value="processing.unit.name" />
+			</properties>		
+		</dimension>
+		<dimension name="agentType" attribute-ref="agentType" >
+			<properties>
+				<property name="alert-token" value="agent.type" />
+			</properties>		
+		</dimension>
+		<dimension name="agent" attribute-ref="agentName" >
+			<properties>
+				<property name="alert-token" value="agent.name" />
+			</properties>		
+		</dimension>
+		<dimension name="dummyapp" attribute-ref="dummyapp"/>
+		
+		<dimension name="destination"  attribute-ref="destination">
+			<properties>
+				<property name="alert-token" value="destination" />
+			</properties>		
+		</dimension>
+		<dimension name="entityType" attribute-ref="entityType">
+			<properties>
+				<property name="alert-token" value="entity.type" />
+			</properties>		
+		</dimension>
+		<dimension name="rule"  attribute-ref="rule">
+			<properties>
+				<property name="alert-token" value="berule.name" />
+			</properties>		
+		</dimension>
+		<time-dimension name="hours" attribute-ref="timestamp" unit="HOUR" frequency="1" qtroffset="1"/>
+		<time-dimension name="minutes" attribute-ref="timestamp" unit="MINUTE" frequency="5" qtroffset="1"/>
+	</dimensions>
+	
+	<measurements>
+	
+		<measurement name="instancecount" units="number">
+			<properties>
+				<property name="storage-datatype" value="INTEGER" />
+				<property name="alert-token" value="instance.count" />
+			</properties>		
+			<metric-function ref="System.INSTANCECOUNT">
+				<function-params>
+					<function-param name="PARAM1" attribute-ref="instanceName"/>
+					<function-param name="PARAM2" attribute-ref="instancecount"/>
+				</function-params>	
+			</metric-function>
+		</measurement>
+		
+		<measurement name="pendinglockstorelease" units="number">
+			<properties>
+				<property name="storage-datatype" value="LONG" />
+				<property name="alert-token" value="pending.locks" />
+			</properties>		
+			<metric-function ref="System.SETVAL">
+				<function-params>
+					<function-param name="PARAM1" attribute-ref="pendinglockstorelease"/>
+				</function-params>	
+			</metric-function>
+		</measurement>
+		
+		<measurement name="totallocksheld" units="number">
+			<properties>
+				<property name="storage-datatype" value="LONG" />
+				<property name="alert-token" value="total.locks" />
+			</properties>		
+			<metric-function ref="System.SUMLONG">
+				<function-params>
+					<function-param name="PARAM1" attribute-ref="totallocksheld"/>
+				</function-params>	
+			</metric-function>
+		</measurement>
+		
+		<measurement name="locallocksheld" units="number">
+			<properties>
+				<property name="storage-datatype" value="LONG" />
+				<property name="alert-token" value="local.locks" />
+			</properties>		
+			<metric-function ref="System.SUMLONG">
+				<function-params>
+					<function-param name="PARAM1" attribute-ref="locallocksheld"/>
+				</function-params>	
+			</metric-function>
+		</measurement>
+		
+		<measurement name="clusterwidelocksheld" units="number">
+			<properties>
+				<property name="storage-datatype" value="LONG" />
+				<property name="alert-token" value="cluster.locks" />
+			</properties>		
+			<metric-function ref="System.SUMLONG">
+				<function-params>
+					<function-param name="PARAM1" attribute-ref="clusterwidelocksheld"/>
+				</function-params>	
+			</metric-function>
+		</measurement>
+		
+		<!-- ========================================================= -->
+		<!-- ============= TRANSACTION RELATED METRICES ============== -->
+		<!-- ========================================================= -->
+		
+		<measurement name="totalsuccessfuldbtxn" units="number">
+			<properties>
+				<property name="storage-datatype" value="LONG" />
+				<property name="alert-token" value="db.transaction.rate" />
+			</properties>		
+			<metric-function ref="System.SETVAL">
+				<function-params>
+					<function-param name="PARAM1" attribute-ref="totalsuccessfuldbtxn"/>
+				</function-params>
+			</metric-function>
+		</measurement>
+		
+		<measurement name="successfultxn" units="number">
+			<properties>
+				<property name="storage-datatype" value="LONG" />
+				<property name="alert-token" value="transaction.rate" />
+			</properties>		
+			<metric-function ref="System.SUMLONG">
+				<function-params>
+					<function-param name="PARAM1" attribute-ref="successfultxn"/>
+				</function-params>	
+			</metric-function>
+		</measurement>
+		
+		<measurement name="avgtimepertxn" units="number">
+			<properties>
+				<property name="storage-datatype" value="DOUBLE" />
+				<property name="alert-token" value="transaction.latency" />
+			</properties>		
+			<metric-function ref="System.SETVAL">
+				<function-params>
+					<function-param name="PARAM1" attribute-ref="avgtimepertxn"/>
+				</function-params>	
+			</metric-function>
+		</measurement>
+		
+		<measurement name="transactionerrors" units="number">
+			<properties>
+				<property name="storage-datatype" value="LONG" />
+				<property name="alert-token" value="transaction.errors" />
+			</properties>		
+			<metric-function ref="System.SUMLONG">
+				<function-params>
+					<function-param name="PARAM1" attribute-ref="transactionerrors"/>
+				</function-params>	
+			</metric-function>
+		</measurement>
+		
+		
+		
+		
+		<!-- ========================================================= -->
+		<!-- ================== CPU RELATED METRICES ================= -->
+		<!-- ========================================================= -->
+		<!--  STATS HIERARCHY -->
+		<measurement name="cpuusage" units="percent">
+			<properties>
+				<property name="storage-datatype" value="DOUBLE" />
+				<property name="alert-token" value="cpu.usage" />
+			</properties>		
+			<metric-function ref="System.PCNTCPUUSAGE">
+				<function-params>
+					<function-param name="PARAM1" attribute-ref="cpuusage"/>
+				</function-params>	
+			</metric-function>
+		</measurement>
+		
+		<!--  STATS HIERARCHY -->
+		<measurement name="cpucount" units="INTEGER">
+			<properties>
+				<property name="storage-datatype" value="INTEGER" />
+				<property name="alert-token" value="cpu.count" />
+			</properties>		
+			<metric-function ref="System.SETVAL">				
+				<function-params>
+					<function-param name="PARAM1" attribute-ref="cpucount"/>
+				</function-params>	
+			</metric-function>
+		</measurement>
+		
+		<!--  STATS HIERARCHY -->
+		<measurement name="cputime" units="millis">
+			<properties>
+				<property name="storage-datatype" value="LONG" />
+				<property name="alert-token" value="cpu.time" />
+			</properties>		
+			<metric-function ref="System.SETVAL">				
+				<function-params>
+					<function-param name="PARAM1" attribute-ref="cputime"/>
+				</function-params>	
+			</metric-function>
+		</measurement>
+		<!-- ========================================================= -->
+		
+		<!-- ========================================================= -->
+		<!-- ================ MEMORY RELATED METRICES ================ -->
+		<!-- ========================================================= -->
+		
+		<!--  STATS HIERARCHY -->
+		<measurement name="usedmem" units="MB">
+			<properties>
+				<property name="storage-datatype" value="DOUBLE" />
+				<property name="alert-token" value="memory.used" />
+			</properties>		
+			<metric-function ref="System.BYTESTOUNIT">				
+				<function-params>
+					<function-param name="PARAM1" attribute-ref="usedmemsize"/>
+				</function-params>	
+			</metric-function>
+		</measurement>
+		
+		<!--  STATS HIERARCHY -->
+		<measurement name="maxmem" units="MB">
+			<properties>
+				<property name="storage-datatype" value="DOUBLE" />
+				<property name="alert-token" value="memory.max" />
+			</properties>		
+			<metric-function ref="System.BYTESTOUNIT">				
+				<function-params>
+					<function-param name="PARAM1" attribute-ref="maxmemsize"/>
+				</function-params>	
+			</metric-function>
+		</measurement>
+		
+		<!--  STATS HIERARCHY -->
+		<measurement name="committedmem" units="MB">
+			<properties>
+				<property name="storage-datatype" value="DOUBLE" />
+				<property name="alert-token" value="memory.committed" />
+			</properties>		
+			<metric-function ref="System.BYTESTOUNIT">				
+				<function-params>
+					<function-param name="PARAM1" attribute-ref="committedmemsize"/>
+				</function-params>	
+			</metric-function>
+		</measurement>
+		
+		<!--  STATS HIERARCHY -->
+		<measurement name="initmem" units="MB">
+			<properties>
+				<property name="storage-datatype" value="DOUBLE" />
+				<property name="alert-token" value="memory.init" />
+			</properties>		
+			<metric-function ref="System.BYTESTOUNIT">
+				<function-params>
+					<function-param name="PARAM1" attribute-ref="initmemsize"/>
+				</function-params>	
+			</metric-function>
+		</measurement>
+		
+		<measurement name="percentmemusage" units="percent">
+			<properties>
+				<property name="storage-datatype" value="DOUBLE" />
+				<property name="alert-token" value="percent.memory.used" />
+			</properties>		
+			<metric-function ref="System.PCNTMEMUSAGE">
+				<function-params>
+					<function-param name="PARAM1" attribute-ref="usedmemsize"/>
+					<function-param name="PARAM2" attribute-ref="maxmemsize"/>
+				</function-params>	
+			</metric-function>
+		</measurement>
+
+		<!-- ========================================================= -->
+		
+		
+		<!-- ========================================================= -->
+		<!-- ===================JVM RELATED METRICES ================ -->
+		<!-- ========================================================= -->
+		<!--  STATS HIERARCHY -->
+		<measurement name="jvmuptime" units="millis">
+			<properties>
+				<property name="storage-datatype" value="LONG" />
+				<property name="alert-token" value="jvm.time" />
+			</properties>		
+			<metric-function ref="System.SETVAL">				
+				<function-params>
+					<function-param name="PARAM1" attribute-ref="jvmuptime"/>
+				</function-params>	
+			</metric-function>
+		</measurement>
+		
+		<!--  STATS HIERARCHY -->
+		<measurement name="threadcount" units="INTEGER">
+			<properties>
+				<property name="storage-datatype" value="INTEGER" />
+				<property name="alert-token" value="total.threadcount" />
+			</properties>		
+			<metric-function ref="System.SETVAL">
+				<function-params>
+					<function-param name="PARAM1" attribute-ref="threadcount"/>
+				</function-params>	
+			</metric-function>
+		</measurement>
+		
+		<!--  STATS HIERARCHY -->
+		<measurement name="deadlockedthreadcount" units="INTEGER">
+			<properties>
+				<property name="storage-datatype" value="INTEGER" />
+				<property name="alert-token" value="deadlocked.threadcount" />
+			</properties>		
+			<metric-function ref="System.SETVAL">				
+				<function-params>
+					<function-param name="PARAM1" attribute-ref="deadlockedthreadcount"/>
+				</function-params>	
+			</metric-function>
+		</measurement>
+		
+		
+		<!-- ========================================================= -->
+		<!-- ===================BE ENTITY METRICES ================ -->
+		<!-- ========================================================= -->
+		
+		
+		
+		<measurement name="putcount" units="LONG">
+			<properties>
+				<property name="storage-datatype" value="LONG" />
+				<property name="alert-token" value="entity.putcount" />
+			</properties>		
+			<metric-function ref="System.SETVAL">
+				<function-params>
+					<function-param name="PARAM1" attribute-ref="putcount"/>
+				</function-params>	
+			</metric-function>
+		</measurement>
+		
+		<measurement name="assertcount" units="LONG">
+			<properties>
+				<property name="storage-datatype" value="LONG" />
+				<property name="alert-token" value="entity.putcount" />
+			</properties>		
+			<metric-function ref="System.SETVAL">
+				<function-params>
+					<function-param name="PARAM1" attribute-ref="assertcount"/>
+				</function-params>	
+			</metric-function>
+		</measurement>
+		
+		
+		<measurement name="eventreceiverate" units="LONG">
+			<properties>
+				<property name="storage-datatype" value="LONG" />
+				<property name="alert-token" value="event.throughput" />
+			</properties>		
+			<metric-function ref="System.SUMLONG">
+				<function-params>
+					<function-param name="PARAM1" attribute-ref="eventreceiverate"/>
+				</function-params>	
+			</metric-function>
+		</measurement>
+		
+		
+		<measurement name="avgexecutiontime" units="DOUBLE">
+			<properties>
+				<property name="storage-datatype" value="DOUBLE" />
+				<property name="alert-token" value="berule.exec.time" />
+			</properties>		
+			<metric-function ref="System.AVG">
+				<function-params>
+					<function-param name="PARAM1" attribute-ref="avgexecutiontime"/>
+				</function-params>	
+			</metric-function>
+		</measurement>
+		
+		<!-- ========================================================= -->
+		
+		
+		<!--  STATS HIERARCHY -->
+		<measurement name="timestamp" units="LONG">
+			<properties>
+				<property name="storage-datatype" value="LONG" />
+				<property name="alert-token" value="timestamp" />
+			</properties>		
+			<metric-function ref="System.SETVAL">				
+				<function-params>
+					<function-param name="PARAM1" attribute-ref="timestamp"/>
+				</function-params>	
+			</metric-function>
+		</measurement>
+		
+		<!-- ========================================================= -->
+		<!-- =============== TIME BUCKET METRICES ================= -->
+		<!-- ========================================================= -->
+		
+		<!-- AVERAGE  STATS HIERARCHY -->
+		<measurement name="avgmemusage" units="MB">
+			<properties>
+				<property name="storage-datatype" value="DOUBLE" />
+				<property name="alert-token" value="average.memory.usage" />
+			</properties>		
+			<metric-function ref="System.AVGMEMUSEAGE">				
+				<function-params>
+					<function-param name="PARAM1" attribute-ref="usedmemsize"/>
+					<function-param name="PARAM2" attribute-ref="maxmemsize"/>
+				</function-params>	
+			</metric-function>
+		</measurement>
+		
+		<!-- AVERAGE  STATS HIERARCHY -->
+		<measurement name="avgcpuusage" units="percent">
+			<properties>
+				<property name="storage-datatype" value="DOUBLE" />
+				<property name="alert-token" value="average.cpu.usage" />
+			</properties>		
+			<metric-function ref="System.AVGCPUUSAGEPERCENTMETRIC">				
+				<function-params>
+					<function-param name="PARAM1" attribute-ref="cpuusage"/>
+				</function-params>
+			</metric-function>
+		</measurement>
+		
+		<!-- ========================================================= -->
+		
+		
+		<!-- ========================================================= -->
+		<!-- =============== HEALTH RELATED METRICES ================= -->
+		<!-- ========================================================= -->
+		
+		<!-- HEALTH HIERARCHY -->
+		
+		<measurement name="agenthealth" units="healthvalue">
+			<properties>
+				<property name="storage-datatype" value="STRING" />
+				<property name="alert-token" value="agent.health" />
+			</properties>		
+			<metric-function ref="System.AGENTHLTH">				
+				<function-params>
+					<function-param name="PARAM1" attribute-ref="instanceName"/>
+					<function-param name="PARAM2" attribute-ref="agentName"/>
+					<function-param name="PARAM3" attribute-ref="agenthealth"/>
+					<function-param name="PARAM4" attribute-ref="agentcount"/>
+				</function-params>
+			</metric-function>
+		</measurement>
+		
+		
+		<measurement name="instancehealth" units="healthvalue">
+			<properties>
+				<property name="storage-datatype" value="STRING" />
+				<property name="alert-token" value="instance.health" />
+			</properties>		
+			<metric-function ref="System.PUHLTH">				
+				<function-params>
+					<function-param name="PARAM1" attribute-ref="instanceName"/>
+					<function-param name="PARAM2" attribute-ref="instancehealth"/>
+					<function-param name="PARAM3" attribute-ref="instanceisactive"/>
+				</function-params>	
+			</metric-function>
+		</measurement>
+		
+		<measurement name="instancedummyhealth" units="healthvalue">
+			<properties>
+				<property name="storage-datatype" value="STRING" />
+				<property name="alert-token" value="instance.health" />
+			</properties>		
+			<metric-function ref="System.HLTHDUMMY">				
+				<function-params>
+					<function-param name="PARAM1" attribute-ref="instancehealth"/>
+				</function-params>	
+			</metric-function>
+		</measurement>
+		
+		<measurement name="appdummyhealth" units="healthvalue">
+			<properties>
+				<property name="storage-datatype" value="STRING" />
+			</properties>		
+			<metric-function ref="System.HLTHDUMMY">				
+				<function-params>
+					<function-param name="PARAM1" attribute-ref="apphealth"/>
+				</function-params>	
+			</metric-function>
+		</measurement>
+		
+		
+		
+		<!-- HEALTH HIERARCHY -->
+		<measurement name="instanceisactive" units="INTEGER">
+			<properties>
+				<property name="storage-datatype" value="INTEGER"/>
+				<property name="alert-token" value="isrunning" />
+			</properties>		
+			<metric-function ref="System.INSTANCEISACTIVE">
+				<function-params>
+					<function-param name="PARAM1" attribute-ref="instanceName"/>
+					<function-param name="PARAM2" attribute-ref="instanceisactive"/>
+				</function-params>	
+			</metric-function>
+		</measurement>
+		
+		<!-- HEALTH HIERARCHY -->
+		<measurement name="apphealth" units="healthvalue">
+			<properties>
+				<property name="storage-datatype" value="STRING" />
+				<property name="alert-token" value="cluster.health" />
+			</properties>		
+			<metric-function ref="System.SETVAL">
+				<function-params>
+					<function-param name="PARAM1" attribute-ref="apphealth"/>
+				</function-params>	
+			</metric-function>
+		</measurement>
+		
+		<!-- HEALTH HIERARCHY -->
+		<measurement name="instancepercentokhealth" units="percent" display-name="Percent Instance Ok">
+			<properties>
+				<property name="storage-datatype" value="LONG" />
+				<property name="alert-token" value="percent.normal" />
+			</properties>		
+			<metric-function ref="System.PCNTOK">				
+				<function-params>
+					<function-param name="PARAM1" attribute-ref="instancehealth"/>
+				</function-params>	
+			</metric-function>
+		</measurement>
+		
+		<!-- HEALTH HIERARCHY -->
+		<measurement name="instancepercentwarnhealth" units="percent" display-name="Percent Instance Warning">
+			<properties>
+				<property name="storage-datatype" value="LONG" />
+				<property name="alert-token" value="percent.warning" />
+			</properties>		
+			<metric-function ref="System.PCNTWARN">				
+				<function-params>
+					<function-param name="PARAM1" attribute-ref="instancehealth"/>
+				</function-params>	
+			</metric-function>
+		</measurement>
+		
+		<!-- HEALTH HIERARCHY -->
+		<measurement name="instancepercentcrithealth" units="percent"  display-name="Percent Instance Critical">
+			<properties>
+				<property name="storage-datatype" value="LONG" />
+				<property name="alert-token" value="percent.critical" />
+			</properties>		
+			<metric-function ref="System.PCNTCRIT">				
+				<function-params>
+					<function-param name="PARAM1" attribute-ref="instancehealth"/>
+				</function-params>	
+			</metric-function>
+		</measurement>
+		
+		
+		<!-- HEALTH HIERARCHY -->
+		<measurement name="instancepercentactive" units="percent" display-name="Percent Instance Active">
+			<properties>
+				<property name="storage-datatype" value="LONG" />
+				<property name="alert-token" value="percent.running" />
+			</properties>		
+			<metric-function ref="System.PCNTACTV">
+				<function-params>
+					<function-param name="PARAM1" attribute-ref="instancecount"/>
+				</function-params>	
+			</metric-function>
+		</measurement>
+		
+		
+		
+		<measurement name="AssetStatus" units="number">
+			<properties>
+				<property name="storage-datatype" value="INTEGER" />
+				<property name="alert-token" value="asset.status" />
+			</properties>		
+			<metric-function ref="System.SETVAL">
+				<function-params>
+					<function-param name="PARAM1" attribute-ref="asset_status"/>
+				</function-params>	
+			</metric-function>
+		</measurement>
+		
+		
+
+	</measurements>
+
+	<cubes>
+		<cube name="BEMMCube">
+			<hierarchies>
+                <hierarchy name="instancehealthhierarchy">
+                    <properties>                        
+                        <property name="storage-schema" value="rawBEMM"/>
+                        <property name="snapshot-rule-eval" value="true"/>
+                    </properties>
+                    <dimensions>
+                        <dimension ref="app"        compute="false"  />
+					    <dimension ref="pu"    		compute="false"  />
+					    <dimension ref="instance"   compute="false"   />
+					    <dimension ref="agentType"  compute="false"   />
+						<dimension ref="agent"      compute="false"   />
+						<dimension ref="hours"  	compute="true"   />
+						<dimension ref="minutes"    compute="true"   />
+                    </dimensions>
+                    <measurement-refs>
+                    	<measurement ref="instanceisactive" />
+                        <measurement ref="cpuusage" />
+						<measurement ref="cpucount"/>
+						<measurement ref="cputime" />
+						<measurement ref="initmem" />
+						<measurement ref="usedmem" />
+						<measurement ref="percentmemusage" />
+						<measurement ref="committedmem" />
+						<measurement ref="maxmem" />
+						<measurement ref="threadcount" />
+						<measurement ref="deadlockedthreadcount"/>
+						<measurement ref="jvmuptime"/>
+						<measurement ref="timestamp"/>
+						<measurement ref="avgmemusage"/>
+						<measurement ref="avgcpuusage"/>
+                    </measurement-refs>
+                </hierarchy>
+
+				<hierarchy name="clusterhealthhierarchy">
+                    <properties>                        
+                        <property name="storage-schema" value="healthBEMM"/>
+                        <property name="snapshot-rule-eval" value="false"/>
+                    </properties>				
+                    <dimensions>
+                        <dimension ref="app"      compute="true"   />
+                        <dimension ref="instance" compute="true" excludes="instancepercentactive,instancepercentokhealth,
+                        												   instancepercentwarnhealth,instancepercentcrithealth
+                        												   "/>
+                        <dimension ref="agent"    compute="true" excludes="apphealth,instancepercentokhealth,instancecount,
+                        												   instancepercentwarnhealth,instancepercentcrithealth
+                        												   "/>
+                        <dimension ref="dummyapp" compute="false"   />												                           												   
+                    </dimensions>
+                    <measurement-refs>
+                        <measurement ref="instancehealth" />
+						<measurement ref="apphealth"  />
+						<measurement ref="agenthealth" />
+						<measurement ref="instancecount" />
+						<measurement ref="instanceisactive" />
+						<measurement ref="instancepercentactive" />
+						<measurement ref="instancepercentokhealth" />
+						<measurement ref="instancepercentwarnhealth"/>
+						<measurement ref="instancepercentcrithealth"/>
+						<measurement ref="appdummyhealth"  />
+						<measurement ref="instancedummyhealth" />
+                    </measurement-refs>
+                </hierarchy>
+                
+                <hierarchy name="inferencehealthhierarchy">
+                    <properties>                        
+                        <property name="storage-schema" value="inferenceBEMM"/>
+                        <property name="snapshot-rule-eval" value="true"/>
+                    </properties>				
+                    <dimensions>
+                        <dimension ref="app"        compute="false"  />
+					    <dimension ref="pu"    		compute="false"  />
+					    <dimension ref="instance"   compute="false"   />
+					    <dimension ref="agentType"  compute="false"   />
+						<dimension ref="agent"      compute="false"   />
+						<dimension ref="hours"  	compute="true"   />
+						<dimension ref="minutes"    compute="true"   />										                           												   
+                    </dimensions>
+                    <measurement-refs>
+                    	<measurement ref="pendinglockstorelease"/>
+                    	<measurement ref="totallocksheld"/>
+                    	<measurement ref="locallocksheld"/>
+                    	<measurement ref="clusterwidelocksheld"/>
+                        <measurement ref="avgtimepertxn"/>
+                        <measurement ref="successfultxn" />
+						<measurement ref="totalsuccessfuldbtxn"/>
+						<measurement ref="transactionerrors"/>
+						<measurement ref="timestamp"/>
+                    </measurement-refs>
+                </hierarchy>
+                
+                <hierarchy name="queryhealthhierarchy">
+                    <properties>                        
+                        <property name="storage-schema" value="queryBEMM"/>
+                        <property name="snapshot-rule-eval" value="true"/>
+                    </properties>				
+                    <dimensions>
+                        <dimension ref="app"        compute="false"  />
+					    <dimension ref="pu"    		compute="false"  />
+					    <dimension ref="instance"   compute="false"   />
+					    <dimension ref="agentType"  compute="false"   />
+						<dimension ref="agent"      compute="false"   />
+						<dimension ref="hours"  	compute="true"   />
+						<dimension ref="minutes"    compute="true"   />										                           												   
+                    </dimensions>
+                    <measurement-refs>
+                    	<measurement ref="pendinglockstorelease"/>
+                    	<measurement ref="totallocksheld"/>
+                    	<measurement ref="locallocksheld"/>
+                    	<measurement ref="clusterwidelocksheld"/>
+                        <measurement ref="avgtimepertxn"/>
+                        <measurement ref="successfultxn" />
+						<measurement ref="totalsuccessfuldbtxn"/>
+						<measurement ref="transactionerrors"/>
+						<measurement ref="timestamp"/>
+                    </measurement-refs>
+                </hierarchy>
+                
+                 <hierarchy name="dashboardhealthhierarchy">
+                    <properties>                        
+                        <property name="storage-schema" value="dashboardBEMM"/>
+                        <property name="snapshot-rule-eval" value="true"/>
+                    </properties>				
+                    <dimensions>
+                        <dimension ref="app"        compute="false"  />
+					    <dimension ref="pu"    		compute="false"  />
+					    <dimension ref="instance"   compute="false"   />
+					    <dimension ref="agentType"  compute="false"   />
+						<dimension ref="agent"      compute="false"   />
+						<dimension ref="hours"  	compute="true"   />
+						<dimension ref="minutes"    compute="true"   />										                           												   
+                    </dimensions>
+                    <measurement-refs>
+                    	<measurement ref="pendinglockstorelease"/>
+                    	<measurement ref="totallocksheld"/>
+                    	<measurement ref="locallocksheld"/>
+                    	<measurement ref="clusterwidelocksheld"/>
+                        <measurement ref="avgtimepertxn"/>
+                        <measurement ref="successfultxn" />
+						<measurement ref="totalsuccessfuldbtxn"/>
+						<measurement ref="transactionerrors"/>
+						<measurement ref="timestamp"/>
+                    </measurement-refs>
+                </hierarchy>
+                
+                <hierarchy name="processhealthhierarchy">
+                    <properties>                        
+                        <property name="storage-schema" value="processBEMM"/>
+                        <property name="snapshot-rule-eval" value="true"/>
+                    </properties>				
+                    <dimensions>
+                        <dimension ref="app"        compute="false"  />
+					    <dimension ref="pu"    		compute="false"  />
+					    <dimension ref="instance"   compute="false"   />
+					    <dimension ref="agentType"  compute="false"   />
+						<dimension ref="agent"      compute="false"   />
+						<dimension ref="hours"  	compute="true"   />
+						<dimension ref="minutes"    compute="true"   />										                           												   
+                    </dimensions>
+                    <measurement-refs>
+                    	<measurement ref="pendinglockstorelease"/>
+                    	<measurement ref="totallocksheld"/>
+                    	<measurement ref="locallocksheld"/>
+                    	<measurement ref="clusterwidelocksheld"/>
+                        <measurement ref="avgtimepertxn"/>
+                        <measurement ref="successfultxn" />
+						<measurement ref="totalsuccessfuldbtxn"/>
+						<measurement ref="transactionerrors"/>
+						<measurement ref="timestamp"/>
+                    </measurement-refs>
+                </hierarchy>
+                
+                <hierarchy name="cachehealthhierarchy">
+                    <properties>                        
+                        <property name="storage-schema" value="cacheBEMM"/>
+                        <property name="snapshot-rule-eval" value="true"/>
+                    </properties>				
+                    <dimensions>
+                        <dimension ref="app"        compute="false"  />
+					    <dimension ref="pu"    		compute="false"  />
+					    <dimension ref="instance"   compute="false"   />
+					    <dimension ref="agentType"  compute="false"   />
+						<dimension ref="agent"      compute="false"   />
+						<dimension ref="hours"  	compute="true"   />
+						<dimension ref="minutes"    compute="true"   />										                           												   
+                    </dimensions>
+                    <measurement-refs>
+                    	<measurement ref="pendinglockstorelease"/>
+                    	<measurement ref="totallocksheld"/>
+                    	<measurement ref="locallocksheld"/>
+                    	<measurement ref="clusterwidelocksheld"/>
+                        <measurement ref="avgtimepertxn"/>
+                        <measurement ref="successfultxn" />
+						<measurement ref="totalsuccessfuldbtxn"/>
+						<measurement ref="transactionerrors"/>
+						<measurement ref="timestamp"/>
+                    </measurement-refs>
+                </hierarchy>
+                
+                <hierarchy name="eventhealthhierarchy">
+                    <properties>                        
+                        <property name="storage-schema" value="eventBEMM"/>
+                        <property name="snapshot-rule-eval" value="true"/>
+                    </properties>				
+                    <dimensions>
+                        <dimension ref="app"        	compute="false"  />
+					    <dimension ref="pu"    			compute="false"  />
+					    <dimension ref="instance"   	compute="false"  />
+					    <dimension ref="agentType"  	compute="false"  />
+						<dimension ref="agent"      	compute="false"  />
+						<dimension ref="destination"     	compute="true"   />
+						<dimension ref="hours"  		compute="true"   />
+						<dimension ref="minutes"    	compute="true"   />										                           												   
+                    </dimensions>
+                    <measurement-refs>
+                    	<measurement ref="eventreceiverate" />
+                    	<measurement ref="timestamp"/>
+                    </measurement-refs>
+                </hierarchy>
+                
+                
+                <hierarchy name="rulehealthhierarchy">
+                    <properties>                        
+                        <property name="storage-schema" value="ruleBEMM"/>
+                        <property name="snapshot-rule-eval" value="false"/>
+                    </properties>				
+                    <dimensions>
+                        <dimension ref="app"        	compute="false"  />
+					    <dimension ref="pu"    			compute="false"  />
+					    <dimension ref="instance"   	compute="false"  />
+					    <dimension ref="agentType"  	compute="false"  />
+						<dimension ref="agent"      	compute="false"  />
+						<dimension ref="rule"     		compute="true"   />									                           												   
+                    </dimensions>
+                    <measurement-refs>
+                    	<measurement ref="avgexecutiontime" />
+                    	<measurement ref="timestamp"/>
+                    </measurement-refs>
+                </hierarchy>
+                
+				<hierarchy name="AssetHierarchy">
+                    <properties>
+                        <property name="asset-hierarchy" value="true"/>
+                        <property name="asset-name" value="instance" />
+                        <property name="storage-schema" value="assetsBEMM"/>
+                        <property name="snapshot-rule-eval" value="false"/>
+                    </properties>				
+					<dimensions>
+						<dimension ref="app"/>
+						<dimension ref="instance"/>
+					</dimensions>
+					<measurement-refs>
+						<measurement ref="AssetStatus"/>
+					</measurement-refs>
+				</hierarchy>
+                
+			</hierarchies>
+		</cube>
+	</cubes>
+</schema>

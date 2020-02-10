@@ -1,0 +1,113 @@
+<acl xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="ACL.xsd">
+	<resources>
+		<resource id="C" type="CONCEPT"/>
+		<resource id="E" type="EVENT"/>
+		<resource id="RS" type="RULESET"/>
+		<resource id="PR" type="PROPERTY"/>
+		<resource name="/Concepts/*" id="ALL" type="CONCEPT"/>
+		<resource name="/Concepts/*" id="ALL" type="CONCEPT"/>
+		<resource name="/Concepts/Person" id="PP" type="CONCEPT"/>
+		<resource name="/Concepts/CreditCard" id="CRED" type="CONCEPT"/>
+		<resource name="/Concepts/Person/*" id="P" type="PROPERTY"/>
+		<resource name="/Concepts/BankUser/*" id="BU" type="PROPERTY"/>
+		<resource name="/Concepts/Person/FirstName" id="FN" type="PROPERTY"/>
+		<resource name="/Concepts/Person/LastName" id="LN" type="PROPERTY"/>
+		<resource name="/Concepts/CreditCardApplication/*" id="CCA" type="PROPERTY"/>
+		<resource name="/Concepts/Account/*" id="AC" type="PROPERTY"/>
+		<resource name="/Concepts/Account/Id" id="ACTID" type="PROPERTY"/>
+		<resource name="/Concepts/Account/AccountType" id="ACTYPE" type="PROPERTY"/>
+		<resource name="/Concepts/Application/*" id="APP" type="PROPERTY"/>
+		<resource name="/Concepts/Card/*" id="CA" type="PROPERTY"/>
+		<resource name="/Concepts/CreditCard/*" id="CC" type="PROPERTY"/>
+		<resource name="/Events/*" id="AllEvents" type="EVENT"/>
+		<resource name="/Events/Debit/*" id="DBALL" type="PROPERTY"/>
+		<resource name="/Events/SuspectAccountEvent/*" id="SUPEALL" type="PROPERTY"/>
+	</resources>
+	<entries>
+		<entry>
+			<role name="BUSINESS_USER"/>
+			<permissions>
+				<permission resourceref="#RS">
+					<action type="create_table">ALLOW</action>
+        			</permission> 
+				<permission resourceref="#PR" type="DOMAINMODEL">
+					<action type="create">ALLOW</action>
+        			</permission>
+        			<permission resourceref="#PR" type="DOMAINMODEL">
+					<action type="delete">ALLOW</action>
+        			</permission>
+        			<permission resourceref="#PR" type="DOMAINMODEL">
+					<action type="modify">ALLOW</action>
+        			</permission>
+				<permission resourceref="#LN" type="DOMAINMODEL">
+					<action type="modify">ALLOW</action>
+				</permission>
+				<permission resourceref="#C">
+					<action type="read">ALLOW</action>
+				</permission>			
+				<permission resourceref="#E">
+					<action type="read">ALLOW</action>
+				</permission>
+				<permission resourceref="#SUPEALL">
+					<action type="read">ALLOW</action>
+				</permission>
+				<permission resourceref="#DBALL">
+					<action type="read">ALLOW</action>
+				</permission>
+				<permission resourceref="#DBALL">
+					<action type="read">ALLOW</action>
+				</permission>
+				<permission resourceref="#P">
+					<action type="read">DENY</action>
+				</permission>
+				<permission resourceref="#PP">
+					<action type="read">DENY</action>
+				</permission>
+				<permission resourceref="#ALL">
+					<action type="read">ALLOW</action>
+				</permission>
+				<permission resourceref="#ACTID">
+					<action type="read">DENY</action>
+				</permission>				
+				<permission resourceref="#ACTYPE">
+					<action type="read">DENY</action>
+				</permission>					
+				<permission resourceref="#APP">
+					<action type="read">DENY</action>
+				</permission>	
+				<permission resourceref="#CRED">
+					<action type="read">DENY</action>
+				</permission>	
+			        <permission resourceref="#BU">
+					<action type="read">ALLOW</action>
+				</permission>
+				<permission resourceref="#CCA">
+					<action type="read">ALLOW</action>
+				</permission>
+				<permission resourceref="#AC">
+					<action type="read">ALLOW</action>
+				</permission>
+				<permission resourceref="#APP">
+					<action type="read">ALLOW</action>
+				</permission>
+				<permission resourceref="#CA">
+					<action type="read">ALLOW</action>
+				</permission>
+				<permission resourceref="#CC">
+					<action type="read">ALLOW</action>
+				</permission>
+			</permissions>
+		</entry>
+		<entry>
+			<role name="TECHU"/>
+			<permissions>
+				<permission resourceref="#DBALL">
+					<action type="read">ALLOW</action>
+				</permission>
+				<permission resourceref="#SUPEALL">
+					<action type="read">ALLOW</action>
+				</permission>
+			</permissions>
+		</entry>
+	</entries>
+</acl>

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" width="200" height="140" backgroundColor="#44bbdd">
+	<mx:Script>
+	    <![CDATA[
+	        import mx.collections.ArrayCollection;
+	
+	        [Bindable]
+	        public var expenses:ArrayCollection = new ArrayCollection([
+	            {Month:"Jan", Profit:2000, Expenses:1500},
+	            {Month:"Feb", Profit:1000, Expenses:200},
+	            {Month:"Mar", Profit:1500, Expenses:500}
+	        ]);
+    	]]>
+    </mx:Script>
+    <mx:ColumnChart id="myChart"
+    	x="0"
+    	y="0"
+    	width="100%"
+    	height="100%"
+        dataProvider="{expenses}" 
+        gutterLeft="40" 
+        gutterRight="10" 
+        gutterBottom="50" 
+        gutterTop="10"
+        showDataTips="true"
+    >
+        <mx:horizontalAxis>
+            <mx:CategoryAxis id="a1" dataProvider="{expenses}" categoryField="Month" title="Month" />
+        </mx:horizontalAxis>
+        <mx:horizontalAxisRenderers>
+            <mx:AxisRenderer axis="{a1}" labelGap="0" />
+        </mx:horizontalAxisRenderers>
+        <mx:verticalAxisRenderers>
+            <mx:AxisRenderer axis="{a1}" labelGap="0" />
+        </mx:verticalAxisRenderers>
+        <mx:series>
+            <mx:ColumnSeries xField="Month" yField="Profit" displayName="Profit" />
+            <mx:ColumnSeries xField="Month" yField="Expenses" displayName="Expenses" />
+        </mx:series>
+    </mx:ColumnChart>
+</mx:Canvas>

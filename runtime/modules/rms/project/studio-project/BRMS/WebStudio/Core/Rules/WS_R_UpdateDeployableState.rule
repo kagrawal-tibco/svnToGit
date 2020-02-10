@@ -1,0 +1,32 @@
+/**
+ * @description Toggle the state of the project deployable (dirty flag) 
+ * @author vdhumal-t420
+ */
+rule WebStudio.Core.Rules.WS_R_UpdateDeployableState {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		WebStudio.Core.Events.WS_E_UpdateDeployableStateEvent updateDeployStateEvent;
+	}
+	when {
+		updateDeployStateEvent.projectName != null;
+	}
+	then {
+		
+		Object LOGGER = Log.getLogger("WebStudio.Core.Rules.WS_R_UpdateDeployableState");
+		String projectName = updateDeployStateEvent.projectName;
+		
+		String deployStateExtId = "Deploy@" + projectName;
+		String subscriptionId = WS_RF_GetSubscriptionId(updateDeployStateEvent.userName);
+		if (subscriptionId != null) deployStateExtId += ("@" + subscriptionId);
+		
+		AMS_C_DeployableState deployableState = 
+			Cluster.DataGrid.CacheLoadConceptByExtIdByUri(deployStateExtId, false, "/Approval/Concepts/ArtifactsConcepts/AMS_C_DeployableState");
+		if (deployableState != null) {
+			deployableState.dirty = updateDeployStateEvent.isDirty;
+			Log.log(LOGGER, "Debug", "Current Deployable Dirty State for project %s - %s", projectName, deployableState.dirty);
+		}			
+	}
+}

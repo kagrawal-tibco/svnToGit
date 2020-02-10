@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml"
+	verticalAlign="middle"
+	horizontalGap="0"
+	horizontalScrollPolicy="off"
+	verticalScrollPolicy="off"
+	initialize="init()"
+	fontSize="11"
+	fontFamily="Arial"
+	color="#232323"
+	paddingLeft="10"
+	paddingRight="10"
+	borderStyle="solid"
+	borderSides="left right"
+	borderColor="#696767"
+>
+	<mx:Style>
+		.firstPageButton{
+			skin:Embed("assets/images/pagechooser/first/default.png");
+			over-skin: Embed("assets/images/pagechooser/first/over.jpg");
+			down-skin: Embed("assets/images/pagechooser/first/down.jpg");
+			disabled-skin: Embed("assets/images/pagechooser/first/disabled.jpg");
+		}
+		.prevPageButton{
+			skin:Embed("assets/images/pagechooser/prev/default.png");
+			over-skin: Embed("assets/images/pagechooser/prev/over.jpg");
+			down-skin: Embed("assets/images/pagechooser/prev/down.jpg");
+			disabled-skin: Embed("assets/images/pagechooser/prev/disabled.jpg");
+		}
+		.nextPageButton{
+			skin:Embed("assets/images/pagechooser/next/default.png");
+			over-skin: Embed("assets/images/pagechooser/next/over.jpg");
+			down-skin: Embed("assets/images/pagechooser/next/down.jpg");
+			disabled-skin: Embed("assets/images/pagechooser/next/disabled.jpg");
+		}
+		.lastPageButton{
+			skin:Embed("assets/images/pagechooser/last/default.png");
+			over-skin: Embed("assets/images/pagechooser/last/over.jpg");
+			down-skin: Embed("assets/images/pagechooser/last/down.jpg");
+			disabled-skin: Embed("assets/images/pagechooser/last/disabled.jpg");
+		}
+	</mx:Style>
+	<mx:Script>
+		<![CDATA[
+			import mx.events.FlexEvent; //color="#535252"
+			
+			public static const MINIMAL_CONTROLS:String = "minimalControlsState";
+			
+			[Bindable]
+			private var _itemPositionString:String;
+			
+			[Bindable]
+			private var _pageCountLabel:String;
+			
+			[Bindable]
+			private var _prevItemButtonEnabled:Boolean = false;
+			
+			[Bindable]
+			private var _nextItemButtonEnabled:Boolean = false;
+			
+			//Important to initialize here
+			private var _currentPage:int = 1;
+			private var _itemsPerPage:int = 1;
+			private var _totalItemCount:int = 0;
+			private var _itemDescriptor:String = "items";
+			
+			public function get currentPage():int{ return _currentPage; }
+			public function get maxPageNumber():int{
+				if(_totalItemCount%_itemsPerPage != 0){
+					return _totalItemCount/_itemsPerPage + 1;
+				}
+				return _totalItemCount/_itemsPerPage;
+			}
+			public function get itemsPerPage():int{ return _itemsPerPage; }
+			public function get totalItemCount():int{ return _totalItemCount; }
+			public function get itemDescriptor():String{ return _itemDescriptor; }
+			/** Returns the index of the first item on the current page. */
+			public function get pagesFirstItemIndex():int{ return (_currentPage-1)*_itemsPerPage + 1; }				
+			public function get pagesLastItemIndex():int{ return int(Math.min(_currentPage*_itemsPerPage, _totalItemCount)); }
+			
+			public function set currentPage(value:int):void{
+				if(_currentPage == value){ return; }
+				_currentPage = cleansePageNumber(value);
+				if(pageNumberInput != null){ pageNumberInput.text = String(_currentPage); }
+				updateItemPositionLabel();
+				updatedButtonEnableds();
+				dispatchEvent(new PageChooserEvent(_currentPage));
+			}
+			public function set itemsPerPage(value:int):void{
+				_itemsPerPage = value > 0 ? value:1;
+				updateCurrentPage();
+				updatePageCountLabel();
+				updateItemPositionLabel();
+			}
+			public function set totalItemCount(value:int):void{
+				_totalItemCount = value >= 0 ? value:0;
+				updateCurrentPage();
+				updatePageCountLabel();
+				updateItemPositionLabel();
+			}
+			public function set itemDescriptor(value:String):void{
+				_itemDescriptor = value;
+				updateItemPositionLabel();
+			}
+			
+			protected function init():void{
+				updatePageCountLabel();
+				updateItemPositionLabel();
+			}
+			
+			protected function updateCurrentPage():void{
+				var max:int = maxPageNumber;
+				if(_currentPage > max){ currentPage = max; }
+			}
+			
+			protected function updatePageCountLabel():void{
+				_pageCountLabel = "of " + String(maxPageNumber);
+			}
+			
+			protected function updateItemPositionLabel():void{
+				var iStart:int = (_currentPage-1)*_itemsPerPage + 1;
+				var iEnd:int = int(Math.min(_currentPage*_itemsPerPage, _totalItemCount)); 
+				_itemPositionString = "(" + _itemDescriptor + " " + String(iStart) + "-" + String(iEnd) + " of " + _totalItemCount + ")";
+			}
+			
+			protected function updatedButtonEnableds():void{
+				_prevItemButtonEnabled = _currentPage != 1;
+				_nextItemButtonEnabled = _currentPage != maxPageNumber;
+			}
+			
+			protected function cleansePageNumber(dirtyPageNumber:int):int{
+				var max:int = maxPageNumber;
+				if(dirtyPageNumber > max){ return max; }
+				else if(dirtyPageNumber < 1){ return 1; }
+				return dirtyPageNumber;
+			}
+			
+			protected function handleFirstPageButtonClick(event:MouseEvent):void{
+				if(_currentPage != 1){ currentPage = 1; }
+			}
+			
+			protected function handlePreviousPageButtonClick(event:MouseEvent):void{
+				if(_currentPage > 1){ currentPage = _currentPage - 1; }
+			}
+			
+			protected function handleSpecificPageEntered(event:Event=null):void{
+				//if(event){ trace(event.type); }
+				var newPage:Number = parseInt(pageNumberInput.text);
+				if(isNaN(newPage)){ //ignore invalid input
+					pageNumberInput.text = String(_currentPage);
+					return;
+				}
+				currentPage = newPage;
+				pageNumberInput.validateNow(); //make sure .textWidth is based on current text
+				pageNumberInput.width = Math.max(30, pageNumberInput.textWidth + 8);
+				pageNumberInput.horizontalScrollPosition = 0;
+			}
+			
+			protected function handleNextPageButtonClick(event:MouseEvent):void{
+				if(_currentPage < maxPageNumber){ currentPage = _currentPage + 1; }
+			}
+			
+			protected function handleLastPageButtonClick(event:MouseEvent):void{
+				currentPage = maxPageNumber;
+			}
+			
+		]]>
+	</mx:Script>
+	<mx:Button id="firstPageButton" height="13" styleName="firstPageButton" enabled="{_prevItemButtonEnabled}" click="handleFirstPageButtonClick(event);"></mx:Button>
+	<mx:Button id="prevPageButton" height="13" styleName="prevPageButton" enabled="{_prevItemButtonEnabled}" click="handlePreviousPageButtonClick(event);"></mx:Button>
+	<mx:Label id="displayingPageLabel" text="Displaying Page:" />
+	<mx:Spacer width="3" />
+	<mx:TextInput id="pageNumberInput" text="1" width="30" height="15" color="#747272" paddingTop="-3" paddingBottom="-4" focusAlpha="0" enter="handleSpecificPageEntered(event)" focusOut="handleSpecificPageEntered(event)"/>
+	<mx:Spacer width="3" />
+	<mx:Label text="{_pageCountLabel}" />
+	<mx:Button id="nextPageButton" height="13" styleName="nextPageButton" enabled="{_nextItemButtonEnabled}" click="handleNextPageButtonClick(event);"></mx:Button>
+	<mx:Button id="lastPageButton" height="13" styleName="lastPageButton" enabled="{_nextItemButtonEnabled}" click="handleLastPageButtonClick(event);"></mx:Button>
+	<mx:Spacer id="itemPositionSpacer" width="15" />
+	<mx:Label id="itemPositionLabel" text="{_itemPositionString}" />
+	<mx:states>
+		<mx:State name="{MINIMAL_CONTROLS}">
+			<mx:SetProperty target="{displayingPageLabel}" name="text" value="Page:" />
+			<mx:RemoveChild target="{itemPositionLabel}" />
+			<mx:RemoveChild target="{itemPositionSpacer}" />
+		</mx:State>
+		
+	</mx:states>
+</mx:HBox>

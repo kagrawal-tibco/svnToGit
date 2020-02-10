@@ -1,0 +1,24 @@
+/**
+ * @description Retuns the Login Token with Authen only  
+ */
+String rulefunction WebStudio.Security.Authn.RuleFunctions.WS_RF_GetUserAuthenToken {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String loginToken;
+	}
+	body {
+		
+		String authenEle = XPath.execute("$var/token/authen", loginToken, null);
+
+		Object strBuf = String.createBuffer(0);
+		String.append(strBuf, "<token>");
+		String.append(strBuf, authenEle);
+		String.append(strBuf, "</token>");
+
+		String authenToken = String.convertBufferToString(strBuf);
+
+		return authenToken;
+	}
+}

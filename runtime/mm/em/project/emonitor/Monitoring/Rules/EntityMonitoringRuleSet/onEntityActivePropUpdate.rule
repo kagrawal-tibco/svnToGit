@@ -1,0 +1,82 @@
+/**
+ * @description 
+ * @author 
+ */
+rule Monitoring.Rules.EntityMonitoringRuleSet.onEntityActivePropUpdate {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Shared.Concepts.MonitorableEntity	updatedentity;
+		
+	}
+	when {
+		updatedentity.aggregated == true && (updatedentity.previousActiveState == "true" || updatedentity.previousActiveState == "false");
+	}
+	then {
+		boolean logClusterHealth = false;
+		Shared.RuleFunctions.log("onEntityActivePropUpdate","DEBUG",getFQName(updatedentity) + 
+								 ", type = " + updatedentity.type +	" has been updated");
+		
+		Monitoring.Concepts.ClustHealthOverview cho = 
+			Instance.getByExtId(
+				Monitoring.RuleFunctions.getClustHealthConcptExtId(
+					Shared.RuleFunctions.topology.getClustName(updatedentity) ) );
+		
+		int idx = -1;
+		
+		if (cho != null) 
+			idx = Instance.PropertyArray.indexOfString(cho.entityTypes,updatedentity.type);
+			
+		Shared.RuleFunctions.log("onEntityActivePropUpdate","DEBUG", "idx = " + idx +
+								 " updatedentity.previousActiveState = " + updatedentity.previousActiveState +
+								 " updatedentity.active = " + updatedentity.active +
+								 " updatedentity.aggregated = " + updatedentity.aggregated);
+		
+		if (idx != -1){
+		    if (updatedentity.previousActiveState == "true" && updatedentity.active == false) {
+		        //added to display predefined names --Nick Xu
+		        //if(updatedentity.predefined == true){
+		            //Shared.RuleFunctions.log("onEntityActivePropUpdate","DEBUG",updatedentity.topologyProps[0]+" has been set from "+updatedentity.name);
+		            //updatedentity.name = updatedentity.topologyProps[0];
+		        //}
+		        //remove from active count
+		        if (cho.entityActiveCount[idx] > 0)
+		        	cho.entityActiveCount[idx] = cho.entityActiveCount[idx] - 1;
+		        	
+		        //add to inactive count
+		        cho.entityInActiveCount[idx] = cho.entityInActiveCount[idx] + 1;
+		    }
+		    else if (updatedentity.previousActiveState == "false" && updatedentity.active == true) {
+		        //add to active count
+		        cho.entityActiveCount[idx] = cho.entityActiveCount[idx] + 1;   
+		             
+		        //remove from inactive count
+				if (cho.entityInActiveCount[idx] > 0)
+		        	cho.entityInActiveCount[idx] = cho.entityInActiveCount[idx] - 1;
+		    }
+		    
+		    Shared.RuleFunctions.log("onEntityActivePropUpdate","DEBUG",ClusterHealthConcptToString(cho));
+		    
+		    //added by Nick Xu for re-discovering. 09/22/2009
+		    if(updatedentity.active == true && updatedentity.previousActiveState == "false"){
+		        Shared.Concepts.MonitorableEntity parent = updatedentity;
+		        while (parent != null){
+		            String parentFQName = getFQName(parent);
+		            Shared.RuleFunctions.log("onEntityActivePropUpdate","DEBUG","Triggering "+parentFQName+" health check...");
+		            String newParentHealthLevel = determinePropertyValue(parent,"healthLevel",null);
+		            if (parent.healthLevel != newParentHealthLevel) {
+		                //store current value of health as previous
+		                parent.previousHealthLevel = parent.healthLevel;
+		                parent.healthLevel = newParentHealthLevel;
+		                Shared.RuleFunctions.log("onEntityActivePropUpdate","DEBUG","Marked "+getFQName(parent)+"'s health level as "+parent.healthLevel);
+		            }
+		            parent = parent.parent;
+		        }
+		    }
+		    Monitoring.Events.cmetrics.ComputedMetricEvent event = Monitoring.Events.cmetrics.ComputedMetricEvent.ComputedMetricEvent(null,null,updatedentity@extId,"cluster","cstats");
+		    Event.assertEvent(event);
+		}
+	}
+}

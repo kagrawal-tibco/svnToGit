@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<drivers>
+
+	<driver>
+		<type>ActiveSpaces</type>
+		<label>TIBCO ActiveSpaces</label>
+		<class>com.tibco.cep.driver.as.internal.ASDriver</class>
+		<description>TIBCO's ActiveSpaces</description>
+		<version>1.0.0</version>
+		<properties>
+			<property name="MetaspaceName" type="String" default="ms" />
+			<property name="MemberName" type="String" default="" />
+			<property name="DiscoveryUrl" type="String" default="" />
+			<property name="ListenUrl" type="String" default="" />
+			<property name="RemoteListenUrl" type="String" default="" />
+			<property name="EnableSecurity" type="Boolean" default="false" />
+			<property name="SecurityRole" type="String" default="Requester" />
+			<property name="IdentityPassword" type="String" default="" mask="true" />
+			<property name="PolicyFile" type="String" default="" />
+			<property name="TokenFile" type="String" default="" />
+            <property name="Credential" type="String" default="USERPWD" />
+            <property name="Domain" type="String" default="" />
+            <property name="UserName" type="String" default="" />
+            <property name="Password" type="String" default="" mask="true" />
+            <property name="KeyFile" type="String" default="" />
+            <property name="PrivateKey" type="String" default="" />
+		</properties>
+		<destinations>
+			<property name="SpaceName" type="String"/>
+			<property name="DistributionRole" type="String" default="LEECH"/>
+			<property name="Filter" type="String"/>
+			<property name="ConsumptionMode" type="String" default="EventListener"/>
+			<property name="BrowserType" type="String" default="GET"/>
+			<property name="DistributionScope" type="String" default="ALL"/>
+			<property name="TimeScope" type="String" default="ALL"/>
+			<property name="PutEvent" type="Boolean" default="true" />
+			<property name="TakeEvent" type="Boolean" default="false" />
+			<property name="ExpireEvent" type="Boolean" default="false" />
+			<property name="Prefetch" type="Long" default="-1" />
+		</destinations>
+		<references>
+			<type>ae.shared.ASTransportResource</type>
+		</references>
+		<serializers userdefined="true">
+			<serializer type="asSerializer"
+				class="com.tibco.cep.driver.as.serializers.ActiveSpacesSerializer" default="true" />
+		</serializers>
+		<configuration>
+			<property>
+				<name>SecurityRole</name>
+				<parent>channel</parent>
+				<type>combo-box</type>
+				<choices default="Requester">
+					<choice displayed="Requester" value="Requester" />
+					<choice displayed="Controller" value="Controller" />
+				</choices>
+			</property>
+            <property>
+                <name>Credential</name>
+                <parent>channel</parent>
+                <type>combo-box</type>
+                <choices default="USERPWD">
+                    <choice displayed="USERPWD" value="USERPWD" />
+                    <choice displayed="X509V3" value="X509V3" />
+                 </choices>
+            </property>
+			<property>
+				<name>DistributionRole</name>
+				<parent>destination</parent>
+				<type>combo-box</type>
+				<choices default="LEECH">
+					<choice displayed="Leech" value="LEECH" />
+					<choice displayed="Seeder" value="SEEDER" />
+				</choices>
+			</property>
+			<property>
+				<name>ConsumptionMode</name>
+				<parent>destination</parent>
+				<type>combo-box</type>
+				<choices default="EventListener">
+					<choice displayed="EventListener" value="EventListener" />
+					<choice displayed="EntryBrowser" value="EntryBrowser" />
+					<choice displayed="Router" value="Router" />
+				</choices>
+			</property>
+			<property>
+				<name>BrowserType</name>
+				<parent>destination</parent>
+				<type>combo-box</type>
+				<choices default="GET">
+					<choice displayed="Get" value="GET" />
+					<choice displayed="Take" value="TAKE" />
+					<choice displayed="LockAndTake" value="LOCK" />
+				</choices>
+			</property>
+			<property>
+				<name>DistributionScope</name>
+				<parent>destination</parent>
+				<type>combo-box</type>
+				<choices default="ALL">
+					<choice displayed="ALL" value="ALL" />
+					<choice displayed="SEEDED" value="SEEDED" />
+				</choices>
+			</property>
+			<property>
+				<name>TimeScope</name>
+				<parent>destination</parent>
+				<type>combo-box</type>
+				<choices default="ALL">
+					<choice displayed="ALL" value="ALL" />
+					<choice displayed="NEW" value="NEW" />
+					<choice displayed="NEW_EVENTS" value="NEW_EVENTS" />
+					<choice displayed="SNAPSHOT" value="SNAPSHOT" />
+				</choices>
+			</property>
+		</configuration>
+	</driver>
+
+</drivers>

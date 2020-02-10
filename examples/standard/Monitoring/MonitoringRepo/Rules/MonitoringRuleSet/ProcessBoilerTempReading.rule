@@ -1,0 +1,24 @@
+/**
+ * @description 
+ * @author 
+ */
+rule Rules.MonitoringRuleSet.ProcessBoilerTempReading {
+	attribute {
+		priority = 1;
+		forwardChain = true;
+	}
+	declare {
+		Concepts.Boiler	boiler;
+		Events.General.BoilerTemp	boilertemp;
+		
+	}
+	when {
+		boiler.Id==boilertemp.BoilerId;
+		boiler.Status=="Operating";
+	}
+	then {
+		System.debugOut
+		    ("##### Boiler <" + boiler.Id + "> 10 second temp reading <" + boilertemp.Temp + ">");
+		boiler.CurrentTemp=boilertemp.Temp;
+	}
+}

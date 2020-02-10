@@ -1,0 +1,54 @@
+<div [ngClass]="{'ws-borderMultiFilter':!this.allowRemoveClause}">
+  <div class="ws-actionConceptType" *ngIf="!this.allowRemoveClause">
+    <input type="image" src="assets/img/save.gif" [disabled]="this.readOnly"/>
+    <ng-container i18n>{{i18n('Add parameters to ')}}</ng-container>{{this.actionConceptType}}
+  </div>
+  <div #parent class="MultiFilterClient" [ngClass]="{
+                                          'ws-diff-background-add': this.isAdded ,
+                                          'ws-diff-background-delete': this.isDeleted,
+                                          'ws-problem-filter-selection': this.isProblematic }" >
+    <div class="removeMultiFilter">
+      <input type="image"
+             title="Remove Multi Filter "
+             *ngIf="this.allowRemoveClause && this.parentClause != undefined"
+             src="assets/img/delete.png"
+             (click)="this.onDeleteMultiFilter(this, $event)"
+             [disabled]="this.readOnly"/>
+    </div>
+    <div  *ngIf="this.showMatchType"
+    [ngClass]="{'ws-diff-background-modify': this.isModified}">
+      <a href="#" id="matchTypeLink" mat-button [matMenuTriggerFor]="matchType" (click)="toggled($event)">
+        {{this.multiFilter.getMatchType()}}
+      </a>
+      <mat-menu #matchType="matMenu">
+        <li *ngFor="let matchTypes of this._matchTypeOptions" mat-menu-item (click)="this.updateMatchType(matchTypes, true)">
+          {{matchTypes}}
+        </li>
+      </mat-menu>
+      <div class="diff-previousvalue" *ngIf="this.isModified">
+        <label>
+          was  {{this.previousValue}}
+        </label>
+      </div>
+    </div>
+    <div class="{{ isRtl() ? 'ws-filterborder-rtl' : 'ws-filterborder' }}">
+    </div>
+    <div>
+      <div #child class="singleFilterClient">
+      </div>
+      <div class="addMultiFilterClient">
+        <input type="image"
+               title="Add Single Filter"
+               src="assets/img/add.png"
+               (click)="this.onAddSingleFilter($event)"
+               [disabled]="this.readOnly"
+               *ngIf="this.allowAddFilter"/>
+        <button  *ngIf="this.allowNestedClause" class="{{ isRtl() ? 'addMultiFilterClientBtn-rtl' : 'addMultiFilterClientBtn' }}"
+                  title="Add Multi Filter"
+                  (click)="this.onAddMultiFilter($event)"
+                  [disabled]="this.readOnly">+()
+        </button>
+      </div>
+    </div>
+  </div>
+</div><br/>

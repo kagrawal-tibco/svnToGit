@@ -1,0 +1,71 @@
+/**
+ * @description 
+ */
+void rulefunction Monitoring.RuleFunctions.CreateAndInitClustHealthConcpt {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		
+		String clustName;
+	}
+	body {
+		String LOG_NAME = "createAndInitClustHealthConcpt";
+		
+		if (clustName == null || String.length(String.trim(clustName)) == 0)
+			throw Exception.newException("ERROR","Invalid cluster name: '" + clustName + "'",null);
+		
+		String extId = Monitoring.RuleFunctions.getClustHealthConcptExtId(clustName);
+		
+		Shared.RuleFunctions.log(LOG_NAME,"DEBUG","Creating and initializing Concept with ExtId: " + extId);
+		
+		Monitoring.Concepts.ClustHealthOverview cho = Instance.getByExtId(extId);
+		
+		if (cho != null)
+			throw Exception.newException("ERROR","Duplicated ExtId: " + extId, null);
+		 
+		//Create
+		cho = Monitoring.Concepts.ClustHealthOverview.ClustHealthOverview(
+					extId /*extId String */,
+					null /*clusterHealthReason String */,
+					null /*entityTypes String[] */, 
+					null/*entityCount int[] */, 
+					null/*entityActiveCount int[] */, 
+					null/*entityInActiveCount int[] */, 
+					null /*entityCriticalHealthLevelCount int[] */,
+					null /*entityWarningHealthLevelCount int[] */, 
+					null/*entityNormalHealthLevelCount int[] */,
+					null/*entityHealthReason String[] */);
+		
+//		cho = Instance.newInstance("Monitoring.Concepts.ClustHealthOverview"
+		
+		//Initialize
+		if (cho.entityTypes@length == 5){
+		    return;
+		}
+		
+		cho.clusterHealthReason = "";
+		
+		cho.entityTypes[0] = "machine";
+		cho.entityTypes[1] = "process";
+		cho.entityTypes[2] = "inference";
+		cho.entityTypes[3] = "query";
+		cho.entityTypes[4] = "cache";
+		
+		for (int i = 0 ; i < 5 ; i = i + 1){
+		    cho.entityCount[i] = 0;
+		    cho.entityActiveCount[i] = 0;
+		    cho.entityInActiveCount[i] = 0;
+		    cho.entityCriticalHealthLevelCount[i] = 0;
+		    cho.entityWarningHealthLevelCount[i] = 0;
+		    cho.entityNormalHealthLevelCount[i] = 0;
+		    cho.entityHealthReason[i] = "";
+		}
+		
+		Shared.RuleFunctions.log(LOG_NAME,"DEBUG","Created Concept." + 
+			"[ Cluster = " + clustName +
+			", ExtId = " + extId +"]");
+			
+		Shared.RuleFunctions.log(LOG_NAME,"DEBUG",ClusterHealthConcptToString(cho));
+	}
+}

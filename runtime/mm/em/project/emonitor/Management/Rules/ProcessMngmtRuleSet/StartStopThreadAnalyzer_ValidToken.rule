@@ -1,0 +1,102 @@
+/**
+ * @description 
+ * @author hlouro-lt-T61
+ */
+rule Management.Rules.ProcessMngmtRuleSet.StartStopThreadAnalyzer_ValidToken {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Management.Events.request.StartStopThreadAnalyzerRequestEvent requestevent;
+	}
+	when {
+		requestevent.token != null && String.length(requestevent.token) != 0;
+	}
+	then {
+		String family = "StartStopThreadAnalyzer_ValidToken";
+		Shared.RuleFunctions.log(family,"DEBUG","Rule " + family + " triggered");
+		
+		String entityType, monitoredEntityName;
+		String isStartTA, threadReportDir, samplingInterval, methodFQName;
+		
+		
+		try {
+			Shared.Concepts.LoggedInUser user = Instance.getByExtId(requestevent.token);
+			if (user == null) {
+			    Shared.Events.reqres.FailureResponseEvent event = Shared.Events.reqres.FailureResponseEvent.FailureResponseEvent(null,null,"001","Invalid token");
+			    Event.replyEvent(requestevent, event);
+			}
+			else {
+			    user.lastAccessTime = System.currentTimeMillis();
+			    String mId = requestevent.monitorableid;
+			    Shared.Concepts.MonitorableEntity monitorable = Instance.getByExtId(mId);
+			    if (monitorable == null) {
+			        Shared.Events.reqres.FailureResponseEvent event = Shared.Events.reqres.FailureResponseEvent.FailureResponseEvent(null,null,"010","Invalid monitor id");
+			        Event.replyEvent(requestevent, event);
+			    }
+			    else {
+//			    	user.monitoring = monitorable;  //what is this for?
+//			        monitorable.lastMonitoredTime = System.currentTimeMillis();
+			        
+			        entityType = monitorable.type;
+		        	monitoredEntityName = getFQName(monitorable);
+		        	isStartTA = requestevent.isStartTA;
+		        	threadReportDir = requestevent.threadReportDir;  //for now it is not used. We are always passing ""
+		        	samplingInterval = requestevent.samplingInterval;
+		        	
+		        	Shared.RuleFunctions.log(family,"DEBUG","About to Start/Stop Thread Analyzer with the following settings:");
+		        	
+		        	Shared.RuleFunctions.log(family,"DEBUG","entityType= " + entityType);				//should it always print process??
+		        	Shared.RuleFunctions.log(family,"DEBUG","monitoredEntityName= " + monitoredEntityName);
+		        	Shared.RuleFunctions.log(family,"DEBUG","isStartThreadAnalyzer= " + requestevent.isStartTA);
+		        	Shared.RuleFunctions.log(family,"DEBUG","threadReportDir= " + requestevent.threadReportDir);
+		        	Shared.RuleFunctions.log(family,"DEBUG","samplingInterval= " + requestevent.samplingInterval);
+		        	
+		        	String[] properties = BEMM.topology.getProperties(String.split(monitoredEntityName,":")); //todo check this
+			    	
+			    	if (properties!=null) {
+				        for(int i =0; i < properties@length; i++) {
+				            Shared.RuleFunctions.log(family,"DEBUG","property[" +i+"]= " + properties[i]);
+				        }
+		        	} else 
+		        		Shared.RuleFunctions.log(family,"DEBUG","properties= null");
+			    	
+			    	String resultXML;
+			        //START THREAD ANALYZER
+			        if(isStartTA == "true" ) {		//TODO: (properites != null)
+			        	Shared.RuleFunctions.log(family,"DEBUG","Starting Thread Analyzer");
+			        	
+			        	resultXML=BEMM.methods.startThreadAnalyzer( entityType, monitoredEntityName, properties, 
+							        					threadReportDir, samplingInterval, 
+							        					requestevent.username, requestevent.password );
+							        					
+			        	if (!String.contains(String.toLowerCase(resultXML),"error"))
+			        		Shared.RuleFunctions.log(family,"DEBUG","Thread Analyzer SUCCESSFULLY started");
+		        		else
+		        			Shared.RuleFunctions.log(family,"DEBUG","FAILED to start Thread Analyzer");
+			        } 
+			        else { //STOP THREAD ANALYZER
+			        	Shared.RuleFunctions.log(family,"DEBUG","Stopping Thread Analyzer");
+			        	
+			        	resultXML=BEMM.methods.stopThreadAnalyzer(entityType, monitoredEntityName, properties,
+			        											  requestevent.username, requestevent.password);
+			        	
+			        	if (!String.contains(String.toLowerCase(resultXML),"error"))
+			        		Shared.RuleFunctions.log(family,"DEBUG","Thread Analyzer SUCCESSFULLY stopped");
+		        		else
+		        			Shared.RuleFunctions.log(family,"DEBUG","FAILED to stop Thread Analyzer");
+			        }
+			        
+			        Shared.Events.reqres.SuccessXMLResponseEvent event = Shared.Events.reqres.SuccessXMLResponseEvent.SuccessXMLResponseEvent(null,resultXML);
+			        Event.replyEvent(requestevent, event);
+			    }
+			}
+		} //try
+		catch (Exception e) { 
+			Management.RuleFunctions.Exceptions.printAndSendException(e /*Except Object */,
+									family/*family String */,methodFQName/*methodFQName String */,
+									monitoredEntityName /*monitoredEntityName String */,requestevent/*requestevent Event */);
+		}
+	}
+}

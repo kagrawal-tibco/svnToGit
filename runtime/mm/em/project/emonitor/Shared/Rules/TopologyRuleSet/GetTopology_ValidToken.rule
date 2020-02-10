@@ -1,0 +1,51 @@
+/**
+ * @description 
+ * @author 
+ */
+rule Shared.Rules.TopologyRuleSet.GetTopology_ValidToken {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Shared.Events.reqres.topology.TopologyRequestEvent	topologyrequestevent;
+		
+	}
+	when {
+		topologyrequestevent.token != null && String.length(topologyrequestevent.token) != 0;
+	}
+	then {
+		Shared.Concepts.LoggedInUser user = Instance.getByExtId(topologyrequestevent.token);
+		if (user == null) {
+		    Shared.Events.reqres.FailureResponseEvent event = Shared.Events.reqres.FailureResponseEvent.FailureResponseEvent(null,null,"001","Invalid token");
+		    Event.replyEvent(topologyrequestevent, event);
+		}
+		else {
+		    user.lastAccessTime = System.currentTimeMillis();
+		    String parentid = topologyrequestevent.parentid;
+		    int depth = topologyrequestevent.depth;
+		    if (parentid == null || String.length(parentid) == 0) {
+		        parentid = Shared.Concepts.GlobalScoreCard.siteID;
+		    }
+		    if (depth <= 0) {
+		        depth = 5;
+		    }
+		    Shared.Concepts.MonitorableEntity monitorable = Instance.getByExtId(parentid);
+		    String siteXML = "";
+		    if (monitorable != null) {
+		        Shared.Concepts.MonitorableEntity selectedEntity = user.monitoring;
+		        while (selectedEntity != null && selectedEntity.purged == true){
+		           selectedEntity = selectedEntity.parent; 
+		        }
+		        if (selectedEntity == null && Shared.Concepts.GlobalScoreCard.siteID != null){
+		            selectedEntity = Instance.getByExtId(Shared.Concepts.GlobalScoreCard.siteID);
+		        }
+		        siteXML = toXML(monitorable,depth,selectedEntity,Shared.Concepts.GlobalScoreCard.purgeCounts);
+		    }
+		    Shared.RuleFunctions.log("GetTopology_ValidToken","DEBUG","Sending "+siteXML+" to User[token="+user@extId+",username="+user.userName+"]");
+		    Shared.Events.reqres.SuccessXMLResponseEvent event = Shared.Events.reqres.SuccessXMLResponseEvent.SuccessXMLResponseEvent(null,siteXML);
+		    Event.replyEvent(topologyrequestevent, event);
+		}
+		Event.consumeEvent(topologyrequestevent);
+	}
+}

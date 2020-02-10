@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<project name="post-install" default="post-install" basedir=".">
+	<property file="post-install.properties"/>
+	<import file="common-tasks.xml"/>
+
+	<taskdef resource="net/sf/antcontrib/antcontrib.properties"/>
+
+	<target name="post-install" depends="import-wrappers,
+					     				set-subst-vars,
+					     				set-studio-permissions,
+					     				import-studio-link-files,
+										update-tra-files,
+										init-studio">
+		<echo message="Done post-installation tasks." />
+	</target>
+
+	<target name="import-wrappers">
+		<echo message="Copying studio-tools wrapper..." />
+		<copy file="${tibco.home}/tools/wrapper/wrap${tibco.wrapper.extension}"
+			tofile="${tibco.home}/be/${beVersionShort}/studio/bin/studio-tools${tibco.wrapper.extension}" />
+		<chmod file="${tibco.home}/be/${beVersionShort}/studio/bin/studio-tools${tibco.wrapper.extension}" perm="755" />
+	</target>
+
+	<target name="set-subst-vars">
+		<antcall target="substitute-variables">
+			<param name="out.file" value="${tibco.home}/be/${beVersionShort}/studio/bin/studio-tools.tra"/>
+		</antcall>
+		<antcall target="substitute-variables">
+			<param name="out.file" value="${tibco.home}/be/${beVersionShort}/studio/eclipse/configuration/studio.tra"/>
+		</antcall>
+		<antcall target="substitute-variables">
+			<param name="out.file" value="${tibco.home}/be/${beVersionShort}/studio/eclipse/dropins/TIBCOBusinessEvents-Studio-plugins.link"/>
+		</antcall>
+		<antcall target="substitute-variables">
+			<param name="out.file" value="${tibco.home}/be/${beVersionShort}/studio/eclipse/dropins/TIBCOBusinessEvents-EclipsePlatform-plugins.link"/>
+		</antcall>
+		<if>
+			<available file="${tibco.home}/be/${beVersionShort}/eclipse-platform/eclipse/dropins/TIBCOBusinessEvents-Studio-plugins.link" type="file"/>
+			<then>
+				<antcall target="substitute-variables">
+					<param name="out.file" value="${tibco.home}/be/${beVersionShort}/eclipse-platform/eclipse/dropins/TIBCOBusinessEvents-Studio-plugins.link"/>
+				</antcall>
+			</then>
+		</if>
+		<if>
+			<os family="mac"/>
+			<then>
+				<antcall target="substitute-variables">
+					<param name="out.file" value="${tibco.home}/be/${beVersionShort}/studio/eclipse/studio.app/Contents/MacOS/studio.ini"/>
+				</antcall>
+				<if>
+					<available file="${tibco.home}/be/${beVersionShort}/eclipse-platform/eclipse/Eclipse.app/Contents/Eclipse/dropins/TIBCOBusinessEvents-Studio-plugins.link" type="file"/>
+					<then>
+						<antcall target="substitute-variables">
+							<param name="out.file" value="${tibco.home}/be/${beVersionShort}/eclipse-platform/eclipse/Eclipse.app/Contents/Eclipse/dropins/TIBCOBusinessEvents-Studio-plugins.link"/>
+						</antcall>
+					</then>
+				</if>
+			</then>
+			<else>
+				<antcall target="substitute-variables">
+					<param name="out.file" value="${tibco.home}/be/${beVersionShort}/studio/eclipse/studio.ini"/>
+				</antcall>
+			</else>
+		</if>
+		<!--repo installer-->
+		<antcall target="substitute-variables">
+			<param name="out.file" value="${tibco.home}/be/${beVersionShort}/studio/repo/install_studio_repo.bat"/>
+		</antcall>
+		<antcall target="substitute-variables">
+			<param name="out.file" value="${tibco.home}/be/${beVersionShort}/studio/repo/install_studio_repo"/>
+		</antcall>
+		<antcall target="substitute-variables">
+			<param name="out.file" value="${tibco.home}/be/${beVersionShort}/studio/repo/install_studio_repo.xml"/>
+		</antcall>
+
+	</target>
+
+	<target name="set-studio-permissions">
+		<chmod dir="${tibco.home}/be/${beVersionShort}/studio" perm="755" includes="**/*" />
+	</target>
+
+	<target name="import-studio-link-files">
+		<!--
+		<if>
+			<or>
+				<isset property="eclipse.home.esc"/>
+	            <not>
+	                <equals arg1="${eclipse.home.esc}" arg2=""/>
+	            </not>
+	        </or>
+			<then>
+				<copy file="${tibco.home}/be/${beVersionShort}/studio/eclipse/dropins_configuration/TIBCOBusinessEvents-Studio-plugins.link"
+		        	tofile="${eclipse.home.esc}/links/TIBCOBusinessEvents-Studio-plugins.link" overwrite="true" />
+			</then>
+		</if>
+		-->
+	</target>
+	<target name="update-tra-files">
+		<antcall target="update-tra">
+			<param name="update.file" value="${tibco.home}/be/5.6/studio/bin/studio-tools.tra"/>
+			<param name="update.operation" value="replace-value"/>
+			<param name="update.property" value="tibco.env.STD_EXT_CP"/>
+			<param name="update.value" value="%BE_STUDIO_HOME%/eclipse/plugins%PSP%%BE_STUDIO_HOME%/bin%PSP%%ECLIPSE_HOME%/plugins/org.eclipse.equinox.launcher_1.3.201.v20161025-1711.jar%PSP%%BE_ECLIPSE_HOME%/plugins/org.eclipse.equinox.launcher_1.3.201.v20161025-1711.jar%PSP%%JDK_LIB%/tools.jar"/>
+		</antcall>
+	</target>
+	<target name="init-studio">
+        
+		<echo message="OS Name is:         ${os.name}" />
+        <echo message="OS Architecture is: ${os.arch}" />
+        <echo message="OS Version is:      ${os.version}" />
+		
+        <if>
+			<or>
+				<os name="SunOS"/>
+				<os arch="s390x"/>
+				<os name="AIX"/>
+				<os arch="HP-UX"/>
+			</or>
+			<then>
+			    <!-- Do Nothing for SunOS, HP-UX, AIX and zLinux. The exec command is failing for studio-tools -initialize.-->
+            </then>
+			
+            <elseif>
+                <and>
+                    <os family="unix"/>
+                    <not>
+                        <os family="mac"/>
+                    </not>
+                </and>
+            <then>
+                <chmod file="${tibco.home}/be/${beVersionShort}/studio/eclipse/studio" perm="755"/>
+                <exec executable="${tibco.home}/be/${beVersionShort}/studio/eclipse/studio">
+                    <arg value="-initialize"/>
+                </exec>
+            </then>
+            </elseif>
+		</if>
+        
+        
+        <if>
+            <os family="mac"/>
+        <then>
+            <chmod file="${tibco.home}/be/${beVersionShort}/studio/eclipse/studio.app/Contents/MacOS/studio" perm="755"/>
+            <exec executable="${tibco.home}/be/${beVersionShort}/studio/eclipse/studio.app/Contents/MacOS/studio">
+                <arg value="-initialize"/>
+            </exec>
+        </then>
+        </if>
+        
+        <if>
+            <os family="windows"/>
+        <then>
+            <chmod file="${tibco.home}/be/${beVersionShort}/studio/eclipse/studio.exe" perm="755"/>
+            <exec executable="${tibco.home}/be/${beVersionShort}/studio/eclipse/studio.exe">
+                <arg value="-initialize"/>
+            </exec>
+        </then>
+        </if>        
+    </target>
+</project>

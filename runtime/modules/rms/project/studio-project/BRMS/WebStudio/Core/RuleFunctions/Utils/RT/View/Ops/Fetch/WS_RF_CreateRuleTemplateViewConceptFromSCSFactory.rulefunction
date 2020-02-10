@@ -1,0 +1,36 @@
+/**
+ * @description Factory for deciding whether to call the builder or view implementation for
+ * fetching RULETEMPLATE or RULETEMPLATEINSTANCE from SCS or WS.
+ */
+WebStudio.Core.Concepts.RuleTemplateInstance.View.WS_C_RuleTemplateInstanceView rulefunction WebStudio.Core.RuleFunctions.Utils.RT.View.Ops.Fetch.WS_RF_CreateRuleTemplateViewConceptFromSCSFactory {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String projectName;
+		String username;
+		String scsIntegrationType;
+		String scsRootURL;
+		String artifactPath;
+		//Whether RT or RTI.
+		String artifactExtn;
+		Object ruleTemplateObject;
+		String[] roles;
+	}
+	body {
+		if (String.equals(artifactExtn, "ruletemplate")) {
+			return WebStudio.
+					Core.
+						RuleFunctions.
+							Utils.RT.View.Ops.Fetch.
+								WS_RF_CreateRuleTemplateViewConceptFromSCS(projectName, username, scsIntegrationType, scsRootURL, artifactPath, ruleTemplateObject, roles);
+		} else if (String.equals(artifactExtn, "ruletemplateinstance")) {
+			return WebStudio.
+					Core.
+						RuleFunctions.
+							Utils.RT.View.Ops.Fetch.
+								WS_RF_CreateRuleTemplateInstanceViewConceptFromSCS(projectName, username, scsIntegrationType, scsRootURL, artifactPath, ruleTemplateObject, roles);
+		}	
+		return null;	
+	}
+}

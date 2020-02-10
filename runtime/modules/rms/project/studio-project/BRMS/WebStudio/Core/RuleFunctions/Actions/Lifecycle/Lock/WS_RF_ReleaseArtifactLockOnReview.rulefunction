@@ -1,0 +1,45 @@
+/**
+ * @description Release artifact lock on approve/reject based on the user preference   
+ */
+boolean rulefunction WebStudio.Core.RuleFunctions.Actions.Lifecycle.Lock.WS_RF_ReleaseArtifactLockOnReview {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String projectName;
+		WebStudio.Core.Concepts.Lifecycle.WS_C_CommittableDeltaEntry reviewedArtifactEntry;		
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.Lifecycle.Lock.WS_RF_ReleaseArtifactLockOnReview");
+		
+		WS_C_UserCheckin userCheckin = Instance.getByExtIdByUri(reviewedArtifactEntry.parentCheckinId, "/WebStudio/Core/Concepts/Lifecycle/WS_C_UserCheckin");
+		String checkInUserName = userCheckin.username;		
+		WS_C_UserPreferences userPreferences = Instance.getByExtIdByUri("PREFERENCES@" + checkInUserName, "/WebStudio/Core/Concepts/WS_C_UserPreferences");
+
+		boolean autoUnLockOnReview = true;
+		if (userPreferences != null) {
+			autoUnLockOnReview = userPreferences.autoUnLockOnReview;
+		}	
+		Log.log(LOGGER, "Debug", "User preference autoUnLockOnReview for user %s is %s", checkInUserName, autoUnLockOnReview);		
+		if (autoUnLockOnReview) {
+			WS_C_ArtifactBaseState currentCommitLifeCycleState = Instance.PropertyAtom.getConceptReference(reviewedArtifactEntry.commitLifeCycleState, 1L);
+			
+			if (currentCommitLifeCycleState instanceof WS_C_ArtifactApprovedState || currentCommitLifeCycleState instanceof WS_C_ArtifactRejectedState) {
+							
+				WS_C_UserArtifactRevision referencedRevision = Instance.PropertyAtom.getConceptReference(reviewedArtifactEntry.userArtifactRevision, 1L);
+				//Get parent artifact
+				WS_C_UserArtifact parentUserArtifact = WS_RF_IsUserArtifact(referencedRevision.parentArtifactId, referencedRevision.parentArtifactType);
+	
+				String artifactType = parentUserArtifact.artifactType;
+				String artifactPath = parentUserArtifact.artifactPath;
+				String artifactExtn = parentUserArtifact.artifactFileExtn;
+				
+				WS_C_ReleaseArtifactLockResponse artifactReleaseLockResponse 
+							= WebStudio.Core.RuleFunctions.Actions.Lifecycle.Lock.WS_RF_ReleaseMasterArtifactLock(projectName, artifactPath, artifactType, artifactExtn, true, null, false);
+							
+				return artifactReleaseLockResponse.lockReleased;			
+			}
+		}		
+		return false;						
+	}
+}

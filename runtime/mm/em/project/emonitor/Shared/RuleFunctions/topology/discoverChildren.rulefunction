@@ -1,0 +1,178 @@
+/**
+ * @description 
+ */
+boolean rulefunction Shared.RuleFunctions.topology.discoverChildren {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Shared.Concepts.MonitorableEntity	parent;         //In the first call the parent is of type cluster. Then it is a recursive fn on its children
+		String	idPrefix;
+	}
+	body {
+		boolean foundChild = false;
+		String fqName = getFQName(parent);
+		if(parent.type == "process" && parent.active == false) {
+            Shared.RuleFunctions.log("discoverChildren","DEBUG","Skipping children discovery for inactive process '"+fqName+"'...");
+		    return foundChild;
+		}
+
+		Shared.RuleFunctions.log("discoverChildren","DEBUG","Discovering children under "+fqName+"...");
+		String[] pathElements = String.split(fqName,":");
+		String[] children = BEMM.topology.getChildren(pathElements);  //gets this parent's children that are registered in the domain
+		Shared.RuleFunctions.log("discoverChildren","DEBUG","Found "+children@length+" children under "+fqName+"...");
+		boolean performInactiveScan = parent.children@length != 0;
+		
+		for (int i = 0 ; i < children@length ; i = i + 1) {    //iterates over all of this parent's children that are currently registered in the domain
+            Shared.Concepts.MonitorableEntity child = null;
+            String[] childNameWithType = String.split(children[i],",");
+
+            for (int j = 0 ; j < parent.children@length ; j = j + 1) {  //iterates over all of this parent's children that were previously discovered.
+                                                                        //The minimum set of children are the entities defined in the ST file.
+
+                if (isEntityMatchName(parent.children[j],childNameWithType[0])) { //check if node previously discovered node (not necessarily
+                                                                                  //a predefined one) matches node currently in the domain
+                    foundChild = true;
+                    child = parent.children[j];
+                    boolean previousState = child.active;
+
+                    if(child.active == true)
+                        break;
+
+                    child.name = childNameWithType[0];
+                    String childFQName = getFQName(child);
+
+                    if(child.predefined == true){
+                        //get properties for each predefined element in topology. Reset properties
+                        //to handle the case when a predefined entity was reset, for instance
+                        String[] properties = BEMM.topology.getProperties(String.split(childFQName,":"));
+                        Shared.RuleFunctions.log("discoverChildren","DEBUG","Found "+properties@length+" properties for predefined entity: "+childFQName);
+
+                        if (properties@length != 0)  {
+                            if(childNameWithType[1] == "agent") {
+                                if(child.type != String.toLowerCase(properties[properties@length-1])){
+                                    child.name = child.topologyProps[0];
+                                    child = null;
+                                    continue;
+                                }
+                            }
+                            for (int k = 0 ; k < properties@length ; k = k + 1){
+                                child.properties[k] = properties[k];
+                                Shared.RuleFunctions.log("discoverChildren","DEBUG","Found "+properties[k]+" for predefined entity: "+childFQName);
+                            }
+                        }
+
+                        boolean pingerEstablished = BEMM.topology.registerPinger(String.split(childFQName,":"),"/Shared/Events/topology/FailedPingEvent");
+                        if (pingerEstablished == false) {
+                            Shared.RuleFunctions.log("discoverChildren","INFO","Failed to establish health pinger for predefined entity '"
+                                + childFQName + "', marking it as inactive and critical...");
+                            //child.active = false;
+                        } else {
+                            child.active = true;
+                            if(child.type == "process")
+                                    child.deployed = true;
+
+                            if(child.initialized == false)
+                                configureAlerts(child);
+
+                            if(previousState == false && child.aggregated == true) //fixed bug: when mm starts with one predefined agent running, the active count is doubled.
+                                child.previousActiveState = "false";
+
+                            Shared.RuleFunctions.log("discoverChildren","DEBUG","Setting to ACTIVE in the topology tree the predefined entity '"
+                                    +childFQName+"' under "+fqName+"...");
+                        }
+                    }
+                    else{ //it's a non-predefined
+                        Shared.RuleFunctions.log("discoverChildren","DEBUG","Found non-predefined entity: " + childFQName);
+                        boolean pingerEstablished = BEMM.topology.registerPinger(String.split(childFQName,":"),"/Shared/Events/topology/FailedPingEvent");
+                        if(pingerEstablished == true){
+                            child.active = true;
+                            if(previousState == false)
+                                child.previousActiveState = "false";
+                        }
+                    }
+
+                    String newHealthLevel = determinePropertyValue(child,"healthLevel",null);
+                    if(child.aggregated == true){
+                        if (child.healthLevel != newHealthLevel) {
+                            child.previousHealthLevel = child.healthLevel;
+                            child.healthLevel = newHealthLevel;
+                        }
+                    }
+                    else {
+                        child.healthLevel = newHealthLevel;
+                    }
+                    break;
+                }
+            }
+            if (child == null) { //Happens when the given node currently active in the cluster has not been previously discovered
+                                 //Not previously discovered means it's going to be created and added to the list of discovered nodes.
+                Shared.RuleFunctions.log("discoverChildren","DEBUG","Creating new instance with child.name '" +
+                        childNameWithType[0] + " 'and extId: " + idPrefix+":"+parent.childIDSeed);
+
+                child = Instance.newInstance("/Shared/Concepts/MonitorableEntity",idPrefix+":"+parent.childIDSeed);
+                child.name = childNameWithType[0];
+                child.type = String.toLowerCase(childNameWithType[1]);
+                child.predefined = false;
+                child.parent = parent;
+                child.childIDSeed = 0;
+                parent.children[parent.children@length] = child;
+                parent.childIDSeed = parent.childIDSeed + 1;
+
+                String childFQName = getFQName(child);
+                //get properties for each element in topology
+                String[] properties = BEMM.topology.getProperties(String.split(childFQName,":"));
+                Shared.RuleFunctions.log("discoverChildren","DEBUG","Found "+properties@length+" properties for non-predefined entity: "+childFQName);
+
+                for (int k = 0 ; k < properties@length ; k = k + 1){
+                    child.properties[k] = properties[k];
+                    Shared.RuleFunctions.log("discoverChildren","DEBUG","Found "+properties[k]+" for non-predefined entity: "+childFQName);
+                    if (k + 1 == properties@length && child.type == "agent") {
+
+                        Shared.RuleFunctions.log("discoverChildren","DEBUG","Setting type to "+properties[k]+" for non-predefined entity: "+childFQName);
+                        child.type = String.toLowerCase(properties[k]);
+                    }
+                }
+
+                boolean pingerEstablished = BEMM.topology.registerPinger(String.split(childFQName,":"),"/Shared/Events/topology/FailedPingEvent");
+
+                if (pingerEstablished == false) {
+                    Shared.RuleFunctions.log("discoverChildren","INFO","Failed to establish health pinger for non-predefined entity '"
+                        +childFQName+"'. Marking it as INACTIVE and CRITICAL...");
+                    child.active = false;
+                }
+                else {
+                    child.active = true;
+                    child.initialized = false;
+                    Shared.RuleFunctions.log("discoverChildren","DEBUG","FOUND non-predefined entity '"+childFQName+"' in the cluster. " +
+                            "Adding it to the discovered entities tree under entity: " + fqName);
+                }
+
+                child.healthLevel = determinePropertyValue(child,"healthLevel",null);
+                child.aggregated = false;
+            }
+            discoverChildren(child,child@extId);
+		}
+
+		if (performInactiveScan == true) {
+		    Shared.RuleFunctions.log("discoverChildren","DEBUG","Performing inactive children scan under entity '"+fqName+"'...");
+		    for (int i = 0 ; i < parent.children@length ; i = i + 1) {
+		        boolean matchFound = false;
+		        for (int j = 0 ; j < children@length; j = j + 1) {
+		            Shared.RuleFunctions.log("discoverChildren","DEBUG","Attempting to match "+children[j]+" with "+parent.children[i].name);
+		            if (String.startsWith(children[j],parent.children[i].name)){
+		                matchFound = true;
+		                break;
+		            }
+		        }
+		        if (matchFound == false && parent.children[i].active == true) {
+		            Shared.RuleFunctions.log("discoverChildren","DEBUG","Performing Inactive Scan." + 
+		            						 " About to send FailedPingEvent for entity: " + getFQName(parent.children[i]));
+		            Shared.Events.topology.FailedPingEvent event = Shared.Events.topology.FailedPingEvent.FailedPingEvent(null,null,getFQName(parent.children[i]));
+		            Event.assertEvent(event);
+		        }
+		    }
+		}
+		return foundChild;
+	}
+}

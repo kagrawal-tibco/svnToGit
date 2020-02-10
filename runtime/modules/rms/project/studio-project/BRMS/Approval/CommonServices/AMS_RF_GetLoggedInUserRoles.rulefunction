@@ -1,0 +1,32 @@
+/**
+ * @description Get an array of logged in user's roles.
+ */
+String rulefunction Approval.CommonServices.AMS_RF_GetLoggedInUserRoles {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String loggedInUserName;
+	}
+	body {
+		if (loggedInUserName == null) {
+			return null;
+		}
+		//Get the matching concept
+			
+		AMS_C_LoggedInUser loggedInUser = Instance.getByExtIdByUri(loggedInUserName, "/AAA/Concepts/AMS_C_LoggedInUser");
+		
+		if (loggedInUser == null) {
+			return null;
+		}
+		String[] roles = Instance.PropertyArray.toArrayString(loggedInUser.roles);
+		
+		String allRoles = "";
+		
+		for (int loop = 0; loop < roles@length; loop++) {
+			allRoles = String.concat(allRoles, roles[loop]);
+			allRoles = String.concat(allRoles, ";");
+		}
+		return allRoles;
+	}
+}

@@ -1,0 +1,130 @@
+<div class="audit-trail-container">
+    <div class="card-body">
+        <div class="row">
+            <!--div class="form-group col-sm-3" *ngIf='isManagement'>
+                <mat-form-field>
+                    <mat-select   
+                        id='user-options'
+                        name='userOptions'
+                        [(ngModel)] = "userName"
+                        placeholder='User'>
+                        <mat-option *ngFor='let user of userList' [value]='user'>
+                            {{user}}
+                        </mat-option>
+                    </mat-select>
+                </mat-form-field>
+            </div!-->
+            <div class="form-group col-sm-3" *ngIf='isManagement'>
+                <mat-form-field>
+                    <mat-select   
+                        id='proj-options'
+                        name='projectOptions'
+                        [(ngModel)] = "projectName"
+                        placeholder="{{i18n('Project')}}" i18n-placeholder>
+                        <mat-option [value]="undefined" i18n>{{i18n('Select')}}</mat-option>
+                        <mat-option *ngFor='let proj of projectList()' [value]='proj'>
+                            {{proj}}
+                        </mat-option>
+                    </mat-select>
+                </mat-form-field>
+            </div>
+
+            <div class="form-group col-sm-3" *ngIf='isManagement || isProject'>
+                <mat-form-field>
+                    <input type="text" name="artifactPath"
+                    matInput 
+                    placeholder="{{i18n('Artifact')}}" i18n-placeholder
+                    autocomplete="false"
+                    [(ngModel)]="artifactPath"
+                    >
+                </mat-form-field>
+            </div>
+
+            <div class="form-group col-sm-3">
+                <mat-form-field>
+                    <mat-select  
+                    id='actionType-options'
+                    name='actionTypeOptions'
+                    [formControl]="actions" placeholder="{{i18n('Action Types')}}" i18n-placeholder multiple>
+                    <mat-option *ngFor='let at of actionTypes()' [value]='at.value'>
+                        {{at.name}}
+                    </mat-option>
+                </mat-select>
+            </mat-form-field>
+                <!-- <mat-form-field>
+                        <mat-select   
+                         id='actionType-options'
+                         name='actionTypeOptions'
+                         placeholder='Action'>
+                           <mat-option [value]="undefined">Select</mat-option>
+                            <mat-option *ngFor='let at of actionTypes()' [value]='at.value'>
+                                {{at.name}}
+                            </mat-option>
+                        </mat-select>
+                    </mat-form-field> -->
+            </div>
+
+            <div class="form-group col-sm-3">
+                <datetime-editor
+                    (valueChange)='onValueChange()' 
+                    [forceReset]='forceReset'
+                    [edit]='true'
+                    [allowPastValues]='true'
+                    [hideTimezone]='true'
+                    [(value)]='afterDate'
+                    floatLabel="{{i18n('After Date')}}"
+                    i18n-floatLabel
+                    ></datetime-editor>
+                </div>
+                
+                <div class="form-group col-sm-3">
+                    <datetime-editor
+                    (valueChange)='onValueChange()' 
+                    [forceReset]='forceReset'
+                    [edit]='true'
+                    [allowPastValues]='true'
+                    [hideTimezone]='true'
+                    [(value)]='beforeDate'
+                    floatLabel="{{i18n('Before Date')}}"
+                    i18n-floatLabel
+                ></datetime-editor>
+            </div>
+
+            <div class="form-group col-sm-3 log-file-checkbox " *ngIf='isManagement'>
+                <mat-checkbox [(ngModel)]='logFile'>
+                    <ng-container i18n>{{i18n('LogFile')}}</ng-container>
+                </mat-checkbox>
+            </div>
+            
+            <div class="form-group col-sm-3" *ngIf='!isProject' style="margin-top: 0.3em;">
+                <button  mat-raised-button class='custom-save-button' (click)='getRowData()' i18n>{{i18n(' Apply ')}}</button>
+                <button  mat-raised-button class='custom-save-button' (click)='clearFilter()' i18n>{{i18n(' Clear ')}}</button>
+            </div>
+        </div>
+
+        <div class="row" style='padding-bottom: 1.25em'>
+            <div class="col-sm-12" *ngIf='isProject'>
+                <button class='btn btn-primary btn-sm btn-narrow' (click)='getRowData()' i18n>{{i18n(' Apply ')}}</button>
+                <button class='btn btn-primary btn-sm btn-narrow' (click)='clearFilter()' i18n>{{i18n(' Clear ')}}</button>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-sm-12">
+                <div style='height:350px' *ngIf='rowData && rowData.length > 0'>
+                    <ag-grid-angular #agGrid style="width: 100%; height: 100%" class="ag-theme-balham"
+                        [gridOptions]="gridOptions"
+                        enableRtl="{{isRtl() ? 'true' : 'false'}}"
+                        [columnDefs]="columnDefs"
+                        [sideBar]="false"
+                        [rowData]="rowData"
+                
+                        rowHeight="22"
+                        rowSelection="multiple"
+                    >
+                    </ag-grid-angular>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

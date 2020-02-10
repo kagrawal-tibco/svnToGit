@@ -1,0 +1,197 @@
+<h1 *ngIf='this.data.isNew' mat-dialog-title i18n>{{i18n('Add deployment preference')}}</h1>
+<h1 *ngIf='!this.data.isNew' mat-dialog-title i18n>{{i18n('Edit deployment preference')}}</h1>
+<div mat-dialog-content>
+    <form>
+        <div class='row justify-content-center'>
+            <div class="col-sm-10">
+                <mat-form-field class="full-width">
+                    <input 
+                        matInput 
+                        #nameInput 
+                        type="text" 
+                        placeholder="{{i18n('Name')}}"
+                        i18n-placeholder  
+                        [(ngModel)]="this.data.currentDeploymentPreference.name"
+                        [formControl]="nameFormControl"
+                        [errorStateMatcher]="this.errorStateMatcher"
+                    >
+                    <mat-error *ngIf="nameFormControl.hasError('required')" [innerHTML]="getMessage('namerequired')">
+                        
+                    </mat-error>
+                    <mat-error *ngIf="nameFormControl.hasError('forbiddenSpaces')" [innerHTML]="getMessage('nameforbiddenSpaces')">
+                       
+                    </mat-error>
+                    <mat-error *ngIf="nameFormControl.hasError('duplicateConfiguration')">
+                        {{i18n('Duplicate Configuration,select another name for configuration.')}}
+                    </mat-error>
+                </mat-form-field>
+            </div>
+        </div>
+        <div class='row justify-content-center'>
+            <div class="col-sm-10">
+                <mat-form-field class="full-width">
+                    <mat-select 
+                        placeholder="{{i18n('Project')}}"
+                        i18n-placeholder 
+                        [(ngModel)]='this.data.currentDeploymentPreference.projectName'
+                        [formControl]="projectFormControl" >
+                        <mat-option *ngFor="let project of this.data.availableProjects" [value]='project'>
+                            {{project}}
+                        </mat-option>
+                    </mat-select>
+                    <mat-error *ngIf="projectFormControl.hasError('required')" [innerHTML]="getMessage('projectrequired')">
+                        
+                    </mat-error>
+                    <mat-error *ngIf="projectFormControl.hasError('duplicateConfiguration')" i18n>
+                        {{i18n('Duplicate Configuration,select another project for configuration.')}}
+                    </mat-error>
+                </mat-form-field>
+            </div>
+        </div>
+        <div class='row justify-content-center'>
+            <div class="col-sm-10">
+                <mat-checkbox name="enabled"[(ngModel)]="this.data.currentDeploymentPreference.enable" labelPosition="before">
+                    <ng-container i18n>{{i18n('Enable')}}</ng-container>
+                </mat-checkbox>
+            </div>
+        </div>
+        <div class='row justify-content-center'>
+            <div class="col-sm-10">
+                <mat-form-field class="full-width">
+                    <input 
+                        matInput 
+                        #hostInput 
+                        type="text" 
+                        placeholder="{{i18n('Host')}}"
+                        i18n-placeholder  
+                        [(ngModel)]="this.data.currentDeploymentPreference.host"
+                        [formControl]="hostFormControl"
+                        [errorStateMatcher]="this.errorStateMatcher"
+                    >
+                    <mat-error *ngIf="hostFormControl.hasError('required')" [innerHTML]="getMessage('hostrequired')">
+                        
+                    </mat-error>
+                    <mat-error *ngIf="hostFormControl.hasError('invalidHostName') && !hostFormControl.hasError('required')" [innerHTML]="getMessage('invalidHostName')">
+                        
+                    </mat-error>
+                </mat-form-field>
+            </div>
+        </div>
+        <div class='row justify-content-center'>
+            <div class="col-sm-10">
+                <mat-form-field class="full-width">
+                    <input 
+                        matInput 
+                        #portInput 
+                        type="number" 
+                        placeholder="{{i18n('Port')}}"
+                        i18n-placeholder  
+                        [(ngModel)]="this.data.currentDeploymentPreference.port"
+                        [formControl]="portFormControl"
+                        [errorStateMatcher]="this.errorStateMatcher"
+                    >
+                    <mat-error *ngIf="portFormControl.hasError('portRequired')" [innerHTML]="getMessage('portrequired')">
+                        
+                    </mat-error>
+                    <mat-error *ngIf="portFormControl.hasError('min')" [innerHTML]="getMessage('portnumber')">
+                       
+                    </mat-error>
+                    <mat-error *ngIf="portFormControl.hasError('number') && !portFormControl.hasError('portRequired') && !portFormControl.hasError('min')" [innerHTML]="getMessage('number')">
+                       
+                    </mat-error>
+                </mat-form-field>
+            </div>
+        </div>
+        <div class='row justify-content-center'>
+            <div class="col-sm-10">
+                <mat-form-field class="full-width">
+                    <input 
+                        matInput 
+                        #userNameInput 
+                        type="text" 
+                        placeholder="{{i18n('User Name')}}"
+                        i18n-placeholder  
+                        [(ngModel)]="this.data.currentDeploymentPreference.userName"
+                        [formControl]="userNameFormControl"
+                        [errorStateMatcher]="this.errorStateMatcher"
+                    >
+                </mat-form-field>
+            </div>
+        </div>
+        <div class='row justify-content-center'>
+            <div class="col-sm-10">
+                <mat-form-field class="full-width">
+                    <input 
+                        matInput 
+                        #passwordInput 
+                        type="password" 
+                        placeholder="{{i18n('Password')}}"
+                        i18n-placeholder  
+                        [(ngModel)]="this.data.currentDeploymentPreference.password"
+                        [formControl]="passwordFormControl"
+                        [errorStateMatcher]="this.errorStateMatcher"
+                    >
+                </mat-form-field>
+            </div>
+        </div>
+        <div class='row justify-content-center'>
+            <div class="col-sm-10">
+                <mat-form-field class="full-width">
+                    <input 
+                        matInput 
+                        #clusterNameInput 
+                        type="text" 
+                        placeholder="{{i18n('Cluster Name')}}"
+                        i18n-placeholder  
+                        [(ngModel)]="this.data.currentDeploymentPreference.clusterName"
+                        [formControl]="clusterNameFormControl"
+                        [errorStateMatcher]="this.errorStateMatcher"
+                    >
+                    <mat-error *ngIf="clusterNameFormControl.hasError('required')" [innerHTML]="getMessage('required')">
+                            
+                    </mat-error>
+                    <mat-error *ngIf="clusterNameFormControl.hasError('forbiddenSpaces')" [innerHTML]="getMessage('forbiddenSpaces')">
+                           
+                    </mat-error>
+                </mat-form-field>
+            </div>
+        </div>
+        <div class='row justify-content-center'>
+            <div class="col-sm-10">
+                <mat-form-field class="full-width">
+                    <input 
+                        matInput 
+                        #agentNameInput 
+                        type="text" 
+                        placeholder="{{i18n('Agent Name')}}"
+                        i18n-placeholder  
+                        [(ngModel)]="this.data.currentDeploymentPreference.agentName"
+                        [formControl]="agentNameFormControl"
+                        [errorStateMatcher]="this.errorStateMatcher"
+                    >
+                    <mat-error *ngIf="agentNameFormControl.hasError('required')" [innerHTML]="getMessage('agentnamerequired')">
+                        
+                    </mat-error>
+                    <mat-error *ngIf="agentNameFormControl.hasError('forbiddenSpaces')" [innerHTML]="getMessage('agentforbiddenSpacesrequired')">
+                        
+                    </mat-error>
+                </mat-form-field>
+            </div>
+        </div>
+        <div class='row justify-content-center'>
+            <div class="col-sm-10">
+                <mat-checkbox name="inMemory" [(ngModel)]="this.data.currentDeploymentPreference.inMemory" labelPosition="before">
+                    <ng-container i18n>{{i18n('In-memory')}}</ng-container>
+                </mat-checkbox>
+            </div>
+        </div>                            
+    </form>
+</div>
+<div mat-dialog-actions>
+    <button class="mat-icon-button custom-button"  mat-dialog-close>
+        <i class="material-icons  custom-clear" matTooltip="{{i18n('Cancel')}}" aria-label="clear" i18n-matTooltip>clear</i>
+    </button>
+    <button class="mat-icon-button custom-button" [disabled]='!canConfirm()' [mat-dialog-close]="this.data">
+        <i class="material-icons " [ngClass]="{'custom-check': canConfirm()}" matTooltip="{{i18n('Confirm')}}" aria-label="check" i18n-matTooltip>check</i>
+    </button>
+</div>

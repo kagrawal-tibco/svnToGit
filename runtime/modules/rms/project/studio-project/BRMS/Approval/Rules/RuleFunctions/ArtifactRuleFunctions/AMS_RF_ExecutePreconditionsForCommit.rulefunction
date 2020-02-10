@@ -1,0 +1,98 @@
+/**
+ * @description Check preconditions for committing an artifact entry
+ */
+String[] rulefunction Approval.Rules.RuleFunctions.ArtifactRuleFunctions.AMS_RF_ExecutePreconditionsForCommit {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String username;
+		String projectName;
+		Approval.Concepts.ArtifactsConcepts.AMS_C_ArtifactCommited artifactCommitted;
+	}
+	body {
+
+		Object LOGGER = Log.getLogger("Approval.Rules.RuleFunctions.ArtifactRuleFunctions.AMS_RF_ExecutePreconditionsForCommit");
+		
+		String responseMessage = null;
+		String errorCode = null;
+		int responseStatus = 0;
+		String[] returnValue = null;
+
+		String artifactPath = artifactCommitted.artifactPath;
+		String artifactType = artifactCommitted.artifactType;
+		String lastCommittedVersion = artifactCommitted.commitVersion;			
+		Log.log(LOGGER, "Debug", "Artifact path [%s], artifact type [%s] and last committed version [%s] for commit", artifactPath, artifactType, lastCommittedVersion);
+
+		if (WS_RF_IsManagedArtifactType(artifactType, null)) {				
+			String masterArtifactExtId = WS_RF_CreateUserArtifactExtId(null, artifactPath, projectName, null, null, null);
+			Log.log(LOGGER, "Debug", "Master artifact Id [%s]", masterArtifactExtId);
+			//Lock and load this
+			boolean masterArtifactLock = Cluster.DataGrid.Lock(masterArtifactExtId, -1, false);
+			if (masterArtifactLock) {
+				WS_C_MasterArtifact masterArtifact = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(masterArtifactExtId, false, "/WebStudio/Core/Concepts/Lifecycle/WS_C_MasterArtifact");
+				if (masterArtifact != null) {
+					Log.log(LOGGER, "Debug", "Master artifact Instance for artifact [%s] is [%s]", artifactPath, masterArtifact);
+					
+					WS_C_UserArtifactRevision masterRevision = Instance.PropertyAtom.getConceptReference(masterArtifact.currentMasterRevision, 1L);
+					if (masterRevision != null) {
+						boolean outOfSync = false;				
+						boolean isPendingReview = false;
+						if (lastCommittedVersion != null) {
+							String userArtifactRevisionExtId = artifactPath + "@" + projectName + "@" + username + "@" + lastCommittedVersion;
+							WS_C_UserArtifactRevision lastCheckedInRevision = Instance.getByExtIdByUri(userArtifactRevisionExtId, "/WebStudio/Core/Concepts/WS_C_UserArtifactRevision");
+							if (lastCheckedInRevision != null) {
+								if (lastCheckedInRevision == masterRevision) {
+									//This means user's local base revision is already in sync with latest approved change.
+									//User may have made changes post a checkout/update and wants to now commit this.
+									//This is a valid checkin request.							
+								} else {
+									WS_C_LifecycleMetadata lifecycleMetadata = Instance.PropertyAtom.getContainedConcept(lastCheckedInRevision.lifecycleMetadata, 1L);
+									WS_C_ArtifactBaseState artifactBaseState = Instance.PropertyAtom.getConceptReference(lifecycleMetadata.currentState, 1L);
+									Log.log(LOGGER, "Debug", "Artifact [%s] last committed revision state [%s]", artifactPath, artifactBaseState.stateName);
+									if (artifactBaseState instanceof WS_C_ArtifactCommittedState) {									
+										isPendingReview = true;								
+									} else {
+										outOfSync = true;	
+									}								
+								}
+							} else { 
+								//If the last committed revision was deleted (on Reject in WS_RF_SetToBaseRevision)   
+								outOfSync = true;
+							}			
+						} else {
+							DateTime masterRevisionUpdatetime = masterArtifact.masterRevUpdateTime;
+							DateTime userWrkspaceRevisionUpdatetime = DateTime.parseLong(artifactCommitted.artifactUpdateTime);
+							
+							if (userWrkspaceRevisionUpdatetime != null && masterRevisionUpdatetime != null ) {
+								String masterRevisionUpdatetimeStr = DateTime.format(masterRevisionUpdatetime, "yyyy-MM-dd HH:mm:ss.SSS");
+								String userWrkspaceRevisionUpdatetimeStr = DateTime.format(userWrkspaceRevisionUpdatetime, "yyyy-MM-dd HH:mm:ss.SSS");
+								Log.log(LOGGER, "Debug", "Artifact [%s], User Workspace revision Update time [%s], Master revision Update time [%s]", artifactPath, userWrkspaceRevisionUpdatetimeStr, masterRevisionUpdatetimeStr);
+								
+								outOfSync = DateTime.before(userWrkspaceRevisionUpdatetime, masterRevisionUpdatetime);
+							}
+						}
+
+						if (outOfSync) {
+							errorCode = "ERR_1140";
+							responseStatus = -1;
+							responseMessage = String.format("A different revision for artifact [%s] in project [%s] already exists. Please update local copy with this.", artifactPath, projectName);
+						} else if (isPendingReview) {
+							errorCode = "ERR_1140";
+							responseStatus = -1;
+							responseMessage = String.format("A different revision for artifact [%s] in project [%s] is already pending for a Review.", artifactPath, projectName);								
+						}							
+					}									
+				}
+			}
+			//Release this lock
+			Cluster.DataGrid.UnLock(masterArtifactExtId, false); 
+		} else {
+			errorCode = "ERR_1140";
+			responseStatus = -1;
+			responseMessage = String.format("Artifact [%s] of type [%s] in project [%s] doesn't support commit from studio.", artifactPath, artifactType, projectName);			
+		}	
+		returnValue = String[]{errorCode, "" + responseStatus, responseMessage};
+		return returnValue;					
+	}
+}

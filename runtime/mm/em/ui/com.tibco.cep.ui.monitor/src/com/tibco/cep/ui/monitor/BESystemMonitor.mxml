@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VDividedBox xmlns:mx="http://www.adobe.com/2006/mxml" width="100%" height="100%" 
+	xmlns:containers="com.tibco.cep.ui.monitor.containers.*" 
+	xmlns:monitor="com.tibco.cep.ui.monitor.*"
+	creationComplete="init()" styleName="BESystemMonitorStyle">
+	
+		<mx:Script>
+			<![CDATA[
+				import com.tibco.cep.ui.monitor.io.PSVRClient;
+				import com.tibco.cep.ui.monitor.events.ServerCrashEvent;
+				import com.tibco.cep.ui.monitor.events.EventTypes;
+		        private function init():void{
+		        	var controller:BESystemMonitorController = new BESystemMonitorController(this);
+		        	controller.init();
+				}
+				
+	 			//Event listener added by controller
+				public function handleServerCrash(event:ServerCrashEvent):void{
+					PSVRClient.instance.unsubscribeAllPanes(null); //also stops the update client
+					dispatchEvent(new ServerCrashEvent(event.message, event.code));
+				} 
+			]]>
+		</mx:Script>
+
+	<mx:HDividedBox width="100%" height="80%">
+		<monitor:TopologyMenu id="topologyMenu"
+			width="425"
+			height="100%">
+		</monitor:TopologyMenu>	
+		<containers:DashboardContainer id="dashboardContainer"
+			width="100%"
+			height="100%">
+		</containers:DashboardContainer>
+	</mx:HDividedBox>
+	<containers:ResultsContainer id="resultsContainer"
+		width="100%" height="20%">
+	</containers:ResultsContainer>
+</mx:VDividedBox>

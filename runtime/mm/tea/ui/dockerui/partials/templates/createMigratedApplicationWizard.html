@@ -1,0 +1,118 @@
+<div class="modal fade box-sizing" id="createMigratedApplicationWizard">
+	<form  enctype="multipart/form-data" method="post" name="createMigratedApplicationForm" style="height:90%;" novalidate>
+    	<div class="modal-header box-sizing">
+       		<button type="button" class="close" data-dismiss="modal" aria-hidden="true">x</button>
+			<span class="lead"><h4>Create TRA Deployments</h4></span>
+	   	</div>
+	   	
+	   	<div ng-if="!$parent.appsSelected" class="row modal-body box-sizing">
+	   		<strong>Select Applications</strong>
+	   		<table tea-table class="tea-table" style="margin-top:10px;">
+				<thead>
+					<tr>
+						<th>#</th><th>App Name</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr ng-repeat="application in $parent.migratedData[0]">
+						<td ><input name="isSelected" type="checkbox" placeholder="isSelected" id="isSelected" ng-model="application.isSelected"  ></td>
+						<td >{{application.name}}</td>
+					</tr>
+				</tbody>
+			</table>
+	   	</div>
+	   	<div ng-if="$parent.appsSelected"  class="modal-body box-sizing">
+	   	<div class="row">
+				<strong>Machines</strong>
+				<div style="margin:20px;overflow:auto;min-height:85%;max-height:85%;">
+					<table tea-table class="tea-table" style="margin-top:10px;">
+						<thead>
+							<tr>
+								<th>Name</th><th>IP</th><th>OS</th><th>BE Homes</th><th>Username</th><th>Password</th><th>SSH Port</th><th>Deployment Path</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr ng-repeat="machine in $parent.migratedData[1]">
+								<td ><input name="machineName" type="text" placeholder="MachineName" id="machineName" ng-model="machine.machineName"  required></td>
+								<td ><input name="machineip" type="text" placeholder="IP" id="machineip" ng-model="machine.ip"  required></td>
+								<td ><input name="machineos" type="text" placeholder="OS" id="machineos" ng-model="machine.os"  required></td>
+								<td >
+									<select required >
+								    	<option ng-repeat="be in machine.beList"  value="{{be.beHome}}">{{be.beHome}}</option>
+								    </select>
+							    </td>
+								<!-- <td ><input name="machinebehome" type="text" placeholder="BEHOME" id="machinebehome" ng-model="machine.behome"  readonly></td>
+								<td ><input name="machinebetra" type="text" placeholder="BETRA" id="machinebetra" ng-model="machine.betra"  readonly></td> -->
+								<td ><input name="machinesshuser" type="text" placeholder="USER" id="machinesshuser" ng-model="machine.sshUser"  required></td>
+								<td ><input name="machinesshpass" type="password" placeholder="PASSWORD" id="machinesshpass" ng-model="machine.sshPass" required ></td>
+								<td ><input name="machinesshport" type="text" placeholder="PORT" id="machinesshport" ng-model="machine.sshPort"  required></td>
+								<td ><input name="machineDeploymentpath" type="text" placeholder="PATH" id="machineDeploymentpath" ng-model="machine.deploymentPath" 
+										ng-change="$parent.populateDeployPath(this)"  required ></td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+		</div>
+		<!-- <div ng-if="!$parent.machinesCreated" class="modal-footer box-sizing">
+			<button type="button" ng-click="$parent.createMigratedMachines($parent.migratedData[1])"               
+	                	class="tbt-btn primary-btn">Create Machines</button>
+	    </div> -->
+	   	<div class="row">
+			<div class="row" style="min-height:20%;max-height:20%;">
+				<strong>{{$parent.migratedData[0][$parent.migratedAppStep].name}}</strong>
+				<div class="row" style="margin-top:10px;">
+					<div >
+						<strong>CDD Path :</strong>{{$parent.migratedData[0][$parent.migratedAppStep].cddPath}}
+					</div>
+					<div >
+						<strong>EAR Path :</strong>{{$parent.migratedData[0][$parent.migratedAppStep].earPath}}
+					</div>
+				</div>
+			</div>
+			<div class="row" style="margin-top:20px;min-height:75%;max-height:75%;">
+				<strong>Instances</strong>
+				<table tea-table class="tea-table" style="margin-top:10px;overflow:auto;">
+					<thead>
+						<tr>
+							<th>Name</th><th>Machine</th><th>BE Home</th><th>JMX Port</th><th>PU</th><th>DeploymentPath</th><!-- <th>JVM Properties</th><th>Global Variables</th> -->
+						</tr>
+					</thead>
+					<tbody>
+						<tr ng-repeat="instance in $parent.migratedData[0][$parent.migratedAppStep].instance">
+							<td><input name="instanceName" type="text" placeholder="InstanceName" id="instanceName" ng-model="instance.instanceName" required ></td>
+							<td><input name="machineName" type="text" placeholder="MachineName" id="machineName" ng-model="instance.machineName" required ></td>
+							<td><input name="instanceBeHome" type="text" placeholder="instanceBeHome" id="instanceBeHome" ng-model="instance.beHome" required readonly></td>
+							<td><input name="jmxPort" type="text" placeholder="JmxPort" id="jmxPort" ng-model="instance.jmxPort" required ></td>
+							<td><input name="pu" type="text" placeholder="PU" id="pu" ng-model="instance.pu" required ></td>
+							<td><input name="instanceDeployPath" type="text" placeholder="InstanceDeployPath" id="instanceDeployPath" ng-model="instance.deployPath" required ></td>
+							<!-- <td>
+								<div style="margin-left:5px;" class="pull-left" ng-repeat="(key,value) in instance.jvmProperties">
+									<strong>{{key}} :</strong>{{value}}
+								</div>
+							</td>
+							<td>
+								<div style="margin-left:5px;" class="pull-left" ng-repeat="(key,value) in instance.globalVariables">
+									<strong>{{key}} :</strong>{{value}}
+								</div>
+							</td> -->
+						</tr>
+					</tbody>
+				</table>
+			</div>
+	   	</div>	
+	   	</div>
+	   	<div  class="modal-footer box-sizing">
+	   		<div ng-show="$parent.isError" class="pull-left">
+				<pre class="fileuploadError">{{$parent.errorMessage}}</pre>
+			</div>
+			<button ng-if="!$parent.appsSelected" type="button" ng-click="$parent.proceedAppsSelect()" class="tbt-btn primary-btn">Proceed</button>
+	  		<button ng-if="$parent.appsSelected" type="button" ng-click="$parent.migrateAll()" ng-class="{'button_disabled':$parent.checkForm()}"          
+                class="tbt-btn primary-btn" ng-disabled="$parent.checkForm()">Create</button>
+            <button ng-if="$parent.migratedAppStep > 0 && $parent.appsSelected" type="button" ng-click="$parent.moveToPrevMigratedApp()"               
+                class="tbt-btn primary-btn">Prev</button>
+            <button ng-if="$parent.migratedData[0].length > 1 && $parent.migratedAppStep < $parent.migratedData[0].length-1 && $parent.appsSelected" 
+            	type="button" ng-click="$parent.moveToNextMigratedApp()" class="tbt-btn primary-btn" >Next</button>
+                
+       	</div>
+	</form>
+</div>

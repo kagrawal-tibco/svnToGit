@@ -1,0 +1,25 @@
+/**
+ * @description Startup Notification service
+ */
+void rulefunction WebStudio.Core.RuleFunctions.Shutdown.WS_RF_StopNotificationService {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Shutdown.WS_RF_StopNotificationService");
+
+		boolean notifyEnabled = System.getSystemPropertyAsBoolean("ws.notify.enabled", false);
+		if (notifyEnabled) {		
+			Log.log(LOGGER, "Debug", "Shutting down Notification service....");
+			try {
+				WS.Common.Notify.closeConnection();
+				Log.log(LOGGER, "Debug", "Notification service stopped.");
+			} catch (Exception exception) {
+				Log.logException(LOGGER, "ERROR", "Error stopping the Notification service - %s", exception, exception@message);
+			}					
+		}
+	}
+}

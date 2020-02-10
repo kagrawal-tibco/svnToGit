@@ -1,0 +1,70 @@
+group concept;
+
+Concept_Definition(elementInfo) ::= <<
+/**
+ * @description <elementInfo.description>
+ * @GUID <elementInfo.GUID>
+ */
+concept <elementInfo.fullPath> <if(elementInfo.parent)>extends <elementInfo.parent><endif> {
+	attributes {
+		<if(elementInfo.autoStartStateMachine)>
+		autoStartStateModel=true;
+		<endif>
+		<if(elementInfo.attributes)>
+		<elementInfo.attributes:{ a | <Concept_Attribute(attribute=a)> }; separator="\n">
+		<endif>
+	}
+	properties {
+		<if(elementInfo.properties)>
+		<elementInfo.properties:{ p | <Concept_Property(property=p)> }; separator="\n">
+		<endif>
+	}
+	stateMachines {
+		<if(elementInfo.stateMachines)>
+		<elementInfo.stateMachines:{ s | <Concept_StateMachine(stateMachine=s)> }; separator="\n">
+		<endif>
+	}
+	metadata {
+		<if(elementInfo.metadata)>
+		<elementInfo.metadataProperties:{ p | <Concept_Metadata(metadata=p)> }; separator="\n">
+		<endif>
+	}
+}
+
+>>
+
+Concept_Attribute(attribute) ::= <<
+	myattribute;
+>>
+
+Concept_Property(property) ::= <<
+<property.type><if(property.array)>[]<endif> <property.name><if(property.requiresAttrBlock)> {
+	<if(property.historyPolicy)>
+	policy=<property.historyPolicy>;
+	<endif>
+	<if(property.historySize)>
+	history=<property.historySize>;
+	<endif>
+	<if(property.contained)>
+	contained=<property.contained>;
+	<endif>
+	<if(property.hasDomains)>
+	domain=<property.domain>;
+	<endif>
+}
+<else>;<endif>
+>>
+
+Concept_StateMachine(stateMachine) ::= <<
+<stateMachine>;	
+>>
+
+Concept_Metadata(metadata) ::= <<
+<if(metadata.map)>
+"<metadata.name>" {
+	<metadata.mapProperties:{ p | <Concept_Metadata(metadata=p)> }; separator="\n">
+}
+<else>
+"<metadata.name>"="<metadata.value>";
+<endif>
+>>

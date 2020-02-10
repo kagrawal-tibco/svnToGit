@@ -1,0 +1,222 @@
+/**
+ * @description Renames an artifact. (Copies the artifact with the new name and then deletes the original one)
+ */
+WebStudio.Core.Concepts.DataSources.WS_C_TemporaryReturnData rulefunction WebStudio.Core.RuleFunctions.Actions.Lifecycle.Rename.WS_RF_RenameArtifact {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object servletRequest;
+		WebStudio.Security.Authn.Concepts.WS_C_LoggedInUser loggedInUser;
+		String contentType;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.Lifecycle.Rename.WS_RF_RenameArtifact");
+				
+		String responseMessage = "Rename completed successfully.";
+		String errorCode = null;
+		int responseStatus = 0;
+		int recordCount = 0;
+		
+		if (!WS_RF_CheckHTTPMethod(servletRequest, "PUT")) {
+			responseStatus = -1;
+			recordCount = 0;
+			errorCode = "ERR_5101";
+			responseMessage = "Invalid HTTP Method, expect method is [PUT].";
+		} else {
+			String projectName = HTTP.Servlet.Request.getRequestParameter(servletRequest, "projectName");
+			String artifactPath = HTTP.Servlet.Request.getRequestParameter(servletRequest, "artifactPath");
+			String artifactExtn = HTTP.Servlet.Request.getRequestParameter(servletRequest, "artifactExtension");
+			String artifactType = HTTP.Servlet.Request.getRequestParameter(servletRequest, "artifactType");
+			String artifactRenameToPath = HTTP.Servlet.Request.getRequestParameter(servletRequest, "artifactRenameToPath");
+			String implementsPath = HTTP.Servlet.Request.getRequestParameter(servletRequest, "implementsPath");
+			boolean deleteOriginal = true;
+			
+			Log.log(LOGGER, "Info", "Project:[%s], Type:[%s], Artifact:[%s], RenameTo:[%s]", projectName, artifactType, artifactPath, artifactRenameToPath);
+			
+			//Get the User roles
+			String[] roles = Instance.PropertyArray.toArrayString(loggedInUser.roles);
+			
+			String strToCheck = null;
+			
+			WS_C_CheckArtifactLockResponse artifactLockStatus = WebStudio.Core.RuleFunctions.Actions.Lifecycle.Lock.WS_RF_CheckMasterArtifactLock(projectName, artifactPath, loggedInUser.username);
+			if (artifactLockStatus.holdsLock || artifactLockStatus.lockOwner == null) {
+				String artifactContent = null;
+				
+				String subscriptionId = null;
+				if (loggedInUser.jwtToken != null) subscriptionId = loggedInUser.jwtToken.sbsc;
+				
+				WS_C_ResponseTransferObjectData fetchedResponseData = WS_RF_GetArtifactContentsFromStore(loggedInUser.username, Instance.PropertyArray.toArrayString(loggedInUser.roles), projectName, artifactPath, artifactExtn);
+				if (String.equals("rulefunctionimpl", artifactExtn)) {
+					WS_C_DecisionTable decisionTable = fetchedResponseData.artifactContents;
+					String contents = WS_RF_GetDecisionTableContents(decisionTable);
+					Object decisionTableEMFObj = WS.Decision.createDecisionTableEMFObject(contents);
+					artifactContent = WS_RF_CreateDecisionTablePageSaveDataItem(loggedInUser.username, projectName, decisionTableEMFObj, contentType, roles);
+				
+				} else if (String.equals("ruletemplateinstance", artifactExtn)) {
+					WS_C_AnyArtifactDetails rti = fetchedResponseData.artifactContents;
+					if (rti == null) { // IF RTI has never been loaded.
+						String scsRootURL = WS_RF_GetSCSRootURL(projectName, subscriptionId);
+						String rtiContent = WS_RF_FetchContentFromSCS(scsRootURL, projectName, artifactPath, artifactExtn, loggedInUser.username);
+						Object ruleTemplateObject = WS.RT.getBaseRuleTemplate(projectName, rtiContent, artifactExtn);				
+						rti = WS_RF_CreateAbstractRuleTemplateConceptFromSCS(projectName, loggedInUser.username, null, scsRootURL, artifactPath, artifactExtn, ruleTemplateObject, roles);
+						
+						//Release the locks acquired during reading artifactContent
+						String unlockKey = WS_RF_CreateUserArtifactExtId(null, implementsPath, projectName, loggedInUser.username, null, null);
+						Cluster.DataGrid.UnLock(unlockKey, false);
+						//Load the RT content to allow new RTI being created.
+						WS_RF_GetArtifactContentsFromStore(loggedInUser.username, Instance.PropertyArray.toArrayString(loggedInUser.roles), projectName, implementsPath, "ruletemplate");
+					}
+					if (rti instanceof WS_C_RuleTemplateInstanceBuilder) {
+						WS_C_RuleTemplateInstanceBuilder rtiBuilder = rti;
+						
+						if (String.equals(contentType, System.getGlobalVariableAsString("WebStudio/CONTENT_TYPE/XML", "application/xml"))) {
+							artifactContent = Instance.serialize(rtiBuilder, false, "", "builder");
+							strToCheck = "extId=\"RTI_BUILDER_";
+						} else {
+							artifactContent = Instance.serializeToJSON(rtiBuilder, false, "builder");
+							strToCheck = "\"extId\":\"RTI_BUILDER_";
+						}						
+					}
+					else if (rti instanceof WS_C_RuleTemplateInstanceView) {
+						WS_C_RuleTemplateInstanceView rtiView = rti;
+						
+						WS_C_BindingInfo[] bInfos = Instance.PropertyArray.toArrayContainedConcept(rtiView.view.bindingInfo);
+						for (int i=0; i<bInfos@length; i++) {
+							if (bInfos[i].domainInfo != null) {
+								Log.log(LOGGER, "Debug", "Total Domain Info Objects to clear - %s for binding [%s]", bInfos[i].domainInfo@length, bInfos[i].bindingId);
+								Instance.PropertyArray.clear(bInfos[i].domainInfo);
+							}
+						}
+
+						if (String.equals(contentType, System.getGlobalVariableAsString("WebStudio/CONTENT_TYPE/XML", "application/xml"))) {
+							artifactContent = Instance.serialize(rtiView.view, false, "", "view");
+						} else {
+							artifactContent = Instance.serializeToJSON(rtiView.view, false, "view");
+						}
+					}
+				
+				} else if (String.equals("beprocess", artifactExtn)) {
+					WS_C_ProcessView processView = fetchedResponseData.artifactContents;
+					if (String.equals(contentType, System.getGlobalVariableAsString("WebStudio/CONTENT_TYPE/XML", "application/xml"))) {
+						artifactContent = Instance.serialize(processView, false, "", "processView");
+						strToCheck = "extId=\"PROCESS_";
+					} else {
+						artifactContent = Instance.serializeToJSON(processView, false, "processView");
+						strToCheck = "\"extId\":\"PROCESS_";
+					}
+				
+				} else if (String.equals("domain", artifactExtn)) {
+					WS_C_Domain domain = fetchedResponseData.artifactContents;
+					if (String.equals(contentType, System.getGlobalVariableAsString("WebStudio/CONTENT_TYPE/XML", "application/xml"))) {
+						artifactContent = Instance.serialize(domain, false, "", "domain");
+						strToCheck = "extId=\"DOMAIN_";
+					} else {
+						artifactContent = Instance.serializeToJSON(domain, false, "domain");
+						strToCheck = "\"extId\":\"DOMAIN_";
+					}
+				
+				} else {
+					responseStatus = -1;
+					responseMessage = String.format("Rename not yet supported for selected artifact type.");
+					errorCode = "ERR_1146";
+					deleteOriginal = false;
+				}
+				Log.log(LOGGER, "Debug", "ArtifactContent : " + artifactContent);
+				
+				if (artifactContent == null) {
+					responseStatus = -1;
+					errorCode = "ERR_1146";
+					responseMessage = "An error occurred while renaming artifact.";
+					deleteOriginal = false;
+				}
+				if (artifactContent != null) {
+					// clear base object extId's to prevent duplicate extId's
+					if (strToCheck != null) {
+						int startIndex = String.indexOfString(artifactContent, 0, strToCheck);
+						if (startIndex != -1) {
+							int endIndex = startIndex + + String.length(strToCheck) + String.indexOfString(artifactContent, startIndex + String.length(strToCheck), "\"");
+							Log.log(LOGGER, "Debug", "StartIndex - %s, EndIndex - %s", startIndex, endIndex);
+							String strToRemove = String.substring(artifactContent, startIndex, endIndex+2);
+							Log.log(LOGGER, "Debug", "String to remove - %s", strToRemove);
+							
+							artifactContent = String.replaceFirst(artifactContent, strToRemove, "");
+						}
+					}
+					
+					//Create a saverequest to create a new artifact with the 'artifactContent'
+					WS_C_SaveRequest saveRequest = Instance.newTransientInstance("/WebStudio/Core/Concepts/Request/Usecases/Save/WS_C_SaveRequest");
+					WS_C_SaveRequestData saveRequestData = Instance.newTransientInstance("/WebStudio/Core/Concepts/Request/Usecases/Save/WS_C_SaveRequestData");
+					WS_C_SaveRequestProject saveRequestProject = Instance.newTransientInstance("/WebStudio/Core/Concepts/Request/Usecases/Save/WS_C_SaveRequestProject");
+					saveRequestProject.name = projectName;
+					WS_C_ArtifactSaveDataItem artifactItem	= Instance.newTransientInstance("/WebStudio/Core/Concepts/Request/Usecases/Save/WS_C_ArtifactSaveDataItem");
+					artifactItem.artifactPath = artifactRenameToPath;
+					artifactItem.artifactType = artifactType;
+					artifactItem.fileExtension = artifactExtn;
+					artifactItem.implementsPath = implementsPath;
+					artifactItem.artifactContent = artifactContent;
+					
+					Instance.PropertyArray.appendContainedConcept(saveRequestProject.artifactItem, artifactItem, 1L);
+					Instance.PropertyArray.appendContainedConcept(saveRequestData.project, saveRequestProject, 1L);
+					Instance.PropertyAtom.setContainedConcept(saveRequest.data, saveRequestData, 1L);
+					
+					Log.log(LOGGER, "Info", "Creating artifact with the new path :[%s]", artifactRenameToPath);
+					
+					WS_RF_AddAuditTrailEntry(loggedInUser.username, projectName, artifactPath, artifactType, "RENAME", null);
+					
+					String[] response = WS_RF_SaveLocalChangesToWorkspaceUtil(loggedInUser, saveRequest, contentType);
+					responseStatus = Number.intValue(response[0], 10);
+					if (responseStatus != 0) {
+						deleteOriginal = false;
+						errorCode = "ERR_1146";
+						responseMessage = "An error occurred while renaming artifact.";
+					}
+				}
+				
+				if (deleteOriginal) {
+					//Release the lock acquired on original file while copying its content, to allow deleting it.
+					try {
+						String unlockKey = null;
+						if (String.equals("rulefunctionimpl", artifactExtn)) {
+							unlockKey = artifactPath + "@" + projectName + "@" + loggedInUser.username;
+						}
+						else if (String.equals("ruletemplateinstance", artifactExtn)) {
+							unlockKey = implementsPath + "@" + projectName + "@" + loggedInUser.username;
+						}
+						//else if (String.equals("beprocess", artifactExtn) {}
+						if (unlockKey != null) Cluster.DataGrid.UnLock(unlockKey, false);
+					} catch(Exception exception){}
+					
+					//Create a deleteRequest to delete original artifact once a new one is created with its contents.
+					WS_C_DeleteRequest deleteRequest = Instance.createInstance("xslt://{{/WebStudio/Core/Concepts/Request/Usecases/Delete/WS_C_DeleteRequest}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"1.0\" exclude-result-prefixes=\"xsl xsd\">\n    <xsl:output method=\"xml\"/>\n    <xsl:template match=\"/\">\n        <createObject>\n            <object/>\n        </createObject>\n    </xsl:template>\n</xsl:stylesheet>");
+					WS_C_DeleteRequestData deleteRequestData = Instance.createInstance("xslt://{{/WebStudio/Core/Concepts/Request/Usecases/Delete/WS_C_DeleteRequestData}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"1.0\" exclude-result-prefixes=\"xsl xsd\">\n    <xsl:output method=\"xml\"/>\n    <xsl:template match=\"/\">\n        <createObject>\n            <object/>\n        </createObject>\n    </xsl:template>\n</xsl:stylesheet>");
+					WS_C_DeleteRequestProject deleteRequestProject = Instance.createInstance("xslt://{{/WebStudio/Core/Concepts/Request/Usecases/Delete/WS_C_DeleteRequestProject}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"1.0\" exclude-result-prefixes=\"xsl xsd\">\n    <xsl:output method=\"xml\"/>\n    <xsl:template match=\"/\">\n        <createObject>\n            <object/>\n        </createObject>\n    </xsl:template>\n</xsl:stylesheet>");
+					deleteRequestProject.name = projectName;
+					WS_C_ArtifactDeleteDataItem artifactDeleteDataItem = Instance.createInstance("xslt://{{/WebStudio/Core/Concepts/Request/Usecases/Delete/WS_C_ArtifactDeleteDataItem}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"1.0\" exclude-result-prefixes=\"xsl xsd\">\n    <xsl:output method=\"xml\"/>\n    <xsl:template match=\"/\">\n        <createObject>\n            <object/>\n        </createObject>\n    </xsl:template>\n</xsl:stylesheet>");
+					artifactDeleteDataItem.artifactPath = artifactPath;
+					artifactDeleteDataItem.artifactType = artifactType;
+					
+					Instance.PropertyArray.appendContainedConcept(deleteRequestProject.artifactItem, artifactDeleteDataItem, 1L);
+					Instance.PropertyArray.appendContainedConcept(deleteRequestData.project, deleteRequestProject, 1L);
+					Instance.PropertyAtom.setContainedConcept(deleteRequest.data, deleteRequestData, 1L);
+					
+					Log.log(LOGGER, "Info", "Deleting artifact from path :[%s]", artifactPath);
+					
+					String[] deleteResponse = WS_RF_DeleteArtifactUtil(loggedInUser, deleteRequest, contentType);
+					responseStatus = Number.intValue(deleteResponse[0], 10);
+					if (responseStatus != 0) {
+						errorCode = deleteResponse[1];
+						responseMessage = "An error occurred while renaming artifact." + deleteResponse[2];
+					}
+				}
+			} else {
+				responseStatus = -1;
+				errorCode = "ERR_1145";
+				responseMessage = String.format("Unable to rename %s, as it has been locked by user %s", artifactPath, artifactLockStatus.lockOwner);
+				Log.log(LOGGER, "Debug", responseMessage);			
+			}
+		}
+		
+		return WS_RF_CreateTemporaryReturnData(responseStatus, recordCount, errorCode, responseMessage, null);
+	}
+}

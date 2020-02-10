@@ -1,0 +1,55 @@
+/**
+ * @description 
+ */
+String rulefunction WebStudio.Core.RuleFunctions.Utils.WS_RF_GetEntityContentsFromProjectLibrary {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String scsRootURL;
+		String userName;
+		String projectName;
+		String artifactPath;
+		String artifactType;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.WS_RF_GetEntityContentsFromProjectLibrary");
+		
+		String subscriptionId = WS_RF_GetSubscriptionId(userName);
+		
+		String pathSeparator = "/";
+			
+		Object reusableBuffer = String.createBuffer(0);
+		String sharedLocation = System.getSystemPropertyAsString("ws.artifact.deploy.location", null);					
+		String.createBuffer(0);
+		String.append(reusableBuffer, sharedLocation);
+		String.append(reusableBuffer, pathSeparator);
+		if (subscriptionId != null && !String.equals(subscriptionId, "")) {
+			String.append(reusableBuffer, subscriptionId);
+			String.append(reusableBuffer, pathSeparator);
+		}
+		String.append(reusableBuffer, projectName);
+		String.append(reusableBuffer, pathSeparator);
+		String.append(reusableBuffer, projectName);
+		String.append(reusableBuffer, ".ear");						
+		String earPath = String.convertBufferToString(reusableBuffer);
+		String.clearBuffer(reusableBuffer);
+		
+		Log.log(LOGGER, "Debug", "Ear Path - %s", earPath);
+		
+		String artifactContents = null;
+		String[] projectLibraryPaths = WS.Common.getProjectLibraries(scsRootURL, projectName, earPath);
+		if (projectLibraryPaths != null) {
+			for (int i=0; i < projectLibraryPaths@length; i++) {
+				Log.log(LOGGER, "Debug", "Looking for artifact[%s] of type[%s] in project Library - %s", artifactPath, artifactType, projectLibraryPaths[i]);
+				artifactContents = WS.Common.getContentFromProjectLibrary(projectLibraryPaths[i], artifactPath, artifactType);
+				if (artifactContents != null && !String.equals(artifactContents, "")) {
+					Log.log(LOGGER, "Debug", "Found artifact[%s] in project lib[%s]", artifactPath, projectLibraryPaths[i]);
+					break;
+				}
+			}
+		}
+		
+		return artifactContents;
+	}
+}

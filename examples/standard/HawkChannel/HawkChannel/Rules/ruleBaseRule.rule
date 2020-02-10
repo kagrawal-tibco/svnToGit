@@ -1,0 +1,60 @@
+/**
+ * @description 
+ * @author wangneng-lt
+ */
+rule Rules.ruleBaseRule {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		
+		Events.ruleBaseEvent rulebaseevent;
+	}
+	when {
+		
+	}
+	then {
+		// get the infomation of the rule base event
+		System.debugOut("\n============================================================================\n"
+			+rulebaseevent.HawkEventType+" Event was triggered on Agent "+rulebaseevent.AgentName
+			+"\nRuleBase Name is: " + rulebaseevent.RuleBaseName
+			+"\nRuleBase State: " + rulebaseevent.RuleBaseState
+			+"\n----------------------------------------------------------------------------------");
+
+		// use generic method invocation without parameters
+		Object[] result1 = Hawk.invokeHawkMethod(rulebaseevent.AgentName,"Self","getUptime",null);		
+		Object[] result1Name = result1[0];
+		Object[] result1DisplayName = result1[1];
+		Object[] result1contentList = result1[2];
+		String nameList="",dispalyNameList="",contentList="";
+		for (int i=0; i<result1Name@length; i++) {
+			nameList+=result1Name[i]+"\t";
+			dispalyNameList+=result1DisplayName[i]+"\t";
+			contentList +=result1contentList[i]+"\t";
+		}
+		
+		
+		// use generic method invocation with parameters
+		String agentName = rulebaseevent.AgentName;
+		String microAgentName = "Custom";
+		String methodName = "executeForString";
+		// set arguments of microagent method "executeForString"
+		String command = "ipconfig";
+		Arguments.arguEvent argEvent = Arguments.arguEvent.arguEvent(null,null,command);
+		Object[] result2 = Hawk.invokeHawkMethodOnAllAgents(microAgentName,methodName,argEvent);
+		Object[] resultOnAgent1 = result2[0];
+		String invokeAgentName = resultOnAgent1[0];
+		Object[] result = resultOnAgent1[1];
+		Object[] resultContent = result[2];
+		String info = resultContent[0];
+		System.debugOut("\nResult of Microagents' methods invocation:"
+					+"\nSelf.getUptime:"+"\n"+nameList+"\n"+dispalyNameList+"\n"+contentList
+					+"\nCustom:executeForString(ipconfig) on Agent: ["+ invokeAgentName 
+					+ "]\n"+ String.substring(info,0,200)+" ..."
+					+"\n============================================================================"
+		);
+		
+		
+	}
+}

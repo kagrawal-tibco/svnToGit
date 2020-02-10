@@ -1,0 +1,72 @@
+Instructions to update files for 5.x Hotfix
+===========================================
+
+Section 1 - Configuration files:
+===============================
+1. Readme files: <Source_Directory>/build/pkg_info/bom/5.0.0/hf<hotfix_number>/TIB_<add_on_name>_<BE_VERSION>_HF-<hotfix_number>_readme.txt
+   where add_on_name is one of:
+   	a) be-datamodeling
+   	b) be-decisionmanager
+   	c) be-eventstreamprocessing
+   	d) be-standard
+   	e) be-views
+   Henceforth, referred to as the "readme" file.
+2. Packaging script: <Source_Directory>/build/assemble.xml
+   This file is maintained by the Dev team. Henceforth, referred to as the "packaging" script/file.
+3. Version file: <Source_Directory>/build/version.properties
+   Henceforth, referred to as the "version" file.
+4. Feature config file: <Source_Directory>/build/pkg_info/bom/hf<hotfix_number>/businessevents-<add_on_name>_FeatureConfig.xml
+   where add_on_name is one of:
+   a) datamodeling
+   b) decisionmanager
+   c) eventstreamprocessing
+   d) express
+   e) standard
+   f) views	
+   Henceforth, referred to as the "feature config" file.
+
+Section 2 - Configuration changes when upgrading to a new HF level:
+==================================================================
+1. Update the version number in the version file. Work with the Release team as needed.
+   The following parameters need to be changed:
+   a) env.BE_BUILD: set this to the engg build number. (eg) env.BE_BUILD=088
+   b) UI_PLUGINS_UPDATE_SUFFIX: set this to the versioning needed for the Studio UI plugins. (eg) UI_PLUGINS_UPDATE_SUFFIX=.001
+   Refer to the following link for more details.
+   http://svn.tibco.com/be/branches/5.0/build/engg_build/Studio_Plugin_Versioning_Convention.txt
+2. Make a copy of the feature config from a previous HF, and copy it to the bom directory for current HF. This can be used as a starter. Work with the Release team as needed.
+3. Configure the feature config file as needed, including update of version numbers. For details, see the instructions at:
+	http://wiki.tibco.com/ReleaseInstallWiki/UniversalInstaller-ServicePacks
+4. Make a copy of the readme file from a previous HF, and name it based on current HF number. This can be used as a starter. Work with the Doc team as needed.
+5. The packaging script already has a target named "build-assemblies-hotfix". This in turn, depends on other assembly specific targets such as "build-assemblies-hotfix-be_server". 
+6. Follow the instructions in Section-3 for adding new files to the HF.
+
+Section 3 - Configuration changes to add a file to HF:
+=====================================================
+1. Determine the add-on and assembly that this file is part of. Refer to the feature config file where needed.
+2. Update the file list in the readme file corresponding to the assembly that this file is part of.
+3. Update the file list (copy task) in the corresponding assembly's target in the packaging script.
+
+(eg). if we need to add cep-common.jar to the HF, then:
+1. We determine that this needs to go in the Standard add-on, and under the "be_server" assembly. 
+2. Changes in readme file.
+	a) Open the readme file for Standard add-on.
+	b) Goto the section titled "Affected Files for <HF>"
+	c) Add cep-common.jar to the appropriate directory where it will be released. In this example, the file needs to go under "{TIBCO_HOME}/be/5.0/hotfix/lib directory"
+3. Changes in packaging script.
+	a) Open the packaging script
+	b) Goto the definition for target "build-assemblies-hotfix-be_server".
+	c) Add or update the copy task for this file based on the path in the build output directory. For this example, the following can be added.
+		<copy todir="${be.exp}/Final/be_server/hotfix">
+			<fileset dir="${ga.dir}/be_server">
+				<include name="**/cep-common.jar"/>
+			</fileset>
+		</copy>
+	d) For platforms other than Win32 and Lin32, platform-specific configuration changes can be controlled using ant tasks in the "build-assemblies-hotfix-PORTs" target.
+
+Section 4 - Creating installers for HF delivery:
+===============================================
+1. After running a complete build, the "build-assemblies-hotfix" target (build.xml) can be run to generate the files needed for the HF delivery.
+2. The generated files are located under <Source_Directory>/build/Enterprise/exp/<PORT>/dbg/Final
+3. Use these files as an input to the Commander job. For engg builds, there is a build.xml script located under engg_build/integration-preflight-tool.
+
+

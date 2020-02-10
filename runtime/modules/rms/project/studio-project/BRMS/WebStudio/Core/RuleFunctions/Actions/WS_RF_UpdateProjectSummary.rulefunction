@@ -1,0 +1,63 @@
+/**
+ * @description 
+ */
+void rulefunction WebStudio.Core.RuleFunctions.Actions.WS_RF_UpdateProjectSummary {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String projectName;
+		String userName;
+		String actionType;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.WS_RF_UpdateProjectSummary");
+		
+		String subscriptionId = WS_RF_GetSubscriptionId(userName);
+		
+		String projectSummaryExtId = WS_RF_CreateUserArtifactExtId("SUMMARY", null, projectName, null, subscriptionId, null);
+		Log.log(LOGGER, "Debug", "Looking up Project Summary with ExtId [%s]", projectSummaryExtId);
+		WebStudio.Core.Concepts.WS_C_ProjectSummary projectSummary  = Instance.getByExtIdByUri(projectSummaryExtId, "/WebStudio/Core/Concepts/WS_C_ProjectSummary");
+		if (projectSummary == null) {
+			Log.log(LOGGER, "Debug", "Project Summary with ExtId[%s] not found, creating new !!", projectSummaryExtId);
+			projectSummary = Instance.newInstance("/WebStudio/Core/Concepts/WS_C_ProjectSummary", projectSummaryExtId);
+		}
+		
+		if (actionType != null) {
+			long currentDateTime = DateTime.getTimeInMillis(DateTime.now());
+			
+			if (String.equals(actionType, "CHECKOUT")) {
+				projectSummary.lastCheckoutBy = userName;
+				projectSummary.lastCheckoutTime = currentDateTime;
+				projectSummary.lastSyncBy = userName;
+				projectSummary.lastSyncTime = currentDateTime;
+				
+			} else if (String.equals(actionType, "COMMIT")) {
+				projectSummary.lastCommitBy = userName;
+				projectSummary.lastCommitTime = currentDateTime;
+				projectSummary.totalCommits++;
+				
+			} else if (String.equals(actionType, "APPROVE")) {
+				projectSummary.totalApprovals++;
+				
+			} else if (String.equals(actionType, "REJECT")) {
+				projectSummary.totalRejections++;
+				
+			} else if (String.equals(actionType, "BUILDANDDEPLOY")) {
+				projectSummary.totalDeployments++;
+				
+			} else if (String.equals(actionType, "VALIDATE")) {
+				projectSummary.lastValidateBy = userName;
+				projectSummary.lastValidateTime = currentDateTime;
+				
+			} else if (String.equals(actionType, "SYNC")) {
+				projectSummary.lastSyncBy = userName;
+				projectSummary.lastSyncTime = currentDateTime;
+				
+			} else if (String.equals(actionType, "GENERATE_DEPLOYABLE")) {
+				projectSummary.lastGenerateDeployableBy = userName;
+				projectSummary.lastGenerateDeployableTime = currentDateTime;
+			}
+		}
+	}
+}

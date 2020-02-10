@@ -1,0 +1,68 @@
+/**
+ * @description 
+ * @author 
+ */
+rule Monitoring.Rules.BEMetricsDataPopulators.onPostRTCMetricEvent {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Monitoring.Events.bemetrics.PostRTCMetricEvent	metricevent;
+		
+	}
+	when {
+		metricevent.hostName != null && String.length(String.trim(metricevent.hostName)) != 0;
+	}
+	then {
+		Shared.RuleFunctions.log("onPostRTCMetricEvent","DEBUG","Received PostRTCMetricEvent[id="+metricevent@id+",hostName="+metricevent.hostName+",metricName="+metricevent.metricName+",idx="+metricevent.index+",size="+metricevent.batchSize+",batchStart="+metricevent.isBatchStart+",batchEnd="+metricevent.isBatchEnd+"]");
+		Shared.Concepts.MonitorableEntity[] entities = searchMonitorableEntities(metricevent.hostName);
+		if (entities == null){
+		    Shared.RuleFunctions.log("onPostRTCMetricEvent","DEBUG","No entities found matching "+metricevent.hostName);
+		    Event.consumeEvent(metricevent);
+		    return;
+		}
+		for (int i = 0 ; i < entities@length ; i = i + 1) {
+		    String monitorableFQName = getFQName(entities[i]);
+		    String viewExtId = monitorableFQName+":rtcstats";
+		    Shared.Concepts.AbstractMonitorView view = Instance.getByExtId(viewExtId);
+		    if (view != null) {
+		        Shared.RuleFunctions.log("onPostRTCMetricEvent","DEBUG","Going to use View[extId="+view@extId+",type="+view.type+"]...");
+		        String componentConfigMapId = getComponentConfigMapId(view.monitorable,view.type);
+		        String[] seriesNames = Util.HashMap.getObject(componentConfigMapId,"seriesnames");
+		        for (int j = 0 ; j < seriesNames@length ; j = j + 1){
+		            String seriesDataExtId = view@extId+":"+seriesNames[j];
+		            Shared.Concepts.SeriesData seriesData = Instance.getByExtId(seriesDataExtId);
+		            if (seriesData == null){
+		                seriesData = Instance.newInstance("/Shared/Concepts/SeriesData",seriesDataExtId);
+		                seriesData.name = seriesNames[j];
+		                seriesData.threshold = Util.HashMap.getObject(componentConfigMapId,"threshold");
+		                view.seriesdata[view.seriesdata@length] = seriesData;
+		                Shared.RuleFunctions.log("onPostRTCMetricEvent","DEBUG","Created SeriesData[extId"+seriesDataExtId+",name"+seriesNames[j]+"] under View[extId="+view@extId+",type="+view.type+"]...");
+		            }
+		            else {
+		                Shared.RuleFunctions.log("onPostRTCMetricEvent","DEBUG","Updating SeriesData[extId"+seriesDataExtId+",name"+seriesNames[j]+"] under View[extId="+view@extId+",type="+view.type+"]...");
+		            }
+		            seriesData.categories[seriesData.categories@length] = String.valueOfLong(metricevent.startTimeMillis+(metricevent.endTimeMillis-metricevent.startTimeMillis)/2);
+		            if (seriesNames[j] == "Throughput") {
+		                seriesData.values[seriesData.values@length] = String.valueOfLong(metricevent.cnt);
+		                seriesData.rawValues[seriesData.rawValues@length] = String.valueOfLong(metricevent.cnt);
+		            }
+		            else if (seriesNames[j] == "Latency") {
+		                seriesData.values[seriesData.values@length] = String.valueOfDouble(metricevent.avgTxnMillis);
+		                seriesData.rawValues[seriesData.rawValues@length] = String.valueOfDouble(metricevent.avgTxnMillis);
+		            }
+		            else {
+		                Shared.RuleFunctions.log("onPostRTCMetricEvent","WARNING","Unknown series name ["+seriesNames[j]+"] under View[extId="+view@extId+",type="+view.type+"]...");
+		                seriesData.values[seriesData.values@length] = "0.0";
+		                seriesData.rawValues[seriesData.rawValues@length] = "0.0";
+		            }
+		        }
+		    }
+		    else {
+		        Shared.RuleFunctions.log("onPostRTCMetricEvent","DEBUG","Found no view matching "+viewExtId+"...");
+		    }
+		}
+		Event.consumeEvent(metricevent);
+	}
+}

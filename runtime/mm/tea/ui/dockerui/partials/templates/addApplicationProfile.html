@@ -1,0 +1,189 @@
+ <div class="modal fade box-sizing" id="addApplicationProfile">
+       <div class="modal-header box-sizing">
+       	 	<button type="button" class="close" data-dismiss="modal" aria-hidden="true">x</button>
+			<span class="lead"><h4 ng-if="!$parent.isEditProfile">Add Application Profile</h4><h4 ng-if="$parent.isEditProfile">Edit Application Profile</h4></span>
+	   </div>
+	   
+	   <div class="modal-body box-sizing">
+			<div class="form-horizontal">
+				<div class="control-group">
+				<div class="row">                             
+                	 <label class="control-label">Profile Name:</label>
+                    <div class="controls">
+						<input name="profileNameInput" type="text"
+							placeholder="ProfileName" id="profileNameTextField"
+							ng-model="$parent.profileName" 
+							required autofocus ng-if="!$parent.isEditProfile"> 
+							<input name="profileNameInput" type="text"
+							id="profileNameTextField" disabled="disabled"
+							ng-model="$parent.profileName" required autofocus
+							ng-if="$parent.isEditProfile">
+					</div>                
+                </div>
+                  	<div class="">
+        				<ul class="configNavTable">
+            				<li ng-class="{active:isSetConfigType('global')}" ng-click="setConfigurationType('global')">
+            					<a ng-class="{active:isSetConfigType('global')}">
+               						 <i class="fa fa-globe"></i>
+               						 <span>Global Variables</span>
+            					</a>
+            				</li>
+        					<li ng-class="{active:isSetConfigType('systemProps')}" ng-click="setConfigurationType('systemProps')">
+        						<a ng-class="{active:isSetConfigType('systemProps')}">
+               						 <i class="fa fa-laptop"></i>
+               						 <span>System Properties</span>
+            					</a>
+        					</li>
+        					<li ng-class="{active:isSetConfigType('beProps')}" ng-click="setConfigurationType('beProps')">
+        						<a ng-class="{active:isSetConfigType('beProps')}">
+               						 <i class="fa fa-laptop"></i>
+               						 <span>BusinessEvents Properties</span>
+            					</a>
+        					</li>        				
+        				</ul>
+        			<div>
+        					<div class="be_configurationDiv">
+        						<div ng-show="isSetConfigType('global')">  			
+        							<div>
+        								<div ng-show="globalVariables!= null && globalVariables.length!==0" class="globalVariablesPanel" style="overflow: hidden;padding-top: 0px;min-height: 290px;">
+										<table class="be-table">
+											<thead>
+												<tr>
+													<th>Name</th>
+													<th>Value</th>
+												</tr>
+											</thead>
+										</table>
+										<div style="overflow: auto;height:200px;width:100%" >
+											<table class="be-table" >
+												<tbody >
+													<tr ng-repeat="gv in globalVariables">
+														<td title="{{gv.key}}"><input class = "inputStyle" name="Name" type="text" placeholder="Name"
+                               									ng-model="gv.key"></td>
+														<td>
+															<div class="row" ng-if="gv.key!= 'Deployment' && gv.key!= 'Domain'">
+																<input class="inputStyle" name="Value" type="text"
+																	placeholder="Value" ng-model="gv.value"
+																	ng-change="configurationChangesFlags.isGlobalVariableChanged=true">
+
+																<div ng-click="removeVariable($index);"
+																	class="operation"
+																	style="width: 10px; display: inline-block;">
+																	<i class="fa fa-minus-circle"></i>
+																</div>
+															</div>
+														</td>
+													</tr>
+												</tbody>
+											</table>
+										</div>
+									</div>
+        								<div ng-show="globalVariables == null || globalVariables.length==0" class="globalVariablesPanel" style="overflow: hidden;padding-top: 0px;min-height: 290px;">
+        					  				<span class="globalVariableNoRecords">
+        					  			 	 	 No Records Found
+        					  				</span>
+        					  			</div>
+        								
+        							</div>       						
+								</div>				
+								
+								<!-- System properties -->		
+								<div ng-show="isSetConfigType('systemProps')">  			
+        							<div>
+        								<div ng-show="systemProperties!= null && systemProperties.length!==0" class="globalVariablesPanel" style="overflow: hidden;padding-top: 0px;min-height: 290px;">
+											<table class="be-table">
+												<thead>
+													<tr>
+														<th>Name</th>
+														<th>Value</th>
+													</tr>
+												</thead>
+											</table>
+											<div style="overflow: auto;height:200px;width:100%" >
+												<table class="be-table" >
+												<tbody>
+													<tr ng-repeat="sp in systemProperties">
+														<td title="{{sp.key}}"><input class = "inputStyle" name="Name" type="text" placeholder="Name"
+                               									ng-model="sp.key"></td>
+														<td>
+															<div class="row" ng-if="sp.key!= 'Deployment' && sp.key!= 'Domain'">
+																<input class="inputStyle" name="Value" type="text"
+																placeholder="Value" ng-model="sp.value"
+																ng-change="configurationChangesFlags.isSystemVariableChanged=true">
+
+																<div ng-click="removeVariable($index);"
+																	class="operation"
+																	style="width: 10px; display: inline-block;">
+																	<i class="fa fa-minus-circle"></i>
+																</div>
+															</div>
+														</td>
+													</tr>
+												</tbody>
+											</table>
+										</div>
+									</div>
+        							<div ng-show="systemProperties == null || systemProperties.length==0" class="globalVariablesPanel" style="overflow: hidden;padding-top: 0px;min-height: 290px;">
+        					  			<span class="globalVariableNoRecords">
+        					  			 	  No Records Found
+        					  			</span>
+        					  		</div>
+        						 </div>       						
+								</div>
+								
+								<!-- BE Properties -->
+								
+								<div ng-show="isSetConfigType('beProps')">  			
+        							<div>
+        								<div ng-show="beProperties!= null && beProperties.length!==0" class="globalVariablesPanel" style="overflow: hidden;padding-top: 0px;min-height: 290px;">
+											<table class="be-table">
+												<thead>
+													<tr>
+														<th>Name</th>
+														<th>Value</th>
+													</tr>
+												</thead>
+											</table>
+											<div style="overflow: auto;height:200px;width:100%" >
+												<table class="be-table" >
+													<tbody>
+														<tr ng-repeat="beProp in beProperties">
+															<td title="{{beProp.key}}"><input class = "inputStyle" name="Name" type="text" placeholder="Name"
+                               									ng-model="beProp.key"></td>
+															<td>
+																<div class="row" ng-if="beProp.key!= 'Deployment' && beProp.key!= 'Domain'">
+																	<input class="inputStyle" name="Value" type="text"
+																	placeholder="Value" ng-model="beProp.value"
+																	ng-change="configurationChangesFlags.isBEPropChanged=true">
+
+																	<div ng-click="removeVariable($index);"
+																		class="operation"
+																		style="width: 10px; display: inline-block;">
+																		<i class="fa fa-minus-circle"></i>
+																	</div>
+																</div>
+															</td>
+														</tr>
+													</tbody>
+												</table>
+											</div>
+										</div>
+        								<div ng-show="beProperties == null || beProperties.length==0" class="globalVariablesPanel" style="overflow: hidden;padding-top: 0px;min-height: 290px;">
+        					  				<span class="globalVariableNoRecords">
+        					  			 	 	 No Records Found
+        					  				</span>
+        					  			</div>
+        							</div>       						
+								</div>
+        					</div>
+        				</div>
+        			</div>
+				</div>
+			</div>
+	  	</div>	  	
+	  	<div class="modal-footer box-sizing">	    	
+	    	<button type="button" data-dismiss="modal" aria-hidden="true" class="btn tbt-btn secondary-btn pull-left" ng-click="close()">Cancel</button>
+	        <button type="button" ng-click="addNewProperty();" class="pull-right" ng-class="{'tbt-btn':true, 'primary-btn':true}" style="right: 100px;position: absolute;">Add New</button>
+	    	<button type="button" ng-click="!$parent.isEditProfile?saveApplicationProfile():editApplicationProfile()" class="pull-right tbt-btn primary-btn" ng-class="{'button_disabled':isDisabled()}">Save</button>
+    	</div>
+ </div>

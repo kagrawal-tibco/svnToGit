@@ -1,0 +1,80 @@
+/**
+ * @description This function is used to create , execute the order.
+ */
+String rulefunction RuleFunctions.ExecuteOrder {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String orderId;
+		String customerName;
+		String orderItemName;
+		int orderItemQuantity;	
+	}
+	body { 
+			String message="Order is executed.";
+						
+			//Get the existing item from the inventory and calulate the total cost of item.
+			Concepts.Item existingItem=RuleFunctions.OM_GetExistingInventoryItem(orderItemName);		
+			double itemCost = 0;
+						
+			if(null!=existingItem){
+				itemCost = orderItemQuantity * existingItem.price;
+			}
+					
+			//Get the customer and update the customer balance
+			Concepts.Customer customer =Instance.getByExtId("CUST-"+customerName);
+			Concepts.Order order = Instance.createInstance("xslt://{{/Concepts/Order}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:tib=\"http://www.tibco.com/bw/xslt/custom-functions\" version=\"1.0\" exclude-result-prefixes=\"xsl xsd tib\">\n    <xsl:output method=\"xml\"/>\n    <xsl:param name=\"orderId\"/>\n    <xsl:param name=\"customer\"/>\n    <xsl:param name=\"itemCost\"/>\n    <xsl:template match=\"/\">\n        <createObject>\n            <object>\n                <orderId>\n                    <xsl:value-of select=\"$orderId\"/>\n                </orderId>\n                <customer>\n                    <xsl:if test=\"$customer/@Id\">\n                        <xsl:attribute name=\"ref\">\n                            <xsl:value-of select=\"$customer/@Id\"/>\n                        </xsl:attribute>\n                    </xsl:if>\n                </customer>\n                <totalCost>\n                    <xsl:value-of select=\"$itemCost\"/>\n                </totalCost>\n                <creationTime>\n                    <xsl:value-of select=\"current-dateTime()\"/>\n                </creationTime>\n            </object>\n        </createObject>\n    </xsl:template>\n</xsl:stylesheet>");
+						
+			System.debugOut("#### Executing Order...");
+			
+		
+			
+			if(null!=existingItem && null != order)
+			{	
+				double specialOffer =itemCost -order.totalCost;
+				itemCost=itemCost+specialOffer;
+				
+				//Calculate the discount			
+				Concepts.Discount discount=Instance.createInstance("xslt://{{/Concepts/Discount}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" version=\"1.0\" exclude-result-prefixes=\"xsl xsd\">\n    <xsl:output method=\"xml\"/>\n    <xsl:template match=\"/\">\n        <createObject>\n            <object>\n                <value>\n                    <xsl:value-of select=\"0\"/>\n                </value>\n            </object>\n        </createObject>\n    </xsl:template>\n</xsl:stylesheet>");
+			
+				Virtual_RF.OrderDiscount(discount,orderItemName,customerName,orderItemQuantity);
+			 	
+			 	//Calculate final cost of the order
+				if(discount.value > 0.0)
+				{
+				   discount.value = (itemCost * discount.value)/100;	
+				   System.debugOut(order.customer.name +" received $"+discount.value+" discount on $"+itemCost);	
+		 		   order.totalCost=itemCost-discount.value;
+				  
+				}else if(specialOffer> 0.0){
+				   itemCost -=specialOffer;	
+				   System.debugOut(order.customer.name +" received $"+specialOffer+" special offer on $"+itemCost);		 		 			   
+				}
+		
+				
+				double	balance=customer.balance - order.totalCost;
+				customer.balance = balance;						
+					
+				long quantity =	existingItem.quantity - orderItemQuantity;
+				existingItem.quantity = quantity ;
+				
+				
+				Concepts.OrderItem orderItem =  Instance.newInstance("/Concepts/OrderItem","ORD-ITEM"+orderItemName);
+				orderItem.name = orderItemName;
+				orderItem.price = itemCost;
+				orderItem.quantity = orderItemQuantity;
+				
+				//Append the item in order.
+				Instance.PropertyArray.appendConceptReference(order.items,orderItem,1);
+				
+				//Print the status of inventory.
+				RuleFunctions.OM_PrintInventoryStatus();
+							
+				System.debugOut("#### Executed order for customer:"+customer.name+" Remaining balance:"+customer.balance);			
+			}		
+			
+			return message;
+			
+	}
+}

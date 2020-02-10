@@ -1,0 +1,55 @@
+/**
+ * @description Add/Delete artifacts to a user group
+ */
+WebStudio.Core.Concepts.DataSources.WS_C_TemporaryReturnData rulefunction WebStudio.Core.RuleFunctions.Actions.Dashboard.WS_RF_UpdateUserGroup {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object servletRequest;
+		WebStudio.Security.Authn.Concepts.WS_C_LoggedInUser loggedInUser;
+		String groupName;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.Dashboard.WS_RF_AddUserGroup");
+		
+		WS_C_ResponseData responseData = null;
+		int responseStatus = 0;
+		int recordCount = 0;
+		String errorCode = null;
+		String responseMessage = null;
+		
+		if (!WS_RF_CheckHTTPMethod(servletRequest, "PUT")) {
+			responseStatus = -1;
+			recordCount = 0;
+			errorCode = "ERR_5101";
+			responseMessage = "Invalid HTTP Method, expect method is [PUT].";
+		} else {
+			String artifactPath = HTTP.Servlet.Request.getRequestParameter(servletRequest, "artifactPath");
+			String operationType = HTTP.Servlet.Request.getRequestParameter(servletRequest, "operationType");
+			
+			//Lock and load User Dashboard concept
+			String userDashboardExtId = WS_RF_CreateUserArtifactExtId("DASHBOARD", null, null, loggedInUser.username, null, null);
+			boolean userDashboardLock = Cluster.DataGrid.Lock(userDashboardExtId, 1000, false);
+			
+			if (userDashboardLock) {
+				WS_E_UpdateUserGroupEvent updateUserGroupEvent =
+								Event.createEvent("xslt://{{/WebStudio/Core/Events/WS_E_UpdateUserGroupEvent}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"1.0\" exclude-result-prefixes=\"xsl xsd\">\n    <xsl:output method=\"xml\"/>\n    <xsl:param name=\"groupName\"/>\n    <xsl:template match=\"/\">\n        <createEvent>\n            <event>\n                <groupName>\n                    <xsl:value-of select=\"$groupName\"/>\n                </groupName>\n            </event>\n        </createEvent>\n    </xsl:template>\n</xsl:stylesheet>");
+				updateUserGroupEvent.userName = loggedInUser.username;
+				updateUserGroupEvent.artifacts = artifactPath;
+				updateUserGroupEvent.operationType = operationType;
+				
+				Event.assertEvent(updateUserGroupEvent);
+				
+				responseMessage = "Group successfully Updated";				
+			}  else {
+				responseStatus = -1;
+				recordCount = 0;
+				errorCode = "ERR_1105";
+				responseMessage = "User Group space locked";
+			}
+		}
+
+		return WS_RF_CreateTemporaryReturnData(responseStatus, recordCount, errorCode, responseMessage, responseData);
+	}
+}

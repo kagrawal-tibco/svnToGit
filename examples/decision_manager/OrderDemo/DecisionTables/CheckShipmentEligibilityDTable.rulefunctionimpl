@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="ASCII"?>
+<Table:Table xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:Table="http:///com/tibco/cep/decision/table/model/DecisionTable.ecore" name="CheckShipmentEligibilityDTable" folder="/DecisionTables/" implements="/VirtualRuleFunctions/CheckShipmentEligibilityShipmentVRF" since="BE 4.0">
+  <md>
+    <prop name="EffectiveDate" type="DateTime" value=""/>
+    <prop name="ExpiryDate" type="DateTime" value=""/>
+    <prop name="SingleRowExecution" type="Boolean" value="false"/>
+  </md>
+  <decisionTable>
+    <md>
+      <prop name="modifiedRuleIndexList" type="String" value=""/>
+    </md>
+    <rule id="1" modified="true">
+      <md>
+        <prop name="modifiedConditionIndexList" type="String" value="0,1,2"/>
+        <prop name="modifiedActionIndexList" type="String" value="0,1"/>
+      </md>
+      <cond id="1_1" colId="1" expr="&lt; 18"/>
+      <cond id="1_2" colId="2" expr="*"/>
+      <act id="1_5" colId="5" expr="false"/>
+      <act id="1_7" colId="7" expr="System.debugOut(&quot;Customer Not Eligible for purchase&quot;);"/>
+    </rule>
+    <rule id="2" modified="true">
+      <md>
+        <prop name="modifiedConditionIndexList" type="String" value="0,1,2"/>
+        <prop name="modifiedActionIndexList" type="String" value="0,1"/>
+      </md>
+      <cond id="2_1" colId="1" expr="> 18 &amp;&amp; &lt; 25"/>
+      <cond id="2_2" colId="2" expr="4||5"/>
+      <act id="2_5" colId="5" expr="true"/>
+      <act id="2_7" colId="7" expr="System.debugOut(&quot;Customer Eligible for purchase&quot;);"/>
+    </rule>
+    <rule id="3" modified="true">
+      <md>
+        <prop name="modifiedConditionIndexList" type="String" value="0,1,2"/>
+        <prop name="modifiedActionIndexList" type="String" value="0,1"/>
+      </md>
+      <cond id="3_1" colId="1" expr=">=25 &amp;&amp; &lt; 40"/>
+      <cond id="3_2" colId="2" expr="3||4"/>
+      <act id="3_5" colId="5" expr="true"/>
+      <act id="3_7" colId="7" expr="System.debugOut(&quot;Customer Eligible for purchase&quot;);"/>
+    </rule>
+    <rule id="4" modified="true">
+      <md>
+        <prop name="modifiedConditionIndexList" type="String" value="0,1,2"/>
+        <prop name="modifiedActionIndexList" type="String" value="0,1"/>
+      </md>
+      <cond id="4_1" colId="1" expr="> 40 &amp;&amp; &lt; 60"/>
+      <cond id="4_2" colId="2" expr="4||5"/>
+      <act id="4_5" colId="5" expr="true"/>
+      <act id="4_7" colId="7" expr="System.debugOut(&quot;Customer Eligible for purchase&quot;);"/>
+    </rule>
+    <rule id="5" modified="true">
+      <md>
+        <prop name="modifiedConditionIndexList" type="String" value="0,1,2"/>
+        <prop name="modifiedActionIndexList" type="String" value="0,1"/>
+      </md>
+      <cond id="5_1" colId="1" expr="> 60"/>
+      <cond id="5_2" colId="2" expr="5"/>
+      <act id="5_5" colId="5" expr="true"/>
+      <act id="5_7" colId="7" expr="System.debugOut(&quot;Customer Eligible for purchase&quot;);"/>
+    </rule>
+    <rule id="6" modified="true">
+      <md>
+        <prop name="modifiedConditionIndexList" type="String" value="2,1"/>
+        <prop name="modifiedActionIndexList" type="String" value="0,1"/>
+      </md>
+      <cond id="6_1" colId="1" expr="> 18 &amp;&amp; &lt; 25"/>
+      <cond id="6_2" colId="2" expr="&lt; 4"/>
+      <act id="6_5" colId="5" expr="false"/>
+      <act id="6_7" colId="7" expr="System.debugOut(&quot;Customer Not Eligible for purchase&quot;);"/>
+    </rule>
+    <rule id="7" modified="true">
+      <md>
+        <prop name="modifiedConditionIndexList" type="String" value="1,2"/>
+        <prop name="modifiedActionIndexList" type="String" value="0,1"/>
+      </md>
+      <cond id="7_1" colId="1" expr=">=25 &amp;&amp; &lt; 40"/>
+      <cond id="7_2" colId="2" expr="&lt; 3"/>
+      <act id="7_5" colId="5" expr="false"/>
+      <act id="7_7" colId="7" expr="System.debugOut(&quot;Customer Not Eligible for purchase&quot;);"/>
+    </rule>
+    <columns>
+      <column id="1" name="customer.age" propertyPath="/Concepts/Customer/age" propertyType="1" columnType="CONDITION"/>
+      <column id="2" name="customer.creditRating" propertyPath="/Concepts/Customer/creditRating" propertyType="3" columnType="CONDITION"/>
+      <column id="5" name="customer.shipmentEligibility" propertyPath="/Concepts/Customer/shipmentEligibility" propertyType="4" columnType="ACTION"/>
+      <column id="7" name="Custom Action 1" columnType="CUSTOM_ACTION"/>
+    </columns>
+  </decisionTable>
+  <exceptionTable/>
+  <argument direction="BOTH">
+    <property path="/Concepts/Customer" alias="customer" resourceType="CONCEPT"/>
+  </argument>
+</Table:Table>

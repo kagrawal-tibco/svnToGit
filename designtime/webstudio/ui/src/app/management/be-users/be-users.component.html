@@ -1,0 +1,55 @@
+<div class="slide-content">
+  <mat-grid-list cols="4" gutterSize='10px' rowHeight="2:1">
+    <mat-grid-tile colspan='1'>
+      <div class="full-top">
+        <h6 mat-subheader>
+          <ng-container i18n>{{i18n('Users')}}</ng-container>
+          <i class="{{isRtl() ? 'material-icons add-rtl clickable' : 'material-icons add clickable' }}" (click)="this.onCreateNewUser()" matTooltip="{{i18n('Create User.')}}" i18n-matTooltip>add_circle_outline</i>
+        </h6>
+        <mat-divider></mat-divider>
+        <mat-nav-list role='navigation'>
+          <mat-list-item *ngFor="let user of this.userList" [class.active]="user == this.selectedUser" (click)="this.onUserSelection(user)">
+            <a mat-list-item class="clickable" >
+              {{user.userName}}
+            </a>
+            <i *ngIf="user==this.selectedUser && !this.selectedUser.newUser" 
+                class="{{isRtl() ? 'material-icons custom-edit-rtl' : 'material-icons custom-edit' }}"
+                matTooltip="{{i18n('Change Password.')}}" i18n-matTooltip
+                (click)="this.onChangePassword()">edit</i>
+            <i *ngIf="user==this.selectedUser && this.selectedUser.newUser" 
+                class="{{isRtl() ? 'material-icons custom-edit-rtl' : 'material-icons custom-edit' }}"
+                matTooltip="{{i18n('Edit username or password.')}}" i18n-matTooltip
+                (click)="this.onChangePassword()">edit</i>
+            <span *ngIf='user === this.selectedUser && this.userList.length > 1 ' class="{{ isRtl() ? 'material-icons custom-user-removal-rtl' : 'material-icons custom-user-removal' }}" (click)="this.onDeleteUser()"
+                matTooltip="{{i18n('Delete User.')}}" i18n-matTooltip>remove_circle_outline</span>
+            <i class="{{isRtl() ? 'material-icons custom-rtl' : 'material-icons custom' }}">person</i>
+          </mat-list-item>
+        </mat-nav-list>
+      </div>
+    </mat-grid-tile>
+    <mat-grid-tile colspan='1'>
+      <div class="full-top">
+        <h6 mat-subheader>
+          <ng-container i18n>{{i18n('Roles')}}</ng-container>
+        </h6>
+        <mat-divider></mat-divider>
+        <mat-selection-list #roles [(ngModel)]='selectedUserRoles' (ngModelChange)=' onRoleSelection()' role="option">
+          <mat-list-option  *ngFor="let role of this.availableRoles" [value]="role">
+            <a mat-list-item class="clickable">
+              {{role}}
+              <span class="{{isRtl() ? 'material-icons custom-roles-rtl' : 'material-icons custom-roles' }}" i18n>{{i18n('people')}}</span>
+            </a>
+          </mat-list-option>
+        </mat-selection-list>
+      </div>
+    </mat-grid-tile>
+  </mat-grid-list>
+  <mat-divider></mat-divider>
+  <div class="save-button">
+    <button mat-raised-button  
+            [ngClass]= "{'custom-save-button': !this.disableApply}"
+            [disabled]="this.disableApply" 
+            (click)="this.updateUsers()" i18n
+    >{{i18n(' Apply ')}}</button>
+  </div>
+</div>

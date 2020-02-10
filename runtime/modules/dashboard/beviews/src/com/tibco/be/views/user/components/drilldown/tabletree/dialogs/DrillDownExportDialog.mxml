@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FloatingBEVPanel
+	xmlns="com.tibco.be.views.user.dashboard.*" 
+	xmlns:mx="http://www.adobe.com/2006/mxml" 
+	layout="vertical" 
+	width="350" 
+	height="150"
+	containerTitle="Drilldown Export Options"
+	resizeable="false"
+	verticalScrollPolicy="off"
+	externallyClosable="false"
+>
+	
+	<mx:Script>
+		<![CDATA[
+			import mx.events.ItemClickEvent;
+		
+			private var _exportType:String;
+			private var _includeSystemFields:Boolean;
+			
+			public function set exportType(exportType:String):void{
+				_exportType = exportType;
+				exporttypegrp.selectedValue = _exportType;
+			}
+			
+			public function get exportType():String{
+				return _exportType;
+			}
+			
+			private function handleExportTypeChanges(event:ItemClickEvent):void{
+				_exportType = event.currentTarget.selectedValue;
+			}
+			
+			public function set includeSystemFields(includeSystemFields:Boolean):void{
+				_includeSystemFields = includeSystemFields;
+				includeSysFieldsChxBox.selected = _includeSystemFields;
+			}
+			
+			public function get includeSystemFields():Boolean{
+				return _includeSystemFields;
+			}
+			
+			private function handleIncludeSystemFieldsClicks(event:MouseEvent):void{
+				_includeSystemFields = event.currentTarget.selected;
+			} 
+			
+		]]>
+	</mx:Script>
+	
+	<mx:RadioButtonGroup id="exporttypegrp" itemClick="handleExportTypeChanges(event);"/>
+	
+	<mx:Form width="100%" height="100%" defaultButton="{okButton}">
+		<!-- Export Type -->
+		<mx:FormItem label="Export As" width="100%" direction="horizontal">
+			<mx:RadioButton groupName="exporttypegrp" label="CSV" value="csv" toolTip="Export data as comma separated values"/>
+			<mx:RadioButton groupName="exporttypegrp" label="XML" value="xml" toolTip="Export data as XML"/>			
+		</mx:FormItem>
+		<!-- Include System Fields -->
+		<mx:FormItem label="Include System Fields(s)" width="100%">
+			<mx:CheckBox id="includeSysFieldsChxBox" width="100%" click="handleIncludeSystemFieldsClicks(event);"/>	
+		</mx:FormItem>
+		<!-- button bar -->
+		<mx:HBox width="100%">
+			<mx:Spacer width="100%"/>
+			<mx:Button id="okButton" label="Export" width="100" styleName="commonButton"/>
+			<mx:Button id="cancelButton" label="Close" width="100" styleName="commonButton"/>
+			<mx:Spacer width="100%"/>			
+		</mx:HBox>
+	</mx:Form>
+</FloatingBEVPanel>

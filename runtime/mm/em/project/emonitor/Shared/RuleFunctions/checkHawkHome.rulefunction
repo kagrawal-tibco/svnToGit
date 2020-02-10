@@ -1,0 +1,27 @@
+/**
+ * @description 
+ */
+void rulefunction Shared.RuleFunctions.checkHawkHome {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		
+	}
+	body {
+		String msg;		
+		String hawkHome = System.getSystemPropertyAsString("tibco.env.HAWK_HOME", "");
+		if (String.length(String.trim(hawkHome)) == 0) {
+			Shared.Concepts.GlobalScoreCard.hasHawk = false;
+			
+			String be_mm_tra = System.getSystemPropertyAsString("wrapper.tra.file", "");
+			msg = "System property tibco.env.HAWK_HOME is not set in " + be_mm_tra + " file. Machine level metrics will not be available.";
+			Shared.RuleFunctions.log("checkHawkHome","INFO",msg);
+		}
+		else {
+			Shared.Concepts.GlobalScoreCard.hasHawk = true;
+			msg = "HAWK_HOME is set to [" + hawkHome + "]";
+			Shared.RuleFunctions.log("checkHawkHome","INFO",msg);
+		}
+	}
+}

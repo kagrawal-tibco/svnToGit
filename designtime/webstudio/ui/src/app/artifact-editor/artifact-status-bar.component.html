@@ -1,0 +1,36 @@
+<div class='status-bar'>
+    <div class= " {{ isRtl() ? 'status-bar-entry-rtl' : 'status-bar-entry' }} ">
+        <div *ngIf='supportProblemsView' tooltip="{{getMessage()}}" (click)='onClick($event)' class='clickable'
+                placement="top" container="body"
+                containerClass="animated fadeIn">
+            <i class="fa fa-times-circle" [class.error]='errorsCount > 0' [class.bounce-grow]='errorsCount > 0' aria-hidden="true"></i> {{errorsCount}}
+            <i class="fa fa-exclamation-triangle" [class.warning]='warningsCount > 0' [class.bounce-grow]='warningsCount > 0' aria-hidden="true"></i> {{warningsCount}}
+        </div>
+    </div>
+    <div *ngIf="supportPropertiesView" class='status-bar-entry separator'></div>
+    <div *ngIf="supportPropertiesView" class='status-bar-entry'>
+        <span tooltip="{{i18n('Properties')}}" i18n-tooltip placement="top" container="body"
+                containerClass="animated fadeIn" (click)='onPropertiesClick($event)' class='clickable'>
+     	    <i class='fa fa-list-alt'></i>
+        </span>
+    </div>
+    <div *ngIf='this.showLockStatus'>
+        <div *ngIf='!enableTCEUI' class='status-bar-entry separator'></div>
+        <div *ngIf='!enableTCEUI' class='status-bar-entry'>
+            <div *ngIf='writeStatus' tooltip="{{i18n('Artifact is unlocked')}}" i18n-tooltip placement="top" container="body"
+                    containerClass="animated fadeIn">
+                 <i class='fa fa-unlock'></i>
+            </div>
+            <div *ngIf='!writeStatus' tooltip="{{i18n('Artifact is locked')}}" i18n-tooltip placement="top" container="body"
+                    containerClass="animated fadeIn">
+                 <i class='fa fa-lock'></i>
+             </div>
+        </div>
+        <div class='status-bar-entry separator'></div>
+        <div class='status-bar-entry right'>
+            <div class='right'>
+                 {{fullPath}}
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,91 @@
+/**
+ * @description 
+ */
+WebStudio.Core.Concepts.DataSources.WS_C_TemporaryReturnData rulefunction WebStudio.Core.RuleFunctions.Actions.Deployment.WS_RF_UpdateDeploymentConfig {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object asyncContextObject;
+		WebStudio.Security.Authn.Concepts.WS_C_LoggedInUser loggedInUser;
+		String contentType;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.Deployment.WS_RF_UpdateDeployConfig");
+		
+		Object servletRequest = HTTP.Servlet.getServletRequest(asyncContextObject);
+		
+		int responseStatus = 0;
+		int recordCount = 0;
+		String errorCode = null;
+		String responseMessage = null;
+		
+		WS_C_TemporaryReturnData tempReturnData = null;
+		
+		if (!WS_RF_CheckHTTPMethod(servletRequest, "PUT")) {
+			responseStatus = -1;
+			recordCount = 0;
+			errorCode = "ERR_5101";
+			responseMessage = "Invalid HTTP Method, expect method is [PUT].";
+		} else {
+			String deploymentConfigName = HTTP.Servlet.Request.getRequestParameter(servletRequest, "name");
+			String projectName = HTTP.Servlet.Request.getRequestParameter(servletRequest, "projectName");
+			
+			if (deploymentConfigName == null || String.equals(deploymentConfigName, "") || projectName == null || String.equals(projectName, "")) {
+				responseStatus = -1;
+				recordCount = 0;
+				errorCode = "ERR_8101";
+				responseMessage = "Missing parameters. Deployment Config Name and Project Name are required.";
+			} else {
+				String requestPostParam = System.getGlobalVariableAsString("WebStudio/requestPostParameter", "data");
+				String requestData = HTTP.Servlet.Request.getRequestParameter(servletRequest, requestPostParam);
+				Log.log(LOGGER, "Debug", "Request Post Data Received %s", requestData);
+				if (requestData == null) {
+					Object requestDataBytes = HTTP.Servlet.Request.getRequestContent(servletRequest);
+					requestData = String.convertByteArrayToString(requestDataBytes, "UTF-8");
+					requestData = WS.Common.cleanupRequestData(requestData);
+					Log.log(LOGGER, "Debug", "Request Post Data Received %s", requestData);
+				}	
+				
+				//Convert to concept model
+				WS_C_DeploymentConfigBaseRequest deploymentConfigBaseRequest = null;
+				if (String.equals(contentType, System.getGlobalVariableAsString("WebStudio/CONTENT_TYPE/XML", "application/xml"))) {
+					deploymentConfigBaseRequest = Instance.createTransientInstanceFromXML("/WebStudio/Core/Concepts/Request/Usecases/Deployment/WS_C_DeploymentConfigBaseRequest", requestData);
+				} else {
+					deploymentConfigBaseRequest = Instance.createTransientInstanceFromJSON("/WebStudio/Core/Concepts/Request/Usecases/Deployment/WS_C_DeploymentConfigBaseRequest", requestData);
+				}
+			
+				Log.log(LOGGER, "Debug", "Request concept deserialized %s", deploymentConfigBaseRequest);
+				
+				WS_C_DeploymentConfigRequestData requestContainedData = deploymentConfigBaseRequest.data;
+				WS_C_DeploymentConfigItem deploymentConfigDItem = requestContainedData.deploymentConfig.deploymentConfigItem;
+				
+				String deploymentConfigItem = Instance.serialize(deploymentConfigDItem, false, "","deploymentConfigItem");
+				Log.log(LOGGER, "Debug", "Serialized data format - %s", deploymentConfigItem);
+				
+				String asyncContextId = WS.Common.generateUUID();
+				String mapLockKey = "DEPLOYMENT_CONFIG_UPDATE_ASYNC_CONTEXT_MAP_" + System.nanoTime();
+				//Concurrent Rete case. Lock locally
+				boolean mapLocked = Cluster.DataGrid.Lock(mapLockKey, -1, true);
+				if (mapLocked) { 
+					Util.HashMap.createMap(mapLockKey);
+					Util.HashMap.putObject(mapLockKey, asyncContextId, asyncContextObject);
+				}
+				
+				String subscriptionId = null;
+				if (loggedInUser.jwtToken != null) subscriptionId = loggedInUser.jwtToken.sbsc;
+				
+				WS_E_DeploymentConfigEvent updateUserPreferenceEvent =
+					 WebStudio.Core.Events.WS_E_DeploymentConfigEvent.WS_E_DeploymentConfigEvent(null, deploymentConfigItem, loggedInUser.username, asyncContextId, mapLockKey, contentType, "UPDATE", deploymentConfigName, projectName, subscriptionId); 
+				
+				Event.assertEvent(updateUserPreferenceEvent);
+			}
+		}
+		
+		if (responseStatus == -1) {
+			tempReturnData = WS_RF_CreateTemporaryReturnData(responseStatus, recordCount, errorCode, responseMessage, null);
+		}
+		
+		return tempReturnData;
+	}
+}

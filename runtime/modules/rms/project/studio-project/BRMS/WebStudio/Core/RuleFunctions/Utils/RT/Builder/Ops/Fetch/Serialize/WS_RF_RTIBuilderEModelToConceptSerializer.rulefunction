@@ -1,0 +1,102 @@
+/**
+ * @description Convert the EModel for RTI builder to equivalent concept model.
+ */
+void rulefunction WebStudio.Core.RuleFunctions.Utils.RT.Builder.Ops.Fetch.Serialize.WS_RF_RTIBuilderEModelToConceptSerializer {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object ruleTemplateEObject;
+		WebStudio.Core.Concepts.RuleTemplateInstance.Builder.WS_C_RuleTemplateInstanceBuilder baseRuleTemplateInstanceBuilder;
+		WebStudio.Core.Concepts.RuleTemplateInstance.Builder.WS_C_RuleTemplateInstanceBuilder ruleTemplateInstanceBuilder;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.RT.Builder.Ops.Fetch.Serialize.WS_RF_RTIBuilderEModelToConceptSerializer");
+		
+		Object baseMultiFilter = WS.RTI.getBaseMultiFilter(ruleTemplateEObject);
+		WS_C_Conditions containedConditions = 
+			Instance.newInstance("/WebStudio/Core/Concepts/RuleTemplateInstance/Builder/WS_C_Conditions", null);
+			
+		String description = WS.RTI.getRuleTemplateInstanceDescription(ruleTemplateEObject);
+		if (!String.equals(description, "")) {
+			ruleTemplateInstanceBuilder.description = description;
+		}
+		
+		Instance.PropertyAtom.setContainedConcept(ruleTemplateInstanceBuilder.conditions, containedConditions, 1L);	
+		if (baseMultiFilter != null) {
+			Log.log(LOGGER, "Debug", "Serializing base multifilter");
+			WebStudio.
+				Core.
+					RuleFunctions.
+						Utils.RT.Builder.
+							Ops.Fetch.Serialize.
+								WS_RF_SerializeMultiFilter(baseMultiFilter, containedConditions);
+		}
+		
+		//Add symbols for commands from model.
+		Object[] actionCommands = WS.RTI.getActionCommands(ruleTemplateEObject);
+		WS_C_Commands childCommandsConcept = null;
+		if (actionCommands@length > 0) {
+			childCommandsConcept = Instance.newInstance("/WebStudio/Core/Concepts/RuleTemplateInstance/Builder/WS_C_Commands", null);
+			//Append it to parent
+			Instance.PropertyAtom.setContainedConcept(ruleTemplateInstanceBuilder.commands, childCommandsConcept, 1L);
+		}
+		//These may be lesser than the base RT commands
+		WS_C_Commands baseCommandsConcept = Instance.PropertyAtom.getContainedConcept(baseRuleTemplateInstanceBuilder.commands, 1L);
+		WS_C_CommandInfo[] baseCommandInfos = WS.Common.toArrayConcept(baseCommandsConcept.commandInfo);
+		
+		for (int baseCommandLoop = 0; baseCommandLoop < baseCommandInfos@length; baseCommandLoop++) {
+			WS_C_CommandInfo baseCommandInfo = baseCommandInfos[baseCommandLoop];
+			
+			boolean childFound = false;
+			for (int actionCommandLoop = 0; actionCommandLoop < actionCommands@length; actionCommandLoop++) {
+				Object actionCommandEModel = actionCommands[actionCommandLoop];
+				//Get alias
+				String commandAlias = WS.RTI.getActionCommandAlias(actionCommandEModel);
+			
+				if (baseCommandInfo.commandAlias == commandAlias) {
+					childFound = true;
+					WS_C_CommandInfo childCommandInfoConcept = 
+						Instance.newInstance("/WebStudio/Core/Concepts/RuleTemplateInstance/Builder/WS_C_CommandInfo", null);
+					childCommandInfoConcept.commandAlias = commandAlias;
+					childCommandInfoConcept.type = baseCommandInfo.type;
+					childCommandInfoConcept.actionType = baseCommandInfo.actionType;
+					//Found it
+					//Get symbols from base command info
+					WS_C_Symbols baseRuleTemplateBuilderCommandSymbols = Instance.PropertyAtom.getConceptReference(baseCommandInfo.symbols, 1L);
+					if (baseRuleTemplateBuilderCommandSymbols != null) {
+						//Set this in the child RTI instance
+						Instance.PropertyAtom.setConceptReference(childCommandInfoConcept.symbols, baseRuleTemplateBuilderCommandSymbols, 1L);
+					}
+					WebStudio.
+						Core.
+							RuleFunctions.
+								Utils.RT.Builder.Ops.
+									Fetch.Serialize.WS_RF_SerializeCommandFilters(actionCommandEModel, childCommandInfoConcept);
+					//Append to child commands concept
+					Instance.PropertyArray.appendConceptReference(childCommandsConcept.commandInfo, childCommandInfoConcept, 1L);
+					break;
+				}	
+			}
+			if (!childFound) {
+				//This parent command was not found in child which means there are no filters for it. 
+				//Just attach symbols.
+				WS_C_CommandInfo childCommandInfoConcept = 
+					Instance.newInstance("/WebStudio/Core/Concepts/RuleTemplateInstance/Builder/WS_C_CommandInfo", null);
+				childCommandInfoConcept.commandAlias = baseCommandInfo.commandAlias;
+				childCommandInfoConcept.type = baseCommandInfo.type;
+				childCommandInfoConcept.actionType = baseCommandInfo.actionType;	
+				//Get symbols from base command info
+				WS_C_Symbols baseRuleTemplateBuilderCommandSymbols = Instance.PropertyAtom.getConceptReference(baseCommandInfo.symbols, 1L);
+				if (baseRuleTemplateBuilderCommandSymbols != null) {
+					//Set this in the child RTI instance
+					Instance.PropertyAtom.setConceptReference(childCommandInfoConcept.symbols, baseRuleTemplateBuilderCommandSymbols, 1L);
+				}	
+				//If no action commands exist, this will be null hence the check.
+				if (childCommandsConcept != null) {
+					Instance.PropertyArray.appendConceptReference(childCommandsConcept.commandInfo, childCommandInfoConcept, 1L);
+				}	
+			}
+		}
+	}
+}

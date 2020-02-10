@@ -1,0 +1,60 @@
+<div class="row">
+  <div class="col-sm-12">
+    <div class="card">
+      <div class="card-header panel-sm">
+	   	<button (click)='toggleMaximize()' class="{{ isRtl() ? 'float-left' : 'float-right' }} btn-outline-primary">
+	    	<i
+		     	class="fa"
+		     	[class.fa-window-restore]="maximized"
+		     	[class.fa-expand]="!maximized"
+		     	>
+	    	</i>
+       </button>
+       <div class="{{ isRtl() ? 'float-right' : 'float-left'}}">
+        <ng-container i18n>{{i18n('Commit Changes to Project ')}}</ng-container>{{project.projectName}}
+      </div>
+      </div>
+      <div class="card-body">
+        <div class="form-group">
+          <change-list
+            [input]='candidatesObs'
+            [mode]='mode'
+          ></change-list>
+        </div>
+        <div class="form-group">
+          <label
+            for="commit-message"
+            class="control-label {{isRtl() ? 'pull-right' : 'pull-left' }}"
+            >{{i18n('Message')}}</label>
+          <textarea
+            #messageInput
+            id="commit-message"
+            class="form-control"
+            required
+            type="text"
+            [style.direction]="isRtl() ? 'rtl' : 'ltr'"
+            placeholder="{{i18n('Message')}}"
+            i18n-placeholder
+            autocomplete="off"
+            [(ngModel)] = "message"
+          ></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="row left-pad bottom-pad top-pad right-pad">
+  <div class="col-sm-12">
+    <button
+      type="button"
+      class="btn btn-outline-primary btn-sm btn-narrow {{isRtl() ? 'pull-right' : 'pull-left'}}"
+      (click)='onCancel()' i18n
+      >{{i18n('Cancel')}}</button>
+    <button
+      [disabled]='!canSubmit()'
+      type="button"
+      class="btn btn-primary btn-sm btn-narrow {{ isRtl() ? 'pull-left' : 'pull-right' }}"
+      (click)='onSubmit()' i18n
+      >{{i18n('Confirm')}}</button>
+  </div>
+</div>

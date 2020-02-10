@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component-set>
+  <components>
+  	<component>
+      <role>org.apache.maven.artifact.handler.ArtifactHandler</role>
+      <role-hint>ear</role-hint>
+      <implementation>org.apache.maven.artifact.handler.DefaultArtifactHandler</implementation>
+      <configuration>
+        <type>ear</type>
+        <extension>ear</extension>
+        <language>java</language>
+        <packaging>ear</packaging>        
+      </configuration>
+    </component>
+    
+   <component>
+      <role>org.apache.maven.lifecycle.mapping.LifecycleMapping</role>
+      <role-hint>ear</role-hint>
+      <implementation>org.apache.maven.lifecycle.mapping.DefaultLifecycleMapping</implementation>
+      <configuration>
+        <phases>
+          <process-resources>org.apache.maven.plugins:maven-resources-plugin:resources</process-resources>
+          <compile>com.tibco.be.maven.plugin:be-maven-plugin:becompile</compile>
+          <process-test-resources>org.apache.maven.plugins:maven-resources-plugin:testResources</process-test-resources>
+          <!-- <test-compile>org.apache.maven.plugins:maven-compiler-plugin:testCompile</test-compile> -->
+          <test-compile>com.tibco.be.maven.plugin:be-maven-plugin:beTestCompile</test-compile>
+         <!--  <test>org.apache.maven.plugins:maven-surefire-plugin:test</test> -->
+          <test>com.tibco.be.maven.plugin:be-maven-plugin:betest</test> 
+          <package>com.tibco.be.maven.plugin:be-maven-plugin:bepackage</package>                    
+          <install>com.tibco.be.maven.plugin:be-maven-plugin:beinstall</install>
+          <!-- <deploy>org.apache.maven.plugins:maven-deploy-plugin:deploy</deploy> -->
+          <deploy>com.tibco.be.maven.plugin:be-maven-plugin:bedeploy</deploy>
+         <!--  <site-deploy>com.tibco.be.maven.plugin:be-maven-plugin:behotdeploy</site-deploy> -->
+        </phases>
+      </configuration>
+    </component>
+    
+    <component>
+      <role>org.apache.maven.lifecycle.mapping.LifecycleMapping</role>
+      <role-hint>buildProjectLib</role-hint>
+      <implementation>
+        org.apache.maven.lifecycle.mapping.DefaultLifecycleMapping
+      </implementation>
+      <configuration>
+        <phases>
+          <build-project-lib></build-project-lib>
+        </phases>
+      </configuration>
+    </component>
+    <component>
+      <role>org.apache.maven.lifecycle.Lifecycle</role>
+      <implementation>org.apache.maven.lifecycle.Lifecycle</implementation>
+      <role-hint>buildProjectLib</role-hint>
+      <configuration>
+        <id>buildProjectLib</id>
+        <phases>
+          <phase>build-project-lib</phase>
+          <phase>install-project-lib</phase>
+        </phases>
+        <default-phases>
+          <build-project-lib>com.tibco.be.maven.plugin:be-maven-plugin:beBuildProjectLib</build-project-lib>
+          <install-project-lib>com.tibco.be.maven.plugin:be-maven-plugin:beInstallProjectLib</install-project-lib>
+        </default-phases>
+      </configuration>
+    </component>
+    
+    <component>
+      <role>org.apache.maven.lifecycle.mapping.LifecycleMapping</role>
+      <role-hint>buildDockerImage</role-hint>
+      <implementation>
+        org.apache.maven.lifecycle.mapping.DefaultLifecycleMapping
+      </implementation>
+      <configuration>
+        <phases>
+        </phases>
+      </configuration>
+    </component>
+    <component>
+      <role>org.apache.maven.lifecycle.Lifecycle</role>
+      <implementation>org.apache.maven.lifecycle.Lifecycle</implementation>
+      <role-hint>buildDockerImage</role-hint>
+      <configuration>
+        <id>buildDockerImage</id>
+        <phases>
+          <phase>docker-process-resources</phase>
+          <phase>docker-compile</phase>
+          <phase>docker-process-test-resources</phase>
+          <phase>docker-test-compile</phase>
+          <phase>docker-test</phase>
+          <phase>docker-package</phase>
+         <!-- <phase>build-base-image</phase>
+          <phase>build-app-docker-file</phase> -->
+          <phase>build-app-image</phase>
+          <phase>docker-install</phase>
+          <phase>docker-deploy</phase>
+         <!--  <phase>run-docker-container</phase>
+          <phase>run-test-cases</phase> -->
+        </phases>
+        <default-phases>
+        	<docker-process-resources>org.apache.maven.plugins:maven-resources-plugin:resources</docker-process-resources>
+          	<docker-compile>com.tibco.be.maven.plugin:be-maven-plugin:becompile</docker-compile>
+          	<docker-process-test-resources>org.apache.maven.plugins:maven-resources-plugin:testResources</docker-process-test-resources>
+          	<docker-test-compile>com.tibco.be.maven.plugin:be-maven-plugin:beTestCompile</docker-test-compile>
+          	<docker-test>com.tibco.be.maven.plugin:be-maven-plugin:betest</docker-test> 
+          	<docker-package>com.tibco.be.maven.plugin:be-maven-plugin:bepackage</docker-package> 
+           <!-- <build-base-image>com.tibco.be.maven.plugin:be-maven-plugin:buildBaseImage</build-base-image>
+            <build-app-docker-file>com.tibco.be.maven.plugin:be-maven-plugin:generateAppDockerFile</build-app-docker-file> -->
+            <build-app-image>com.tibco.be.maven.plugin:be-maven-plugin:buildAppImage</build-app-image>
+            <docker-install>com.tibco.be.maven.plugin:be-maven-plugin:beinstall</docker-install>
+            <docker-deploy>com.tibco.be.maven.plugin:be-maven-plugin:dockerdeploy</docker-deploy>
+         <!--  <run-docker-container>com.tibco.be.maven.plugin:be-maven-plugin:RunDockerContainer</run-docker-container>
+          <run-test-cases>com.tibco.be.maven.plugin:be-maven-plugin:RunTestCases</run-test-cases> -->
+        </default-phases>
+      </configuration>
+    </component>
+    
+     <component>
+      <role>org.apache.maven.lifecycle.Lifecycle</role>
+      <implementation>org.apache.maven.lifecycle.Lifecycle</implementation>
+      <role-hint>teaHotDeploy</role-hint>
+      <configuration>
+        <id>teaHotDeploy</id>
+        <phases>
+          <phase>tea-process-resources</phase>
+          <phase>tea-compile</phase>
+          <phase>tea-process-test-resources</phase>
+          <phase>tea-test-compile</phase>
+          <phase>tea-test</phase>
+          <phase>tea-package</phase>
+          <phase>tea-install</phase>
+          <phase>hot-deploy</phase>
+        </phases>
+        <default-phases>
+        	<tea-process-resources>org.apache.maven.plugins:maven-resources-plugin:resources</tea-process-resources>
+          	<tea-compile>com.tibco.be.maven.plugin:be-maven-plugin:becompile</tea-compile>
+          	<tea-process-test-resources>org.apache.maven.plugins:maven-resources-plugin:testResources</tea-process-test-resources>
+          	<tea-test-compile>com.tibco.be.maven.plugin:be-maven-plugin:beTestCompile</tea-test-compile>
+          	<tea-test>com.tibco.be.maven.plugin:be-maven-plugin:betest</tea-test> 
+          	<tea-package>com.tibco.be.maven.plugin:be-maven-plugin:bepackage</tea-package> 
+            <tea-install>com.tibco.be.maven.plugin:be-maven-plugin:beinstall</tea-install>
+            <hot-deploy>com.tibco.be.maven.plugin:be-maven-plugin:behotdeploy</hot-deploy>
+        </default-phases>
+      </configuration>
+    </component>
+    
+    
+  </components>
+</component-set>

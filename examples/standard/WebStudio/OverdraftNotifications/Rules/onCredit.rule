@@ -1,0 +1,25 @@
+/**
+ * @description
+ * @author anpatil-dt
+ */
+rule Rules.onCredit {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Events.Credit_Account e;
+	}
+	when {
+
+	}
+	then {
+		System.debugOut("### Received Credit Account Event[ID="+e.AccountID+",Amount="+e.Amount+"]");
+		Concepts.Account account = Instance.getByExtId(e.AccountID);
+		if (account != null) {
+			System.debugOut("### Crediting Account[ID="+account.AccountID+",Balance="+account.AccountBalance+"]");
+			account.AccountBalance = account.AccountBalance + e.Amount;
+			System.debugOut("### Credited Account[ID="+account.AccountID+",Balance="+account.AccountBalance+"]");
+		}
+	}
+}

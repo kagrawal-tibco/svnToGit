@@ -1,0 +1,48 @@
+/**
+ * @description Transform new committed artifact into old one for history.
+ */
+Approval.Concepts.ArtifactsConcepts.AMS_C_ArtifactCommited rulefunction WebStudio.Core.RuleFunctions.Adapters.WS_RF_TransformCheckinModel {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String patternId;
+		WebStudio.Core.Concepts.Lifecycle.WS_C_CommittableDeltaEntry newDeltaEntryModel;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Adapters.WS_RF_TransformCheckinModel");
+		Log.log(LOGGER, "Debug", "In WS_RF_TransformCheckinModel");
+		WS_C_UserArtifactRevision userArtifactRevision = Instance.PropertyAtom.getConceptReference(newDeltaEntryModel.userArtifactRevision, 1L);
+		
+		if (userArtifactRevision != null) {
+			Log.log(LOGGER, "Debug", "Parent Artifact Id [%s]", userArtifactRevision.parentArtifactId);
+			//Create a joint extid
+			WS_C_UserArtifact userArtifact = WS_RF_IsUserArtifact(userArtifactRevision.parentArtifactId, userArtifactRevision.parentArtifactType);
+			Log.log(LOGGER, "Debug", "User Artifact Id [%s]", userArtifact@id);
+			//Get contents
+			String artifactContentsId = userArtifactRevision.artifactContentsId;
+			Log.log(LOGGER, "Debug", "artifactContentsId [%s]", artifactContentsId);
+			
+			String artifactContent = null;
+			if (userArtifact.artifactType == "rulefunctionimpl") {
+				WS_C_DecisionTable decisionTableContentsConcept = WS_RF_GetArtifactContentInstance(artifactContentsId, userArtifact.artifactType);
+				Log.log(LOGGER, "Debug", "decisionTableContentsConcept id [%s]", decisionTableContentsConcept@id);
+				artifactContent = WS_RF_GetDecisionTableContents(decisionTableContentsConcept);
+				artifactContent = WS.Common.escapeXML(artifactContent);
+			} 
+			
+			WS_C_AbstractOperation operation = Instance.PropertyAtom.getConceptReference(newDeltaEntryModel.operation, 1L);
+			String opName = operation.opName;
+			if (operation instanceof WS_C_CreateOperation) {
+				opName = "Add";
+			}	
+			WS_C_ArtifactBaseState currentCommitState = Instance.PropertyAtom.getConceptReference(newDeltaEntryModel.commitLifeCycleState, 1L);	
+			//Create old model for this
+			AMS_C_ArtifactCommited artifactCommitted = 
+				Instance.createInstance("xslt://{{/Approval/Concepts/ArtifactsConcepts/AMS_C_ArtifactCommited}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"2.0\" exclude-result-prefixes=\"xsl xsd\"><xsl:output method=\"xml\"/><xsl:param name=\"patternId\"/><xsl:param name=\"userArtifact\"/><xsl:param name=\"artifactContent\"/><xsl:param name=\"opName\"/><xsl:param name=\"currentCommitState\"/><xsl:template name=\"Function\" match=\"/\"><createObject><object><xsl:attribute name=\"extId\"><xsl:value-of select=\"concat($patternId, concat(&quot;@&quot;, $userArtifact/artifactPath))\"/></xsl:attribute><xsl:if test=\"$userArtifact/artifactPath\"><artifactPath><xsl:value-of select=\"$userArtifact/artifactPath\"/></artifactPath></xsl:if><xsl:if test=\"$userArtifact/artifactType\"><artifactType><xsl:value-of select=\"$userArtifact/artifactType\"/></artifactType></xsl:if><artifactContent><xsl:value-of select=\"$artifactContent\"/></artifactContent><xsl:if test=\"$userArtifact/artifactFileExtn\"><artifactFileExtension><xsl:value-of select=\"$userArtifact/artifactFileExtn\"/></artifactFileExtension></xsl:if><operation><xsl:value-of select=\"$opName\"/></operation><xsl:if test=\"$currentCommitState/stateName\"><status><xsl:value-of select=\"$currentCommitState/stateName\"/></status></xsl:if><patternId><xsl:value-of select=\"$patternId\"/></patternId><notCompressed><xsl:value-of select=\"true()\"/></notCompressed></object></createObject></xsl:template></xsl:stylesheet>");
+				
+			return artifactCommitted;	
+		}
+		return null;
+	}
+}

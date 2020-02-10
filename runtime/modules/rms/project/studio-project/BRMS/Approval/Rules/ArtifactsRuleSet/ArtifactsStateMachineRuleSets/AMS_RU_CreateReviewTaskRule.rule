@@ -1,0 +1,57 @@
+/**
+ * @description Create a task for super user role to review
+ * @author aathalye-lt
+ */
+rule Approval.Rules.ArtifactsRuleSet.ArtifactsStateMachineRuleSets.AMS_RU_CreateReviewTaskRule {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Approval.Events.ArtifactEvents.StateMachine.AMS_E_CreateTaskEvent ams_e_createtaskevent;
+		Approval.Concepts.ArtifactsConcepts.AMS_C_Checkin ams_c_checkin;
+	}
+	when {
+		ams_e_createtaskevent.roleName != null &&
+		ams_e_createtaskevent.revisionId == ams_c_checkin.revisionId;
+	}
+	then {
+		Object LOGGER = Log.getLogger("Approval.Rules.ArtifactsRuleSet.ArtifactsStateMachineRuleSets.AMS_RU_CreateReviewTaskRule");
+		String revisionId = ams_c_checkin.revisionId;
+		//Create task with extid = revisionid
+		//Use id as reference and then retrive the concept using id
+		//Lock this extId
+		boolean reviewTaskLock = Cluster.DataGrid.Lock(revisionId, -1, false);
+		if (reviewTaskLock) {
+			WS_C_ReviewTask reviewTask = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(ams_c_checkin.revisionId, false, "/WebStudio/Core/Concepts/Lifecycle/WS_C_ReviewTask");
+			if (reviewTask == null) {
+				//Store id of Referenced checkin concept to allow lazy loading
+				reviewTask = 
+					Instance.createInstance("xslt://{{/WebStudio/Core/Concepts/Lifecycle/WS_C_ReviewTask}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"1.0\" exclude-result-prefixes=\"xsl xsd\">\n    <xsl:output method=\"xml\"/>\n    <xsl:param name=\"ams_e_createtaskevent\"/>\n    <xsl:param name=\"ams_c_checkin\"/>\n    <xsl:template match=\"/\">\n        <createObject>\n            <object>\n                <xsl:if test=\"$ams_e_createtaskevent/revisionId\">\n                    <xsl:attribute name=\"extId\">\n                        <xsl:value-of select=\"$ams_e_createtaskevent/revisionId\"/>\n                    </xsl:attribute>\n                </xsl:if>\n                <xsl:if test=\"$ams_c_checkin/newCheckinModelId\">\n                    <referencedCheckinId>\n                        <xsl:value-of select=\"$ams_c_checkin/newCheckinModelId\"/>\n                    </referencedCheckinId>\n                </xsl:if>\n                <xsl:if test=\"$ams_e_createtaskevent/roleName\">\n                    <roleName>\n                        <xsl:value-of select=\"$ams_e_createtaskevent/roleName\"/>\n                    </roleName>\n                </xsl:if>\n            </object>\n        </createObject>\n    </xsl:template>\n</xsl:stylesheet>");
+				Log.log(LOGGER, "Info", "Creating Task for revision [%s]", ams_c_checkin.revisionId);
+//				//Lock and load role
+//				boolean roleLock = Cluster.DataGrid.Lock(ams_e_createtaskevent.roleName, -1, false);
+//				if (roleLock) {
+//					AMS_C_Role role = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(ams_e_createtaskevent.roleName, false, "/AAA/Concepts/AMS_C_Role");
+//					Instance.PropertyArray.appendString(role.reviewTasksExtIds, reviewTask@extId, 1L);
+//					Cluster.DataGrid.UnLock(ams_e_createtaskevent.roleName, false);
+//				}
+//				String reviewSinkExtId = "COMMON_REVIEW_SINK";
+//				WS_C_CommonReviewSink commonReviewSink = Instance.getByExtIdByUri(reviewSinkExtId, "/WebStudio/Core/Concepts/Lifecycle/WS_C_CommonReviewSink");
+//				Instance.PropertyArray.appendString(commonReviewSink.reviewTaskExtIds, reviewTask@extId, 1L);
+				Log.log(LOGGER, "Info", "ReviewTaskExtId [%s] & Project Name [%s]", reviewTask@extId, ams_c_checkin.projectName);
+				
+				WS_RF_SetupReviewSink();
+				
+				WS_RF_AddReviewTaskToSink(reviewTask@extId, ams_c_checkin.projectName, null);
+			} else {
+				Log.log(LOGGER, "Info", "Task exists for revison [%s]", reviewTask);
+				//Assuming it was for same role
+			}
+			//Assuming order from SM is skewed unlock it
+			Cluster.DataGrid.UnLock(revisionId, false);
+			//Consume the event
+			Event.consumeEvent(ams_e_createtaskevent);
+		}
+	}
+}

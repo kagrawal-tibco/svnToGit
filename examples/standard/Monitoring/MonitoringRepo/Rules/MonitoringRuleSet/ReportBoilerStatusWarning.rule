@@ -1,0 +1,27 @@
+/**
+ * @description 
+ * @author 
+ */
+rule Rules.MonitoringRuleSet.ReportBoilerStatusWarning {
+	attribute {
+		priority = 2;
+		forwardChain = true;
+	}
+	declare {
+		Concepts.Boiler	boiler;
+		
+	}
+	when {
+		boiler.Status=="Operating";                          /* boiler is operating */
+		Temporal.History.howCurrent(boiler.CurrentTemp)
+		    -Temporal.History.howOld(boiler.CurrentTemp) > 60000; /* 60 seconds of data is available */
+		Rules.CalcTimeToThreshold(boiler)>0;                      /* threshold has not been reached yet */
+		Rules.CalcTimeToThreshold(boiler)<60.0;          /* reaching threshold temperature in < 1 minute */
+	}
+	then {
+		System.debugOut("##### WARNING! In " + Rules.CalcTimeToThreshold(boiler) 
+		    + " seconds boiler <" + boiler.Id + "> temp will be above 100 degrees");
+		
+		Event.sendEvent(Event.createEvent("xslt://{{/Events/General/TempWarning}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"1.0\" exclude-result-prefixes=\"xsd xsl\">\n    <xsl:output method=\"xml\"/>\n    <xsl:param name=\"boiler\"/>\n    <xsl:template match=\"/\">\n        <createEvent>\n            <event>\n                <xsl:if test=\"$boiler/Id\">\n                    <BoilerId>\n                        <xsl:value-of select=\"$boiler/Id\"/>\n                    </BoilerId>\n                </xsl:if>\n                <xsl:if test=\"$boiler/CurrentTemp\">\n                    <Temp>\n                        <xsl:value-of select=\"$boiler/CurrentTemp\"/>\n                    </Temp>\n                </xsl:if>\n                <xsl:if test=\"$boiler/Status\">\n                    <Remarks>\n                        <xsl:value-of select=\"$boiler/Status\"/>\n                    </Remarks>\n                </xsl:if>\n            </event>\n        </createEvent>\n    </xsl:template>\n</xsl:stylesheet>"));
+	}
+}

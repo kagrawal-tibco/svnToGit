@@ -1,0 +1,24 @@
+/**
+ * @description 
+ */
+String rulefunction Functions.printPath {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Model.Seat	lastSeat;
+	}
+	body {
+		String result = null;
+		Model.Seat curr = lastSeat;
+		
+		while(curr.position != 1) {
+		    if(result == null)
+		        result = printGuest(curr.guest);
+		    else 
+		        result = printGuest(curr.guest) + "->" + result;
+		    curr = curr.leftSeat;
+		}
+		return printGuest(curr.guest) + "->" + result;
+	}
+}

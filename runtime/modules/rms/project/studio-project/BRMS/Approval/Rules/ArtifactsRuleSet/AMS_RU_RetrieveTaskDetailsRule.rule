@@ -1,0 +1,65 @@
+/**
+ * @description Fetch Details of a Task
+ * @author aathalye-lt
+ */
+rule Approval.Rules.ArtifactsRuleSet.AMS_RU_RetrieveTaskDetailsRule {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Approval.Events.ArtifactEvents.Worklist.AMS_E_TaskDetailsRequestEvent ams_e_taskdetailsrequestevent;
+	}
+	when {
+		ams_e_taskdetailsrequestevent.revisionId != null;
+	}
+	then {
+		Object LOGGER = Log.getLogger("Approval.Rules.ArtifactsRuleSet.AMS_RU_RetrieveTaskDetailsRule");
+		String taskExtId = ams_e_taskdetailsrequestevent.revisionId;
+		AMS_C_ReviewTask reviewTask = Instance.getByExtIdByUri(taskExtId, "/Approval/Concepts/ArtifactsConcepts/AMS_C_ReviewTask");
+		
+		if (reviewTask != null) {
+			boolean checkinLock = Cluster.DataGrid.Lock("" + reviewTask.referencedCheckinId, -1, false);
+			if (checkinLock) {
+				AMS_C_Checkin referencedCheckin = Instance.getByExtIdByUri(reviewTask.referencedCheckinId, "/Approval/Concepts/ArtifactsConcepts/AMS_C_Checkin");
+				if (referencedCheckin != null) {
+					String[] artifactPaths = 
+						Instance.PropertyArray.toArrayString(referencedCheckin.artifactPaths);
+					
+					String patternId = referencedCheckin.patternId;
+					Log.log(LOGGER, "Debug", "Using pattern id %s for checkin %s", patternId, referencedCheckin);
+					
+					String serialized = "<CommittedArtifacts>";
+					//Frame an extid
+					for (int loop = 0, length = artifactPaths@length; loop < length; loop++) {
+						String artifactPath = artifactPaths[loop];
+						serialized = String.concat(serialized, "<CommittedArtifact>");
+						String extId = 
+		        			String.concat(String.concat(patternId, "@"), artifactPath);
+		        		//Load concept with this extid after locking
+		        		if (Cluster.DataGrid.Lock(extId, -1, false)) {
+			        		AMS_C_ArtifactCommited committed = Cluster.DataGrid.CacheLoadConceptByExtId(extId, false);
+			        		//Serialize it
+							String serializedArtifact = 
+								Instance.filterAndSerializeUsingDefaults(committed, "artifactPath|artifactType|artifactFileExtension|operation|status|projectName");
+							//Serialize applicable stages
+							String serializedStages = AMS_RF_SerializeApplicableStages(committed.applicableStagesConceptId);
+							serializedArtifact = String.concat(serializedArtifact, "\n" + serializedStages);
+							serializedArtifact = String.replaceAll(serializedArtifact, "\\<\\?xml (.*)\\?\\>", "");	
+							serializedArtifact = String.concat(serializedArtifact, "</CommittedArtifact>");			
+							serialized = String.concat(serialized, serializedArtifact);
+		        		}	
+					}	
+					serialized = String.concat(serialized, "\n");
+					serialized = String.concat(serialized, "</CommittedArtifacts>");
+					//Set this in response
+					Approval.Events.ArtifactEvents.Worklist.AMS_E_TaskDetailsResponseEvent responseEvent =
+						Approval.Events.ArtifactEvents.Worklist.AMS_E_TaskDetailsResponseEvent.AMS_E_TaskDetailsResponseEvent(null, serialized);
+					
+					Event.replyEvent(ams_e_taskdetailsrequestevent, responseEvent);	
+					Event.consumeEvent(ams_e_taskdetailsrequestevent);
+				}
+			}
+		}
+	}
+}

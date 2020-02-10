@@ -1,0 +1,134 @@
+/**
+ * @description 
+ */
+void rulefunction Monitoring.RuleFunctions.alerts.fireAlerts {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Shared.Concepts.SeriesData	seriesdata;
+	}
+	body {
+		if (seriesdata.rawValues@length == 0){
+		    return;
+		}
+		int idx = String.lastIndexOfString(seriesdata@extId,0,":");
+		String compFQName = String.substring(seriesdata@extId,0,idx);
+		Shared.Concepts.AbstractMonitorView view = Instance.getByExtId(compFQName);
+		if (view.type == "sysalerts"){
+		    return;
+		}
+		Shared.RuleFunctions.log("fireAlerts","DEBUG","Attempting alerts firing for "+seriesdata@extId+" with "+seriesdata.categories@length+" categorie(s),"+seriesdata.values@length+" value(s) and "+seriesdata.rawValues@length+" raw value(s)");
+		Shared.RuleFunctions.log("fireAlerts","DEBUG","Found "+view@extId+" as the parent of "+seriesdata@extId+"");
+		Shared.Concepts.MonitorableEntity entity = view.monitorable;
+		String fqName = Shared.RuleFunctions.topology.getFQName(entity);
+		String entityTypePath = getTypePath(entity);
+		String componentConfigMapId = getComponentConfigMapId(entity,view.type);
+		boolean timebased = false;
+		if (componentConfigMapId != null) {
+		    timebased = Util.HashMap.getObject(componentConfigMapId,"timebased");
+		}
+		String[] configurationMapIds = BEMM.alerts.getAlertConfigMapIds(entityTypePath,view.type);
+		if (configurationMapIds != null) {
+		    Shared.RuleFunctions.log("fireAlerts","DEBUG","Found "+configurationMapIds@length+" alert configurations for "+fqName);
+		    for (int i = 0 ; i < configurationMapIds@length ; i = i + 1){
+		        String configurationMapId = configurationMapIds[i];
+		        String triggerSeriesName = Util.HashMap.getObject(configurationMapId,"seriesname");
+		        String referenceSeriesName = Util.HashMap.getObject(configurationMapId,"referenceseriesname");
+		        Shared.RuleFunctions.log("fireAlerts","DEBUG","Going to use ["+triggerSeriesName+"] as trigger and ["+referenceSeriesName+"] as reference for "+view@extId+" based on "+fqName);
+		        Shared.Concepts.SeriesData triggeringSeries = Monitoring.RuleFunctions.view.findSeries(view,triggerSeriesName);
+		        Shared.Concepts.SeriesData referenceSeries = Monitoring.RuleFunctions.view.findSeries(view,referenceSeriesName);
+		        if (triggeringSeries == seriesdata || referenceSeries == seriesdata) {
+		            Shared.RuleFunctions.log("fireAlerts","DEBUG",triggeringSeries@extId+" matches trigger series...");
+		            int valueLocation = Util.HashMap.getObject(configurationMapId,"valuelocation");
+		            Object[] triggerSeriesDataSet = getSeriesValue(view,triggeringSeries,Util.HashMap.getObject(configurationMapId,"categoryvalue"),valueLocation);
+		            Object[] referenceSeriesDataSet = null;
+		            if (referenceSeries == null) {
+		               referenceSeriesDataSet = Object[1]{};
+		               Object[] temp = Object[2]{};
+		               temp[0] = "";
+		               temp[1] = Util.HashMap.getObject(configurationMapId,"constantreference");
+		               temp[2] = Util.HashMap.getObject(configurationMapId,"constantreference");
+		               referenceSeriesDataSet[0] = temp;
+		            }
+		            else {
+		               Shared.RuleFunctions.log("fireAlerts","DEBUG",referenceSeries@extId+" matches referenceSeries series...");
+		               valueLocation = Util.HashMap.getObject(configurationMapId,"referencevaluelocation");
+		               referenceSeriesDataSet = getSeriesValue(view,referenceSeries,Util.HashMap.getObject(configurationMapId,"referencecategoryvalue"),valueLocation);
+		            }
+		            double threshold = Util.HashMap.getObject(configurationMapId,"threshold");
+		            if (referenceSeriesDataSet@length != 1 && triggerSeriesDataSet@length != referenceSeriesDataSet@length){
+		                //log a warning and bail out
+		                Shared.RuleFunctions.log("fireAlerts","WARNING","Inconsitent number of entries for trigger data set["+triggerSeriesDataSet@length+"] and reference data set["+referenceSeriesDataSet@length+"]");
+		            }
+		            else {
+		                for (int j = 0 ; j < triggerSeriesDataSet@length ; j = j + 1){
+		                    Object[] tiggerDataSet = triggerSeriesDataSet[j];
+		                    Object triggerCategoryValue = tiggerDataSet[0];
+		                    double triggerValue = tiggerDataSet[1];
+		                    Object[] referenceDataSet = null;
+		                    if (referenceSeriesDataSet@length == 1){
+		                        referenceDataSet = referenceSeriesDataSet[0];
+		                    }
+		                    else {
+		                        referenceDataSet = referenceSeriesDataSet[j];
+		                    }
+		                    String alertID = view@extId+":"+configurationMapId;
+		                    if (timebased == true) {
+		                        alertID = alertID+":latesttime";
+		                    }
+		                    else {
+		                        alertID = alertID+":"+triggerCategoryValue;
+		                    }
+		
+		                    Shared.RuleFunctions.log("fireAlerts","DEBUG","Going to check ["+triggerCategoryValue+","+triggerValue+","+tiggerDataSet[2]+"] against ["+referenceDataSet[0]+","+referenceDataSet[1]+","+referenceDataSet[2]+"] with threshold as "+threshold+"% for "+alertID);
+		                    double referenceValue = referenceDataSet[1];
+		                    double diffPercentage = (triggerValue/referenceValue)*100;
+		                    Monitoring.Concepts.MonitorableEntityAlertHistory alertHistory = Instance.getByExtId(view.monitorable@extId+":alerthistory");
+		                    if(alertHistory == null) return;
+		                    int alertIDIndex = Instance.PropertyArray.indexOfString(alertHistory.alertsIDIndex,alertID);
+		                    if (alertIDIndex == -1){
+		                        alertIDIndex = alertHistory.alertsIDIndex@length;
+		                        alertHistory.alertsIDIndex[alertIDIndex] = alertID;
+		                        alertHistory.alertFiredByID[alertIDIndex] = false;
+		                    }
+		                    boolean fireAlert = diffPercentage >= threshold;
+		                    if (fireAlert == true && alertHistory.alertFiredByID[alertIDIndex] == false){
+		                        //fire threshold alert
+		                        if (timebased == true) {
+		                            triggerCategoryValue = Number.longValue(triggerCategoryValue,10);
+		                        }
+		                        String message = BEMM.alerts.getFormattedMessage(configurationMapId,entity.name,triggerCategoryValue,tiggerDataSet[2],referenceDataSet[2]);
+		                        String severity = "normal";
+		                        Object[] projection = Util.HashMap.getObject(configurationMapId,"projection");
+		                        for (int k = 0 ; k < projection@length ; k = k + 1){
+		                            String[] projectedProperty = projection[k];
+		                            if (projectedProperty[0] == "severity"){
+		                                severity = projectedProperty[1];
+		                            }
+		                        }
+		                        Shared.RuleFunctions.log("fireAlerts","DEBUG","Firing alert with severity as "+severity+",message as "+message+" for "+fqName+" using "+view@extId+" for "+alertID);
+		                        alertHistory.alertFiredByID[alertIDIndex] = true;
+		                        alertHistory.lastFiredTimeByID[alertIDIndex] = DateTime.now();
+		                        Monitoring.Events.cmetrics.AlertEvent event = Monitoring.Events.cmetrics.AlertEvent.AlertEvent(System.currentTimeMillis()+alertID,null,view.monitorable@extId,"cluster","sysalerts",alertID,severity,message,DateTime.now());
+		                        Event.assertEvent(event);
+		                    }
+		                    else if (fireAlert == false && alertHistory.alertFiredByID[alertIDIndex] == true) {
+		                        Shared.RuleFunctions.log("fireAlerts","DEBUG","Resetting alert fired for against ["+referenceDataSet[0]+","+referenceDataSet[1]+","+referenceDataSet[2]+"] with threshold as "+threshold+"% based on ["+triggerCategoryValue+","+triggerValue+","+tiggerDataSet[2]+"] for "+alertID);
+		                        alertHistory.alertFiredByID[alertIDIndex] = false;
+		                        Monitoring.Events.cmetrics.AlertResetEvent event = Monitoring.Events.cmetrics.AlertResetEvent.AlertResetEvent(System.currentTimeMillis()+alertID,null,view.monitorable@extId,null,null,alertID,view.monitorable@extId);
+		                        Event.assertEvent(event);
+		                    }
+		                    else if (fireAlert == true && alertHistory.alertFiredByID[alertIDIndex] == true) {
+		                        Shared.RuleFunctions.log("fireAlerts","DEBUG","An alert has already been fired against ["+referenceDataSet[0]+","+referenceDataSet[1]+","+referenceDataSet[2]+"] with threshold as "+threshold+"%, skipping ["+triggerCategoryValue+","+triggerValue+","+tiggerDataSet[2]+"] for "+alertID);
+		                    }
+		                    else if (fireAlert == false && alertHistory.alertFiredByID[alertIDIndex] == false) {
+		                        Shared.RuleFunctions.log("fireAlerts","DEBUG","No alert firing needed against ["+referenceDataSet[0]+","+referenceDataSet[1]+","+referenceDataSet[2]+"] with threshold as "+threshold+"%, skipping ["+triggerCategoryValue+","+triggerValue+","+tiggerDataSet[2]+"] for "+alertID);
+		                    }
+		                }
+		            }
+		        }
+		    }
+		}
+	}
+}

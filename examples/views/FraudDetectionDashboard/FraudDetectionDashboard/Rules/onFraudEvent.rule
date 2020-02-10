@@ -1,0 +1,21 @@
+/**
+ * @description 
+ * @author anpatil-T61
+ */
+rule Rules.onFraudEvent {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Events.Fraud fraud;
+	}
+	when {
+		
+	}
+	then {
+		DateTime now = DateTime.now();
+		DateTime nowByMin = DateTime.createTime(DateTime.getYear(now),DateTime.getMonth(now),DateTime.getDate(now),DateTime.getHour(now),DateTime.getMinute(now),0,null);
+		Dashboards.M_FraudTrackingByMin.compute(nowByMin,1,fraud.AccountId,fraud.Amount);
+	}
+}

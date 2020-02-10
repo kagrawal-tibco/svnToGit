@@ -1,0 +1,26 @@
+/**
+ * @description PP function which validates certain conditions before the rule is evaluated.
+ */
+void rulefunction Approval.Rules.RuleFunctions.Preprocessors.AMS_RFP_WorkitemDelegationPreconditionsPPValidator {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Approval.Events.ArtifactEvents.Worklist.Delegation.AMS_E_WorkitemDelegationRequestEvent ams_e_workitemdelegationrequestevent;
+	}
+	body {
+		System.debugOut("Checking pre-conditions on workitem delegation");
+		boolean isUserLoggedIn = 
+			Approval.CommonServices.AMS_RF_ValidateUsername(ams_e_workitemdelegationrequestevent) != null;
+		
+		if (!isUserLoggedIn) {
+			AMS_E_ErrorEvent errorEvent = 
+				Approval.CommonServices.AMS_RF_CreateErrorEvent("WORKITEM_DELEGATION_ERROR", "The user " + ams_e_workitemdelegationrequestevent.loggedInUserName + " is not logged in", null);
+			Event.replyEvent(ams_e_workitemdelegationrequestevent, errorEvent);
+			//Consume the event so that RTC is not triggered
+			Event.consumeEvent(ams_e_workitemdelegationrequestevent);
+			throw Exception.newException("WORKITEM_DELEGATION_ERROR", 
+										 "The user " + ams_e_workitemdelegationrequestevent.loggedInUserName + " is not logged in", null);	
+		}	
+	}
+}

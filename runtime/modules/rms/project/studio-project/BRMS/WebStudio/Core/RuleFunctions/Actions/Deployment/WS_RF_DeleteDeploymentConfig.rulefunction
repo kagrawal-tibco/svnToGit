@@ -1,0 +1,67 @@
+/**
+ * @description 
+ */
+WebStudio.Core.Concepts.DataSources.WS_C_TemporaryReturnData rulefunction WebStudio.Core.RuleFunctions.Actions.Deployment.WS_RF_DeleteDeploymentConfig {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object asyncContextObject;
+		WebStudio.Security.Authn.Concepts.WS_C_LoggedInUser loggedInUser;
+		String contentType;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.Deployment.WS_RF_DeleteDeployConfig");
+		
+		Object servletRequest = HTTP.Servlet.getServletRequest(asyncContextObject);
+		
+		int responseStatus = 0;
+		int recordCount = 0;
+		String errorCode = null;
+		String responseMessage = null;
+		
+		WS_C_TemporaryReturnData tempReturnData = null;
+		
+		if (!WS_RF_CheckHTTPMethod(servletRequest, "DELETE")) {
+			responseStatus = -1;
+			recordCount = 0;
+			errorCode = "ERR_5101";
+			responseMessage = "Invalid HTTP Method, expect method is [DELETE].";			
+		} else {
+			String deploymentConfigName = HTTP.Servlet.Request.getRequestParameter(servletRequest, "name");
+			String projectName = HTTP.Servlet.Request.getRequestParameter(servletRequest, "projectName");
+			
+			if (deploymentConfigName == null || String.equals(deploymentConfigName, "") || projectName == null || String.equals(projectName, "")) {
+				responseStatus = -1;
+				recordCount = 0;
+				errorCode = "ERR_8101";
+				responseMessage = "Missing parameters. Deployment Config Name and Project Name are required.";
+			} else {
+				Log.log(LOGGER, "Debug", "Deleting Deployment Config - [%s]", deploymentConfigName);
+				
+				String asyncContextId = WS.Common.generateUUID();
+				String mapLockKey = "DEPLOYMENT_CONFIG_DELETE_ASYNC_CONTEXT_MAP_" + System.nanoTime();
+				//Concurrent Rete case. Lock locally
+				boolean mapLocked = Cluster.DataGrid.Lock(mapLockKey, -1, true);
+				if (mapLocked) { 
+					Util.HashMap.createMap(mapLockKey);
+					Util.HashMap.putObject(mapLockKey, asyncContextId, asyncContextObject);
+				}
+				
+				String subscriptionId = null;
+				if (loggedInUser.jwtToken != null) subscriptionId = loggedInUser.jwtToken.sbsc;
+				
+				WS_E_DeploymentConfigEvent updateUserPreferenceEvent =
+					 WebStudio.Core.Events.WS_E_DeploymentConfigEvent.WS_E_DeploymentConfigEvent(null, null, loggedInUser.username, asyncContextId, mapLockKey, contentType, "DELETE", deploymentConfigName, projectName, subscriptionId);
+					
+				Event.assertEvent(updateUserPreferenceEvent);
+			}
+		}
+		
+		if (responseStatus == -1) {
+			tempReturnData = WS_RF_CreateTemporaryReturnData(responseStatus, recordCount, errorCode, responseMessage, null);
+		}
+		
+		return tempReturnData;
+	}
+}

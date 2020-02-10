@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Application xmlns:mx="http://www.adobe.com/2006/mxml" layout="vertical" creationComplete="init()" >
+	<mx:Script>
+		<![CDATA[
+			import mx.collections.ArrayCollection;
+			
+			[Bindable]
+			private var dataPoints:ArrayCollection;
+			
+			private function init():void{
+				dataPoints = new ArrayCollection();
+			}
+			
+			private function setValues():void{
+				var minValue:Number = Number(minChartValueInput.text);
+				var maxValue:Number = Number(maxChartValueInput.text);
+				var divisions:Number = Number(numDivisionsInput.text);
+				
+				setChartBoundsAndInterval(minValue, maxValue, divisions);
+				
+				dataPoints.removeAll();
+				dataPoints.addItem({"category":0, "value":minValue});
+				dataPoints.addItem({"category":1, "value":maxValue});
+				dataPoints.refresh();
+			}
+			
+			private function setChartBoundsAndInterval(minValue:Number, maxValue:Number, divisions:Number):void{
+				var range:Number = maxValue - minValue;
+				var roughTick:Number = range/divisions;
+				var exponent:Number = Math.log(roughTick)*Math.LOG10E;
+				var magnitude:Number = Math.pow(10, Math.floor(exponent));
+				var residual:Number = roughTick/magnitude;
+				var scale:Number = roundToFactor(residual, 0.5);
+				var tick:Number = scale * magnitude;
+				
+				var chartMin:Number = floorToFactor(minValue, tick);
+				var chartMax:Number = ceilToFactor(maxValue, tick);
+				
+				testChartVAxis.minimum = chartMin;
+				testChartVAxis.maximum = chartMax;
+				testChartVAxis.interval = tick;
+				
+				chartMinOutput.text = chartMin.toString();
+				chartMaxOutput.text = chartMax.toString();
+				intervalOutput.text = tick.toString();
+				rangeOutput.text = range.toString();
+				roughTickOutput.text = roughTick.toString();
+				exponentOutput.text = exponent.toString();
+				magnitudeOutput.text = magnitude.toString();
+				residualOutput.text = residual.toString();
+				scaleOutput.text = scale.toString();
+			}
+			
+			private function floorToFactor(unrounded:Number, factor:Number):Number{
+				return Math.floor(unrounded/factor)*factor;
+			}
+			
+			private function ceilToFactor(unrounded:Number, factor:Number):Number{
+				return Math.ceil(unrounded/factor)*factor;
+			}
+			
+			private function roundToFactor(unrounded:Number, factor:Number):Number{
+				return Math.round(unrounded/factor)*factor;
+			}
+		
+		]]>
+	</mx:Script>
+	<mx:VDividedBox height="100%" width="100%" >
+		<mx:HBox>
+			<mx:Label text="min chart value" /><mx:TextInput id="minChartValueInput" text="1"/>
+			<mx:Label text="max chart value" /><mx:TextInput id="maxChartValueInput" text="8"/>
+			<mx:Label text="number of divisios" /><mx:TextInput id="numDivisionsInput" text="5"/>
+			<mx:Button label="set" click="setValues()" />
+		</mx:HBox>
+		
+		<mx:LineChart id="testChart" dataProvider="{dataPoints}" showDataTips="true">
+			<mx:verticalAxis>
+				<mx:LinearAxis id="testChartVAxis" autoAdjust="false" />
+			</mx:verticalAxis>
+			<mx:horizontalAxis>
+				<mx:CategoryAxis categoryField="category" />
+			</mx:horizontalAxis>
+			<mx:series>
+				<mx:LineSeries yField="value" />
+			</mx:series>
+		</mx:LineChart>
+		<mx:Grid>
+			<mx:GridRow>
+				<mx:GridItem><mx:Label text="chart min" width="75" textAlign="right"/><mx:TextInput id="chartMinOutput" editable="false" /></mx:GridItem>
+				<mx:GridItem><mx:Label text="chart max" width="75" textAlign="right"/><mx:TextInput id="chartMaxOutput" editable="false" /></mx:GridItem>
+				<mx:GridItem><mx:Label text="tick" width="75" textAlign="right"/><mx:TextInput id="intervalOutput" editable="false" /></mx:GridItem>
+			</mx:GridRow>
+			<mx:GridRow>
+				<mx:GridItem><mx:Label text="range" width="75" textAlign="right"/><mx:TextInput id="rangeOutput" editable="false" /></mx:GridItem>
+				<mx:GridItem><mx:Label text="roughTick" width="75" textAlign="right"/><mx:TextInput id="roughTickOutput" editable="false" /></mx:GridItem>
+				<mx:GridItem><mx:Label text="exponent" width="75" textAlign="right"/><mx:TextInput id="exponentOutput" editable="false" /></mx:GridItem>
+			</mx:GridRow>
+			<mx:GridRow>
+				<mx:GridItem><mx:Label text="magnitude" width="75" textAlign="right"/><mx:TextInput id="magnitudeOutput" editable="false" /></mx:GridItem>
+				<mx:GridItem><mx:Label text="residual" width="75" textAlign="right"/><mx:TextInput id="residualOutput" editable="false" /></mx:GridItem>
+				<mx:GridItem><mx:Label text="scale" width="75" textAlign="right"/><mx:TextInput id="scaleOutput" editable="false" /></mx:GridItem>
+			</mx:GridRow>
+		</mx:Grid>
+	</mx:VDividedBox>
+</mx:Application>

@@ -1,0 +1,118 @@
+/**
+ * @description 
+ * @author hlouro-lt-T61
+ */
+rule Management.Rules.EntityMngmtRuleSet.InvokeEntityMethod_ValidToken {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Management.Events.request.InvokeMethodRequestEvent requestevent;
+	}
+	when {
+		requestevent.token != null && String.length(requestevent.token) != 0;
+	}
+	then {
+		String family = "InvokeEntityMethod_ValidToken";
+		Shared.RuleFunctions.log(family,"DEBUG","Rule " + family + " triggered");
+		
+		String monitoredEntityName;
+		String entityType;
+		String methodName;
+		String methodGroup;
+		String methodFQName;
+		String userName;
+		String pwd;
+		
+		try {
+			Shared.Concepts.LoggedInUser user = Instance.getByExtId(requestevent.token);
+			if (user == null) {
+			    Shared.Events.reqres.FailureResponseEvent event = Shared.Events.reqres.FailureResponseEvent.FailureResponseEvent(null,null,"001","Invalid token");
+			    Event.replyEvent(requestevent, event);
+			}
+			else {
+			    user.lastAccessTime = System.currentTimeMillis();
+			    String mId = requestevent.monitorableid;
+			    Shared.Concepts.MonitorableEntity monitorable = Instance.getByExtId(mId);
+			    if (monitorable == null) {
+			        Shared.Events.reqres.FailureResponseEvent event = Shared.Events.reqres.FailureResponseEvent.FailureResponseEvent(null,null,"010","Invalid monitor id");
+			        Event.replyEvent(requestevent, event);
+			    }
+			    else {
+//			        user.monitoring = monitorable;  //what is this for?
+//			        monitorable.lastMonitoredTime = System.currentTimeMillis();
+//			        entityType = monitorable.type;
+					userName = requestevent.userName;
+					pwd = requestevent.pwd;
+			        monitoredEntityName = getFQName(monitorable);
+			        entityType = requestevent.entityType;
+			        methodName = requestevent.methodName ;
+			        methodGroup = requestevent.methodGroup;
+			        methodFQName = "/"+entityType+"/"+methodGroup+"/"+methodName;
+			        
+			        String[] properties = BEMM.topology.getProperties(String.split(monitoredEntityName,":")); //todo check this
+			        String[] params;
+			        String paramsTokenStr = requestevent.paramsTokenStr;
+			        
+			        Shared.RuleFunctions.log(family,"DEBUG", "paramsTokenStr = " + paramsTokenStr);
+			        
+			        paramsTokenStr = BEMM.util.urlDecodeString(paramsTokenStr, "UTF-8");
+			        
+			        Shared.RuleFunctions.log(family,"DEBUG", "paramsTokenStr = " + paramsTokenStr);
+			        
+			        //we have to handle the ONE empty string parameter case separately because somehow we receive "" rather than empty_string
+			        if (paramsTokenStr == "\"\"") {
+			            Shared.RuleFunctions.log(family,"DEBUG", "Setting the 1 entry params[] array to \"\"");
+			            params = String.split2("", "#",-1);
+			        }
+			        else if (paramsTokenStr == "null") {
+			            Shared.RuleFunctions.log(family,"DEBUG", "Setting the params[] array to null");
+			            params = null;
+			        }    
+			        else
+			            params = String.split2(paramsTokenStr, "#",-1);  //TODO: HANDLE THE NO ARGUMENTS CASE
+					
+					Shared.RuleFunctions.log(family,"DEBUG","username= " + userName);
+					Shared.RuleFunctions.log(family,"DEBUG","password= " + pwd);
+			        Shared.RuleFunctions.log(family,"DEBUG","monitoredEntityName= " + monitoredEntityName);
+			        Shared.RuleFunctions.log(family,"DEBUG","entityType= " + entityType);
+			        Shared.RuleFunctions.log(family,"DEBUG","methodName= " + methodName);
+			        Shared.RuleFunctions.log(family,"DEBUG","methodGroup= " + methodGroup);
+
+			        if (properties != null) {			        
+				        for(int i =0; i < properties@length; i++) {
+				            Shared.RuleFunctions.log(family,"DEBUG","property[" +i+"]= " + properties[i]);
+			        	} 
+			        } else
+			        	Shared.RuleFunctions.log(family,"DEBUG","properties= null");
+			
+			        if (params != null) {
+			            for(int i =0; i < params@length; i++) {
+			                Shared.RuleFunctions.log(family,"DEBUG","param[" +i+"]= " + params[i]);
+			            }
+			            if (params@length == 0)
+			            	Shared.RuleFunctions.log(family,"DEBUG","WARNING: Empty parameters!!!");
+			        } else
+			            Shared.RuleFunctions.log(family,"DEBUG","params= null");
+			            
+			        Shared.RuleFunctions.log(family,"DEBUG","Invoking method: " + 
+				    									methodFQName + " on monitored entity: " + monitoredEntityName );
+				    									
+					String invokeMethodReturnXML = BEMM.methods.invoke(monitoredEntityName, entityType, methodGroup, 
+																		methodName, properties, params, userName, pwd);
+					
+			        Shared.RuleFunctions.log(family,"DEBUG","... SENDING ... "+invokeMethodReturnXML);
+
+		        	Shared.Events.reqres.SuccessXMLResponseEvent event = Shared.Events.reqres.SuccessXMLResponseEvent.SuccessXMLResponseEvent(null,invokeMethodReturnXML);
+			        Event.replyEvent(requestevent, event);
+				}
+			}
+		}//try
+		catch (Exception e) { 
+			Management.RuleFunctions.Exceptions.printAndSendException(e /*Except Object */,
+									family/*family String */,methodFQName/*methodFQName String */,
+									monitoredEntityName /*monitoredEntityName String */,requestevent/*requestevent Event */);
+		}
+	}
+}

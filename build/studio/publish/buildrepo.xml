@@ -1,0 +1,18 @@
+<project name="featuresandbundles" default="publish">
+	<target name="publish">
+		<delete dir="${exportDirectory}/studio-repo/be-bw"/>
+		<delete dir="${exportDirectory}/studio-repo/be-epf"/>
+		<property name="bwpluginsDirecotry" value="${bwLocation}" />
+		<property name="epfpluginsDirecotry" value="${epfLocation}" />
+			<echo message="publishing repo for BW jars"/>
+			<eclipse.publish.featuresAndBundles repository="file:${exportDirectory}/studio-repo/be-bw" >
+			     <bundles dir="${bwpluginsDirecotry}" includes="*.jar"	/>
+			</eclipse.publish.featuresAndBundles>
+		
+			<echo message="publishing repo for EPF jars"/>
+			<eclipse.publish.featuresAndBundles repository="file:${exportDirectory}/studio-repo/be-epf" >
+				 <features dir="${epfpluginsDirecotry}/features" includes="org.eclipse.*"/>
+			     <bundles dir="${epfpluginsDirecotry}/plugins" includes="org.eclipse.*"	/>
+			</eclipse.publish.featuresAndBundles>
+	</target>
+</project>

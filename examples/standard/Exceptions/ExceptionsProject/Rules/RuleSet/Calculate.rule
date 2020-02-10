@@ -1,0 +1,35 @@
+/**
+ * @description 
+ * @author 
+ */
+rule Rules.RuleSet.Calculate {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Events.Values_Event	values_event;
+		
+	}
+	when {
+		
+	}
+	then {
+		System.debugOut("_____________________________________________________________________________________________");
+		System.debugOut("Calculate Rule: Event received with properties- '"+values_event.Text+"', "+values_event.Number);
+		
+		int dividend = 20;
+		try{
+		    System.debugOut("Dividing - "+dividend+"/"+values_event.Number);
+		    int i = Rules.DivideFunction(dividend, values_event.Number);
+		    System.debugOut("Division of "+dividend+"/"+values_event.Number+ " = "+i);
+		}
+		catch(Exception e)
+		{
+		    System.debugOut("Exception Caught during division: "+ e@cause);
+		    System.debugOut("Exception Caught during division: "+ e@errorType);    
+		    System.debugOut("Exception Caught during division: "+ e@message);
+		    System.debugOut("Exception Caught during division: "+ e@stackTrace);     
+		}
+	}
+}

@@ -1,0 +1,105 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>     Preprocessor: Concept Operations
+
+- TIBCO BusinessEvents&reg; Examples
+</title>
+<meta http-equiv="Content-type" content="text/html; charset=iso-8859-1" />
+<meta http-equiv="Content-Language" content="en-us" />
+<link rel="Shortcut Icon" href="../../_resources/icon.gif" type="image/gif" />
+<style type="text/css" media="all">@import "../../_resources/examples.css";</style>
+<script type="text/javascript" src="../../_resources/examples.js" /></script>
+<script type="text/javascript">
+function buildForms() {
+ var form;
+
+
+ SendEventForm.setServer("http://localhost:8115");
+
+ form = SendEventForm.get("action");
+ form.setDestinationPath("/Channels/Http/AllOperations");
+ form.setEventPath("/Events/Action");
+ form.addProperty("Action", "createConcept");
+ form.addProperty("Identifier", "Concept1");
+ form.addProperty("Parameter", "Some text");
+ form.build();
+
+}
+</script>
+</head>
+<body onLoad="buildForms()">
+
+
+<h1>Preprocessor: Concept Operations</h1>
+
+
+<h2>Purpose of This Example</h2>
+
+<p>The <em>Preprocessor: Concept Operations</em> example shows how
+you can <em>directly operate on concepts</em> from within a preprocessor function.</p>
+
+<h2>How it Works</h2>
+
+<p>An HTTP destination receives HTTP requests and transforms them into events.</p>
+
+<p>In the CDD, this destination is assigned the preprocessor <code>RuleFunctions.Preprocessor</code>.</p>
+
+<p>When an <code>Events.Action</code> event appears on the destination,
+it first goes through the destination's preprocessor.</p>
+
+<p>The preprocessor checks the <code>Action</code> field
+of the <code>Events.Action</code> event and reacts
+depending on the value.</p>
+
+<p>If the <code>Action</code> field is <code>createConcept</code>,
+the preprocessor creates a new <code>Data</code> concept
+with the given <code>Identifier</code> as <code>extId</code>,
+and with the given <code>Parameter</code> as <code>Text</code> ;
+then it consumes the event. Else the event goes through.</p>
+
+<p>Two rules are included to detect which object (event or concept)
+reached the RTC.</p>
+
+
+<h2>How to Run the Example</h2>
+<ol>
+
+<li>
+<p>Open a command window and at the command prompt,
+start the TIBCO BusinessEvents&reg; engine using the following command.
+</p>
+
+<pre class="commands">
+cd <i>BE_HOME</i>/examples/standard/PreprocessorConceptOperations
+<i>BE_HOME</i>/bin/be-engine --propFile <i>BE_HOME</i>/bin/be-engine.tra -u default -c PreprocessorConceptOperations/default.cdd PreprocessorConceptOperations.ear
+</pre>
+
+<p>Adapt the command as needed,
+for example if you have customized the example project,
+or are running it from a different directory.</p>
+</li>
+
+
+<li>
+<p>Send an <code>Events.Action</code> event (use a different <code>Identifier</code> every time):</p>
+<form id="action"></form>
+<p>In the command window you see a message like this:</p>
+<pre class="logs">Preprocessor: Event received with Action='createConcept', Identifier='Concept1', Parameter='Some text'.
+Preprocessor: Creating concept 'Concept1'
+Preprocessor: Consuming event before it goes to the working memory...
+PrintConcept: New Concept with @extId='Concept1', Text='Some text'.
+</pre>
+</li>
+
+</ol>
+
+
+<div class="footer">
+<p>TIBCO BusinessEvents&reg; 5.6<br />
+Copyright&copy; 2004-2019 TIBCO Software Inc. All rights reserved.</p>
+</div>
+</body>
+</html>

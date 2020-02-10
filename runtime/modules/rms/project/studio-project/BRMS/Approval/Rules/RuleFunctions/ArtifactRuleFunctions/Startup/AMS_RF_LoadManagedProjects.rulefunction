@@ -1,0 +1,45 @@
+/**
+ * @description Load contents of managed project at startup. The project contents could be fully empty as well.
+ */
+void rulefunction Approval.Rules.RuleFunctions.ArtifactRuleFunctions.Startup.AMS_RF_LoadManagedProjects {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		
+	}
+	body {
+		Object LOGGER = Log.getLogger("Approval.Rules.RuleFunctions.ArtifactRuleFunctions.Startup.AMS_RF_LoadManagedProjects");
+		String pathSeparator = "/";
+		
+		String baseProjectDir = WS_RF_GetSCSRootURL(null, null);
+		if (baseProjectDir == null) {
+		    throw Exception.newException(null, "Source control repository location not present. Set ws.scs.rootURL property", null);
+		}
+		
+		//List all project folders
+		String[] projects = RMS.Approval.fetchServedProjectsList(baseProjectDir);	
+		
+		String globalProjectsMapID = "MANAGED_PROJECTS";
+		//Create a global map for loaded projects for this RMS.
+		Util.HashMap.createMap(globalProjectsMapID);
+		
+		for (int loop = 0; loop < projects@length; loop++) {
+			Object buffer = String.createBuffer(0);
+			
+			buffer = String.append(buffer, baseProjectDir);
+			buffer = String.append(buffer, pathSeparator);
+			buffer = String.append(buffer, projects[loop]);
+			
+			String projectPath = String.convertBufferToString(buffer);
+			Log.log(LOGGER, "Debug", "Loading contents for project %s ", projectPath);
+			Object loadedProject = RMS.ArtifactsManagement.loadProject(projectPath, null);
+			
+			if (loadedProject != null) {
+				Log.log(LOGGER, "Debug", "Adding project %s to global map", projects[loop]);
+				//Add it to global hashmap
+				Util.HashMap.putObject(globalProjectsMapID, projects[loop], loadedProject);
+			}
+		}
+	}
+}

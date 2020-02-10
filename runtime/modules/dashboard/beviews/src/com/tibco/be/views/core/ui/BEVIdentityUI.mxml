@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml" verticalAlign="middle" horizontalGap="0">
+	<mx:Text text="{this._title}" id="txtSynderaText" selectable="false" styleName=""/>
+	<mx:Image id="imgSynderaLogo" source="{this._logo}"/>
+
+	<mx:Script>
+		<![CDATA[
+		import mx.utils.StringUtil;
+
+		[Embed (source="../../../../../assets/synidentity/dull_white_logo.png")]
+		public static const DULL_WHITE_LOGO:Class;
+		
+		[Embed (source="../../../../../assets/synidentity/gray_logo.png")]
+		public static const GRAY_LOGO:Class;
+		
+		[Embed (source="../../../../../assets/synidentity/white_logo.png")]
+		public static const WHITE_LOGO:Class;
+	 		 	
+	 	public static const LONG_VERSION:int = 0;
+	 	public static const SHORT_VERSION:int = 1;
+	 	
+		//public static var WHITE_COLOR : String = "white";
+		//public static var DULL_WHITE_COLOR : String = "dullwhite";	
+		//public static var GRAY_COLOR : String = "gray"; 
+
+	 	private var _version:int = LONG_VERSION;
+	 	//private var _colorIndicator:String = WHITE_COLOR;
+
+ 		[Bindable]
+	 	private var _title:String = "Powered By";
+
+	 	[Bindable]
+	 	private var _logo:Class = DULL_WHITE_LOGO;
+
+	 	private var _position:String = "left";
+	 	
+		public function SynIdentity():void {
+
+		}
+		
+		[Inspectable]
+		public function set version(value:int):void{
+			if (value != LONG_VERSION && value != SHORT_VERSION) {
+				throw new Error("invalid version");
+			}
+			this._version = value;
+			if (this._version == SHORT_VERSION) {
+				title = null;
+			}
+		}
+			
+		[Inspectable]
+		public function set color(value:Class):void{
+			if (value != WHITE_LOGO && value != GRAY_LOGO && value != DULL_WHITE_LOGO) {
+				throw new Error("invalid logo color");
+			}	
+			//this._colorIndicator = value;
+			//this.setLogo();
+			this._logo = value;
+			this.setIdentityTextStyle();
+			this.drawIdentity();
+		}	
+	
+		[Inspectable]
+		public function set title(identityTitle:String):void{
+			this._title = identityTitle
+		}
+		
+		[Inspectable (defaultValue="left")]
+		public function set position(position:String):void{ //-- left or right
+			this._position=position;
+		}
+		
+/* 		private function setLogo():void{
+			switch(this._colorIndicator){
+				case WHITE_COLOR :
+					this._logo=this.synLogoWhiteCls;
+				break;
+				case DULL_WHITE_COLOR :
+					this._logo=this.synLogoDullWhiteCls;
+				break;
+				case GRAY_COLOR :
+					this._logo=this.synLogoGrayCls;
+				break;
+			}
+			//return this._logo;			
+		}
+ */				
+		public function drawIdentity():void{
+			if (_version == LONG_VERSION) {
+				if(_position.toLowerCase() == "right"){
+					this.setChildIndex(this.imgSynderaLogo,0);
+					this.setChildIndex(this.txtSynderaText,1);
+				}
+			}
+		}
+				
+		private function setIdentityTextStyle():void{
+			if(this._logo == GRAY_LOGO ){
+				this.txtSynderaText.styleName = "synIdentityTextG";
+			}
+			else {
+				this.txtSynderaText.styleName = "synIdentityTextW";
+			}
+		}		
+		
+		]]>
+	</mx:Script>
+</mx:HBox>

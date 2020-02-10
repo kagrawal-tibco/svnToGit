@@ -1,0 +1,29 @@
+/**
+ * @description 
+ */
+void rulefunction WebStudio.Core.RuleFunctions.Utils.RT.Builder.WS_RF_ClearSymbols {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		WebStudio.Core.Concepts.RuleTemplateInstance.Builder.WS_C_AbstractSymbolInfo symbolInfo;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.RT.Builder.WS_RF_ClearSymbols");
+		
+		if (symbolInfo != null) {
+			if (symbolInfo instanceof WS_C_ComplexSymbolInfo) {
+				WS_C_ComplexSymbolInfo complexSymbol = symbolInfo;
+				
+				WS_C_AbstractSymbolInfo[] childSymbolInfo = Instance.PropertyArray.toArrayConcept(complexSymbol.symbolInfo);
+				for (int i=0; i < childSymbolInfo@length; i++) {
+					Instance.PropertyArray.removeConceptReference(complexSymbol.symbolInfo, childSymbolInfo[i]);
+					if (symbolInfo instanceof WS_C_ComplexSymbolInfo) {
+						WS_RF_ClearSymbols(childSymbolInfo[i]);
+					}
+					Instance.deleteInstance(childSymbolInfo[i]);
+				}
+			}
+		}
+	}
+}

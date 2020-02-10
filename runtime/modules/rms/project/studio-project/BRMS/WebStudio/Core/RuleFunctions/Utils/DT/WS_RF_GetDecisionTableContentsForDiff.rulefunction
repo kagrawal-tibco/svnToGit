@@ -1,0 +1,132 @@
+/**
+ * @description 
+ */
+WebStudio.Core.Concepts.DataSources.Artifacts.Decision.WS_C_DecisionTablePageDetails rulefunction WebStudio.Core.RuleFunctions.Utils.DT.WS_RF_GetDecisionTableContentsForDiff {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String projectName;
+		String artifactPath;
+		WebStudio.Core.Concepts.Decision.Pagination.WS_C_DecisionTable decisionTable;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.DT.WS_RF_GetDecisionTableContentsForDiff");
+		
+		WebStudio.Core.Concepts.DataSources.Artifacts.Decision.WS_C_DecisionTablePageDetails decisionTableArtifactDetails = 
+													Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/Artifacts/Decision/WS_C_DecisionTablePageDetails");
+		decisionTableArtifactDetails.projectName = projectName;
+		decisionTableArtifactDetails.artifactPath = artifactPath;
+		decisionTableArtifactDetails.tableName = decisionTable.name;
+		decisionTableArtifactDetails.folderPath = decisionTable.folder;
+		decisionTableArtifactDetails.implementsPath = decisionTable.implementsPath;
+		decisionTableArtifactDetails.arguments = Instance.PropertyAtom.getContainedConcept(decisionTable.arguments, 1L);
+		decisionTableArtifactDetails.metadata = Instance.PropertyAtom.getContainedConcept(decisionTable.metadata, 1L);				
+		decisionTableArtifactDetails.decisionTableSinglePageView = false; 
+		
+		Log.log(LOGGER, "Debug", "Base details copied");
+								
+		WebStudio.Core.Concepts.Decision.Pagination.WS_C_TableRuleSet decisionTableRuleSet = Instance.PropertyAtom.getContainedConcept(decisionTable.decisionTable, 1L);
+		if (decisionTableRuleSet != null) {
+			decisionTableArtifactDetails.decisionTableTotalPages = 1;
+			decisionTableArtifactDetails.decisionTableLastRuleId = decisionTableRuleSet.lastRuleId;
+			
+			WS_C_TableColumns dtColumns = decisionTableRuleSet.columns;
+			WS_C_TableColumns newDTColumns = Instance.newTransientInstance("/WebStudio/Core/Concepts/Decision/Pagination/WS_C_TableColumns");
+			
+			if (dtColumns.column != null) {
+				WS_C_TableColumn[] dtColumnList = Instance.PropertyArray.toArrayContainedConcept(dtColumns.column);
+				for (int i = 0; i < dtColumnList@length; i++) {
+					WS_C_TableColumn tableColumn = Instance.newTransientInstance("/WebStudio/Core/Concepts/Decision/Pagination/WS_C_TableColumn");
+					tableColumn.columnId = 	dtColumnList[i].columnId;
+					tableColumn.name = WS.Common.escapeXML(dtColumnList[i].name);
+					tableColumn.columnAlias = dtColumnList[i].columnAlias;
+					tableColumn.columnType = dtColumnList[i].columnType;					
+					tableColumn.property = dtColumnList[i].property;
+					tableColumn.propertyType = dtColumnList[i].propertyType;
+					tableColumn.isArrayProperty= dtColumnList[i].isArrayProperty;
+					tableColumn.associatedDM = dtColumnList[i].associatedDM;
+					tableColumn.isSubstitution = dtColumnList[i].isSubstitution;
+					Instance.PropertyArray.appendContainedConcept(newDTColumns.column, tableColumn, 1L);	
+				}
+			}
+			decisionTableArtifactDetails.decisionTableColumns = newDTColumns;
+			Log.log(LOGGER, "Debug", "Table Column copy complete");
+			
+			WS_C_TablePage singleDTTablePage = Instance.newTransientInstance("/WebStudio/Core/Concepts/Decision/Pagination/WS_C_TablePage");
+			if (decisionTableRuleSet.tablePageIds != null) {
+				String[] tablePageIds = Instance.PropertyArray.toArrayString(decisionTableRuleSet.tablePageIds);
+				
+				for (int index = 0; index < tablePageIds@length; index++) {
+					WS_C_TablePage tempDecisionTablePage = Instance.getByExtIdByUri(tablePageIds[index], "/WebStudio/Core/Concepts/Decision/Pagination/WS_C_TablePage");
+					
+					if (tempDecisionTablePage.tableRule != null) {
+						WS_C_TableRule[] tableRules = Instance.PropertyArray.toArrayContainedConcept(tempDecisionTablePage.tableRule);
+						for (int index2 = 0; index2 < tableRules@length; index2++) {
+							WebStudio.Core.Concepts.Decision.Pagination.WS_C_TableRule tableRule = WebStudio.Core.RuleFunctions.Utils.DT.WS_RF_CreateTableRuleInstance(tableRules[index2]);
+							Instance.PropertyArray.appendContainedConcept(singleDTTablePage.tableRule, tableRule, 1L);	
+						}
+					}				
+				}	
+	
+				for (int index = 0; index < tablePageIds@length; index++) {
+					WS_C_TablePage tempDecisionTablePage = Instance.getByExtIdByUri(tablePageIds[index], "/WebStudio/Core/Concepts/Decision/Pagination/WS_C_TablePage");
+					WS_C_TableRule[] newTableRules = Instance.PropertyArray.toArrayConcept(tempDecisionTablePage.newTableRule);
+					for (int index2 = 0; index2 < newTableRules@length; index2++) {
+						WebStudio.Core.Concepts.Decision.Pagination.WS_C_TableRule newTableRule = WebStudio.Core.RuleFunctions.Utils.DT.WS_RF_CreateTableRuleInstance(newTableRules[index2]);
+						Instance.PropertyArray.appendContainedConcept(singleDTTablePage.tableRule, newTableRule, 1L);	
+					}			
+				}
+			}
+			decisionTableArtifactDetails.decisionTablePage = singleDTTablePage;
+			
+			Log.log(LOGGER, "Debug", "Table Page and Rule copy complete");
+		}
+
+		WebStudio.Core.Concepts.Decision.Pagination.WS_C_TableRuleSet exceptionTableRuleSet = Instance.PropertyAtom.getConceptReference(decisionTable.exceptionTable, 1L);
+		decisionTableArtifactDetails.exceptionTableTotalPages = exceptionTableRuleSet.totalPages;
+		decisionTableArtifactDetails.exceptionTableLastRuleId = exceptionTableRuleSet.lastRuleId;
+		
+		WS_C_TableColumns etColumns = exceptionTableRuleSet.columns;
+		WS_C_TableColumns newETColumns = Instance.newTransientInstance("/WebStudio/Core/Concepts/Decision/Pagination/WS_C_TableColumns");
+		
+		if (etColumns.column != null) {
+			WS_C_TableColumn[] etColumnList = Instance.PropertyArray.toArrayContainedConcept(etColumns.column);
+			for (int i = 0; i < etColumnList@length; i++) {
+				WS_C_TableColumn tableColumn = Instance.newTransientInstance("/WebStudio/Core/Concepts/Decision/Pagination/WS_C_TableColumn");
+				tableColumn.columnId = 	etColumnList[i].columnId;
+				tableColumn.name = WS.Common.escapeXML(etColumnList[i].name);
+				tableColumn.columnAlias = etColumnList[i].columnAlias;
+				tableColumn.columnType = etColumnList[i].columnType;					
+				tableColumn.property = etColumnList[i].property;
+				tableColumn.propertyType = etColumnList[i].propertyType;
+				tableColumn.isArrayProperty= etColumnList[i].isArrayProperty;
+				tableColumn.associatedDM = etColumnList[i].associatedDM;
+				tableColumn.isSubstitution = etColumnList[i].isSubstitution;
+				Instance.PropertyArray.appendContainedConcept(newETColumns.column, tableColumn, 1L);	
+			}
+		}
+		decisionTableArtifactDetails.exceptionTableColumns = newETColumns;
+		
+		Log.log(LOGGER, "Debug", "Exception Table Column copy complete");
+
+		WS_C_TablePage singleETTablePage = Instance.newTransientInstance("/WebStudio/Core/Concepts/Decision/Pagination/WS_C_TablePage");
+		
+		if (exceptionTableRuleSet.tablePageIds != null) {
+			String[] tablePageIds = Instance.PropertyArray.toArrayString(exceptionTableRuleSet.tablePageIds);
+			WS_C_TablePage exceptionTablePage = Instance.getByExtIdByUri(tablePageIds[0], "/WebStudio/Core/Concepts/Decision/Pagination/WS_C_TablePage");
+			
+			if (exceptionTablePage.tableRule != null) {
+				WS_C_TableRule[] tableRules = Instance.PropertyArray.toArrayContainedConcept(exceptionTablePage.tableRule);
+				for (int index = 0; index < tableRules@length; index++) {
+					WebStudio.Core.Concepts.Decision.Pagination.WS_C_TableRule tableRule = WebStudio.Core.RuleFunctions.Utils.DT.WS_RF_CreateTableRuleInstance(tableRules[index]);
+					Instance.PropertyArray.appendContainedConcept(singleETTablePage.tableRule, tableRule, 1L);	
+				}
+			}
+		}		
+		decisionTableArtifactDetails.exceptionTablePage = singleETTablePage;
+		Log.log(LOGGER, "Debug", "Exception Table Page and Rule copy complete");
+		
+		return decisionTableArtifactDetails;
+	}
+}

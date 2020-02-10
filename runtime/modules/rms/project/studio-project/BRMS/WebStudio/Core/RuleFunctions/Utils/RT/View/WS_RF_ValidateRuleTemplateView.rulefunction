@@ -1,0 +1,90 @@
+/**
+ * @description Validates Rule Template Instance View and reports error if any.
+ */
+WebStudio.Core.Concepts.DataSources.Problems.WS_C_RTValidationResponse rulefunction WebStudio.Core.RuleFunctions.Utils.RT.View.WS_RF_ValidateRuleTemplateView {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		WebStudio.Core.Concepts.RuleTemplateInstance.View.WS_C_RuleTemplateInstanceView ruleTemplateInstance;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.RT.View.WS_RF_ValidateRuleTemplateView");
+		
+		WebStudio.Core.Concepts.DataSources.Problems.WS_C_RTValidationResponse validationResponse = Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/Problems/WS_C_RTValidationResponse");
+		
+		Object missingBindingMsg =  String.createBuffer(0);
+		boolean missingBinding = false;
+		
+		for (int loopCnt = 0; loopCnt < ruleTemplateInstance.view.bindingInfo@length; loopCnt++) {
+			WS_C_BindingInfo bindingInfo = ruleTemplateInstance.view.bindingInfo[loopCnt];
+			
+			Log.log(LOGGER,"debug"," Id : [%s], Type : [%s] & Value : [%s]",bindingInfo.bindingId, bindingInfo.type, bindingInfo.value);
+			
+			//check for missing binding
+			String bindingValue = bindingInfo.value;
+			if (bindingValue != null) bindingValue = String.trim(bindingValue);
+			if (bindingValue == null || String.equals(bindingValue,"") || String.equals(bindingValue,"null")) {
+				missingBinding = true;
+				String.append(missingBindingMsg, bindingInfo.bindingId);
+				String.append(missingBindingMsg,", ");
+				
+			} else {
+				boolean inDomain = false;
+				
+				//check for invalid binding			
+				if (bindingInfo.domainInfo != null) {
+					for (int domainCnt = 0; domainCnt < bindingInfo.domainInfo@length ; domainCnt++) {
+						WS_C_Domain domainInfo = bindingInfo.domainInfo[domainCnt];
+						
+						for (int entryCnt=0; entryCnt<domainInfo.singleEntry@length ; entryCnt++) {
+							String entryValue = domainInfo.singleEntry[entryCnt].value;
+							if (String.equals(entryValue, bindingValue)) {
+								inDomain = true;
+								break;
+							} 
+						}
+					}
+				}
+				
+				if (!inDomain && !WS_RF_ValidateValueByType(bindingInfo.type, bindingValue)) {
+					Object invalidBindingMsg =  String.createBuffer(0);
+					String.append(invalidBindingMsg,"Type mismatch, expected type ''");
+					String.append(invalidBindingMsg,bindingInfo.type);
+					String.append(invalidBindingMsg,"'");
+					if (String.equals("DateTime",bindingInfo.type)) {
+						String.append(invalidBindingMsg,"(Format 'yyyy-MM-dd'T'HH:mm:ss.SSSZ').");
+					} else {
+						String.append(invalidBindingMsg,".");
+					}
+					WebStudio.Core.Concepts.DataSources.Problems.WS_C_Problem problem = Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/Problems/WS_C_Problem");
+					problem.errorMessage = String.convertBufferToString(invalidBindingMsg);
+					problem.problemType = "Semantic";
+					problem.location = bindingInfo.bindingId;
+					problem.errorCode = "313";
+					Instance.PropertyArray.appendContainedConcept(validationResponse.problem,problem,1L);
+				} 
+			}
+		}
+		
+		if (missingBinding) {
+			String err = String.convertBufferToString(missingBindingMsg);
+			err = String.substring(err,0,String.lastIndexOfString(err, 0, ","));
+			String.clearBuffer(missingBindingMsg);
+			String.append(missingBindingMsg,"Following bindings are not defined: (");
+			String.append(missingBindingMsg,err);
+			String.append(missingBindingMsg,").");
+			
+			WebStudio.Core.Concepts.DataSources.Problems.WS_C_Problem problem = Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/Problems/WS_C_Problem");
+			problem.errorMessage = String.convertBufferToString(missingBindingMsg);
+			problem.problemType = "Semantic";
+			problem.location = "";
+			problem.errorCode = "311";
+			problem.isWarning = true;
+			
+			Instance.PropertyArray.appendContainedConcept(validationResponse.problem,problem,1L);
+		}
+		
+		return validationResponse;
+	}
+}

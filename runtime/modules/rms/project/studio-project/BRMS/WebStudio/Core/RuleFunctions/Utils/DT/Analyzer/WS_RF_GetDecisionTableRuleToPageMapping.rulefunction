@@ -1,0 +1,39 @@
+/**
+ * @description 
+ */
+Object rulefunction WebStudio.Core.RuleFunctions.Utils.DT.Analyzer.WS_RF_GetDecisionTableRuleToPageMapping {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		WebStudio.Core.Concepts.Decision.Pagination.WS_C_DecisionTable decisionTable;
+	}
+	body {
+		
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.DT.Analyzer.WS_RF_GetDecisionTableRuleToPageMapping");
+		
+		WebStudio.Core.Concepts.Decision.Pagination.WS_C_TableRuleSet decisionTableRuleSet = Instance.PropertyAtom.getContainedConcept(decisionTable.decisionTable, 1L);		
+		WS_C_TablePage[] tablePagesArray = Instance.PropertyArray.toArrayContainedConcept(decisionTableRuleSet.tablePage);
+		Object ruleToPageMap = Collections.Map.createHashMap();
+		for (int i = 0; i < tablePagesArray@length; i++) {
+			WS_C_TablePage tablePage = tablePagesArray[i];
+		
+			WebStudio.Core.Concepts.Decision.Pagination.WS_C_TableRule[] tableRulesArray = Instance.PropertyArray.toArrayContainedConcept(tablePage.tableRule);
+			for (int j = 0; j < tableRulesArray@length; j++) {
+				WebStudio.Core.Concepts.Decision.Pagination.WS_C_TableRule tableRule = tableRulesArray[j];
+				String ruleIdStr = String.valueOfLong(tableRule.ruleId);
+				String pageNumStr = String.valueOfLong(tablePage.pageNumber);
+				Collections.Map.put(ruleToPageMap, ruleIdStr, pageNumStr);	
+			}
+			
+			WebStudio.Core.Concepts.Decision.Pagination.WS_C_TableRule[] newTableRulesArray = Instance.PropertyArray.toArrayConcept(tablePage.newTableRule);
+			for (int j = 0; j < newTableRulesArray@length; j++) {
+				WebStudio.Core.Concepts.Decision.Pagination.WS_C_TableRule tableRule = newTableRulesArray[j];
+				String ruleIdStr = String.valueOfLong(tableRule.ruleId);
+				String pageNumStr = String.valueOfLong(tablePage.pageNumber);
+				Collections.Map.put(ruleToPageMap, ruleIdStr, pageNumStr);	
+			}
+		}		
+		return ruleToPageMap;				
+	}
+}

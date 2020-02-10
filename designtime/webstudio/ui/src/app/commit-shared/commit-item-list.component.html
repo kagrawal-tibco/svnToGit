@@ -1,0 +1,62 @@
+<h2 mat-dialog-title i18n>{{title}} <span class="badge badge-pill badge-primary">{{input?.length}}</span></h2>
+<div class="row">
+	<div
+		class="card-body"
+		*ngIf='!input || input.length === 0'
+		>
+		{{emptyMsg}}
+	</div>
+	<div class="card-body">
+		<ul class="list-group list-group-scroll">
+			<li
+			*ngFor = 'let c of input'
+			class='list-group-item'
+			>
+			<div class="animation-container animated"
+				[class.fadeOut]='removing === c'
+			>
+				<commit-item
+				[commitItem]='c'
+				(approvalResult)="onResolve(c, $event)"
+				(cancelCommit)='onWithdraw(c)'
+				(delegateCommit)='onDelegate(c)'
+				(deleteCommit)='onDelete(c, $event)'
+				[mode]='mode'
+				></commit-item>
+			</div>
+			</li>
+		</ul>
+	</div>
+</div>
+<!-- <div class="card">
+  <div class="card-header card-header-sm">
+    {{title}} <span class="badge badge-pill badge-primary">{{input?.length}}</span>
+  </div>
+  <div
+    class="card-body"
+    *ngIf='!input || input.length === 0'
+    >
+    {{emptyMsg}}
+  </div>
+  <div class="card-body">
+	  <ul class="list-group list-group-scroll">
+	    <li
+	      *ngFor = 'let c of input'
+	      class='list-group-item'
+	    >
+	      <div class="animation-container animated"
+	        [class.fadeOut]='removing === c'
+	      >
+	        <commit-item
+	        [commitItem]='c'
+	        (approvalResult)="onResolve(c, $event)"
+	        (cancelCommit)='onWithdraw(c)'
+	        (delegateCommit)='onDelegate(c)'
+	        (deleteCommit)='onDelete(c, $event)'
+	        [mode]='mode'
+	        ></commit-item>
+	      </div>
+	    </li>
+	  </ul>
+  </div>
+</div> -->

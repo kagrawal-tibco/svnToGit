@@ -1,0 +1,71 @@
+/**
+ * @description Validate the authentication token in the HTTP request 
+ */
+AAA.Concepts.AMS_C_LoggedInUser rulefunction AAA.Rules.AuthenRules.RuleFunctions.AMS_RF_ValidateLogin {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String sessionId;
+		int sessionTimeout;
+		String clientPrefix;
+	}
+	body {
+		Object LOGGER = Log.getLogger("AAA.Rules.AuthenRules.RuleFunctions.AMS_RF_ValidateLogin");
+		
+		AMS_C_LoggedInUser loggedInUser = null;
+						
+		String token = HTTP.decodeURL(sessionId, "UTF-8");
+		token = String.convertByteArrayToString(RMS.Util.decodeBase64(token), "UTF-8");
+		
+		if (token != null) {
+			//String tokentmp = String.concat("<?xml version=\"1.0\" encoding=\"UTF-8\"?>", token);
+			//Get the User Name from token
+			String username = XPath.execute("string($var/token/authen/user/attribute::username)", token, null);
+			String qUsername = String.concat(clientPrefix, username);
+			//Obtain Cluster-wide lock for username
+			boolean locked = Cluster.DataGrid.Lock(qUsername, -1, false);
+			if (locked) {
+				loggedInUser = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(qUsername, false, "/AAA/Concepts/AMS_C_LoggedInUser");
+				if (loggedInUser != null) {
+					Log.log(LOGGER, "Debug", "Loaded the LoggedInUser concept for user %s from Cache", username);
+
+					//Get the Authen token from user login token
+					String serverAuthenToken = WS_RF_GetUserAuthenToken(loggedInUser.loginToken);
+
+					if (!String.equals(token, serverAuthenToken)) {
+						Log.log(LOGGER, "Error", "Invalid authentication token from HTTP request");
+						return null;	
+					}
+					
+					boolean isSessionTimedout = AAA.Rules.AuthenRules.RuleFunctions.AMS_RF_IsSessionTimedout(sessionTimeout, loggedInUser.accessTimeStamp);															
+					if (isSessionTimedout) {
+						//Login Session is inactive, so Clean up and logout the user
+						Log.log(LOGGER, "Info", "Login session has timed out..Deleting the User Concept");
+						boolean loggedInUsersLock = Cluster.DataGrid.Lock("LOGGEDIN_USERS", -1, false);
+						AMS_C_LoggedInUsers loggedInUsers = null;
+						if (loggedInUsersLock) {
+							Log.log(LOGGER, "Debug", "Getting the logged in users from LOGGEDIN_USERS");
+							loggedInUsers = Cluster.DataGrid.CacheLoadConceptByExtIdByUri("LOGGEDIN_USERS", false, "/Approval/Scorecards/AMS_C_LoggedInUsers");
+							AMS_C_LoggedInUserEntry loggedInUserExists = WS_RF_CheckIfUserLoggedIn(Instance.PropertyArray.toArrayContainedConcept(loggedInUsers.loggedInUsers), loggedInUser@extId, null);
+							
+							if (loggedInUserExists != null) {
+								Log.log(LOGGER, "Debug", "Removing the logged in user %s entry from LOGGEDIN_USERS", loggedInUser.username);
+								Instance.PropertyArray.removeContainedConcept(loggedInUsers.loggedInUsers, loggedInUserExists);
+							}	
+						}
+						Instance.deleteInstance(loggedInUser);
+						return null;												
+					}
+
+					loggedInUser.accessTimeStamp = DateTime.now(); 
+					Log.log(LOGGER, "Debug", "Updating access timestamp of user %s to current time", username);
+					return loggedInUser;
+				}		
+			}
+		} else {
+			Log.log(LOGGER, "Error", "Authentication token was not found in the HTTP request");
+		}
+		return null;
+	}
+}

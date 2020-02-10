@@ -1,0 +1,88 @@
+/**
+ * @description 
+ */
+WebStudio.Core.Concepts.DataSources.WS_C_TemporaryReturnData rulefunction WebStudio.Core.RuleFunctions.Actions.WS_RF_FetchUserData {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object servletRequest;
+		WebStudio.Security.Authn.Concepts.WS_C_LoggedInUser loggedInUser;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.WS_RF_FetchUserData");
+		
+		int totalRowsCounter = 0;
+		String responseMessage = null;
+		int responseStatusCode = 0;
+		String errorCode = null;
+		WS_C_ResponseData responseData = null;
+		
+		boolean isAdmin = WS_RF_IsAdminRole(loggedInUser);
+		
+		if (!WS_RF_CheckHTTPMethod(servletRequest, "GET")) {
+			responseStatusCode = -1;
+			errorCode = "ERR_5101";
+			responseMessage = "Invalid HTTP Method, expect method is [GET].";
+			
+		} else if (isAdmin) {
+			responseData = Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/WS_C_ResponseData");
+		
+			WS_C_AbstractDataSourceRecord usersDataSourceRecord = 
+					Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/Records/WS_C_UsersDataSourceRecord");
+		    WS_C_UsersDataSourceRecord usersDSRecord = usersDataSourceRecord;
+		    
+		    String authType = System.getSystemPropertyAsString("be.auth.type", null);
+		    usersDSRecord.authType = authType;
+		    
+		    String subscriptionId = null;
+			if (loggedInUser.jwtToken != null) subscriptionId = loggedInUser.jwtToken.sbsc;
+		    
+		    if (authType == "ldap") {
+		    		String[] roles = RMS.Authorization.getAllRoles(subscriptionId);
+			    for (int j = 0; j < roles@length; j++) {
+				   WebStudio.Core.Concepts.DataSources.WS_C_User userDetail = Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/WS_C_User");
+				   userDetail.roleName = roles[j];
+				   Instance.PropertyArray.appendContainedConcept(usersDSRecord.authEntry, userDetail, 1L);
+			    }
+		    	
+		    } else {
+		      Object[] userEntry = WS.Acl.getUserDataArray(subscriptionId);
+		      Log.log(LOGGER, "Debug", "Total User entries - %s", userEntry@length);
+
+			  boolean addUser = true;
+			  for (int j = 0; j < userEntry@length; j++) {
+			  	addUser = true;
+			  	
+				WebStudio.Core.Concepts.DataSources.WS_C_User userDetail = Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/WS_C_User");
+				userDetail.subscriptionId = WS.Acl.getSubscriptionId(userEntry[j]);
+				userDetail.userName = WS.Acl.getUserName(userEntry[j]);
+				//if (userDetail.subscriptionId == null) 
+				userDetail.userPassword = WS.Acl.getUserPassword(userEntry[j]);
+				userDetail.roleName = WS.Acl.getUserRoleString(userEntry[j]);			
+				
+				if (loggedInUser.jwtToken != null && (userDetail.subscriptionId == null || !String.equals(userDetail.subscriptionId, loggedInUser.jwtToken.sbsc))) {
+					addUser = false;
+				}
+				
+				if (addUser) Instance.PropertyArray.appendContainedConcept(usersDSRecord.authEntry, userDetail, 1L);
+			  }
+			  
+			  String [] roles = RMS.Authorization.getAllRoles(subscriptionId);
+			  for (int i = 0; i < roles@length; i++) {
+			  	usersDSRecord.availableRoles[i] = roles[i];
+			  }
+		
+			  Log.log(LOGGER, "Debug", "Total Filtered User entries being returned - %s", usersDSRecord.authEntry@length);
+		    }
+		    
+		    Instance.PropertyArray.appendContainedConcept(responseData.record, usersDataSourceRecord, 1L);
+			
+		} else {
+			responseStatusCode = -1;
+			responseMessage = "User do not have this permission";
+		}
+		
+		return WS_RF_CreateTemporaryReturnData(responseStatusCode, totalRowsCounter, errorCode, responseMessage, responseData);
+	}
+}

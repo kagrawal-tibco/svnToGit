@@ -1,0 +1,47 @@
+/**
+ * @description 
+ */
+long rulefunction WebStudio.Core.RuleFunctions.Utils.DT.WS_RF_GetDecisionTablePageSize {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String userName;
+		String tableType;
+		long noOftableRules;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.DT.WS_RF_GetDecisionTablePageSize");
+		
+		int DEFAULT_PAGE_SIZE = 100;
+
+		int pageSize = DEFAULT_PAGE_SIZE;
+		if (String.equals("DECISION_TABLE", tableType)) { 
+			WS_C_UserPreferences userPreferences = Instance.getByExtIdByUri("PREFERENCES@" + userName, "/WebStudio/Core/Concepts/WS_C_UserPreferences");
+			if (userPreferences == null || userPreferences.decisionTablePageSize <= 0) {
+				pageSize = System.getGlobalVariableAsInt("Webstudio/DecisionTable/pageSize", DEFAULT_PAGE_SIZE);
+			} else {
+				pageSize = userPreferences.decisionTablePageSize;
+			}		
+			if (pageSize <= 0) {
+				if (noOftableRules > 0) {
+					pageSize = noOftableRules;
+				} 
+				else {
+					pageSize = DEFAULT_PAGE_SIZE;
+				}		 
+			} 
+		} 
+		else {
+			if (noOftableRules > 0) {
+				pageSize = noOftableRules;
+			} 
+			else {
+				pageSize = DEFAULT_PAGE_SIZE;
+			}		 	
+		}	
+		
+		Log.log(LOGGER, "Debug", "Decision Table Page Size %s", pageSize);				
+		return pageSize;		
+	}
+}

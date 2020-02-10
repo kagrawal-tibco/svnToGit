@@ -1,0 +1,37 @@
+<div>
+  <form #projectForm='ngForm'>
+    <fieldset [disabled]='!edit'>
+      <div class="form-group">
+        <label for="projectName" class='control-label control-label-normal' i18n>{{i18n('Project Name')}}</label>
+        <input 
+          #projectNameInput
+          type="text" 
+          class="form-control form-control-sm"
+          id='projectName'
+          name="projectName"
+          [(ngModel)]='input.projectName'
+          [noDuplicate]='checkProjectNameUnique'
+          [validPath]='"NAME"'
+          required
+          autocomplete="off"
+          #projectName='ngModel'
+          >
+        <div *ngIf='projectName.errors'>
+          <div
+            *ngIf ='projectName.errors["duplicate"]'
+            class='alert alert-warning'
+          >
+            <span class='monospace'>{{input.name}} </span> already exists.
+          </div>
+          <div
+            *ngIf ='projectName.errors["invalidPath"]'
+            class='alert alert-warning'
+          >
+            <span class='monospace'>[{{input.name}}]</span>  is invalid.
+            {{projectName.errors['invalidPath']}}
+          </div>
+        </div>
+      </div>
+    </fieldset>
+  </form>
+</div>

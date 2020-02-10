@@ -1,0 +1,42 @@
+/**
+ * @description 
+ */
+long rulefunction WebStudio.Core.RuleFunctions.Utils.DT.WS_RF_CreateTableRuleInstanceConcepts {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		WebStudio.Core.Concepts.Decision.Pagination.WS_C_TablePage baseTablePage;
+		WebStudio.Core.Concepts.Decision.Pagination.WS_C_TablePage tablePage;
+		boolean newTableRulesAddedToPage;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.DT.WS_RF_CreateTableRuleInstanceConcepts");
+		
+		long maxRuleId = 0;
+		WebStudio.Core.Concepts.Decision.Pagination.WS_C_TableRule[] baseTableRulesArray = null; 
+		
+		if (newTableRulesAddedToPage) {
+			baseTableRulesArray = Instance.PropertyArray.toArrayConcept(baseTablePage.newTableRule);			
+		} else {
+			baseTableRulesArray = Instance.PropertyArray.toArrayContainedConcept(baseTablePage.tableRule);
+		}
+				
+		for (int j = 0; j < baseTableRulesArray@length; j++) {
+			WebStudio.Core.Concepts.Decision.Pagination.WS_C_TableRule tableRule = WebStudio.Core.RuleFunctions.Utils.DT.WS_RF_CreateTableRuleInstance(baseTableRulesArray[j]);
+			maxRuleId = Math.maxLong(maxRuleId, tableRule.ruleId);
+			
+			if (newTableRulesAddedToPage) {
+				//Refs, so need to be explicitly asserted.
+				WS.Common.assertInstance(tableRule, false);										
+				Instance.PropertyArray.appendConceptReference(tablePage.newTableRule, tableRule, 1L);
+			} else {
+				Instance.PropertyArray.appendContainedConcept(tablePage.tableRule, tableRule, 1L);
+			}
+			
+			Log.log(LOGGER, "Debug", "Copied Table Rule %s of base revision.", tableRule.ruleId);	    											
+		}
+		
+		return maxRuleId;		
+	}
+}

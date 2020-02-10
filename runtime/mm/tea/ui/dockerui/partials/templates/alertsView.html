@@ -1,0 +1,166 @@
+<div ng-controller='IndexCtrl' class="appManagementPage tea-theme wrapper row-offcanvas row-offcanvas-left">
+   	<div ng-include src="'partials/templates/header.html'"></div>
+    <div class="beTeaAgentView"> 	
+   		<aside class="left-side sidebar-offcanvas" ng-class="">
+        	<div ng-include src="'partials/templates/leftNav.html'"></div>
+    	</aside>
+		<div ng-controller="alertsCtrl" >
+     		<div ng-show="notification.show">
+      			<div ng-include="'partials/templates/directive/showNotification.html'"></div>
+     		</div>   
+		 	<div class="adminView">
+		 		<div id="loaderdiv" style="display: none;">
+					<img src="images/icons/loader.gif" class="ajax-loader" />
+				</div>
+				<div class="instanceViewPanel1">
+         			<h3>Alerts</h3>
+         			<div ng-include="'partials/templates/aboutBETeaView.html'"></div>
+         			<ul class="appBox clearfix" style="padding-bottom: 10px">        
+        				<li class="firstButton pull-left">  
+                			<div  ng-class="showOperations()? 'operation' : 'disableOperation'" ng-click="showOperations()? clearApplicationAlerts() : null">
+      	  		  				<i class="fa fa-trash"></i>
+				  				<span>Clear Alerts</span> 
+				  			</div>
+            			</li> 
+            			<!-- <li class="button pull-left">
+            				<div>
+      	  		  				<input type="checkbox" ng-model="filteredValues.isAdvancedSearch" ng-change="clearAdvanceFilter()">
+				  				Advanced Search
+				  			</div>
+				  			<div ng-show="filteredValues.isAdvancedSearch">
+				  			</div>
+            			</li> -->
+            			<li class="button pull-right">
+            				<div class="operation" ng-click="reloadPage()">
+      	  		  				<i class="fa fa-refresh"></i>
+				  				<span>Refresh</span> 
+				  			</div>
+            			</li>
+            		</ul>
+            	</div>
+        		<div class="be_operations_container container">
+	        		<div class="instanceListView">
+			       		<table tea-table class="alertView tea-table" >
+		       				<thead>
+		        				<tr>
+		        					<th class="selection"><input type="checkbox" ng-model="filteredValues.allAlertsChecked" ng-change="selectAllAlerts()"></th>
+		        					<th>
+		        						Alert Level
+		        						<i title="sort" class="operation fa fa-sort" ng-click="sortArray('AlertLevel',sortvalues.AlertLevel)" ></i>
+		        						<div>
+      										<input ng-model="search.AlertLevel" ng-change="filterData()" class="be_filter_input" type="text" />
+    									</div>
+		        					</th>
+		        					<th>
+		        						Alert Text
+		        					</th>
+		        					<th>
+		        						Action
+		        						<i title="sort" class="operation fa fa-sort" ng-click="sortArray('AlertType',sortvalues.AlertType)" ></i>
+		        						<div>
+      										<input ng-model="search.AlertType" ng-change="filterData()" class="be_filter_input" type="text" />
+    									</div>
+		        					</th>
+		        					<th>
+		        						Alert Type
+		        						<i title="sort" class="operation fa fa-sort" ng-click="sortArray('IsSetAction',sortvalues.IsSetAction)" ></i>
+		        						<div>
+      										<input ng-model="search.IsSetAction" ng-change="filterData()" class="be_filter_input" type="text" />
+    									</div>
+		        					</th>
+		        					<th>
+		        						Created Date
+		        						<i title="sort" class="operation fa fa-sort" ng-click="sortArray('created_time',sortvalues.created_time)" ></i>
+		        						<div>
+      										<input ng-model="search.created_time" ng-change="filterData()" class="be_filter_input" type="text" />
+    									</div>
+		        					</th>
+		        					<th></th>
+		        				</tr>
+		        			</thead>
+		        			<tbody>
+		        				<tr ng-repeat-start="alert in pagedItems[currentPage]" ng-style="alert.expanded && {'border-bottom':'none'}">
+		        					<td ng-style="alert.AlertLevel == 'High' && {'border-left': '1px solid #F34D4D'} || alert.AlertLevel == 'Medium' && {'border-left': '1px solid #F3BA53'} || alert.AlertLevel == 'Low' && {'border-left': '1px solid #F7F76E'} || alert.AlertLevel == 'Normal' && {'border-left': '1px solid #418641'}"><input type="checkbox" ng-model="alert.isChecked" ng-change="selectAlertsEntity()"></td>
+		        					<td ng-class="checkPreviousAlerts(alert)">{{alert.AlertLevel}}</td>
+		        					<td ng-class="checkPreviousAlerts(alert)" style="width:250px;padding:10px;">{{alert.AlertText}}</td>
+		        					<td ng-class="checkPreviousAlerts(alert)">{{alert.AlertType}}</td>
+		        					<td ng-class="checkPreviousAlerts(alert)"><span ng-if="alert.IsSetAction">Set</span><span ng-if="!alert.IsSetAction">Clear</span></td>
+		        					<td ng-class="checkPreviousAlerts(alert)">{{getDateFromLong(alert.created_time)}}</td>
+		        					<td ng-class="checkPreviousAlerts(alert)">
+             							<a ng-if="alert.expanded" ng-click="alert.expanded = false">Hide Details</a>
+              							<a ng-if="!alert.expanded" ng-click="alert.expanded = true">Show details</a>
+           	 						</td>
+		        				</tr>
+		        				<tr ng-if="alert.expanded" ng-repeat-end="">
+		        					<td colspan="4" ng-style="alert.AlertLevel == 'High' && {'border-left': '1px solid #F34D4D'} || alert.AlertLevel == 'Medium' && {'border-left': '1px solid #F3BA53'} || alert.AlertLevel == 'Low' && {'border-left': '1px solid #F7F76E'} || alert.AlertLevel == 'Normal' && {'border-left': '1px solid #418641'}">
+		        						<div style="padding-top:20px;padding-bottom:20px;">
+		        							<strong>Rule Name :</strong>
+            								<span>{{alert.ruleName.split('$')[2]}}</span>
+		        						</div>
+		        						<!-- <div style="padding-top:20px;padding-bottom:20px;">
+		        							<strong>User Name :</strong>
+            								<span>{{alert.userName}}</span>
+		        						</div> -->
+            						</td>
+            						<td colspan="3">
+            							<!-- <div style="padding-top:20px;padding-bottom:20px;">
+            								<strong>Entity Type :</strong>
+            								<span>{{ruleEntityAndAttibutes[alert.SetEntityType].displayName}}</span>
+            							</div>
+            							<div style="padding-top:20px;padding-bottom:20px;">
+            								<strong>Entity Name :</strong>
+            								<span>{{alert.SetEntityName}}</span>
+            							</div> -->
+            							<div style="padding-top:20px;padding-bottom:20px;">
+		        							<strong>User Name :</strong>
+            								<span>{{alert.userName}}</span>
+		        						</div>
+            						</td>
+            						<!-- <td style="width:300px;" colspan="2">
+            							<div ng-if="!alert.IsSetAction" style="width: 300px;vertical-align: top;padding-top: 20px;">
+            								<strong>Clear Condition:</strong>
+            								{{alert.ClearCondition}}
+            							</div>
+            							<div ng-if="alert.IsSetAction" style="width: 300px;vertical-align: top;padding-top: 20px;">
+            								<strong>Set Condition:</strong>
+            								{{alert.SetCondition}}
+            							</div>
+            						</td> -->
+         						</tr>
+		        			</tbody>
+		        			<tfoot>
+		                    	<tr>
+		                        	<td colspan="11">- END OF DATA -</td>
+		                   	 	</tr>
+        						<tr>
+        							<td colspan="9">{{sizes}}
+          								<span class="text-center">
+            								<ul class="pagination">
+             									 <li ng-class="{disabled: currentPage == 0}">
+                									<a href="javascript:;" ng-click="prevPage()">Prev</a>
+             									 </li>
+              									 <li ng-repeat="n in range(pagedItems.length)" ng-class="{active: n == currentPage}" ng-click="setPage()">
+               										<a href="javascript:;" ng-bind="n + 1">1</a>
+              									 </li>
+              									 <li ng-class="{disabled: currentPage == pagedItems.length - 1}">
+                									<a href="javascript:;" ng-click="nextPage()">Next</a>
+              									 </li>
+            								</ul>
+          								</span>
+          								<span class="pull-right text-center">
+            								<ul class="pagination">
+             									 <li ng-class="{active: size == itemsPerPage}" ng-click="perPage(size)" ng-repeat="size in pageSizes">
+                									<a href="javascript:;">{{size}}</a>
+             									 </li>
+            								</ul>
+          								</span>
+        							</td>
+     							</tr>
+		                	</tfoot>
+		       			</table>
+		       		</div>
+        		</div>  
+     		</div> 
+     	</div> 
+     </div> 
+</div>    

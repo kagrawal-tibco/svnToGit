@@ -1,0 +1,26 @@
+/**
+ * @description 
+ * @author 
+ */
+rule Rules.PrintRule {
+	
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	
+	declare {
+		Events.TextEvent	textevent;
+	}
+
+	when {
+	}
+
+	then {
+		System.debugOut("PrintRule received TextEvent: " + textevent.Text);
+
+		RuleFunctions.CloseHttpRequest(textevent);
+		Event.consumeEvent(textevent);
+	}
+
+}

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beviewsconfig:ChartComponent xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:beviewsconfig="http://www.tibco.com/be/designer" namespace="/Dashboards/Charts/TIBX/" folder="/Dashboards/Charts/TIBX/" name="TIBX_ByYearForLastDecade" description="" GUID="5F8DE78C-EB06-FBB6-4206-7A36C5379796" ownerProjectName="DisparateTimeCharts" version="1334965192496" displayName="TIBX_ByYearForLastDecade" componentColorSetIndex="-1" seriesColorIndex="-1">
+  <visualization xsi:type="beviewsconfig:LineChartVisualization" namespace="/Dashboards/Charts/TIBX/" folder="/Dashboards/Charts/TIBX/" name="Visualization_" description="" GUID="E4DDA975-408A-58BF-5157-BAF78B048A2D" ownerProjectName="DisparateTimeCharts" version="1334965192496" lineThickness="2" dataPlotting="all" plotShape="circle" plotShapeDimension="3">
+    <seriesConfig xsi:type="beviewsconfig:ChartSeriesConfig" namespace="/Dashboards/Charts/TIBX/" folder="/Dashboards/Charts/TIBX/" name="SeriesConfig_" description="" GUID="6B9C0692-E3DC-1FFF-2950-0EB58C118004" ownerProjectName="DisparateTimeCharts" version="1334965192496" displayName="TIBX" anchor="Q1">
+      <actionRule namespace="/Dashboards/Charts/TIBX/" folder="/Dashboards/Charts/TIBX/" name="AR_" description="" GUID="D7BE984B-4B3F-F7C8-60B7-4A4B6015D594" ownerProjectName="DisparateTimeCharts" version="1334965192496" threshold="-10" thresholdUnit="year">
+        <dataSource href="../../DataSources/YearlyTickers.datasource#/"/>
+        <params namespace="/Dashboards/Charts/TIBX/" folder="/Dashboards/Charts/TIBX/" name="ticker" description="" GUID="8A3995E1-8F0C-223C-041D-29E823DAF263" ownerProjectName="DisparateTimeCharts" version="1334965192496" type="String"/>
+      </actionRule>
+      <valueDataConfig xsi:type="beviewsconfig:ChartValueDataConfig">
+        <extractor>
+          <sourceField href="../../Metrics/YearlyTickerMetric.metric#//@properties.2"/>
+        </extractor>
+        <formatter xsi:type="beviewsconfig:TextFieldFormat" toolTipFormat="{SnapShotTime}={Price}" displayFormat="{Price}" showLabel="true">
+          <formatStyle fontSize="10" fontStyle="normal"/>
+        </formatter>
+      </valueDataConfig>
+      <categoryDataConfig xsi:type="beviewsconfig:ChartCategoryDataConfig">
+        <extractor>
+          <sourceField href="../../Metrics/YearlyTickerMetric.metric#//@properties.0"/>
+        </extractor>
+        <formatter xsi:type="beviewsconfig:TextFieldFormat" displayFormat="{SnapShotTime,date,YYYY}"/>
+      </categoryDataConfig>
+    </seriesConfig>
+  </visualization>
+  <layoutConstraint xsi:type="beviewsconfig:FlowLayoutConstraint" componentRowSpan="1" componentColSpan="3"/>
+  <plotArea>
+    <foreground line="both"/>
+  </plotArea>
+  <categoryGuidelineConfig headerName="Time" sortOrder="unsorted" duplicatesAllowed="true">
+    <headerFormatStyle fontSize="10" fontStyle="normal"/>
+    <labelFormatStyle fontSize="10" fontStyle="normal"/>
+  </categoryGuidelineConfig>
+  <valueGuidelineConfig headerName="Price" scale="normal" division="5">
+    <headerFormatStyle fontSize="10" fontStyle="normal"/>
+    <labelFormatStyle fontSize="10" fontStyle="normal"/>
+  </valueGuidelineConfig>
+</beviewsconfig:ChartComponent>

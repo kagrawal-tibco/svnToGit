@@ -1,0 +1,37 @@
+/**
+ * @description Create a task for reviewer to review lock requests
+ * @author aathalye-lt
+ */
+rule Approval.Rules.ArtifactsRuleSet.ArtifactsStateMachineRuleSets.AMS_RU_CreateGrantLockTaskRule {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Approval.Events.ArtifactEvents.StateMachine.AMS_E_GrantLockRequestEvent ams_e_grantlockrequestevent;
+		Approval.Concepts.ArtifactsConcepts.ArtifactLockConcepts.AMS_C_LockArtifactRequest ams_c_lockartifactrequest;
+	}
+	when {
+		//Join conditions have to be all of these
+		ams_e_grantlockrequestevent.username == ams_c_lockartifactrequest.username &&
+		ams_e_grantlockrequestevent.artifactPath == ams_c_lockartifactrequest.artifactPath &&
+		ams_e_grantlockrequestevent.projectName == ams_c_lockartifactrequest.projectName;
+	}
+	then {
+		//Create task with extid = revisionid
+		//Use id as reference and then retrive the concept using id
+		AMS_C_LockArtifactReviewTask lockReviewTask = Instance.getByExtIdByUri(ams_c_lockartifactrequest.lockRequestId, "/Approval/Concepts/ArtifactsConcepts/ArtifactLockConcepts/AMS_C_LockArtifactReviewTask");
+
+		if (lockReviewTask == null) {
+			lockReviewTask = 
+				Instance.createInstance("xslt://{{/Approval/Concepts/ArtifactsConcepts/ArtifactLockConcepts/AMS_C_LockArtifactReviewTask}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"2.0\" exclude-result-prefixes=\"xsl xsd\"><xsl:output method=\"xml\"/><xsl:param name=\"ams_c_lockartifactrequest\"/><xsl:param name=\"ams_e_grantlockrequestevent\"/><xsl:template name=\"Function\" match=\"/\"><createObject><object><xsl:if test=\"$ams_c_lockartifactrequest/lockRequestId\"><xsl:attribute name=\"extId\"><xsl:value-of select=\"$ams_c_lockartifactrequest/lockRequestId\"/></xsl:attribute></xsl:if><xsl:if test=\"$ams_e_grantlockrequestevent/roleName\"><roleName><xsl:value-of select=\"$ams_e_grantlockrequestevent/roleName\"/></roleName></xsl:if><xsl:if test=\"$ams_c_lockartifactrequest/@extId\"><referencedLockRequestId><xsl:value-of select=\"$ams_c_lockartifactrequest/@extId\"/></referencedLockRequestId></xsl:if></object></createObject></xsl:template></xsl:stylesheet>");
+			System.debugOut("Task created for lock Request with with extId >>> " + lockReviewTask@extId);
+			
+			AMS_C_Role role = Instance.getByExtIdByUri(lockReviewTask.roleName, "/AAA/Concepts/AMS_C_Role");
+		
+			Instance.PropertyArray.appendString(role.lockReviewTaskExtIds, lockReviewTask@extId, 1L);
+		} 
+		//Consume the event
+		Event.consumeEvent(ams_e_grantlockrequestevent);	
+	}
+}

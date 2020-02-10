@@ -1,0 +1,251 @@
+
+/** The ontology types need to be dropped before this line */
+
+drop table ALL_ENTITIES;
+
+drop type T_EVENT;
+
+drop type T_CONCEPT;
+
+drop type T_ENTITY;
+
+drop type T_ENTITYREF_COL_HIST;
+
+drop type T_ENTITYREF_HIST;
+
+drop type T_ENTITYREF_HIST_TABLE;
+
+drop type T_ENTITYREF_HIST_TUPLE;
+
+
+/* Type = Type to support BE PropertyArrayString with HIST > 1*/
+
+
+drop type T_ENTITY_REF_TABLE;
+
+drop type T_ENTITY_REF;
+
+
+
+/** Types to Support BE AtomString and Array String Implementations */
+
+drop type T_STRING_COL_HIST;
+
+drop type T_STRING_HIST;
+
+drop type T_STRING_HIST_TABLE;
+
+drop type T_STRING_HIST_TUPLE;
+
+drop type T_STRING_COL;
+
+
+/* Create Global Types */
+
+/* Type = COL of BE PropertyAtomString */
+
+create or replace type T_STRING_COL as TABLE of varchar2(4000);
+/
+
+/* Type = HIST Tuple of  BE PropertyAtomString */
+
+create or replace type T_STRING_HIST_TUPLE as OBJECT (timeIdx DATE, val varchar2(4000));
+/
+/* Type = BE HIST Table of PropertyAtomString with HIST > 1*/
+
+create or replace type T_STRING_HIST_TABLE as TABLE of T_STRING_HIST_TUPLE;
+/
+/* Type = Type to support BE PropertyAtomString with HIST > 1*/
+
+create or replace type T_STRING_HIST as OBJECT (curIdx INTEGER, curSize INTEGER, vals T_STRING_HIST_TABLE);
+/
+/* Type = Type to support BE PropertyArrayString with HIST > 1*/
+create or replace type T_STRING_COL_HIST as TABLE of T_STRING_HIST;
+/
+
+/** End of Types to Support BE AtomString and Array String Implementations */
+
+/** Types to Support BE AtomString and Array String Implementations */
+
+drop type T_INT_COL_HIST;
+
+drop type T_INT_HIST;
+
+drop type T_INT_HIST_TABLE;
+
+drop type T_INT_HIST_TUPLE;
+
+drop type T_INT_COL;
+
+
+
+/* Type = COL of BE PropertyAtomINT */
+
+create or replace type T_INT_COL as TABLE of INT;
+/
+
+/* Type = HIST Tuple of  BE PropertyAtomINT */
+
+create or replace type T_INT_HIST_TUPLE as OBJECT (timeIdx DATE, val INT);
+/
+/* Type = BE HIST Table of PropertyAtomINT with HIST > 1*/
+
+create or replace type T_INT_HIST_TABLE as TABLE of T_INT_HIST_TUPLE;
+/
+/* Type = Type to support BE PropertyAtomINT with HIST > 1*/
+
+create or replace type T_INT_HIST as OBJECT (curIdx INTEGER, curSize INT, vals T_INT_HIST_TABLE);
+/
+
+/* Type = Type to support BE PropertyArrayInt with HIST > 1*/
+create or replace type T_INT_COL_HIST as TABLE of T_INT_HIST;
+/
+
+/** End of Types to Support BE AtomINT and Array INT Implementations */
+
+/** Types to Support BE AtomString and Array String Implementations */
+
+drop type T_BOOLEAN_COL_HIST;
+
+drop type T_BOOLEAN_HIST;
+
+drop type T_BOOLEAN_HIST_TABLE;
+
+drop type T_BOOLEAN_HIST_TUPLE;
+
+drop type T_BOOLEAN_COL;
+
+
+
+/* Type = COL of BE PropertyAtomBOOLEAN */
+
+create or replace type T_BOOLEAN_COL as TABLE of CHAR(1);
+/
+
+/* Type = HIST Tuple of  BE PropertyAtomBOOLEAN */
+
+create or replace type T_BOOLEAN_HIST_TUPLE as OBJECT (timeIdx DATE, val CHAR(1));
+/
+/* Type = BE HIST Table of PropertyAtomBOOLEAN with HIST > 1*/
+
+create or replace type T_BOOLEAN_HIST_TABLE as TABLE of T_BOOLEAN_HIST_TUPLE;
+/
+/* Type = Type to support BE PropertyAtomBOOLEAN with HIST > 1*/
+
+create or replace type T_BOOLEAN_HIST as OBJECT (curIdx INTEGER, curSize INT, vals T_BOOLEAN_HIST_TABLE);
+/
+/* Type = Type to support BE PropertyArrayInt with HIST > 1*/
+create or replace type T_BOOLEAN_COL_HIST as TABLE of T_BOOLEAN_HIST;
+/
+
+
+/** End of Types to Support BE AtomBOOLEAN and Array BOOLEAN Implementations */
+
+/** Types to Support BE AtomString and Array String Implementations */
+
+drop type T_NUMBER_COL_HIST;
+
+drop type T_NUMBER_HIST;
+
+drop type T_NUMBER_HIST_TABLE;
+
+drop type T_NUMBER_HIST_TUPLE;
+
+drop type T_NUMBER_COL;
+
+
+
+/* Type = COL of BE PropertyAtomNUMBER */
+
+create or replace type T_NUMBER_COL as TABLE of NUMBER;
+/
+
+/* Type = HIST Tuple of  BE PropertyAtomNUMBER */
+
+create or replace type T_NUMBER_HIST_TUPLE as OBJECT (timeIdx DATE, val NUMBER);
+/
+/* Type = BE HIST Table of PropertyAtomNUMBER with HIST > 1*/
+
+create or replace type T_NUMBER_HIST_TABLE as TABLE of T_NUMBER_HIST_TUPLE;
+/
+/* Type = Type to support BE PropertyAtomNUMBER with HIST > 1*/
+
+create or replace type T_NUMBER_HIST as OBJECT (curIdx INTEGER, curSize INT, vals T_NUMBER_HIST_TABLE);
+/
+create or replace type T_NUMBER_COL_HIST as TABLE of T_NUMBER_HIST;
+/
+
+/** End of Types to Support BE AtomNUMBER and Array NUMBER Implementations */
+
+/** Types to Support BE AtomString and Array String Implementations */
+
+drop type T_DATETIME_COL_HIST;
+
+drop type T_DATETIME_HIST;
+
+drop type T_DATETIME_HIST_TABLE;
+
+drop type T_DATETIME_HIST_TUPLE;
+
+drop type T_DATETIME_COL;
+
+
+
+/* Type = COL of BE PropertyAtomDATETIME */
+
+create or replace type T_DATETIME_COL as TABLE of DATE;
+/
+
+/* Type = HIST Tuple of  BE PropertyAtomDATETIME */
+
+create or replace type T_DATETIME_HIST_TUPLE as OBJECT (timeIdx DATE, val DATE);
+/
+/* Type = BE HIST Table of PropertyAtomDATETIME with HIST > 1*/
+
+create or replace type T_DATETIME_HIST_TABLE as TABLE of T_DATETIME_HIST_TUPLE;
+/
+/* Type = Type to support BE PropertyAtomDATETIME with HIST > 1*/
+
+create or replace type T_DATETIME_HIST as OBJECT (curIdx INTEGER, curSize INT, vals T_DATETIME_HIST_TABLE);
+/
+create or replace type T_DATETIME_COL_HIST as TABLE of T_DATETIME_HIST;
+/
+
+/** Base Entity Types */
+
+
+
+
+create or replace type T_ENTITY as object (id NUMBER, extId varchar2(2000), state char(1)) NOT FINAL ;
+/
+
+create or replace type T_ENTITY_REF as object (id NUMBER);
+/
+
+create or replace type T_ENTITY_REF_TABLE as TABLE OF T_ENTITY_REF;
+/
+
+/* Type = HIST Tuple of  BE PropertyAtomString */
+
+create or replace type T_ENTITYREF_HIST_TUPLE as OBJECT (timeIdx DATE, val T_ENTITY_REF);
+/
+/* Type = BE HIST Table of PropertyAtomString with HIST > 1*/
+
+create or replace type T_ENTITYREF_HIST_TABLE as TABLE of T_ENTITYREF_HIST_TUPLE;
+/
+/* Type = Type to support BE PropertyAtomString with HIST > 1*/
+
+create or replace type T_ENTITYREF_HIST as OBJECT (curIdx INTEGER, curSize INTEGER, vals T_ENTITYREF_HIST_TABLE);
+/
+/* Type = Type to support BE PropertyArrayString with HIST > 1*/
+create or replace type T_ENTITYREF_COL_HIST as TABLE of T_ENTITYREF_HIST;
+/
+
+create or replace type T_CONCEPT UNDER T_ENTITY (time_created TIMESTAMP, time_last_modified TIMESTAMP) NOT FINAL;
+/
+
+create or replace type T_EVENT UNDER T_ENTITY (time_created TIMESTAMP, time_acknowledged TIMESTAMP, time_sent TIMESTAMP) NOT FINAL;
+/
+
+create table ALL_ENTITIES (entity T_ENTITY);
+

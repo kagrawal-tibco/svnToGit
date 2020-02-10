@@ -1,0 +1,28 @@
+/**
+ * @description Factory to fetch work item details for format required for WS.
+ */
+void rulefunction WebStudio.Core.RuleFunctions.Utils.Lifecycle.WS_RF_FetchWorkItemDetailsForWSFactory {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String requiredUserRevisionId;
+		Object referencedCheckin;
+		WebStudio.Core.Concepts.DataSources.WS_C_ResponseData responseData;
+		String subscriptionId;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.Lifecycle.WS_RF_FetchWorkItemDetailsForWSFactory");
+		
+		if (referencedCheckin instanceof WS_C_UserCheckin) {
+			Log.log(LOGGER, "Info", "Web based checkin found");
+			WS_C_UserCheckin referencedWSCheckin = referencedCheckin;
+			WS_RF_FetchWSWorkitemDetailsForWS(requiredUserRevisionId, referencedWSCheckin, responseData, subscriptionId);
+			
+		} else if (referencedCheckin instanceof AMS_C_Checkin) {
+			Log.log(LOGGER, "Info", "RMS checkin found");
+			AMS_C_Checkin referencedRMSCheckin = referencedCheckin;
+			WS_RF_FetchRMSWorkitemDetailsForWS(requiredUserRevisionId, referencedRMSCheckin, responseData);
+		}
+	}
+}

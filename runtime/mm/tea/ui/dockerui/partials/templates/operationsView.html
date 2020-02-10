@@ -1,0 +1,135 @@
+<section>
+	<div class="be_operationsPanel">
+	    <div class="be_operations_methods_col">
+	        <div class="be_operations_title" style="padding-left: 4px;">
+	            	Methods
+	        </div>
+        	<ul class="be_operations_method_list" >
+				<li  ng-repeat="methodGroup in processingUnitMethods.methodgroup">	
+					<div class="be_operationsTree" ng-click="showChildren=!showChildren">            	
+     	  		  		<i  ng-class="showChildren?'fa fa-chevron-down':'fa fa-chevron-right'"></i>
+			  			<span class="groupName">{{methodGroup.group}}</span> 
+			  		</div> 								
+					<ul>
+						<li ng-show="showChildren" ng-click="getOperationInfo(method,methodGroup.group)" style="padding-left:20px;padding-bottom:3px" ng-repeat="method in methodGroup.method">
+							<i class="fa fa-cog"></i>
+								{{method.name}}
+						</li>
+					</ul>								
+				</li>
+			</ul>
+	     </div>
+	     <div class="be_operations_results_col" >
+	        <div class="be_operations_title" style="padding-left:4px;">
+	            Name : {{operation.name}} 
+	        </div>
+	        <div  style="padding-left:15px">
+				<div class="form-horizontal" ng-hide="operation.name==undefined||operation.name==''||operation.name==null">
+					<div class="control-group">
+						<table>
+							<tr style="vertical-align:top">
+								<td style="white-space: nowrap;">
+									<strong>Description :</strong>
+								</td>
+								<td style="padding-left: 20px;">
+									{{operation.annotation}}
+								</td>
+							</tr>
+							<tr>
+								<td style="min-width: 85px;">
+									<strong>Instances : </strong>
+								</td>
+								<td style="padding-left: 20px;">
+									<select ng-model="$parent.selectedRunningInstances" id="multiSelectDropDown" multiple="multiple" ng-change="selectedInstanceAgents()">
+   										 <option ng-repeat="instance in runningInstances" value="{{instance.key}}" >{{instance.name}}</option>
+									</select>
+								</td>
+								<!-- <td  style="padding-left: 20px;"> 
+									<div style="padding-top: 18px;"  isteven-multi-select input-model="runningInstances" button-label="name" item-label="name" output-model="$parent.selectedRunningInstances" tick-property="ticked" selection-mode="multiple"  default-label="defaultNameInstance" class="be_operations_instance_list"></div><br/>
+								</td> -->
+							</tr>
+						</table>
+						<br/>
+						<div class="be_horizontal_seperator"></div>
+						<br/>
+						<form name="paramForm" novalidate id="mbeanOpsForm">
+			 				<div style="padding-top:10px;" ng-repeat="param in parameters" title="{{param.desc}}" data-toggle="tooltip" data-placement="top" be-tooltip>
+			 							
+			 								<div ng-if="!$parent.isOnAgentView && param.name !=null && param.type!='boolean' &&  ('Session'==param.name || 'sessionName'==param.name)" class="be_method_form_element" colspan=1>
+			 									{{param.name}}&nbsp; <div ng-if="param.required" style="color:red">*</div>:
+			 								</div>
+			 							
+			 								<div ng-if="!$parent.isOnAgentView && param.name !=null && param.type!='boolean' &&  ('Session'==param.name || 'sessionName'==param.name)" colspan=6 ng-click="rebuild()">
+												<select id ="instanceAgentsDropDown" style="margin:5px;" ng-model="$parent.selectedInstanceAgents"  multiple="multiple"  ng-change="addSelectedInstanceAgents()">            								
+													<option ng-repeat="instanceAgent in instanceAgents" value="{{instanceAgent}}" >{{instanceAgent}}</option>			 
+           										</select> 
+           										<div style="display:none" ng-init="instanceAgentsDropDownLoad();"></div>
+											</div>
+											
+			 							
+			 								<!-- If parameter name is other than session -->
+			 								<div ng-if="param.name !=null && param.type!='boolean'  &&  'Session'!=param.name && 'sessionName'!=param.name" class="be_method_form_element" colspan=1>
+			 									{{param.name}}&nbsp; <div ng-if="param.required" style="color:red">*</div>:
+			 								</div>
+			 								<div ng-if="param.name !=null && param.type!='boolean' && 'Session'!=param.name && 'sessionName'!=param.name" colspan=6>
+			 									<input type="text" ng-model="param.defaultvalue" style="width:275px;" ng-required="param.required">
+			 								</div>
+			 								
+			 								<!-- -Only if value is boolean -->
+			 					
+			 								<div ng-if="param.name !=null && param.type=='boolean'" class="be_method_form_element" colspan=1>
+			 									{{param.name}}&nbsp; <div ng-if="param.required" style="color:red">*</div>:
+			 								</div>
+			 								<div ng-if="param.name !=null && param.type=='boolean'" colspan=6>
+			 									<input class="controls" type="checkbox" n=g-model="param.defaultvalue" style="margin-left: 0px;margin-top: -8px;">
+			 								</div>
+			 				</div>
+			 				<div style="padding-top:10px;">
+			 					<div colspan=1 class="be_method_form_element">
+			 						<button  ng-click="invokeOperation(operation)" ng-disabled="paramForm.$invalid" class="tbt-btn primary-btn" ng-class="{'button_disabled':paramForm.$invalid}">Invoke</button>
+			 					</div>
+			 				</div>
+			 			</form> 
+					</div>
+				</div>					
+				<div ng-show="operation.name==undefined||operation.name==''||operation.name==null">
+					<strong>Select a method from the left tree to perform operation.</strong>
+				</div>
+			</div>
+			<div ng-show="showResultPanel" class="be_operations_result_panel">
+				<div class="invokePanelTitles">Result</div>
+					<div ng-show="result == undefined">
+						{{failResult.message}}
+					</div>
+					<div ng-show="result.rows.row.length == 0" class="">
+						<span style="position: relative;left: 38%;font-weight: bold;color: gray;">
+        					  No Records Found
+        				</span>
+					</div>
+					<div class="resultTable" ng-show="result != undefined && result.rows.row.length != 0">
+						<table tea-table class="tea-table">
+       						<thead>
+       				  		 	<tr>
+       				  		 		 <th ng-repeat="header in result.headers.header">
+       				  		 		 	{{header.value}}
+       				  		 		 </th>
+       				  		 	</tr>
+       				  		 </thead>
+       				  		 <tbody>
+       				  		 	<tr ng-repeat="rows in result.rows.row">  
+       								<td ng-repeat = "column in rows.columns.column">
+       									{{column.value}}
+       								</td>    
+       				  		 	</tr>
+       				  		 </tbody>
+       				  		 <tfoot>
+                       			<tr>
+                           			<td colspan="7">- END OF DATA -</td>
+                       			</tr>
+                       		</tfoot>
+       				  	</table>	
+					</div>
+			</div>
+	     </div>
+	 </div>
+</section>

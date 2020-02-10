@@ -1,0 +1,334 @@
+<!doctype html public "-//w3c//dtd html 3.2 final//en">
+<html>
+<head>
+    <title>DrillDown Results</title>
+    <link rel="stylesheet" type="text/css" href="/drilldown/css/tabletree.css" />
+    <link rel="stylesheet" type="text/css" href="/drilldown/css/popupmenu.css"/>
+    <link rel="stylesheet" type="text/css" href="/drilldown/css/page.css"/>
+    <link rel="stylesheet" type="text/css" href="/querymgr/css/querymgr.css"/>
+    <script language="javascript" src="/drilldown/js/popupmenu.js"></script>
+    <script language="javascript" src="/drilldown/js/querystring.js"></script>
+    <script language="javascript" src="/drilldown/js/tabletree.js"></script>
+    <script language="javascript" src="/drilldown/js/sortTableTree.js"></script>
+    <script language="javascript" src="/drilldown/js/drilldownmenu.js"></script>
+    <script language="javascript" src="/scripts/imageutil.js"></script>
+    <script language="javascript" src="/scripts/servercomm.js"></script>
+    <script language="javascript" src="/scripts/validationlibrary.js"></script>
+    <script language="JavaScript">
+        var removeOnCollapse = false;
+        var bExpandCollapseRequest = false;
+        var sessionKeeperId = 0;
+        
+        var enableQueryMgrActions = true;
+        var enableDrilldownExportAction = true;
+        
+        var popupobj;
+        var currentfieldname = '';
+        var currentfielddatatype = '';
+        
+        function runCommands() {
+            #foreach( $runCommand in $runCommands )
+            $runCommand
+            #end
+        }
+        
+        function postRequest(url, target) {
+            var qp = new QueryParser(url);
+            var kvp = qp.getKeyValuePairs();
+            var submitter = window.document.submitter;
+            var requestElem = window.document.submitter.request;
+            requestElem.value = createRequest(null, null, null, kvp);
+            if (typeof target == 'undefined') {
+                submitter.target = "ifrmMain*events";
+            }
+            else {
+                if (target == ""){
+                    submitter.target = "_self";
+                }
+                else{
+                    submitter.target = target;
+                }
+            }
+            submitter.submit();
+        }
+        
+        function enableActions(){
+           //enable query manager actions 
+           enableQueryMgrActions = true;
+           //enable drilldown WYSIWYG export link 
+           enableDrilldownExportAction = true;
+           document.getElementById("wysiwygexportlink").style.cursor = "hand"; 
+        }
+        
+        function disableActions(){
+           //disable query manager actions 
+           enableQueryMgrActions = false;
+           //disable drilldown WYSIWYG export link 
+           enableDrilldownExportAction = false;
+           document.getElementById("wysiwygexportlink").style.cursor = "default"; 
+        }
+        
+        
+        function exportresults(exportURL) {
+            if (enableDrilldownExportAction == false) {
+                return;
+            }
+            window.document.body.style.cursor = "wait";
+            var callbackfn = function(responseText){
+                var retVal = window.showModalDialog('/exportdialogholder.html', responseText, "dialogHeight:150px; dialogWidth:350px; help: No; resizable: Yes; status: No; scroll: No;");
+                if (retVal != undefined && retVal.length != 0){
+                    var qp = new QueryParser(retVal);
+                    window.document.downloadFrm.request.value = createRequest(null, null, null, qp.getKeyValuePairs());
+                    window.document.downloadFrm.submit();
+                }
+                window.top.document.body.style.cursor = "auto";
+            };
+            var qp = new QueryParser(exportURL);
+            var kvp = qp.getKeyValuePairs();
+            sendRequest("$pullrequestbaseurl", null, null, null, kvp, callbackfn);
+        }
+        
+        function launchExternalLink(typeid,instanceid,fieldname) {
+            var callbackfn = function(responseText) {
+                var parsedXML = parseXML(responseText);
+                var state = parsedXML.getElementsByTagName("state")[0].text;
+                if (state == "OK") {
+                    var content = parsedXML.getElementsByTagName("content")[0].text;
+                    window.open(content);        
+                }
+                else if (state == "ERROR"){
+                    var message = parsedXML.getElementsByTagName("message")[0].text;
+                    alert(message);
+                }
+                else {
+                    //unknown state
+                    alert("Unknown response from server : "+responseText);
+                }
+            }
+            var params = new Array();
+            params[0] = new Array("typeid",typeid);
+            params[1] = new Array("tupid",instanceid);
+            params[2] = new Array("fieldname",fieldname); 
+            try {
+                sendRequest("$pullrequestbaseurl", "$stoken", "$sessionid", "launchexternallink", params, callbackfn);
+            } catch (err) {
+                //do nothing;
+            }        
+        }
+        
+        function startSessionKeeper(){
+            if (sessionKeeperId != 0){
+                //alert("Clearing Session Keeper");
+                clearInterval(sessionKeeperId);
+            }
+            //alert("Starting Session Keeper");
+            sessionKeeperId = setInterval("fireSessionKeeperRequest()", $sessionkeeperinterval);
+        }
+        
+        function fireSessionKeeperRequest(){
+            //alert("Firing Session Keeper");
+            try {
+                var params = new Array();
+                params[0] = new Array("sessionKeeperId",sessionKeeperId);
+                sendRequest("$pullrequestbaseurl", "$stoken", "$sessionid", "keepsessionalive", params, null);
+            } catch (err) {
+                //do nothing;
+            }     
+        }
+        
+        function getSelectedTypeId(){
+            selectedindex = this.document.typeselectorform.typeid.selectedIndex;
+            if (selectedindex > -1){
+                return this.document.typeselectorform.typeid.options[selectedindex].value;
+            }
+            return null;
+        }
+        
+        function typeIdChanged(){
+            selectedTypeId = getSelectedTypeId();
+            try {
+                var params = new Array();
+                params[0] = new Array("typeid",selectedTypeId);
+                sendRequest("$pullrequestbaseurl", "$stoken", "$sessionid", "getfields", params, handleGetFields);
+            } catch (err) {
+                //do nothing;
+            }         
+        }
+        
+        function handleGetFields(response){
+            if (response != undefined) {
+                document.getElementById('fieldssection').innerHTML = response;
+                if (selectedTypeId == "" || selectedTypeId == null) {
+                    //user has selected 'Select One...'
+                    //disabled query manager actions 
+                    enableQueryMgrActions = false;
+                }
+                else {
+                    //enable the flag to allow query execution, but do not enable the WYSIWYG export link
+                    enableQueryMgrActions = true;
+                }
+            }
+        }
+        
+        function showmenu(fieldname, fielddatatype, bconfirm){
+            currentfieldname = fieldname;
+            currentfielddatatype = fielddatatype;
+            var xPos = window.event.x + 10;
+            var yPos = document.body.scrollTop + window.event.y;
+            var menudiv = document.all['conditionsmgmtmenu'];
+            intshowmenu(xPos,yPos,menudiv);
+            /*menudiv.style.pixelLeft = xPos;
+            menudiv.style.pixelTop = yPos;
+            window.event.cancelBubble = true;
+            window.event.returnValue = false;*/
+        }
+
+        function intshowmenu(x,y,menudiv){
+    /*      menudiv.style.display = "";
+            menudiv.style.visibility = "visible";*/
+            popupobj = window.createPopup();
+            popupobj.document.body.innerHTML = menudiv.innerHTML;
+            popupobj.show(x, y, menudiv.offsetWidth, menudiv.offsetHeight, document.body);
+        }
+
+        function inthidemenu(menudiv){
+    /*      menudiv.style.display = "none";
+            menudiv.style.visibility = "hidden";
+    */
+            popupobj.hide();
+        }
+
+        function showconditiondlgforcurrentfield(){
+            inthidemenu(document.all['conditionsmgmtmenu']);
+            window.document.body.style.cursor = "wait";
+            var params = new Array();
+            params[0] = new Array("fieldname",currentfieldname);
+            params[1] = new Array("fielddatatype",currentfielddatatype);
+            params[2] = new Array("token","$stoken");
+            params[3] = new Array("sessionid","$sessionid");
+            params[4] = new Array("actionURL","$pullrequestbaseurl");
+            var conditionasstring = window.showModalDialog('/querymgr/conditiondialogholder.html', params, "dialogHeight:180px; dialogWidth:450px; help: No; resizable: No; status: No; scroll: No;");
+            if (conditionasstring != undefined && trim(conditionasstring).length != 0){
+                window.document.getElementById(currentfieldname+'_condition_row').title = conditionasstring;
+                window.document.getElementById(currentfieldname+'_condition_row').innerHTML = conditionasstring;
+            }
+            window.top.document.body.style.cursor = "auto";
+        }
+
+    /*    function changestyle(elementid,stylename){
+            var element = document.getElementById(elementid);
+            element.className = stylename;
+        }*/
+
+        function resetconditionforcurrentfield(){
+            inthidemenu(document.all['conditionsmgmtmenu']);
+            window.top.document.body.style.cursor = "wait";
+            if ( window.document.getElementById(currentfieldname+'_condition_row').title != 'Any'){
+                try {
+                    var params = new Array();
+                    params[0] = new Array("fieldname",currentfieldname);
+                    sendRequest("$pullrequestbaseurl", "$stoken", "$sessionid", "resetfieldcondition", params, handleConditionChange);
+                } catch (err) {
+                    //do nothing;
+                }         
+            }
+        }
+        
+        function handleConditionChange(response){
+            if (response != undefined){
+                window.document.getElementById(currentfieldname+'_condition_row').title = response;
+                window.document.getElementById(currentfieldname+'_condition_row').innerHTML = response;
+            }
+            window.top.document.body.style.cursor = "auto";        
+        }
+
+        /*function transfercontent(){
+            window.parent.transferFieldsHTMLToLayer(window.document.body.innerHTML);
+        }*/
+        
+        function submitQueryForExecution(){
+            if (enableQueryMgrActions == false) {
+                return;
+            }
+            window.top.document.body.style.cursor = "wait";
+            try {
+                var params = new Array();
+                sendRequest("$pullrequestbaseurl", "$stoken", "$sessionid", "executequery", params, handleQueryExecution);
+            } catch (err) {
+                //do nothing;
+            }    	
+        }
+        
+        function handleQueryExecution(response){
+            //enable all actions
+            enableActions();
+            window.top.document.body.style.cursor = "auto";
+            if (response != undefined){
+                var iframeObj = window.document.getElementById("drilldown_loader");
+                if (iframeObj != undefined){
+                    iframeObj.src = "/genericloader.html?uri=$pullrequestbaseurl&stoken=$stoken&sessionid=$sessionid&command=drilldown";
+                }
+            }
+        }
+        
+        function showQueryExportDialog(){
+            //do not show query export dialog if query manager actions are disabled
+            if (enableQueryMgrActions == false) {
+                return;
+            }
+            var params = new Array();
+            params[0] = new Array("token","$stoken");
+            params[1] = new Array("sessionid","$sessionid");
+            params[2] = new Array("actionURL","$pullrequestbaseurl");
+            var response = window.showModalDialog('/querymgr/exportdialogholder.html', params, "dialogHeight:240px; dialogWidth:450px; help: No; resizable: No; status: No; scroll: No;");
+            if (response != undefined && response.length != 0){
+                var qp = new QueryParser(response);
+                window.document.downloadFrm.request.value = createRequest(null, null, null, qp.getKeyValuePairs());
+                window.document.downloadFrm.submit();
+            }			
+        }	
+        
+    </script>
+</head>
+<body $bodyOnLoad class="pagebackgrd" leftmargin="10" bottommargin="10" rightmargin="10" topmargin="10">
+<table border="0" cellpadding="0" cellspacing="0" width="100%" height="100%">
+    <tr align="center" valign="middle" width="100%">
+        <td align="center" valign="middle" width="20%">
+            <table border="0" cellpadding="0" cellspacing="0" width="100%" height="100%">
+                $querymanagercontent
+            </table>
+        </td>
+        <td align="center" valign="middle" height="100%"><img src="/drilldown/images/blank.gif" width="20"/></td>
+        <td align="center" valign="middle" width="80%">
+            <table border="0" cellpadding="0" cellspacing="0" width="100%" height="100%">
+                $drilldowncontent
+            </table>
+        </td>
+    </tr>
+</table>
+<iframe
+    name="hiddenframe"
+    src=""
+    scrolling="no"
+    border="0"
+    frameborder="0"
+    marginwidth="0"
+    marginheight="0"
+    height="0"
+    width="0"
+    allowtransparency="true">
+</iframe>
+<div name="conditionsmgmtmenu" id="conditionsmgmtmenu" style="position: absolute; top: -1000; left: -1000">
+    <table align="left" border="0" cellspacing="0" cellpadding="0" style="border: 1px solid #9FAAAA;background-color: White;">
+        <tr style="font-family: Verdana, Geneva, Arial, Helvetica, sans-serif;font-size: 10px;color: #484848;cursor: hand;padding: 3px;"
+            onmouseover="this.style.background='#C0E5F7';" onmouseout="this.style.background='#FFFFFF';" onclick="parent.showconditiondlgforcurrentfield()">
+            <td  align="left">Specify Condition...</td>
+        </tr>
+        <tr style="font-family: Verdana, Geneva, Arial, Helvetica, sans-serif;font-size: 10px;color: #484848;cursor: hand;padding: 3px;"
+            onmouseover="this.style.background='#C0E5F7';" onmouseout="this.style.background='#FFFFFF';" onclick="parent.resetconditionforcurrentfield()">
+            <td align="left">Reset Condition...</td>
+        </tr>
+    </table>
+</div>
+</body>
+</html>

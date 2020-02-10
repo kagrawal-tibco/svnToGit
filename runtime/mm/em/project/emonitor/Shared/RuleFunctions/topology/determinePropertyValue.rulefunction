@@ -1,0 +1,126 @@
+/**
+ * @description 
+ */
+Object rulefunction Shared.RuleFunctions.topology.determinePropertyValue {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Shared.Concepts.MonitorableEntity	entity;
+		String	propertyName;
+		Object	additionalInfo;
+		
+	}
+	body {
+		String fqName = getFQName(entity);
+		String entityType = getTypePath(entity);
+		if (String.indexOfString(entityType,0,"site") == -1){
+		    entityType = "site/"+entityType;
+		}
+		String debugName = fqName+"/"+propertyName;
+		String[] possibleValues = BEMM.rules.getPropertyValueOptions(entityType,propertyName);
+		if (possibleValues != null && possibleValues@length != 0){
+		    Shared.RuleFunctions.log("determinePropertyValue","DEBUG","Found "+possibleValues@length+" possible values for "+debugName);
+		    for (int i = 0 ; i < possibleValues@length ; i = i + 1){
+		        String possibleValue = possibleValues[i];
+		        String debugNameWithPossibleValue = debugName+"/"+possibleValue;
+		        int filterCnt = BEMM.rules.getTargetEntityFiltersCount(entityType,propertyName,possibleValue);
+		        Shared.RuleFunctions.log("determinePropertyValue","DEBUG","Found "+filterCnt+" filters for "+debugNameWithPossibleValue);
+		        for (int j = 0 ; j < filterCnt ; j = j + 1){
+		            String filterMapID = BEMM.rules.getTargetEntityFilterMapId(entityType,propertyName,possibleValue,j);
+		            String filterType = Util.HashMap.getObject(filterMapID,"filtertype");
+		            if (filterType == "child-cluster-member"){
+		                String childType = Util.HashMap.getObject(filterMapID,"childtype");
+		                int tolerance = Util.HashMap.getObject(filterMapID,"tolerance");
+		                Object[] properties = Util.HashMap.getObject(filterMapID,"properties");
+		                int[] searchResults = searchMonitorableEntitiesByTypeAndProps(childType,properties);
+		                if (searchResults != null) {
+		                    int totalEntities = searchResults[0];
+		                    int matchingEntities = searchResults[1];
+		                    Shared.RuleFunctions.log("determinePropertyValue","DEBUG","Found "+matchingEntities+" "+childType+" match(es) in "+totalEntities+" for "+debugNameWithPossibleValue);
+		                    if (totalEntities != 0 && matchingEntities != 0){
+		                        int matchPercentage = (matchingEntities * 100)/totalEntities;
+		                        if (matchPercentage >= tolerance){
+		                            Shared.RuleFunctions.log("determinePropertyValue","DEBUG","Matching percentage["+matchPercentage+"] is above tolerance["+tolerance+"] for "+debugNameWithPossibleValue+", returning "+possibleValue);
+		                            if ( propertyName == "active" ) {
+		                                return (possibleValue == "true");
+		                            }
+		                            return possibleValue;
+		                        }
+		                    }
+		                }
+		                else {
+		                    Shared.RuleFunctions.log("determinePropertyValue","DEBUG","No match found using "+childType+" for "+debugNameWithPossibleValue);
+		                }
+		            }
+		            else if (filterType == "notification"){
+		                if (additionalInfo != null) {
+		                    String mapID = additionalInfo;
+		                    int tolerance = Util.HashMap.getObject(filterMapID,"tolerance");
+		                    long range = Util.HashMap.getObject(filterMapID,"range");
+		                    Object[] properties = Util.HashMap.getObject(filterMapID,"properties");
+		                    boolean match = true;
+		                    for (int k = 0 ; k < properties@length ; k = k + 1){
+		                        String[] property = properties[k];
+		                        Object value = Util.HashMap.getObject(mapID,property[0]);
+		                        if (value != null && String.equals(property[1],""+value) == false){
+		                            match = false;
+		                            break;
+		                        }
+		                    }
+		                    if (match == true){
+		                        Shared.RuleFunctions.log("determinePropertyValue","DEBUG","Incoming alert "+Util.HashMap.getObject(mapID,"id")+" matches  filter condition in "+debugNameWithPossibleValue);
+		                        if (tolerance == 0){
+		                            Shared.RuleFunctions.log("determinePropertyValue","DEBUG","Matching count["+1+"] is above tolerance["+tolerance+"] for "+debugNameWithPossibleValue+", returning "+possibleValue);
+		                            if ( propertyName == "active" ) {
+		                                return (possibleValue == "true");
+		                            }
+		                            return possibleValue;
+		                        }
+		                        else if (range != 0){
+		                            String mapid = fqName+"/alertsrangebucket";
+		                            String mapkey = null;
+		                            for (int k = 0 ; k < properties@length ; k = k + 1){
+		                                String[] property = properties[k];
+		                                if (mapkey == null){
+		                                    mapkey = BEMM.util.join(property,"/");
+		                                }
+		                                else {
+		                                    mapkey = "#"+BEMM.util.join(property,"/");
+		                                }
+		                            }
+		                            Util.HashMap.createMap(mapid);
+		                            int cnt = 1;
+		                            if (Util.HashMap.getObject(mapid,mapkey) != null){
+		                                cnt = Util.HashMap.getObject(mapid,mapkey) + 1;
+		                            }
+		                            else {
+		                                Shared.RuleFunctions.log("determinePropertyValue","DEBUG","Scheduling alert count check after "+range+" msecs for "+debugNameWithPossibleValue);
+		                                //Schedule an range check event
+		                                Shared.Events.topology.RangeCheckEvent event = Shared.Events.topology.RangeCheckEvent.RangeCheckEvent(null,null,entity@extId,filterMapID,propertyName,possibleValue,mapkey);
+		                                Cluster.scheduleEvent("mm.scheduler",fqName,event,range);
+		                            }
+		                            Util.HashMap.putObject(mapid,mapkey,cnt);
+		                        }
+		                    }
+		                }
+		            }
+		            else {
+		                Shared.RuleFunctions.log("determinePropertyValue","WARNING","Unknown filter type ["+filterType+"] found under "+entityType+"/health/"+possibleValue+"/"+j);
+		            }
+		        }
+		    }
+		}
+		if (propertyName == "active"){
+		    Shared.RuleFunctions.log("determinePropertyValue","DEBUG","No match for "+debugName+", returning true...");
+		    return true;
+		}
+		if(entity.active == true) {
+		    Shared.RuleFunctions.log("determinePropertyValue","DEBUG","No match for "+debugName+", returning normal...");
+		    return "normal";
+        } else {
+		    Shared.RuleFunctions.log("determinePropertyValue","DEBUG","No match for "+debugName+", returning critical...");
+            return "critical";
+        }
+	}
+}

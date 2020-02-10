@@ -1,0 +1,99 @@
+<div ng-controller='IndexCtrl' class="appManagementPage tea-theme wrapper row-offcanvas row-offcanvas-left">
+   	<div class="header">
+        <nav class="tbt-top-nav navbar-static-top">
+            <span class="dropdown" dropdown on-toggle="toggled(open)">
+      			<a href class="title dropdown-toggle ng-binding" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+      				<i class="tibcoAbb24x24LogoIcon"></i>
+      				 TIBCO BusinessEvents
+      			</a>
+      			<ul class="dropdown-menu">
+      				<li>        			
+          				<a ng-click="openHelpPageForBETea()">Help</a>
+        			</li>
+      				<li>        			
+          				<a ng-click="showAboutWindowForBETea()">About TIBCO BusinessEvents Enterprise Administrator Agent</a>
+        			</li>
+      			</ul>
+    		</span>
+            <ul class="topNav">
+				<li title="Application" ng-click="showDashboardApplications()"  ng-class="{active:true}">	
+					<i class="fa fa-cube"></i>					
+					<span>Application Deployments</span>  
+				</li>
+				<li title="Machines" ng-click="showDashboardHosts()">
+					<i class="fa fa-desktop"></i>							
+					<span >Machines</span>
+				</li>
+				<li title="Moitoring" ng-click="showAgentStats()">
+					<i class="fa fa-line-chart"></i>							
+					<span >Monitoring</span>
+				</li>
+			</ul>
+        </nav>
+    </div> 
+    <div ng-controller="applicationManagmentCtrl">
+    	<div class="row main-frame box-sizing" >
+     	<div ng-show="notification.show">
+      		<div ng-include="'partials/templates/directive/showNotification.html'"></div>
+    	</div>
+    	<div id="loaderdiv" style="display: none;">
+			<img src="images/icons/loader.gif" class="ajax-loader" />
+		</div>
+        <h3>BusinessEvents Application Deployments</h3>
+        <div class="button pull-right operation" ng-click="reloadPage()"><i class="fa fa-refresh"></i><span style="padding-left: 5px;">Refresh</span></div>
+        <div  ng-include="'partials/templates/actionConfirmation.html'"></div>
+        <div ng-include="'partials/templates/applicationLevelCDD.html'"></div>  
+        <div ng-include="'partials/templates/hotDeployInstance.html'"></div>
+        <div ng-include="'partials/templates/updateTRAView.html'"></div>
+        <div ng-include="'partials/templates/aboutBETeaView.html'"></div>
+        <div ng-include="'partials/templates/createApplication.html'"></div>
+        <div ng-include="'partials/templates/addApplicationProfile.html'"></div>
+        <div ng-include="'partials/templates/deleteApplicationProfile.html'"></div>
+        <div ng-include="'partials/templates/copyApplicationProfile.html'"></div>         
+         
+        <div class="row" style="padding-bottom: 10px">
+            <div class="col-md-4 appSearch" style="padding-left: 0px;">               
+                <div class="input-prepend-inner pull-left" >
+                    <span class="add-on"><i class="fa fa-filter fa-lg"></i></span>
+                    <input ng-model="search.name" class="appSearchInput col-md-7" placeholder="Filter deployment">
+                    <i class="global-filter-reset ng-hide" ng-show="nameFilter" ng-click="nameFilter = ''"></i>
+                </div>
+            </div>
+            <div class="createButton pull-left" ng-if='hasPermission(1);'>
+                  <button class="btn tbt-btn btn-primary" title="Create New Deployment" ng-click="showCreateApplication()" style="padding: 4px 20px 4px 20px;line-height: 20px;font-size: 12px;">
+                    New Deployment
+      	  		  </button>  
+            </div>
+            
+			<div ng-include="'partials/templates/importApplication.html'"></div>
+			<div ng-include="'partials/templates/parseSTForImport.html'"></div>
+			<div ng-include="'partials/templates/importMigrateAppWizard.html'"></div>
+			<div ng-include="'partials/templates/createMigratedApplicationWizard.html'"></div>
+			<div ng-include="'partials/templates/importExportedApplication.html'"></div>
+
+			<div class="importButton btn tbt-btn btn-primary dropdown" dropdown on-toggle="toggled(open)">
+				<a href class="title dropdown-toggle ng-binding" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+					<span class="pull-left" title="Import" style="color: #ffffff; font-size: 12px;">Import Deployment</span>
+					<span class="fa fa-angle-down" style="padding: 5px 0px 0px 7px; line-height: 20px; font-size: 15px; color: #ffffff;"></span>
+				</a>
+				<ul class="dropdown-menu">
+					<!--li ng-if='hasPermission(1);'><a ng-click="showImportApplication()">BE MM Deployment</a></li>-->
+					<li ng-if='hasPermission(1);'><a ng-click="showImportMigratedApplicationsWizard()">TIBCO Administrator Deployment</a></li>
+					<li ng-if='hasPermission(1);'><a ng-click="showImportExportedApplicationsWizard()">BE TEA-Agent Deployment</a></li>
+				</ul>
+			</div>           
+        </div>      
+     </div>     
+	 <div style="margin-left: 42px;">	
+	 	<div ng-if="appObject.length < 1" class="noDeploymentsFoundError">
+	 		No deployments found
+	 	</div>	   
+		<ul class="appManagement_appList clearfix">   
+			<li class="appManagement_appItem" ng-repeat="apps in appObject | filter:{name:search.name}">
+				<appdiv be-app-object="apps"></appdiv>	
+			</li>		
+		</ul>
+     </div> 
+    </div>    
+</div>      
+

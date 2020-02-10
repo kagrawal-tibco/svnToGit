@@ -1,0 +1,28 @@
+/**
+ * @description 
+ */
+boolean rulefunction Functions.checkHobbies {
+	attribute {
+		validity = CONDITION;
+	}
+	scope {
+		Model.Seat	seat;
+		Model.Guest	rightGuest;
+	}
+	body {
+		if(haveCommon(seat.guest, rightGuest)) {
+		    return true;
+		}
+		//right guest doesn't have common hobby, check with the one on the left
+		Model.Seat leftSeat = seat.leftSeat;
+		if(leftSeat == null) {
+		    //first seat doesn't have left seat when the search start
+		    return true; 
+		}
+		if(haveCommon(leftSeat.guest, seat.guest)) {
+		    return true;
+		}
+		//doesn't have common hobby with the left and right guest
+		return false;
+	}
+}

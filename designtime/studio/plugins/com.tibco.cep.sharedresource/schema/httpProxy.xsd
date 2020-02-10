@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<xsd:schema xmlns:tns="www.tibco.com/shared/ProxyConnection"
+	xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+	xmlns:aemeta-services-2002="http://www.tibco.com/xmlns/aemeta/services/2002"
+	targetNamespace="www.tibco.com/shared/ProxyConnection"
+	xmlns:bt="http://tibco.com/be/shared/basetypes">
+
+    <xsd:import schemaLocation="basetypes.xsd" namespace="http://tibco.com/be/shared/basetypes"></xsd:import>
+    <xsd:import namespace="http://www.tibco.com/xmlns/aemeta/services/2002"
+		schemaLocation="aemeta-services-2002.xsd"></xsd:import>
+
+	<xsd:element name="proxySharedResource" type="tns:proxySharedResourceType" />
+
+	<xsd:complexType name="proxySharedResourceType">
+		<xsd:sequence>
+			<xsd:element name="config" maxOccurs="1" minOccurs="1"
+				type="tns:configType">
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+
+	<xsd:complexType name="configType">
+		<xsd:sequence>
+			<xsd:element minOccurs="1" maxOccurs="1" name="proxyPort"
+				type="bt:intOrGVs">
+			</xsd:element>
+			<xsd:element minOccurs="0" maxOccurs="1" name="proxyHost"
+				type="xsd:string">
+			</xsd:element>
+			<xsd:element minOccurs="0" maxOccurs="1" name="identity"
+				type="xsd:string">
+			</xsd:element>
+			<xsd:element name="description" type="xsd:string" maxOccurs="1" minOccurs="0"></xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	
+</xsd:schema>
+

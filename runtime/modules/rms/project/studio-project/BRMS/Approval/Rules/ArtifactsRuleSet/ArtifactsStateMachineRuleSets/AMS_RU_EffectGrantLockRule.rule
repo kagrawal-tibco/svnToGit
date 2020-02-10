@@ -1,0 +1,46 @@
+/**
+ * @description Carry out actions once lock is granted.
+ * @author aathalye-lt
+ */
+rule Approval.Rules.ArtifactsRuleSet.ArtifactsStateMachineRuleSets.AMS_RU_EffectGrantLockRule {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Approval.Events.ArtifactEvents.StateMachine.AMS_E_EffectGrantLockEvent ams_e_effectgrantlockevent;
+		Approval.Concepts.ArtifactsConcepts.ArtifactLockConcepts.AMS_C_LockArtifactRequest ams_c_lockartifactrequest;
+	}
+	when {
+		ams_e_effectgrantlockevent.lockRequestId == ams_c_lockartifactrequest.lockRequestId;
+	}
+	then {
+		System.debugOut("Firing Grant Lock Rule");
+		String project = ams_c_lockartifactrequest.projectName;
+		String artifactPath = ams_c_lockartifactrequest.artifactPath;
+		String username = ams_c_lockartifactrequest.username;
+		
+		//Check if the lock is already held
+		AMS_C_LockableArtifact lockableArtifact = Instance.getByExtIdByUri(project + "@" + artifactPath, "/Approval/Concepts/ArtifactsConcepts/ArtifactLockConcepts/AMS_C_LockableArtifact");
+		
+		boolean isLocked = lockableArtifact.locked;
+		
+		if (isLocked) {
+			//We have already handled the case where locker and requestor are same.
+			String lockedBy = lockableArtifact.lockedBy;
+			//This artifact is locked so cannot be accquired.
+			String errorDetail = "Artifact >>> " + artifactPath + " has already been locked by >>> " + lockedBy;
+			System.debugOut(errorDetail);
+			System.debugOut("Lock Request for >>> " + artifactPath + " failed");
+			
+			Approval.Events.ArtifactEvents.AMS_E_ErrorEvent errorEvent = Approval.
+																			CommonServices.
+																				AMS_RF_CreateErrorEvent("LOCK_ERROR", "Cannot lock Artifact", errorDetail);
+			//Event.replyEvent(ams_e_artifactlockrequestevent, errorEvent);	
+		} else {
+			//Grant the lock
+			lockableArtifact.locked = true;
+			lockableArtifact.lockedBy = username;
+		}
+	}
+}

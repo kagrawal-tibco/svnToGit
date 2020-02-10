@@ -1,0 +1,30 @@
+/**
+ * @description
+ * @author anpatil-dt
+ */
+rule Rules.onYearCalculationTrigger {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Events.CalculationTrigger e;
+	}
+	when {
+		e.period == "year";
+	}
+	then {
+		int duration = 15;
+		System.debugOut("Computing tickers for "+e.Ticker+" for "+duration+" "+e.period+"(s)");
+		//get current time
+		DateTime now = DateTime.now();
+		//go back specified years
+		DateTime.addYear(now,-duration);
+		long timeMsecs = DateTime.getTimeInMillis(now);
+		//calculate price for the last whole year @ month resolution
+		for (int i = 0 ; i < duration*12 ; i++){
+			Dashboards.Metrics.YearlyTickerMetric.compute(DateTime.parseLong(timeMsecs), e.Ticker, Math.random()*100, Math.random() * 10000);
+			timeMsecs = timeMsecs + 31*24*60*60*1000;
+		}
+	}
+}

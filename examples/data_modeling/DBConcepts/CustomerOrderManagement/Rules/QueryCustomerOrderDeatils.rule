@@ -1,0 +1,47 @@
+/**
+ * @description 
+ * @author bmane-lt
+ */
+rule Rules.QueryCustomerOrderDeatils {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		
+		Events.QueryCustomerOrderDetails querycustomerorderdetails;
+	}
+	when {
+		
+	}
+	then {
+		Database.setCurrentConnection("/SharedResources/DBConceptsConnection");
+		Database.beginTransaction();
+		
+		String Order_id="ORDER"+querycustomerorderdetails.customer_id;
+		DatabaseConcepts.customer_order.ORDERS order=Instance.createInstance("xslt://{{/DatabaseConcepts/customer_order/ORDERS}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"1.0\" exclude-result-prefixes=\"xsl xsd\">\n    <xsl:output method=\"xml\"/>\n    <xsl:param name=\"Order_id\"/>\n    <xsl:template match=\"/\">\n        <createObject>\n            <object>\n                <ORDER_ID>\n                    <xsl:value-of select=\"$Order_id\"/>\n                </ORDER_ID>\n            </object>\n        </createObject>\n    </xsl:template>\n</xsl:stylesheet>");
+		
+		
+		DatabaseConcepts.customer_order.ORDERS []order_details=Database.queryUsingConceptProps(order,true);
+		DatabaseConcepts.customer_order.CUSTOMERS customer=order_details[0].CUSTOMERS[0];
+		
+		DatabaseConcepts.customer_order.ORDER_ITEMS []Order_items=DatabaseConcepts.customer_order.ORDER_ITEMS[order_details[0].ORDER_ITEMS@length]{};
+		for(int i=0;i<order_details[0].ORDER_ITEMS@length;i++)
+		{
+			Order_items[i]=order_details[0].ORDER_ITEMS[i];
+		}
+		System.debugOut("Query from database results");
+		System.debugOut("Customer Deatils");
+		System.debugOut("   "+customer.CUSTOMER_ID+"   "+customer.CUSTOMER_NAME+"   "+customer.CUSTOMER_ADDRESS+"   "+customer.CUSTOMER_STATE+"   "+customer.CUSTOMER_CITY);
+		System.debugOut("Order Details");
+		System.debugOut("   "+order.ORDER_ID);
+		System.debugOut("Items");
+		for(int j=0;j<order_details[0].ORDER_ITEMS@length;j++)
+		{
+		System.debugOut("   "+Order_items[j].ITEM_ID+"   "+Order_items[j].ITEM_QTY);
+		}
+		Database.commit();
+		Database.unsetConnection();
+		
+}
+}

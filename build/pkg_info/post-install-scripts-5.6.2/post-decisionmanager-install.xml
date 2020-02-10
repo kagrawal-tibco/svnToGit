@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<project name="post-install" default="post-install" basedir=".">
+	<property file="post-install.properties"/>
+	<import file="common-tasks.xml"/>
+		
+    <taskdef resource="net/sf/antcontrib/antcontrib.properties"/>
+	
+	<target name="post-install" depends="import-wrappers,
+					     				set-subst-vars">
+		<echo message="Done post-installation tasks." />
+	</target>
+
+	<target name="import-wrappers">
+	</target>
+	
+	<target name="set-subst-vars">
+		<if>
+			<os family="mac"/>
+			<then>
+				<antcall target="substitute-variables">
+					<param name="out.file" value="${tibco.home}/be/${beVersionShort}/decisionmanager/eclipse/decisionmanager.app/Contents/MacOS/decisionmanager.ini"/>
+				</antcall>
+			</then>
+			<else>
+				<antcall target="substitute-variables">
+					<param name="out.file" value="${tibco.home}/be/${beVersionShort}/decisionmanager/eclipse/decisionmanager.ini"/>
+				</antcall>
+			</else>
+		</if>
+		
+		<antcall target="substitute-variables">
+			<param name="out.file" value="${tibco.home}/be/${beVersionShort}/decisionmanager/eclipse/configuration/studio.tra"/>
+		</antcall>
+		<antcall target="substitute-variables">
+			<param name="out.file" value="${tibco.home}/be/${beVersionShort}/decisionmanager/eclipse/dropins/TIBCOBusinessEvents-Studio-plugins.link"/>
+		</antcall>
+		<antcall target="substitute-variables">
+			<param name="out.file" value="${tibco.home}/be/${beVersionShort}/decisionmanager/eclipse/dropins/TIBCOBusinessEvents-EclipsePlatform-plugins.link"/>
+		</antcall>
+	</target>
+</project>	 

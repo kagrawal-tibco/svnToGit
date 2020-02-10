@@ -1,0 +1,41 @@
+/**
+ * @description 
+ */
+void rulefunction WebStudio.Core.RuleFunctions.Utils.RT.Builder.WS_RF_ClearConditionFilterDetails {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		WebStudio.Core.Concepts.RuleTemplateInstance.Builder.WS_C_AbstractConditionsFilter conditionFilter;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.RT.Builder.WS_RF_ClearConditionFilterDetails");
+		
+		if (conditionFilter != null) {
+			WS_C_Link[] links = Instance.PropertyArray.toArrayConcept(conditionFilter.link);
+			for (int i=0; i<links@length; i++) {
+				Instance.PropertyArray.removeConceptReference(conditionFilter.link, links[i]);
+				Instance.deleteInstance(links[i]);
+			}
+			
+			WS_C_FilterValue filterValue = conditionFilter.value;
+			if (filterValue != null) {
+				links = Instance.PropertyArray.toArrayConcept(filterValue.link);
+				for (int i=0; i<links@length; i++) {
+					Instance.PropertyArray.removeConceptReference(filterValue.link, links[i]);
+					Instance.deleteInstance(links[i]);
+				}
+				
+				Instance.deleteInstance(filterValue);
+			}
+			
+			WS_C_AbstractConditionsFilter[] conditionFilters = Instance.PropertyArray.toArrayConcept(conditionFilter.filter);
+			for (int i=0; i<conditionFilters@length; i++) {
+				WS_RF_ClearConditionFilterDetails(conditionFilters[i]);
+				
+				Instance.PropertyArray.removeConceptReference(conditionFilter.filter, conditionFilters[i]);
+				Instance.deleteInstance(conditionFilters[i]);
+			}
+		}		
+	}
+}

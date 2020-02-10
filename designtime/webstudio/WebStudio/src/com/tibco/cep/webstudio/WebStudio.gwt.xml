@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module rename-to='webstudio'>
+  <!-- Inherit the core Web Toolkit stuff.                        -->
+  <inherits name='com.google.gwt.user.User'/>
+  <inherits name="com.smartgwt.SmartGwt"/>
+  <inherits name="com.smartgwt.Drawing"/>
+  <inherits name="com.tibco.cep.studio.util.studio_utils_module"/>
+    
+  <!-- Inherit the default GWT style sheet.  You can change       -->
+  <!-- the theme of your GWT application by uncommenting          -->
+  <!-- any one of the following lines.                            -->
+  <!-- <inherits name='com.google.gwt.user.theme.standard.Standard'/> -->
+  <!-- <inherits name='com.google.gwt.user.theme.chrome.Chrome'/> -->
+  <!-- <inherits name='com.google.gwt.user.theme.dark.Dark'/>     -->
+  <!--
+  <inherits name="com.smartclient.theme.enterprise.EnterpriseResources"/>
+  <inherits name="com.smartclient.theme.enterpriseblue.EnterpriseBlueResources"/> 
+  <inherits name="com.smartclient.theme.treefrog.TreeFrog"/> 
+  -->
+  <inherits name="com.smartgwt.SmartGwtNoTheme"/>    
+  <inherits name="com.smartclient.theme.enterpriseblue.EnterpriseBlue"/>
+  
+  <!-- Other module inherits                                      -->
+  <inherits name="com.google.gwt.http.HTTP"/>  
+  
+  <!-- Tom Sawyer Perspectives inherits                         -->
+  <inherits name='com.tomsawyer.Utilities'/>
+  <inherits name='com.tomsawyer.Licensing'/>
+  <inherits name='com.tomsawyer.Visualization'/>
+  <inherits name='com.tomsawyer.Perspectives' />
+  
+  <!-- Specify the app entry point class.                         -->
+  <entry-point class='com.tibco.cep.webstudio.client.WebStudio'/>
+  <extend-property name="locale" values="ar"/>
+  <!-- <extend-property name="locale" values="en"/> -->
+  <!-- <extend-property name="locale" values="fr"/> --> <!-- French -->
+  <!-- <extend-property name="locale" values="de"/> --> <!-- German -->
+  <!-- extend-property name="locale" values="zh"/--> <!-- Chinese -->
+  <!-- extend-property name="locale" values="ja"/--> <!-- Japanese -->
+  
+  <!-- Tom Sawyer Specific -->
+  <!-- Specify the app servlets.                   -->
+  <servlet path='/PaletteToolbarService'
+			 class='com.tibco.cep.webstudio.server.PaletteToolbarServiceImpl'/>
+  <replace-with
+    class="com.tibco.cep.webstudio.client.process.ProcessDrawingViewWidgetFactoryImpl">
+  <when-type-is
+    class="com.tomsawyer.web.client.view.drawing.TSDrawingViewWidgetFactory"/>
+  </replace-with>
+  
+  
+  <!-- Specify the paths for translatable code                    -->
+  <source path='client'/>
+  <source path='shared'/>
+  <source path='public'/>
+  <source path='model'/>
+  <source path='server'/>
+  
+  <!-- GWT client logging configuration. -->
+  <inherits name="com.google.gwt.logging.Logging"/>
+  <set-property name="gwt.logging.logLevel" value="INFO"/> <!-- ALL, FINEST, FINER, FINE, CONFIG, INFO, WARNING, SEVERE -->
+  <set-property name="gwt.logging.enabled" value="TRUE"/> <!-- Keep logging always enabled here, and enable/disable in WebStudio.html to allow it to be configurable post build. -->
+  <set-property name="gwt.logging.consoleHandler" value="DISABLED"/>
+  <set-property name="gwt.logging.simpleRemoteHandler" value="ENABLED" />
+  <set-property name="gwt.logging.developmentModeHandler" value="DISABLED" /> <!-- Logs by calling method GWT.log. These messages can only be seen in Development mode — look for them in the DevMode window -->
+  <set-property name="gwt.logging.systemHandler" value="DISABLED" /> <!-- Logs to stdout. These messages can only be seen in Development Mode — look for them in the DevMode window -->
+  <set-property name="gwt.logging.popupHandler" value="DISABLED" /> <!-- Logs to the popup which appears in the upper left hand corner -->
+  <set-property name="gwt.logging.consoleHandler" value="DISABLED"/> <!-- Logs to the javascript console, which is used by Firebug Lite (for IE), Safari and Chrome(?) -->
+  <set-property name="gwt.logging.firebugHandler" value="DISABLED" /> <!-- Logs to Firebug -->
+  <set-property name="compiler.stackMode" value="emulated"/>
+</module>

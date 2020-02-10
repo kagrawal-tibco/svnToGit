@@ -1,0 +1,84 @@
+/**
+ * @description 
+ */
+WebStudio.Core.Concepts.DataSources.WS_C_TemporaryReturnData rulefunction WebStudio.Core.RuleFunctions.Actions.Lifecycle.History.WS_RF_FetchArtifactHistory {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object servletRequest;
+		WebStudio.Security.Authn.Concepts.WS_C_LoggedInUser loggedInUser;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.Lifecycle.Review.WS_RF_FetchCommittableEntryContents");
+		
+		String responseMessage = null;
+		String errorCode = null;
+		int recordCount = 0;
+		int responseStatus = 0;
+		
+		WS_C_ResponseData responseData = 
+			Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/WS_C_ResponseData");
+		
+		if (!WS_RF_CheckHTTPMethod(servletRequest, "GET")) {
+			responseStatus = -1;
+			recordCount = 0;
+			errorCode = "ERR_5101";
+			responseMessage = "Invalid HTTP Method, expect method is [GET].";
+		} else {
+			String username = loggedInUser.username;
+			Log.log(LOGGER, "Debug", "Logged in user [%s]", username);
+			
+			String artifactPath = HTTP.Servlet.Request.getRequestParameter(servletRequest, "artifactPath");
+			String artifactExtn = HTTP.Servlet.Request.getRequestParameter(servletRequest, "artifactExtension");
+			String projectName = HTTP.Servlet.Request.getRequestParameter(servletRequest, "projectName");
+			
+			Log.log(LOGGER, "Info", "Artifact path [%s], extension [%s] & project name [%s]", artifactPath, artifactExtn, projectName);
+			
+			String subscriptionId = null;
+			if (loggedInUser.jwtToken != null) subscriptionId = loggedInUser.jwtToken.sbsc;
+			
+			// Get Master copy of the Artifact
+			String masterArtifactExtId = WS_RF_CreateUserArtifactExtId(null, artifactPath, projectName, null, subscriptionId, null);
+			WS_C_MasterArtifact masterArtifact = Instance.getByExtIdByUri(masterArtifactExtId, "/WebStudio/Core/Concepts/Lifecycle/WS_C_MasterArtifact");
+			
+			String reviewTaskExtId = null;
+			if (masterArtifact != null) {
+				AMS_C_ArtifactCheckinHistoryEntry[] checkinHistoryEntries = Instance.PropertyArray.toArrayContainedConcept(masterArtifact.checkinHistory.checkinEntries);
+				for (int i=0; i < checkinHistoryEntries@length; i++) {
+					reviewTaskExtId = WS_RF_CreateUserArtifactExtId(String.valueOfLong(checkinHistoryEntries[i].revisionId), null, null, null, subscriptionId, null);
+					WS_C_AbstractReviewTask reviewTask = Instance.getByExtIdByUri(reviewTaskExtId, "/WebStudio/Core/Concepts/Lifecycle/WS_C_ReviewTask");
+					if (reviewTask != null) {
+						WS_C_UserCheckin userCheckin = Instance.getByExtIdByUri(reviewTask.referencedCheckinId, "/WebStudio/Core/Concepts/Lifecycle/WS_C_UserCheckin");
+						
+						WS_C_AbstractDataSourceRecord abstractDataSourceRecord = Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/Records/WS_C_ArtifactHistoryDataSourceRecord");
+						WS_C_ArtifactHistoryDataSourceRecord artifactHistoryDSR = abstractDataSourceRecord;
+						artifactHistoryDSR.userName = userCheckin.username;
+						artifactHistoryDSR.projectName = userCheckin.managedProjectName;
+						artifactHistoryDSR.checkinComments = userCheckin.checkinComments;
+						artifactHistoryDSR.revisionId = userCheckin.revisionId;
+						artifactHistoryDSR.checkinTime = userCheckin.checkinTime;
+						
+						Instance.PropertyArray.appendContainedConcept(responseData.record, abstractDataSourceRecord, 1L);
+						recordCount++;
+					}
+				} 
+			} else {
+				responseMessage = "This artifact does not have any approved changes yet.";
+				errorCode = "ERR_1205";
+				recordCount = 0;
+				responseStatus = -1;
+			}
+		}
+		
+//		String responseDSXML = WS_RF_CreateAndSerializeResponseDataSource(responseStatus, recordCount, errorCode, responseMessage, responseData);
+//		responseMessage = responseDSXML;
+//		Log.log(LOGGER, "Debug", "Data source response %s", responseMessage);
+//		
+//		HTTP.Servlet.Response.setResponseStatusCode(servletResponse, responseCode);
+//        HTTP.Servlet.Response.setResponseHeader(servletResponse, "Content-type", responseContentType);	    										
+//		HTTP.Servlet.Response.setResponseContent(asyncContextObject, responseMessage, true);
+	
+		return WS_RF_CreateTemporaryReturnData(responseStatus, recordCount, errorCode, responseMessage, responseData);
+	}
+}

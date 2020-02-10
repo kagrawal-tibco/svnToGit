@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--Created by TIBCO WSDL-->
+<wsdl:definitions xmlns:tns="http://www.tibco.com/be/ontology/TestSOAP" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:ns0="http://www.tibco.com/TNT/webservices/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" name="_TestSOAP" targetNamespace="http://www.tibco.com/be/ontology/TestSOAP">
+    <wsdl:types>
+        <s:schema xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:tm="http://microsoft.com/wsdl/mime/textMatching/" xmlns:s="http://www.w3.org/2001/XMLSchema" xmlns:tns="http://www.tibco.com/TNT/webservices/" xmlns:http="http://schemas.xmlsoap.org/wsdl/http/" xmlns:mime="http://schemas.xmlsoap.org/wsdl/mime/" targetNamespace="http://www.tibco.com/TNT/webservices/" elementFormDefault="unqualified" attributeFormDefault="unqualified">
+            <s:element name="MathOpsRequest">
+                <s:complexType>
+                    <s:sequence>
+                        <s:element name="a" type="s:float"/>
+                        <s:element name="b" type="s:float"/>
+                    </s:sequence>
+                </s:complexType>
+            </s:element>
+            <s:element name="MathOpsResponse">
+                <s:complexType>
+                    <s:sequence>
+                        <s:element name="result" type="s:float"/>
+                    </s:sequence>
+                </s:complexType>
+            </s:element>
+        </s:schema>
+    </wsdl:types>
+    <wsdl:message name="AddRequestMsg">
+        <wsdl:part name="MathOpsRequestMsgPart" element="ns0:MathOpsRequest"/>
+    </wsdl:message>
+    <wsdl:message name="AddResponseMsg">
+        <wsdl:part name="MathOpsResponseMsgPart" element="ns0:MathOpsResponse"/>
+    </wsdl:message>
+    <wsdl:message name="MultiplyRequestMsg">
+        <wsdl:part name="MathOpsRequestMsgPart" element="ns0:MathOpsRequest"/>
+    </wsdl:message>
+    <wsdl:message name="MultiplyResponseMsg">
+        <wsdl:part name="MathOpsResponseMsgPart" element="ns0:MathOpsResponse"/>
+    </wsdl:message>
+        <wsdl:message name="SubtractRequestMsg">
+        <wsdl:part name="MathOpsRequestMsgPart" element="ns0:MathOpsRequest"/>
+    </wsdl:message>
+    <wsdl:message name="SubtractResponseMsg">
+        <wsdl:part name="MathOpsResponseMsgPart" element="ns0:MathOpsResponse"/>
+    </wsdl:message>
+    <wsdl:message name="DivideRequestMsg">
+        <wsdl:part name="MathOpsRequestMsgPart" element="ns0:MathOpsRequest"/>
+    </wsdl:message>
+    <wsdl:message name="DivideResponseMsg">
+        <wsdl:part name="MathOpsResponseMsgPart" element="ns0:MathOpsResponse"/>
+    </wsdl:message>
+    <wsdl:portType name="MathOps">
+        <wsdl:operation name="Add">
+            <wsdl:input message="tns:AddRequestMsg"/>
+            <wsdl:output message="tns:AddResponseMsg"/>
+        </wsdl:operation>
+        <wsdl:operation name="Multiply">
+            <wsdl:input message="tns:MultiplyRequestMsg"/>
+            <wsdl:output message="tns:MultiplyResponseMsg"/>
+        </wsdl:operation>
+        <wsdl:operation name="Subtract">
+            <wsdl:input message="tns:SubtractRequestMsg"/>
+            <wsdl:output message="tns:SubtractResponseMsg"/>
+        </wsdl:operation>
+        <wsdl:operation name="Divide">
+            <wsdl:input message="tns:DivideRequestMsg"/>
+            <wsdl:output message="tns:DivideResponseMsg"/>
+        </wsdl:operation>
+    </wsdl:portType>
+    <wsdl:service name="MathOpsService">
+        <wsdl:port name="MathOpsServicePort" binding="tns:MathOpsBinding">
+            <soap:address location=""/>
+            <ns1:connectionFactory xmlns:ns1="http://www.tibco.com/namespaces/ws/2004/soap/binding/JMS">QueueConnectionFactory</ns1:connectionFactory>
+            <ns1:targetAddress xmlns:ns1="http://www.tibco.com/namespaces/ws/2004/soap/binding/JMS" destination="queue">queue.mathops</ns1:targetAddress>
+        </wsdl:port>
+    </wsdl:service>
+    <wsdl:binding name="MathOpsBinding" type="tns:MathOps">
+        <soap:binding style="document" transport="http://www.tibco.com/namespaces/ws/2004/soap/binding/JMS"/>
+        <wsdl:operation name="Add">
+            <soap:operation soapAction="Add" style="document"/>
+            <wsdl:input>
+                <soap:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+       <wsdl:operation name="Multiply">
+            <soap:operation soapAction="Multiply" style="document"/>
+            <wsdl:input>
+                <soap:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="Subtract">
+            <soap:operation soapAction="Subtract" style="document"/>
+            <wsdl:input>
+                <soap:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="Divide">
+            <soap:operation soapAction="Divide" style="document"/>
+            <wsdl:input>
+                <soap:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+    </wsdl:binding>
+</wsdl:definitions>

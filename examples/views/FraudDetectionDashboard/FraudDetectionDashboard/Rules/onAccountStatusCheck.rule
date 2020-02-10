@@ -1,0 +1,63 @@
+/**
+ * @description 
+ * @author anpatil-T61
+ */
+rule Rules.onAccountStatusCheck {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Events.AccountStatusCheck statusCheck;
+	}
+	when {
+		
+	}
+	then {
+		System.debugOut("Firing onAccountStatusCheck...");
+		//get status for normal accounts for today 
+		//create date values
+		DateTime now = DateTime.now();
+		DateTime today = DateTime.createTime(DateTime.getYear(now),DateTime.getMonth(now),DateTime.getDate(now),0,0,0,null);
+		
+		//check current count for normal accounts
+		Dashboards.M_DailyCurrAccountsByStatus normalCurrCountMetric = Dashboards.M_DailyCurrAccountsByStatus.lookup(today,"Normal");
+		Dashboards.M_DailyMaxAccountsByStatus normalMaxCountMetric = Dashboards.M_DailyMaxAccountsByStatus.lookup(today,"Normal");
+		
+		if (normalCurrCountMetric != null && normalMaxCountMetric != null){
+			if (normalCurrCountMetric.CurrentCount < normalMaxCountMetric.MaxCount*0.8) { 
+				System.debugOut("Currently normal accounts["+normalCurrCountMetric.CurrentCount+"] is below 80% of max accounts["+normalMaxCountMetric.MaxCount+"]");
+			}
+			else {
+				System.debugOut("Currently normal accounts["+normalCurrCountMetric.CurrentCount+"] is above 80% of max accounts["+normalMaxCountMetric.MaxCount+"]");
+			}
+		}
+		else if (normalCurrCountMetric == null){
+			System.debugOut("No Dashboards.M_DailyCurrAccountsByStatus found for [TrackingDate="+DateTime.format(today, "yyyy-MM-dd'T'HH:mm:ss.SSSZ")+",status=Normal]");
+		}
+		else if (normalMaxCountMetric == null){
+			System.debugOut("No Dashboards.M_DailyMaxAccountsByStatus found for [TrackingDate="+DateTime.format(today, "yyyy-MM-dd'T'HH:mm:ss.SSSZ")+",status=Normal]");
+		}
+		
+		//check current count for suspended accounts
+		
+		Dashboards.M_DailyCurrAccountsByStatus suspendedCurrCountMetric = Dashboards.M_DailyCurrAccountsByStatus.lookup(today,"Suspended");
+		Dashboards.M_DailyMaxAccountsByStatus suspendedMaxCountMetric = Dashboards.M_DailyMaxAccountsByStatus.lookup(today,"Suspended");
+		
+		if (suspendedCurrCountMetric != null && suspendedMaxCountMetric != null){
+			if (suspendedCurrCountMetric.CurrentCount > suspendedMaxCountMetric.MaxCount*0.8) { 
+				System.debugOut("Currently suspended accounts["+suspendedCurrCountMetric.CurrentCount+"] is above 80% of max accounts["+suspendedMaxCountMetric.MaxCount+"]");
+			}
+			else {
+				System.debugOut("Currently suspended accounts["+normalCurrCountMetric.CurrentCount+"] is below 80% of max accounts["+normalMaxCountMetric.MaxCount+"]");
+			}
+		}
+		else if (suspendedCurrCountMetric == null){
+			System.debugOut("No Dashboards.M_DailyCurrAccountsByStatus found for [TrackingDate="+DateTime.format(today, "yyyy-MM-dd'T'HH:mm:ss.SSSZ")+",status=Suspended]");
+		}
+		else if (suspendedMaxCountMetric == null){
+			System.debugOut("No Dashboards.M_DailyMaxAccountsByStatus found for [TrackingDate="+DateTime.format(today, "yyyy-MM-dd'T'HH:mm:ss.SSSZ")+",status=Suspended]");
+		}
+				
+	}
+}

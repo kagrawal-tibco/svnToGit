@@ -1,0 +1,19 @@
+/**
+ * @description Utility function to create ErrorEvent
+ */
+Approval.Events.ArtifactEvents.AMS_E_ErrorEvent rulefunction Approval.CommonServices.AMS_RF_CreateErrorEvent {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String errorCode;
+		String errorMessage;
+		String errorDetail;
+	}
+	body {
+		Approval.Events.ArtifactEvents.AMS_E_ErrorEvent errorEvent = 
+						Event.createEvent("xslt://{{/Approval/Events/ArtifactEvents/AMS_E_ErrorEvent}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:ns=\"www.tibco.com/be/ontology/Approval/Events/ArtifactEvents/AMS_E_ErrorEvent\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"1.0\" exclude-result-prefixes=\"xsl ns xsd\">\n    <xsl:output method=\"xml\"/>\n    <xsl:param name=\"errorDetail\"/>\n    <xsl:param name=\"errorMessage\"/>\n    <xsl:param name=\"errorCode\"/>\n    <xsl:template match=\"/\">\n        <createEvent>\n            <event>\n                <payload>\n                    <ns:error>\n                        <errorDetail>\n                            <xsl:value-of select=\"$errorDetail\"/>\n                        </errorDetail>\n                        <errorString>\n                            <xsl:value-of select=\"$errorMessage\"/>\n                        </errorString>\n                        <errorCode>\n                            <xsl:value-of select=\"$errorCode\"/>\n                        </errorCode>\n                    </ns:error>\n                </payload>\n            </event>\n        </createEvent>\n    </xsl:template>\n</xsl:stylesheet>");
+						
+		return errorEvent;				
+	}
+}

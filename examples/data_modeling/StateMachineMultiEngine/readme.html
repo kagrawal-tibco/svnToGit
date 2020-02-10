@@ -1,0 +1,158 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>     State Machine Multi-Engine
+
+- TIBCO BusinessEvents&reg; Examples
+</title>
+<meta http-equiv="Content-type" content="text/html; charset=iso-8859-1" />
+<meta http-equiv="Content-Language" content="en-us" />
+<link rel="Shortcut Icon" href="../../_resources/icon.gif" type="image/gif" />
+<style type="text/css" media="all">@import "../../_resources/examples.css";</style>
+<script type="text/javascript" src="../../_resources/examples.js" /></script>
+<script type="text/javascript">
+function buildForms() {
+ var form;
+
+
+ SendEventForm.setServer("http://localhost:7001");
+
+
+ form = SendEventForm.get("EqpCreateEvent");
+ form.setDestinationPath("/Channels/HTTP/AllOps");
+ form.setEventPath("/Events/CreateEvent");
+ form.addProperty("eqpName", "EQP1");
+ form.build();
+
+
+ form = SendEventForm.get("DoorOpen");
+ form.setDestinationPath("/Channels/HTTP/AllOps");
+ form.setEventPath("/Events/DoorStateEvent");
+ form.addProperty("name", "EQP1");
+ form.addProperty("doorOpen", "true");
+ form.build();
+
+
+ form = SendEventForm.get("DoorClose");
+ form.setDestinationPath("/Channels/HTTP/AllOps");
+ form.setEventPath("/Events/DoorStateEvent");
+ form.addProperty("name", "EQP1");
+ form.addProperty("doorOpen", "false");
+ form.build();
+
+ form = SendEventForm.get("Delete");
+ form.setDestinationPath("/Channels/HTTP/AllOps");
+ form.setEventPath("/Events/DeleteEvent");
+ form.addProperty("name", "EQP1");
+ form.build();
+
+
+
+}
+</script>
+</head>
+<body onLoad="buildForms()">
+
+
+<h1>StateMachine Multi-Engine</h1>
+
+<h2>Purpose of This Example</h2>
+
+<p>This example demonstrates how the TIBCO BusinessEvents&reg; Data Modeling add-on can keep a concept's state synchronized across multiple inference engines, while multiple events acting on the state-machine are being processed by these engines. Project details include: </p>
+<ul>
+<li>A concept called Equipment, and a main state machine for it </li>
+<li>Different types of transitions such as self transition, and events added to transition scope </li>
+</ul>
+
+
+<h2>How to Run This Example</h2>
+<ol>
+
+
+<li>
+<p>Open two command windows and at the command prompt, start the TIBCO BusinessEvents cache server and inference engine respectively using the following commands. </p>
+
+<pre class="commands">
+cd <i>BE_HOME</i>/examples/data_modeling/StateMachineMultiEngine
+<i>BE_HOME</i>/bin/be-engine --propFile <i>BE_HOME</i>/bin/be-engine.tra -u cache -c StateMachineMultiEngine/SMMultiEngine.cdd SMMultiEngine.ear
+<i>BE_HOME</i>/bin/be-engine --propFile <i>BE_HOME</i>/bin/be-engine.tra -u default -c StateMachineMultiEngine/SMMultiEngine.cdd SMMultiEngine.ear
+</pre>
+
+<p>Adapt the command as needed, for example, if you have customized the example project, or are running it from a different directory.</p>
+</li>
+
+
+<li>
+<p>Send an EqpCreateEvent. This will create a concept instance and start the main state machine.</p>
+
+<form id="EqpCreateEvent"></form>
+
+<p>In the command window you see messages like this:
+<span class="logs">
+
+####RULE###   Equipment :EQP1 created
+#### SMT ####: EqpEQP1 Processing Create
+Main EqpStateMachine starts here for concept be.gen.Concepts.Equipment@id=3&v=0
+#### SM ####: Eqp EQP1 Created</span></p>
+</li>
+
+
+<li>
+<p>Send a DoorStateEvent with state true. The state machine moves to the DoorOpen state.</p>
+
+<form id="DoorOpen"></form>
+
+<p>In the command window you see messages like this
+(the concept id may change at each run):
+<span class="logs">
+#### SM ####: Eqp EQP1 in State DoorOpen</span></p>
+</li>
+
+<p>On sending DoorStateEvent with state true, the state machine stays at DoorOpen state. In the command window you see messages like this:</p>
+<span class="logs">
+### STMT ###: Staying in DoorOpen
+#### SM ####: Eqp EQP1 in State DoorOpen</span>
+
+<li>
+<p>Send a DoorStateEvent with state false. The state machine moves to DoorClose state.</p>
+
+<form id="DoorClose"></form>
+
+<p>In the command window you see messages like this
+(the concept id may change at each run):
+<span class="logs">
+### SMT ### : Eqp EQP1 Going from DoorOpen to DoorClose.
+#### SM ####: Eqp EQP1 in State DoorClosed</span></p>
+</li>
+
+<p>On sending DoorStateEvent with state false, the state machine stays at DoorClose state. In the command window you see messages like this:</p>
+<span class="logs">
+### SMT ###: Staying in DoorClose
+#### SM ####: Eqp EQP1 in State DoorClosed</span>
+
+
+<li>
+<p>Send DeleteEvent which will delete the concept instance and end the main state machine.</p>
+
+<form id="Delete"></form>
+
+<p>In the command window you see a message like this:
+<span class="logs"> ######  Equipment EQP1 DELETED</span></p>
+</li>
+
+<li>
+<p> To reset the data, restart the engines at the command line.</p
+</li>
+
+</ol>
+
+
+
+<div class="footer">
+<p>TIBCO BusinessEvents&reg; 5.6<br />
+Copyright&copy; 2004-2019 TIBCO Software Inc. All rights reserved.</p>
+</div>
+</body>
+</html>

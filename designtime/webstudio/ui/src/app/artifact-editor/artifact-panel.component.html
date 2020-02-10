@@ -1,0 +1,32 @@
+<div class='close-icon clickable' (click)='onClose()'>
+  <i class='fa fa-times'></i>
+</div>
+<div class= "{{isRtl() ? 'panel-tabset-rtl' : 'panel-tabset'}}">
+  <tabset>
+    <tab
+      *ngFor = 'let tab of tabs'
+      [heading]='tab'
+      [customClass]="'panel-tab'"
+      (selectTab)='onSelect(tab)'
+      [active]='tab === curr'
+    > </tab>
+  </tabset>
+</div>
+<div class='console' [hidden]="curr !== tabMap.get('Verify')">
+  <verify *ngIf='verifyConfig' [config]='verifyConfig'></verify>
+  <button
+    *ngIf='!verifyConfig'
+    type="button"
+    class='btn btn-sm btn-primary'
+    (click)='onVerify()'
+    i18n>{{i18n('Start a Verify Session')}}</button>
+</div>
+<div class='problems' [hidden]="curr !== tabMap.get('Problems')">
+  <artifact-problems></artifact-problems>
+</div>
+<div *ngIf='showProperties' class='properties' [hidden]="curr !== tabMap.get('Properties')">
+  <artifact-properties></artifact-properties>
+</div>
+<div *ngIf='showTestData' class='problems' [hidden]="curr !== tabMap.get('TestData')">
+  <artifact-testdata></artifact-testdata>
+</div>

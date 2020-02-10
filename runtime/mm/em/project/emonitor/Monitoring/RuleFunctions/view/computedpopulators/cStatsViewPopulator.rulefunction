@@ -1,0 +1,58 @@
+/**
+ * @description 
+ */
+void rulefunction Monitoring.RuleFunctions.view.computedpopulators.cStatsViewPopulator {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String	viewName;
+		Monitoring.Events.cmetrics.ComputedMetricEvent	computedmetricevent;
+	}
+	body {
+		String extID = viewName;
+		Shared.Concepts.AbstractMonitorView view = Instance.getByExtId(extID);
+		if (view == null) {
+		    Shared.RuleFunctions.log("cStatsViewPopulator","DEBUG","No View found matching "+extID);
+		    return;
+		}
+		String componentConfigMapId = getComponentConfigMapId(view.monitorable,view.type);
+		if (componentConfigMapId == null) {
+		    Shared.RuleFunctions.log("cStatsViewPopulator","DEBUG","Invalid component definition found for "+view.type+"...");
+		    return;
+		}
+		String[] seriesNames = Util.HashMap.getObject(componentConfigMapId,"seriesnames");
+		String seriesName = seriesNames[0];
+		Shared.Concepts.SeriesData series = Instance.getByExtId(view@extId+":"+seriesName);
+		//update or create cluster health row
+		int idx = Instance.PropertyArray.indexOfString(series.categories,"Cluster Health");
+		if (idx == -1){
+		    idx = 0;
+		}
+		series.categories[idx] = "Cluster Health";
+		series.values[idx] = view.monitorable.healthLevel;
+		series.rawValues[idx] = view.monitorable.healthLevel;
+		//update or create remaining entity type rows
+		
+		String clustName = Shared.RuleFunctions.topology.getClustName(view.monitorable);
+		String extId = Monitoring.RuleFunctions.getClustHealthConcptExtId(clustName);
+		
+		Monitoring.Concepts.ClustHealthOverview cho = Instance.getByExtId(extId);
+		
+		if (cho == null)
+			return;
+		
+		int typeCnt = cho.entityTypes@length;
+		for (int i = 0 ; i < typeCnt ; i = i + 1){
+		    idx = i + 1;
+		    series.categories[idx] = cho.entityTypes[i];
+		    series.values[idx] = String.valueOfInt(cho.entityCount[i]);
+		    series.values[idx] = series.values[idx] + "#" + cho.entityActiveCount[i];
+		    series.values[idx] = series.values[idx] + "#" + cho.entityInActiveCount[i];
+		    series.values[idx] = series.values[idx] + "#" + cho.entityNormalHealthLevelCount[i];
+		    series.values[idx] = series.values[idx] + "#" + cho.entityWarningHealthLevelCount[i];
+		    series.values[idx] = series.values[idx] + "#" + cho.entityCriticalHealthLevelCount[i];
+		    series.rawValues[idx] = series.values[idx];
+		}
+	}
+}

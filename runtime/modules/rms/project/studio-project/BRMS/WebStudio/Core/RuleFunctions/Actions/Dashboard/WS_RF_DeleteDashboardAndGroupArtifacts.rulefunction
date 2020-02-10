@@ -1,0 +1,103 @@
+/**
+ * @description Removes references of any artifacts stored in Dashboard/Group
+ */
+void rulefunction WebStudio.Core.RuleFunctions.Actions.Dashboard.WS_RF_DeleteDashboardAndGroupArtifacts {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		WebStudio.Core.Concepts.WS_C_UserProject userProject;
+		String userName;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.Dashboard.WS_RF_DeleteDashboardAndGroupArtifacts");
+		
+		//Lock and load User Dashboard concept
+		String userDashboardExtId = WS_RF_CreateUserArtifactExtId("DASHBOARD", null, null, userName, null, null);
+		boolean userDashboardLock = Cluster.DataGrid.Lock(userDashboardExtId, 1000, false);
+		Log.log(LOGGER, "Debug", "User Dashboard space locked state - %s", userDashboardLock);
+		
+		String stackID = "artifactsToRemove_" + System.nanoTime();
+		if (userDashboardLock) {
+			WS_C_UserDashboard userDashboard = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(userDashboardExtId, true, "/WebStudio/Core/Concepts/Dashboard/WS_C_UserDashboard");
+				
+			if (userDashboard != null) {
+				Log.log(LOGGER, "Debug", "User Dashboard instance id %s", userDashboard@id);
+				
+				Object artifactStack = WS.Common.Stack.create(stackID);
+
+				// Remove artifacts from custom groups
+				WS_C_Group[] userGroups = Instance.PropertyArray.toArrayContainedConcept(userDashboard.userGroups);
+				for (int i = 0; i< userGroups@length; i++) {
+					WS_C_Group group = userGroups[i];
+				 	if (!group.systemGroup) {
+				 		Log.log(LOGGER, "Debug", "Checking Group %s", group.name);
+				 		
+				 		Log.log(LOGGER, "Debug", "Total artifacts in Group - %s", group.artifactIds@length);
+				 		for (int j = 0; j < group.artifactIds@length; j++) {
+				 			WS_C_GroupArtifact groupArtifact = Instance.getByExtIdByUri(group.artifactIds[j], "/WebStudio/Core/Concepts/Dashboard/WS_C_GroupArtifact");
+				 			if (groupArtifact != null) {
+					 			WS_C_UserArtifact artifact = WS_RF_IsUserArtifact(groupArtifact.artifactExtId, groupArtifact.artifactType);
+					 			
+					 			if (userProject != null) {
+					 				if (Instance.PropertyArray.indexOfContainedConcept(userProject.userArtifacts, artifact) != -1) {
+					 					WS.Common.Stack.push(artifactStack, groupArtifact@extId);
+					 					Log.log(LOGGER, "Debug", "On Project Deletion, removing artifact [%s] from group [%s]", artifact.artifactPath, group.name);
+					 				}
+					 			}
+				 			}
+				 		}
+				 		String[] artifactExtIds = WS.Common.Stack.toArray(artifactStack, "java.lang.String", null);
+				 		for (int k = 0; k < artifactExtIds@length; k++) {
+				 			Instance.PropertyArray.removeString(group.artifactIds, artifactExtIds[k]);
+				 		}
+				 	}
+				}
+				
+				// remove any GroupArtifacts that are no longer associated to any group
+				String[] artifactExtIds = WS.Common.Stack.toArray(artifactStack, "java.lang.String", null);
+				for (int k = 0; k < artifactExtIds@length; k++) {
+					boolean canRemove = true;
+					for (int i = 0; i< userGroups@length; i++) {
+						WS_C_Group group = userGroups[i];
+					 	if (!group.systemGroup) {
+				 			if (Instance.PropertyArray.indexOfString(group.artifactIds, artifactExtIds[k]) != -1) {
+					 			canRemove = false;
+					 			break;
+				 			}
+				 		}
+				 	}
+				 	if (canRemove) {
+				 		Log.log(LOGGER, "Debug", "Deleting Group Artifact [%s] as its no longer associated to any group.", artifactExtIds[k]);
+				 		WS_C_GroupArtifact groupArtifact = Instance.getByExtIdByUri(artifactExtIds[k], "/WebStudio/Core/Concepts/Dashboard/WS_C_GroupArtifact");
+				    		if (groupArtifact != null) Instance.deleteInstance(groupArtifact);
+				    		else Log.log(LOGGER, "Debug", "Group Artifact with ExtId [%s] not found for deletion.", artifactExtIds[k]);
+				 	}
+				}
+				WS.Common.Stack.clear(artifactStack);
+
+				// Remove artifact from RecentlyOpened
+				WS_C_RecentlyOpenedArtifacts[] recentlyOpenedArtifacts = Instance.PropertyArray.toArrayContainedConcept(userDashboard.recentlyOpenedArtifacts);
+				for (int i = 0; i < recentlyOpenedArtifacts@length; i++) {
+					WS_C_UserArtifact artifact = WS_RF_IsUserArtifact(recentlyOpenedArtifacts[i].artifactId, recentlyOpenedArtifacts[i].artifactType);
+					
+					if (userProject != null) {
+		 				if (Instance.PropertyArray.indexOfContainedConcept(userProject.userArtifacts, artifact) != -1) {
+		 					WS.Common.Stack.push(artifactStack, recentlyOpenedArtifacts[i]);
+		 					Log.log(LOGGER, "Debug", "On Project Deletion, removing artifact [%s] from Recently Opened List", artifact.artifactPath);
+		 				}
+		 			}
+				}
+				
+				WS_C_RecentlyOpenedArtifacts[] recentlyOpenedArtifactsIds = WS.Common.Stack.toArray(artifactStack, "be.gen.WebStudio.Core.Concepts.Dashboard.WS_C_RecentlyOpenedArtifacts", "com.tibco.cep.runtime.service.loader.BEClassLoader");
+				for (int k = 0; k < recentlyOpenedArtifactsIds@length; k++) {
+					Instance.PropertyArray.removeContainedConcept(userDashboard.recentlyOpenedArtifacts, recentlyOpenedArtifactsIds[k]);
+				}
+				WS.Common.Stack.clear(artifactStack);
+			}
+		}
+		
+		// Finally delete the stack once done
+		WS.Common.Stack.delete(stackID);
+	}
+}

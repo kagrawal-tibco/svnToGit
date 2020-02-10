@@ -1,0 +1,39 @@
+/**
+ * @description 
+ * @author anpatil-T61
+ */
+rule Rules.onAccountCreated {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Events.AccountCreated accountCreated;
+	}
+	when {
+		
+	}
+	then {
+		System.debugOut("Received Events.AccountCreated[Id="+accountCreated.AccountId+",Balance="+accountCreated.AccountBalance+",Status="+accountCreated.AccountStatus+"]");
+		//create date values
+		DateTime now = DateTime.now();
+		DateTime today = DateTime.createTime(DateTime.getYear(now),DateTime.getMonth(now),DateTime.getDate(now),0,0,0,null);
+		
+		//create daily current accounts metric by today/accountstatus		
+		Dashboards.M_DailyCurrAccountsByStatus currAccntMetric = Dashboards.M_DailyCurrAccountsByStatus.compute(today, accountCreated.AccountStatus,1,accountCreated.AccountId,accountCreated.AccountBalance,0);
+		System.debugOut("computed Dashboards.M_CurrAccountsByStatus[AccntStatus="+currAccntMetric.AccntStatus+",CurrentCount="+currAccntMetric.CurrentCount+"]");
+		
+		//create daily max accounts metric by today/accountstatus
+		Dashboards.M_DailyMaxAccountsByStatus maxAccntMetric = Dashboards.M_DailyMaxAccountsByStatus.compute(today,currAccntMetric.AccntStatus,currAccntMetric.CurrentCount,accountCreated.AccountId,accountCreated.AccountBalance,0);
+		System.debugOut("computed Dashboards.M_MaxAccountsByStatus[AccntStatus="+maxAccntMetric.AccntStatus+",MaxCount="+maxAccntMetric.MaxCount+"]");
+		
+		//create accounts metric by account id
+		Dashboards.M_Accounts account = Dashboards.M_Accounts.compute(accountCreated.AccountId,now,accountCreated.AccountBalance,0,0);
+		System.debugOut("computed Dashboards.M_Accounts[AccountId="+account.AccountID+",Balance="+account.Balance+",LastDebit="+account.LastDebit+",LastCredit="+account.LastCredit+",LastModifiedTime="+DateTime.format(account.LastModifiedDate, "yyyy-MM-dd'T'HH:mm:ss.SSSZ")+"]");				
+		
+		//create a account concept 
+		Concepts.Address address = Concepts.Address.Address(accountCreated.AccountId+"_addr",accountCreated.AccountId+" avenue",accountCreated.AccountId,accountCreated.AccountId,12345);
+		Concepts.Account.Account(accountCreated.AccountId,accountCreated.AccountId,accountCreated.AccountId,address);
+		
+	}
+}

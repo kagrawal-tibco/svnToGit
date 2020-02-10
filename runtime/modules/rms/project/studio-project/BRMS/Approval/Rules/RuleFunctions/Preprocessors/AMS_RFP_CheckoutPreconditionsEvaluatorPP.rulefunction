@@ -1,0 +1,25 @@
+/**
+ * @description Any pre-checks before artifact contents fetch before checkout/update.
+ */
+void rulefunction Approval.Rules.RuleFunctions.Preprocessors.AMS_RFP_CheckoutPreconditionsEvaluatorPP {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Approval.Events.ArtifactEvents.AMS_E_AbstractRMSEvent abstractRMSEvent;
+	}
+	body {
+		boolean isUserLoggedIn = 
+			Approval.CommonServices.AMS_RF_ValidateUsername(abstractRMSEvent) != null;
+		
+		if (!isUserLoggedIn) {
+			AMS_E_ErrorEvent errorEvent = 
+				Approval.CommonServices.AMS_RF_CreateErrorEvent("ARTIFACT_CONTENT_ERROR", "The user " + abstractRMSEvent.loggedInUserName + " is not logged in", null);
+			Event.replyEvent(abstractRMSEvent, errorEvent);
+			//Consume the event so that RTC is not triggered
+			Event.consumeEvent(abstractRMSEvent);
+			throw Exception.newException("ARTIFACT_CONTENT_ERROR", 
+										 "The user " + abstractRMSEvent.loggedInUserName + " is not logged in", null);	
+		}	
+	}
+}

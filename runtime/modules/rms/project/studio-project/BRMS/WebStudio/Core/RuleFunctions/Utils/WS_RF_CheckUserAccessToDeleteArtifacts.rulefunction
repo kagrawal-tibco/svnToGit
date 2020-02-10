@@ -1,0 +1,104 @@
+/**
+ * @description Checks access to Delete artifacts passed in deleteableEntities
+ * Returns true if user has delete access to all of these artifacts
+ * else returns false with error message 
+ */
+boolean rulefunction WebStudio.Core.RuleFunctions.Utils.WS_RF_CheckUserAccessToDeleteArtifacts {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		WebStudio.Security.Authn.Concepts.WS_C_LoggedInUser loggedInUser;
+		String projectName;
+		WebStudio.Core.Concepts.WS_C_AbstractUserEntity[] deleteableEntities;
+		Object errorMessage;							
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.WS_RF_CheckUserAccessToDeleteArtifacts");
+		
+		String subscriptionId = null;
+		if (loggedInUser.jwtToken != null) subscriptionId = loggedInUser.jwtToken.sbsc;
+		
+		String scsRootURL = WS_RF_GetSCSRootURL(projectName, subscriptionId);
+		if (scsRootURL == null) {
+			throw Exception.newException(null, "Source control repository location not present. Set ws.scs.rootURL property", null);
+		}
+				
+		boolean userHasAccess = true;
+		//Get the User roles
+		String[] roles = Instance.PropertyArray.toArrayString(loggedInUser.roles);	
+		Object accessDeniedArtifacts = String.createBuffer(0);
+		String operation = null;
+		
+		for (int loop = 0; loop < deleteableEntities@length; loop++) {
+			WS_C_AbstractUserEntity userEntityArtifact = deleteableEntities[loop];
+			if (userEntityArtifact instanceof WS_C_UserArtifact) {
+				WS_C_UserArtifact userArtifact = userEntityArtifact; 
+				String artifactPath = userArtifact.artifactPath;
+				String artifactType = userArtifact.artifactType;
+
+				String implementsPath = null;
+				String implementsType = null;
+				if (String.equals("ruletemplateinstance", artifactType)) {				
+					operation = "del_inst";
+					implementsPath = WS_RF_GetImplementsPath(loggedInUser.username, projectName, artifactPath, userArtifact.artifactFileExtn, scsRootURL);
+					implementsType = "ruletemplate";
+				}	
+				else if (String.equals("rulefunctionimpl", artifactType)) {
+					operation = "del_impl";
+					implementsPath = WS_RF_GetImplementsPath(loggedInUser.username, projectName, artifactPath, userArtifact.artifactFileExtn, scsRootURL);
+					implementsType = "rulefunction";
+				}
+				else {
+					operation = "delete";
+					implementsPath = artifactPath;
+					implementsType = artifactType;
+				}
+				Log.log(LOGGER, "Debug", "Checking access for user %s to %s on artifact %s %s in project %s", loggedInUser.username, operation, implementsType, implementsPath, projectName);
+
+				boolean hasAccess = RMS.Authorization.ensureAccess(projectName, subscriptionId, roles, implementsPath, String.toUpperCase(implementsType), operation);
+				Log.log(LOGGER, "Debug", "Has Access : %s", hasAccess);
+				if (!hasAccess) {
+					userHasAccess = false;
+					String.append(accessDeniedArtifacts, artifactPath + "." + userArtifact.artifactFileExtn);  
+					String.append(accessDeniedArtifacts, "\n");				
+				}				
+			}
+		}
+		
+		if (!userHasAccess) {
+			String temp = String.convertBufferToString(accessDeniedArtifacts);
+			String.append(errorMessage, "Delete Failed. Access denied to delete project resources :");
+			String.append(errorMessage, "\n");
+			String.append(errorMessage, temp);
+			String.append(errorMessage, ". \n");
+			String.append(errorMessage, "No resources were deleted.");
+		} else {
+			for (int loop = 0; loop < deleteableEntities@length; loop++) {
+				WS_C_AbstractUserEntity userEntityArtifact = deleteableEntities[loop];
+				if (userEntityArtifact instanceof WS_C_UserArtifact) {
+					WS_C_UserArtifact userArtifact = userEntityArtifact; 
+					String artifactPath = userArtifact.artifactPath;
+					String artifactType = userArtifact.artifactType;
+
+					WS_C_CheckArtifactLockResponse artifactLockStatus 
+										= WebStudio.Core.RuleFunctions.Actions.Lifecycle.Lock.WS_RF_CheckMasterArtifactLock(projectName, artifactPath, loggedInUser.username);
+					if (!artifactLockStatus.holdsLock && artifactLockStatus.lockOwner != null) {
+						userHasAccess = false;
+						String.append(accessDeniedArtifacts, artifactPath + "." + userArtifact.artifactFileExtn);  
+						String.append(accessDeniedArtifacts, "\n");				
+					}
+				}
+			}			
+			if (!userHasAccess) {
+				String temp = String.convertBufferToString(accessDeniedArtifacts);
+				String.append(errorMessage, "Delete Failed. Project resources :");
+				String.append(errorMessage, temp);
+				String.append(errorMessage, "are locked by other user(s)\n");
+				String.append(errorMessage, "No resources were deleted.");
+			}							
+		}		
+		
+		return userHasAccess;		
+	}
+}

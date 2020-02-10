@@ -1,0 +1,30 @@
+ <div class="modal fade box-sizing" id="createApplication">
+     <form  enctype="multipart/form-data" method="post" name="paramForm" novalidate>
+       <div class="modal-header box-sizing">
+       	 	<button type="button" class="close" data-dismiss="modal" aria-hidden="true">x</button>
+			<span class="lead"><h4>{{$parent.operationTitle}}: {{$parent.applicationName}}</h4></span>
+	   </div>
+	   
+	   <div class="modal-body box-sizing">
+			<div class="form-horizontal">
+				<div class="control-group">
+					<label class="control-label" >Deployment Name </label>
+                    <div class="controls">
+                        <input name="appNameInput" type="text" placeholder="DeploymentName" id="appNameTextField" ng-disabled="isEdit"
+                               ng-model="$parent.createData.applicationName"  required>
+                    </div>                    
+				</div>
+			</div>
+	  	</div>	
+	  	<div class="modal-footer box-sizing">
+	  		<div ng-show="$parent.isError" class="pull-left">
+				<span class="fileuploadError">*{{$parent.errorMessage}}</span>
+			</div>
+	    	<button type="button" ng-disabled="paramForm.$invalid || ($parent.isEdit && !$parent.isEditEnabled())" ng-click="!$parent.isEdit ? $parent.createApplication(createData.applicationName,createData.CDDfilesCreateApp,createData.earfilesCreateApp,createData.monitorableOnly):$parent.doEditApplication(createData.CDDfilesCreateApp,createData.earfilesCreateApp)"               
+                class="tbt-btn primary-btn" ng-class="{'button_disabled':paramForm.$invalid || (isEdit && !isEditEnabled() )}">Save</button>
+	    	<button type="button" data-dismiss="modal" aria-hidden="true" class="btn tbt-btn secondary-btn" ng-click="close()">
+		   		 Cancel
+	    	</button>
+    	</div>
+    </form>
+ </div>

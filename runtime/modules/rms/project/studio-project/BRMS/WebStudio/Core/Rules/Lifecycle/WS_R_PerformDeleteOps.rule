@@ -1,0 +1,132 @@
+/**
+ * @description Rule to execute delete operation on one ore more artifacts.
+ * @author aathalye-T410
+ */
+rule WebStudio.Core.Rules.Lifecycle.WS_R_PerformDeleteOps {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		WebStudio.Core.Events.Lifecycle.WS_E_ArtifactDeleteEvent artifactDeleteEvent;
+	}
+	when {
+		artifactDeleteEvent@payload != null;
+	}
+	then {
+		Object LOGGER = Log.getLogger("WebStudio.Core.Rules.Lifecycle.WS_R_PerformDeleteOps");
+		
+		String payload = artifactDeleteEvent@payload;
+		String projectName = artifactDeleteEvent.projectName;
+		String username = artifactDeleteEvent.username;
+	
+		String errorCode = artifactDeleteEvent.errorCode;
+		String responseMessage = artifactDeleteEvent.responseMessage;
+		double numberOfSCSEntities = 0;
+		
+		String[] roles = WS.Common.splitToStringArray(artifactDeleteEvent.roles, ",");
+		
+		if (errorCode == null) {
+			String scsRootURL = WS_RF_GetSCSRootURL(projectName, WS_RF_GetSubscriptionId(username));
+						
+			numberOfSCSEntities = 
+				Number.doubleValue(XPath.execute("count($var//ns2:WS_C_AbstractUserEntity)", payload, "ns2=www.tibco.com/be/ontology/WebStudio/Core/Concepts/WS_C_AbstractUserEntity")); 
+			
+			Log.log(LOGGER, "Info", "Total Entries to delete [%s]", numberOfSCSEntities);
+			
+			for (int scsEntitiesLoop = 0, length = numberOfSCSEntities; scsEntitiesLoop < length; scsEntitiesLoop++) {
+				int scsEntitiesLoopJ = scsEntitiesLoop + 1;
+				String userEntityExtId = XPath.execute("$var//ns2:WS_C_AbstractUserEntity[" + scsEntitiesLoopJ + "]/attribute::extId", payload, "ns2=www.tibco.com/be/ontology/WebStudio/Core/Concepts/WS_C_AbstractUserEntity");
+				Log.log(LOGGER, "Info", "ExtId of user entity to delete [%s]", userEntityExtId);
+				//Load this
+				boolean locked = Cluster.DataGrid.Lock(userEntityExtId, -1, false);
+				if (locked) {
+					//TODO Very gross logic. Needs to change
+					WS_C_AbstractUserEntity userEntity = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(userEntityExtId, false, "/WebStudio/Core/Concepts/RuleTemplateInstance/WS_C_RuleTemplateInstanceUserArtifact");
+					if (userEntity == null) {
+						userEntity = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(userEntityExtId, false, "/WebStudio/Core/Concepts/Decision/WS_C_UserDTableArtifact");
+						if (userEntity == null) {
+							userEntity = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(userEntityExtId, false, "/WebStudio/Core/Concepts/Domain/WS_C_DomainUserArtifact");
+							if (userEntity == null) {
+								userEntity = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(userEntityExtId, false, "/WebStudio/Core/Concepts/Process/WS_C_ProcessUserArtifact");
+								if (userEntity == null) {
+									userEntity = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(userEntityExtId, false, "/WebStudio/Core/Concepts/WS_C_UserArtifact");
+									if (userEntity == null) {
+										userEntity = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(userEntityExtId, false, "/WebStudio/Core/Concepts/WS_C_UserProject");
+									}
+								}
+							}
+						}
+					}
+					//Do not Remove it. Only soft delete it.
+					WS_RF_FlipSoftDeleteState(userEntity);
+					if (userEntity.softDelete) {
+						if (userEntity instanceof WS_C_UserProject) {
+							Log.log(LOGGER, "Info", "Deleted project [%s]", projectName);
+							
+							Log.log(LOGGER, "Debug", "Marking Project artifacts as Soft deleted via project deleted operation.");
+							WS_C_UserProject userProject = userEntity;
+							for (int i=0; i<userProject.userArtifacts@length; i++) {
+								userProject.userArtifacts[i].softDeleteViaProjectDelete = true;
+								Log.log(LOGGER, "Debug", "Marked Artifact [%s] as soft deleted [%s] via Project Delete Ops", userProject.userArtifacts[i].artifactPath, userProject.userArtifacts[i].softDeleteViaProjectDelete);
+							}
+							
+							// remove any depending dashboard/group artifacts
+							WS_RF_DeleteDashboardAndGroupArtifacts(userEntity, username);
+							
+							WS_RF_AddAuditTrailEntry(username, projectName, null, null, "DELETE", "Delete Successful");
+						} else if (userEntity instanceof WS_C_UserArtifact) {
+							WS_C_UserArtifact userArtifact = userEntity;
+							String userArtifactPath = userArtifact.artifactPath;
+							String userArtifactType = userArtifact.artifactType;
+							String userArtifactExtn = userArtifact.artifactFileExtn;
+							Log.log(LOGGER, "Info", "Deleted entity [%s] from project [%s]", userArtifactPath, projectName);
+							String[] allRevisionIds = Instance.PropertyArray.toArrayString(userArtifact.artifactRevisionIds);
+							WS_C_UserArtifactRevision latestRevision = null;
+							if (allRevisionIds@length == 0) {
+								if (WS_RF_IsManagedArtifactType(userArtifactType, "Delete")) {
+									Log.log(LOGGER, "Info", "No revisions found for artifact [%s] in project [%s]", userArtifactPath, projectName);
+									latestRevision = WS_RF_CreateDeleteFacilitatorsForArtifact(projectName, username, userArtifact, roles);
+								}
+							} else {
+								Log.log(LOGGER, "Info", "Revisions exist for this artifact, total revision [%s]", allRevisionIds@length);
+								String latestRevisionId = allRevisionIds[allRevisionIds@length - 1];
+								latestRevision = Instance.getByExtIdByUri(latestRevisionId, "/WebStudio/Core/Concepts/WS_C_UserArtifactRevision");
+								WS_C_AnyArtifactDetails contentsConcept = WS_RF_GetArtifactContentInstance(latestRevision.artifactContentsId, latestRevision.parentArtifactType);								
+								if (contentsConcept == null) {
+									contentsConcept = WS_RF_FetchArtifactContentsFactory(scsRootURL, username, projectName, userArtifactPath, userArtifactExtn, userArtifact@extId, roles);
+									latestRevision.artifactContentsId = contentsConcept@extId;
+								} else {
+									Log.log(LOGGER, "Debug", "Content already exists, no need for lookup");
+								}																		
+							}
+							if (WS_RF_IsManagedArtifactType(userArtifactType, "Delete")) {
+								WS_RF_PerformLifecycleStateOps(null, projectName, username, "Delete", userArtifact, latestRevision);
+							}
+							WS_RF_AddAuditTrailEntry(username, projectName, userArtifactPath, null, "DELETE", "Delete Successful");
+						}
+					} else {
+						Log.log(LOGGER, "Info", "Could not delete user entity [%s]", userEntity);
+						//TODO rollback entire operation.
+					}
+				}
+			}
+			responseMessage = "Artifacts deleted successfully";
+		}
+		if (artifactDeleteEvent.mapLockKey == null || artifactDeleteEvent.asyncContextId == null) {
+			return;
+		}
+		WS_C_ResponseData responseData = 
+			Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/WS_C_ResponseData");
+		Object asyncContext = Util.HashMap.getObject(artifactDeleteEvent.mapLockKey, artifactDeleteEvent.asyncContextId);
+		//Clear it
+		Util.HashMap.removeObject(artifactDeleteEvent.mapLockKey, artifactDeleteEvent.asyncContextId);
+		Util.HashMap.deleteMap(artifactDeleteEvent.mapLockKey);
+		String responseDSXML = WS_RF_CreateAndSerializeResponseDataSource(0, numberOfSCSEntities, errorCode, responseMessage, responseData, artifactDeleteEvent.contentType);
+		
+		Object servletResponse = HTTP.Servlet.getServletResponse(asyncContext);
+		
+		HTTP.Servlet.Response.setResponseHeader(servletResponse, "Content-type", "application/xml;charset=utf-8");
+		HTTP.Servlet.Response.setResponseContent(asyncContext, responseDSXML, true);	
+	}
+}

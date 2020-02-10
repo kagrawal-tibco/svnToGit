@@ -1,0 +1,82 @@
+/**
+ * @description Merged Diff in synchronize dialog between - User's base copy; user's modified copy; and server copy.
+ * previousContent - user's base copy
+ * currentContent - user's modified copy
+ * serverContent - server copy
+ */
+WebStudio.Core.Concepts.DataSources.Records.WS_C_ArtifactVersionDiffContentDataSourceRecord rulefunction WebStudio.Core.RuleFunctions.Actions.Lifecycle.History.WS_RF_GetMergeDiff {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String artifactPath;
+		String artifactExtn;
+		String projectName;
+		String username;
+		String[] roles;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.Lifecycle.Review.WS_RF_GetMergeDiff");
+		
+		String revisionIdParam = null;
+		WS_C_UserArtifactRevision serverArtifactRevision = null;
+		
+		WS_C_UserArtifact parentArtifact = WS_RF_IsUserArtifact(WS_RF_CreateUserArtifactExtId(null, artifactPath, projectName, username, null, null), artifactExtn);
+		if (parentArtifact != null && parentArtifact.artifactRevisionIds@length > 0) {
+			serverArtifactRevision = Instance.getByExtIdByUri(parentArtifact.artifactRevisionIds[parentArtifact.artifactRevisionIds@length-1], "/WebStudio/Core/Concepts/WS_C_UserArtifactRevision");
+		}
+		
+		String subscriptionId = WS_RF_GetSubscriptionId(username);
+		String masterArtifactExtId = WS_RF_CreateUserArtifactExtId(null, artifactPath, projectName, null, subscriptionId, null);
+		WS_C_MasterArtifact masterArtifact = Instance.getByExtIdByUri(masterArtifactExtId, "/WebStudio/Core/Concepts/Lifecycle/WS_C_MasterArtifact");
+		
+		Log.log(LOGGER, "Debug", "Fetching diff for diffMode 1.");
+		AMS_C_ArtifactCheckinHistory checkinHistory = masterArtifact.checkinHistory;
+		if (checkinHistory.checkinEntries@length > 0) {
+			AMS_C_ArtifactCheckinHistoryEntry checkinEntry = checkinHistory.checkinEntries[checkinHistory.checkinEntries@length - 1];
+			int lastApprovedRevisionId = WS_RF_GetLastApprovedArtifactRevisionId(checkinEntry.revisionId, artifactPath, true, subscriptionId);
+			if (lastApprovedRevisionId >= 0) {
+				revisionIdParam =  lastApprovedRevisionId + "";
+			}
+			if (revisionIdParam != null) {
+				serverArtifactRevision = WS_RF_GetLastApprovedArtifactVersion(Number.intValue(revisionIdParam, 10), artifactPath, projectName, true, subscriptionId);
+			}
+		}
+		if (serverArtifactRevision != null) {
+			WS_C_AnyArtifactDetails serverArtifactContentsConcept = WS_RF_GetArtifactContentInstance(serverArtifactRevision.artifactContentsId, serverArtifactRevision.parentArtifactType);
+			
+			WS_C_ArtifactVersionDiffContentDataSourceRecord artifactVersionDiffContentDSR = Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/Records/WS_C_ArtifactVersionDiffContentDataSourceRecord");
+			artifactVersionDiffContentDSR.artifactPath = artifactPath;
+			artifactVersionDiffContentDSR.artifactType = artifactExtn;
+			
+			WebStudio.Core.Concepts.DataSources.Records.WS_C_ArtifactVersionDiffContentDataSourceRecord userDiff = WS_RF_GetUserArtifactDiff(artifactPath, artifactExtn, projectName, username, true);
+			if (userDiff == null) {
+				WS_RF_GetArtifactContentsFromStore(username, roles, projectName, artifactPath, artifactExtn);
+				// trying once again
+				userDiff = WS_RF_GetUserArtifactDiff(artifactPath, artifactExtn, projectName, username, true);
+				if (userDiff == null) {
+					Log.log(LOGGER, "Debug", "Finally returning null post 2nd try !!");
+					return null;
+				}
+			}
+			
+			if (String.equals(artifactExtn, "ruletemplate") || String.equals(artifactExtn, "ruletemplateinstance")) {
+				Log.log(LOGGER, "Info", "Artifact Type Rule Template Instance, Extn[%s]", artifactExtn); 
+				
+				artifactVersionDiffContentDSR.serverContents = serverArtifactContentsConcept;
+				artifactVersionDiffContentDSR.currentVersionContents = userDiff.currentVersionContents;
+				artifactVersionDiffContentDSR.previousVersionContents = userDiff.previousVersionContents;
+							
+			} else if (String.equals(artifactExtn, "rulefunction") || String.equals(artifactExtn, "rulefunctionimpl")) {
+				serverArtifactContentsConcept = WebStudio.Core.RuleFunctions.Utils.DT.WS_RF_GetDecisionTableContentsForDiff(projectName, artifactPath, serverArtifactContentsConcept);
+				
+				artifactVersionDiffContentDSR.serverContents = serverArtifactContentsConcept;
+				artifactVersionDiffContentDSR.currentVersionContents = userDiff.currentVersionContents;
+				artifactVersionDiffContentDSR.previousVersionContents = userDiff.previousVersionContents;				
+			}
+									
+			return artifactVersionDiffContentDSR;
+		}
+		return null;
+	}
+}

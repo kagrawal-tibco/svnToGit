@@ -1,0 +1,48 @@
+/**
+ * @description 
+ * @author anpatil-T61
+ */
+rule Rules.onAccountStatusChange {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Events.AccountStatusChange accountStatusChange;
+	}
+	when {
+		
+	}
+	then {
+		System.debugOut("Received Events.AccountStatusChange[Id="+accountStatusChange.AccountId+",Balance="+accountStatusChange.AccountBalance+",Status="+accountStatusChange.AccountStatus+"]");
+		//create date values
+		DateTime now = DateTime.now();
+		DateTime today = DateTime.createTime(DateTime.getYear(now),DateTime.getMonth(now),DateTime.getDate(now),0,0,0,null);
+				
+		Dashboards.M_DailyCurrAccountsByStatus normalCurrMetric = null;
+		Dashboards.M_DailyCurrAccountsByStatus suspendedCurrMetric = null;
+		
+		if (accountStatusChange.AccountStatus == "Normal") {
+			//update daily current accounts metric by today/accountstatus
+			normalCurrMetric = Dashboards.M_DailyCurrAccountsByStatus.compute(today,"Normal",1,accountStatusChange.AccountId,accountStatusChange.AccountBalance,0);
+			suspendedCurrMetric = Dashboards.M_DailyCurrAccountsByStatus.compute(today,"Suspended",-1,accountStatusChange.AccountId,accountStatusChange.AccountBalance,0);
+		}
+		else if (accountStatusChange.AccountStatus == "Suspended") {
+			//update daily current accounts metric by today/accountstatus
+			normalCurrMetric = Dashboards.M_DailyCurrAccountsByStatus.compute(today,"Normal",-1,accountStatusChange.AccountId,accountStatusChange.AccountBalance,0);
+			suspendedCurrMetric = Dashboards.M_DailyCurrAccountsByStatus.compute(today,"Suspended",1,accountStatusChange.AccountId,accountStatusChange.AccountBalance,0);
+		}
+		
+		System.debugOut("computed Dashboards.M_CurrAccountsByStatus[AccntStatus="+normalCurrMetric.AccntStatus+",CurrentCount="+normalCurrMetric.CurrentCount+"]");
+		System.debugOut("computed Dashboards.M_CurrAccountsByStatus[AccntStatus="+suspendedCurrMetric.AccntStatus+",CurrentCount="+suspendedCurrMetric.CurrentCount+"]");
+		
+		//update daily max accounts metric by today/accountstatus		
+		Dashboards.M_DailyMaxAccountsByStatus normalMaxMetric = Dashboards.M_DailyMaxAccountsByStatus.compute(today,normalCurrMetric.AccntStatus,normalCurrMetric.CurrentCount,accountStatusChange.AccountId,accountStatusChange.AccountBalance,0);
+		System.debugOut("computed Dashboards.M_MaxAccountsByStatus[AccntStatus="+normalMaxMetric.AccntStatus+",MaxCount="+normalMaxMetric.MaxCount+"]");
+		
+		//update daily max accounts metric by today/accountstatus
+		Dashboards.M_DailyMaxAccountsByStatus suspendedMaxMetric = Dashboards.M_DailyMaxAccountsByStatus.compute(today,suspendedCurrMetric.AccntStatus,suspendedCurrMetric.CurrentCount,accountStatusChange.AccountId,accountStatusChange.AccountBalance,0);
+		System.debugOut("computed Dashboards.M_MaxAccountsByStatus[AccntStatus="+suspendedMaxMetric.AccntStatus+",MaxCount="+suspendedMaxMetric.MaxCount+"]");
+		
+	}
+}

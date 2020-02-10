@@ -1,0 +1,312 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>     Query Trades
+
+- TIBCO BusinessEvents&reg; Examples
+</title>
+<meta http-equiv="Content-type" content="text/html; charset=iso-8859-1" />
+<meta http-equiv="Content-Language" content="en-us" />
+<link rel="Shortcut Icon" href="../../_resources/icon.gif" type="image/gif" />
+<style type="text/css" media="all">@import "../../_resources/examples.css";</style>
+<script type="text/javascript" src="../../_resources/examples.js" /></script>
+<script type="text/javascript">
+function buildForms() {
+ var form;
+
+
+ SendEventForm.setServer("http://localhost:8130");
+
+
+ form = SendEventForm.get("startCalcLoanCQForm");
+ form.setDestinationPath("/EventsAndChannels/HttpChannel/QueryTriggerDest");
+ form.setEventPath("/EventsAndChannels/QueryTrigger");
+ form.addProperty("DATA", "loan");
+ form.build();
+
+ form = SendEventForm.get("stopCalcLoanCQForm");
+ form.setDestinationPath("/EventsAndChannels/HttpChannel/QueryStopperDest");
+ form.setEventPath("/EventsAndChannels/QueryStopper");
+ form.addProperty("DATA", "<Specify query unique name>");
+ form.build();
+
+ form = SendEventForm.get("calcAvgStockPriceSSForm");
+ form.setDestinationPath("/EventsAndChannels/HttpChannel/QueryTriggerDest");
+ form.setEventPath("/EventsAndChannels/QueryTrigger");
+ form.addProperty("DATA", "avg-stock-price");
+ form.build();
+
+ form = SendEventForm.get("startCalcSettledVsLatestCQForm");
+ form.setDestinationPath("/EventsAndChannels/HttpChannel/QueryTriggerDest");
+ form.setEventPath("/EventsAndChannels/QueryTrigger");
+ form.addProperty("DATA", "settled-vs-latest-tick");
+ form.build();
+
+ form = SendEventForm.get("stopCalcSettledVsLatestCQForm");
+ form.setDestinationPath("/EventsAndChannels/HttpChannel/QueryStopperDest");
+ form.setEventPath("/EventsAndChannels/QueryStopper");
+ form.addProperty("DATA", "<Specify query unique name>");
+ form.build();
+
+}
+</script>
+</head>
+<body onLoad="buildForms()">
+
+
+<h1>Query Trades</h1>
+
+<h2>Purpose of This Example</h2>
+
+<p>This example project demonstrates the use of continuous queries and snapshot queries on a cache cluster which contains StockTicks and Trades.</p>
+
+<p>The remainder of this document explains the key points about the example project, and shows you how to run it.</p>
+
+<h2>Project Description</h2>
+
+<h3>Concepts and Events</h3>
+
+<p>The project has two concepts, Trade and Securities. There is one event, StockTick.</p>
+
+<p>Trades are booked against a Counterparty, which in this example is just a name. Trades have a unique security ID, security, amount, counterparty and other properties. Securities have a unique security ID and other properties. Trades and Securities can be correlated using their security IDs.</p>
+
+<h3>Sample Data Generation</h3>
+
+<p>The project contains two agents. One is an inference agent, with rules to create sample Trades, Securities and StockTicks, channels and other entities to assist data generation. The second is a query agent. It does not contain any rules, but only channels and rule functions to execute queries. Both agents share the same ontology.</p>
+
+<h3>Inference Agent Triggers Data Generation Periodically</h3>
+
+<p>Timer events are used in the inference agent to trigger data generation periodically. These timer events are started when the inference agent starts.</p>
+
+<p>Five Securities - TIBX, VMW, JNJ, GOOG and MSFT are created when the first timer event fires. Over the next few minutes, 10 more securities are created - IDX.10, IDX.20.. IDX.100.</p>
+
+<p>Another timer event creates trades for these five securities periodically (at five-second intervals). This timer event, runs as long as the TIBCO BusinessEvents engine is running. When the trades are created, their settlement-status is "PARTIAL". There are five fixed counterparties - CP1, CP2..CP5 against which the Trades are booked, cyclically.</p>
+
+<p>Every 75 seconds, the first five Trades that were created in this 75 second cycle are settled by changing their settlement status to "FULLY_SETTLED".</p>
+
+<p>Similarly, StockTicks events are created every five seconds for the same set of symbols/securities described previously.</p>
+
+<h3>Query Agent has Three Queries</h3>
+
+<p>Three queries are written in three separate rule functions. The query agent receives QueryTrigger events from the channel's Query destination. The QueryTriggerHandler rule function receives these events and dispatches them to one of the three different rule functions based on the name specified in the trigger event.</p>
+
+<p>To avoid parsing the queries every time an event arrives, the three queries are created once when the query agent startups up, using a startup rule function (called Startup). When the agent stops, these queries are deleted in a shutdown rule function (called Shutdown).</p>
+
+<p>Trades, Securities and StockTicks each have an "alias" defined in their Extended Properties tabs to make them easier to use in the queries.</p>
+
+<p>The queries are as follows:</p>
+
+<h3>CalcAvgStockPriceSS Query</h3>
+
+<pre class="commands">
+select s.symbol, avg(s.price) theAvg, count(*) theCount
+from StockTick s
+where s.symbol = $symbol1 or s.symbol = $symbol2
+group by s.symbol
+order by theCount;
+</pre>
+
+<p>This is an example of a snapshot query that groups the stock ticks based on their symbols (<code>group by s.symbol</code>), calculates the average price (<code>theAvg</code>) and counts (<code>theCount</code>) the number of elements in each group. Finally, the query produces the symbol of the group along with the aggregates (<code>theAvg</code> and <code>theCount</code>) sorted in ascending order based on the group counts.</p>
+
+<p>The <code>where</code> clause specifies a filter on the stock symbol. The two symbols have been parameterized and so the values are not fixed until the query is run.</p>
+
+<p>The <code>Query.Statement</code> functions shown below are used to set the parameters before executing the query.</p>
+
+<pre class="commands">
+Query.Statement.open(queryName, statementName);
+Query.Statement.setVar(statementName, "symbol1", "TIBX");
+Query.Statement.setVar(statementName, "symbol2", "JNJ");
+</pre>
+
+<h3>CalcFullySettledVsTickCQ Query</h3>
+
+<pre class="commands">
+select tick.symbol, trade.counterpartyId, sum(trade.loanamtusd), avg(tick.price), count(*)
+from Trade trade, StockTick {policy: maintain last 1 sliding where symbol = "TIBX"} tick
+where trade.securityId = "TIBX"
+and trade.settlestatus = "FULLY_SETTLED"
+and trade.securityId = tick.symbol
+group by tick.symbol, trade.counterpartyId;
+</pre>
+
+<p>This query is an example of a continuous query, which once started will keep running and monitor changes until it is stopped. The query performs a join on Trades and StockTicks by matching the Trade's security id with the StockTick's symbol. In its most basic form, the query maintains a sum of the Loan amounts of all Trades per security id/symbol and counterparty, along with the average tick price for the same security id/symbol and counterparty group. It also maintains a count of the number of elements in the group.</p>
+
+<p>Additional conditions in the Where clause ensure that the Trades being considered by the query are all "TIBX" and are also fully settled(FULLY_SETTLED).</p>
+
+<p>The Sliding Window policy defined on StockTicks ensures that it always retains the most recent quote because the window size is 1. Also, the policy has a Where clause which ensures that the sliding window only keeps ticks whose symbols match "TIBX".</p>
+
+<p>Since this is a continuous query, the results are calculated and refreshed every time a new StockTick event occurs on when a Trade concept is asserted into the cluster/cache or when an existing Trade is modified.</p>
+
+<p>Events and concepts that are already present in the cache are not visible to a continuous query. The continuous query relies on change notifications sent to it by the cache cluster. If nothing changes, then it does not produce any output.</p>
+
+<p>The intention is to calculate the sum of all the settled TIBX trades that are available in the cache and to maintain the latest sum for as long as the query is running. To do this, the query has to be setup before execution to capture a snapshot of all those settled TIBX trades and then continuously look for changes and additions.</p>
+
+<p>This is not required for StockTicks because new ticks are generated every five seconds and only the latest value is required.</p>
+
+<p>The <code>Query.Statement</code> functions shown below are used to specify if a snapshot is required or not.</p>
+
+<pre class="commands">
+Query.Statement.open(queryName, statementName);
+//Trades need snapshot.
+Query.Statement.setSnapshotRequired(statementName, "trade", true);
+//StockTicks do not need snapshot.
+Query.Statement.setSnapshotRequired(statementName, "tick", false);
+</pre>
+
+<h3>CalculateLoanCQ Query</h3>
+
+<pre class="commands">
+select t.counterpartyId, sum(futureRF(t,s)), sum(settledRF(t,s))
+from Trade t, Securities s
+where t.securityId = s.securityId
+group by t.counterpartyId;
+</pre>
+
+<p>This is another continuous query which performs a streaming join between Securities and Trades on their security ids. It also maintains two sum aggregates over the values returned by custom rule functions - <code>futureRF</code> and <code>settledRF</code>.</p>
+
+<p>The query shows that custom logic can be plugged into the query execution process. The <code>futureRF</code> returns the trade's loan amount if the trade is partially settled, otherwise 0. The <code>settledRF</code> returns the trade's loan amount if the trade is fully settled.</p>
+
+<p>In this example project, the five securities are created when the Inference agent starts. If this query is started much later, then the five securities that were created will never be visible to the query because the query relies solely on change notifications. Even if new Trades are created, if the query is not running while the Securities it needs are being created or modified then the join cannot be performed (that is, with just Trades and no Securities).</p>
+
+<p>To overcome this situation, the query is configured to start with a snapshot of all Securities that exist in the cache/cluster.</p>
+
+<pre class="commands">
+Query.Statement.open(queryName, statementName);
+//Securities need snapshot.
+Query.Statement.setSnapshotRequired(statementName, "s", true);
+//Trades do not need snapshot.
+Query.Statement.setSnapshotRequired(statementName, "t", false);
+</pre>
+
+<h2>More Queries</h2>
+
+<p>Below is a small list of continuous queries that can be executed on the concepts and events.</p>
+
+<p>A simple continuous query that maintains the average of the stock prices, and displays the sorted results.</p>
+
+<pre class="commands">
+select s.symbol, avg(s.price) avgPrice
+from StockTick s
+group by s.symbol
+order by avgPrice;
+</pre>
+
+<p>A moving average of stock prices over the last 10 stock quotes, where the last 10 quotes are maintained per symbol. The query also maintains these numbers, sorted on the average price. Finally, the output is restricted to only the first three averages.</p>
+
+<pre class="commands">
+select {limit: first 3} s.symbol, avg(s.price) theAvg
+from StockTick {policy: maintain last 10 sliding by symbol} s
+group by s.symbol
+order by theAvg;
+</pre>
+
+<p>Alternatively, the average prices could also be calculated over quotes received in the last five minutes.</p>
+
+<pre class="commands">
+select s.symbol, avg(s.price) theAvg
+from StockTick {policy: maintain last 5 minutes where symbol = "TIBX" or symbol = "JNJ" by symbol} s
+group by s.symbol;
+</pre>
+
+<h2>How to Run the Example</h2>
+
+<p>Start two agents, one using the Inference processing unit and the other using the Query processing unit. Both the Query and Inference agents use the same cluster name so that they can communicate with each other. See <i>TIBCO BusinessEvents Administration</i> for details about cache cluster configuration.</p>
+<p>First open a command window and change to the following directory.
+<pre class="commands">
+cd BE_HOME/examples/event_stream_processing/QueryTrades/QueryTradesProject
+</pre>
+
+<h3>Start the Inference agent</h3>
+
+<pre class="commands">
+BE_HOME/bin/be-engine --propFile BE_HOME/bin/be-engine.tra -c Archives/InferenceAndQuery.cdd -u Inference Archives/QueryTrades.ear
+</pre>
+
+<h3>Start the Query agent.</h3>
+
+<pre class="commands">
+BE_HOME/bin/be-engine --propFile BE_HOME/bin/be-engine.tra -c Archives/InferenceAndQuery.cdd -u Query Archives/QueryTrades.ear
+</pre>
+
+<h3>Start the Query agent with BQL console.</h3>
+
+<p>The Query Agent can also be started in the "BQL console mode" where the BQL UI pops up from the agent. In this mode the channels, startup and shutdown functions are disabled for safety. Queries can be typed and executed directly from this UI. To enable this mode, uncomment the following line in the CDD file and restart the Query Agent. See BE_HOME/examples/event_stream_processing/bql for details.</p>
+
+<pre class="commands">
+&lt;cdd:property name="be.agent.query.console" value="tradesample.agent.query"/&gt;
+</pre>
+
+<p>When the Inference agent starts, the sample StockTicks, Trades and Securities are created continuously as described in earlier sections.</p>
+
+<p>By this time, the Query agent is ready to start processing queries. Queries can be triggered by sending an HTTP message to the agent. Monitor the console output of the Query agent to observe the agent's response to requests.</p>
+
+<p>When this message is sent to the running Query agent, monitor the agent's console to view the results. When the query starts, it also prints the unique name of the query instance that is to be executed. For continuous queries, note this name, because this name can be used later to stop the query remotely.</p>
+
+<p>In these examples, the query output is printed to the console. In a real-world situation, the results could be used to send messages to remote servers or perform any other useful operation.</p>
+
+<table>
+ <tr>
+  <th>
+   Calculate Average Stock Price Snapshot Query (CalcAvgStockPriceSS)
+  </th>
+ </tr>
+ <tr>
+  <td>
+   <form id="calcAvgStockPriceSSForm"></form>
+  </td>
+ </tr>
+ <tr>
+</table>
+
+<p></p>
+<p></p>
+
+<table>
+ <tr>
+  <th>
+   Calculate Loan Continuous Query (CalculateLoanCQ)
+  </th>
+ </tr>
+ <tr>
+  <td>
+   <form id="startCalcLoanCQForm"></form>
+  </td>
+ </tr>
+ <tr>
+  <td>
+   <form id="stopCalcLoanCQForm"></form>
+  </td>
+ </tr>
+</table>
+
+<p></p>
+<p></p>
+
+<table>
+ <tr>
+  <th>
+   Calculate FullySettled-Vs-Tick Continuous Query (CalcFullySettledVsTickCQ)
+  </th>
+ </tr>
+ <tr>
+  <td>
+   <form id="startCalcSettledVsLatestCQForm"></form>
+  </td>
+ </tr>
+ <tr>
+  <td>
+   <form id="stopCalcSettledVsLatestCQForm"></form>
+  </td>
+ </tr>
+</table>
+
+<p></p>
+
+<div class="footer">
+<p>TIBCO BusinessEvents&reg; 5.6<br />
+Copyright&copy; 2004-2019 TIBCO Software Inc. All rights reserved.</p>
+</div>
+</body>
+</html>

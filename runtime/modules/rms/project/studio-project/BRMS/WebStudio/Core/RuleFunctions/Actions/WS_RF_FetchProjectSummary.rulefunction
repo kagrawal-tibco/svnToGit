@@ -1,0 +1,75 @@
+/**
+ * @description 
+ */
+WebStudio.Core.Concepts.DataSources.WS_C_TemporaryReturnData rulefunction WebStudio.Core.RuleFunctions.Actions.WS_RF_FetchProjectSummary {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object servletRequest;
+		WebStudio.Security.Authn.Concepts.WS_C_LoggedInUser loggedInUser;
+		String projectName;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.WS_RF_FetchProjectSummary");
+		
+	    WS_C_ResponseData responseData = null;
+		int responseStatus = 0;
+		int recordCount = 0;
+		String errorCode = null;
+		String responseMessage = null;
+		
+		if (!WS_RF_CheckHTTPMethod(servletRequest, "GET")) {
+			responseStatus = -1;
+			recordCount = 0;
+			errorCode = "ERR_5101";
+			responseMessage = "Invalid HTTP Method, expect method is [GET].";
+		} else {
+			responseData = Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/WS_C_ResponseData");
+			
+			String subscriptionId = null;
+			if (loggedInUser.jwtToken != null) subscriptionId = loggedInUser.jwtToken.sbsc;
+			
+			String psummaryextId = WS_RF_CreateUserArtifactExtId("SUMMARY", null, projectName, null, subscriptionId, null);
+			
+		    WebStudio.Core.Concepts.WS_C_ProjectSummary projectSummary = Instance.getByExtIdByUri(psummaryextId, "/WebStudio/Core/Concepts/WS_C_ProjectSummary");
+		    if (projectSummary == null) {
+			   responseMessage = "Project not checked out yet";
+		    } else {
+		    	   int totalArtifacts = 0;
+		       
+		       String userProjectExtId = WS_RF_CreateUserArtifactExtId(null, null, projectName, loggedInUser.username, null, null);
+			   WebStudio.Core.Concepts.WS_C_UserProject userProject = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(userProjectExtId, true, "/WebStudio/Core/Concepts/WS_C_UserProject");
+			   if (userProject != null)	totalArtifacts = userProject.userArtifacts@length;
+
+		       String scsRootURL = WS_RF_GetSCSRootURL(projectName, subscriptionId);
+		       Log.log(LOGGER, "Debug", "SCS root URL - %s", scsRootURL);
+		       
+		       WS_C_ProjectSummaryDataSourceRecord projectSummaryDataSourceRecord = null;
+		       WS_C_AbstractDataSourceRecord projectSummaryDataSourceRecordNew = Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/Records/WS_C_ProjectSummaryDataSourceRecord");
+		       projectSummaryDataSourceRecord = projectSummaryDataSourceRecordNew;
+			   projectSummaryDataSourceRecord.name = projectSummary.name;
+			   projectSummaryDataSourceRecord.description = projectSummary.description;
+			   projectSummaryDataSourceRecord.artifactsCount = totalArtifacts;
+			   projectSummaryDataSourceRecord.size = WS.Common.getProjectSize(scsRootURL+"/"+projectName);
+			   projectSummaryDataSourceRecord.lastCommitTime = projectSummary.lastCommitTime;
+			   projectSummaryDataSourceRecord.lastCommitBy = projectSummary.lastCommitBy;
+			   projectSummaryDataSourceRecord.lastCheckoutTime = projectSummary.lastCheckoutTime;
+			   projectSummaryDataSourceRecord.lastCheckoutBy = projectSummary.lastCheckoutBy;
+			   projectSummaryDataSourceRecord.lastValidateTime = projectSummary.lastValidateTime;
+			   projectSummaryDataSourceRecord.lastValidateBy = projectSummary.lastValidateBy;
+			   projectSummaryDataSourceRecord.lastSyncTime = projectSummary.lastSyncTime;
+			   projectSummaryDataSourceRecord.lastSyncBy = projectSummary.lastSyncBy;
+			   projectSummaryDataSourceRecord.lastGenerateDeployableTime = projectSummary.lastGenerateDeployableTime;
+			   projectSummaryDataSourceRecord.lastGenerateDeployableBy = projectSummary.lastGenerateDeployableBy;
+			   projectSummaryDataSourceRecord.totalCommits = projectSummary.totalCommits;
+			   projectSummaryDataSourceRecord.totalApprovals = projectSummary.totalApprovals;
+			   projectSummaryDataSourceRecord.totalRejections = projectSummary.totalRejections;
+			   projectSummaryDataSourceRecord.totalDeployments = projectSummary.totalDeployments;
+			   
+			   Instance.PropertyArray.appendContainedConcept(responseData.record, projectSummaryDataSourceRecordNew, 1L);	
+		    }
+		}
+		return WS_RF_CreateTemporaryReturnData(responseStatus, recordCount, null, responseMessage, responseData);
+	}
+}

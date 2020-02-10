@@ -1,0 +1,125 @@
+/**
+ * @description 
+ * @author huabin-lt
+ */
+rule Rules.PrintMyspaceTupleAndPutANewTupleToOutSpace {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Events.MyspaceDefEvent myspaceDefEvent;
+	}
+	when {
+		
+	}
+	then {
+		System.debugOut("Print Tuple And Put Another Tuple Rule: MyspaceDefEvent ID: " + myspaceDefEvent.eid);
+		System.debugOut("Print Tuple And Put Another Tuple Rule: MyspaceDefEvent VALUE: " + myspaceDefEvent.value);
+		System.debugOut("Print Tuple And Put Another Tuple Rule: MyspaceDefEvent CONSUMPTION MODE: " + myspaceDefEvent.consumption_mode);
+		System.debugOut("Print Tuple And Put Another Tuple Rule: MyspaceDefEvent BROWSER TYPE: " + myspaceDefEvent.browser_type);
+
+		String asChannel = System.getGlobalVariableAsString("aschannel", "/Channels/aschannel");
+		String myspaceEntryBrowser = System.getGlobalVariableAsString("aschannel.myspace.entrybrowser", "/Channels/aschannel/MyspaceWithEntryBrowserLeechType");
+		String outspaceOutbound = System.getGlobalVariableAsString("aschannel.outspace.outbound", "/Channels/aschannel/OutspaceOutBound");
+
+		// query
+		Object[] result = AS.query(myspaceEntryBrowser, null, "get", "snapshot", "all", 0, 1000, "eid < 500");
+		if (result != null) {
+			for (int i=0; i<result@length; i++) {
+				MyspaceDefEvent temp = result[i];
+				System.debugOut("Print Tuple And Put Another Tuple Rule: ResultX id is "+temp.eid);
+				System.debugOut("Print Tuple And Put Another Tuple Rule: ResultX value is "+temp.value);
+			}
+		}
+
+		// take snapshot
+		result = AS.takeSnapshot(outspaceOutbound, null, "get", "all", 0, 1000, "eid <= 10500");
+		if (result != null) {
+			for (int i=0; i<result@length; i++) {
+				Object[] tuple = result[i];
+				for (int j=0; j<tuple@length; j++) {
+					Object[] keyValue = tuple[j];
+					System.debugOut("Print Tuple And Put Another Tuple Rule: ResultY "+i+","+j+" is "+keyValue[0]);
+					System.debugOut("Print Tuple And Put Another Tuple Rule: ResultY "+i+","+j+" is "+keyValue[1]);
+				}
+			}
+		}
+
+		// begin transaction
+		AS.beginTransaction(asChannel);
+
+		// put tuple
+		Events.OutspaceDefEvent newOutputEvent = Events.OutspaceDefEvent.OutspaceDefEvent(
+			"newOutputEvent+20000",
+			null,
+			myspaceDefEvent.eid+20000,
+			"New Output Event TEXT PAYLOAD " + myspaceDefEvent.value,
+			DateTime.now(),
+			null, null, null);
+		AS.putEvent(outspaceOutbound, newOutputEvent);
+
+		// put tuples
+		if (myspaceDefEvent.eid != 501) {
+			// put tuples
+			Events.OutspaceDefEvent newOutputEvent2 = Events.OutspaceDefEvent.OutspaceDefEvent(
+				"newOutputEvent+30000",
+				null,
+				myspaceDefEvent.eid+30000,
+				"New Output Event TEXT PAYLOAD +30000" + myspaceDefEvent.value,
+				DateTime.now(),
+				null, null, null);
+			Events.OutspaceDefEvent newOutputEvent3 = Events.OutspaceDefEvent.OutspaceDefEvent(
+				"newOutputEvent+40000",
+				null,
+				myspaceDefEvent.eid+40000,
+				"New Output Event TEXT PAYLOAD +40000" + myspaceDefEvent.value,
+				DateTime.now(),
+				null, null, null);
+			Events.OutspaceDefEvent[] newOutputEvents = {newOutputEvent2, newOutputEvent3};
+			AS.putEvents(outspaceOutbound, newOutputEvents);
+			System.debugOut("Print Tuple And Put Another Tuple Rule: Put two tuples into outspace with putTuples() function.");
+		}
+
+		// get tuple
+		MyspaceDefEvent asEventKey = Events.MyspaceDefEvent.MyspaceDefEvent("asEventKey", null, 499, null, null, null, null);
+		MyspaceDefEvent tupleEvent = AS.getEvent(myspaceEntryBrowser, asEventKey);
+
+		if (tupleEvent == null) {
+			// commit transaction
+			AS.commitTransaction(asChannel);
+		} else {
+			System.debugOut("Print Tuple And Put Another Tuple Rule: 499 MyspaceDefEvent ID: " + tupleEvent.eid);
+			System.debugOut("Print Tuple And Put Another Tuple Rule: 499 MyspaceDefEvent VALUE: " + tupleEvent.value);
+			System.debugOut("Print Tuple And Put Another Tuple Rule: 499 MyspaceDefEvent CONSUMPTION MODE: " + tupleEvent.consumption_mode);
+			System.debugOut("Print Tuple And Put Another Tuple Rule: 499 MyspaceDefEvent BROWSER TYPE: " + tupleEvent.browser_type);
+
+			// take tuple
+			tupleEvent = AS.takeEvent(myspaceEntryBrowser, asEventKey);
+			System.debugOut("Take Tuple before rolling back transaction");
+			boolean lt450 = false;
+			// take snapshot
+			result = AS.takeSnapshot(myspaceEntryBrowser, null, "get", "all", 0, 1000, "id <= 450");
+			if (result != null && result@length > 0) {
+				lt450 = true;
+			}
+			if (lt450) {
+				// rollback transaction
+				AS.rollbackTransaction(asChannel);
+			} else {
+				// commit transaction
+				AS.commitTransaction(asChannel);
+			}
+		}
+		Events.OutspaceDefEvent outEvent = Events.OutspaceDefEvent.OutspaceDefEvent(
+			"outputEvent",
+			null,
+			myspaceDefEvent.eid+10000,
+			"TEXT PAYLOAD " + myspaceDefEvent.value,
+			DateTime.now(),
+			null, null, null);
+		Event.sendEvent(outEvent);
+		System.debugOut("END OF FUNCTION PRINT MYSPACE TUPPLE AND PUT A NEW TUPLE TO OUTSPACE!");
+
+	}
+}

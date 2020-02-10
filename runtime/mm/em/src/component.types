@@ -1,0 +1,128 @@
+# Syntax
+# componenttype=type,dataretrievaltype,serieses,threshold,dataretrievaltypespecificproperty[can be ':' separated]
+# where
+#   type can be 'Table' or 'Chart'
+#   dataretrievaltype can be simulated or JMX or query or computed or HAWK
+#   series can be either 'datadriven' or ':' separated list of names
+#   threshold numeric value for threshold (e.g. -1, 10 or 600000)
+#   dataretrievaltypespecificproperty can be JMX specific information or actual query
+#       For JMX - it is the name of event which is to be used for communicating with BE
+#       For Query - it is a '@@' separated string where
+#                   First element can be the actual query or "reference"
+#                   if first element is a query then
+#                       Second element should be listener name. The listener name will be prefixed with /Monitoring/RuleFunctions/cqueries/
+#                       Any remaining elements are treated as sorting spec and should be "," separated where first element is index of the field in the query and the second element indicates ascending (true) or descending (false)
+#                   if first element is a reference then
+#                       Second element should point to the componenttype
+
+
+# Cluster Stats Component [available for cluster]
+cluster/cstats=Table,computed,cstatsseries,-1,/Monitoring/Concepts/ClusterHealthOverView
+
+# System Alerts Component [available for cluster]
+cluster/sysalerts=Table,computed,sysalertsseries,25,/Monitoring/Events/cmetrics/AlertEvent
+
+# CPU Stats Component [available for machine]
+cluster/machine/cpustats=Chart,HAWK,CPU Stats,600000,/Monitoring/Events/rmetrics/perf/CPUUsageMetricEvent
+
+# Memory Comsumption Component [availabe for machine]
+cluster/machine/memory=Chart,HAWK,Available,600000,/Monitoring/Events/rmetrics/perf/MemoryMetricEvent
+
+# SWAP Comsumption Component [availabe for machine]
+cluster/machine/swap=Chart,HAWK,Used,600000,/Monitoring/Events/rmetrics/perf/SwapMetricEvent
+
+# IO Stats Component [available for machine]
+cluster/machine/iostats=Table,simulated,iostatsseries,5,IO stat @@1000
+
+# Network Stats Component [available for machine]
+cluster/machine/nwstats=Table,simulated,nwstatsseries,5,Network stat @@1000
+
+# Virtual Machine Stats Component [available for machine]
+cluster/machine/vmstats=Table,simulated,vmstatsseries,5,Virtual Machine stat @@1000
+
+# CPU Stats Component [available for process]
+cluster/machine/process/cpustats=Chart,JMX,CPU Stats,600000,/Monitoring/Events/rmetrics/perf/CPUUsageMetricEvent
+
+# Memory Comsumption Component [availabe for process]
+cluster/machine/process/memory=Chart,JMX,Max:Committed:Used,600000,/Monitoring/Events/rmetrics/perf/MemoryMetricEvent
+
+# Running Threads Component [availabe for process, agent]
+cluster/machine/process/rthreads=Chart,JMX,Running Threads,600000,/Monitoring/Events/rmetrics/perf/ThreadMetricEvent
+
+# Deadlocked Threads Component [available for process, agent]
+cluster/machine/process/dthreads=Chart,JMX,Deadlocked Threads,600000,/Monitoring/Events/rmetrics/perf/ThreadMetricEvent
+
+# Garbage Collection Component [available for process, agent]
+cluster/machine/process/gc=Table,JMX,gcseries,-1,/Monitoring/Events/rmetrics/perf/GarbageCollectionMetricEvent
+
+# Best Thread Pools By Usage/Capacity Component [available for agent]
+cluster/machine/process/*/besttpool=Chart,query,thread pool,10,select {limit: first 10} service.hostName, service.metricName, max(service.maxThreads) as maxThreads, min(service.activeThreads) as activeThreads from /Monitoring/Events/bemetrics/ThreadAndJobPoolMetricEvent {policy: maintain last 1 minutes; accept: new} as service group by service.hostName, service.metricName order by activeThreads, service.metricName;@@BestOrWorstThreadOrJobPoolQueryListener@@3,true@@1,true
+
+# Worst Thread Pools By Usage/Capacity Component [available for agent]
+cluster/machine/process/*/worsttpool=Chart,query,thread pool,10,select {limit: first 10} service.hostName, service.metricName, max(service.maxThreads) as maxThreads, min(service.activeThreads) as activeThreads from /Monitoring/Events/bemetrics/ThreadAndJobPoolMetricEvent {policy: maintain last 1 minutes; accept: new} as service group by service.hostName, service.metricName order by activeThreads desc, service.metricName;@@BestOrWorstThreadOrJobPoolQueryListener@@3,false@@1,true
+
+# Thread Pools Usage Component [available for agent]
+cluster/machine/process/*/tpool=Chart,query,datadriven,600000,select service.hostName, service.metricName, service.timeMillis, service.maxThreads, service.activeThreads, service.queueCapacity, service.queueSize from /Monitoring/Events/bemetrics/ThreadAndJobPoolMetricEvent {policy: maintain last 10 tumbling by service.hostName; accept: new} as service order by service.hostName, service.timeMillis;
+
+# Best Job Queues By Usage/Capacity Component [available for agent]
+cluster/machine/process/*/bestjqueue=Chart,query,Job Queue,10,select {limit: first 10} service.hostName, service.metricName, max(service.queueCapacity) as queueCapacity, min(service.queueSize) as queueSize from /Monitoring/Events/bemetrics/ThreadAndJobPoolMetricEvent {policy: maintain last 1 minutes; accept: new} as service group by service.hostName, service.metricName order by queueSize, service.metricName;@@BestOrWorstThreadOrJobPoolQueryListener@@3,true@@1,true
+
+# Worst Job Queues By Usage/Capacity Component [available for agent]
+cluster/machine/process/*/worstjqueue=Chart,query,Job Queue,10,select {limit: first 10} service.hostName, service.metricName, max(service.queueCapacity) as queueCapacity, min(service.queueSize) as queueSize from /Monitoring/Events/bemetrics/ThreadAndJobPoolMetricEvent {policy: maintain last 1 minutes; accept: new} as service group by service.hostName, service.metricName order by queueSize desc, service.metricName;@@BestOrWorstThreadOrJobPoolQueryListener@@3,false@@1,true
+
+# Job Queues Usage Component [available for agent]
+cluster/machine/process/*/jqueue=Chart,query,datadriven,600000,reference@@cluster/machine/process/*/tpool
+
+# Rete Locks Stats Component [available for inference agent]
+cluster/machine/process/inference/locks=Chart,query,locks,600000,select service.hostName, service.metricName, service.startTimeMillis, service.endTimeMillis, service.cnt, service.newOrUpdate from /Monitoring/Events/bemetrics/ConcurrentLockMetricEvent {policy: maintain last 10 tumbling by service.hostName; accept: new} as service order by service.metricName, service.startTimeMillis;
+
+# Run To Completion Stats Component [available for inference agent]
+cluster/machine/process/inference/rtcstats=Chart,query,Throughput:Latency,600000,select service.hostName, service.metricName, service.startTimeMillis, service.endTimeMillis, service.cnt, service.avgTxnMillis , service.newOrUpdate from /Monitoring/Events/bemetrics/PostRTCMetricEvent {policy: maintain last 10 tumbling by service.hostName; accept: new} as service order by service.metricName, service.startTimeMillis;
+
+# Worst Rules By Execution Time Component [available for inference agent]
+cluster/machine/process/inference/worstrules=Chart,query,Rules,10,select {limit: first 10} service.hostName, service.metricName, max(service.cnt) as cnt, max(service.avgTxnMillis) as avgTxnMillis from /Monitoring/Events/bemetrics/RuleOrRuleFuncMetricEvent {policy: maintain last 1 minutes by service.hostName; accept: new} as service group by service.hostName, service.metricName order by avgTxnMillis desc, service.metricName;@@BestOrWorstRulePerfListener@@3,false@@1,true
+
+# Best Rules By Execution Time Component [available for inference agent]
+cluster/machine/process/inference/bestrules=Chart,query,Rules,10,select {limit: first 10} service.hostName, service.metricName, max(service.cnt) as cnt, max(service.avgTxnMillis) as avgTxnMillis from /Monitoring/Events/bemetrics/RuleOrRuleFuncMetricEvent {policy: maintain last 1 minutes by service.hostName; accept: new} as service group by service.hostName, service.metricName order by avgTxnMillis, service.metricName;@@BestOrWorstRulePerfListener@@3,true@@1,true
+
+# Preprocessor Stats Component [available for inference agent]
+cluster/machine/process/inference/ppstats=Table,simulated,ppstatsseries,5,Pre Processor stat @@1000
+
+# Channel Stats Component [available for inference agent]
+cluster/machine/process/inference/chstats=Table,simulated,chstatsseries,5,Channel stat @@1000
+
+# Entity Count Component [available for query agent]
+cluster/machine/process/query/entitystats=Chart,JMX,Local Cache Element Count:Incoming Entity Count,600000,/Monitoring/Events/rmetrics/query/QueryAgentMetricEvent
+
+# Local Cache Element Count Component [available for query agent]
+#cluster/machine/process/query/lcachestats=Chart,JMX,Local Cache Element Count,600000,/Monitoring/Events/rmetrics/perf/query/QueryAgentMetricEvent
+
+# Incoming Entity Count Component [available for query agent]
+#cluster/machine/process/query/inentitystat=Chart,JMX,Incoming Entity Count,600000,/Monitoring/Events/rmetrics/perf/query/QueryAgentMetricEvent
+
+# Snapshot Query Execution Stats Component [available for query agent]
+cluster/machine/process/query/ssqestats=Table,JMX,Snapshot Query Execution,10,/Monitoring/Events/rmetrics/query/QueryExecutionMetricEvent@@pendingEntityCount,true
+
+# Continuous Query Execution Stats Component [available for query agent]
+cluster/machine/process/query/cqestats=Table,JMX,Continuous Query Execution,10,/Monitoring/Events/rmetrics/query/QueryExecutionMetricEvent@@pendingEntityCount,true
+
+# Best Put Times Component [available for cache agent]
+cluster/machine/process/cache/bestptimes=Chart,simulated,bestptimesseries,600000,<time>@@1000
+
+# Worst Put Times Component [available for cache agent]
+cluster/machine/process/cache/worstptimes=Chart,simulated,worstptimesseries,600000,<time>@@1000
+
+# Best Read Times Component [available for cache agent]
+cluster/machine/process/cache/bestrtimes=Chart,simulated,bestprtimesseries,600000,<time>@@1000
+
+# Worst Read Times Component [available for cache agent]
+cluster/machine/process/cache/worstrtimes=Chart,simulated,worstrtimesseries,600000,<time>@@1000
+
+# Best Hit/Miss Ratio Component [available for cache agent]
+cluster/machine/process/cache/besthitratio=Chart,simulated,worsthitratioseries,600000,<time>@@1000
+
+# Worst Hit/Miss Ratio Component [available for cache agent]
+cluster/machine/process/cache/worsthitratio=Chart,simulated,besthitratioseries,600000,<time>@@1000
+
+# Cached Object Stats Component [available for MCacheObjects]
+cluster/mcacheobjects/mcacheobjectstats=Table,CACHE,Cache Object Stats,-1,/Monitoring/Events/rmetrics/cache/CacheObjectMetricEvent

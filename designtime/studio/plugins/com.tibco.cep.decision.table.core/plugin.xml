@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.2"?>
+<plugin>
+    <extension
+          point="com.tibco.cep.studio.core.decisionTableCodeGenerator">
+       <decisionTable
+             generator="com.tibco.cep.decision.table.codegen.DTCodeGenerator">
+       </decisionTable>
+    </extension>
+      <extension point="org.eclipse.emf.edit.itemProviderAdapterFactories">
+    <factory 
+       uri = "http:///com/tibco/cep/decisionproject/model/decisionproject.ecore" 
+       class = "com.tibco.cep.decisionprojectmodel.provider.DecisionProjectModelItemProviderAdapterFactory" 
+       supportedTypes = 
+         "org.eclipse.emf.edit.provider.IEditingDomainItemProvider
+          org.eclipse.emf.edit.provider.IStructuredItemContentProvider
+          org.eclipse.emf.edit.provider.ITreeItemContentProvider
+          org.eclipse.emf.edit.provider.IItemLabelProvider
+          org.eclipse.emf.edit.provider.IItemPropertySource" />
+  </extension>
+    
+  <extension point="org.eclipse.emf.edit.itemProviderAdapterFactories">
+    <factory 
+       uri = "http:///com/tibco/cep/decisionproject/model/ontology.ecore" 
+       class = "com.tibco.cep.decisionproject.ontology.provider.OntologyItemProviderAdapterFactory" 
+       supportedTypes = 
+         "org.eclipse.emf.edit.provider.IEditingDomainItemProvider
+          org.eclipse.emf.edit.provider.IStructuredItemContentProvider
+          org.eclipse.emf.edit.provider.ITreeItemContentProvider
+          org.eclipse.emf.edit.provider.IItemLabelProvider
+          org.eclipse.emf.edit.provider.IItemPropertySource" />
+  </extension>
+    
+  <extension point="org.eclipse.emf.edit.itemProviderAdapterFactories">
+    <factory 
+       uri = "http:///com/tibco/cep/decision/table/model/DomainModel.ecore" 
+       class = "com.tibco.cep.decision.table.model.domainmodel.provider.DomainModelItemProviderAdapterFactory" 
+       supportedTypes = 
+         "org.eclipse.emf.edit.provider.IEditingDomainItemProvider
+          org.eclipse.emf.edit.provider.IStructuredItemContentProvider
+          org.eclipse.emf.edit.provider.ITreeItemContentProvider
+          org.eclipse.emf.edit.provider.IItemLabelProvider
+          org.eclipse.emf.edit.provider.IItemPropertySource" />
+  </extension>
+  <extension
+        point="com.tibco.cep.studio.cli">
+     <commandLineInterpreter
+           class="com.tibco.cep.decision.cli.GenerateDecisionTableClassCLI">
+     </commandLineInterpreter>
+  </extension>
+   <extension
+         point="com.tibco.cep.studio.cli">
+      <commandLineInterpreter
+            class="com.tibco.cep.decision.cli.ImportExcelCLI">
+      </commandLineInterpreter>
+   </extension>
+   <extension
+         point="com.tibco.cep.studio.cli">
+      <commandLineInterpreter
+            class="com.tibco.cep.decision.cli.ValidateDecisionTableCLI">
+      </commandLineInterpreter>
+   </extension> 
+   <extension
+         point="com.tibco.cep.studio.cli">
+      <commandLineInterpreter
+            class="com.tibco.cep.decision.cli.ConvertCSV2ExcelCLI">
+      </commandLineInterpreter>
+   </extension>   
+  <extension
+         point="com.tibco.cep.rt.addonContributor">
+      <addon
+            class="com.tibco.cep.decision.table.addon.DecisionManagerAddOnLoader">
+      </addon>
+   </extension>
+  <extension
+        point="com.tibco.cep.studio.core.studioProjectMigrator">
+     <studioProjectMigrator
+           studioProjectMigrator="com.tibco.cep.decision.table.migration.DecisionTablePropertiesMigrator">
+     </studioProjectMigrator>
+  </extension>
+  <extension
+        point="com.tibco.cep.studio.cli">
+     <commandLineInterpreter
+           class="com.tibco.cep.decision.cli.WebStudioValidateDecisionTableCLI">
+     </commandLineInterpreter>
+  </extension>
+  <extension
+        point="com.tibco.cep.studio.cli">
+     <commandLineInterpreter
+           class="com.tibco.cep.decision.cli.ExportDecisionTableToExcelCLI">
+     </commandLineInterpreter>
+  </extension>
+ </plugin>

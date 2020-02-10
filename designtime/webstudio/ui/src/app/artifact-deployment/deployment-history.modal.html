@@ -1,0 +1,69 @@
+<div class='row'>
+  <div class='col-sm-12'>
+    <div class='card panel-sm page-lg' >
+      <div class='card-header'>
+        <ng-container i18n>{{i18n('Deployment History of Artifact ')}}</ng-container>{{currentEntry ? currentEntry.deploymentDescriptor.amsDecisionTablePath : ''}}
+      </div>
+      <div class='card-body'>
+        <div class="row">
+          <div class="col-sm-4 page-col-sm scroll-y divider-right">
+            <div *ngIf='!entries'>
+              <span class='fa fa-refresh fa-spin'></span><ng-container i18n>{{i18n(' Loading ')}}</ng-container>
+            </div>
+            <div *ngIf='entries && entries.length === 0' class='card' i18n>
+              {{i18n('No deployment Record')}}
+              </div>
+            <tabset
+              [vertical]='true'
+              [type]='"pills"'
+            >
+              <tab
+                class='custom-tab callout'
+                *ngFor='let entry of entries'   
+                [active]='isActive(entry)'
+                (selectTab)='onSelect(entry)'
+                [customClass]='getLabelStyle(entry)'
+              >
+                <ng-template 
+                  tabHeading
+                  >
+                  <div 
+                    class='clickable' 
+                  >
+                    <div>
+                      <i [class]='getIndicator(entry)'></i><small><span> {{getTimestamp(entry)}}</span></small>
+                    </div>
+                    <div>
+                      <small>{{getEntityBrief(entry)}}</small>
+                    </div>
+                    <div>
+                      <small 
+                        class='opague'
+                        [class.gray]='! isActive(entry)'
+                      >@ {{getTargetBrief(entry)}}</small>
+                    </div>
+                  </div>
+                </ng-template>
+              </tab>
+            </tabset>
+          </div>
+          <div class="col-sm-8" *ngIf='showDetails | async'>
+            <deployment-info
+              [input]='currentEntry'
+              [artifactId]='context.id'
+            ></deployment-info>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class='row left-pad right-pad bottom-pad top-pad'>
+  <div class='col-sm-6 text-left'>
+    <button 
+      type="button"
+      class='btn btn-outline-primary btn-sm btn-narrow'
+      (click)='onClose()'
+      i18n>{{i18n('Close')}}</button>
+  </div>
+</div>

@@ -1,0 +1,21 @@
+ <div class="modal fade box-sizing" id="newRulePanel">
+      <div class="modal-header box-sizing">
+       	 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">x</button>
+		 <span class="lead" ng-if="$parent.isRuleCreate"><h4>Create Rule</h4></span>
+		 <span class="lead" ng-if="!$parent.isRuleCreate"><h4>Edit Rule : {{$parent.ruleObj.name.split('$')[2]}}</h4></span>
+	  </div>
+	   
+	  <div class="modal-body box-sizing">
+	  	  <ul style="padding-left: 30px;padding-top: 13px;">
+	  	  	  <li class="ruleListItem pull-left" ng-repeat = "step in $parent.ruleCreationwizardSteps">
+	  	  	  		<div class="row">
+	  	  	  			<div class="pull-left" ng-class="step.isSelected ? 'ruleSelectedLabelConnector' : 'ruleLabelConnector'" ></div>
+	  	  	  			<div ng-style="!$parent.isRuleCreate && {'cursor': 'pointer'}" ng-click="!$parent.isRuleCreate?navigateToStep(step.id):null" class="pull-left" ng-class="{'ruleSelectedStep' : step.isSelected && isStepCorrect(step.id) , 'ruleSelectedErrorStep':step.isSelected && !isStepCorrect(step.id),'ruleNormalStep':!step.isSelected}">{{step.id}}</div>
+	  	  	  			<div class="pull-left" ng-class="ruleCreationwizardSteps[step.id].isSelected || (step.isSelected && $last)? 'ruleSelectedLabelConnector' : 'ruleLabelConnector'"></div>
+	  	  	  		</div>
+	  	  	  		<p>{{step.name}}</p>
+	  	  	  </li>
+	  	  </ul>
+	  	  <div ng-include="$parent.ruleCreationwizardSteps[step].template"></div>
+	  </div>
+ </div>

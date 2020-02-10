@@ -1,0 +1,33 @@
+/**
+ * @description 
+ */
+Approval.Scorecards.AMS_C_LoggedInUserEntry rulefunction WebStudio.Security.Authn.RuleFunctions.WS_RF_CheckIfUserLoggedIn {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Approval.Scorecards.AMS_C_LoggedInUserEntry[] loggedInUsers;
+		String newUserExtId;
+		String apiToken;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Security.Authn.RuleFunctions.WS_RF_CheckIfUserLoggedIn");
+		
+		AMS_C_LoggedInUserEntry loggedInUserEntry = null;
+		for (int i=0; i<loggedInUsers@length; i++) {
+			loggedInUserEntry = loggedInUsers[i];
+			
+			if (loggedInUserEntry != null) {
+				if (newUserExtId != null && !String.equals(newUserExtId, "") && String.equals(loggedInUserEntry.userExtId, newUserExtId)) {
+					return loggedInUserEntry;
+				}
+				
+				if (apiToken != null && !String.equals(apiToken, "") && String.equals(loggedInUserEntry.apiToken, apiToken)) {
+					return loggedInUserEntry;
+				}
+			}
+		}
+		
+		return null;
+	}
+}

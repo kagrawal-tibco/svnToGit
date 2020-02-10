@@ -1,0 +1,24 @@
+/**
+ * @description 
+ */
+boolean rulefunction WebStudio.Core.RuleFunctions.Controller.WS_RF_CheckHTTPMethod {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object servletRequest;
+		String expectedHttpMethod;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Controller.WS_RF_CheckHTTPMethod");
+
+		boolean isValidHTTPMethod = false;
+				
+		String currentHTTPMethod = HTTP.Servlet.Request.getMethod(servletRequest);
+		if (String.equals(currentHTTPMethod, expectedHttpMethod)) {
+			isValidHTTPMethod = true;
+		}
+		
+		return isValidHTTPMethod;
+	}
+}

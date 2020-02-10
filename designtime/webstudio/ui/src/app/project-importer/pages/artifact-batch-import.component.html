@@ -1,0 +1,21 @@
+<div class='card panel-sm page'>
+  <div class='card-header'>
+    {{title}}
+  </div>
+  <div class='card-body'
+	  (DragStart)="noop()" (dragenter)="noop()" (dragover)="noop()" (drop)="noop()"
+  >
+    <artifact-uploader
+      [(result)]='result'
+      [multiple]='true'
+    ></artifact-uploader>
+  <div 
+    *ngIf ='!valid'
+    style="bottom: 13px;opacity: .85;margin-right:30px"
+    class='alert alert-warning'
+  >
+    <span class='monospace'><ng-container i18n>{{i18n('Some of the artifacts being imported are invalid. ')}}</ng-container>{{message}}
+    	<ng-container i18n>{{i18n('Please remove the invalid artifacts or click \'Next\' to make additional changes')}}</ng-container></span>
+  </div>
+  </div>
+</div>

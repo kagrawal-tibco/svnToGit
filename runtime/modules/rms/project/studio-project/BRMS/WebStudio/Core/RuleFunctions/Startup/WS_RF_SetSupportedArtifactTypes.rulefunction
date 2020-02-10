@@ -1,0 +1,48 @@
+/**
+ * @description 
+ */
+void rulefunction WebStudio.Core.RuleFunctions.Startup.WS_RF_SetSupportedArtifactTypes {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		
+	}
+	body {		
+		WS_C_SupportedArtifactTypesConfig supportedArtifactTypes = Instance.getByExtIdByUri("WS_SUPP_ARTIFACTS_CFG", "/WebStudio/Core/Concepts/WS_C_SupportedArtifactTypesConfig");
+		
+		if (supportedArtifactTypes == null) {
+			//Supported Artifact types
+			supportedArtifactTypes = 
+				Instance.createInstance("xslt://{{/WebStudio/Core/Concepts/WS_C_SupportedArtifactTypesConfig}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"1.0\" exclude-result-prefixes=\"xsl xsd\">\n    <xsl:output method=\"xml\"/>\n    <xsl:template match=\"/\">\n        <createObject>\n            <object>\n                <xsl:attribute name=\"extId\">\n                    <xsl:value-of select=\"&quot;WS_SUPP_ARTIFACTS_CFG&quot;\"/>\n                </xsl:attribute>\n            </object>\n        </createObject>\n    </xsl:template>\n</xsl:stylesheet>");
+	
+			Instance.PropertyArray.appendString(supportedArtifactTypes.artifactTypes, "CONCEPT", 1L);
+			Instance.PropertyArray.appendString(supportedArtifactTypes.artifactTypes, "EVENT", 1L);
+			Instance.PropertyArray.appendString(supportedArtifactTypes.artifactTypes, "TIME", 1L);
+			Instance.PropertyArray.appendString(supportedArtifactTypes.artifactTypes, "RULE", 1L);
+			Instance.PropertyArray.appendString(supportedArtifactTypes.artifactTypes, "RULEFUNCTION", 1L);
+			Instance.PropertyArray.appendString(supportedArtifactTypes.artifactTypes, "RULEFUNCTIONIMPL", 1L);
+			Instance.PropertyArray.appendString(supportedArtifactTypes.artifactTypes, "RULETEMPLATE", 1L);
+			Instance.PropertyArray.appendString(supportedArtifactTypes.artifactTypes, "SCORECARD", 1L);
+			Instance.PropertyArray.appendString(supportedArtifactTypes.artifactTypes, "CHANNEL", 1L);
+			Instance.PropertyArray.appendString(supportedArtifactTypes.artifactTypes, "DOMAIN", 1L);
+			Instance.PropertyArray.appendString(supportedArtifactTypes.artifactTypes, "RULETEMPLATEINSTANCE", 1L);
+			Instance.PropertyArray.appendString(supportedArtifactTypes.artifactTypes, "RULETEMPLATEVIEW", 1L);
+			Instance.PropertyArray.appendString(supportedArtifactTypes.artifactTypes, "METRIC", 1L);
+			Instance.PropertyArray.appendString(supportedArtifactTypes.artifactTypes, "BEPROCESS", 1L);
+			//Shared resources
+			Instance.PropertyArray.appendString(supportedArtifactTypes.artifactTypes, "RVTRANSPORT", 1L);
+			Instance.PropertyArray.appendString(supportedArtifactTypes.artifactTypes, "SHAREDHTTP", 1L);
+			Instance.PropertyArray.appendString(supportedArtifactTypes.artifactTypes, "SHAREDJDBC", 1L);
+			Instance.PropertyArray.appendString(supportedArtifactTypes.artifactTypes, "SHAREDJNDICONFIG", 1L);
+			Instance.PropertyArray.appendString(supportedArtifactTypes.artifactTypes, "ID", 1L);
+			Instance.PropertyArray.appendString(supportedArtifactTypes.artifactTypes, "SHAREDJMSCON", 1L);
+			Instance.PropertyArray.appendString(supportedArtifactTypes.artifactTypes, "SHAREDASCON", 1L);
+			Instance.PropertyArray.appendString(supportedArtifactTypes.artifactTypes, "SUBSTVAR", 1L);
+			Instance.PropertyArray.appendString(supportedArtifactTypes.artifactTypes, "WSDL", 1L);
+			Instance.PropertyArray.appendString(supportedArtifactTypes.artifactTypes, "XSD", 1L);
+			Instance.PropertyArray.appendString(supportedArtifactTypes.artifactTypes, "SHAREDSB", 1L);
+			Instance.PropertyArray.appendString(supportedArtifactTypes.artifactTypes, "CDD", 1L);		
+		}
+	}
+}

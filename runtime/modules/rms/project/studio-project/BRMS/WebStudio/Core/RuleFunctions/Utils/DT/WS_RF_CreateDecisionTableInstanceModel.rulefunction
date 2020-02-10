@@ -1,0 +1,80 @@
+/**
+ * @description 
+ */
+WebStudio.Core.Concepts.Decision.Pagination.WS_C_DecisionTable rulefunction WebStudio.Core.RuleFunctions.Utils.DT.WS_RF_CreateDecisionTableInstanceModel {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String projectName;
+		String userName;		
+		WebStudio.Core.Concepts.Decision.Pagination.WS_C_DecisionTable baseDecisionTableInstanceModel;
+		WebStudio.Core.Concepts.Decision.Pagination.WS_C_DecisionTablePageSaveDataItem saveDataItem;
+	}
+	body {
+		
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.DT.WS_RF_CreateDecisionTableInstanceModel");
+
+		WS_C_DecisionTable decisionTableArtifact = Instance.newTransientInstance("/WebStudio/Core/Concepts/Decision/Pagination/WS_C_DecisionTable");
+		decisionTableArtifact.name = baseDecisionTableInstanceModel.name;
+		decisionTableArtifact.folder = baseDecisionTableInstanceModel.folder; 
+		decisionTableArtifact.implementsPath = baseDecisionTableInstanceModel.implementsPath;
+		WS.Common.setExtId(decisionTableArtifact, "DT_" + WS.Common.generateUUID());
+																		
+		WS_C_TableMetadata saveMetadata = saveDataItem.metadata;
+		if (saveMetadata != null) {
+			Instance.PropertyAtom.setContainedConcept(decisionTableArtifact.metadata, saveMetadata, 1L);
+			Log.log(LOGGER, "Debug", "Updated Table Metadata");
+		} else {
+			WS_C_TableMetadata metadata = Instance.newTransientInstance("/WebStudio/Core/Concepts/Decision/Pagination/WS_C_TableMetadata");
+			WS_C_TableMetadata prevMetadata = Instance.PropertyAtom.getContainedConcept(baseDecisionTableInstanceModel.metadata, 1L);
+			WS_C_MetadataProperty[] prevMetadataprops = Instance.PropertyArray.toArrayContainedConcept(prevMetadata.property);
+			for (int i = 0; i < prevMetadataprops@length; i++) {
+				WS_C_MetadataProperty property = Instance.newTransientInstance("/WebStudio/Core/Concepts/Decision/Pagination/WS_C_MetadataProperty");
+				property.name = prevMetadataprops[i].name;
+				property.type = prevMetadataprops[i].type;
+				property.value = prevMetadataprops[i].value;
+				Instance.PropertyArray.appendContainedConcept(metadata.property, property, 1L);
+			}
+			Instance.PropertyAtom.setContainedConcept(decisionTableArtifact.metadata, metadata, 1L);
+			Log.log(LOGGER, "Debug", "Copied Table Metadata of existing version.");						
+		}	
+				
+		WS_C_DecisionTableArguments arguments = Instance.newTransientInstance("/WebStudio/Core/Concepts/Decision/Pagination/WS_C_DecisionTableArguments");
+		WS_C_DecisionTableArguments prevArguments = Instance.PropertyAtom.getContainedConcept(baseDecisionTableInstanceModel.arguments, 1L); 
+		WS_C_DecisionTableArgument[] argumentArray = Instance.PropertyArray.toArrayContainedConcept(prevArguments.argument);
+		for (int i = 0; i < argumentArray@length; i++) {
+			WS_C_DecisionTableArgument argument = Instance.newTransientInstance("/WebStudio/Core/Concepts/Decision/Pagination/WS_C_DecisionTableArgument");
+			argument.argumentAlias = argumentArray[i].argumentAlias;
+			argument.direction = argumentArray[i].direction;
+			argument.path = argumentArray[i].path;
+			argument.resourceType = argumentArray[i].resourceType;
+			argument.isArray = argumentArray[i].isArray;
+	 		Instance.PropertyArray.appendContainedConcept(arguments.argument, argument, 1L);
+		}
+		Instance.PropertyAtom.setContainedConcept(decisionTableArtifact.arguments, arguments, 1L);
+		Log.log(LOGGER, "Debug", "Copied Table Arguments of existing version.");
+
+		WebStudio.Core.Concepts.Decision.Pagination.WS_C_TableRuleSet prevDecisionTableRuleSet = Instance.PropertyAtom.getContainedConcept(baseDecisionTableInstanceModel.decisionTable, 1L);
+
+		WS_C_TableColumns saveDecisionTableColumns = saveDataItem.decisionTableColumns;
+		WS_C_TablePage saveDecisionTablePage = saveDataItem.decisionTablePage;		
+
+		WebStudio.Core.Concepts.Decision.Pagination.WS_C_TableRuleSet decisionTableRuleSet =
+										WS_RF_CreateTableInstanceConcept(projectName, userName, prevDecisionTableRuleSet, arguments, saveDecisionTableColumns, saveDecisionTablePage);
+		Instance.PropertyAtom.setContainedConcept(decisionTableArtifact.decisionTable, decisionTableRuleSet, 1L);  
+
+		WebStudio.Core.Concepts.Decision.Pagination.WS_C_TableRuleSet prevExceptionTableRuleSet = Instance.PropertyAtom.getConceptReference(baseDecisionTableInstanceModel.exceptionTable, 1L);
+
+		WS_C_TableColumns saveExceptionTableColumns = saveDataItem.exceptionTableColumns;
+		WS_C_TablePage saveExceptionTablePage = saveDataItem.exceptionTablePage;		
+
+		WebStudio.Core.Concepts.Decision.Pagination.WS_C_TableRuleSet exceptionTableRuleSet = 		
+										WS_RF_CreateTableInstanceConcept(projectName, userName, prevExceptionTableRuleSet, arguments, saveExceptionTableColumns, saveExceptionTablePage);
+		Instance.PropertyAtom.setConceptReference(decisionTableArtifact.exceptionTable, exceptionTableRuleSet, 1L);
+		//Refs, so need to be explicitly asserted.
+		WS.Common.assertInstance(exceptionTableRuleSet, false);
+				
+		return decisionTableArtifact;
+	}
+}

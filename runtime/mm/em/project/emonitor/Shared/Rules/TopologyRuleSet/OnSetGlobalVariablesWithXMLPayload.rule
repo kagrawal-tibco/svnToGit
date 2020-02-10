@@ -1,0 +1,51 @@
+/**
+ * @description 
+ * @author HLOURO-TEST-PC
+ */
+rule Shared.Rules.TopologyRuleSet.OnSetGlobalVariablesWithXMLPayload {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		
+		Shared.Events.topology.SetGlobalVariablesWithXMLPayload setgvxmlp;
+	}
+	when {
+		
+	}
+	then {
+		String family = "OnSetGlobalVariablesEvent";
+		String token=null;
+		String monitorableid=null;
+		String newgvxml=null;
+		
+		if (setgvxmlp@payload == null) {
+			Shared.RuleFunctions.log(family,"WARNING","Received HTTP request with NULL event payload");
+		} else {
+			Shared.RuleFunctions.log(family,"DEBUG","Received HTTP request with event payload: " + setgvxmlp@payload);
+			
+			token = XPath.evalAsString("xpath://<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xpath>\n    <expr>$setgvxmlp/payload/xsd2:request/@token</expr>\n    <namespaces>\n        <namespace URI=\"http://www.w3.org/1999/XSL/Transform\" pfx=\"xsl\"/>\n        <namespace URI=\"http://www.example.org/SetGVSchema\" pfx=\"xsd2\"/>\n        <namespace URI=\"http://www.w3.org/2001/XMLSchema\" pfx=\"xsd\"/>\n    </namespaces>\n    <variables>\n        <variable>setgvxmlp</variable>\n    </variables>\n</xpath>");
+			monitorableid = XPath.evalAsString("xpath://<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xpath>\n    <expr>$setgvxmlp/payload/xsd2:request/@monitorableid</expr>\n    <namespaces>\n        <namespace URI=\"http://www.w3.org/1999/XSL/Transform\" pfx=\"xsl\"/>\n        <namespace URI=\"http://www.example.org/SetGVSchema\" pfx=\"xsd2\"/>\n        <namespace URI=\"http://www.w3.org/2001/XMLSchema\" pfx=\"xsd\"/>\n    </namespaces>\n    <variables>\n        <variable>setgvxmlp</variable>\n    </variables>\n</xpath>");
+			
+			newgvxml = XPath.evalAsString("xpath://<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xpath>\n    <expr>tib:render-xml($setgvxmlp/payload/xsd2:request/xsd2:payload/xsd2:Machine , true())</expr>\n    <namespaces>\n        <namespace URI=\"http://www.w3.org/1999/XSL/Transform\" pfx=\"xsl\"/>\n        <namespace URI=\"http://www.example.org/SetGVSchema\" pfx=\"xsd2\"/>\n        <namespace URI=\"http://www.w3.org/2001/XMLSchema\" pfx=\"xsd\"/>\n        <namespace URI=\"http://www.tibco.com/bw/xslt/custom-functions\" pfx=\"tib\"/>\n    </namespaces>\n    <variables>\n        <variable>setgvxmlp</variable>\n    </variables>\n</xpath>");
+			//remove prefix
+			newgvxml = String.replaceAll(newgvxml, "ns0:", "");
+			//remove namespace
+			newgvxml = String.replaceFirst(newgvxml, "xmlns.*?>", ">");
+		}
+		
+		Shared.RuleFunctions.log(family,"DEBUG","Creating event 'SetGlobalVariables' with the following properties: ");
+		Shared.RuleFunctions.log(family,"DEBUG","      token= " + token);
+		Shared.RuleFunctions.log(family,"DEBUG","      monitorableid= " + monitorableid);
+		Shared.RuleFunctions.log(family,"DEBUG","      newgvxml= " + newgvxml);
+		
+		Shared.Events.topology.SetGlobalVariables setGvEv = Shared.Events.topology.SetGlobalVariables.SetGlobalVariables(null/*extId String */, 
+											null/*payload String */,token/*token String */,
+											monitorableid/*monitorableid String */,newgvxml/*newgvxml String */);
+		
+		Shared.RuleFunctions.log(family,"DEBUG","Asserting event 'SetGlobalVariables'");
+		
+		Event.assertEvent(setGvEv); 
+	}
+}

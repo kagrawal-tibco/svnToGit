@@ -1,0 +1,21 @@
+/**
+ * @description
+ * @author anpatil-dt
+ */
+rule Rules.onGDP {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Events.E_GDP gdp;
+	}
+	when {
+
+	}
+	then {
+		System.debugOut("Received Events.E_GDP[country="+gdp.Country+",GDP="+gdp.GDP+"]");
+		Dashboards.Metrics.M_CountryGDP countryGDPMetric = Dashboards.Metrics.M_CountryGDP.compute(gdp.Country, gdp.GDP, gdp.GDP, gdp.GDP);
+		System.debugOut("Computed Dashboards.Metrics.M_CountryGDP[country="+countryGDPMetric.Country+",gdp="+countryGDPMetric.GDP+",maxgdp="+countryGDPMetric.MaxGDP+",stdgdp="+countryGDPMetric.StdGDP+"]");
+	}
+}

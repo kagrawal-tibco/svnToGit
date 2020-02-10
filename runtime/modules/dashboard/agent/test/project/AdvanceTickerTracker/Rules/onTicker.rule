@@ -1,0 +1,37 @@
+/**
+ * @description
+ * @author anpatil-T61
+ */
+rule Rules.onTicker {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Events.Ticker ticker;
+	}
+	when {
+
+	}
+	then {
+		System.debugOut("Received TickerEvent[ticker="+ticker.ticker+",price="+ticker.price+",volume="+ticker.volume+"]");
+		//compute the M_Ticker metric
+		Dashboards.M_TickerTracker tickerTracker = Dashboards.M_TickerTracker.compute(ticker.ticker,ticker.price,ticker.volume);
+		System.debugOut("Computed Dashboards.M_TickerTracker[ticker="+tickerTracker.Ticker+",price="+tickerTracker.Price+",volume="+tickerTracker.Volume+"]");
+		//create the Con_Test_2 child concept
+		Concepts.Con_Test_2 childForConTest1 = Concepts.Con_Test_2.Con_Test_2(String.valueOfDouble(Math.random()),null,-1,-1,-1,true,null,"ContainedChildForConTest1");
+		Concepts.Con_Test_2 childForConTest2 = Concepts.Con_Test_2.Con_Test_2(String.valueOfDouble(Math.random()),null,-1,-1,-1,false,null,"ContainedChildForConTest2");
+		//create the Con_Test_3 child
+		Concepts.Con_Test_3 childForConTest = Concepts.Con_Test_3.Con_Test_3(String.valueOfDouble(Math.random()),null,-1,-1,-1,false,null,"RefChildForConTest1/2 And Con_Test_Diff");
+		//create the Con_Test Concept
+		Object str_array = String[]{"foo"};
+		Concepts.Con_Test ConTest1 = Concepts.Con_Test.Con_Test(String.valueOfDouble(Math.random()),null,-1,-1,-1,true,null,childForConTest1,childForConTest,"ConTest1",str_array,"foo");
+		Concepts.Con_Test ConTest2 = Concepts.Con_Test.Con_Test(String.valueOfDouble(Math.random()),null,-1,-1,-1,false,null,childForConTest2,childForConTest,"ConTest2",null,null);
+		//create the Con_Test_Diff Concept
+		Concepts.Con_Test_Diff.Con_Test_Diff(String.valueOfDouble(Math.random()),ticker.ticker,childForConTest,"ConTestDiff");
+
+		tickerTracker = Dashboards.M_TickerTracker.compute("abc123_@##$%abc",ticker.price,ticker.volume);
+		System.debugOut("Computed Dashboards.M_TickerTracker[ticker="+tickerTracker.Ticker+",price="+tickerTracker.Price+",volume="+tickerTracker.Volume+"]");
+
+	}
+}

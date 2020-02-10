@@ -1,0 +1,84 @@
+/**
+ * @description 
+ */
+void rulefunction Monitoring.RuleFunctions.cqueries.BestOrWorstRulePerfListener {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String	resultName;
+		boolean	isBatchEnd;
+		boolean	hasEnded;
+		Object	row;
+		Object	closure;
+	}
+	body {
+		if (isBatchEnd) {
+		    String configMapId = closure;
+		    String cType = Util.HashMap.getObject(configMapId,"ctype");
+		    String[] mergedListIDs = processBatch(configMapId);
+		    for (int i = 0 ; i < mergedListIDs@length ; i = i + 1){
+		        String mergedListID = mergedListIDs[i];
+		        //mergedListID is of the form ctype::hostname::merged
+		        String hostName = String.split(mergedListID,"::")[1];
+		        int finalCnt = BEMMUtil.LinkedList.size(mergedListID);
+		        Shared.RuleFunctions.log("BestOrWorstRulePerfListener","DEBUG","["+cType+"]::Found "+mergedListID+" with "+finalCnt+" elements and host name as "+hostName);
+		        
+		        String categories = null;
+		        String cntList = null;
+		        String avgList = null;
+		        String name = null;
+		        for (int j = 0 ; j < finalCnt ; j = j + 1){
+		            Object[] data = BEMMUtil.LinkedList.get(mergedListID,j);
+		            if(data == null) continue;
+
+		            name = data[1] + ":"+ cType;
+		            
+		            if (categories == null) {
+		            	categories = data[1];
+		            }
+		            else {
+			            categories = categories + ";" + data[1];
+		            }
+		            		            
+		            long cnt = data[2];
+		            if(cntList == null) cntList = String.valueOfInt(cnt);
+		            else cntList = cntList + ";" + String.valueOfInt(cnt);
+		            
+		            double average = data[3];
+		            if(avgList == null) avgList = String.valueOfDouble(average);
+		            else avgList = avgList + ";" + String.valueOfDouble(average);		            
+		        }
+		        Monitoring.Events.bemetrics.AbstractIndexableBEMetricEvent event =  Monitoring.Events.bemetrics.RuleOrRuleFuncGroupEvent.RuleOrRuleFuncGroupEvent(
+		                        null,null,0,true,true,finalCnt,"",hostName,name,categories,cntList,avgList);
+		        Event.sendEvent(event);
+		        BEMMUtil.LinkedList.deleteList(mergedListID);
+		    }
+		    return;
+		} else if (hasEnded) {
+		    return;
+		} else {
+		    String configMapId = closure;
+		    String cType = Util.HashMap.getObject(configMapId,"ctype");
+		    //will create the master cType host list if needed
+		    BEMMUtil.LinkedList.createList(cType);
+		    Object[] columns = row;
+		    if(columns == null) return;
+		    //get host fqname
+		    String host = columns[0];
+		    //host are maintained per cType
+		    String hostWithCTypeId = cType + "::" + host;
+		    if (BEMMUtil.LinkedList.contains(cType,hostWithCTypeId) == false){
+		        //create host-data list
+		        BEMMUtil.LinkedList.createList(hostWithCTypeId);
+		        //add the new host list to the master cType host list
+		        BEMMUtil.LinkedList.add(cType,BEMMUtil.LinkedList.size(cType),hostWithCTypeId);
+		    }
+		    int newIdx = BEMMUtil.LinkedList.size(hostWithCTypeId);
+		    //get metric name
+		   String name = columns[1] + ":"+ cType;
+		   Shared.RuleFunctions.log("BestOrWorstRulePerfListener","DEBUG","["+cType+"]::["+hostWithCTypeId+"]::Adding ["+BEMM.util.join(columns,",")+"]");
+		   BEMMUtil.LinkedList.add(hostWithCTypeId,newIdx,columns);
+		}
+	}
+}

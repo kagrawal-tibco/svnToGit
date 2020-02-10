@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0"
+    xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" name="prrmodel"
+    nsURI="http:///com/tibco/cep/decision/table/model/PRR.ecore" nsPrefix="ProductionRule">
+  <eClassifiers xsi:type="ecore:EClass" name="ProductionRuleSet" eSuperTypes="#//RuleSet">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="operationalMode" eType="ecore:EDataType platform:/plugin/org.eclipse.emf.ecore/model/Ecore.ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="ruleVariable" upperBound="-1"
+        eType="#//RuleVariable" containment="true"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="rule" upperBound="-1" eType="#//ProductionRule"
+        containment="true"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="RuleVariable" eSuperTypes="platform:/plugin/org.eclipse.uml2.uml/model/UML.ecore#//TypedElement">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="initialExpression" eType="ecore:EClass platform:/plugin/org.eclipse.uml2.uml/model/UML.ecore#//OpaqueExpression"
+        containment="true"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="ProductionRule" eSuperTypes="#//Rule">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="condition" ordered="false"
+        lowerBound="1" upperBound="-1" eType="#//RuleCondition" containment="true"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="action" lowerBound="1"
+        upperBound="-1" eType="#//RuleAction" containment="true"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="ruleVariables" lowerBound="1"
+        upperBound="-1" eType="#//RuleVariable" containment="true"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="priority" eType="ecore:EDataType platform:/plugin/org.eclipse.emf.ecore/model/Ecore.ecore#//EString"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="RuleCondition">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="conditionExpression" eType="ecore:EClass platform:/plugin/org.eclipse.uml2.uml/model/UML.ecore#//OpaqueExpression"
+        containment="true"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="RuleAction">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="actionExpression" eType="ecore:EClass platform:/plugin/org.eclipse.uml2.uml/model/UML.ecore#//OpaqueExpression"
+        containment="true"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="RuleSet" eSuperTypes="platform:/plugin/org.eclipse.uml2.uml/model/UML.ecore#//Behavior"/>
+  <eClassifiers xsi:type="ecore:EClass" name="Rule" eSuperTypes="platform:/plugin/org.eclipse.uml2.uml/model/UML.ecore#//NamedElement"/>
+  <eClassifiers xsi:type="ecore:EClass" name="Variable" eSuperTypes="platform:/plugin/org.eclipse.uml2.uml/model/UML.ecore#//TypedElement"/>
+</ecore:EPackage>

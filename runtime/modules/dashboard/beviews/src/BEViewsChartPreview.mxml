@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Application 
+	xmlns:mx="http://www.adobe.com/2006/mxml"
+	layout="absolute"
+	xmlns:ns1="bridge.*"
+	width="100%"
+	height="100%"
+	paddingTop="0"
+	paddingLeft="0"
+	paddingRight="0"
+	paddingBottom="0"
+	backgroundColor="#FFFFFF"
+	creationComplete="init()"
+>
+	<mx:Script>
+		<![CDATA[
+			import mx.controls.Text;
+			import mx.controls.Alert;
+			
+			import com.tibco.be.views.user.components.chart.BEVChartComponent;
+			import com.tibco.be.views.core.ui.dashboard.UnknownComponent;
+			import com.tibco.be.views.core.ui.dashboard.BEVComponent;
+			import com.tibco.be.views.core.ui.dashboard.BEVComponentFactory;
+			
+			private static const DEBUG:Boolean = false;
+			
+			private var _component:BEVComponent;			
+			private var _configXML:XML;
+			private var _dataXML:XML;
+			private var _completeXML:XML;
+			
+			private function init():void{
+				//if(DEBUG){ setChartConfigAndData(testing.ChartPreviewTestData.COMPLETE_XML); }
+			}
+			
+			public function setChartConfigAndData(configAndDataXMLStr:String):void{
+				try{
+					_completeXML = new XML(configAndDataXMLStr);
+					extractConfigFromComplete();
+					extractDataFromComplete();
+					buildAndDisplayComponent();
+				} 
+				catch(error:Error){
+					removeAllChildren();
+					trace("ERROR: Failed setting conifg and data - \n" + error.message);
+				}
+			}
+			
+			public function setChartConfig(configXMLStr:String):void{
+				try{
+					if(DEBUG){ addMessage(configXMLStr);  return; }
+					_configXML = new XML(configXMLStr);
+					buildAndDisplayComponent();
+					_completeXML = null;
+				}
+				catch(error:Error){
+					removeAllChildren();
+					trace("ERROR: Failed setting conifg - \n" + error.message);
+				}
+			}
+			
+			public function updateChartData(dataXMLStr:String):void{
+				try{
+					if(DEBUG){ addMessage(dataXML);  return; }
+					var dataXML:XML = new XML(dataXMLStr);
+					if(_dataXML == null){
+						_component.componentData = dataXML;
+					}
+					else{
+						_component.updateData(dataXML);	
+					}
+					_dataXML = dataXML;
+					_completeXML = null;
+				}
+				catch(error:Error){
+					removeAllChildren();
+					trace("ERROR: Failed updating data - \n" + error.message);
+				}
+			}
+			
+			private function addMessage(message:String):void{
+				var msg:Text = new Text();
+				msg.text = message;
+				msg.setStyle("borderStyle", "solid");
+				addChild(msg);
+			}
+			
+			/**
+			 * Removes children of visualizationdata whose templatetype is "data"
+			*/
+			private function extractConfigFromComplete():void{
+				if(_completeXML == null){ return; }
+				_configXML = new XML(_completeXML);
+				if(_completeXML.visualizationdata == undefined || _completeXML.visualizationdata.length() == 0 || _completeXML.visualizationdata.datarow == undefined){
+					return;
+				}
+				var dataRows:XMLList = _configXML.visualizationdata.datarow.(@templatetype == "data");
+				for(var i:int=0; i < dataRows.length(); i++){
+					delete dataRows[i--];
+				}
+			}
+			
+			/**
+			 * Creates a visualizationdata node whose children consist of the "data" templatetype
+			 * nodes from the completeXML.
+			*/
+			private function extractDataFromComplete():void{
+				if(_completeXML == null){ return; }
+				if(_completeXML.visualizationdata == undefined || _completeXML.visualizationdata.length() == 0){
+					_dataXML = new XML();
+					return;
+				}
+				_dataXML = new XML(_completeXML.visualizationdata[0]);
+				var headerRows:XMLList = _dataXML.datarow.(@templatetype == "header");
+				for(var i:int=0; i < headerRows.length(); i++){
+					delete headerRows[i--];
+				}
+			}
+			
+			private function buildAndDisplayComponent():void {
+	        	try{
+		        	//clear previous component
+		    		removeAllChildren();
+		        	
+		        	//build new component
+					_component = BEVComponentFactory.instance.getComponent(
+						new String(_configXML.@componentid),		//id
+						new String(_configXML.@componentname),		//name
+						new String(_configXML.@componenttype),		//title
+						new String(_configXML.@componenttype),		//type
+						new Rectangle(0,0,1,1)			//layout constraints
+					) as BEVComponent;
+					if(_component == null || _component is UnknownComponent){
+						trace(
+							"ERROR: Could not build component!\n" +
+							"\tID: " + _configXML.@componentid +
+							"\n\tName: " + _configXML.@componentname +
+							"\n\tType: " + _configXML.@componenttype
+						);
+					}	
+					if(_component is BEVChartComponent){
+						(_component as BEVChartComponent).initProperties();
+					}
+					_component.x = 0; 
+					_component.y = 0;
+					_component.percentWidth = 100;
+					_component.percentHeight = 100;
+					_component.componentConfig = _configXML;
+					if(_dataXML != null) _component.componentData = _dataXML;
+					
+					addChild(_component);
+	        	}
+	        	catch(error:Error){
+	        		//Alert.show(error.message, "ERROR");
+	        		trace(error.getStackTrace());
+	        	}
+			}
+			
+		]]>
+	</mx:Script>
+	<ns1:FABridge bridgeName="chartPreviewAJAXBridge"/>
+</mx:Application>

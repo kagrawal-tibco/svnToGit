@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<ruleset icon="" name="RuleSet" description="" guid="1192148011940-1128144989" bindings="" namespace="" folder="/">
+    <lastModified/>
+    <hiddenProperties/>
+    <rules>
+        <rule icon="" name="PersonEventGenRule" description="" guid="1192214991693-2043304569" bindings="" namespace="" isAFunction="false" isAConditionFunction="false" compilationStatus="-1">
+            <lastModified>2007-10-12T12:13:49.807-07:00</lastModified>
+            <hiddenProperties/>
+            <priority>5</priority>
+            <testInterval>-1</testInterval>
+            <startTime>-1</startTime>
+            <doesRequeue>false</doesRequeue>
+            <maxRules>1</maxRules>
+            <fwdChain>true</fwdChain>
+            <bwdChain>false</bwdChain>
+            <declarations>
+                <declaration identifier="timerloopevent" entity="/TimerLoopEvent">
+                    <domain>
+                        <entries/>
+                    </domain>
+                </declaration>
+            </declarations>
+            <condition/>
+            <action>double d = Math.random();
+d = d * 10;
+int i = d;
+
+String[] lastNames = {"Smurf", "Flintstone", "Simpson"};
+String[] firstNames = {"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"};
+
+int lastNamePos = i % lastNames@length;
+int firstNamePos = i % firstNames@length;
+String fn = firstNames[firstNamePos] + firstNames[firstNamePos] + firstNames[firstNamePos] + "_" + i;
+int age = (d * 100) % 75;
+
+SimpleEvent e = PersonEvent.PersonEvent("","", fn, lastNames[lastNamePos], age);
+Event.assertEvent(e);
+</action>
+            <requeueVars/>
+            <template/>
+            <author/>
+        </rule>
+        <rule icon="" name="PersonEventListener" description="" guid="1192148017888-1976597064" bindings="" namespace="" isAFunction="false" isAConditionFunction="false" compilationStatus="-1">
+            <lastModified>2007-10-11T17:33:40.403-07:00</lastModified>
+            <hiddenProperties/>
+            <priority>5</priority>
+            <testInterval>-1</testInterval>
+            <startTime>-1</startTime>
+            <doesRequeue>false</doesRequeue>
+            <maxRules>1</maxRules>
+            <fwdChain>true</fwdChain>
+            <bwdChain>false</bwdChain>
+            <declarations>
+                <declaration identifier="personevent" entity="/PersonEvent">
+                    <domain>
+                        <entries/>
+                    </domain>
+                </declaration>
+            </declarations>
+            <condition/>
+            <action>System.debugOut("Rule action:" + personevent.firstName + " " + personevent.lastName + " " + personevent.age);</action>
+            <requeueVars/>
+            <template/>
+            <author/>
+        </rule>
+    </rules>
+</ruleset>

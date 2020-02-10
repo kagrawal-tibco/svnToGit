@@ -1,0 +1,70 @@
+<!doctype html public "-//w3c//dtd html 3.2 final//en">
+<html>
+<head>
+<meta http-equiv="X-UA-Compatible" content="IE=EmulateIE8" />
+<title>Condition Editor</title>
+    <link rel="stylesheet" type="text/css" href="/drilldown/css/page.css"/>
+    <link rel="stylesheet" type="text/css" href="/querymgr/css/querymgr.css"/>
+    <script language="javascript" src="/scripts/servercomm.js"></script>
+    <script language="javascript" src="/scripts/validationlibrary.js"></script>
+    <script language="javascript" src="/querymgr/scripts/conditionutils.js"></script>
+    <script language="javascript">
+        var actionURL;
+        var token;
+        var sessionid;
+        var params;
+        var datatype;
+    
+        function renderCondition() {
+            var dialogArgs = window.dialogArguments;
+            params = new Array();
+            for (var i = 0 ; i < dialogArgs.length ; i++){
+                var pname = dialogArgs[i][0];
+                var pvalue = dialogArgs[i][1];
+                if (pname == "actionURL"){
+                    actionURL = pvalue;
+                }
+                else if (pname == "token"){
+                    token = pvalue;
+                }
+                else if (pname == "session"){
+                    session = pvalue;
+                }
+                else if (pname == "fielddatatype"){
+                    datatype = pvalue;
+                }                
+                else {
+                    params.push(new Array(pname,pvalue));
+                }
+            }
+            var callbackfn = function(responseText){
+                document.body.innerHTML = responseText;
+                prepCondition(datatype);
+            };
+            try {
+                sendRequest(actionURL, token, sessionid, "viewfieldcondition", params, callbackfn);
+            } catch (err) {
+                //do nothing;
+            }                   
+        }
+        
+        function okClicked(){
+            var valid = validateCondition(datatype);
+            if (valid == true){
+                updateCondition(datatype,actionURL, token, sessionid, params);
+            }
+        }
+        
+        function cancelClicked(){
+            transfervalue('');
+        }
+        
+        function operatorChanged(){
+            handleOperatorChange(datatype);
+        }
+        
+    </script>
+</head>
+<body leftmargin="" topmargin="" onload="return renderCondition();">
+</body>
+</html>

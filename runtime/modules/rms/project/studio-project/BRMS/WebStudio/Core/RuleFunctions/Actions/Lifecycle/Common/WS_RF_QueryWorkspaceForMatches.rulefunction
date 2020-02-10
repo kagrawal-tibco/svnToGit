@@ -1,0 +1,23 @@
+/**
+ * @description Query user workspace for artifacts matching search path.
+ */
+Object[] rulefunction WebStudio.Core.RuleFunctions.Actions.Lifecycle.Common.WS_RF_QueryWorkspaceForMatches {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String workspaceQueryString;
+		String queryArgsKey;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.Lifecycle.Common.WS_RF_QueryWorkspaceForMatches");
+		
+		//Execute workspace query
+		Object workspaceResultList = WS.Common.Query.executeQuery("WS-Enquiry", workspaceQueryString, Util.HashMap.getMap(queryArgsKey), true);
+		Object[] workspaceResults = null;
+		if (WS.Common.Query.sizeOfList(workspaceResultList) > 0) {
+			workspaceResults = WS.Common.Query.listToArray(workspaceResultList);
+		}
+		return workspaceResults;
+	}
+}

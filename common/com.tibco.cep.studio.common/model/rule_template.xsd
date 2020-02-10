@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<xsd:schema xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:instance="http://www.tibco.com/com.tibco.be.ruletemplate.instance#rule_template.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema" ecore:nsPrefix="instance" ecore:package="instance" targetNamespace="http://www.tibco.com/com.tibco.be.ruletemplate.instance#rule_template.xsd">
+  <xsd:import namespace="http://www.eclipse.org/emf/2002/Ecore" schemaLocation="platform:/plugin/org.eclipse.emf.ecore/model/Ecore.xsd"/>
+  <xsd:element ecore:ignore="true" name="RuleTemplateInstance" type="instance:RuleTemplateInstance"/>
+  <xsd:element ecore:ignore="true" name="Clause" type="instance:Clause"/>
+  <xsd:element ecore:ignore="true" name="ConditionFilter" type="instance:ConditionFilter"/>
+  <xsd:element ecore:ignore="true" name="Command" type="instance:Command"/>
+  <xsd:element ecore:ignore="true" name="AddCommand" type="instance:AddCommand"/>
+  <xsd:element ecore:ignore="true" name="BuilderSubClause" type="instance:BuilderSubClause"/>
+  <xsd:element ecore:ignore="true" name="RelatedLink" type="instance:RelatedLink"/>
+  <xsd:element ecore:ignore="true" name="MultiFilter" type="instance:MultiFilter"/>
+  <xsd:complexType name="RuleTemplateInstance">
+    <xsd:sequence>
+      <xsd:element ecore:name="conditionFilter" form="qualified" minOccurs="0" name="category" type="instance:ConditionFilter"/>
+      <xsd:element maxOccurs="unbounded" minOccurs="0" name="actions" type="instance:Command"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType abstract="true" name="Clause">
+    <xsd:sequence>
+      <xsd:element ecore:derived="true" ecore:lowerBound="1" ecore:name="subClause" ecore:transient="true" ecore:volatile="true" form="qualified" minOccurs="0" name="catalog" type="instance:BuilderSubClause"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="ConditionFilter">
+    <xsd:sequence>
+      <xsd:element form="qualified" name="name" type="xsd:string"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType abstract="true" name="Command">
+    <xsd:complexContent>
+      <xsd:extension base="instance:Clause">
+        <xsd:attribute name="actionType" type="ecore:EString"/>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="AddCommand"/>
+  <xsd:complexType name="BuilderSubClause">
+    <xsd:sequence>
+      <xsd:element ecore:derived="true" ecore:name="links" ecore:transient="true" ecore:volatile="true" form="qualified" maxOccurs="unbounded" minOccurs="0" name="catalog" type="instance:RelatedLink"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="RelatedLink">
+    <xsd:attribute name="linkText" type="ecore:EString"/>
+  </xsd:complexType>
+  <xsd:complexType name="MultiFilter">
+    <xsd:complexContent>
+      <xsd:extension base="instance:Clause">
+        <xsd:attribute name="matchType" type="ecore:EString" use="required"/>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+</xsd:schema>

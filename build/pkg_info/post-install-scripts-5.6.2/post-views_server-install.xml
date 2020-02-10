@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<project name="post-install" default="post-install" basedir=".">
+	<property file="post-install.properties"/>
+	<import file="common-tasks.xml"/>
+		
+    <taskdef resource="net/sf/antcontrib/antcontrib.properties"/>
+	
+	<target name="post-install" depends="import-wrappers,set-subst-vars,install-flash-trust-cfg">
+		<echo message="Done post-installation tasks." />
+	</target>
+
+	<target name="import-wrappers">
+		<echo message="Copying be-views wrapper..." />
+		<if>
+			<os family="mac"/>
+			<then>
+				<copy file="${tibco.home}/tools/wrapper/gwrap${tibco.wrapper.extension}"
+					tofile="${tibco.home}/be/${beVersionShort}/views/bin/be-views${tibco.wrapper.extension}" />
+			</then>
+			<else>
+				<copy file="${tibco.home}/tools/wrapper/wrap${tibco.wrapper.extension}"
+					tofile="${tibco.home}/be/${beVersionShort}/views/bin/be-views${tibco.wrapper.extension}" />
+			</else>
+		</if>
+		<chmod file="${tibco.home}/be/${beVersionShort}/views/bin/be-views${tibco.wrapper.extension}" perm="755" />
+			
+		<echo message="Copying views-tools wrapper..." />
+		<copy file="${tibco.home}/tools/wrapper/wrap${tibco.wrapper.extension}"
+			tofile="${tibco.home}/be/${beVersionShort}/views/tools/views-tools${tibco.wrapper.extension}" />
+		<chmod file="${tibco.home}/be/${beVersionShort}/views/tools/views-tools${tibco.wrapper.extension}" perm="755" />
+	</target>
+	
+	<target name="set-subst-vars">
+		<antcall target="substitute-variables">
+			<param name="out.file" value="${tibco.home}/be/${beVersionShort}/views/bin/be-views.tra"/>
+		</antcall>
+		<antcall target="substitute-variables">
+			<param name="out.file" value="${tibco.home}/be/${beVersionShort}/views/tools/views-tools.tra"/>
+		</antcall>
+	<!--	<if>
+			<os family="unix"/>
+			<then>
+				<if>
+					<or> 
+						<os name="AIX"/>
+						<os arch="s390x"/>
+					</or>
+					<then>
+						<replace file="${tibco.home}/be/${beVersionShort}/views/bin/be-views.tra" token="${TIBCO_JAVA_HOME_ESC}" value="${tibco.home}/tibcojre64/1.7.0" />
+						<replace file="${tibco.home}/be/${beVersionShort}/views/bin/be-views.tra" token="${TIBCO_JVM_LIB_SERVER_ESC}" value="${tibco.home}/tibcojre64/1.7.0/bin/j9vm/libjvm.so" />
+						<replace file="${tibco.home}/be/${beVersionShort}/views/bin/be-views.tra" token="${TIBCO_JVM_LIB_DIR_ESC}" value="${tibco.home}/tibcojre64/1.7.0/bin/j9vm" />
+					</then>
+					<else>
+						<replace file="${tibco.home}/be/${beVersionShort}/views/bin/be-views.tra" token="${TIBCO_JAVA_HOME_ESC}" value="${tibco.home}/tibcojre64/1.7.0" />
+						<replace file="${tibco.home}/be/${beVersionShort}/views/bin/be-views.tra" token="${TIBCO_JVM_LIB_SERVER_ESC}" value="${tibco.home}/tibcojre64/1.7.0/lib/amd64/server/libjvm.so" />
+						<replace file="${tibco.home}/be/${beVersionShort}/views/bin/be-views.tra" token="${TIBCO_JVM_LIB_DIR_ESC}" value="${tibco.home}/tibcojre64/1.7.0/lib/amd64" />
+					</else>
+				</if>
+			</then>
+		</if> -->
+	</target>
+
+	<target name="install-flash-trust-cfg">
+		<!-- Update the views-trusted-locations.cfg with the installed BE_HOME -->
+		<antcall target="substitute-variables">
+			<param name="out.file" value="${tibco.home}/be/${beVersionShort}/views/config/views-trusted-locations.cfg"/>
+		</antcall>
+		<!-- copy the views-trusted-locations.cfg to the appropriate OS specific location -->
+		<if>
+			<os family="windows"/>
+			<!-- we are in the windows world -->
+			<then>
+				<if>
+					<!-- are we in windows 7 or windows vista world ?-->
+					<available file="${user.home}/AppData/Roaming" type="dir"/> 
+					<then>
+						<!-- yes, we are in windows 7 or windows vista world -->
+						<echo message="Updating ${user.name}'s flash trust locations on ${os.name}..." />
+						<mkdir dir="${user.home}/AppData/Roaming/Macromedia/Flash Player/#Security/FlashPlayerTrust/"/>
+						<copy file="${tibco.home}/be/${beVersionShort}/views/config/views-trusted-locations.cfg"
+							tofile="${user.home}/AppData/Roaming/Macromedia/Flash Player/#Security/FlashPlayerTrust/${beVersionShort}-views-trusted-locations.cfg"/>
+					</then>
+					<else>
+						<!-- no, we are in pre-windows 7 or windows vista world aka windows 2000 or windows XP -->
+						<echo message="Updating ${user.name}'s flash trust locations on ${os.name}..." />
+						<mkdir dir="${user.home}/Application Data/Macromedia/Flash Player/#Security/FlashPlayerTrust"/>
+						<copy file="${tibco.home}/be/${beVersionShort}/views/config/views-trusted-locations.cfg"
+							tofile="${user.home}/Application Data/Macromedia/Flash Player/#Security/FlashPlayerTrust/${beVersionShort}-views-trusted-locations.cfg"/>					
+					</else>
+				</if>
+			</then>
+			<else>
+				<if>
+					<!-- are we in unix world ?-->		
+					<os family="unix"/>
+					<then>
+						<!-- yes, we are in unix world -->
+						<echo message="Updating ${user.name}'s flash trust locations on ${os.name}..." />
+						<mkdir dir="${user.home}/.macromedia/Flash_Player/#Security/FlashPlayerTrust/"/>
+						<copy file="${tibco.home}/be/${beVersionShort}/views/config/views-trusted-locations.cfg"
+							tofile="${user.home}/.macromedia/Flash_Player/#Security/FlashPlayerTrust/${beVersionShort}-views-trusted-locations.cfg"/>
+					</then>
+				</if>
+			</else>
+		</if>		
+	</target>
+</project>	

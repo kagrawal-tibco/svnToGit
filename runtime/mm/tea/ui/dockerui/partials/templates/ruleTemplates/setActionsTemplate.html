@@ -1,0 +1,120 @@
+ <div class="ruleCreationContainer">
+ 	<form name="genForm" novalidate style="height : 92%;">
+ 		<div style="height : 92%;">
+ 			<div ng-show="!isAddNewAction" class="setActionsTablePanel">
+ 				<table tea-table class="tea-table " >
+ 					<thead>
+ 						<tr>
+ 							<th>Action Name</th>
+ 							<th>Alert Level</th>
+ 							<th></th>
+ 						</tr>
+ 					</thead>
+ 					<tbody>
+ 						<tr ng-repeat="action in setActionsArray">
+		        			<td>{{action.name}}</td>
+		        			<td>{{action.alertLevel}}</td>
+		        			<td style="width:33%;">
+		        				<div>
+		        					<i title="Edit" ng-class="indexToDelete == $index && isDeleteInProgress ? 'disableOperation':'operation'" class="fa fa-pencil " ng-click="indexToDelete == $index && isDeleteInProgress?null:editAction($index,setActionsArray)"></i>
+		        					<i title="Delete" style="margin-left: 10px;" class="operation fa fa-trash-o" ng-click="initiateDelete($index)"></i>
+		        				</div>
+		        				<div class="confirmDeletePanel" ng-if="indexToDelete == $index && isDeleteInProgress">
+		        					<div>
+		        						Confirm Delete?
+		        					</div>
+		        					<div>
+		        						<ul>
+		        							<li>
+		        								<div class="operation pull-left" ng-click="deleteAction($index,setActionsArray)">            	
+      	  		  									<i  class="fa fa-check-circle"></i>
+				  									<span>Yes</span> 
+				  								</div>  
+		        							</li>
+		        							<li>
+		        								<div class="operation pull-right" ng-click="cancelDelete()">            	
+      	  		  									<i  class="fa fa-times"></i>
+				  									<span>Cancel</span> 
+				  								</div> 
+		        							</li>
+		        						</ul>
+		        					</div>
+		        				</div>
+		        			</td> 
+		        		</tr>
+ 					</tbody>
+		   	 	</table>  
+ 			</div>
+ 			<div>
+ 				<div ng-show="!isAddNewAction" ng-click="addNewAction()" style="padding-top: 5px;padding-bottom: 5px;wdith:100%" class="operation pull-left">    
+        			<i  class="fa fa-plus-circle"></i>
+				   	<span>Add New</span>             
+                </div>
+ 			</div>
+ 			<div ng-show="isAddNewAction" class="addNewActionPanel pull-left">
+ 				<div style="height: 90%;">
+ 					<div class="pull-left" style="width:23%;height:100%;">
+						<select ng-disabled="isEditAction" ng-options="actionDescriptor as actionDescriptor.name for actionDescriptor in actionDescriptors track by actionDescriptor.name" ng-model="action.actionFunctionDescriptor" style="width:90% !important;"></select>
+ 					</div>
+ 					<div class="createActionPanel pull-left">
+ 						<div class="createNewActionElement">
+ 							<div class="form-horizontal">
+								<div class="control-group">
+									<div>
+										<label class="control-label">Alert Level</label>
+										<div class="controls">
+											<select ng-model="action.alertLevel" required>
+												<option ng-repeat="(key, value) in alertLevelMap" value="{{value}}">{{key.split('$')[1]}}</option>
+											</select>
+										</div>
+									</div>
+									<div ng-repeat="param in action.actionFunctionDescriptor.functionParamValues">
+										<label class="control-label">{{param.name}}</label>
+                  						<div class="controls" ng-if="param.name != 'Body' && param.name != 'Health' && param.name != 'Alert Text' && param.name != 'Cc' && param.name != 'Bcc'">
+                        					<input ng-model="param.value" type="text" required>
+                    					</div> 
+                    					<div class="controls" ng-if="param.name == 'Cc' || param.name == 'Bcc'">
+                        					<input ng-model="param.value" type="text">
+                    					</div>
+                    					<div class="controls" ng-if="param.name == 'Body'">
+                        					<textarea ng-model="param.value" rows="4" cols="40" required></textarea>
+                    					</div> 
+                    					<div class="controls" ng-if="param.name == 'Alert Text'">
+                    						<textarea ng-if="!isEditAction" ng-model="param.value" rows="4" cols="40" ng-init="param.value=(param.value==''||param.value==null)?action.actionFunctionDescriptor.alertText:param.value" required></textarea>
+                    						<textarea ng-if="isEditAction" ng-model="param.value" rows="4" cols="40" required></textarea>
+                    					</div>
+                    					<div class="controls" ng-if="param.name == 'Health'">
+                        					<select  ng-model="param.value" required>
+                           	 					<option ng-selected="{{key.split('$')[1] == param.value}}" ng-repeat="(key,value) in entityHealthValuesMap" value="{{key.split('$')[1]}}">{{value}}</option>
+                        					</select>
+                    					</div> 
+									</div>
+								</div>
+							</div>
+ 						</div>
+ 					</div>
+ 				</div>
+ 				<div>
+ 					<div style="padding-top: 5px;padding-left:10px;" class="pull-right operation" ng-click="closeNewActionPanel()" >    
+        		 		<i  class="fa fa-times"></i>
+				 		<span>Cancel</span>             
+                	</div>
+                	<div style="padding-top: 5px;" class="pull-right" ng-class="genForm.$invalid ? 'disableOperation' : 'operation'" ng-click="genForm.$invalid? null :saveAction(setActionsArray)">    
+        		 		<i  class="fa fa-floppy-o"></i>
+				 		<span>Save</span>             
+                	</div>
+ 				</div>
+ 			</div>
+ 		</div>
+ 		<div class="ruleCreationFooter" >
+ 			<div ng-show="$parent.isError" class="pull-left">
+				<span class="fileuploadError">*{{$parent.errorMessage}}</span>
+			</div>
+         	<button class="btn btn-primary"  ng-click="prevStep()">Previous</button>
+         	<button ng-class="{'tbt-btn':true, 'primary-btn':true,'button_disabled':setActionsArray.length == 0}" ng-disabled="setActionsArray.length == 0" ng-click="nextStep()">Next</button>
+         	<button type="button" data-dismiss="modal" aria-hidden="true" class="btn tbt-btn secondary-btn" ng-click="close()">
+		  	 	Cancel
+	    	</button>
+   		</div>
+ 	</form>
+ </div>

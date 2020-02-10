@@ -1,0 +1,18 @@
+/**
+ * @description 
+ */
+void rulefunction Receiver.RuleFunctions.Shutdown {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		
+	}
+	body {
+		Object receiver = Util.HashMap.removeObject("AllReceivers", "demoReceiver");
+		Util.HashMap.deleteMap("AllReceivers");		
+				
+		System.debugOut("Discarding load balanced receiver");
+		LoadBalancer.Receiver.discardReceiver(receiver);		
+	}
+}

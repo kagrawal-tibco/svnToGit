@@ -1,0 +1,75 @@
+<div style="height: 100%;max-height: 20vh;">
+    <div class="sidebar-header" >
+        <div (click)="toggleExpanded()" class="sidebar-header-span">
+        <ng-container i18n>{{i18n('OPEN EDITORS')}}</ng-container>
+        <!-- <button 
+            mat-button 
+            type="button" 
+            class="sidebar-header-button"
+            tooltip="Close All Editors"
+            placement="right" 
+            container="body" 
+            containerClass="animated fadeIn"
+            (click)='closeAll()'>
+                <i class="material-icons icon-button clickable"> clear_all </i>
+            </button> -->
+        </div>
+    </div>
+    <ul [@expansionChanged]='expanded' class="custom-list">
+        <li *ngFor='let artifact of this.artifactList'>
+            <span class="clickable" (click)='this.onClick(artifact)' (contextmenu)='this.onEditOptions(artifact, $event)'>
+                <span class="fa-stack fa-stack-small">
+                    <i class="{{artifact.type.defaultIcon}} fa-stack-2x overlayIconBase"></i>
+                </span>
+                <span class="entry_label">
+                    {{artifact.name + '[' + this.getType(artifact.type.defaultExtension) + ']'}}
+                </span>
+                <div id='options-context-menu' hidden='true'></div>
+            </span>
+            <span>
+                <i class="fa fa-close custom-clear" (click)="onTabDirectiveRemoved(artifact)"></i>
+            </span>
+        </li>
+    </ul>
+
+</div>
+<!-- <mat-card class="custom-mat-card">
+    <mat-card-header class="sidebar-header">
+        <mat-card-title class="title">
+            Open Editors
+            <button 
+                mat-button 
+                type="button" 
+                class="sidebar-header-button"
+				tooltip="Close All Editors"
+                placement="right" 
+                container="body" 
+                containerClass="animated fadeIn"
+				(click)='closeAll()'>
+                    <i class="material-icons icon-button clickable"> clear_all </i>
+				</button>
+        </mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+        <div class="custom-list" *ngFor='let artifact of this.artifactList'>
+           
+            <span class="clickable" (click)='this.onClick(artifact)'>
+                <span class="fa-stack fa-stack-small">
+                    <i class="{{artifact.type.defaultIcon}} fa-stack-2x overlayIconBase"></i>
+                </span>
+                <span class="entry_label">
+                    {{artifact.name + '[' + this.getType(artifact.type.defaultExtension) + ']'}}
+                </span>
+            </span>
+            <span>
+                <i 
+                    class="material-icons icon-button custom-clear clickable" 
+                    matTooltip='Close Editor' 
+                    (click)="onTabDirectiveRemoved(artifact)" 
+                    aria-label="clear"
+                > clear </i>
+                <i class="fa fa-close custom-clear" (click)="onTabDirectiveRemoved(artifact)"></i>
+            </span>
+        </div>
+    </mat-card-content>
+</mat-card> -->

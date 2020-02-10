@@ -1,0 +1,36 @@
+/**
+ * @description 
+ * @author 
+ */
+rule Shared.Rules.AuthenticationRuleSet.SignOut_ValidToken {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Shared.Events.reqres.authentication.LogOutRequestEvent	logoutrequestevent;
+		
+	}
+	when {
+		logoutrequestevent.token != null && String.length(logoutrequestevent.token) > 0;
+	}
+	then {
+		String token = logoutrequestevent.token;
+		Shared.Concepts.LoggedInUser user = Instance.getByExtId(token);
+		if (user != null) {
+		    user.lastAccessTime = System.currentTimeMillis();
+		    String username = user.userName;
+		    Shared.RuleFunctions.log("SignOut_ValidToken","INFO","Logging out "+username+" using "+token+" as token...");
+		    Instance.deleteInstance(user);
+		    Shared.Concepts.GlobalScoreCard.loggedInUsers = Shared.Concepts.GlobalScoreCard.loggedInUsers - 1;
+		    Shared.Events.reqres.SuccessSimpleResponseEvent responseevent = Shared.Events.reqres.SuccessSimpleResponseEvent.SuccessSimpleResponseEvent(null,null,user.userName+" successfully logged out...",null);
+		    Event.replyEvent(logoutrequestevent,responseevent);
+		}
+		else {
+		    Shared.RuleFunctions.log("SignOut_ValidToken","INFO","No user found matching "+token);
+		    Shared.Events.reqres.FailureResponseEvent responseevent = Shared.Events.reqres.FailureResponseEvent.FailureResponseEvent(null,null,"002","No user found matching "+token);
+		    Event.replyEvent(logoutrequestevent,responseevent);
+		}
+		Event.consumeEvent(logoutrequestevent);
+	}
+}

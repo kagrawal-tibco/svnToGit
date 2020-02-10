@@ -1,0 +1,106 @@
+/**
+ * @description 
+ */
+boolean rulefunction Shared.RuleFunctions.topology.isEntityMatchName {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Shared.Concepts.MonitorableEntity	target;
+		String	entityname;
+	}
+	body {
+		Shared.RuleFunctions.log("MatchEntityWithName","DEBUG","Attempting to match entities...");
+		Shared.RuleFunctions.log("MatchEntityWithName","DEBUG","target.name= " + target.name);
+        Shared.RuleFunctions.log("MatchEntityWithName","DEBUG","entityname= " + entityname);
+        Shared.RuleFunctions.log("MatchEntityWithName","DEBUG","Target Type: " + target.type);
+
+		if(target.type == "process") {
+		    if(String.toLowerCase(entityname) == String.toLowerCase(target.name)) {
+		        Shared.RuleFunctions.log("MatchEntityWithName","DEBUG","Match FOUND.");
+		        return true;
+		    }
+		    
+		    if(target.predefined == false) {
+		    	Shared.RuleFunctions.log("MatchEntityWithName","DEBUG","Match NOT FOUND. Entity NOT predefined.");
+		    	return false;
+		    }
+		    
+		    //added 02-22-2010 to match PU using jmx port
+		    String[] pathElements = String.split(getFQName(target),":");
+		    Shared.RuleFunctions.log("MatchEntityWithName","DEBUG","the path for entityname '" + target.name + "'  is: "+getFQName(target));
+            //keep the path but replace the name with the name we are searching for
+		    pathElements[pathElements@length-1]=entityname;
+		    String port = BEMM.topology.getPUPort(pathElements);
+		    
+		    Shared.RuleFunctions.log("MatchEntityWithName","DEBUG","Attempting to match ports...");
+		    Shared.RuleFunctions.log("MatchEntityWithName","DEBUG","target.topologyProps[2]= " + target.topologyProps[2]);
+		    Shared.RuleFunctions.log("MatchEntityWithName","DEBUG","PU port= " + port);
+
+		    if(target.topologyProps[2] != port) {
+                    Shared.RuleFunctions.log("MatchEntityWithName","DEBUG","Match NOT FOUND. Port properties are different.");
+                    return false;
+            }
+		    Shared.RuleFunctions.log("MatchEntityWithName","DEBUG","Ports match FOUND");
+		    //if(target.active == true) return false; //commented out 02-23-2010
+
+		    String[] children = BEMM.topology.getChildren(pathElements);
+		    Shared.RuleFunctions.log("MatchEntityWithName","DEBUG","the children length for entityname is: "+children@length);
+		    Shared.RuleFunctions.log("MatchEntityWithName","DEBUG","the children length for target is: "+target.children@length);
+	    	
+	    	if(target.children@length != children@length)   {
+                Shared.RuleFunctions.log("MatchEntityWithName","DEBUG","Match NOT FOUND. Entity lengths are different.");
+                return false;
+            }
+		    
+		    for (int i = 0 ; i < children@length ; i = i + 1) {
+		        String[] childNameWithType = String.split(children[i],",");
+		        boolean ifChildMatch = false;
+		        
+		        for (int j=0;j<target.children@length;j++){
+		        	if(isEntityMatchName(target.children[j],childNameWithType[0])) {
+		        		ifChildMatch = true;
+		        		break;
+		        	}
+		        }
+		        
+		        if(!ifChildMatch) {
+                    Shared.RuleFunctions.log("MatchEntityWithName","DEBUG","Match NOT FOUND.");
+		        	return false;
+                }
+//		        if(!isEntityMatchName(target.children[i],childNameWithType[0]))
+//		        return false;
+		    }
+		} else if(target.type == "inference"||target.type == "query"||target.type == "cache"||target.type == "dashboard"){
+		    if(String.toLowerCase(entityname) == String.toLowerCase(target.name)) {
+                Shared.RuleFunctions.log("MatchEntityWithName","DEBUG","Match FOUND.");
+		    	return true;
+            }
+		    
+		    if(target.predefined == true){
+		        String[] nameWithNum = String.split(entityname, "#");
+		        Shared.RuleFunctions.log("MatchEntityWithName","DEBUG","Attempting to match "+target.topologyProps[0]+" to "+nameWithNum[0]);
+		        if(String.toLowerCase(target.topologyProps[0]) != String.toLowerCase(nameWithNum[0])) {
+                    Shared.RuleFunctions.log("MatchEntityWithName","DEBUG","Match NOT FOUND. Properties are different.");
+		        	return false;
+                }
+		    }
+		    else {
+		        if(String.toLowerCase(target.name) != String.toLowerCase(entityname)) {
+                    Shared.RuleFunctions.log("MatchEntityWithName","DEBUG","Match NOT FOUND.");
+		        	return false;
+                }
+		    }
+		} else if (target.type == "machine") {
+			if(String.toUpperCase(target.name) != String.toUpperCase(entityname))
+				return false;
+	    } else {
+		    if(String.toLowerCase(target.name) != String.toLowerCase(entityname)) {
+		    	Shared.RuleFunctions.log("MatchEntityWithName","DEBUG","Match NOT FOUND.");
+		    	return false;
+		    }
+		}
+        Shared.RuleFunctions.log("MatchEntityWithName","DEBUG","Match FOUND.");
+		return true;
+	}
+}

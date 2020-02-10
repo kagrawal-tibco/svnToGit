@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<drivers>
+	<driver>
+		<type>ActiveSpaces 3.x</type>
+		<label>ActiveSpaces 3.x</label>
+		<class>com.tibco.cep.driver.as3.AS3Driver</class>
+		<description>Tibco ActiveSpaces 3.x</description>
+		<version>1.0.0</version>
+		<properties>
+			<property name="RealmServer" displayName="Realm Server URL*"
+				type="String" default="http://localhost:8080" />
+			<property name="GridName" displayName="Grid Name" type="String"
+				default="" />
+			<property name="UserName" displayName="User Name" type="String"
+				default="" />
+			<property name="Password" displayName="Password" type="String"
+				default="" mask="true" />
+			<property name="Secondary" displayName="Secondary" type="String"
+				default="" />
+			<property name="useSsl" displayName="Use SSL" type="Boolean"
+				default="false" />
+			<property name="Trust_Type" displayName="Trust Type" type="String"
+				default="TrustEveryone" />
+			<property name="Trust_File" displayName="Identity" type="String"
+				default="" />
+		</properties>
+		<destinations>
+			<property name="TableName" displayName="Table Name*" type="String"
+				default="" />
+			<property name="Filter" displayName="Filter" type="String"
+				default="" />
+			<property name="ConsumptionMode" type="String" default="EventListener" />
+			<property name="PutEvent" type="Boolean" default="true" />
+			<property name="DeleteEvent" type="Boolean" default="false" />
+			<property name="ExpireEvent" type="Boolean" default="false" />
+		</destinations>
+		<serializers userdefined="false">
+			<serializer type="String" class="com.tibco.cep.driver.as3.AS3Serializer"
+				default="true" />
+		</serializers>
+		<!-- Define combo-boxes etc that are referred to in destination properties. -->
+		<configuration>
+			<property>
+				<name>Trust_Type</name>
+				<parent>channel</parent>
+				<type>combo-box</type>
+				<choices default="TrustEveryone">
+					<choice displayed="TrustEveryone" value="TrustEveryone" />
+					<choice displayed="TrustFile" value="TrustFile" />
+				</choices>
+			</property>
+			<property>
+				<name>ConsumptionMode</name>
+				<parent>destination</parent>
+				<type>combo-box</type>
+				<choices default="EventListener">
+					<choice displayed="EventListener" value="EventListener" />
+				</choices>
+			</property>
+		</configuration>
+	</driver>
+</drivers>

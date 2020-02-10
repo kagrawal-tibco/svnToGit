@@ -1,0 +1,101 @@
+/**
+ * @description 
+ * @author apsharma-t420
+ */
+rule WebStudio.Core.Rules.WS_R_UpdateApplicaitonPreferences {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		WebStudio.Core.Events.WS_E_UpdateApplicationPreferenceEvent updateApplicationPreferenceEvent;
+	}
+	when {
+		updateApplicationPreferenceEvent@payload != null;
+	}
+	then {
+		Object LOGGER = Log.getLogger("WebStudio.Core.Rules.WS_R_UpdateApplicaitonPreferences");
+		
+		WS_C_ResponseData responseData = null;
+		int responseStatus = 0;
+		String errorCode = null;
+		String responseMessage = "Application Preferences successfully updated";		
+		
+		String subscriptionId = WS_RF_GetSubscriptionId(updateApplicationPreferenceEvent.userName);
+		String appPreferencesExtId = WS_RF_CreateUserArtifactExtId("APPLICATION_PREFERENCES", null, null, null, subscriptionId, null);
+		Log.log(LOGGER, "Debug", "Trying to acquire lock on User Preference space with ExtId - %s", appPreferencesExtId);
+		
+		boolean appPreferencesLock = Cluster.DataGrid.Lock(appPreferencesExtId, -1, false);
+		if (appPreferencesLock) {
+			Log.log(LOGGER, "Debug", "Lock acquired for Application Preference space space.");
+			WS_C_ApplicationPreferences applicationPreferences = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(appPreferencesExtId, false, "/WebStudio/Core/Concepts/WS_C_ApplicationPreferences");
+			
+			if(applicationPreferences != null) {
+				Instance.deleteInstance(applicationPreferences);
+			}
+			
+			applicationPreferences = Instance.newInstance("/WebStudio/Core/Concepts/WS_C_ApplicationPreferences",appPreferencesExtId);
+			
+			String appPreferenceItem = updateApplicationPreferenceEvent@payload;
+			Log.log(LOGGER, "Debug", "Pay load data - %s.", appPreferenceItem);
+			
+			if (appPreferenceItem != null) {
+				WS_C_AppPreferenceRequest appPreferencesRequest = Instance.createTransientInstanceFromXML("/WebStudio/Core/Concepts/Request/Usecases/UpdatePreferences/WS_C_AppPreferenceRequest", appPreferenceItem);
+				WS_C_AppPreferenceDataItem appPreferencesDataItem = appPreferencesRequest.applicationPreferenceItem;
+				
+				for(int count = 0; count < appPreferencesDataItem.operatorPreferences@length; count++) {
+					WS_C_OperatorPreference operatorPreference = null;
+					boolean isFieldTypePresent = false;
+					WS_C_OperatorPreferenceItem opPreferenceItem = appPreferencesDataItem.operatorPreferences[count];
+					String operatorPreferenceExtId = appPreferencesExtId + "@" + WS_RF_CreateUserArtifactExtId("OPERATOR_PREFERENCE", null, null, null, null, opPreferenceItem.fieldType);
+					if(applicationPreferences.operatorPreference@length > 0) {
+						for (int appPreferenceCnt = 0; appPreferenceCnt < applicationPreferences.operatorPreference@length; appPreferenceCnt++) {
+							String fieldType = applicationPreferences.operatorPreference[appPreferenceCnt].fieldType;
+							if(String.equals(fieldType,opPreferenceItem.fieldType)) {
+								isFieldTypePresent = true;
+								operatorPreference = applicationPreferences.operatorPreference[appPreferenceCnt];
+							}
+						}
+						operatorPreference = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(operatorPreferenceExtId, false, "/WebStudio/Core/Concepts/WS_C_OperatorPreference");
+						if(operatorPreference != null) {
+							Instance.deleteInstance(operatorPreference);
+						}
+						operatorPreference = Instance.newInstance("/WebStudio/Core/Concepts/WS_C_OperatorPreference",operatorPreferenceExtId);
+						operatorPreference.fieldType = opPreferenceItem.fieldType;
+					} else {
+						operatorPreference = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(operatorPreferenceExtId, false, "/WebStudio/Core/Concepts/WS_C_OperatorPreference");
+						if(operatorPreference != null) {
+							Instance.deleteInstance(operatorPreference);
+						}
+						operatorPreference = Instance.newInstance("/WebStudio/Core/Concepts/WS_C_OperatorPreference",operatorPreferenceExtId);
+						operatorPreference.fieldType = opPreferenceItem.fieldType;
+					}
+					
+					
+					for (int filterOpCnt = 0; filterOpCnt < opPreferenceItem.filterOperators@length; filterOpCnt++) {
+						Instance.PropertyArray.appendString(operatorPreference.filterOperators,opPreferenceItem.filterOperators[filterOpCnt], 1L);
+					}
+					for (int commandOpCnt = 0; commandOpCnt < opPreferenceItem.commandOperators@length; commandOpCnt++) {
+						Instance.PropertyArray.appendString(operatorPreference.commandOperators,opPreferenceItem.commandOperators[commandOpCnt], 1L);
+					}
+					Instance.PropertyArray.appendContainedConcept(applicationPreferences.operatorPreference,operatorPreference,1L);
+				}
+				
+				WS_RF_AddAuditTrailEntry(updateApplicationPreferenceEvent.userName, null, null, null, "PREFERENCES", "Updated Operator Preferences");
+			}
+			
+			Object asyncContext = Util.HashMap.getObject(updateApplicationPreferenceEvent.mapKey, updateApplicationPreferenceEvent.asyncContextId);
+			//Clear it
+			Util.HashMap.removeObject(updateApplicationPreferenceEvent.mapKey, updateApplicationPreferenceEvent.asyncContextId);
+			Util.HashMap.deleteMap(updateApplicationPreferenceEvent.mapKey);
+			Object servletResponse = HTTP.Servlet.getServletResponse(asyncContext);
+			
+			String responseDSXML = WS_RF_CreateAndSerializeResponseDataSource(responseStatus, 0, errorCode, responseMessage, responseData, updateApplicationPreferenceEvent.contentType);
+			Log.log(LOGGER, "Debug", "Data source response %s", responseDSXML);
+			
+			HTTP.Servlet.Response.setResponseHeader(servletResponse, "Content-type", updateApplicationPreferenceEvent.contentType + ";charset=utf-8");	    										
+			HTTP.Servlet.Response.setResponseContent(asyncContext, responseDSXML, true);	
+		}
+								
+	}
+}

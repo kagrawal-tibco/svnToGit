@@ -1,0 +1,132 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>     AS3x Channel Example
+
+- TIBCO BusinessEvents&reg; Examples
+</title>
+<meta http-equiv="Content-type" content="text/html; charset=iso-8859-1" />
+<meta http-equiv="Content-Language" content="en-us" />
+<link rel="Shortcut Icon" href="../../_resources/icon.gif" type="image/gif" />
+<style type="text/css" media="all">@import "../../_resources/examples.css";</style>
+<script type="text/javascript" src="../../_resources/examples.js" /></script>
+
+<script type="text/javascript">
+
+function buildForms() {
+ var form;
+
+
+ SendEventForm.setServer("http://localhost:4546");
+
+ // Put Data
+ form = SendEventForm.get("putData");
+ form.setDestinationPath("/Channels/HTTPChannel/put");
+ form.setEventPath("/Events/PutData");
+ form.addProperty("tid", "101");
+ form.addProperty("value", "Hello BE AS3 Channel");
+ form.build();
+
+}
+</script>
+</head>
+<body onLoad="buildForms()">
+
+
+<h1>AS3x Channel</h1>
+
+
+<h2>Purpose of This Example</h2>
+
+<p>This example demonstrates the use of AS3.x Listener to listen for put events on AS3.x Datagrid</p>
+<ul>
+<li><p>Put Data in Datagrid</p></li>
+<li><p>Listen to the put events on the Datagrid</p></li>
+</ul>
+<p>This example can also be run with AS4x Datagrid. Please configure the dependent FTL Server as mentioned in pre-requisites section below</p>
+<h2>Pre-requisites</h2>
+
+<p>Below are the list of pre-requisites before running this example:</p>
+<ul>
+<li><p>Install TIBCO FTL (version 5.3.0 and above if using AS 3.x, version FTL 6.1 and above if using AS 4.1.x)</p></li>
+<li><p>Install TIBCO AS3x. (AS 3.3.0 and above) </p></li>
+</ul>
+<p><b>Note:</b> To run/understand this sample, prior knowledge of AS3x is required. </p>
+
+<h2>How to Run the Example</h2>
+<ol>
+
+<li>
+<p>Update be-engine.tra.
+<ul>
+<li><p>If FTL dependency is already resolved as part of the AS3x installation via symbolic link (e.g. in Linux/MacOS installation), then only AS3x_HOME needs to be set.</p></li>
+<li><p>However if FTL dependency is not set as part of AS3x installation, then both AS3x_HOME as well as FTL_HOME need to be set.</p></li>
+</ul>
+</li>
+<li>
+<p>Set TIBDG_ROOT to point to AS3x home directory in <i>BE_HOME</i>/examples/standard/AS3x/scripts/setup file. Use corresponding .bat file for Windows OS. For Windows OS, also set TIBFTL_ROOT to point to FTL home directory</p>
+</li>
+<li>
+<p>Setup and Start the AS3x datagrid.</p>
+<pre class="commands">
+<b>Change the directory to  <i>BE_HOME</i>/examples/standard/AS3xChannel/scripts</b>
+
+<b>Start the AS3x datagrid as follows</b>
+./as-start
+or ./as-start-ftl6 (if using FTL 6.1 or above with AS 4.1 or above)
+
+Use corresponding .bat files for Windows OS
+</pre>
+<b>Note:</b> In case of Windows multiple command prompt windows for various tibdg executables will be opened. One each for FTL Server, tibdgproxy, tibdgkeeper & tibdgnode. Please do not close those windows while the grid is running.
+</li>
+<li>
+<p>Start the TIBCO BusinessEvents engine using the following command. </p>
+
+<pre class="commands">
+
+cd <i>BE_HOME</i>/examples/standard/AS3xChannel
+<i>BE_HOME</i>/bin/be-engine --propFile <i>BE_HOME</i>/bin/be-engine.tra -u default -c AS3xChannel/Deployments/AS3Channel.cdd AS3xChannel.ear
+
+</pre>
+
+<p>Adapt the command as needed, for example, if you have customized the example project, or are running it from a different directory.</p>
+</li>
+
+<li>
+<p>Create Employee and provide it with the necessary details in the form below. All the dependent/contained entities will be created and added as well</p>
+
+<form id="putData"></form>
+</li>
+
+<li>
+<p>A message arriving at the <code>MyTableDest</code> destination within the ActiveSpaces 3x channel is transformed into an <code>MyTableEvent</code> which is asserted. The rule <code>ListenMyTable</code> executes on assertion of this event. It prints the details of the message to the command window. For example:</p>
+<p>
+<pre class="logs">[inference-class] MyTableEvent ID: 101
+[inference-class] MyTableEvent VALUE: Hello BE AS3 Channel
+</p>
+</li>
+
+<li>
+<p> Finally once all done. You can stop the datagrid. Use appropriate .bat/sh file based on the underlying OS</p>
+<pre class="commands">
+<b>Change the directory to  <i>BE_HOME</i>/examples/standard/AS3xChannel/scripts</b>
+
+<b>Stop the AS3x datagrid as follows</b>
+./as-stop
+or ./as-stop-ftl6 (if using FTL 6.1 or above with AS 4.1 or above)
+
+Use corresponding .bat files for Windows OS
+</pre>
+<b>Note:</b> The Realm Server window opened during "as-start" would now be updated and the realm server will be shut down. You can now close the Realm server window as well. Additionally the data is persisted under "<i>BE_HOME</i>/examples/standard/AS3xChannel/scripts/activespaces". If you want a clean start during the next run, delete this folder.
+</li>
+
+</ol>
+
+<div class="footer">
+<p>TIBCO BusinessEvents&reg; 5.6<br />
+Copyright&copy; 2004-2019 TIBCO Software Inc. All rights reserved.</p>
+</div>
+</body>
+</html>

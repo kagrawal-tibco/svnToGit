@@ -1,0 +1,22 @@
+/**
+ * @description Get binding infor from array based on id.
+ */
+WebStudio.Core.Concepts.RuleTemplateInstance.View.WS_C_BindingInfo rulefunction WebStudio.Core.RuleFunctions.Utils.RT.View.Ops.Save.WS_RF_GetBindingInfoFromId {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		WebStudio.Core.Concepts.RuleTemplateInstance.View.WS_C_BindingInfo[] ws_c_bindinginfos;
+		String bindingId; //The ide to search with
+	}
+	body {
+		//Simple linear search
+		for (int loop = 0; loop < ws_c_bindinginfos@length; loop++) {
+			WS_C_BindingInfo bindingInfo = ws_c_bindinginfos[loop];
+			if (String.equals(bindingInfo.bindingId, bindingId)) {
+				return bindingInfo;
+			}
+		}
+		return null;
+	}
+}

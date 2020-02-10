@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="ASCII"?>
+<Table:Table xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:Table="http:///com/tibco/cep/decision/table/model/DecisionTable.ecore" name="ProcessApplication" folder="/Virtual_RF/" implements="/Virtual_RF/ProcessApplication_VirtualRuleFunction" since="BE 4.0">
+  <md>
+    <prop name="EffectiveDate" type="DateTime" value=""/>
+    <prop name="ExpiryDate" type="DateTime" value=""/>
+    <prop name="SingleRowExecution" type="Boolean" value="false"/>
+  </md>
+  <decisionTable>
+    <rule id="1">
+      <md/>
+      <cond id="1_1" colId="1" expr="0"/>
+      <act id="1_2" colId="2" expr="creditcardapplication.CardIssued.Id=&quot;Debit&quot;"/>
+      <act id="1_3" colId="3" expr="creditcardapplication.CardIssued.InterestRate=10"/>
+      <act id="1_4" colId="4" expr="creditcardapplication.CardIssued.DefaultRate=8"/>
+      <act id="1_6" colId="6" expr="&quot;Limited Purpose&quot;" displayValue="Limited Purpose"/>
+    </rule>
+    <rule id="2">
+      <md/>
+      <cond id="2_1" colId="1" expr="&lt;5000"/>
+      <act id="2_2" colId="2" expr="creditcardapplication.CardIssued.Id=&quot;Visa&quot;"/>
+      <act id="2_3" colId="3" expr="creditcardapplication.CardIssued.InterestRate=12"/>
+      <act id="2_4" colId="4" expr="creditcardapplication.CardIssued.DefaultRate=10"/>
+      <act id="2_6" colId="6" expr="Prepaid"/>
+    </rule>
+    <rule id="19">
+      <md/>
+      <cond id="19_1" colId="1" expr=">= 5000 &amp;&amp; &lt; 10000"/>
+      <act id="19_2" colId="2" expr="creditcardapplication.CardIssued.Id=&quot;Mastercard&quot;"/>
+      <act id="19_3" colId="3" expr="creditcardapplication.CardIssued.InterestRate=11"/>
+      <act id="19_4" colId="4" expr="creditcardapplication.CardIssued.DefaultRate=9"/>
+      <act id="19_6" colId="6" expr="Standard"/>
+    </rule>
+    <rule id="20">
+      <md/>
+      <cond id="20_1" colId="1" expr=">= 10000 &amp;&amp; &lt; 50000"/>
+      <act id="20_2" colId="2" expr="creditcardapplication.CardIssued.Id=&quot;American Express&quot;"/>
+      <act id="20_3" colId="3" expr="creditcardapplication.CardIssued.InterestRate=9"/>
+      <act id="20_4" colId="4" expr="creditcardapplication.CardIssued.DefaultRate=7"/>
+      <act id="20_6" colId="6" expr="Premium"/>
+    </rule>
+    <columns>
+      <column id="1" name="applicant.CreditLimit" propertyPath="/Concepts/Applicant/CreditLimit" propertyType="3" columnType="CONDITION" alias=""/>
+      <column id="2" name="Custom Action 1" columnType="CUSTOM_ACTION" alias=""/>
+      <column id="3" name="Custom Action 2" columnType="CUSTOM_ACTION" alias=""/>
+      <column id="4" name="Custom Action 3" columnType="CUSTOM_ACTION" alias=""/>
+      <column id="6" name="creditcardapplication.CreditType" propertyPath="/Concepts/CreditCardApplication/CreditType" columnType="ACTION"/>
+    </columns>
+  </decisionTable>
+  <exceptionTable/>
+  <argument direction="BOTH">
+    <property path="/Concepts/Applicant" alias="applicant" resourceType="CONCEPT"/>
+  </argument>
+  <argument direction="BOTH">
+    <property path="/Concepts/CreditCardApplication" alias="creditcardapplication" resourceType="CONCEPT"/>
+  </argument>
+</Table:Table>

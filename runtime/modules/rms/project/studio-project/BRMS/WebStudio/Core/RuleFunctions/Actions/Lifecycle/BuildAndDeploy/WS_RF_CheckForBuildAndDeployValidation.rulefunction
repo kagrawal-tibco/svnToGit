@@ -1,0 +1,124 @@
+/**
+ * @description 
+ */
+WebStudio.Core.Concepts.DataSources.WS_C_AnyArtifactDetails[] rulefunction WebStudio.Core.RuleFunctions.Actions.Lifecycle.BuildAndDeploy.WS_RF_CheckForBuildAndDeployValidation {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String loggedInUsername;
+		WebStudio.Core.Concepts.Lifecycle.WS_C_UserCheckin referencedCheckin;
+		WebStudio.Core.Concepts.Request.Usecases.Lifecycle.Review.WS_C_StatusChangeWorklist worklistData;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.Lifecycle.Review.WS_RF_CheckForBuildAndDeployValidation");
+		
+		long revisionId = referencedCheckin.revisionId;
+		
+		//TODO Get actual project name in WS and not managed one. Get project name.
+		String userProjectExtId = WS_RF_CreateUserArtifactExtId(null, null, referencedCheckin.managedProjectName, referencedCheckin.username, null, null);
+		WS_C_UserProject userProject = Instance.getByExtIdByUri(userProjectExtId, "/WebStudio/Core/Concepts/WS_C_UserProject");
+		
+		if (userProject == null) {
+			//Studio case where WS project checkout not performed, create a transient instance to use
+			userProject = Instance.newTransientInstance("/WebStudio/Core/Concepts/WS_C_UserProject");
+			userProject.name = referencedCheckin.managedProjectName;
+		}
+		WS_C_CommittableDeltaEntry[] committables = Instance.PropertyArray.toArrayConcept(referencedCheckin.committables);
+		//Get associated data items
+		WS_C_StatusChangeRequestDataItem[] requestDataItems = Instance.PropertyArray.toArrayContainedConcept(worklistData.worklistItem);
+		
+		Log.log(LOGGER, "Debug", "Number of data items in revision [%s] are [%s]", revisionId, requestDataItems@length);
+		
+		String subscriptionId = WS_RF_GetSubscriptionId(loggedInUsername);
+		String scsRootURL = WS_RF_GetSCSRootURL(userProject.name, subscriptionId);
+		Log.log(LOGGER, "Debug", "SCS root URL configured is %s", scsRootURL);
+		
+		// Need to get the artifacts from the SCS
+		if (scsRootURL == null) {
+			throw Exception.newException(null, "Source control repository location not present. Set ws.scs.rootURL property", null);
+		}
+		
+		// fetch the preferences for SCS userName/password details
+		String[] scsCredentials = WS_RF_GetSCSCredentials(referencedCheckin.username);
+		
+		String stackID = "validationsStack_" + System.nanoTime();
+		Object validationsStack = WS.Common.Stack.create(stackID);
+		WS.Common.Stack.clear(validationsStack);
+		
+		int recordCount = 0;
+		
+		String pathSeparator = "/";				
+		String sharedLocation = System.getSystemPropertyAsString("ws.artifact.deploy.location", null);		
+		Object reusableBuffer = String.createBuffer(0);								
+		reusableBuffer = String.createBuffer(0);
+		String.append(reusableBuffer, sharedLocation);
+		String.append(reusableBuffer, pathSeparator);
+		if (subscriptionId != null && !String.equals(subscriptionId, "")) {
+			String.append(reusableBuffer, subscriptionId);
+			String.append(reusableBuffer, pathSeparator);
+		}
+		String.append(reusableBuffer, userProject.name);
+		String.append(reusableBuffer, pathSeparator);
+		String.append(reusableBuffer, userProject.name);
+		String.append(reusableBuffer, ".ear");						
+		String archivePath = String.convertBufferToString(reusableBuffer);
+		
+		for (int requestDataItemLoop = 0; requestDataItemLoop < requestDataItems@length; requestDataItemLoop++) {
+			WS_C_StatusChangeRequestDataItem requestDataItem = requestDataItems[requestDataItemLoop];
+			String reviewStatus = requestDataItem.reviewStatus;
+			String managedProjectName = requestDataItem.managedProjectName;
+			
+			if (String.equals(reviewStatus,"BuildAndDeploy")) {
+				Log.log(LOGGER, "Debug", "Requested status change for data item [%s] is [%s] and managed projectName [%s]", requestDataItem, reviewStatus, managedProjectName);
+				//Find the right committable for this dataitem
+				WS_C_CommittableDeltaEntry matchingDeltaEntry = WS_RF_GetMatchingCommittableEntry(requestDataItem, committables);
+				if (matchingDeltaEntry != null) {
+					// before processing the status change, check if the last artifact opertion and the worklist operation are identical
+					WS_C_AbstractOperation workItemOperation = matchingDeltaEntry.operation;
+					WS_C_UserArtifactRevision referencedRevision = Instance.PropertyAtom.getConceptReference(matchingDeltaEntry.userArtifactRevision, 1L);
+					WS_C_LifecycleMetadata lifecycleMetadata = Instance.PropertyAtom.getContainedConcept(referencedRevision.lifecycleMetadata, 1L);
+					WS_C_AbstractOperation lastOperationPerformed = Instance.PropertyAtom.getConceptReference(lifecycleMetadata.lastOperation, 1L);
+					
+					Log.log(LOGGER, "Debug", "referencedRevision - id[%s], version[%s] & extId[%s]", referencedRevision@id, referencedRevision.version, referencedRevision@extId);
+					
+					WS_C_UserArtifact parentUserArtifact = WS_RF_IsUserArtifact(referencedRevision.parentArtifactId, referencedRevision.parentArtifactType);
+					
+					String artifactPath = parentUserArtifact.artifactPath;
+					Log.log(LOGGER, "Debug", "Last artifact operation [%s] and current worklist item operation [%s].", lastOperationPerformed.opName, workItemOperation.opName);
+					
+					WS_C_AnyArtifactDetails artifact = WS_RF_GetArtifactContentInstance(referencedRevision.artifactContentsId, referencedRevision.parentArtifactType);
+					
+					if (artifact instanceof WS_C_DecisionTable) {
+						WebStudio.Core.Concepts.DataSources.Problems.WS_C_TableAnalyzerProblemsResponse validationProblemsResponse = WebStudio.Core.RuleFunctions.Utils.DT.Analyzer.WS_RF_ValidateDecisionTableUtil(artifactPath,parentUserArtifact.artifactFileExtn,userProject.name,loggedInUsername,scsRootURL,archivePath,artifact);
+						if(validationProblemsResponse.problem@length > 0) {
+							WS.Common.Stack.push(validationsStack, validationProblemsResponse);
+							recordCount++;
+						}
+					} else {
+						WebStudio.Core.Concepts.DataSources.Problems.WS_C_RTValidationResponse validationResponse = null;
+						if (artifact instanceof WS_C_RuleTemplateInstanceBuilder) {
+							validationResponse = WS_RF_ValidateRuleTemplateBuilder(artifact);
+						} else if (artifact instanceof WS_C_RuleTemplateInstanceView) {
+							validationResponse = WS_RF_ValidateRuleTemplateView(artifact);
+						}
+											
+						if (validationResponse != null && validationResponse.problem@length > 0) {
+							validationResponse.artifactPath = artifactPath;
+							validationResponse.projectName = userProject.name;
+							validationResponse.artifactType = requestDataItem.artifactType;
+							WS.Common.Stack.push(validationsStack, validationResponse);
+							recordCount++;
+						}
+					}
+				}
+			}
+		}
+		
+		WS_C_AnyArtifactDetails[] validationResponse = WS.Common.Stack.toArray(validationsStack, "be.gen.WebStudio.Core.Concepts.DataSources.WS_C_AnyArtifactDetails", "com.tibco.cep.runtime.service.loader.BEClassLoader");
+		WS.Common.Stack.delete(stackID);
+		
+		return validationResponse;
+		
+	}
+}

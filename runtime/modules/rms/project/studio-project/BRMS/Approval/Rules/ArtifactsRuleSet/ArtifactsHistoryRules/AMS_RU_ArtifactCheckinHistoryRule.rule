@@ -1,0 +1,118 @@
+/**
+ * @description Fetch checkin history of an artifact -> Similar to source control log view.
+ * @author aathalye-lt
+ */
+rule Approval.Rules.ArtifactsRuleSet.ArtifactsHistoryRules.AMS_RU_ArtifactCheckinHistoryRule {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Approval.Events.ArtifactEvents.History.AMS_E_ArtifactCheckinLogRequestEvent ams_e_artifactcheckinlogrequestevent;
+	}
+	when {
+		ams_e_artifactcheckinlogrequestevent.artifactPath != null
+		&& ams_e_artifactcheckinlogrequestevent.projectname != null;
+	}
+	then {
+		Object LOGGER = Log.getLogger("Approval.Rules.ArtifactsRuleSet.ArtifactsHistoryRules.AMS_RU_ArtifactCheckinHistoryRule");
+		String projectName = ams_e_artifactcheckinlogrequestevent.projectname;
+		String artifactPath = ams_e_artifactcheckinlogrequestevent.artifactPath;
+		
+		//Look for a lockable artifact
+		String masterArtifactExtId = String.concat(artifactPath, String.concat("@", projectName));
+		WS_C_MasterArtifact masterArtifact = Instance.getByExtIdByUri(masterArtifactExtId, "/WebStudio/Core/Concepts/Lifecycle/WS_C_MasterArtifact");
+		
+		Log.log(LOGGER, "Debug", "Master Artifact value [%s]", masterArtifact);
+		
+		String responsePayload = 
+					"<tns:ArtifactCheckinHistory xmlns:tns=\"www.tibco.com/be/rms/ArtifactCheckinHistory\">";
+		if (masterArtifact == null) {
+			//TODO
+			String folderPath = artifactPath;
+			//It could be a folder
+			//Get all artifacts inside this if it is a folder
+			//Look for new artifacts for this project
+//			AMS_C_NewArtifacts newArtifacts = Instance.getByExtId("New" + "@" + projectName);
+//			int folderPathLength = String.length(folderPath);
+//			if (newArtifacts != null) {
+//				AMS_C_LockableArtifact[] lockableNewArtifacts = 
+//					Instance.PropertyArray.toArrayConcept(newArtifacts.lockableArtifacts);
+//				//Conservatively declare size	
+//				checkins = AMS_C_Checkin[lockableNewArtifacts@length]{};
+//				
+//				for (int loop = 0; loop < lockableNewArtifacts@length; loop++) {
+//					AMS_C_LockableArtifact lockableNewArtifact = lockableNewArtifacts[loop];
+//					String newArtifactPath = lockableNewArtifact.artifactPath;
+//					
+//					if (folderPathLength <= String.length(newArtifactPath)) {
+//						//This could be potential match
+//						int offsetLength = folderPathLength - 1;
+//						if (String.regionMatches(false, newArtifactPath, 0, folderPath, 0, offsetLength)) {
+//							//Match Found
+//							checkins[loop] = 
+//						}
+//					}
+//				}	
+//			}
+		} else {
+			AMS_C_ArtifactCheckinHistory checkinHistory = masterArtifact.checkinHistory;
+			if (checkinHistory != null) {
+				AMS_C_ArtifactCheckinHistoryEntry[] checkinEntries = Instance.PropertyArray.toArrayConcept(checkinHistory.checkinEntries);
+				
+				Log.log(LOGGER, "Debug", "Number of checkin entries [%s]", checkinEntries@length);
+				
+				Object responseBuffer = String.createBuffer(0);	
+				responseBuffer = String.append(responseBuffer, responsePayload);
+				for (int loop = 0; loop < checkinEntries@length; loop++) {
+					responseBuffer = String.append(responseBuffer, "<tns:HistoryEntry>");
+					AMS_C_ArtifactCheckinHistoryEntry checkinEntry = checkinEntries[loop];
+					long revisionId = checkinEntry.revisionId;
+					
+					WS_C_UserCheckin referencedCheckin = AMS_RF_GetReferencedCheckin(revisionId);
+						
+					if (referencedCheckin != null) {
+						Log.log(LOGGER, "Debug", "Referenced Checkin [%s]", referencedCheckin);
+						//Serialize and append it to buffer
+						String serialized = 
+							Instance.filterAndSerializeUsingDefaults(referencedCheckin, "revisionId|username|projectName|checkinTime|checkinComments");
+						serialized = String.replaceAll(serialized, "\\<\\?xml (.*)\\?\\>", "");	
+						responseBuffer = String.append(responseBuffer, serialized);
+						
+						String patternId = referencedCheckin.checkinCorrelationId;
+						//Get all checked in artifacts in it
+						WS_C_CommittableDeltaEntry[] committables = Instance.PropertyArray.toArrayConcept(referencedCheckin.committables);
+							
+						for (int committableEntryLoop = 0; committableEntryLoop < committables@length; committableEntryLoop++) {
+							WS_C_CommittableDeltaEntry committableDeltaEntry = committables[committableEntryLoop];
+							
+							WS_C_UserArtifactRevision userArtifactRevision = Instance.PropertyAtom.getConceptReference(committableDeltaEntry.userArtifactRevision, 1L);
+							
+							if (userArtifactRevision != null) {
+								Log.log(LOGGER, "Debug", "Parent Artifact Id [%s]", userArtifactRevision.parentArtifactId);
+								//Create a joint extid
+								WS_C_UserArtifact userArtifact = WS_RF_IsUserArtifact(userArtifactRevision.parentArtifactId, userArtifactRevision.parentArtifactType);
+								String artifactCommittedExtId = patternId + "@" + artifactPath;
+								//Protected by lock on AMS_C_ReviewTask
+								AMS_C_ArtifactCommited artifactCommitted = Instance.getByExtIdByUri(artifactCommittedExtId, "/Approval/Concepts/ArtifactsConcepts/AMS_C_ArtifactCommited");
+								//Serialize and append it
+								responseBuffer = String.append(responseBuffer, 
+															   String.replaceAll(Instance.filterAndSerializeUsingDefaults(artifactCommitted, "artifactPath|artifactType|artifactFileExtension|operation|status"), "\\<\\?xml (.*)\\?\\>", ""));
+							}
+						}	
+					}
+					responseBuffer = String.append(responseBuffer, "</tns:HistoryEntry>");
+				}
+				responseBuffer = String.append(responseBuffer, "</tns:ArtifactCheckinHistory>");
+				Log.log(LOGGER, "Info", "%s", responsePayload);
+				responsePayload = String.convertBufferToString(responseBuffer);
+				Log.log(LOGGER, "Debug", "Response [%s]", responsePayload);
+			}
+		}
+		
+		AMS_E_ArtifactCheckinLogResponseEvent responseEvent = 
+			Approval.Events.ArtifactEvents.History.AMS_E_ArtifactCheckinLogResponseEvent.AMS_E_ArtifactCheckinLogResponseEvent(null, responsePayload, null, null, null, null, null);
+		Event.replyEvent(ams_e_artifactcheckinlogrequestevent, responseEvent);
+		Event.consumeEvent(ams_e_artifactcheckinlogrequestevent);	
+	}
+}

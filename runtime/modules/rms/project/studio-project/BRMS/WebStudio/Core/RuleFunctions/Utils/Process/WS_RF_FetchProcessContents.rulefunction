@@ -1,0 +1,25 @@
+/**
+ * @description 
+ */
+WebStudio.Core.Concepts.Process.WS_C_ProcessView rulefunction WebStudio.Core.RuleFunctions.Utils.Process.WS_RF_FetchProcessContents {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String scsRootURL;
+		String userName;
+		String projectName;
+		String artifactPath;
+		String artifactExtn;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.Process.WS_RF_FetchProcessContents");
+		
+		String projectPath = scsRootURL + "/" + projectName;
+		Object processEMFWrapper = WS.Process.getProcessEMFObject(projectPath, projectName, artifactPath + "." + artifactExtn);
+							
+		WS_C_ProcessView processView = WS_RF_CreateProcessConceptFromSCS(userName, projectName, processEMFWrapper);
+		
+		return processView;
+	}
+}

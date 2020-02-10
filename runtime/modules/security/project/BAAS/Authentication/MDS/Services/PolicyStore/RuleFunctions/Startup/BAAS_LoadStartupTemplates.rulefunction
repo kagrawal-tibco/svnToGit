@@ -1,0 +1,23 @@
+/**
+ * @description 
+ */
+void rulefunction Authentication.MDS.Services.PolicyStore.RuleFunctions.Startup.BAAS_LoadStartupTemplates {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		
+	}
+	body {
+		String templateLocn = "/media/Windows7/dev/be/5.1/runtime/modules/security/project/BAAS/Authentication/MDS/Schemas/LDAPPolicyTemplate.xml";
+		//Read contents
+		String templateContent = File.readFileAsString(templateLocn, "UTF-8");
+		Authentication.MDS.Policy.Concepts.BAAS_C_PolicyStore policyStore = 
+			Instance.createInstance("xslt://{{/Authentication/MDS/Policy/Concepts/BAAS_C_PolicyStore}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"1.0\" exclude-result-prefixes=\"xsl xsd\">\n    <xsl:output method=\"xml\"/>\n    <xsl:template match=\"/\">\n        <createObject>\n            <object>\n                <xsl:attribute name=\"extId\">\n                    <xsl:value-of select=\"&quot;POLICY_STORE&quot;\"/>\n                </xsl:attribute>\n            </object>\n        </createObject>\n    </xsl:template>\n</xsl:stylesheet>");
+		
+		Authentication.MDS.Policy.Concepts.BAAS_C_PolicyTemplate policyTemplate = 
+			Instance.createInstance("xslt://{{/Authentication/MDS/Policy/Concepts/BAAS_C_PolicyTemplate}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"1.0\" exclude-result-prefixes=\"xsl xsd\">\n    <xsl:output method=\"xml\"/>\n    <xsl:param name=\"templateContent\"/>\n    <xsl:template match=\"/\">\n        <createObject>\n            <object>\n                <xsl:attribute name=\"extId\">\n                    <xsl:value-of select=\"&quot;LDAP_POLICY_TEMPLATE&quot;\"/>\n                </xsl:attribute>\n                <templateId>\n                    <xsl:value-of select=\"&quot;LDAP_POLICY_TEMPLATE&quot;\"/>\n                </templateId>\n                <templateContent>\n                    <xsl:value-of select=\"$templateContent\"/>\n                </templateContent>\n            </object>\n        </createObject>\n    </xsl:template>\n</xsl:stylesheet>");
+		
+		Instance.PropertyArray.appendContainedConcept(policyStore.policyTemplates, policyTemplate, 1L);		
+	}
+}

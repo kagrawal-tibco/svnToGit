@@ -1,0 +1,116 @@
+/**
+ * @description 
+ */
+Object rulefunction Shared.RuleFunctions.topology.searchMonitorableEntities {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String	fqName;
+	}
+	body {
+		String logFamily = "searchMonitorableEntities";
+		String refinedFQName = refineFQName(fqName);
+		if (refinedFQName == null) {
+		    return null;
+		}
+		//remove site from the fqname , we dont need it
+		String[] siteNames = BEMM.topology.getRoot();
+		
+		for (int i=0; i<siteNames@length; i++) {
+			String[] nameAndType = String.split(siteNames[i],",");
+			
+			String siteName = nameAndType[0];
+			if (String.startsWith(refinedFQName,siteName+":") == true){
+			    refinedFQName = String.substring(refinedFQName,String.length(siteName)+1,String.length(refinedFQName));
+			    Shared.RuleFunctions.log(logFamily,"DEBUG","Reduced "+fqName+" to "+refinedFQName);
+			    break; //siteName found, so exit the loop
+			}		
+		}
+		
+		
+		String[] nameComponents = String.split(refinedFQName,":");
+		if (nameComponents@length == 0){
+		    return null;
+		}
+		
+		if (Shared.Concepts.GlobalScoreCard.siteID == null){
+		    Shared.RuleFunctions.log(logFamily,"WARNING","Site ID is null...");
+		    return null;
+		}
+		
+		String[] matchingIds = {Shared.Concepts.GlobalScoreCard.siteID};
+		//Shared.RuleFunctions.log(logFamily,"DEBUG","searchMonitorableEntities::Starting Matching Ids are "+matchingIds[0]);
+		for (int i = 0 ; i < nameComponents@length ; i = i + 1){
+		    String matchingChildIds = null;
+		    String matchCriteria = nameComponents[i];
+		    Shared.RuleFunctions.log(logFamily,"DEBUG","searchMonitorableEntities::matchCriteria["+i+"] is "+matchCriteria);
+		    boolean isMatchWildCard = (String.startsWith(matchCriteria,"%") && String.endsWith(matchCriteria,"%")) || matchCriteria == "*";
+		    for (int j = 0 ; j < matchingIds@length ; j = j + 1){
+		        Shared.RuleFunctions.log(logFamily,"DEBUG","Loading Shared.Concepts.MonitorableEntity with extId as "+matchingIds[j]+"...");
+		        Shared.Concepts.MonitorableEntity entity = Instance.getByExtId(matchingIds[j]);
+		        Shared.RuleFunctions.log(logFamily,"DEBUG","Loaded "+entity+" with extId as "+matchingIds[j]+"...");
+		        if (entity != null && entity.purged == false) {
+		            Shared.RuleFunctions.log(logFamily,"DEBUG","searchMonitorableEntities::Going to search for "+matchCriteria+" under MonitorableEntity[name="+entity.name+",type="+entity.type+"]...");
+		            for (int k = 0 ; k < entity.children@length ; k = k + 1) {
+		                if (entity.children[k].purged == true) {
+		                    continue;
+		                }
+		                Shared.RuleFunctions.log(logFamily,"DEBUG","searchMonitorableEntities::Going to try to match "+matchCriteria+" with MonitorableEntity[name="+entity.children[k].name+",type="+entity.children[k].type+"]...");
+		                boolean matched = false;
+		                if (entity.children[k].type == "machine") {
+		                	Shared.RuleFunctions.log(logFamily,"DEBUG","searchMonitorableEntities::Going to try to match "+matchCriteria+" with "+entity.children[k].name+" as a machine...");
+		                	matched = String.equals(matchCriteria,entity.children[k].name);
+		                	if (matched == false) {
+		                		matched = String.startsWith(entity.children[k].name, matchCriteria); 
+		                	}
+		                }
+		                else if (isMatchWildCard == true || String.equals(matchCriteria,entity.children[k].name)) {
+		                	matched = true;
+		                }
+		                if (matched == true) {
+		                    Shared.RuleFunctions.log(logFamily,"DEBUG","searchMonitorableEntities::MonitorableEntity[name="+entity.children[k].name+",type="+entity.children[k].type+"] matches "+matchCriteria);
+		                    		                    
+		                    if (matchingChildIds == null) {
+		                        matchingChildIds = entity.children[k]@extId;
+		                    }
+		                    else {
+		                        matchingChildIds = matchingChildIds + "," + entity.children[k]@extId;
+		                    }
+		                }
+		            }
+		        }
+		    }		    
+		    Shared.RuleFunctions.log(logFamily,"DEBUG","searchMonitorableEntities::Matching Ids after "+i+"th iteration is "+matchingChildIds);
+		    if (matchingChildIds == null) {
+		        matchingIds = null;
+		        break;
+		    }
+		    matchingIds = String.split(matchingChildIds,",");
+		    if (matchingIds@length == 0) {
+		        matchingIds = null;
+		        break;
+		    }
+		}
+				
+		if (matchingIds == null) {
+		    return null;
+		}
+		
+		String finalMatchingIDs = null;
+		Shared.Concepts.MonitorableEntity[] matchingEntities = Shared.Concepts.MonitorableEntity[matchingIds@length]{};
+		for (int i = 0 ; i < matchingIds@length ; i = i + 1){
+		    matchingEntities[i] = Instance.getByExtId(matchingIds[i]);
+		    Shared.RuleFunctions.log(logFamily,"DEBUG","searchMonitorableEntities::Found MonitorableEntity[name="+matchingEntities[i].name+",type="+matchingEntities[i].type+"] matching "+fqName);
+		    if (i == 0){
+		        finalMatchingIDs = matchingIds[i];
+		    }
+		    else{
+		        finalMatchingIDs = finalMatchingIDs + "," + matchingIds[i];
+		    }
+		}
+		
+		Object downCast = matchingEntities;
+		return downCast;
+	}
+}

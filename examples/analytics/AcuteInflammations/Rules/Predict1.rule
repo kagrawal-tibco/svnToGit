@@ -1,0 +1,36 @@
+/**
+ * @description 
+ * @author agawde
+ */
+rule Rules.Predict1 {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Events.Predict1 request;
+	}
+	when {
+	}
+	then {		
+		String InflammationOfUrinaryBadderResult = Analytics.Terr.callParsModel("PredictInflammationOfUrinaryBadder",  
+			
+				"TemperatureOfPatient", request.TemperatureOfPatient,
+				"OccurenceOfNausea", request.OccurrenceOfNausea,
+				"LumbarPain", request.LumbarPain,
+				"UrinePushing", request.UrinePushing,
+				"MicturitionPains", request.MicturitionPains,
+				"BurningOfUrethra", request.BurningOfUrethra
+			);
+			
+		System.debugOut("Inflammation of Urinary Badder Result: " + InflammationOfUrinaryBadderResult);
+		System.debugOut("######");
+		System.debugOut("Temperature of Patient: " + request.TemperatureOfPatient);
+		System.debugOut("Occurrence of Nausea: " + request.OccurrenceOfNausea);
+		System.debugOut("Lumbar Pain: " + request.LumbarPain);
+		System.debugOut("Urine Pushing: " + request.UrinePushing);
+		System.debugOut("Micturition Pains: " + request.MicturitionPains);
+		System.debugOut("Burning of Urethra: " + request.BurningOfUrethra);			
+		Event.consumeEvent(request);				
+	}
+}

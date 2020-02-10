@@ -1,0 +1,53 @@
+/**
+ * @description 
+ * @author 
+ */
+rule DataGenerator.RuleSet.TradesPinger {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		DataGenerator.Entities.TradesPinger	tradespinger;
+		
+	}
+	when {
+		
+	}
+	then {
+		String[] counterparties = {"CP1", "CP2", "CP3", "CP4", "CP5"};
+		String[] securities = {"TIBX", "HPQ", "JNJ", "MSFT", "VMW"};
+		
+		int count = DataGenerator.Entities.Counter.tradePingCount;
+		
+		if(count > 0 && count % 15 == 0){
+		    int lastId =  DataGenerator.Entities.Counter.lastSettledTradeId;
+		    int c = lastId;
+		    int lastC = c + 5;
+		    for(; c < lastC; c = c + 1){
+		        ConceptModel.Trade trade = Instance.getByExtId("T:" + c);    
+		        trade.settlestatus = "FULLY_SETTLED";
+		
+		        System.debugOut("Old Trade: " + trade@extId  + ", security:" 
+		                        + trade.securityId + ", counterparty: "+ trade.counterpartyId  + " settled.");
+		    }
+		
+		    DataGenerator.Entities.Counter.lastSettledTradeId = lastC;
+		}
+		
+		//-----------
+		
+		String tradeExtId = "T:" + count;
+		ConceptModel.Trade t = Instance.newInstance("/ConceptModel/Trade", tradeExtId);
+		t.securityId = securities[count % 5];    
+		t.loanamtusd = 1000;
+		t.settlestatus = "PARTIAL";
+		t.counterpartyId = counterparties[count % 5];
+		t.category = "L";    
+		
+		System.debugOut("Created Trade: " + tradeExtId + ", security: " + t.securityId + ", status: " + t.settlestatus + ", counterparty: " + t.counterpartyId);
+		
+		count = count + 1;
+		DataGenerator.Entities.Counter.tradePingCount = count;
+	}
+}

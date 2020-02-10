@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+	xmlns:jxb="http://java.sun.com/xml/ns/jaxb" jxb:version="2.0">
+
+
+	<xsd:element name="masterHost">
+		<xsd:complexType>
+			<xsd:sequence>
+				<xsd:element ref="hostId" />
+				<xsd:element ref="hostName" />
+				<xsd:element ref="hostIPAddress" />
+				<xsd:element ref="deploymentPath" />
+				<xsd:element ref="userName" />
+				<xsd:element ref="password" />
+				<xsd:element ref="sshPort" />
+				<xsd:element ref="machineName" />
+				<xsd:element ref="os" />
+				<xsd:element ref="beHome" />
+				<xsd:element ref="beTra" />
+				<xsd:element ref="be" maxOccurs="unbounded" minOccurs="1"></xsd:element>
+			</xsd:sequence>
+			<xsd:attribute ref="id"></xsd:attribute>
+		</xsd:complexType>
+	</xsd:element>
+	
+	<xsd:element name="hostId" type="xsd:string" />
+	<xsd:element name="hostName" type="xsd:string" />
+	<xsd:element name="hostIPAddress" type="xsd:string" />
+	<xsd:element name="beHome" type="xsd:string" />
+	<xsd:element name="version" type="xsd:string" />
+	<xsd:element name="beTra" type="xsd:string" />
+	<xsd:element name="deploymentPath" type="xsd:string" />
+	<xsd:element name="userName" type="xsd:string" />
+	<xsd:element name="password" type="xsd:string" />
+	<xsd:element name="sshPort" type="xsd:int" />
+	<xsd:element name="os" type="xsd:string" />
+	<xsd:element name="machineName" type="xsd:string" />
+	<xsd:attribute name="id" type="xsd:string" />
+
+	<xsd:element name="masterHosts">
+		<xsd:complexType>
+			<xsd:sequence>
+				<xsd:element ref="masterHost" maxOccurs="unbounded" minOccurs="0"></xsd:element>
+			</xsd:sequence>
+		</xsd:complexType>
+	</xsd:element>
+
+	<xsd:element name="be">
+		<xsd:complexType>
+			<xsd:sequence>
+				<xsd:element ref="beHome"></xsd:element>
+				<xsd:element ref="beTra"></xsd:element>
+				<xsd:element ref="version"></xsd:element>
+			</xsd:sequence>
+			<xsd:attribute name="id" type="xsd:string"></xsd:attribute>
+		</xsd:complexType>
+	</xsd:element>
+</xsd:schema>

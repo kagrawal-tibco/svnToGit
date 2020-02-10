@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<xsd:schema xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:menu="http://www.tibco.com/cep/diagramming/menu" xmlns:xsd="http://www.w3.org/2001/XMLSchema" ecore:nsPrefix="menu" ecore:package="com.tibco.cep.diagramming.menu" targetNamespace="http://www.tibco.com/cep/diagramming/menu">
+  <xsd:import namespace="http://www.eclipse.org/emf/2002/Ecore" schemaLocation="platform:/plugin/org.eclipse.emf.ecore/model/Ecore.xsd"/>
+  <xsd:element ecore:ignore="true" name="Item" type="menu:Item"/>
+  <xsd:element ecore:ignore="true" name="Menu" type="menu:Menu"/>
+  <xsd:element ecore:ignore="true" name="MenuItem" type="menu:MenuItem"/>
+  <xsd:element ecore:ignore="true" name="Pattern" type="menu:Pattern"/>
+  <xsd:complexType abstract="true" ecore:interface="true" name="Item">
+    <xsd:sequence>
+      <xsd:element ecore:resolveProxies="true" maxOccurs="unbounded" minOccurs="0" name="pattern" type="menu:Pattern"/>
+    </xsd:sequence>
+    <xsd:attribute name="id" type="ecore:EString"/>
+    <xsd:attribute name="name" type="ecore:EString"/>
+    <xsd:attribute name="icon" type="ecore:EString"/>
+    <xsd:attribute name="command" type="ecore:EString"/>
+    <xsd:attribute ecore:unsettable="false" name="visible" type="ecore:EBoolean"/>
+  </xsd:complexType>
+  <xsd:complexType name="Menu">
+    <xsd:complexContent>
+      <xsd:extension base="menu:Item">
+        <xsd:sequence>
+          <xsd:element ecore:resolveProxies="true" maxOccurs="unbounded" minOccurs="0" name="items" type="menu:Item"/>
+        </xsd:sequence>
+        <xsd:attribute ecore:unsettable="false" name="isSubMenu" type="ecore:EBoolean"/>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="MenuItem">
+    <xsd:complexContent>
+      <xsd:extension base="menu:Item">
+        <xsd:attribute name="mnemonic" type="ecore:EString"/>
+        <xsd:attribute ecore:unsettable="false" name="checked" type="ecore:EBoolean"/>
+        <xsd:attribute ecore:unsettable="false" name="keycode" type="ecore:EInt"/>
+        <xsd:attribute ecore:unsettable="false" name="modifiers" type="ecore:EInt"/>
+        <xsd:attribute ecore:unsettable="false" name="separator" type="ecore:EBoolean"/>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="Pattern">
+    <xsd:attribute name="pattern" type="ecore:EString"/>
+  </xsd:complexType>
+</xsd:schema>

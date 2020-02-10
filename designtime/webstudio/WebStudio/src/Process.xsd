@@ -1,0 +1,479 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+	
+	<!-- Process Element -->
+	<xs:element name="process">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="label" />
+				<xs:element ref="version" />
+				<xs:element ref="processType" />
+				<xs:element ref="laneset" />
+				<xs:element ref="properties" />
+				<xs:element ref="flowNodes" />
+				<xs:element ref="processId" />
+				<xs:element ref="sequenceFlows" />
+				<xs:element ref="creationDate" />
+				<xs:element ref="lastModificationDate" />
+				<xs:element ref="annotations"></xs:element>
+				<xs:element ref="associations"></xs:element>
+				<xs:element ref="author"></xs:element>
+				<xs:element ref="documentation"></xs:element>
+			</xs:sequence>
+			<xs:attribute name="Id" use="required" type="xs:integer" />
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="label" type="xs:string" />
+	<xs:element name="processType" type="xs:string" />
+	<xs:element name="version" type="xs:integer" />
+	<xs:element name="author" type="xs:string"/>
+	<xs:element name="creationDate" type="xs:string" />
+	<xs:element name="lastModificationDate" type="xs:string" />
+	
+	<xs:element name="laneset">
+		<xs:complexType>
+			<xs:complexContent>
+				<xs:extension base="superlane">
+					<xs:attribute name="Id" use="required" type="xs:integer" />
+				</xs:extension>
+			</xs:complexContent>
+		</xs:complexType>
+	</xs:element>
+	
+	<!--  Properties element which has collection of  property -->
+	<xs:element name="properties">
+		<xs:complexType>
+			<xs:sequence>
+        <xs:element ref="property" maxOccurs="unbounded" minOccurs="0"/>
+			</xs:sequence>
+			<xs:attribute name="Id" use="required" type="xs:integer" />
+		</xs:complexType>
+	</xs:element>
+	
+	<!--  Property Element -->
+	<xs:element name="name" type="xs:string"/>
+	<xs:element name="type" type="xs:string"/>
+	<xs:element name="isMultiple" type="xs:boolean" />
+	<xs:element name="path" type="xs:string" />	
+
+	<xs:element name="property">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="name" />
+				<xs:element ref="type" />
+				<xs:element ref="isMultiple" />
+				<xs:element ref="path"></xs:element>
+			</xs:sequence>
+			<xs:attribute name="Id" use="required" type="xs:integer" />
+		</xs:complexType>
+	</xs:element>
+	
+	<!--  FlowNodes element which has collection of FlowNodeElement -->
+	<xs:element name="flowNodes">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element maxOccurs="unbounded" ref="flowNodeElement" />
+			</xs:sequence>
+			<xs:attribute name="Id" use="required" type="xs:integer" />
+		</xs:complexType>
+	</xs:element>
+	
+	<xs:element name="elementName" type="xs:string" />
+	<xs:element name="elementType" type="xs:string" />
+	<xs:element name="elementId" type="xs:string" />
+	<xs:element name="flowNodeElement" type="flowNodeElement"/>	
+	<xs:element name="resourcePath" type="xs:string" />
+	<xs:element name="incoming" type="xs:string" />
+	<xs:element name="outgoing" type="xs:string" />
+	<xs:element name="checkpoint" type="xs:boolean" />
+	<xs:element name="isSequential" type="xs:boolean" />
+	<xs:element name="testBefore" type="xs:boolean" />
+	<xs:element name="loopCardinality" type="xs:string" />
+	<xs:element name="loopCount" type="xs:string" />
+	<xs:element name="behavior" type="xs:NCName" />
+	<xs:element name="loopCondition" type="xs:string" />
+	<xs:element name="completionCondition" type="xs:string" />
+	<xs:element name="keyExpression" type="xs:string" />
+	<xs:element name="service" type="xs:string" />
+	<xs:element name="port" type="xs:string" />
+	<xs:element name="operation" type="xs:string" />
+	<xs:element name="soapAction" type="xs:string" />
+	<xs:element name="opTimeout" type="xs:integer" />
+	<xs:element name="transport" type="xs:anyURI" />
+	<xs:element name="bindingType" type="xs:NCName" />
+    <xs:element name="defaultSequenceId" type="xs:string"/>
+    <xs:element name="joinRuleFunction" type="xs:string"/>
+    <xs:element name="forkRuleFunction" type="xs:string"/>
+    <xs:element name="mergeExpression" type="xs:string"/>
+    <xs:element name="toolId" type="xs:string"/>    
+	<xs:element name="elementLabel" type="xs:string"/>
+	<xs:element name="triggerbyevent" type="xs:boolean"/>  
+    <xs:element name="rules" type="xs:string"/>
+    <xs:element name="priorityValue" type="xs:integer" />
+    <xs:element name="uniqueId" type="xs:integer" />
+    
+	<!--  FlowNodeElement type-->
+	<xs:complexType name="flowNodeElement">
+		<xs:sequence>
+			<xs:element ref="elementId" />
+			<xs:element ref="elementType" />
+			<xs:element ref="elementName" />
+			<xs:element ref="nodePoint" />
+			<xs:element ref="labelPoint" />
+			<xs:element ref="resourcePath" />
+			<xs:element minOccurs="0" ref="incoming" />
+			<xs:element minOccurs="0" ref="outgoing" />
+			<xs:element ref="lanes" />
+			<xs:element ref="uniqueId" />
+			<xs:element ref="version" />
+			<xs:element ref="checkpoint" />
+			<xs:element minOccurs="0" ref="outputMap" />
+			<xs:element minOccurs="0" ref="uriList" />
+			<xs:element minOccurs="0" ref="loopCharacteristics" />
+			<xs:choice minOccurs="0">
+				<xs:element ref="keyExpression" />
+				<xs:sequence>
+					<xs:element ref="service" />
+					<xs:element ref="port" />
+					<xs:element ref="operation" />
+					<xs:element ref="soapAction" />
+					<xs:element ref="opTimeout" />
+					<xs:element ref="transport" />
+					<xs:element ref="bindingType" />
+				</xs:sequence>
+				<xs:element ref="elementLabel"></xs:element>
+				<xs:element ref="triggerbyevent"></xs:element>
+			</xs:choice>
+			<xs:element minOccurs="0" ref="inputMap" />
+			<xs:element minOccurs="0" ref="priorityValue" />
+			<xs:element minOccurs="0" ref="messageStarterList" />
+			<xs:element ref="defaultSequenceId" />
+			<xs:element ref="joinRuleFunction" />
+			<xs:element ref="forkRuleFunction" />
+			<xs:element ref="mergeExpression" />
+			<xs:element ref="toolId" />
+			<xs:element ref="documentation" />
+			<xs:element ref="eventDefinition" />
+			<xs:element ref="timeout"/>
+		</xs:sequence>
+		<xs:attribute name="Id" type="xs:string"></xs:attribute>
+	</xs:complexType>
+	
+	<!-- Node Points Element -->
+	<xs:element name="nodePoint">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="x" />
+				<xs:element ref="y" />
+			</xs:sequence>
+			<xs:attribute name="Id" use="required" type="xs:integer" />
+		</xs:complexType>
+	</xs:element>
+	
+	<!-- Label Points Element -->
+	<xs:element name="labelPoint">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="x" />
+				<xs:element ref="y" />
+			</xs:sequence>
+			<xs:attribute name="Id" use="required" type="xs:integer" />
+		</xs:complexType>
+	</xs:element>
+	
+	<!-- OutPutMap Element -->
+	<xs:element name="outputMap">
+		<xs:complexType>
+			<xs:complexContent>
+				<xs:extension base="mapping">
+					<xs:attribute name="Id" use="required" type="xs:integer" />
+				</xs:extension>
+			</xs:complexContent>
+		</xs:complexType>
+	</xs:element>
+	
+	<!-- URIList Element which has collection of implementationURI element-->
+	<xs:element name="uriList">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element maxOccurs="unbounded" ref="implementationURI" />
+			</xs:sequence>
+			<xs:attribute name="Id" use="required" type="xs:integer" />
+		</xs:complexType>
+	</xs:element>
+	
+	<!-- ImplementationURI Element-->
+	<xs:element name="implementationURI">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="uri" />
+				<xs:element ref="isDeployed" />
+			</xs:sequence>
+			<xs:attribute name="Id" use="required" type="xs:integer" />
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="uri" type="xs:string" />
+	<xs:element name="isDeployed" type="xs:boolean" />
+	
+	<!-- Loop Characteristics Elememt -->
+	<xs:element name="loopCharacteristics">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="isSequential" />
+				<xs:element ref="loopCount" />
+				<xs:element ref="completionCondition"/>
+				<xs:element ref="loopCardinality"/>
+				<xs:element ref="testBefore" />
+				<xs:element ref="loopCondition" />
+				<xs:element ref="type" />
+				<xs:element ref="behavior"/>
+			</xs:sequence>
+			<xs:attribute name="Id" use="required" type="xs:integer" />
+		</xs:complexType>
+	</xs:element>
+	
+	<!-- Input Map Elememt -->	
+	<xs:element name="inputMap">
+		<xs:complexType>
+			<xs:complexContent>
+				<xs:extension base="mapping">
+					<xs:attribute name="Id" use="required" type="xs:integer" />
+				</xs:extension>
+			</xs:complexContent>
+		</xs:complexType>
+	</xs:element>	
+	
+	
+	<!-- Message Starter list Elememt -->	
+	<xs:element name="messageStarterList">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element maxOccurs="unbounded" ref="messageStarter" />
+			</xs:sequence>
+			<xs:attribute name="Id" use="required" type="xs:integer" />
+		</xs:complexType>
+	</xs:element>
+	
+	<!-- Message Starter Elememt -->
+	<xs:element name="messageStarter">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="msgStarterId" />
+				<xs:element ref="replyTo" />
+				<xs:element ref="consume" />
+			</xs:sequence>
+			<xs:attribute name="Id" use="required" type="xs:integer" />
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="msgStarterId" type="xs:NCName" />
+	<xs:element name="replyTo" type="xs:boolean" />
+	<xs:element name="consume" type="xs:boolean" />
+	<xs:element name="processId" type="xs:NCName" />
+	
+	<xs:element name="timeout">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="expression" />
+				<xs:element ref="unit" />
+				<xs:element ref="event" />
+			</xs:sequence>
+			<xs:attribute name="Id" use="required" type="xs:integer" />
+		</xs:complexType>
+	</xs:element>
+	
+	<xs:element name="expression" type="xs:string" />
+	<xs:element name="unit" type="xs:string" />
+	<xs:element name="event" type="xs:string" />
+	
+	<!-- Sequence Flows Element  which has collection of sequence flow element-->
+	<xs:element name="sequenceFlows">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element maxOccurs="unbounded" ref="sequenceElement" />
+			</xs:sequence>
+			<xs:attribute name="Id" use="required" type="xs:integer" />
+		</xs:complexType>
+	</xs:element>
+	
+	<!--  Sequence flow element -->
+	<xs:element name="sequenceElement" type="sequenceElement"/>
+	
+	<!--  Sequence flow type -->
+	<xs:complexType name="sequenceElement">
+		<xs:sequence>
+			<xs:element ref="elementId" />
+			<xs:element ref="elementType" />
+			<xs:element ref="elementName" />
+			<xs:element ref="lanes" />
+			<xs:element ref="uniqueId" />
+			<xs:element ref="isImmediate" />
+			<xs:element ref="targetReference" />
+			<xs:element ref="sourceReference" />
+			<xs:element ref="startPoint" />
+			<xs:element ref="endPoint" />
+			<xs:element ref="bendPointList" />
+			<xs:element ref="expression" />
+			<xs:element ref="documentation"/>
+		</xs:sequence>
+		<xs:attribute name="Id" use="required" type="xs:integer" />
+	</xs:complexType>	
+	<xs:element name="isImmediate" type="xs:boolean" />
+	<xs:element name="targetReference" type="xs:NCName" />
+	<xs:element name="sourceReference" type="xs:NCName" />	
+	
+	<!-- Start Point -->
+	<xs:element name="startPoint">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="x" />
+				<xs:element ref="y" />
+			</xs:sequence>
+			<xs:attribute name="Id" use="required" type="xs:integer" />
+		</xs:complexType>
+	</xs:element>
+	
+	<!-- End Point -->
+	<xs:element name="endPoint">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="x" />
+				<xs:element ref="y" />
+			</xs:sequence>
+			<xs:attribute name="Id" use="required" type="xs:integer" />
+		</xs:complexType>
+	</xs:element>
+	
+	
+	<!-- Super lane type-->
+	<xs:complexType name="superlane">
+		<xs:sequence>
+			<xs:element ref="lane" />
+		</xs:sequence>
+	</xs:complexType>
+	<xs:element name="lane">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="laneId" />
+				<xs:element ref="elementName" />
+			</xs:sequence>
+			<xs:attribute name="Id" use="required" type="xs:integer" />
+		</xs:complexType>
+	</xs:element>
+	
+	<!--  Lanes element and its  -->
+	<xs:element name="laneId" type="xs:string" />
+	<xs:element name="x" type="xs:double" />
+	<xs:element name="y" type="xs:double" />	
+	<xs:element name="lanes">
+		<xs:complexType>
+			<xs:complexContent>
+				<xs:extension base="superlane">
+					<xs:attribute name="Id" use="required" type="xs:integer" />
+				</xs:extension>
+			</xs:complexContent>
+		</xs:complexType>
+	</xs:element>
+	
+
+	<xs:complexType name="mapping">
+		<xs:sequence>
+			<xs:element ref="mapping" />
+		</xs:sequence>
+	</xs:complexType>
+	 <xs:element name="mapping" type="xs:string" />
+	
+	<!--Bendpoint  Element -->
+	<xs:element name="bendPoints">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="x"></xs:element>
+				<xs:element ref="y"></xs:element>
+			</xs:sequence>
+			<xs:attribute name="Id" type="xs:integer" use="required"></xs:attribute>
+		</xs:complexType>
+	</xs:element>
+	
+	<!-- Bend point lsit element -->
+	<xs:element name="bendPointList">
+		<xs:complexType>
+			<xs:sequence>
+  			<xs:element ref="bendPoints" maxOccurs="unbounded" minOccurs="0"></xs:element>
+			</xs:sequence>
+			<xs:attribute name="Id" type="xs:integer" use="required"></xs:attribute>
+		</xs:complexType>
+	</xs:element>
+	
+	<!--Annotations Element -->
+	<xs:element name="annotations">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="annotationElement" maxOccurs="unbounded"
+					minOccurs="1"/>
+			</xs:sequence>
+			<xs:attribute name="Id" type="xs:integer" use="required"></xs:attribute>
+		</xs:complexType>
+	</xs:element>
+	
+	<!--Associations Element -->
+	<xs:element name="associations">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element maxOccurs="unbounded" ref="associationElement" />
+			</xs:sequence>
+			<xs:attribute name="Id" type="xs:integer"></xs:attribute>
+		</xs:complexType>
+	</xs:element>
+	
+	<!--Annotation Element -->
+	<xs:element name="annotationElement">
+		<xs:complexType>
+			<xs:complexContent>
+				<xs:extension base="flowNodeElement">
+					<xs:sequence>
+						<xs:element ref="textValue"/>
+					</xs:sequence>
+				</xs:extension>
+			</xs:complexContent>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="textValue" type="xs:string"/>
+	
+	<!--Association Element -->
+	<xs:element name="associationElement">
+		<xs:complexType>
+			<xs:complexContent>
+				<xs:extension base="sequenceElement">
+				<xs:sequence>
+						<xs:element ref="elementLabel"/>
+					</xs:sequence>
+				</xs:extension>
+			</xs:complexContent>
+		</xs:complexType>
+	</xs:element>
+	
+	<!-- Documentation Element -->
+	<xs:element name="documentation">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="docId" />
+				<xs:element ref="text" />
+			</xs:sequence>
+			<xs:attribute name="Id" type="xs:string"></xs:attribute>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="docId" type="xs:string" />
+	<xs:element name="text" type="xs:string" /> 
+		  
+   	<!-- Event Defination Element -->
+	<xs:element name="eventDefinition">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="definitionType" />
+				<xs:element ref="definitionId" />
+			</xs:sequence>
+			<xs:attribute name="Id" type="xs:string"></xs:attribute>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="definitionId" type="xs:string" />
+	<xs:element name="definitionType" type="xs:string" /> 
+</xs:schema>

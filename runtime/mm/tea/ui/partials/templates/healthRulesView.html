@@ -1,0 +1,130 @@
+<div ng-controller='IndexCtrl' class="appManagementPage tea-theme wrapper row-offcanvas row-offcanvas-left">
+   	<div ng-include src="'partials/templates/header.html'"></div>
+    <div class="beTeaAgentView"> 	
+   		<aside class="left-side sidebar-offcanvas" ng-class="">
+        	<div ng-include src="'partials/templates/leftNav.html'"></div>
+    	</aside>
+		<div ng-controller="healthRulesCtrl" >
+     		<div ng-show="notification.show">
+      			<div ng-include="'partials/templates/directive/showNotification.html'"></div>
+     		</div>   
+		 	<div class="adminView">
+		 		<div id="loaderdiv" style="display: none;">
+					<img src="images/icons/loader.gif" class="ajax-loader" />
+				</div>
+        		<h3>Rules</h3> 
+        		<div ng-include="'partials/templates/aboutBETeaView.html'"></div>    
+        		<div class="row" style="padding-bottom: 10px">
+        			<ul class="appBox clearfix" style="padding-bottom: 10px">        
+        				<li class="firstButton pull-left">  
+        					<div ng-include="'partials/templates/createNewRulePanel.html'"></div>
+        					<div  class="operation"  ng-click="showCreateNewRuleWizard()"> 
+                 				<i class="fa fa-plus-circle fa-lg"></i>
+				 				<span>Create New Rule</span>  
+					 		</div>           
+            			</li>
+            			<li class="button pull-left" ng-if="hasPermission(19)">
+                    		<div ng-class="getAllSelectedRulesList().length > 0 ? 'operation' : 'disableOperation'" ng-click="getAllSelectedRulesList().length > 0 ? deleteRule(null,true) : null" >
+                        		<i  class="fa fa-trash-o"></i>
+                       			<span>Delete</span>
+                    		</div>
+                		</li> 
+            			<li class="button pull-left">  
+        					<div  ng-class="getSelectedEnableDisableRulesList(false).length > 0 ?'operation':'disableOperation'"  ng-click="getSelectedEnableDisableRulesList(false).length > 0?updateRuleState(true):null"> 
+                 				<i class="fa fa-toggle-on"></i>
+				 				<span>Enable</span>  
+					 		</div>           
+            			</li>
+            			<li class="button pull-left">  
+        					<div  ng-class="getSelectedEnableDisableRulesList(true).length>0?'operation':'disableOperation'"  ng-click="getSelectedEnableDisableRulesList(true).length>0?updateRuleState(false):null"> 
+                 				<i class="fa fa-toggle-off"></i>
+				 				<span>Disable</span>  
+					 		</div>           
+            			</li> 
+            			<li class="button pull-right">
+            				<div class="operation" ng-click="reloadPage()">
+      	  		  				<i class="fa fa-refresh"></i>
+				  				<span>Refresh</span> 
+				  			</div>
+            			</li>
+        			</ul> 
+        		</div>      
+        		<div class="be_operations_container container">
+        			<div  ng-include="'partials/templates/actionConfirmation.html'"></div>
+	        		<div class="instanceListView">
+			       		<table tea-table class="tea-table" >
+		       				<thead>
+		        				<tr>
+		        					<th class="selection"><input type="checkbox" ng-model="filteredValues.allRulesChecked" ng-change="selectAllRules()"></th>
+		        					<th>
+		        						Rule Name
+		        						<i title="sort" class="operation fa fa-sort" ng-click="onSortCall('name')" ></i>
+		        						<div>
+      										<input ng-model="search.name" class="be_filter_input" type="text" />
+    									</div>
+		        					</th>
+		        					<th>
+		        						Monitored Enity
+		        						<i title="sort" class="operation fa fa-sort" ng-click="onSortCall('name')" ></i>
+		        						<div>
+      										<input ng-model="search.entity" class="be_filter_input" type="text" />
+    									</div>
+		        					</th>
+		        					<th>
+		        						User
+		        						<i title="sort" class="operation fa fa-sort" ng-click="onSortCall('userName')" ></i>
+		        						<div>
+      										<input ng-model="search.userName" class="be_filter_input" type="text" />
+    									</div>
+		        					</th>
+		        					<th>
+		        						Created On
+		        						<i title="sort" class="operation fa fa-sort" ng-click="onSortCall('createdDate')" ></i>
+		        						<div>
+      										<input ng-model="search.createdDate" class="be_filter_input" type="text" />
+    									</div>
+		        					</th>
+		        					<th>
+		        						Modified On
+		        						<i title="sort" class="operation fa fa-sort" ng-click="onSortCall('modifiedDate')" ></i>
+		        						<div>
+      										<input ng-model="search.modifiedDate" class="be_filter_input" type="text" />
+    									</div>
+		        					</th>
+		        					<th>
+		        						Enabled
+		        						<i title="sort" class="operation fa fa-sort" ng-click="onSortCall('enabled')" ></i>
+		        						<div>
+      										<input ng-model="search.enabled" class="be_filter_input" type="text" />
+    									</div>
+		        					</th>
+		        					<th></th>
+		        				</tr>
+		        			</thead>
+		        			<tbody>
+		        				<tr ng-repeat="rule in applicationRules | orderBy:sort.column:sort.descending | filter:filterFunction" ng-class="rule.enabled?'':'ruleDisabled'">
+		        					<td><input type="checkbox" ng-model="rule.isChecked" ng-change="selectRulesEntity()"></td>
+		        					<td>{{rule.name.split('$')[2]}}</td>
+		        					<td>{{ruleEntityAndAttibutes[rule.name.split('$')[1]].displayName}}</td>
+		        					<td>{{rule.userName}}</td>
+		        					<td>{{getDateFromLong(rule.createdDate)}}</td>
+		        					<td>{{getDateFromLong(rule.modifiedDate)}}</td>
+		        					<td>{{rule.enabled}}</td>
+		        					<td>
+		        						<i title="Edit" class="fa fa-pencil operation" ng-click="showEditRuleWizard(rule)"></i>
+		        						<i title="Delete" style="margin-left: 10px;" class="operation fa fa-trash-o" ng-click="deleteRule(rule,false)"></i>
+		        					</td> 
+		        				</tr>
+		        			</tbody>
+		        			<tfoot>
+		                    	<tr>
+		                        	<td colspan="11">- END OF DATA -</td>
+		                   	 	</tr>
+		                	</tfoot>
+		       			</table>
+		       		</div>
+        		</div>
+     		</div> 
+     	</div> 
+     </div> 
+</div>    

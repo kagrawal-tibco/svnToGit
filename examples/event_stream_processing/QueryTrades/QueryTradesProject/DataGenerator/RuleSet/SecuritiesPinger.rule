@@ -1,0 +1,62 @@
+/**
+ * @description 
+ * @author 
+ */
+rule DataGenerator.RuleSet.SecuritiesPinger {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		DataGenerator.Entities.SecuritiesPinger	securitiespinger;
+		
+	}
+	when {
+		
+	}
+	then {
+		ConceptModel.Securities s = Instance.getByExtId("SEC:TIBX");
+		if(s == null){
+		    s = Instance.newInstance("/ConceptModel/Securities", "SEC:TIBX");
+		    s.inactive = "N";
+		    s.securityId = "TIBX";
+		    System.debugOut("Created Security: " + s.securityId);
+		
+		    s = Instance.newInstance("/ConceptModel/Securities", "SEC:HPQ");
+		    s.inactive = "N";
+		    s.securityId = "HPQ";
+		    System.debugOut("Created Security: " + s.securityId);
+		
+		    s = Instance.newInstance("/ConceptModel/Securities", "SEC:JNJ");
+		    s.inactive = "N";
+		    s.securityId = "JNJ";
+		    System.debugOut("Created Security: " + s.securityId);
+		
+		    s = Instance.newInstance("/ConceptModel/Securities", "SEC:MSFT");
+		    s.inactive = "N";
+		    s.securityId = "MSFT";
+		    System.debugOut("Created Security: " + s.securityId);
+		
+		    s = Instance.newInstance("/ConceptModel/Securities", "SEC:VMW");
+		    s.inactive = "N";
+		    s.securityId = "VMW";
+		    System.debugOut("Created Security: " + s.securityId);
+		}
+		
+		int count = DataGenerator.Entities.Counter.securitiesPingCount;
+		if(count > 100){
+		    return;
+		}
+		
+		if(count > 0 && count % 10 == 0){
+		    String id = "IDX." + count;
+		    s = Instance.newInstance("/ConceptModel/Securities", "SEC:" + id);
+		    s.inactive = "N";
+		    s.securityId = id;
+		    System.debugOut("Created Security: " + s.securityId);
+		}
+		
+		count = count + 1;
+		DataGenerator.Entities.Counter.securitiesPingCount = count;
+	}
+}

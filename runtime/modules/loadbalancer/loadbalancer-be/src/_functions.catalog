@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<catalog name="CEP LoadBalancer">
+        <enabled system-property="TIBCO.BE.function.catalog.LoadBalancer">true</enabled>
+
+        <category>
+            <name>LoadBalancer</name>
+
+            <category>
+                <name>Router</name>
+
+                <function>
+                    <name>createLoadBalancerTo</name>
+                    <class>com.tibco.cep.loadbalancer.functions.router.RoutingFunctions</class>
+                    <args>adhocConfigName</args>
+                    <async>false</async>
+                    <helpUrl/>
+                    <isActionOnly>false</isActionOnly>
+                    <isValidInQuery>true</isValidInQuery>
+                </function>
+
+                <function>
+                    <name>send</name>
+                    <class>com.tibco.cep.loadbalancer.functions.router.RoutingFunctions</class>
+                    <args>loadBalancer, event, routingKey</args>
+                    <async>false</async>
+                    <helpUrl/>
+                    <isActionOnly>false</isActionOnly>
+                    <isValidInQuery>true</isValidInQuery>
+                </function>
+
+                <function>
+                    <name>discardLoadBalancer</name>
+                    <class>com.tibco.cep.loadbalancer.functions.router.RoutingFunctions</class>
+                    <args>loadBalancer</args>
+                    <async>false</async>
+                    <helpUrl/>
+                    <isActionOnly>false</isActionOnly>
+                    <isValidInQuery>true</isValidInQuery>
+                </function>
+            </category>
+
+            <category>
+                <name>Receiver</name>
+
+                <category>
+                    <name>Membership</name>
+
+                    <function>
+                        <name>isInFlux</name>
+                        <class>com.tibco.cep.loadbalancer.functions.receiver.membership.MembershipFunctions</class>
+                        <args></args>
+                        <async>false</async>
+                        <helpUrl/>
+                        <isActionOnly>false</isActionOnly>
+                        <isValidInQuery>true</isValidInQuery>
+                    </function>
+
+                    <function>
+                        <name>getRecentChangeAt</name>
+                        <class>com.tibco.cep.loadbalancer.functions.receiver.membership.MembershipFunctions</class>
+                        <args></args>
+                        <async>false</async>
+                        <helpUrl/>
+                        <isActionOnly>false</isActionOnly>
+                        <isValidInQuery>true</isValidInQuery>
+                    </function>
+                </category>
+
+                <function>
+                    <name>createTcpReceiverFor</name>
+                    <class>com.tibco.cep.loadbalancer.functions.receiver.ReceivingFunctions</class>
+                    <args>adhocConfigName</args>
+                    <async>false</async>
+                    <helpUrl/>
+                    <isActionOnly>false</isActionOnly>
+                    <isValidInQuery>true</isValidInQuery>
+                </function>
+
+               <function>
+                   <name>discardReceiver</name>
+                   <class>com.tibco.cep.loadbalancer.functions.receiver.ReceivingFunctions</class>
+                   <args>loadBalancedReceiver</args>
+                   <async>false</async>
+                   <helpUrl/>
+                   <isActionOnly>false</isActionOnly>
+                   <isValidInQuery>true</isValidInQuery>
+               </function>
+            </category>
+        </category>
+</catalog>
+

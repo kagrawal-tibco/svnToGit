@@ -1,0 +1,35 @@
+/**
+ * @description toggle the deployable state (ear out-of-sync) for the project
+ */
+void rulefunction WebStudio.Core.RuleFunctions.Utils.WS_RF_UpdateDeployableState {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String projectName;
+		boolean dirty;
+		String userName;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.WS_RF_UpdateDeployableState");
+
+		Log.log(LOGGER, "Debug", "Update deployable state for project %s to dirty %s", projectName, dirty);
+
+		String subscriptionId = WS_RF_GetSubscriptionId(userName);
+		String deployStateExtId = WS_RF_CreateUserArtifactExtId("Deploy", null, projectName, null, subscriptionId, null);
+		//Lock this concept
+		boolean deployStateLock = Cluster.DataGrid.Lock(deployStateExtId, -1, false);		
+		if (deployStateLock) {
+			//Mark DeployableState for project as dirty
+			AMS_C_DeployableState deployableState = Instance.getByExtIdByUri(deployStateExtId, "/Approval/Concepts/ArtifactsConcepts/AMS_C_DeployableState");
+			if (deployableState == null) {									
+				Log.log(LOGGER, "Debug", "No instance found for deployableState of project %s, creating one.", projectName);
+				deployableState = Instance.createInstance("xslt://{{/Approval/Concepts/ArtifactsConcepts/AMS_C_DeployableState}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"1.0\" exclude-result-prefixes=\"xsl xsd\">\n    <xsl:output method=\"xml\"/>\n    <xsl:param name=\"deployStateExtId\"/>\n    <xsl:param name=\"dirty\"/>\n    <xsl:template match=\"/\">\n        <createObject>\n            <object>\n                <xsl:attribute name=\"extId\">\n                    <xsl:value-of select=\"$deployStateExtId\"/>\n                </xsl:attribute>\n                <dirty>\n                    <xsl:value-of select=\"$dirty\"/>\n                </dirty>\n            </object>\n        </createObject>\n    </xsl:template>\n</xsl:stylesheet>");
+			} else {
+				Log.log(LOGGER, "Debug", "Asserting event to update deployableState of project %s.", projectName);
+				WS_E_UpdateDeployableStateEvent updateDeployStateEvent = Event.createEvent("xslt://{{/WebStudio/Core/Events/WS_E_UpdateDeployableStateEvent}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"2.0\" exclude-result-prefixes=\"xsl xsd\"><xsl:output method=\"xml\"/><xsl:param name=\"projectName\"/><xsl:param name=\"dirty\"/><xsl:param name=\"userName\"/><xsl:template name=\"Function\" match=\"/\"><createEvent><event><projectName><xsl:value-of select=\"$projectName\"/></projectName><isDirty><xsl:value-of select=\"$dirty\"/></isDirty><userName><xsl:value-of select=\"$userName\"/></userName></event></createEvent></xsl:template></xsl:stylesheet>");
+				Event.assertEvent(updateDeployStateEvent);																			
+			}
+		}			
+	}
+}

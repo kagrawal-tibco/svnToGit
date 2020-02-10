@@ -1,0 +1,113 @@
+/**
+ * @description Create appropriate instance of abstract symbol info concept.
+ */
+WebStudio.Core.Concepts.RuleTemplateInstance.Builder.WS_C_AbstractSymbolInfo rulefunction WebStudio.Core.RuleFunctions.Utils.RT.Builder.WS_RF_CreateBuilderAbstractSymbolInfoFactory {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String scsIntegrationType;
+		String scsRootURL;
+		String projectName;
+		Object symbolChildNode;
+		Object ruleTemplateObject;
+		//A flag which will be true if this is directly a scope element or action context element
+		//and not nested child.
+		boolean isTopLevelElement;
+		//If true set the alias and type on the top level symbol info else not.
+		//Required when inserting into command.
+		boolean isCommandChild;
+		String username;
+		String[] roles;
+		String subscriptionId;
+		String earPath;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.RT.Builder.WS_RF_CreateBuilderAbstractSymbolInfoFactory");
+		
+		String symbolIdsMapId = "SYMBOL_IDS";
+		if (subscriptionId != null) symbolIdsMapId += ("_" + subscriptionId);
+		Object symbolIdsToSymbolInfosMap = Util.HashMap.getMap(symbolIdsMapId);
+		if (symbolIdsToSymbolInfosMap == null) {
+			Util.HashMap.createMap(symbolIdsMapId);
+		}
+		String symbolTypesMapId = "SYMBOL_TYPES";
+		if (subscriptionId != null) symbolTypesMapId += ("_" + subscriptionId);
+		//Put dummy integers in the map.
+		Object symbolTypesToIntegerMap = Util.HashMap.getMap(symbolTypesMapId);
+		if (symbolTypesToIntegerMap == null) {
+			Util.HashMap.createMap(symbolTypesMapId);
+		}
+		String nodeGUID = WS.RT.Builder.getGUID(symbolChildNode);
+		WS_C_AbstractSymbolInfo symbolInfo = Util.HashMap.getObject(symbolIdsMapId, nodeGUID);
+		
+		if (symbolInfo == null) {
+			String symbolAlias = WS.RT.Builder.getSymbolAlias(symbolChildNode);
+			String symbolType = WS.RT.Builder.getSymbolType(scsIntegrationType, scsRootURL, projectName, symbolChildNode, WS_RF_GetEarPath(projectName, subscriptionId));
+			if (symbolType == null) {
+				Log.log(LOGGER, "Debug", "Command Type not found for alias %s. Resolving from declaration", symbolAlias);
+				symbolType = WS_RF_ResolveSymbolType(null, scsRootURL, projectName, symbolAlias, ruleTemplateObject, subscriptionId);
+			}
+			
+			Log.log(LOGGER, "Debug", "SymbolAlias[%s] & SymbolType[%s].", symbolAlias, symbolType);
+			
+			if (!WS.RT.Builder.isSimpleSymbolNode(symbolChildNode) && !WS.RT.Builder.isPrimitiveType(symbolType)) {
+				// Need to check if should create a new one every time?
+				String symbolExtId =  WS_RF_CreateUserArtifactExtId("SHARED_SYMBOL", symbolType, projectName, username, null, "" + System.nanoTime());
+				WS_C_ComplexSymbolInfo complexSymbolInfo = Instance.getByExtIdByUri(symbolExtId,"/WebStudio/Core/Concepts/RuleTemplateInstance/Builder/WS_C_ComplexSymbolInfo");
+				Log.log(LOGGER, "Debug", "LookingUp/Creating Symbol with ExtId - %s.", symbolExtId);
+				
+				if (complexSymbolInfo == null) {
+					Log.log(LOGGER, "Debug", "Symbol not found, creating a new one.");
+					Log.log(LOGGER, "Debug", "Trying to acquire lock on Complex SymbolInfo space with ExtId - %s", symbolExtId);
+			        boolean complexSymbolInfoLock = Cluster.DataGrid.Lock(symbolExtId, -1, false);
+					if (complexSymbolInfoLock) {
+						Log.log(LOGGER, "Debug", "Lock acquired for Complex SymbolInfo space.");
+						complexSymbolInfo = Instance.newInstance("/WebStudio/Core/Concepts/RuleTemplateInstance/Builder/WS_C_ComplexSymbolInfo", symbolExtId);
+					}
+				}
+				symbolInfo = complexSymbolInfo;	
+			} else {
+				Log.log(LOGGER, "Debug", "Processing Simple Type - %s.", symbolType);
+				WS_C_SimpleSymbolInfo simpleSymbolInfo = Instance.newInstance("/WebStudio/Core/Concepts/RuleTemplateInstance/Builder/WS_C_SimpleSymbolInfo", null);
+				symbolInfo = simpleSymbolInfo;	
+			}
+			
+			boolean shouldAppendSymAliasAndType = !(isCommandChild && isTopLevelElement);
+			
+			Log.log(LOGGER, "Debug", "shouldAppendSymAliasAndType - %s.", shouldAppendSymAliasAndType);
+			
+			//This is a NAND truth table.
+			if (shouldAppendSymAliasAndType) {
+				symbolInfo.symbolAlias = symbolAlias;
+				symbolInfo.type = symbolType;
+								
+				// Load associated Domain Model's if any provided its not already associated from a previous lookup
+				if (symbolInfo.domainInfo != null && Instance.PropertyArray.toArrayConcept(symbolInfo.domainInfo)@length == 0) {
+					String[] domainPaths = WS.RT.Builder.getSymbolDomainPaths(symbolChildNode);
+							
+					if (domainPaths != null && domainPaths@length > 0) {
+						Log.log(LOGGER, "Debug", "Total Domain models associated - %s.", domainPaths@length);
+						for (int i = 0; i < domainPaths@length; i++) {
+							WS_C_Domain domainInfoConcept = WS_RF_FetchDomainEntries(username, roles, projectName, domainPaths[i], "domain", true);
+							Instance.PropertyArray.appendConceptReference(symbolInfo.domainInfo, domainInfoConcept, 1L);
+							WS.Common.assertInstance(domainInfoConcept, false);
+						}
+					}
+				}
+			}
+			Object integer = Util.HashMap.getObject(symbolTypesMapId, symbolInfo.type);
+			if (!WS.RT.Builder.isSimpleSymbolNode(symbolChildNode) && 
+							isTopLevelElement && integer == null) {
+				Log.log(LOGGER, "Debug", "Adding processed root level symbol %s to map", symbolInfo.type);
+				Util.HashMap.putObject(symbolTypesMapId, symbolInfo.type, 1);
+			}
+			//Put in map
+			Util.HashMap.putObject(symbolIdsMapId, nodeGUID, symbolInfo);
+		} else {
+			Log.log(LOGGER, "Debug", "SymbolInfo with nodeGUID[%s] already exists.", nodeGUID);
+		}
+			
+		return symbolInfo;
+	}
+}

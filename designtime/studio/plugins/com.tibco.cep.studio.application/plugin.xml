@@ -1,0 +1,264 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.2"?>
+<plugin>
+   <extension
+         point="org.eclipse.ui.startup">
+      <startup
+            class="com.tibco.cep.studio.application.StudioApplicationPluginStartup">
+      </startup>
+   </extension>
+   <extension
+         point="org.eclipse.ui.commands">
+      <category
+            id="com.tibco.cep.studio.application.category"
+            name="TIBCO BusinessEvents">
+      </category>
+      <command
+            categoryId="com.tibco.cep.studio.application.category"
+            description="Show Console"
+            id="com.tibco.cep.studio.application.console"
+            name="Console">
+      </command>
+      <command
+            categoryId="com.tibco.cep.studio.application.category"
+            description="Show Preferences"
+            id="com.tibco.cep.studio.application.preferences"
+            name="Preferences">
+      </command>
+      <command
+            categoryId="com.tibco.cep.studio.application.category"
+            description="Key Assist"
+            id="com.tibco.cep.studio.application.keyassist"
+            name="Key Assist">
+      </command>
+      <command
+            categoryId="com.tibco.cep.studio.application.category"
+            description="Navigation menu"
+            id="com.tibco.cep.studio.application.navigation"
+            name="Navigation">
+      </command>
+      <command
+            categoryId="com.tibco.cep.studio.application.category"
+            description="Shows all views"
+            id="com.tibco.cep.studio.application.showview"
+            name="Show&amp;View">
+      </command>
+      <command
+            categoryId="com.tibco.cep.studio.application.category"
+            description="Show Properties"
+            id="com.tibco.cep.studio.application.properties"
+            name="Properties">
+      </command>
+      <command
+            categoryId="com.tibco.cep.studio.application.category"
+            description="Shows Palette View"
+            id="com.tibco.cep.studio.application.palette"
+            name="Palette">
+      </command>
+      <command
+            categoryId="com.tibco.cep.studio.application.category"
+            description="Shows Overview"
+            id="com.tibco.cep.studio.application.overview"
+            name="Overview">
+      </command>
+      <command
+            categoryId="com.tibco.cep.studio.application.category"
+            description="Shows Studio Project Explorer"
+            id="com.tibco.cep.studio.application.project.explorer"
+            name="Project Explorer">
+      </command>
+      <!--keyBinding
+            commandId="org.eclipse.ui.file.exit"
+            keyConfigurationId="com.tibco.cep.studio.keyConfiguration"
+            keySequence="M3+M2+X">
+      </keyBinding>
+      <keyBinding
+            commandId="com.tibco.cep.studio.application.keyassist"
+            keyConfigurationId="com.tibco.cep.studio.keyConfiguration"
+            keySequence="M1+M2+L">
+      </keyBinding-->
+   </extension>
+   <extension
+         id="product"
+         name="%productName"
+         point="org.eclipse.core.runtime.products">
+      <product
+            application="org.eclipse.ui.ide.workbench"
+            name="%productName">
+         <property
+               name="aboutText"
+               value="%aboutText">
+         </property>
+         <property
+               name="windowImages"
+               value="icons/tibco16x16.png,icons/tibco32x32.png,icons/tibco48x48.png,icons/tibco64x64.png,icons/tibco128x128.png">
+         </property>
+         <property
+               name="aboutImage"
+               value="icons/about_image.png">
+         </property>
+         <property
+               name="appName"
+               value="%productName">
+         </property>
+         <property
+               name="startupForegroundColor"
+               value="FFFFFF">
+         </property>
+         <property
+               name="startupMessageRect"
+               value="37,390,445,20">
+         </property>
+         <property
+               name="startupProgressRect"
+               value="37,420,337,15">
+         </property>
+         <property
+               name="preferenceCustomization"
+               value="plugin_customization.ini">
+         </property>
+      </product>
+   </extension>
+   <extension
+         point="org.eclipse.ui.intro">
+      <intro
+            class="org.eclipse.ui.intro.config.CustomizableIntroPart"
+            icon="icons/welcome16.gif"
+            id="com.tibco.cep.studio.application.intro">
+      </intro>
+      <introProductBinding
+            introId="com.tibco.cep.studio.application.intro"
+            productId="com.tibco.cep.studio.application.product">
+      </introProductBinding>         
+   </extension>
+   <extension
+         point="org.eclipse.ui.intro.config">
+       <config
+            content="introContent.xml"
+            id="com.tibco.cep.studio.application.introConfigId"
+            introId="com.tibco.cep.studio.application.intro">
+         <presentation
+               home-page-id="root">
+            <implementation
+                  kind="html"
+                  os="win32,linux"
+                  style="content/shared.css">
+            </implementation>
+         </presentation>
+      </config>
+   </extension>
+   <extension
+         point="org.eclipse.ui.perspectives">
+      <perspective
+            class="com.tibco.cep.studio.application.perspective.StudioPerspective"
+            icon="icons/tibco16-32.gif"
+            id="com.tibco.cep.studio.application.perspective"
+            name="BusinessEvents Studio Development">
+      </perspective>
+   </extension>
+  <extension
+         point="org.eclipse.ui.activities">
+      <activity
+      		description="Develop standard applications"
+            id="com.tibco.cep.standard.development"
+            name="Standard Development">
+      </activity>
+      <category
+            description="Use TIBCO BusinessEvents to develop BusinessEvent applications"
+            id="com.tibco.cep.standard.category"
+            name="TIBCO BusinessEvents">
+      </category>
+      <categoryActivityBinding
+            activityId="com.tibco.cep.standard.development"
+            categoryId="com.tibco.cep.standard.category">
+      </categoryActivityBinding>	
+      <activityPatternBinding
+            activityId="com.tibco.cep.standard.development"
+            pattern="com\.tibco\.cep\.diagramming/.*">
+      </activityPatternBinding>
+      <activityPatternBinding
+            activityId="com.tibco.cep.standard.development"
+            pattern="com\.tibco\.cep\.sharedresource/.*">
+      </activityPatternBinding>
+      <activityPatternBinding
+            activityId="com.tibco.cep.standard.development"
+            pattern="com\.tibco\.cep\.studio\.application/.*">
+      </activityPatternBinding>
+      <activityPatternBinding
+            activityId="com.tibco.cep.standard.development"
+            pattern="com\.tibco\.cep\.studio\.cluster\.topology/.*">
+      </activityPatternBinding>
+      <activityPatternBinding
+            activityId="com.tibco.cep.standard.development"
+            pattern="com\.tibco\.cep\.studio\.debug\.ui/.*">
+      </activityPatternBinding>            
+      <activityPatternBinding
+            activityId="com.tibco.cep.standard.development"
+            pattern="com\.tibco\.cep\.studio\.mapper/.*">
+      </activityPatternBinding>
+      <activityPatternBinding
+            activityId="com.tibco.cep.standard.development"
+            pattern="com\.tibco\.cep\.studio\.tester\.ui/.*">
+      </activityPatternBinding>
+      <activityPatternBinding
+            activityId="com.tibco.cep.standard.development"
+            pattern="com\.tibco\.cep\.studio\.ui/.*">
+      </activityPatternBinding>
+      <activityPatternBinding
+            activityId="com.tibco.cep.standard.development"
+            pattern="com\.tibco\.cep\.studio\.ui\.editors/.*">
+      </activityPatternBinding>
+      <activityPatternBinding
+            activityId="com.tibco.cep.standard.development"
+            pattern="com\.tibco\.cep\.studio\.ui\.index/.*">
+      </activityPatternBinding>
+      <activityPatternBinding
+            activityId="com.tibco.cep.standard.development"
+            pattern="com\.tibco\.cep\.studio\.ui\.navigator/.*">
+      </activityPatternBinding>
+      <activityPatternBinding
+            activityId="com.tibco.cep.standard.development"
+            pattern="com\.tibco\.cep\.studio\.ws/.*">
+      </activityPatternBinding>
+      <activityPatternBinding
+            activityId="com.tibco.cep.standard.development"
+            pattern="com\.tibco\.cep\.studio\.xmlsdk\.ui/.*">
+      </activityPatternBinding>
+      <defaultEnablement
+            id="com.tibco.cep.standard.development">
+      </defaultEnablement>
+	</extension>
+   <extension
+         point="org.eclipse.ui.activities">
+      <activity
+            description="WST Activity"
+            id="com.tibco.cep.studio.application.wst.activity"
+            name="WST Activity">
+      </activity>
+      <category
+            description="WST Category"
+            id="com.tibco.cep.studio.application.wst.category"
+            name="WST Validation">
+      </category>
+      <activityPatternBinding
+            activityId="com.tibco.cep.studio.application.wst.activity"
+            pattern="org\.eclipse\.wst\.validation\.ui/.*">
+      </activityPatternBinding>
+      <categoryActivityBinding
+            activityId="com.tibco.cep.studio.application.wst.activity"
+            categoryId="com.tibco.cep.studio.application.wst.category">
+      </categoryActivityBinding>
+   </extension>
+   <!--
+   <extension
+         point="org.eclipse.help.toc">
+      <toc
+            file="toc.xml">
+      </toc>
+      <toc
+            file="testToc.xml"
+            primary="true">
+      </toc>
+   </extension>
+-->
+</plugin>

@@ -1,0 +1,142 @@
+/**
+ * @description 
+ */
+WebStudio.Core.Concepts.DataSources.WS_C_TemporaryReturnData rulefunction WebStudio.Core.RuleFunctions.Actions.WS_RF_ShowDecisionTableCoverage {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object servletRequest;
+		WebStudio.Security.Authn.Concepts.WS_C_LoggedInUser loggedInUser;
+		String contentType;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.WS_RF_ShowDecisionTableCoverage");
+		
+		String responseMessage = null;
+		String errorCode = null;
+		int recordCount = 1;
+		int responseStatus = 0;
+		
+		String username = null;
+		String projectName = null;
+		String artifactPath = null;
+		
+		WS_C_TemporaryReturnData tempReturnData = null;
+		
+		WS_C_AnyArtifactDetails artifactDetails = null;			
+		if (!WS_RF_CheckHTTPMethod(servletRequest, "POST")) {
+			responseStatus = -1;
+			recordCount = 0;
+			errorCode = "ERR_5101";
+			responseMessage = "Invalid HTTP Method, expect method is [POST].";
+			
+			tempReturnData = WS_RF_CreateTemporaryReturnData(responseStatus, recordCount, errorCode, responseMessage, null);
+		} else {
+			username = loggedInUser.username;			
+			//Get the User roles
+			String[] roles = Instance.PropertyArray.toArrayString(loggedInUser.roles);
+
+			Object requestDataBytes = HTTP.Servlet.Request.getRequestContent(servletRequest);
+			String requestData = String.convertByteArrayToString(requestDataBytes, "UTF-8");
+			Log.log(LOGGER, "Debug", "Raw Save request data - %s", requestData);
+			
+			String subscriptionId = null;
+			if (loggedInUser.jwtToken != null) subscriptionId = loggedInUser.jwtToken.sbsc;
+
+			//Convert to concept model
+			WS_C_DecisionTableAnalyzerDetails tableAnalyzerDetails = null;
+			if (String.equals(contentType, System.getGlobalVariableAsString("WebStudio/CONTENT_TYPE/XML", "application/xml"))) {
+				tableAnalyzerDetails = Instance.createTransientInstanceFromXML("/WebStudio/Core/Concepts/DataSources/Artifacts/Decision/TableAnalyzer/WS_C_DecisionTableAnalyzerDetails", requestData);
+			} else {
+				tableAnalyzerDetails = Instance.createTransientInstanceFromJSON("/WebStudio/Core/Concepts/DataSources/Artifacts/Decision/TableAnalyzer/WS_C_DecisionTableAnalyzerDetails", requestData);
+			}
+			projectName = tableAnalyzerDetails.projectName;
+			artifactPath = tableAnalyzerDetails.artifactPath;
+			
+			//Get the Decision Table artifact contents from Users workspace 
+			WS_C_ResponseTransferObjectData fetchedResponseData = WebStudio.Core.RuleFunctions.Utils.WS_RF_GetArtifactContentsFromStore(username, roles, projectName, artifactPath, "rulefunctionimpl");			
+			WS_C_AnyArtifactDetails artifactContents = fetchedResponseData.artifactContents;
+			//Create the Decision Table EMF object			
+			Object decisionTableEMFObj = WebStudio.Core.RuleFunctions.Utils.DT.WS_RF_CreateEMFObjectForDecisionTable(artifactContents);
+			WS_C_ProjectArtifactNamesDataSourceRecord[] testDataArtifactRecords = Instance.PropertyArray.toArrayConcept(tableAnalyzerDetails.artifactRecord);
+			
+			if (testDataArtifactRecords != null && testDataArtifactRecords@length > 0) {
+				Log.log(LOGGER, "Info", "Run TestData coverage for decision table");
+				
+				String scsRootURL = WS_RF_GetSCSRootURL(projectName, subscriptionId);
+				if (scsRootURL == null) {
+					throw Exception.newException(null, "Source control repository location not present. Set ws.scs.rootURL property", null);
+				}
+				
+				String entityPath = testDataArtifactRecords[0].baseArtifactPath;
+				String testDataFile = testDataArtifactRecords[0].artifactPath;
+				Object testDataModelObj = WS.Decision.TableAnalyzer.getTestDataModel(scsRootURL, projectName, entityPath, testDataFile);
+				Object testDataCoverageResults = WS.Decision.TableAnalyzer.computeTestDataCoverage(scsRootURL, decisionTableEMFObj, entityPath, testDataModelObj);
+
+				String[] columnNames = WS.Decision.TableAnalyzer.getTestDataColumns(testDataModelObj);
+				int recordCnt =	WS.Decision.TableAnalyzer.getTestDataRecordCount(testDataModelObj);
+				WS_C_TestDataCoverageResponse testDataCoverageResponse = 
+						Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/Artifacts/Decision/TableAnalyzer/WS_C_TestDataCoverageResponse");
+				for (int i = 0; i < columnNames@length; i++) {
+					Instance.PropertyArray.appendString(testDataCoverageResponse.columnName, columnNames[i], 1L);
+				}						
+				for (int i = 0; i < recordCnt; i++) {
+					String[] record = WS.Decision.TableAnalyzer.getTestDataRecord(testDataModelObj, i);
+					WS_C_TestDataCoverageRecord testDataCoverageRecord = 
+							Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/Artifacts/Decision/TableAnalyzer/WS_C_TestDataCoverageRecord");
+					for (int j = 0; j < record@length; j++) {
+						Instance.PropertyArray.appendString(testDataCoverageRecord.value, record[j], 1L);
+					}
+					Object coveredRulesList = Collections.Map.get(testDataCoverageResults, i);
+					if (coveredRulesList != null) {
+						for (int k = 0; k < Collections.size(coveredRulesList); k++) {
+							Object coveredRuleId = Collections.List.get(coveredRulesList, k);
+							Instance.PropertyArray.appendString(testDataCoverageRecord.coveredRuleId, coveredRuleId, 1L);
+						}
+					}
+					Instance.PropertyArray.appendContainedConcept(testDataCoverageResponse.record, testDataCoverageRecord, 1L); 						
+				}
+				artifactDetails = testDataCoverageResponse;													
+			} else {				
+				WS_C_TableAnalyzerFilter[] analyzerFilters = Instance.PropertyArray.toArrayConcept(tableAnalyzerDetails.filter);
+				
+				Object columnFilterList = Collections.List.createArrayList();
+				for (int i = 0; i < analyzerFilters@length; i++) {
+					String columnName = analyzerFilters[i].columnName;
+					boolean isRangeFilter = analyzerFilters[i].isRangeFilter;
+					String[] items = null;
+					Object[] range = {0, 0}; 
+					if (isRangeFilter) {
+						range[0] =analyzerFilters[i].minValue;
+						range[1] =analyzerFilters[i].maxValue;
+					} else {
+						items = Instance.PropertyArray.toArrayString(analyzerFilters[i].value);
+					}		
+					Object columnFilter = WS.Decision.TableAnalyzer.createColumnFilter(columnName, isRangeFilter, items, range);
+					Collections.add(columnFilterList, columnFilter);
+				}
+				
+				Object[] columnFilters = Collections.toArray(columnFilterList);
+				//Analyze the Decision Table
+				String[] coveredRules = WS.Decision.TableAnalyzer.computeCoverage(decisionTableEMFObj, columnFilters);
+				//Build the TableAnalyzer coverage response concept
+				WS_C_TestDataCoverageResponse showCoverageResponse = WebStudio.Core.RuleFunctions.Utils.DT.Analyzer.WS_RF_BuildDecisionTableShowCoverageResponse(artifactContents, coveredRules);									
+				artifactDetails = showCoverageResponse;
+			}
+			
+			WS_C_AbstractDataSourceRecord abstractDataSourceRecord = 
+									Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/Records/WS_C_ArtifactContentsDataSourceRecord");
+			WS_C_ArtifactContentsDataSourceRecord artifactContentsDataSourceRecord = abstractDataSourceRecord;
+
+			Instance.PropertyAtom.setContainedConcept(artifactContentsDataSourceRecord.artifactDetails, artifactDetails, 1L);
+			
+			WS_C_ResponseData responseData = Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/WS_C_ResponseData");
+			Instance.PropertyArray.appendContainedConcept(responseData.record, abstractDataSourceRecord, 1L);
+			
+			tempReturnData = WS_RF_CreateTemporaryReturnData(responseStatus, recordCount, errorCode, responseMessage, responseData);
+		}
+		
+		return tempReturnData;		
+	}
+}

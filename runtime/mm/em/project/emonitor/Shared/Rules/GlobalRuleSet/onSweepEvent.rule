@@ -1,0 +1,124 @@
+/**
+ * @description 
+ * @author 
+ */
+rule Shared.Rules.GlobalRuleSet.onSweepEvent {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Shared.Events.SweepEvent	sweepevent;
+		
+	}
+	when {
+		
+	}
+	then {
+		Shared.RuleFunctions.log("onSweepEvent","DEBUG","Attempting to sweep purged elements...");
+		int purgedViewsCnt = BEMMUtil.LinkedList.size("purgedviews");
+		int purgedEntitiesCnt = BEMMUtil.LinkedList.size("purgedmonitorableentities");
+		if (purgedEntitiesCnt == 0 && purgedViewsCnt == 0){
+		    Shared.RuleFunctions.log("onSweepEvent","DEBUG","No sweep needed...");
+		}
+		BEMMUtil.LinkedList.createList("deletedmonitorableentities");
+		long currTime = System.currentTimeMillis();
+		long sweepThreshold = System.getGlobalVariableAsLong("SweepThreshold",600000); //default is 10 mins
+		int i = 0;
+		Shared.RuleFunctions.log("onSweepEvent","DEBUG","Attempting to sweep "+purgedViewsCnt+" purged views...");
+		while (i < purgedViewsCnt) {
+		    Shared.Concepts.AbstractMonitorView purgedView = BEMMUtil.LinkedList.get("purgedviews",i);
+		    //check if the purged view is eligible for deletion
+		    if (currTime - purgedView.lastAccessTime >= sweepThreshold){
+		        //yes, the purged view is eligible for deletion
+		        Shared.RuleFunctions.log("onSweepEvent","DEBUG","Deleting "+purgedView@extId);
+		        //remove the view from the purged view list
+		        boolean removed = BEMMUtil.LinkedList.removeByElement("purgedviews",purgedView);
+		        if (removed == true){
+		        	for(int j=0;j<purgedView.seriesdata@length;j++){
+		        		Instance.deleteInstance(purgedView.seriesdata[j]);
+		        	}
+		            //delete the view
+		            Instance.deleteInstance(purgedView);
+		            //decrement the purged view list count
+		            purgedViewsCnt = purgedViewsCnt - 1;
+		        }
+		        else {
+		            //we could not remove the purged view from list, lets move on to the next one
+		            i = i + 1;
+		        }
+		    }
+		    else {
+		        //the purged view is not eligible for deletion, lets move on to the next one
+		        i = i + 1;
+		    }
+		}
+		Shared.RuleFunctions.log("onSweepEvent","DEBUG","Attempting to sweep "+purgedEntitiesCnt+" purged entities...");
+		i = 0;
+		while (i < purgedEntitiesCnt){
+		    Shared.Concepts.MonitorableEntity purgedEntity = BEMMUtil.LinkedList.get("purgedmonitorableentities",i);
+		    //check if the purged entity is eligible for deletion
+		    if (currTime - purgedEntity.lastMonitoredTime >= sweepThreshold){		    
+	            //added 02-25-2010 to delete alert history once the entity is purged.
+	            if(purgedEntity != null){
+		            MonitorableEntityAlertHistory history = Instance.getByExtId(purgedEntity@extId+":alerthistory");
+		            if(history != null){
+		            	Instance.deleteInstance(history);
+		            	Shared.RuleFunctions.log("onSweepEvent","DEBUG","Deleted alert history "+history@extId+"...");
+		            }		
+		        }    
+		        //yes, the purged entity may be eligible for deletion
+		        String fqName = getFQName(purgedEntity);
+		        //check if the entity has any pending purged entities
+		        for (int j = 0 ; j < purgedViewsCnt ; j = j + 1){
+		            Shared.Concepts.AbstractMonitorView purgedView = BEMMUtil.LinkedList.get("purgedviews",j);
+		            if (purgedView.monitorable == purgedEntity) {
+		                //yes we have found an view which was not deleted, so we cannot delete the entity
+		                purgedEntity = null;
+		                break;
+		            }
+		        }
+		        if (purgedEntity != null) {
+		            //The purged entity is eligible for deletion
+		            Shared.RuleFunctions.log("onSweepEvent","DEBUG","Deleting "+fqName);
+		            //remove the entity from the purged entity list
+		            boolean removed = BEMMUtil.LinkedList.removeByElement("purgedmonitorableentities",purgedEntity);
+		            if (removed == true){
+		                //decrement the purged entities count
+		                purgedEntitiesCnt = purgedEntitiesCnt - 1;
+		                //remove entity from parent
+		                if(purgedEntity.parent != null)
+		                	removed = Instance.PropertyArray.removeConceptReference(purgedEntity.parent.children,purgedEntity);
+		                if (removed == true) {
+//		                    //add the deleted entity's name to deletedmonitorableentities to prevent rediscovering
+//		                    if (BEMMUtil.LinkedList.contains("deletedmonitorableentities",purgedEntity.name) == false){
+//		                        BEMMUtil.LinkedList.add("deletedmonitorableentities",BEMMUtil.LinkedList.size("deletedmonitorableentities"),purgedEntity.name);
+//		                    }
+		                    //clean up and delete the entity
+		                    purgedEntity.parent = null;
+		                    Instance.deleteInstance(purgedEntity);
+		                }
+		            }
+		            else{
+		                //we could not remove the purged entity from list, lets move on to the next one
+		                i = i + 1;
+		            }
+		        }
+		        else {
+		            Shared.RuleFunctions.log("onSweepEvent","DEBUG",fqName+" cannot be deleted since it has referencing view(s)");
+		            //we have found an view which was not deleted, so we cannot delete the entity, lets move on to the next one
+		            i = i + 1;
+		        }
+		    }
+		    else {
+		        //the purged entity is not entitled for deletion, lets move on to the next one
+		        i = i + 1;
+		    }
+		}
+		if (purgedViewsCnt > 0 || purgedEntitiesCnt > 0){
+		    Shared.RuleFunctions.log("onSweepEvent","DEBUG","Scheduling a sweep event...");
+		    Shared.RuleFunctions.scheduleSweepEvent();
+		}
+		Event.consumeEvent(sweepevent);
+	}
+}

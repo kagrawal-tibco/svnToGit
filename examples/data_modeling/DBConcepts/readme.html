@@ -1,0 +1,162 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>     Customer Order Management
+
+- TIBCO BusinessEvents&reg; Examples
+</title>
+<meta http-equiv="Content-type" content="text/html; charset=iso-8859-1" />
+<meta http-equiv="Content-Language" content="en-us" />
+<link rel="Shortcut Icon" href="../../_resources/icon.gif" type="image/gif" />
+<style type="text/css" media="all">@import "../../_resources/examples.css";</style>
+<script type="text/javascript" src="../../_resources/examples.js" /></script>
+<script type="text/javascript">
+function buildForms() {
+ var form;
+
+
+ SendEventForm.setServer("http://localhost:9001");
+
+
+ form = SendEventForm.get("CreateItemsForm");
+ form.setDestinationPath("/Channels/HTTP/AllOps");
+ form.setEventPath("/Events/CreateItems");
+ form.addProperty("number", "5");
+ form.build();
+
+
+ form = SendEventForm.get("CreateCustomerOrderForm");
+ form.setDestinationPath("/Channels/HTTP/AllOps");
+ form.setEventPath("/Events/CreateCustomerOrder");
+ form.addProperty("customer_id", "Cust_1");
+ form.addProperty("customer_name", "be_user");
+ form.addProperty("customer_address", "TIBCO");
+ form.addProperty("customer_city", "PA");
+ form.addProperty("customer_state", "USA");
+ form.addProperty("item_id1", "ITEM1");
+ form.addProperty("item_id2", "ITEM3");
+ form.addProperty("item_id3", "ITEM4");
+ form.build();
+
+
+ form = SendEventForm.get("QueryCustomerOrderDetailsForm");
+ form.setDestinationPath("/Channels/HTTP/AllOps");
+ form.setEventPath("/Events/QueryCustomerOrderDetails");
+ form.addProperty("customer_id", "Cust_1");
+ form.build();
+
+
+
+
+}
+</script>
+</head>
+<body onLoad="buildForms()">
+
+
+<h1>Customer Order Management</h1>
+
+
+<h2>Purpose of This Example</h2>
+
+<p>This Example demonstrates the Database Concepts feature available in the TIBCO BusinessEvents&reg; Data Modeling add-on. First this example sets up an Oracle database. Then you create items and customer orders (using CustomerOrderEvent), and query them. The customer and order details are inserted into the database using RDBMS functions. RDBMS functions are also used to query the database. </p>
+<p>To use this example, you must have a supported version of Oracle Database installed and you must have permission to create a user and tables. You must also understand how to run SQL scripts.</p>
+
+
+<h2>How to Run This Example</h2>
+<ol>
+<li>
+<p>Create the customer_order user using scripts/initialise_SQL.sql</p>
+</li>
+<li>
+<p>Log in to customer_order and run <code>scripts/Datbase_setup.sql</code>. This sets up the database used by the database concepts in this example.</p>
+</li>
+
+<li>
+<p>Open a command window and at the command prompt, start the TIBCO BusinessEvents&reg; engine using the following command.</p>
+
+<pre class="commands">
+cd <i>BE_HOME</i>/examples/data_modeling/DBConcepts/CutomerOrderManagement/bin/be-engine --propFile <i>BE_HOME</i>/bin/be-engine.tra -u default -c CustomerOrderManagement/COM.cdd COM.ear
+</pre>
+
+<p>Adapt the command as needed, for example, if you have customized the example project, or are running it from a different directory.</p>
+</li>
+
+
+<li>
+<p>Enter a number and click Send. Do this multiple times to create multiple items.</p>
+
+<form id="CreateItemsForm"></form>
+
+<p>In the command window you see messages similar to this:
+
+<span class="logs">
+
+Items created and Inserted
+   ITEM0  100
+   ITEM1  101
+   ITEM2  102
+   ITEM3  103
+   ITEM4  104</span></p>
+</li>
+
+
+<li>
+<p>Next place an order. Complete the customer detail fields and then enter some of the items you created in the last step. Type ITEM and then the number. You can do this multiple times, creating different customers and ordering various items. Database concepts are created in TIBCO BusinessEvents&reg;, and also in the database.</p>
+
+<form id="CreateCustomerOrderForm"></form>
+
+<p>In the command window you see messages like this
+<span class="logs">
+
+Customer Deatils
+    cust_1   beuser   TIBCO   USA   PA
+ Order Details
+    ORDERcust_1   2010-05-12T19:00:20.034+05:30
+ Items
+    ITEM0   1
+    ITEM3   1
+    ITEM4   1</span></p>
+</li>
+
+
+<li>
+<p>Now you can query customer orders in the database. Enter the ID of a customer you created in the last step.</p>
+
+<form id="QueryCustomerOrderDetailsForm"></form>
+
+<p>In the command window you see a message like this:
+<span class="logs">
+
+Query from database results
+ Customer Deatils
+    cust_1   beuser_1   TIBCO   USA   PA
+ Order Details
+    ORDERcust_1
+ Items
+    ITEM0   1
+    ITEM3   1
+    ITEM4   1
+    </span></p>
+</li>
+
+
+
+<li>
+<p> To reset the data use cleanup_SQL.sql, restart the engine at the command line.</p
+</li>
+
+</ol>
+
+
+
+
+
+<div class="footer">
+<p>TIBCO BusinessEvents&reg; 5.6<br />
+Copyright&copy; 2004-2019 TIBCO Software Inc. All rights reserved.</p>
+</div>
+</body>
+</html>

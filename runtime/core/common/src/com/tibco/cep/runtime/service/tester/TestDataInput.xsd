@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+targetNamespace="www.tibco.com/be/studio/tester/input"
+xmlns:tns="www.tibco.com/be/studio/tester/input"
+xmlns:jaxb="http://java.sun.com/xml/ns/jaxb"
+jaxb:version="1.0"
+xmlns:xjc="http://java.sun.com/xml/ns/jaxb/xjc"
+jaxb:extensionBindingPrefixes="xjc"
+elementFormDefault="qualified">
+
+	<xsd:annotation>
+		<xsd:appinfo>
+			 <jaxb:globalBindings>
+        		<xjc:simple/>
+      		</jaxb:globalBindings>
+		</xsd:appinfo>
+	</xsd:annotation>
+
+    <xsd:complexType name="TestDataInputType">
+        <xsd:annotation>
+        	<xsd:documentation>Root element of the Test Data Input File. Will be one depending on whether concept/event or scorecard data.</xsd:documentation>
+        </xsd:annotation>
+        <xsd:sequence>
+    		<xsd:choice>
+                <xsd:annotation>
+                	<xsd:documentation>This is a choice between all elements of concept type or event type. There cannot be mix of these under one TestDataInput.</xsd:documentation>
+                </xsd:annotation>
+                <xsd:element ref="tns:ConceptTestDataInputRecord" minOccurs="0" maxOccurs="unbounded"/>
+    			<xsd:element ref="tns:EventTestDataInputRecord" minOccurs="0" maxOccurs="unbounded"/>
+                <xsd:element ref="tns:ConceptReferenceInputRecord" minOccurs="0" maxOccurs="unbounded"/>
+                <xsd:element ref="tns:ContainedConceptInputRecord" minOccurs="0" maxOccurs="unbounded"/>
+            </xsd:choice>
+    	</xsd:sequence>
+    	<xsd:attribute name="resourcePath" type="xsd:string">
+    		<xsd:annotation>
+    			<xsd:documentation>The relative path of the resource for this test data. e.g : /Concepts/ConceptA.</xsd:documentation>
+    		</xsd:annotation>
+    	</xsd:attribute>
+    	<xsd:attribute name="resourceType">
+    		<xsd:simpleType>
+    			<xsd:restriction base="xsd:string">
+    				<xsd:enumeration value="CONCEPT"/>
+    				<xsd:enumeration value="EVENT"/>
+    				<xsd:enumeration value="SCORECARD"/>
+    			</xsd:restriction>
+    		</xsd:simpleType>
+    	</xsd:attribute>
+    </xsd:complexType>
+
+    <xsd:complexType name="TestDataInputRecordType" abstract="true">
+    	<xsd:sequence>
+    		<xsd:element name="extId" maxOccurs="1">
+                <xsd:annotation>
+                	<xsd:documentation>Set the extId field from input.</xsd:documentation>
+                </xsd:annotation>
+                <xsd:simpleType>
+    				<xsd:restriction base="xsd:string">
+    				</xsd:restriction>
+    			</xsd:simpleType>
+    		</xsd:element>
+    	</xsd:sequence>
+    	<xsd:attribute name="rowNumber" type="xsd:int">
+    		<xsd:annotation>
+    			<xsd:documentation>This is presently kept to some value which should be unique in the document. This will be used to reference a record externally.</xsd:documentation>
+    		</xsd:annotation>
+    	</xsd:attribute>
+    </xsd:complexType>
+
+    <xsd:complexType name="ConceptTestDataInputRecordType">
+    	<xsd:complexContent>
+    		<xsd:extension base="tns:TestDataInputRecordType">
+    			<xsd:sequence>
+                    <xsd:annotation>
+                    	<xsd:documentation>This represent collection of primitive properties/concept references/contained concepts.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:element ref="tns:Property" minOccurs="0" maxOccurs="unbounded"/>
+					<xsd:element ref="tns:ConceptReference" minOccurs="0" maxOccurs="unbounded"/>
+					<xsd:element ref="tns:ContainedConcept" minOccurs="0" maxOccurs="unbounded"/>
+				</xsd:sequence>
+    		</xsd:extension>
+    	</xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="EventTestDataInputRecordType">
+    	<xsd:complexContent>
+    		<xsd:extension base="tns:TestDataInputRecordType">
+    			<xsd:sequence>
+    				<xsd:element ref="tns:Property" minOccurs="0" maxOccurs="unbounded"/>
+    				<xsd:element name="Payload" type="tns:Payload" minOccurs="0" maxOccurs="1"/>
+    			</xsd:sequence>
+    		</xsd:extension>
+    	</xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="Payload" mixed="true">
+    	<xsd:sequence>
+    		<xsd:element name="PayloadContent">
+    			<xsd:simpleType>
+    				<xsd:restriction base="xsd:byte"/>
+    			</xsd:simpleType>
+    		</xsd:element>
+    	</xsd:sequence>
+    </xsd:complexType>
+
+    <xsd:complexType name="PropertyType">
+    	<xsd:sequence>
+    		<xsd:element name="PropertyData" type="tns:PropertyDataType" maxOccurs="unbounded" minOccurs="1"/>
+    	</xsd:sequence>
+    	<xsd:attribute name="name" type="xsd:string" />
+    	<xsd:attribute name="dataType">
+    		<xsd:simpleType>
+    			<xsd:restriction base="xsd:string">
+    				<xsd:enumeration value="STRING" />
+    				<xsd:enumeration value="INTEGER" />
+    				<xsd:enumeration value="LONG" />
+    				<xsd:enumeration value="DOUBLE" />
+    				<xsd:enumeration value="BOOLEAN" />
+    				<xsd:enumeration value="DATETIME" />
+    				<xsd:enumeration value="CONTAINED_CONCEPT" />
+    				<xsd:enumeration value="CONCEPT_REFERENCE" />
+    			</xsd:restriction>
+    		</xsd:simpleType>
+    	</xsd:attribute>
+    	<xsd:attribute name="multiple" type="xsd:boolean" use="optional" default="false" />
+    </xsd:complexType>
+
+    <xsd:complexType name="ExternalReferenceType">
+		<xsd:sequence>
+			<xsd:element ref="tns:Reference" minOccurs="1" maxOccurs="unbounded" />
+		</xsd:sequence>
+		<xsd:attribute name="referencedResourcePath" type="xsd:string" />
+	</xsd:complexType>
+
+
+	<xsd:complexType name="PropertyDataType">
+        <xsd:annotation>
+        	<xsd:documentation>Represents a child of a simple property. It encapsulates the value of the primitive property, and can repeat for array type propery.</xsd:documentation>
+        </xsd:annotation>
+        <xsd:simpleContent>
+			<xsd:extension base="xsd:string"/>
+		</xsd:simpleContent>
+	</xsd:complexType>
+
+	<xsd:complexType name="ReferenceType">
+		<xsd:annotation>
+			<xsd:documentation>
+				An element which will be used by
+				ConceptReference/ContainedConcept to point to the
+				referenced/contained concept.
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:attribute name="rowNumber" use="required" type="xsd:int" />
+	</xsd:complexType>
+
+	<xsd:element name="TestDataInput" type="tns:TestDataInputType"/>
+	<xsd:element name="Reference" type="tns:ReferenceType"/>
+	<xsd:element name="ConceptReference" type="tns:ExternalReferenceType"/>
+	<xsd:element name="ContainedConcept" type="tns:ExternalReferenceType"/>
+
+	<xsd:element name="Property" type="tns:PropertyType"/>
+	<xsd:element name="ConceptTestDataInputRecord" type="tns:ConceptTestDataInputRecordType"/>
+    <xsd:element name="ConceptReferenceInputRecord" type="tns:ConceptReferenceInputRecordType"/>
+    <xsd:element name="ContainedConceptInputRecord" type="tns:ContainedConceptInputRecordType"/>
+    <xsd:element name="EventTestDataInputRecord" type="tns:EventTestDataInputRecordType"/>
+
+
+    <xsd:complexType name="ConceptReferenceInputRecordType">
+    	<xsd:complexContent>
+    		<xsd:extension base="tns:ConceptTestDataInputRecordType">
+    			<xsd:attribute name="resourcePath" type="xsd:string">
+    				<xsd:annotation>
+    					<xsd:documentation>This attribute will point to the resource path of the referenced entity. Identify the record uniquely with resourcepath and rowNumber.</xsd:documentation>
+    				</xsd:annotation>
+    			</xsd:attribute>
+    		</xsd:extension>
+    	</xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="ContainedConceptInputRecordType">
+    	<xsd:complexContent>
+    		<xsd:extension base="tns:ConceptTestDataInputRecordType">
+    			<xsd:attribute name="resourcePath" type="xsd:string">
+    				<xsd:annotation>
+    					<xsd:documentation>This attribute will point to the resource path of the contained entity. Identify the record uniquely with resourcepath and rowNumber.</xsd:documentation>
+    				</xsd:annotation>
+    			</xsd:attribute>
+    		</xsd:extension>
+    	</xsd:complexContent>
+    </xsd:complexType>
+
+</xsd:schema>

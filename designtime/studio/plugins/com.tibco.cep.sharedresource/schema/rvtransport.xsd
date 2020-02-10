@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<xsd:schema xmlns:tns="http://tibco.com/be/shared/rv"
+	xmlns:xsd="http://www.w3.org/2001/XMLSchema" targetNamespace="http://tibco.com/be/shared/rv"
+	xmlns:aems="http://www.tibco.com/xmlns/aemeta/services/2002"
+	elementFormDefault="qualified" xmlns:bt="http://tibco.com/be/shared/basetypes">
+
+	<xsd:import schemaLocation="basetypes.xsd"
+		namespace="http://tibco.com/be/shared/basetypes"></xsd:import>
+	<xsd:import schemaLocation="aemeta-services-2002.xsd"
+		namespace="http://www.tibco.com/xmlns/aemeta/services/2002"></xsd:import>
+
+	<xsd:element name="BWSharedResource" type="tns:BWSharedResourceType" />
+
+
+	<xsd:complexType name="BWSharedResourceType">
+
+		<xsd:sequence>
+			<xsd:element name="config" type="tns:configType"></xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+
+	<xsd:complexType name="configType">
+		<xsd:sequence>
+			<xsd:element minOccurs="1" maxOccurs="1" name="workerWeight"
+				type="bt:longOrGVs">
+			</xsd:element>
+			<xsd:element minOccurs="1" maxOccurs="1" name="workerTasks"
+				type="bt:intOrGVs">
+			</xsd:element>
+			<xsd:element minOccurs="1" maxOccurs="1" name="workerCompleteTime"
+				type="bt:longOrGVs">
+			</xsd:element>
+			<xsd:element minOccurs="1" maxOccurs="1" name="schedulerWeight"
+				type="bt:intOrGVs">
+			</xsd:element>
+			<xsd:element minOccurs="1" maxOccurs="1" name="scheduleHeartbeat"
+				type="bt:floatOrGVs">
+			</xsd:element>
+			<xsd:element minOccurs="1" maxOccurs="1" name="scheduleActivation"
+				type="bt:floatOrGVs">
+			</xsd:element>
+			<xsd:element name="showExpertSettings" maxOccurs="1"
+				minOccurs="1">
+				<xsd:simpleType>
+					<xsd:restriction base="xsd:string">
+						<xsd:enumeration value="reliable"></xsd:enumeration>
+						<xsd:enumeration value="certified"></xsd:enumeration>
+						<xsd:enumeration value="certifiedQ"></xsd:enumeration>
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:element>
+			<xsd:element name="daemon" type="xsd:string" maxOccurs="1"
+				minOccurs="1">
+			</xsd:element>
+			<xsd:element name="network" type="xsd:string" maxOccurs="1"
+				minOccurs="1">
+			</xsd:element>
+			<xsd:element name="service" type="xsd:string" maxOccurs="1"
+				minOccurs="1">
+			</xsd:element>
+			<xsd:element name="useSsl" type="bt:booleanOrGVs"
+				maxOccurs="1" minOccurs="1">
+			</xsd:element>
+			<xsd:element ref="aems:ssl" maxOccurs="1"
+				minOccurs="1">
+			</xsd:element>
+			<xsd:choice>
+				<xsd:group ref="tns:reliableGroup" minOccurs="1"
+					maxOccurs="1" />
+				<xsd:group ref="tns:certifiedGroup" minOccurs="1"
+					maxOccurs="1" />
+				<xsd:group ref="tns:certifiedQGroup" minOccurs="1"
+					maxOccurs="1" />
+			</xsd:choice>
+			<xsd:element name="description" type="xsd:string"
+				maxOccurs="1" minOccurs="0"></xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+
+	<xsd:group name="reliableGroup">
+		<xsd:sequence></xsd:sequence>
+	</xsd:group>
+
+	<xsd:group name="certifiedGroup">
+		<xsd:sequence>
+			<xsd:element name="cmName" type="xsd:string" maxOccurs="1"
+				minOccurs="1">
+			</xsd:element>
+			<xsd:element name="ledgerFile" type="xsd:string"
+				maxOccurs="1" minOccurs="1">
+			</xsd:element>
+			<xsd:element name="syncLedger" type="bt:booleanOrGVs"
+				maxOccurs="1" minOccurs="1">
+			</xsd:element>
+			<xsd:element name="requireOld" type="bt:booleanOrGVs"
+				maxOccurs="1" minOccurs="1">
+			</xsd:element>
+			<xsd:element name="relayAgent" type="xsd:string"
+				maxOccurs="1" minOccurs="1">
+			</xsd:element>
+			<xsd:element name="operationTimeout" type="bt:longOrGVs"
+				maxOccurs="1" minOccurs="1">
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:group>
+
+	<xsd:group name="certifiedQGroup">
+		<xsd:sequence>
+			<xsd:element name="cmqName" type="xsd:string" maxOccurs="1"
+				minOccurs="1">
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:group>
+
+
+</xsd:schema>

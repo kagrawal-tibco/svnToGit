@@ -1,0 +1,57 @@
+/**
+ * @description Get the email notification CC list
+ */
+String rulefunction WebStudio.Core.RuleFunctions.Utils.Lifecycle.WS_RF_GetNotificationCCEmails {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String username;
+		String projectname;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.Lifecycle.WS_RF_GetNotificationCCEmails");
+		
+		String subscriptionId = WS_RF_GetSubscriptionId(username);
+		String notficationPreferencesExtId = WS_RF_CreateUserArtifactExtId("NOTIFY_PREFERENCES", null, null, null, subscriptionId, null);
+		
+		String receiverCCEmails;
+		WS_C_NotificationPreferences notificationPreferences = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(notficationPreferencesExtId, false, "/WebStudio/Core/Concepts/WS_C_NotificationPreferences");
+		if (notificationPreferences != null) {
+			for (int count = 0; count < notificationPreferences.emailPreference@length; count++) {
+				WS_C_AbstractEmailPreference emailpreference = notificationPreferences.emailPreference[count];
+				if (emailpreference.project == projectname) {
+					if (String.equals(emailpreference.emailIds,"NO_EMAILS")) {
+					   receiverCCEmails = null;
+					} else {
+						receiverCCEmails = emailpreference.emailIds;
+					}
+				}
+			}
+			
+		} else {
+			receiverCCEmails = System.getSystemPropertyAsString("ws.notify.mail.receiver.cc.emails", null);
+		}
+		
+		Object strBuff = String.createBuffer(0);
+		if (receiverCCEmails != null) {
+			receiverCCEmails = String.trim(receiverCCEmails);
+			String[] receiverCCEmailsArr = String.tokenize(receiverCCEmails, ",");
+			for (int i = 0; i < receiverCCEmailsArr@length; i++) {
+				if (String.length(receiverCCEmailsArr[i]) > 0) {
+					if (String.contains(receiverCCEmailsArr[i], "@")) {
+						String.append(strBuff, receiverCCEmailsArr[i]);
+						String.append(strBuff, ",");
+					} else {
+						String userEmailId = WebStudio.Core.RuleFunctions.Utils.Lifecycle.WS_RF_GetUserNotificationId(receiverCCEmailsArr[i]);
+						String.append(strBuff, userEmailId);
+						String.append(strBuff, ",");
+					}		
+				}	
+			}		
+		}
+		receiverCCEmails = String.convertBufferToString(strBuff);
+		Log.log(LOGGER, "Debug", "Email Notification Receiver CC Emails [%s]", receiverCCEmails);
+		return receiverCCEmails;		
+	}
+}

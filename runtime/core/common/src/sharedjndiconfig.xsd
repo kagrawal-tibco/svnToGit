@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<xsd:schema
+	ecore:documentRoot="SharedJndiConfigRoot"
+	ecore:nsPrefix="sharedjndiconfig"
+	ecore:package="com.tibco.be.util.config.sharedresources.sharedjndiconfig"
+	elementFormDefault="unqualified"
+	xml:lang="en"
+	xmlns:bt="http://tibco.com/be/basetypes"
+	xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore"
+	xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+	<xsd:import namespace="http://www.eclipse.org/emf/2002/Ecore"
+		schemaLocation="platform:/plugin/org.eclipse.emf.ecore/model/Ecore.xsd" />
+	<xsd:import namespace="http://tibco.com/be/basetypes"
+		schemaLocation="basetypes.xsd" />
+
+	<!-- - - - - - - - - Elements - - - - - - - - - -->
+
+	<xsd:element name="BWSharedResource" type="BWSharedResource-type" />
+
+	<!-- - - - - - - - - - Types - - - - - - - - - - -->
+
+	<xsd:complexType ecore:name="BwSharedResource" name="BWSharedResource-type">
+		<xsd:sequence>
+			<xsd:element name="name" type="xsd:string" minOccurs="0" />
+			<xsd:element name="resourceType">
+				<xsd:simpleType ecore:name="ResourceType">
+					<xsd:restriction base="xsd:string">
+						<xsd:enumeration value="ae.shared.JNDISharedConfiguration" />
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:element>
+			<xsd:element name="description" type="xsd:string" minOccurs="0" />
+			<xsd:element name="config" type="Config-type" />
+		</xsd:sequence>
+	</xsd:complexType>
+
+	<xsd:complexType name="Config-type" ecore:name="Config">
+		<xsd:sequence>
+			<xsd:element name="resourceType" ecore:name="resourceType" type="xsd:string" />
+			<xsd:element name="description" ecore:name="resourceType" type="xsd:string" />
+			<xsd:element name="ProviderUrl" ecore:name="providerUrl" type="xsd:string" />
+			<xsd:element name="ValidateJndiSecurityContext" ecore:name="validateJndiSecurityContext" type="bt:booleanOrGVs-type" />
+			<xsd:element name="ContextFactory" ecore:name="contextFactory" type="xsd:string" />
+			<xsd:element name="ProviderUrl" ecore:name="providerUrl" type="xsd:string" />
+			<xsd:element name="SecurityPrincipal" ecore:name="securityPrincipal" type="xsd:string" />
+			<xsd:element name="SecurityCredentials" ecore:name="securityCredentials" type="xsd:string" />
+			<xsd:element name="OptionalJNDIProperties" ecore:name="optionalJndiProperties" type="OptionalJndiProperties-type" />
+		</xsd:sequence>
+	</xsd:complexType>
+
+	<xsd:complexType name="OptionalJndiProperties-type" ecore:name="OptionalJndiProperties">
+		<xsd:sequence>
+			<xsd:element minOccurs="0" maxOccurs="unbounded" name="row">
+				<xsd:complexType ecore:name="Row">
+					<xsd:sequence>
+						<xsd:element ecore:name="name" name="JNDIPropNameCol" type="xsd:string" />
+						<xsd:element ecore:name="type" name="JNDIPropTypeCol" type="bt:jndiPropertyTypeOrGvs-type" />
+						<xsd:element ecore:name="value" name="JNDIPropValueCol" type="xsd:string" />
+					</xsd:sequence>
+				</xsd:complexType>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	
+</xsd:schema>

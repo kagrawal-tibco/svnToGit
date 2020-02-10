@@ -1,0 +1,19 @@
+/**
+ * @description 
+ * @author anpatil-T61
+ */
+rule Rules.tooManySuspendedAccountCheck {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Dashboards.M_DailyCurrAccountsByStatus currAccountMetric;
+	}
+	when {
+		currAccountMetric.AccntStatus == "Suspended" && currAccountMetric.CurrentCount > 2;
+	}
+	then {
+		System.debugOut("Too many suspended accounts["+currAccountMetric.CurrentCount+"] in the system");  
+	}
+}

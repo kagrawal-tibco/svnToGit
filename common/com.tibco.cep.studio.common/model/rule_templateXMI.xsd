@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<xsd:schema xmlns:instance="http://www.tibco.com/com.tibco.be.ruletemplate.instance#rule_template.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema" targetNamespace="http://www.tibco.com/com.tibco.be.ruletemplate.instance#rule_template.xsd">
+  <xsd:complexType name="RuleTemplateInstance">
+    <xsd:choice maxOccurs="unbounded" minOccurs="0">
+      <xsd:element name="conditionFilter" type="instance:MultiFilter"/>
+      <xsd:element name="actions" type="instance:Actions"/>
+    </xsd:choice>
+    <xsd:attribute name="name" type="xsd:string"/>
+    <xsd:attribute name="implements" type="xsd:string"/>
+  </xsd:complexType>
+  <xsd:element name="RuleTemplateInstance" type="instance:RuleTemplateInstance"/>
+  <xsd:complexType name="Actions">
+    <xsd:choice maxOccurs="unbounded" minOccurs="0">
+      <xsd:element name="actions" type="instance:Command"/>
+    </xsd:choice>
+  </xsd:complexType>
+  <xsd:element name="Actions" type="instance:Actions"/>
+  <xsd:complexType abstract="true" name="Filter">
+    <xsd:choice maxOccurs="unbounded" minOccurs="0">
+    </xsd:choice>
+  </xsd:complexType>
+  <xsd:element name="Filter" type="instance:Filter"/>
+  <xsd:complexType abstract="true" name="FilterValue">
+    <xsd:choice maxOccurs="unbounded" minOccurs="0">
+    </xsd:choice>
+  </xsd:complexType>
+  <xsd:element name="FilterValue" type="instance:FilterValue"/>
+  <xsd:complexType abstract="true" name="Clause">
+    <xsd:complexContent>
+      <xsd:extension base="instance:Filter"/>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:element name="Clause" type="instance:Clause"/>
+  <xsd:complexType name="MultiFilter">
+    <xsd:complexContent>
+      <xsd:extension base="instance:Clause">
+        <xsd:attribute name="matchType" type="xsd:string" use="required"/>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:element name="MultiFilter" type="instance:MultiFilter"/>
+  <xsd:complexType name="SingleFilter">
+    <xsd:complexContent>
+      <xsd:extension base="instance:Filter">
+        <xsd:attribute name="operator" type="xsd:string" use="required"/>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:element name="SingleFilter" type="instance:SingleFilter"/>
+  <xsd:complexType abstract="true" name="Command">
+    <xsd:complexContent>
+      <xsd:extension base="instance:Clause">
+        <xsd:attribute name="actionType" type="xsd:string"/>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:element name="Command" type="instance:Command"/>
+  <xsd:complexType name="BuilderSubClause">
+    <xsd:choice maxOccurs="unbounded" minOccurs="0">
+    </xsd:choice>
+  </xsd:complexType>
+  <xsd:element name="BuilderSubClause" type="instance:BuilderSubClause"/>
+  <xsd:complexType name="RelatedLink">
+    <xsd:choice maxOccurs="unbounded" minOccurs="0">
+    </xsd:choice>
+    <xsd:attribute name="linkText" type="xsd:string"/>
+  </xsd:complexType>
+  <xsd:element name="RelatedLink" type="instance:RelatedLink"/>
+  <xsd:complexType name="SimpleFilterValue">
+    <xsd:complexContent>
+      <xsd:extension base="instance:FilterValue">
+        <xsd:attribute name="value" type="xsd:string"/>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:element name="SimpleFilterValue" type="instance:SimpleFilterValue"/>
+  <xsd:complexType name="RelatedFilterValue">
+    <xsd:complexContent>
+      <xsd:extension base="instance:FilterValue"/>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:element name="RelatedFilterValue" type="instance:RelatedFilterValue"/>
+</xsd:schema>

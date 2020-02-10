@@ -1,0 +1,16 @@
+/**
+ * @description Startup for creating partner registry.
+ */
+void rulefunction Authentication.MDS.Services.PartnerRegistration.RuleFunctions.Startup.BAAS_RF_CreatePartnerRegistry {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		
+	}
+	body {
+		System.debugOut("Creating partner registry");
+		Authentication.MDS.Partner.Concepts.BAAS_C_PartnerRegistry partnerRegistry = 
+			Instance.createInstance("xslt://{{/Authentication/MDS/Partner/Concepts/BAAS_C_PartnerRegistry}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"1.0\" exclude-result-prefixes=\"xsl xsd\">\n    <xsl:output method=\"xml\"/>\n    <xsl:template match=\"/\">\n        <createObject>\n            <object>\n                <xsl:attribute name=\"extId\">\n                    <xsl:value-of select=\"&quot;PARTNER_REGISTRY&quot;\"/>\n                </xsl:attribute>\n            </object>\n        </createObject>\n    </xsl:template>\n</xsl:stylesheet>");
+	}
+}

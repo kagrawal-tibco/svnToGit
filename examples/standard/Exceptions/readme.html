@@ -1,0 +1,151 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>     Exceptions
+
+- TIBCO BusinessEvents&reg; Examples
+</title>
+<meta http-equiv="Content-type" content="text/html; charset=iso-8859-1" />
+<meta http-equiv="Content-Language" content="en-us" />
+<link rel="Shortcut Icon" href="../../_resources/icon.gif" type="image/gif" />
+<style type="text/css" media="all">@import "../../_resources/examples.css";</style>
+<script type="text/javascript" src="../../_resources/examples.js" /></script>
+<script type="text/javascript">
+function buildForms() {
+ var form;
+
+
+ SendEventForm.setServer("http://localhost:8107");
+
+
+ form = SendEventForm.get("postValueForm");
+ form.setDestinationPath("/Channels/HTTPChannel/PostValue");
+ form.setEventPath("/Events/Values_Event");
+ form.addProperty("Text", "");
+ form.addProperty("Number", "0");
+ form.build();
+
+
+}
+</script>
+</head>
+<body onLoad="buildForms()">
+
+
+<h1>Exceptions</h1>
+
+
+<h2>Purpose of This Example</h2>
+
+<p>This example demonstrates exception handling in TIBCO BusinessEvents&reg;. This example demonstrates the behavior of the following: Try Catch block , Try Finally block, and Advisory Event.</p>
+
+<h2>How to Run the Example</h2>
+<ol>
+
+
+<li>
+<p>Open a command window and at the command prompt, start the TIBCO BusinessEvents engine using the following command.</p>
+
+<pre class="commands">
+cd <i>BE_HOME</i>/examples/standard/Exceptions
+<i>BE_HOME</i>/bin/be-engine --propFile <i>BE_HOME</i>/bin/be-engine.tra -u default -c ExceptionsProject/ExceptionsProject.cdd ExceptionsProject.ear
+</pre>
+
+<p>Adapt the command as needed, for example, if you have customized the example project, or are running it from a different directory.</p>
+</li>
+
+
+<li>
+<p>Send a message that creates an event and triggers the rules. Type values like the following to trigger the exception handling:<br>
+<ul>
+<li>Type text in the Text field and an integer in the Number field.</li>
+<li>Type an integer in the Text field and a zero in the Number field. </li>
+</ul>
+<p>Note that this example does not demonstrate exception handling for other errors such as entering decimal numbers.</p>
+
+<form id="postValueForm"></form>
+</li>
+</ol>
+
+
+
+<h3>Example Results</h3>
+<p>In the command window you see various messages depending on what you enter. Only the relevant messages for the example are shown.</p>
+<p><b>When you enter an integer in both fields, no errors occur and you see a message like this:</b></p>
+
+ <p><span class="logs">--------------------------------------------------------------------------------
+ Calculate Rule: Event received with properties- '44444', 55555
+ Dividing - 20/55555
+ Division of 20/55555 = 0
+ --------------------------------------------------------------------------------
+ ConvertStringToInt Rule: Event received with properties- '44444', 55555
+ Converting String -44444 to Integer
+ ValueOfString :44444
+ Finally Block: I am executed even when there was an exception in Try block
+
+ </span></p>
+
+ <b>When you enter a word in the text field and a number in the number field, you see messages like this:</b>
+
+<p><span class="logs">--------------------------------------------------------------------------------
+ConvertStringToInt Rule: Event received with properties- 'texttexttext', 66666
+Converting String -texttexttext to Integer
+Finally Block: I am executed even when there was an exception in Try block
+[truncated for doc]
+--------------------------------------------------------------------------------
+EngineCaughtException: AdvisoryEvent received implying that an exception is caught by engine.
+AdvisoryEvent id: 4
+AdvisoryEvent extId: null
+AdvisoryEvent ttl: 0
+AdvisoryEvent category: Exception
+AdvisoryEvent type: java.lang.NumberFormatException
+AdvisoryEvent message: Got runtime exception while executing Rule
+be.gen.Rules.RuleSet.ConvertStringToInt(Rules.RuleSet.ConvertStringToInt)
+Action be.gen.Rules.RuleSet.ConvertStringToInt$ConvertStringToInt_a@14649ed Objects
+<be.gen.Events.Values_Event@id=3>Exception in Rule=Rules.RuleSet.ConvertStringToInt { Events.Values_Event@id=3 }
+
+For input string: "texttexttext"
+java.lang.NumberFormatException: For input string: "texttexttext"
+        at java.lang.NumberFormatException.forInputString(NumberFormatException.java:48)
+[truncated for doc]
+ --------------------------------------------------------------------------------
+ Calculate Rule: Event received with properties- 'texttexttext', 66666
+ Dividing - 20/66666
+ Division of 20/66666 = 0
+
+ </span></p>
+
+ <b>When you enter a zero in the number field, you see messages like this:</b>
+
+ <p><span class="logs">--------------------------------------------------------------------------------
+ConvertStringToInt Rule: Event received with properties- '88888', 0
+Converting String -88888 to Integer
+ValueOfString :88888
+Finally Block: I am executed even when there was an exception in Try block
+--------------------------------------------------------------------------------
+Calculate Rule: Event received with properties- '88888', 0
+Dividing - 20/0
+Exception Caught during division: null
+Exception Caught during division: DivideByZeroException
+Exception Caught during division: Can't divide by zero
+Exception Caught during division: com.tibco.cep.runtime.model.exception.impl.BEExceptionImpl: Can't divide by zero
+                at com.tibco.be.functions.exception.ExceptionHelper.newException(ExceptionHelper.java:37)
+[truncated for doc]
+
+--------------------------------------------------------------------------------
+ConvertStringToInt Rule: Event received with properties- '88888', 0
+Converting String -88888 to Integer
+ValueOfString :88888
+Finally Block: I am executed even when there was an exception in Try block
+
+</span></p>
+
+
+<div class="footer">
+<p>TIBCO BusinessEvents&reg; 5.6<br />
+Copyright&copy; 2004-2019 TIBCO Software Inc. All rights reserved.</p>
+</div>
+</body>
+</html>

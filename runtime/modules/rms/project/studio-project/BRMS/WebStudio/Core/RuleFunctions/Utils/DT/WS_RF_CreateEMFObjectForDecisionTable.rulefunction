@@ -1,0 +1,53 @@
+/**
+ * @description 
+ */
+Object rulefunction WebStudio.Core.RuleFunctions.Utils.DT.WS_RF_CreateEMFObjectForDecisionTable {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		WebStudio.Core.Concepts.Decision.Pagination.WS_C_DecisionTable decisionTable;
+	}
+	body {
+		
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.DT.WS_RF_CreateEMFObjectForDecisionTable");
+
+		Log.log(LOGGER, "Debug", "Creating EMF object for Decision Table %s%s", decisionTable.folder, decisionTable.name);
+		Object decisionTableEMFObject = WS.Decision.TableModel.createDecisionTableEMFObject(decisionTable.name, decisionTable.folder, decisionTable.implementsPath);
+		
+		WS_C_DecisionTableArguments decisionTableArguments = Instance.PropertyAtom.getPropertyValue(decisionTable.arguments);
+		WS_C_DecisionTableArgument[] decisionTableArgumentArray = Instance.PropertyArray.toArrayContainedConcept(decisionTableArguments.argument);
+		for (int i = 0; i < decisionTableArgumentArray@length; i++) {
+			String argAlias = decisionTableArgumentArray[i].argumentAlias;
+			String direction = decisionTableArgumentArray[i].direction;
+			String path = decisionTableArgumentArray[i].path;
+			String resourceType = decisionTableArgumentArray[i].resourceType;
+			boolean isArray = decisionTableArgumentArray[i].isArray;
+			Object argument = WS.Decision.TableModel.createArgument(argAlias, path, direction, resourceType, isArray);
+			WS.Decision.TableModel.addArgument(decisionTableEMFObject, argument);	   
+		}
+		
+		WS_C_TableMetadata metadata = Instance.PropertyAtom.getPropertyValue(decisionTable.metadata);
+		Object metedataObj = WS.Decision.TableModel.createMetadata();		
+		WS_C_MetadataProperty[] properties = Instance.PropertyArray.toArrayContainedConcept(metadata.property);
+		for (int i = 0; i < properties@length; i++) {
+			WS_C_MetadataProperty property = properties[i];
+			Object propertyObj = WS.Decision.TableModel.createMetadataProperty(property.name, property.type, property.value);
+			WS.Decision.TableModel.addMetadataProperty(metedataObj, propertyObj); 
+			
+		}
+		WS.Decision.TableModel.addTableMetadata(decisionTableEMFObject, metedataObj);
+			 
+		WebStudio.Core.Concepts.Decision.Pagination.WS_C_TableRuleSet decisionTableRuleSet = Instance.PropertyAtom.getPropertyValue(decisionTable.decisionTable);
+		Object decisionTableRuleSetObj = WS_RF_CreateEMFObjectForTableRuleSet(decisionTableRuleSet);		
+		WS.Decision.TableModel.addDecisionTableRuleSet(decisionTableEMFObject, decisionTableRuleSetObj);
+
+		WebStudio.Core.Concepts.Decision.Pagination.WS_C_TableRuleSet exceptionTableRuleSet = Instance.PropertyAtom.getPropertyValue(decisionTable.exceptionTable);
+		Object exceptionTableRuleSetObj = WS_RF_CreateEMFObjectForTableRuleSet(exceptionTableRuleSet);
+		WS.Decision.TableModel.addExceptionTableRuleSet(decisionTableEMFObject, exceptionTableRuleSetObj);
+
+		Log.log(LOGGER, "Debug", "Created EMF object for Decision Table %s%s", decisionTable.folder, decisionTable.name);
+		
+		return decisionTableEMFObject;		
+	}
+}

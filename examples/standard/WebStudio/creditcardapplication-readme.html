@@ -1,0 +1,152 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+    <title> CreditCard Application
+
+        - TIBCO BusinessEvents&reg; WebStudio Examples</title>
+
+<meta http-equiv="Content-type" content="text/html; charset=iso-8859-1" />
+<meta http-equiv="Content-Language" content="en-us" />
+<link rel="Shortcut Icon" href="../../_resources/icon.gif" type="image/gif" />
+<style type="text/css" media="all">@import "../../_resources/examples.css";</style>
+<script type="text/javascript" src="../../_resources/examples.js" /></script>
+<script type="text/javascript">
+function buildForms() {
+ var form;
+
+ SendEventForm.setServer("http://localhost:8010");
+
+ form = SendEventForm.get("sendCreditCardApplicationForm");
+ form.setDestinationPath("/cc/invoke");
+ form.setEventPath("/cc/invoke");
+ form.build();
+}
+</script>
+</head>
+
+<body onLoad="buildForms()">
+
+
+<h1>CreditCard Application</h1>
+
+
+<h2>Purpose of This Example</h2>
+
+<p>This example shows how to use WebStudio to develop, commit, approve, and deploy business rules. It also shows the execution of deployed business rules and decision tables.
+In this example, we will create business rules to:</p>
+<p>Specifically, this example demonstrates how a basic credit card application approval system might utilize Virtual Rule Functions, Decision Tables and rule templates to determine an applicant's credit worthiness, approved credit level, and interest rate.</p>
+<ul>
+    <li>set credit card status</li>
+    <li>whether applicable for special interest rates</li>
+</ul>
+
+
+<h2>How to Run the Example</h2>
+
+<ol>
+	<li><p>For Hot deployment settings - Update <i>BE_HOME</i>/rms/bin/RMS.cdd to set appropriate hot deployment parameters. Refer to property group namely - HotDeploy (go through the documentation for more details).</p>
+    </li>
+	<li>Additionally update the cdd for CreditCardApplication, located at <i>BE_HOME</i>/examples/standard/WebStudio/CreditCardApplication/Deployments to add properties indicating where to look for classes/artifacts to hot deploy. Typically this points to the shared location in RMS, i.e. "be.engine.cluster.externalClasses.path" (for DT) points to "<i>BE_HOME</i>/rms/shared/CreditCardApplication/Decision_Tables and "be.cluster.ruletemplateinstances.deploy.dir" (for RTI) points to <i>BE_HOME</i>/rms/shared/CreditCardApplication". 
+	</li>
+	
+	<li><p>Open a command window and at the command prompt,
+        start the TIBCO BusinessEvents engine to run the cache agent. Use the following command:
+        Substitute your actual value for <i>BE_HOME</i>.</p>
+<pre class="commands">
+cd <i>BE_HOME</i>/examples/standard/WebStudio
+<i>BE_HOME</i>/bin/be-engine --propFile <i>BE_HOME</i>\bin\be-engine.tra -u cache -c CreditCardApplication/Deployments/CreditCardApplication.cdd CreditCardApplication.ear
+</pre>
+
+        <p>Adapt these commands as needed.
+            For example, if you have customized the example project,
+            or are running it from a different directory.</p>
+    </li>
+
+    <li><p>Open a second command window and at the command prompt,
+        start the TIBCO BusinessEvents engine to run the inference agent. Use the following command:
+        Substitute your actual value for <i>BE_HOME</i>.</p>
+
+<pre class="commands">
+cd <i>BE_HOME</i>/examples/standard/WebStudio
+<i>BE_HOME</i>/bin/be-engine --propFile <i>BE_HOME</i>\bin\be-engine.tra -u default -c CreditCardApplication/Deployments/CreditCardApplication.cdd CreditCardApplication.ear
+</pre>
+        </li>
+	
+    <li><p>Open a command window and at the command prompt, start the TIBCO BusinessEvents RMS using the following command.
+        Substitute your actual value for <i>BE_HOME</i>.</p>
+<pre class="commands">
+cd <i>BE_HOME</i>/rms/bin
+be-rms
+</pre>
+    </li>
+
+    <li><p>Launch the URL <code>http://localhost:8090/WebStudio/</code>
+        using your web browser.</p>
+    </li>
+
+    <li><p>Login to the dashboard using <code>admin</code> as Username
+        and <code>admin</code> as Password.</p>
+    </li>
+
+    <li><p>Checkout the <code>CreditCardApplication</code> project.</p>
+        <p align="center"><image src="images/newUI/CCA_Checkout.png"/></p>
+    </li>
+
+    <li><p>Create a business rule named <code>SpecialOffersRTI</code>
+        based on the rule template named <code>SpecialOffers</code>.
+        Set the values in the business rule as shown and save it.</p>
+        <p align="center"><image src="images/newUI/CCA_RTIBuilder.png"/></p>
+    </li>
+	
+	<li><p>Create a business rule named <code>PreScreenRTI</code>
+        based on the rule template named <code>Applicant_PreScreen</code>.
+        Set the values in the business rule as shown and save it.</p>
+        <p align="center"><image src="images/newUI/CCA_RTIView.png"/></p>
+    </li>
+
+    <li><p>Commit the changes.</p>
+        <p align="center"><image src="images/newUI/CCA_Commit.png"/></p>
+    </li>
+
+    <li><p>Approve the changes.</p>
+        <p align="center"><image src="images/newUI/CCA_Approve.png"/></p>
+    </li>
+	
+	
+
+    <li><p>Build and deploy the changes.</p>		
+        <p align="center"><image src="images/newUI/CCA_BuildAndDeploy.png"/></p>
+    </li>
+
+    <li><p>You will now find <code>PreScreenRTI.ruletemplateinstance & SpecialOffersRTI.ruletemplateinstance</code>
+        in <code><i>BE_HOME</i>/rms/shared/CreditCardApplication/BusinessRules</code>.</p>
+    </li>
+	
+    <li><p>Send an application for getting a CreditCard. Figure out the credit card type applicable and whether you apply for special rates.</p>
+
+        <form id="sendCreditCardApplicationForm"></form>
+
+        <p>In the command window you see messages like this:
+
+        <pre class="logs">
+Application Request successfully Received !!
+Applicant Name >>> John Doe
+Status[VISA Granted], Eligible[false] & CreditLimit[2500.0]
+Min Income[1000], Min Age[20] Credit Type [Installment]
+Applicant qualifies for a special interest rate
+New rates - Default Rate [11.75] & Interest Rate [12.5]
+</pre>
+    </li>
+</ol>
+
+<div class="footer">
+<p>TIBCO BusinessEvents&reg; 5.6<br />
+Copyright&copy; 2004-2019 TIBCO Software Inc. All rights reserved.</p>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,21 @@
+/**
+ * @description 
+ */
+void rulefunction RuleFunctions.PreprocessorNoLock {
+	
+	attribute {
+		validity = ACTION;
+	}
+	
+	scope {
+		Events.Withdraw w;
+	}
+	
+	body {
+		RuleFunctions.CloseHttpRequest(w);
+		
+		// Loads the concept that the rules will work on.
+		Cluster.DataGrid.CacheLoadConceptByExtId(w.accountNumber, false);
+	}
+	
+}

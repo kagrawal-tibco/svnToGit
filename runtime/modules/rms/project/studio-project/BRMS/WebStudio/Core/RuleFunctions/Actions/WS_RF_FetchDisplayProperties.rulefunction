@@ -1,0 +1,105 @@
+/**
+ * @description 
+ */
+WebStudio.Core.Concepts.DataSources.WS_C_TemporaryReturnData rulefunction WebStudio.Core.RuleFunctions.Actions.WS_RF_FetchDisplayProperties {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object servletRequest;
+		WebStudio.Security.Authn.Concepts.WS_C_LoggedInUser loggedInUser;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.WS_RF_FetchDisplayProperties");
+		
+		WS_C_ResponseData responseData = null;
+		int responseStatus = 0;
+		int recordCount = 0;
+		String errorCode = null;
+		String responseMessage = null;
+		
+		if (!WS_RF_CheckHTTPMethod(servletRequest, "GET")) {
+			responseStatus = -1;
+			recordCount = 0;
+			errorCode = "ERR_5101";
+			responseMessage = "Invalid HTTP Method, expect method is [GET].";
+		} else {
+			String projectName = HTTP.Servlet.Request.getRequestParameter(servletRequest, "projectName");
+			String localeCode = HTTP.Servlet.Request.getRequestParameter(servletRequest, "localeCode");
+			Log.log(LOGGER, "Debug", "Project Name - %s & Locale Code - %s", projectName, localeCode);
+			
+			responseData = Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/WS_C_ResponseData");
+			
+			String subscriptionId = null;
+			if (loggedInUser.jwtToken != null) subscriptionId = loggedInUser.jwtToken.sbsc;
+			
+			//Fetch it from source control first
+			String scsRootURL = WS_RF_GetSCSRootURL(projectName, subscriptionId);
+			if (scsRootURL == null) {
+				throw Exception.newException(null, "Source control repository location not present. Set ws.scs.rootURL property", null);
+			}
+
+			String stackID = projectName + "_" + System.nanoTime();
+			Object projectNameStack = WS.Common.Stack.create(stackID);
+			
+			// fetch display data for individual project
+			if (projectName != null && !String.equals(projectName, "")) {
+				WS.Common.Stack.push(projectNameStack, projectName);
+			} else {
+				// fetch display data for all projects under this user's workspace
+				String userWorkspaceExtId = WS_RF_CreateUserArtifactExtId("WORKSPACE", null, null, loggedInUser.username, null, null);
+				WebStudio.Core.Concepts.WS_C_UserWorkspace userWorkspace = Instance.getByExtIdByUri(userWorkspaceExtId, "/WebStudio/Core/Concepts/WS_C_UserWorkspace");
+				
+				if (userWorkspace != null) {
+					WebStudio.Core.Concepts.WS_C_UserProject[] userProjects = Instance.PropertyArray.toArrayContainedConcept(userWorkspace.userProjects); 
+					
+					for (int i=0; i<userProjects@length; i++) {
+						if (userProjects[i] != null) {
+							String project_name = userProjects[i].name;
+							WS.Common.Stack.push(projectNameStack, project_name);
+						}
+					}
+				}
+			}
+			
+			String[] projects = null;
+			if (projectNameStack != null && !WS.Common.Stack.isEmpty(projectNameStack)) {
+				Log.log(LOGGER, "Debug", "Converting ProjectNameStack to Array");				
+				projects = WS.Common.Stack.toArray(projectNameStack, "java.lang.String", null);				
+				WS.Common.Stack.delete(stackID);
+				Log.log(LOGGER, "Debug", "Project List Size - %s", projects@length);
+			} else {
+				Log.log(LOGGER, "Debug", "Project Name Stack is empty !!");
+			}
+			
+			if (projects != null && projects@length > 0) {
+				WS_C_DisplayPropertiesDataSourceRecord displayPropertiesDSR = Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/Records/WS_C_DisplayPropertiesDataSourceRecord");
+				WS_C_AbstractDataSourceRecord dataSourceRecord = displayPropertiesDSR;
+				Instance.PropertyArray.appendContainedConcept(responseData.record, dataSourceRecord, 1L);
+				
+				responseData.clearContentReference = true;
+				
+				WS_C_ProjectDisplayDataSource projectDisplayDS = Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/Display/WS_C_ProjectDisplayDataSource");
+				Instance.PropertyAtom.setContainedConcept(displayPropertiesDSR.displayProperties, projectDisplayDS, 1L);
+				
+				for (int i=0; i<projects@length; i++) {
+					String projectPath = scsRootURL + "/" + projects[i];
+					Log.log(LOGGER, "Debug", "Project Path - %s", projectPath);
+					
+					String projectDisplayXML = WS.Display.getDisplayProperties(projectPath, localeCode);
+					Log.log(LOGGER, "Debug", "Project Display XML - %s", projectDisplayXML);
+					
+					WS_C_ProjectDisplay projectDisplay = Instance.createTransientInstanceFromXML("/WebStudio/Core/Concepts/DataSources/Display/WS_C_ProjectDisplay", projectDisplayXML);
+					Instance.PropertyArray.appendConceptReference(projectDisplayDS.project, projectDisplay.project, 1L);
+					
+					recordCount++;
+				}
+				Log.log(LOGGER, "Debug", "Total projects in projectDisplayDS - %s", projectDisplayDS.project@length);
+			} else {
+				responseMessage = "No Project checkedout yet.";
+			}
+		}
+
+		return WS_RF_CreateTemporaryReturnData(responseStatus, recordCount, errorCode, responseMessage, responseData);	
+	}
+}

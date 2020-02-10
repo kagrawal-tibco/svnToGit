@@ -1,0 +1,107 @@
+<div class='card panel-sm page' >
+  <div class='card-header'>
+   	<button (click)='toggleMaximize()' class="float-right btn-outline-primary">
+    	<i
+     	class="fa"
+     	[class.fa-window-restore]="maximized"
+     	[class.fa-expand]="!maximized"
+     	>
+    	</i>
+   	</button>
+    {{title}}
+  </div>
+  <div class='card-body'>
+    <div class="row">
+      <div class="col-sm-4 page-col scroll-x divider-right">
+        <div *ngIf='!descriptors'>
+          <span class='fa fa-refresh fa-spin'></span><ng-container i18n>{{i18n(' Loading ')}}</ng-container>
+        </div>
+        <div *ngIf='descriptors && descriptors.length === 0'>
+          <div class='card' i18n>{{i18n('No used deployment descriptor.')}}</div> 
+        </div>
+        <ul class='top-pad nav nav-stacked nav-pills'>
+          <li class='nav-item'
+            *ngFor = 'let descriptor of descriptors'
+            [class.active]='isActive(descriptor)'
+          >
+            <a
+              (click) = 'onSelect(descriptor)'
+              class='clickable nav-link'
+              [class.active]='isActive(descriptor)'
+              >
+              <div>
+                <small>{{getEntityBrief(descriptor)}}</small>
+              </div>
+              <div>
+                <small 
+                  class='opague'
+                  [class.gray]='!isActive(descriptor)'
+                >@ {{getTargetBrief(descriptor)}}</small>
+              </div>
+            </a>
+          </li>
+        </ul>
+        <div class='divider-bottom bottom-pad top-pad'></div>
+        <ul class='top-pad nav nav-stacked nav-pills'>
+          <li class='nav-item'
+            [class.active]='inCreateMode'
+          >
+            <a
+              (click)='setInCreateMode()'
+              class='clickable nav-link'
+              [class.active]='inCreateMode'
+              >
+              <small i18n>{{i18n('New Deployment Descriptor')}}</small>
+            </a>
+          </li>
+        </ul>
+      </div>
+      <div class="col-sm-8 page-col scroll-y">
+        <div class='row'>
+          <div class='col-sm-12'>
+            <descriptor-info
+              *ngIf='showDescriptor | async'
+              [input]='inCreateMode ? newDescriptor : selected'
+              [artifactId]='context.artifact.id'
+              [edit]='inCreateMode'
+              [revisions]='revisions'
+              [unique]='inCreateMode ? descriptors : []'
+              (valid)='onValidChange($event)'
+            ></descriptor-info>
+          </div>
+        </div>
+        <div class='row'>
+          <div class='col-sm-12'>
+            <div class='top-pad divider-top'>
+              <div *ngIf='!inCreateMode'>
+                <button type="button" class='btn btn-danger btn-sm btn-narrow' (click)='onDelete()'
+                ><i class="fa fa-trash-o" aria-hidden="true"></i><ng-container i18n>{{i18n('Delete')}}</ng-container>
+                </button>
+              <button type="button" class='btn btn-info btn-sm btn-narrow' (click)='onCopy()'><i class="fa fa-clone" aria-hidden="true"></i><ng-container i18n>{{i18n('Copy')}}</ng-container></button>
+              </div>
+              <div *ngIf='inCreateMode'>
+                <label class='control-label control-label-normal' i18n>{{i18n('Save the deployment descriptor')}}</label>
+                <button 
+                  type="button" 
+                  class='btn btn-primary btn-sm btn-narrow' 
+                  (click)='onSave()'
+                  [disabled]='!valid'
+               ><i class="fa fa-bookmark" aria-hidden="true"></i><ng-container i18n>{{i18n(' Save')}}</ng-container>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class='row left-pad right-pad bottom-pad top-pad'>
+  <div class='col-sm-6 text-left'>
+    <button 
+      type="button"
+      class='btn btn-outline-primary btn-sm btn-narrow'
+      (click)='onClose()'
+      i18n>{{i18n('Close')}}</button>
+  </div>
+</div>

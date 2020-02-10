@@ -1,0 +1,44 @@
+<div class='row'>
+  <div class='col-sm-12'>
+    <navigable-wizard [pages]='pages' [params]='params' [position]='position'></navigable-wizard>
+  </div>
+</div>
+<div class='row left-pad right-pad bottom-pad top-pad'>
+  <div class='col-sm-6 text-left'>
+    <button
+      type="button"
+      class='btn btn-outline-primary btn-sm btn-narrow'
+      (click)='onCancel()' i18n
+      >{{i18n('Cancel')}}</button>
+  </div>
+  <div class='col-sm-6 text-right'>
+    <button
+      type="button"
+      class='btn btn-outline-primary btn-sm btn-narrow'
+      *ngIf='position > 0'
+      (click)='onPrev()' i18n
+      >{{i18n('Prev')}}</button>
+      <button
+        *ngIf='hasRepos() && position == 0'
+        type='button'
+        class='btn btn-info btn-sm'
+        [disabled]='!(params.canNextStep | async)'
+        (click)='onNextSCM()' i18n>
+        {{i18n('Import from SCM')}}
+        </button>
+    <button 
+      *ngIf='showNext()'
+      type="button"
+      [disabled]='!(params.canNextStep | async)'
+      class='btn btn-primary btn-sm btn-narrow'
+      (click)='onNext()'
+      >{{nextBtnText}}</button>
+    <button
+      *ngIf='showFinish()'
+      type="button"
+      class='btn btn-primary btn-sm btn-narrow'
+      [disabled]='!(params.canFinish | async)'
+      (click)='onFinish()' i18n
+      >{{i18n('Finish')}}</button>
+  </div>
+</div>

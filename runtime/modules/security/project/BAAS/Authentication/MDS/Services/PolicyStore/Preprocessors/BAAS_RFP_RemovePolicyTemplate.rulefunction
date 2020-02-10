@@ -1,0 +1,38 @@
+/**
+ * @description Remove a policy template from the store.
+ */
+void rulefunction Authentication.MDS.Services.PolicyStore.Preprocessors.BAAS_RFP_RemovePolicyTemplate {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Authentication.MDS.Services.PolicyStore.Events.BAAS_E_RemovePolicyTemplateRequestEvent baas_e_removepolicytemplaterequestevent;
+	}
+	body {
+		String templateId = baas_e_removepolicytemplaterequestevent.templateId;
+		//Check if such a template id exists in the store.
+		boolean policyTemplateLock = Cluster.DataGrid.Lock(templateId, -1, false);
+		BAAS_C_PolicyTemplate existingAuthnPolicyTemplate = null;
+		if (policyTemplateLock) {
+			existingAuthnPolicyTemplate = Cluster.DataGrid.CacheLoadConceptByExtId(templateId, true);
+			if (existingAuthnPolicyTemplate != null) {
+				throw Exception.newException("Policy template removal error", "Attempt to remove policy template with a non-existing template id", null);
+				//TODO send response
+			}
+		}
+		//Lock and load policy store
+		boolean policyStoreLock = Cluster.DataGrid.Lock("POLICY_STORE", -1, false);
+		if (policyStoreLock) {
+			BAAS_C_PolicyStore mdsPolicyStore = Cluster.DataGrid.CacheLoadConceptByExtId("POLICY_STORE", true);
+			if (mdsPolicyStore == null) {
+				throw Exception.newException("Policy store config error", "No policy store created in metadata repository", null);
+				//Send response.
+			}
+			Instance.PropertyArray.removeContainedConcept(mdsPolicyStore.policyTemplates, existingAuthnPolicyTemplate);
+			//Send success response
+			BAAS_E_RemovePolicyTemplateResponseEvent templateRemovalResponseEvent = 
+				Event.createEvent("xslt://{{/Authentication/MDS/Services/PolicyStore/Events/BAAS_E_RemovePolicyTemplateResponseEvent}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"1.0\" exclude-result-prefixes=\"xsl xsd\">\n    <xsl:output method=\"xml\"/>\n    <xsl:template match=\"/\">\n        <createEvent>\n            <event>\n                <status>\n                    <xsl:value-of select=\"&quot;true&quot;\"/>\n                </status>\n            </event>\n        </createEvent>\n    </xsl:template>\n</xsl:stylesheet>");
+			Event.replyEvent(baas_e_removepolicytemplaterequestevent, templateRemovalResponseEvent);
+		}
+	}
+}

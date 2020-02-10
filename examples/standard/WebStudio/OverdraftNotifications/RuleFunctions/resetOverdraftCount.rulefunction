@@ -1,0 +1,21 @@
+/**
+ * @description 
+ */
+void rulefunction RuleFunctions.resetOverdraftCount {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		
+		String accountID;
+	}
+	body {
+		if (accountID != null) {
+			Account account = Instance.getByExtId(accountID);
+			if (account != null) {
+				System.debugOut("### Resetting over draft count on Account[ID="+account.AccountID+",Balance="+account.AccountBalance+"]");
+				account.OverdraftCount = 0;
+			}
+		}
+	}
+}

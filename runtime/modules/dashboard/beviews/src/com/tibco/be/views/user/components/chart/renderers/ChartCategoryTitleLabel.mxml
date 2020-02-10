@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<BitmapLabel xmlns="com.tibco.be.views.ui.*" xmlns:mx="http://www.adobe.com/2006/mxml"
+	textAlign="left"
+    selectable="false"
+    styleName="axisLabel"
+    truncateToFit="true"
+    incrementXYOnRotation="true"
+    creationComplete="handleCreationComplete(event)"
+>
+	<mx:Script>
+		<![CDATA[
+			import mx.events.FlexEvent;
+			import mx.charts.AxisRenderer;
+        	import com.tibco.be.views.user.components.chart.BEVHorizontalBarChart;
+        	import com.tibco.be.views.user.components.chart.BEVCartesianChart;
+        	
+        	private var _parentChart:BEVCartesianChart;
+        	private var _fontSize:Number;
+        	private var _isStyled:Boolean = false;
+        	
+        	override public function set data(value:Object):void{
+        		text = (value is String ? value:value.text) + (_isStyled ? " ":""); //label is cut off for stylized fonts, space pad as workaround
+        	}
+        	
+			public function configure(parentChart:BEVCartesianChart, numChartLabels:Number, fontSize:int, fontColor:uint, fontStyles:String, placement:String, rotation:Number, skipFactor:Number):void{
+        		_parentChart = parentChart;
+        		_fontSize = fontSize;
+        		
+        		//plotArea creates a new rectangle, thus try to avoid calling 2x
+    			if(_parentChart is BEVHorizontalBarChart){
+    				maxWidth = _parentChart.plotArea.height;
+    			}
+    			else{
+    				maxWidth = _parentChart.plotArea.width;
+    			}
+        		
+        		var fontStyle:String = fontStyles.indexOf("italic") >= 0 ? "italic":"normal";
+				var fontWeight:String = fontStyles.indexOf("bold") >= 0 ? "bold":"normal";
+				
+				_isStyled = fontStyle != "normal" || fontWeight != "normal";
+				
+        		setStyle("fontSize", _fontSize);
+        		setStyle("color", fontColor);
+        		setStyle("fontStyle", fontStyle);
+        		setStyle("fontWeight", fontWeight);
+        	}
+        	
+        	private function handleCreationComplete(event:FlexEvent):void{
+        		var p:AxisRenderer = parent as AxisRenderer;
+				if(p != null && p.getStyle('verticalAxisTitleAlignment') == 'vertical' && rotation != 180){
+					rotation = 180;
+				} 
+        	}
+        	
+        	override protected function updateDisplayList(unscaledWidth:Number, unscaledHeight:Number):void{
+        		if(parent == null){ return; } //bug https://bugs.adobe.com/jira/browse/FLEXDMV-1695
+        		super.updateDisplayList(unscaledWidth, unscaledHeight);
+        	}
+		]]>
+	</mx:Script>
+</BitmapLabel>

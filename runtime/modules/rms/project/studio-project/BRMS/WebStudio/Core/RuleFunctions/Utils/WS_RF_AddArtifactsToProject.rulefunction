@@ -1,0 +1,51 @@
+/**
+ * @description 
+ */
+boolean rulefunction WebStudio.Core.RuleFunctions.Utils.WS_RF_AddArtifactsToProject {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String artifactPath;
+		String artifactType;
+		String projectName;
+		String userName;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.WS_RF_AddArtifactsToProject");
+		
+		boolean newlyAdded = false;
+		
+		String userProjectExtId = WS_RF_CreateUserArtifactExtId(null, null, projectName, userName, null, null);
+		boolean userProjectLock = Cluster.DataGrid.Lock(userProjectExtId, -1, false);
+		if (userProjectLock) {
+			WS_C_UserProject userProject = Instance.getByExtIdByUri(userProjectExtId, "/WebStudio/Core/Concepts/WS_C_UserProject");
+			
+			if (userProject != null) {
+				String type = artifactType;
+				if (type == "ruletemplate") {
+					type = "ruletemplateinstance";
+				}
+				WS_C_UserArtifact userArtifact = WS_RF_IsUserArtifact(WS_RF_CreateUserArtifactExtId(null, artifactPath, projectName, userName, null, null), type);
+			
+				if (userArtifact == null) {
+					String userArtifactExtId = WS_RF_CreateUserArtifactExtId(null, artifactPath, projectName, userName, null, null);
+					userArtifact = WS_RF_UserArtifactCreationFactory(userArtifactExtId, artifactPath, artifactType, artifactType, userProject@extId);
+					Log.log(LOGGER, "Debug", "User Artifact from factory instance id %s and ExtId - %s", userArtifact@id, userArtifactExtId);
+				}
+				
+				// adding now (checkout) as the last sync date
+				if (userArtifact.lastSyncDate == null) userArtifact.lastSyncDate = DateTime.now();
+		
+				//Append this to project if not already added
+				if (Instance.PropertyArray.indexOfContainedConcept(userProject.userArtifacts, userArtifact) == -1) {
+					Instance.PropertyArray.appendContainedConcept(userProject.userArtifacts, userArtifact, 1L);
+					Log.log(LOGGER, "Debug", "Added artifact[%s] to Project[%s]", artifactPath, projectName);
+					newlyAdded = true;
+				}
+			}
+		}
+		
+		return newlyAdded;
+	}
+}

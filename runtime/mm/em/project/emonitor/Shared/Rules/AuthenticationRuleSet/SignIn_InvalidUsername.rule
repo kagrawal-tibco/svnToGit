@@ -1,0 +1,22 @@
+/**
+ * @description 
+ * @author 
+ */
+rule Shared.Rules.AuthenticationRuleSet.SignIn_InvalidUsername {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Shared.Events.reqres.authentication.LoginRequestEvent	requestevent;
+		
+	}
+	when {
+		requestevent.username == null || String.length(requestevent.username) == 0;
+	}
+	then {
+		Shared.Events.reqres.FailureResponseEvent responseevent = Shared.Events.reqres.FailureResponseEvent.FailureResponseEvent(null,null,"001","Invalid or no username specified");
+		Event.replyEvent(requestevent,responseevent);
+		Event.consumeEvent(requestevent);
+	}
+}

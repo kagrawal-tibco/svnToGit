@@ -1,0 +1,20 @@
+/**
+ * @description 
+ * @author smahabal-lt
+ */
+rule Rules.ParentInstance {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		
+		Events.createParent createparent;
+	}
+	when {
+		
+	}
+	then {
+Instance.createInstance("xslt://{{/Concepts/Parent}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"1.0\" exclude-result-prefixes=\"xsl xsd\">\n    <xsl:output method=\"xml\"/>\n    <xsl:template match=\"/\">\n        <createObject>\n            <object>\n                <Parent_string_prop>\n                    <xsl:value-of select=\"&quot;parent_prop&quot;\"/>\n                </Parent_string_prop>\n            </object>\n        </createObject>\n    </xsl:template>\n</xsl:stylesheet>");		
+}
+}

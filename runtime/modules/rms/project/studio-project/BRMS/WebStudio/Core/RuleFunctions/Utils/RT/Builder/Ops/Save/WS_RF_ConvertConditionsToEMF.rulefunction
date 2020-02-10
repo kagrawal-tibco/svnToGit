@@ -1,0 +1,29 @@
+/**
+ * @description Process conditions part of builder and transform to EMF for persistence.
+ */
+void rulefunction WebStudio.Core.RuleFunctions.Utils.RT.Builder.Ops.Save.WS_RF_ConvertConditionsToEMF {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object ruleTemplateInstanceEModel;
+		WebStudio.Core.Concepts.RuleTemplateInstance.Builder.WS_C_Conditions conditions;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.RT.Builder.Ops.Save.WS_RF_ConvertConditionsToEMF");
+		//Get base multi filters
+		WS_C_AbstractConditionsFilter[] baseMultiFilters = Instance.PropertyArray.toArrayConcept(conditions.filter);
+		//Get first one
+		WS_C_AbstractConditionsFilter baseMultiFilter = baseMultiFilters[0];
+		//Get its children
+		WS_C_AbstractConditionsFilter rootConditionsFilter = baseMultiFilter;
+		
+		Log.log(LOGGER, "Debug", "Referenced conditions id %s", rootConditionsFilter@id);
+		
+		WebStudio.
+			Core.
+				RuleFunctions.
+					Utils.RT.Builder.Ops.Save.
+						WS_RF_ConvertMultiFilterToEMF(ruleTemplateInstanceEModel, rootConditionsFilter);
+	}
+}

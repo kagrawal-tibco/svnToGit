@@ -1,0 +1,93 @@
+<div class='properties-container'>
+  <div class="{{ isRtl() ? 'tabSection-rtl' : 'tabSection' }}">
+    <!-- <button [style.background-color]="getStyle('G')" class="btn btn-outline-primary" (click)="selectTab('general')">General</button>
+    <button *ngIf="this.isDT" [style.background-color]="getStyle('C')" class="btn btn-outline-primary" (click)="selectTab('cell')">Cell</button>
+    <button *ngIf="this.isDT" [style.background-color]="getStyle('R')" class="btn btn-outline-primary" (click)="selectTab('rule')">Rule</button> -->
+    <tabset [vertical]='true' type='pills' [justified]='true'>
+      <tab heading='General' i18n-heading (selectTab)="selectTab('general')"> </tab>
+      <tab *ngIf='showCellRule()'heading='Cell'(selectTab)="selectTab('cell')"> </tab>
+      <tab *ngIf='showCellRule()' heading='Rule'(selectTab)="selectTab('rule')"> </tab>
+    </tabset>
+  </div>
+  <div *ngIf="this.isDT" class="contentSection">
+    <div *ngIf="this.selected ==='G'">
+      <table class="contentClass">
+        <tr style="padding-bottom: 5px">
+          <td><label class="control-label control-label-normal" i18n>{{i18n('Last modified')}}</label></td>
+          <td style="width: 75%;"><input type="text" [(ngModel)]="lastmodifiedG" disabled></td>
+        </tr>
+        <tr style="padding-bottom: 5px">
+          <td><label class="control-label control-label-normal" i18n>{{i18n('Version')}}</label></td>
+          <td style="width: 75%;"><input type="text" [(ngModel)]="versionG" disabled></td>
+        </tr>
+        <tr style="padding-bottom: 5px">
+          <td><label class="control-label control-label-normal" i18n>{{i18n('Implementation path')}}</label></td>
+          <td style="width: 75%;"><input type="text" [(ngModel)]="implementsG" disabled></td>
+        </tr>
+      </table>
+    </div>
+    <div *ngIf="this.selected ==='C'">
+      <table>
+        <tr style="padding-bottom: 10px">
+          <!-- <td><label class="control-label control-label-normal" i18n>{{i18n('Enabled')}}</label></td>
+          <toggle-switch [size]='"mini"' [value]='cellEnabled' (valueChange)='changeCellEnabled()'></toggle-switch> -->
+          <td>
+              <mat-slide-toggle [checked]="cellEnabled" (change)="changeCellEnabled($event)" color="primary">
+                  {{i18n('Enabled')}}
+              </mat-slide-toggle> 
+          </td>
+        </tr><br>
+        <tr style="padding-bottom: 5px">
+          <td valign="top"><label class="control-label control-label-normal" i18n>{{i18n('Comments')}}</label></td>
+          <td><textarea class="comments" rows="3" cols="50" [(ngModel)]="cellComments" (focusout)="focusOutCellComment()" placeholder="{{i18n('Set cell description...')}}'" i18n-placeholder></textarea></td>
+        </tr>
+      </table>
+    </div>
+    <div *ngIf="this.selected ==='R'">
+      <table class="contentClass">
+        <tr style="padding-bottom: 5px">
+          <td><label class="control-label control-label-normal" i18n>{{i18n('Id')}}</label></td>
+          <td><input type="text" [(ngModel)]="ruleID" disabled></td>
+        </tr>
+        <tr style="padding-bottom: 5px">
+          <td><label class="control-label control-label-normal" i18n>{{i18n('Priority')}}</label></td>
+          <td><input type="text" [(ngModel)]="rulePriority" (focusout)="focusOutRulePriority()" disabled></td>
+        </tr>
+        <tr style="padding-bottom: 5px">
+          <td valign="top"><label class="control-label control-label-normal" i18n>{{i18n('Comments')}}</label></td>
+          <td><textarea class="comments" rows="3" cols="50" [(ngModel)]="ruleComments" (focusout)="focusOutRuleComment()" placeholder="{{i18n('Set rule description...')}}" i18n-placeholder></textarea></td>
+        </tr>
+      </table>
+    </div>
+  </div>
+  <div *ngIf="this.isRTI" class="contentSection">
+    <div class="row">
+      <div class="col-sm-12">
+        <form>
+          <div class="form-group">
+            <label class="control-label control-label-normal {{isRtl() ? 'rtiLabels-rtl' : 'rtiLabels' }}" i18n>{{i18n('Name')}}</label>
+            <input type="text" class="rtiName" value={{this.rtiName}} disabled>
+          </div>
+          <div class="form-group">
+            <label class="control-label control-label-normal {{isRtl() ? 'rtiLabels-rtl' : 'rtiLabels' }}" i18n>{{i18n('Priority')}}</label>
+            <select (change)="this. updateRTIPriority($event)">
+              <option *ngFor="let  priority of this.priorityValues" [selected]="priority == this.rtiPriority">
+                {{priority}}
+              </option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="control-label control-label-normal rtiDescriptionLabel" i18n>{{i18n('Description')}}</label>
+            <textarea  name= "description"
+                       class="comments"
+                       rows='3'
+                       cols='100'
+                       [(ngModel)]="this.rtiDescription"
+                       (change)="this.focusOutRTIProperties()">
+            </textarea>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

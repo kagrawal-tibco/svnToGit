@@ -1,0 +1,23 @@
+/**
+ * @description 
+ * @author 
+ */
+rule Shared.Rules.TopologyRuleSet.OnPUStart_InvalidToken {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Shared.Events.topology.PuStartEvent	pustartevent;
+		
+	}
+	when {
+		pustartevent.token == null || String.length(pustartevent.token) == 0;
+	}
+	then {
+		Shared.RuleFunctions.log("OnPUStartEvent","DEBUG","Invalid token!");
+		Shared.Events.reqres.FailureResponseEvent event = Shared.Events.reqres.FailureResponseEvent.FailureResponseEvent(null,null,"001","Invalid token");
+		Event.replyEvent(pustartevent, event);
+		Event.consumeEvent(pustartevent);
+	}
+}

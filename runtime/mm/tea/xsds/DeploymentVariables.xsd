@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+	xmlns:jxb="http://java.sun.com/xml/ns/jaxb" jxb:version="2.0">
+
+	<xsd:element name="deploymentVariables">
+		<xsd:complexType>
+	    	<xsd:sequence>
+	    		<xsd:element name="name" type="xsd:string"/>
+	    		<xsd:element name="type" type="DeploymentVariableType"/>
+ 				<xsd:element name="version" type="xsd:long" minOccurs="0"/>
+ 				<xsd:element name="key" type="xsd:string" minOccurs="0"/>	    		
+	    		<xsd:element name="nameValuePairs" type="NameValuePairs"/>
+	    	</xsd:sequence>
+	    </xsd:complexType>
+	</xsd:element>
+
+	<xsd:complexType name="NameValuePairs">
+		<xsd:sequence>
+			<xsd:element name="nameValuePair" type="NameValuePair"
+				minOccurs="0" maxOccurs="unbounded" />
+		</xsd:sequence>
+	</xsd:complexType>
+
+	<xsd:complexType name="NameValuePair">
+		<xsd:sequence>
+			<xsd:element name="name" type="xsd:string" maxOccurs="1"
+				minOccurs="1" />
+			<xsd:element name="description" type="xsd:string"
+				minOccurs="0" />
+			<!-- <xsd:element name="state" type="State"/> -->
+			<xsd:element name="defaultValue" type="xsd:string"
+				minOccurs="0" maxOccurs="1" />
+			<xsd:element name="value" type="xsd:string" minOccurs="1"
+				maxOccurs="1" />
+			<xsd:element name="deployedValue" type="xsd:string"
+				minOccurs="0" maxOccurs="1" />
+			<xsd:element name="isDeleted" type="xsd:boolean"
+				minOccurs="1" maxOccurs="1" />
+
+			<xsd:element name="hasDefaultValue" type="xsd:boolean"
+				maxOccurs="1" minOccurs="1">
+			</xsd:element>
+
+			<xsd:element name="type" type="xsd:string" maxOccurs="1"
+				minOccurs="0">
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+
+	<xsd:simpleType name="DeploymentVariableType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="GLOBAL_VARIABLES" />
+			<xsd:enumeration value="SYSTEM_VARIABLES" />
+			<xsd:enumeration value="JVM_PROPERTIES" />
+			<xsd:enumeration value="LOG_CONFIG" />
+			<xsd:enumeration value="APPLICATION_CONFIG" />
+			<xsd:enumeration value="INSTANCE_CONFIG" />
+			<xsd:enumeration value="LOG_PATTERNS" />
+			<xsd:enumeration value="BE_PROPERTIES" />
+		</xsd:restriction>
+	</xsd:simpleType>
+
+	<!-- <xsd:simpleType name="State"> <xsd:restriction base="xsd:string"> <xsd:enumeration 
+		value="NEW"/> <xsd:enumeration value="MODIFIED"/> <xsd:enumeration value="DELETED"/> 
+		</xsd:restriction> </xsd:simpleType> -->
+
+</xsd:schema>

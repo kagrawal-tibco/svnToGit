@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+<extension
+         point="org.eclipse.ui.editors">
+      <editor
+            class="com.tibco.cep.sharedresource.as3.AS3Editor"
+            default="true"
+            extensions="as3"
+            icon="icons/asconnection.png"
+            id="com.tibco.cep.sharedresource.as3.AS3Editor"
+            name="ActiveSpaces 3.x Editor">
+      </editor>
+    </extension>
+   <extension
+         point="org.eclipse.ui.newWizards">
+        <category
+             id="com.tibco.cep.sharedresource.ui.category"
+             name="TIBCO Shared Resources">
+        </category>
+        <wizard
+               canFinishEarly="false"
+               category="com.tibco.cep.sharedresource.ui.category"
+               class="com.tibco.cep.sharedresource.ui.wizards.NewAS3Wizard"
+               finalPerspective="com.tibco.cep.studio.application.perspective"
+               icon="icons/asconnection.png"
+               id="com.tibco.cep.studio.ui.newAS3Wizard"
+               name="ActiveSpaces 3.x Connection">
+            <description>
+               Create a new ActiveSpaces 3.x Connection resource
+            </description>
+        </wizard>
+    </extension>                  
+    <extension
+         point="com.tibco.cep.studio.core.projectResourceValidator">
+      <validator
+            Validator="com.tibco.cep.sharedresource.validation.AS3SharedResourceValidator"
+            extensions="as3">
+      </validator>
+    </extension>
+    <extension
+         point="com.tibco.cep.studio.core.refactoringParticipant">
+      <refactoringParticipant
+            participant="com.tibco.cep.sharedresource.refactor.AS3RefactoringParticipant">
+      </refactoringParticipant>
+    </extension>
+    <extension
+          point="com.tibco.cep.sharedresource.sharedResourcePropertyProvider">
+       <SharedResource
+             sharedResourcePropertyProvider="com.tibco.cep.sharedresource.as3.DefaultSharedResourcePropertyProvider"></SharedResource>
+    </extension> 
+</plugin>

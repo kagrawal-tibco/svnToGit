@@ -1,0 +1,28 @@
+/**
+ * @description 
+ * @author wangneng-lt
+ */
+rule Rules.subscriptionRule {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		
+		Events.subscriptionEvent subscriptionevent;
+	}
+	when {
+		
+	}
+	then {
+		// subsctibe microagent method Memory on agent "test"
+		System.debugOut("\n============================================================================"
+			+ "\nResult of"
+			+  System.getGlobalVariableAsString("microAgentName","") + System.getGlobalVariableAsString("methodName","")
+			+ "subscription on Agent[:" + System.getGlobalVariableAsString("agentName","")+"]"
+			+ " \nPage Faults PER second: "+subscriptionevent.Page_FaultsPERsec
+			+ "\nAvailable Memory(GB): "+subscriptionevent.Available_Bytes/1024/1024/1024
+			+ "\nCommitted Memory(GB): "+subscriptionevent.Committed_Bytes/1024/1024/1024
+			+ "\n============================================================================");
+	}
+}

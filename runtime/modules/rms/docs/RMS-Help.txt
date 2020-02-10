@@ -1,0 +1,69 @@
+1.) Structure Of RMS:
+
+Following is the directory structure planned for rms installation:
+
+rms/lib -> Will contain any libraries required by the RMS. (Typically shared code with BUI.) (cep-rms, cep-security, cep-mgmtserver, cep-decisionproject)
+rms/lib/ext -> Will contain third-party jars required by RMS. (Typically the EMF/UML dependencies)
+rms/bin/startup.bat
+       /startup.sh -> Script files for windows/unix to start up the RMS.
+	   /cep-rms.tra -> TRA config file for RMS
+rms/config/jaas-config.config -> The configuration file for JAAS (Present in bui/config)
+rms/project/src/ -> Contain RMS Designer project source.
+rms/project/bin/ -> Contain RMS.ear file
+rms/examples -> Out of box example to run RMS against.
+rms/examples/MyProject/bin/MyProject.ear -> EAR file of the sample project
+rms/examples/MyProject/bin/MyProjectCustomFunctions.jar -> JAR file containing custom catalog functions if any for the sample project
+rms/examples/MyProject/src/ -> Contain the sample project's designer source.   
+rms/examples/MyProject/config/MyProject.xml -> Sample Access control file for this project
+rms/examples/MyProject/config/MyProject.dm -> Sample domain model file.
+rms/examples/MyProject/data/MyProject_TestData/... -> Directory under which test data will exist.
+rms/be/ -> A light weight version of the enterprise edition of BE.
+
+2.) TRA properties for RMS:
+
+    a.) rms.project.location=<path of a sample project as mentioned above> -> To be changed by user/customer depending upon where their artifacts   are  located.
+	b.) rms.project.name=<project name> -> To be changed by user.
+	 The name of the EAR file to be used for checkout should be of the form <project name>.ear. Similarly the Access control file for this project should be named as <project name>.xml, similarly for domain model, and test data. See above example of sample project shipped out of the box for naming conventions.
+	c.) rms.project.workspace=<diectory to store checked in projects> -> Default will be /workspace 
+	d.) rms.project.decisiondata=<directory to store approved project> -> Default will be /decisiondata
+	e.) rms.project.deployment=<directory to store deployable ear> -> May be same as decisiondata above.
+	f.) rms.auth.type=file -> Can be changed to LDAP if authentication data provider is LDAP 
+	g.) rms.auth.file.location=users.txt-> (Will look for users.txt inside the rms/config directory by default)
+    h.) rms.auth.ldap.host=<domain name of the host for LDAP>
+    i.) rms.auth.ldap.port=<port for LDAP>
+    j.) rms.auth.ldap.adminDN= -> Base DN for admin login e.g: -> cn=Directory Administrators,dc=apac,dc=tibco,dc=com  	
+	k.) rms.auth.ldap.adminPassword=admin
+	l.) rms.auth.ldap.baseDN=dc=apac,dc=tibco,dc=com -> Base Tree in ldap under which to search users.
+
+3.) TRA properties for RMS in BUI:	
+	a.) rms.port = 8888 by default -> Can be changed by user depending upon HTTP channel configuration.
+	b.) rms.baseURL = http://localhost:<rms.port>/Transports/Channels/HTTPChannel -> This url pattern need not be changed unless channel URL is changed in the RMS designer project.
+	c.) rms.login.destination.name=AuthenticationRequestDestination -> Need not be changed unless Designer project for RMS is changed.
+	d.) rms.login.destination.port=<rms.port> -> Need not be changed unless Designer project for RMS is changed.
+	e.) rms.checkout.destination.name=CheckoutProjectDestination -> Need not be changed unless Designer project for RMS is changed.
+	f.) rms.checkout.destination.port=<rms.port> -> Need not be changed unless Designer project for RMS is changed.
+	g.) rms.checkin.destination.name=SubmitProjectDestination -> Need not be changed unless Designer project for RMS is changed.
+	h.) rms.checkin.destination.port=<rms.port> -> Need not be changed unless Designer project for RMS is changed.
+	i.) rms.worklists.destination.name=AdminTasksDestination -> Need not be changed unless Designer project for RMS is changed.
+	j.) rms.worklists.destination.port=<rms.port> -> Need not be changed unless Designer project for RMS is changed.
+	k.) rms.approvals.destination.name=RouterDestination -> Need not be changed unless Designer project for RMS is changed.
+	l.) rms.approvals.destination.port=<rms.port> -> Need not be changed unless Designer project for RMS is changed.
+	
+4.) Steps to run the RMS, and BUI:
+
+    a.) Install the RMS in some location on the file system. Let us call this as <RMS_HOME>.
+    b.) Run the startup.bat file from <RMS_HOME>/bin.
+	c.) You should see BE engine running on the console.
+	d.) Start BUI application.
+	e.) Click File -> Login and enter valid credentials (username/password in users.txt for file authentication, or in LDAP)
+	f.) An Authentication successful message should be displayed if login was successful, else failure message will be displayed.
+	g.) Depending upon the login user's role (say Business User), some of the menu options will be enabled/disabled.
+	h.) Click on File -> Checkout menu.
+	i.) Select a directory on local file system to save the checked out directory project. Click Ok
+	j.) If a checkout is successful, it will display a message accordingly, as well as the BUI will be populated with the ontology in the project explorer tree. This checkout will send the latest copy of the ontology, the ACL file, domain model file, Decision Tables that would have been approved previously, test data associated with the ontology, and any custom catalog functions.
+	h.) Click on File -> Commit Project after authoring/modifying decision tables and after local testing using the locally running BE engine.
+	i.) RMS will create a local copy of the submitted project inside "$rms.project.workspace" directory with the name of the user who submitted it, and the version number, and with status = "pendingapprovalfordeployment".
+	j.) A task will be created for a role 'RULE_ADMINISTRATOR' to view tasks on his plate which await approval.
+	h.) These tasks can be viewed inside the BUI by clicking on File -> Show Worklists. This menu option will only be enabled for users belonging to role 'RULE_ADMINISTRATOR'.
+	
+	--More stuff coming later--

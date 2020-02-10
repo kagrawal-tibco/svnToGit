@@ -1,0 +1,28 @@
+/**
+ * @description 
+ */
+String rulefunction Shared.RuleFunctions.view.toDataXML {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Shared.Concepts.AbstractMonitorView	monitorview;
+	}
+	body {
+		Shared.RuleFunctions.log("toDataXML","DEBUG","Creating dataXML for "+monitorview@extId);
+		String xml = "<data type=\""+monitorview.type+"\">";
+		for(int i = 0 ; i < monitorview.seriesdata@length ; i=i+1){
+		    Shared.RuleFunctions.log("toDataXML","DEBUG","Creating dataXML for "+monitorview@extId+"/"+monitorview.seriesdata[i].name+" with category count as "+monitorview.seriesdata[i].categories@length+" and value count as "+monitorview.seriesdata[i].values@length);
+		    xml = xml + "<series name=\""+monitorview.seriesdata[i].name +"\">";
+		    for (int j = 0 ; j < monitorview.seriesdata[i].categories@length ; j = j + 1){
+		        xml = xml + "<datapoint>";
+		        xml = xml + "<category>"+monitorview.seriesdata[i].categories[j]+"</category>";
+		        xml = xml + "<value>"+monitorview.seriesdata[i].values[j]+"</value>";
+		        xml = xml + "</datapoint>";
+		    }
+		    xml = xml + "</series>";
+		}
+		xml = xml + "</data>";
+		return xml;
+	}
+}

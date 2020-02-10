@@ -1,0 +1,34 @@
+/**
+ * @description Get applicable workflow stages for lock requests for a role and applicable to certain artifact based on its current status.
+ */
+void rulefunction Approval.Rules.RuleFunctions.ArtifactRuleFunctions.AMS_RF_GetLockWorkflowStagesForArtifact {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String role;
+		String lockRequestId;
+	}
+	body {
+		String stageInfo = 
+			"<tns:WorkflowInfo xmlns:tns=\"www.tibco.com/be/rms/RoleWorkflowStages\">\n <tns:WorkflowStages>"; 
+		String stages = null;
+		//Get all stages this role has
+		AMS_C_Role roleConcept = Instance.getByExtIdByUri(role, "/AAA/Concepts/AMS_C_Role");
+		if (roleConcept != null) {
+			//Get all possible stages for this role
+			AMS_C_WorkflowStage[] lockStages = Instance.PropertyArray.toArrayConcept(roleConcept.lockStages);
+			//Now filter out based on what stage this requestid is in
+			AMS_C_LockArtifactReviewTask lockReviewTask = Instance.getByExtIdByUri(lockRequestId, "/Approval/Concepts/ArtifactsConcepts/ArtifactLockConcepts/AMS_C_LockArtifactReviewTask");
+			
+			if (lockReviewTask != null) {
+				AMS_C_LockArtifactRequest lockArtifactRequest = Instance.getByExtIdByUri(lockReviewTask.referencedLockRequestId, "/Approval/Concepts/ArtifactsConcepts/ArtifactLockConcepts/AMS_C_LockArtifactRequest");
+				
+				if (lockArtifactRequest != null) {
+					//Find out current states
+					//Instance.StateMachine.getCurrentStateNames(
+				}	
+			}
+		}
+	}
+}

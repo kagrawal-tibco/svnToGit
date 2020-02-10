@@ -1,0 +1,23 @@
+/**
+ * @description 
+ * @author Nick
+ */
+rule Shared.Rules.TopologyRuleSet.OnGetGlobalVariables_InvalidToken {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		
+		Shared.Events.topology.GetGlobalVariablesEvent getglobalvariablesevent;
+	}
+	when {
+		getglobalvariablesevent.token == null || String.length(getglobalvariablesevent.token) == 0;
+	}
+	then {
+		Shared.RuleFunctions.log("OnGetGlobalVariablesEvent","DEBUG","Invalid token!");
+		Shared.Events.reqres.FailureResponseEvent event = Shared.Events.reqres.FailureResponseEvent.FailureResponseEvent(null,null,"001","Invalid token");
+		Event.replyEvent(getglobalvariablesevent, event);	
+		Event.consumeEvent(getglobalvariablesevent);	
+	}
+}

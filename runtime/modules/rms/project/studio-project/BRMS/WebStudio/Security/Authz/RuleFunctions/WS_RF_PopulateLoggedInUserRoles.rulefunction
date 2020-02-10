@@ -1,0 +1,51 @@
+/**
+ * @description 
+ */
+void rulefunction WebStudio.Security.Authz.RuleFunctions.WS_RF_PopulateLoggedInUserRoles {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String extId;
+	}
+	body {
+		
+		Object LOGGER = Log.getLogger("WebStudio.Security.Authz.RuleFunctions.WS_RF_PopulateLoggedInUserRoles");
+		
+		WS_C_LoggedInUser loggedInUser = Instance.getByExtIdByUri(extId, "/WebStudio/Security/Authn/Concepts/WS_C_LoggedInUser");
+
+		if (loggedInUser != null) {		
+			String loginToken = loggedInUser.loginToken;
+			
+			if (loginToken != null) {				
+				//Clear previous roles if any
+				Instance.PropertyArray.clear(loggedInUser.roles);
+		
+				//XPath to fetch roles
+				String roleCountXPath = "count($var//role)";
+		
+				String roleCountString = XPath.execute(roleCountXPath, loginToken, "");
+				double countRoles = Number.doubleValue(roleCountString);
+				Log.log(LOGGER, "Debug", "Number of applicable roles for this user %s - %s", loggedInUser.username, countRoles);
+				
+				for (int loop = 1; loop <= countRoles; loop++) {
+					String roleXPath = "string($var//role[" + loop + "]/attribute::name)";
+					String roleName = XPath.execute(roleXPath, loginToken, "");
+					
+					if (roleName != null) {
+						Log.log(LOGGER, "Debug", "Role name obtained for user %s - %s", loggedInUser.username, roleName);
+		
+						//Add role to the list
+						Instance.PropertyArray.appendString(loggedInUser.roles, roleName, 1L);
+					}
+				}
+			} 
+			else {
+				Log.log(LOGGER, "Error", "LoginToken not found for User %s.", loggedInUser.username);
+			}			
+		}
+		else {
+			Log.log(LOGGER, "Error", "LoggedIn User Concept not found for User %s.", extId);
+		}	
+	}
+}

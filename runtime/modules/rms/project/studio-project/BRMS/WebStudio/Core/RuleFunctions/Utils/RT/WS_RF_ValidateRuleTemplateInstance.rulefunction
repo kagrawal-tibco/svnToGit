@@ -1,0 +1,67 @@
+/**
+ * @description 
+ */
+String rulefunction WebStudio.Core.RuleFunctions.Utils.RT.WS_RF_ValidateRuleTemplateInstance {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String projectName;
+		String artifactPath;
+		String artifactExtn;
+		WebStudio.Security.Authn.Concepts.WS_C_LoggedInUser loggedInUser;
+		String archivePath;
+		String scsRootURL;
+		String[] roles;
+		String contentType;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.WS_RF_ValidateRuleTemplateInstance");
+		
+		WebStudio.Core.Concepts.DataSources.Problems.WS_C_RTValidationResponse validationResponse = null;
+		String responseMessage = null;
+		String errorCode = null;
+		int recordCount = 0;
+		int responseStatus = 0;
+		
+		String userName = loggedInUser.username;
+		
+		//Get DT contents										
+		WS_C_ResponseTransferObjectData fetchedResponseData = WebStudio.Core.RuleFunctions.Utils.WS_RF_GetArtifactContentsFromStore(userName, roles, projectName, artifactPath, artifactExtn);			
+	
+		if (fetchedResponseData.errorCode != null) {
+			responseStatus = -1;
+			errorCode = fetchedResponseData.errorCode;
+			responseMessage = fetchedResponseData.errorMessage;
+		} else {					
+			WS_C_AnyArtifactDetails ruleTemplateInstance = null;
+			if(fetchedResponseData.artifactContents == null) {
+				String userArtifactExtId = 
+					WebStudio.Core.RuleFunctions.Utils.WS_RF_CreateUserArtifactExtId(null, artifactPath, projectName, loggedInUser.username, null, null);
+				ruleTemplateInstance = WebStudio.Core.RuleFunctions.Utils.WS_RF_FetchArtifactContentsFactory(scsRootURL, loggedInUser.username, projectName, artifactPath, artifactExtn, userArtifactExtId, roles);
+			} else {
+				ruleTemplateInstance = fetchedResponseData.artifactContents;
+			}
+				
+			
+			if (ruleTemplateInstance instanceof WS_C_RuleTemplateInstanceBuilder) {
+				validationResponse = WS_RF_ValidateRuleTemplateBuilder(ruleTemplateInstance);
+			} else if (ruleTemplateInstance instanceof WS_C_RuleTemplateInstanceView) {
+				validationResponse = WS_RF_ValidateRuleTemplateView(ruleTemplateInstance);
+			}				 				
+			
+			if (validationResponse != null) {
+				validationResponse.artifactPath = artifactPath;
+				validationResponse.projectName = projectName;
+			}				
+		}
+		
+		WS_C_AnyArtifactDetails[] validateResponseObjects = {validationResponse};
+				
+		responseMessage = WebStudio.
+								Core.
+									RuleFunctions.
+										Utils.WS_RF_BuildValidateResponse(validateResponseObjects, responseStatus, recordCount, errorCode, responseMessage, contentType);		
+		return responseMessage;
+	}
+}

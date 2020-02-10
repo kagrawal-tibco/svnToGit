@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beviewsconfig:ChartComponent xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:beviewsconfig="http://www.tibco.com/be/designer" namespace="/Dashboards/Charts/TIBX/" folder="/Dashboards/Charts/TIBX/" name="TIBX_ByMinutesForLastHour" description="" GUID="9AA2C16E-CBE3-0884-51C5-C7A04AEF97E7" ownerProjectName="DisparateTimeCharts" version="1334969450218" displayName="TIBX_ByMinutesForLastHour" componentColorSetIndex="-1" seriesColorIndex="-1">
+  <visualization xsi:type="beviewsconfig:LineChartVisualization" namespace="/Dashboards/Charts/TIBX/" folder="/Dashboards/Charts/TIBX/" name="Visualization_" description="" GUID="5A9B2698-CF21-E187-2DFB-709985D96C8D" ownerProjectName="DisparateTimeCharts" version="1334969450218" lineThickness="2" dataPlotting="all" plotShape="circle" plotShapeDimension="3">
+    <seriesConfig xsi:type="beviewsconfig:ChartSeriesConfig" namespace="/Dashboards/Charts/TIBX/" folder="/Dashboards/Charts/TIBX/" name="SeriesConfig_" description="" GUID="0EAA9A76-4362-27E9-8DC3-D9E3F5D59653" ownerProjectName="DisparateTimeCharts" version="1334969450218" displayName="TIBX" anchor="Q1">
+      <actionRule namespace="/Dashboards/Charts/TIBX/" folder="/Dashboards/Charts/TIBX/" name="AR_" description="" GUID="C74E5B9C-210B-A148-1395-D356264B5FB1" ownerProjectName="DisparateTimeCharts" version="1334969450218" threshold="-1" thresholdUnit="hour">
+        <dataSource href="../../DataSources/MinutelyTickersByHour.datasource#/"/>
+        <params namespace="/Dashboards/DataSources/" folder="/Dashboards/DataSources/" name="endofday" description="" GUID="83788D36-B107-F8D3-CA21-7EDF5A757EFA" ownerProjectName="DisparateTimeCharts" version="1334969450218" value="${SYS:ENDOFDAY}" type="DateTime"/>
+        <params namespace="/Dashboards/DataSources/" folder="/Dashboards/DataSources/" name="ticker" description="" GUID="909FA8A7-CD29-A18E-1F84-4B4DAB89CFBC" ownerProjectName="DisparateTimeCharts" version="1334969450218" value="TIBX" type="String"/>
+        <params namespace="/Dashboards/DataSources/" folder="/Dashboards/DataSources/" name="startofday" description="" GUID="2DEC580C-935B-CDA3-791C-267F521B0E27" ownerProjectName="DisparateTimeCharts" version="1334969450219" value="${SYS:STARTOFDAY}" type="DateTime"/>
+      </actionRule>
+      <valueDataConfig xsi:type="beviewsconfig:ChartValueDataConfig">
+        <extractor>
+          <sourceField href="../../Metrics/MinutelyTickerMetric.metric#//@properties.2"/>
+        </extractor>
+        <formatter xsi:type="beviewsconfig:TextFieldFormat" toolTipFormat="{SnapShotTime}={Price}" displayFormat="{Price}" showLabel="true">
+          <formatStyle fontSize="10" fontStyle="normal"/>
+        </formatter>
+      </valueDataConfig>
+      <categoryDataConfig xsi:type="beviewsconfig:ChartCategoryDataConfig">
+        <extractor>
+          <sourceField href="../../Metrics/MinutelyTickerMetric.metric#//@properties.0"/>
+        </extractor>
+        <formatter xsi:type="beviewsconfig:TextFieldFormat" displayFormat="{SnapShotTime}"/>
+      </categoryDataConfig>
+    </seriesConfig>
+  </visualization>
+  <layoutConstraint xsi:type="beviewsconfig:FlowLayoutConstraint" componentRowSpan="1" componentColSpan="3"/>
+  <plotArea>
+    <foreground line="both"/>
+  </plotArea>
+  <categoryGuidelineConfig headerName="Time" sortOrder="unsorted" duplicatesAllowed="true">
+    <headerFormatStyle fontSize="10" fontStyle="normal"/>
+    <labelFormatStyle fontSize="10" fontStyle="normal"/>
+  </categoryGuidelineConfig>
+  <valueGuidelineConfig headerName="Price" scale="normal" division="5">
+    <headerFormatStyle fontSize="10" fontStyle="normal"/>
+    <labelFormatStyle fontSize="10" fontStyle="normal"/>
+  </valueGuidelineConfig>
+</beviewsconfig:ChartComponent>

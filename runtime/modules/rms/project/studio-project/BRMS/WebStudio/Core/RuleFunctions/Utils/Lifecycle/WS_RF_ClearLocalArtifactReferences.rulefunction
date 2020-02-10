@@ -1,0 +1,39 @@
+/**
+ * @description 
+ */
+void rulefunction WebStudio.Core.RuleFunctions.Utils.Lifecycle.WS_RF_ClearLocalArtifactReferences {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		WebStudio.Core.Concepts.WS_C_UserArtifact userArtifact;
+		String projectName;
+		String userName;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.Lifecycle.WS_RF_ClearLocalArtifactReferences");
+		
+		if (userArtifact != null) {
+			String[] existingRevisionIds = Instance.PropertyArray.toArrayString(userArtifact.artifactRevisionIds);
+			Log.log(LOGGER, "Debug", "Existing revision Id's - %s", existingRevisionIds@length);
+			
+			// clear artifact revisions
+			WS_C_UserArtifactRevision userArtifactRevision = null;			
+			for (int i=0; i < existingRevisionIds@length; i++) {
+				userArtifactRevision = Instance.getByExtIdByUri(existingRevisionIds[i], "/WebStudio/Core/Concepts/WS_C_UserArtifactRevision");
+				Log.log(LOGGER, "Debug", "Cleaning Up ArtifactRevision ExtId[%s]", userArtifactRevision@extId);
+				WS_RF_ClearRevisionDetails(userArtifactRevision, projectName, userName);				
+			}
+			
+			// clear checkpoint revision
+			Log.log(LOGGER, "Debug", "Cleaning Up Checkpoint ArtifactRevision ExtId[%s]", userArtifact.checkpointRevision@extId);
+			WS_RF_ClearRevisionDetails(userArtifact.checkpointRevision, projectName, userName);
+			
+			// remove any dashboard artifacts
+			WS_RF_DeleteDashboardArtifact(userName, userArtifact@extId);
+			
+			// finally the userartifact
+			Instance.deleteInstance(userArtifact);
+		}
+	}
+}

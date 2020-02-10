@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="org.eclipse.ui.editors">
+      <editor
+            class="com.tibco.cep.sharedresource.ascon.ASConnectionEditor"
+            default="true"
+            extensions="sharedascon"
+            icon="icons/asconnection.png"
+            id="com.tibco.cep.sharedresource.ascon.ASConnectionEditor"
+            name="AS Connection Editor">
+      </editor>
+	</extension>
+   <extension
+         point="org.eclipse.ui.newWizards">
+		<wizard
+	           canFinishEarly="false"
+	           category="com.tibco.cep.sharedresource.ui.category"
+	           class="com.tibco.cep.sharedresource.ui.wizards.NewASConnectionWizard"
+	           finalPerspective="com.tibco.cep.studio.application.perspective"
+	           icon="icons/asconnection.png"
+	           id="com.tibco.cep.studio.ui.newASConnectionWizard"
+	           name="AS Connection">
+	        <description>
+	           Create a new AS Connection resource
+	        </description>
+		</wizard>
+	</extension>			      
+    <extension
+         point="com.tibco.cep.studio.core.projectResourceValidator">
+      <validator
+            Validator="com.tibco.cep.sharedresource.validation.ASConnectionSharedResourceValidator"
+            extensions="sharedascon">
+      </validator>
+	</extension>
+    <extension
+         point="com.tibco.cep.studio.core.refactoringParticipant">
+      <refactoringParticipant
+            participant="com.tibco.cep.sharedresource.refactor.ASConnectionRefactoringParticipant">
+      </refactoringParticipant>
+	</extension>
+    <extension
+          point="com.tibco.cep.sharedresource.sharedResourcePropertyProvider">
+       <SharedResource
+             sharedResourcePropertyProvider="com.tibco.cep.sharedresource.ascon.DefaultSharedResourcePropertyProvider">
+       </SharedResource>
+    </extension>
+</plugin>

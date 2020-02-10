@@ -1,0 +1,50 @@
+/**
+ * @description 
+ */
+void rulefunction Monitoring.RuleFunctions.view.truncateSeriesData {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Shared.Concepts.SeriesData	seriesdata;
+	}
+	body {
+		Shared.RuleFunctions.log("truncateSeriesData","DEBUG",seriesdata@extId+" has been updated...");
+		if (seriesdata.threshold <= 0){
+		    Shared.RuleFunctions.log("truncateSeriesData","DEBUG",seriesdata@extId+" has no threshold defined...");
+		    return;
+		}
+		int existingCnt = seriesdata.categories@length;
+		int startingIdx = -1;
+		if (seriesdata.threshold < 1000) {
+		    Shared.RuleFunctions.log("truncateSeriesData","DEBUG",seriesdata@extId+" is to be processed as count limiting series with threshold as "+seriesdata.threshold+"...");
+		    //we will assume this is a count limiting data set
+		    if (existingCnt > seriesdata.threshold) {
+		        startingIdx = existingCnt - seriesdata.threshold;
+		        Shared.RuleFunctions.log("truncateSeriesData","DEBUG",seriesdata@extId+" has "+existingCnt+" data points, limiting to "+seriesdata.threshold+"...");
+		    }
+		}
+		else {
+		    Shared.RuleFunctions.log("truncateSeriesData","DEBUG",seriesdata@extId+" is to be processed as time limiting series with threshold as "+seriesdata.threshold+" msecs...");
+		    //we will assume that the threshold is time in milliseconds
+		    long latestTime = Number.longValue(seriesdata.categories[existingCnt-1],10);
+		    long timeThreshold = latestTime - seriesdata.threshold;
+		    int i = 0;
+		    while (startingIdx == -1) {
+		        long time =  Number.longValue(seriesdata.categories[i],10);
+		        if (time >= timeThreshold) {
+		            startingIdx = i;
+		        }
+		        i = i + 1;
+		    }
+		}
+		if (startingIdx > 0) {
+		    Shared.RuleFunctions.log("truncateSeriesData","DEBUG","Removing first "+startingIdx+" element(s) from "+seriesdata@extId+"...");
+		    for (int i = 0 ; i < startingIdx ; i = i + 1) {
+		        Instance.PropertyArray.delete(seriesdata.categories,0);
+		        Instance.PropertyArray.delete(seriesdata.values,0);
+		        Instance.PropertyArray.delete(seriesdata.rawValues,0);
+		    }
+		}
+	}
+}

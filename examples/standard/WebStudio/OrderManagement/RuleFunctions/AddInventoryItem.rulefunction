@@ -1,0 +1,43 @@
+/**
+ * @description This rule function is used to add a item in inventory.
+ */
+String rulefunction RuleFunctions.AddInventoryItem {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String itemName;
+		double itemPrice;
+		int itemQuantity;
+		Concepts.Inventory inventory;
+	}
+	body {
+			String message="";
+		    Concepts.Item item =  Instance.createInstance("xslt://{{/Concepts/Item}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"1.0\" exclude-result-prefixes=\"xsl xsd\">\n    <xsl:output method=\"xml\"/>\n    <xsl:param name=\"itemName\"/>\n    <xsl:param name=\"itemPrice\"/>\n    <xsl:param name=\"itemQuantity\"/>\n    <xsl:template match=\"/\">\n        <createObject>\n            <object>\n                <xsl:attribute name=\"extId\">\n                    <xsl:value-of select=\"concat(&quot;ITEM-&quot;,$itemName)\"/>\n                </xsl:attribute>\n                <name>\n                    <xsl:value-of select=\"$itemName\"/>\n                </name>\n                <price>\n                    <xsl:value-of select=\"$itemPrice\"/>\n                </price>\n                <quantity>\n                    <xsl:value-of select=\"$itemQuantity\"/>\n                </quantity>\n            </object>\n        </createObject>\n    </xsl:template>\n</xsl:stylesheet>");
+		
+			//Get the existing item,if item is exist in the don't add it again.	
+			Concepts.Item existingItem  = RuleFunctions.OM_GetExistingInventoryItem(itemName);
+			
+			if(null!=existingItem)
+			{
+				message="### "+existingItem.name+ " is exist in the inventory.";
+				System.debugOut(message);
+			}
+			else
+			{	
+				if(null==existingItem)
+				{		
+					System.debugOut("### Adding the item in inventory ###");
+								
+					Instance.PropertyArray.appendConceptReference(inventory.items,item,1);
+					message="### "+item.name+ " is added in the inventory successfully.";
+					System.debugOut(message);		
+				}	
+			}	
+				
+			//Print the status of inventory.
+			RuleFunctions.OM_PrintInventoryStatus();
+			
+			return message;
+		}
+}

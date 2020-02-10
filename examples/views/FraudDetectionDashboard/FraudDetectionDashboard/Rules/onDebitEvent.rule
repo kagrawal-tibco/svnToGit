@@ -1,0 +1,30 @@
+/**
+ * @description 
+ * @author anpatil-T61
+ */
+rule Rules.onDebitEvent {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Events.Debit debit;
+	}
+	when {
+		
+	}
+	then {
+		//create date values
+		DateTime now = DateTime.now();
+		//bucket debits by minute
+		DateTime nowByMin = DateTime.createTime(DateTime.getYear(now),DateTime.getMonth(now),DateTime.getDate(now),DateTime.getHour(now),DateTime.getMinute(now),0,null);
+		
+		//create debit traffic metric by time bucket
+		Dashboards.M_DebitTrafficByMin.compute(nowByMin,1,debit.TransactionType,debit.AccountId,debit.Amount);
+
+		//update accounts metric by account id
+		Dashboards.M_Accounts account = Dashboards.M_Accounts.compute(debit.AccountId,now,-(debit.Amount),0,debit.Amount);
+		System.debugOut("computed Dashboards.M_Accounts[AccountId="+account.AccountID+",Balance="+account.Balance+",LastDebit="+account.LastDebit+",LastCredit="+account.LastCredit+",LastModifiedTime="+DateTime.format(account.LastModifiedDate, "yyyy-MM-dd'T'HH:mm:ss.SSSZ")+"]");				
+				
+	}
+}

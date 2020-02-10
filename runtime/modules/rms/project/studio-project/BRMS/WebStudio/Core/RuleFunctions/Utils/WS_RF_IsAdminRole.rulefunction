@@ -1,0 +1,38 @@
+/**
+ * @description 
+ */
+boolean rulefunction WebStudio.Core.RuleFunctions.Utils.WS_RF_IsAdminRole {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		WebStudio.Security.Authn.Concepts.WS_C_LoggedInUser loggedInUser;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.WS_RF_IsAdminRole");
+		
+		String adminRoleExtId = WS_RF_CreateUserArtifactExtId("ADMIN_ROLES", null, null, null, null, null);
+		WS_C_AdminRoles adminRolesEntity = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(adminRoleExtId, false, "/WebStudio/Core/Concepts/WS_C_AdminRoles");
+		
+		boolean isAdminRole = false;
+		if (adminRolesEntity != null) {
+			WS_C_RoleMap[] roleMap = Instance.PropertyArray.toArrayContainedConcept(adminRolesEntity.entry);
+			String[] roles = Instance.PropertyArray.toArrayString(loggedInUser.roles);
+			
+			for (int i=0; i < roles@length && !isAdminRole; i++) {
+				Log.log(LOGGER, "Debug", "User Role being checked - %s", roles[i]);
+				
+				for (int j=0; j < roleMap@length; j++) {
+					Log.log(LOGGER, "Debug", "Admin Role%s & Coverage[%s] being checked", Instance.PropertyArray.toArrayString(roleMap[j].role), roleMap[j].coverage);
+					
+					if (Instance.PropertyArray.indexOfString(roleMap[j].role, roles[i]) != -1) {
+						isAdminRole = true;
+						break; 
+					}
+				}
+			}
+		}
+		
+		return isAdminRole;
+	}
+}

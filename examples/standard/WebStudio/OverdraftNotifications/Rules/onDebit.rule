@@ -1,0 +1,29 @@
+/**
+ * @description
+ * @author anpatil-dt
+ */
+rule Rules.onDebit {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Events.Debit_Account e;
+	}
+	when {
+
+	}
+	then {
+		System.debugOut("### Received Debit Account Event[ID="+e.AccountID+",Amount="+e.Amount+"]");
+		Concepts.Account account = Instance.getByExtId(e.AccountID);
+		if (account != null) {
+			System.debugOut("### Debiting Account[ID="+account.AccountID+",Balance="+account.AccountBalance+"]");
+			account.AccountBalance = account.AccountBalance - e.Amount;
+			System.debugOut("### Debited Account[ID="+account.AccountID+",Balance="+account.AccountBalance+"]");
+			if (account.AccountBalance < 0){
+				account.OverdraftCount++;
+				System.debugOut("### Account[ID="+account.AccountID+",Balance="+account.AccountBalance+"] Over Drafted "+account.OverdraftCount+" time(s)");
+			}
+		}
+	}
+}

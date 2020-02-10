@@ -1,0 +1,37 @@
+/**
+ * @description This function is used to print the existing status of inventory
+ */
+void rulefunction RuleFunctions.OM_PrintInventoryStatus {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		
+	}
+	body {
+		
+			Concepts.Inventory inventory =Instance.getByExtId("OMS-INVENTORY");
+			
+			if(null!=inventory)
+			{
+				Concepts.Item[] items = Instance.PropertyArray.toArrayConcept(inventory.items);	
+				
+				if(null!=items)
+				{
+					System.debugOut("Status of Inventory:");
+					System.debugOut("-------------------------------------------------");
+					System.debugOut("Name\t\tPrice\t\tQuantity");
+					System.debugOut("-------------------------------------------------");
+					for(int index=0;index < items@length ;index++)
+					{
+						Concepts.Item item = items[index];
+						if(null!=item)
+						{
+							System.debugOut(item.name+"\t\t"+item.price+"\t\t"+item.quantity);
+						}
+					}
+					System.debugOut("-------------------------------------------------");
+				}				  
+			}
+		}
+}

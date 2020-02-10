@@ -1,0 +1,47 @@
+/**
+ * @description PP for loading existing policy templates.
+ */
+void rulefunction Authentication.MDS.Services.PolicyStore.Preprocessors.BAAS_RFP_LoadPolicyTemplatesPP {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Authentication.MDS.Services.PolicyStore.Events.BAAS_E_LoadTemplatesRequestEvent baas_e_loadtemplatesrequestevent;
+	}
+	body {
+		//Lock and load policy store
+		boolean policyStoreLock = Cluster.DataGrid.Lock("POLICY_STORE", -1, false);
+		if (policyStoreLock) {
+			BAAS_C_PolicyStore mdsPolicyStore = Cluster.DataGrid.CacheLoadConceptByExtId("POLICY_STORE", true);
+			if (mdsPolicyStore == null) {
+				throw Exception.newException("Policy store config error", "No policy store created in metadata repository", null);
+				//Send response.
+			}
+			
+			BAAS_C_PolicyTemplate[] templates = Instance.PropertyArray.toArrayConcept(mdsPolicyStore.policyTemplates);
+			
+			//Serialize root
+			Object responseBuilder = String.createBuffer(0);
+			String.append(responseBuilder, "<PolicyTemplates>");
+			String.append(responseBuilder, "\n");
+			for (int loop = 0; loop < templates@length; loop++) {
+				BAAS_C_PolicyTemplate policyTemplate = templates[loop];
+				String templateString = Instance.filterAndSerializeUsingDefaults(policyTemplate, "templateContent");
+				//Chunk it
+				templateString = Common.RuleFunctions.BAAS_RF_ChunkXMLHeader(templateString);
+				String.append(responseBuilder, templateString);
+			}
+			String.append(responseBuilder, "\n");
+			String.append(responseBuilder, "</PolicyTemplates>");
+			
+			String templateResult = String.convertBufferToString(responseBuilder);
+			String.clearBuffer(responseBuilder);
+			responseBuilder = null;
+			
+			BAAS_E_LoadExistingTemplatesResponseEvent loadTemplatesResponseEvent = 
+				Authentication.MDS.Services.PolicyStore.Events.BAAS_E_LoadExistingTemplatesResponseEvent.BAAS_E_LoadExistingTemplatesResponseEvent(null, templateResult);
+			
+			Event.replyEvent(baas_e_loadtemplatesrequestevent, loadTemplatesResponseEvent);	 
+		}
+	}
+}

@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox implements="com.tibco.be.views.ui.IDraggableWrapper"
+	xmlns:mx="http://www.adobe.com/2006/mxml"
+	width="240"
+	height="180"
+	borderStyle="solid"
+	backgroundColor= "0xBBBBBB"
+	paddingLeft="0"
+	paddingRight="0"
+	paddingTop="0"
+	paddingBottom="0"
+	creationComplete="init()"
+	mouseDown="moveMe(event)"
+	rollOverEffect="{enlarge}"
+	rollOutEffect="{revert}"
+>
+	<mx:Script>
+		<![CDATA[
+			import mx.core.UIComponent;
+			import mx.controls.Alert;
+			import mx.managers.DragManager;
+			import mx.core.DragSource;
+			import com.tibco.be.views.core.ui.dashboard.BEVComponentFactory;
+			import com.tibco.be.views.core.ui.dashboard.BEVComponent;
+		
+			private static const GALLERY_METRIC_HEIGHT:int = 150;
+		
+			private var _config:XML;
+			private var _component:BEVComponent;
+			private var _dragEnabled:Boolean = false;
+			private var _dragOutlineWidth:int;
+			private var _dragOutlineHeight:int;
+			
+			public function set config(value:XML):void{ _config = new XML(value); }
+			public function get config():XML{ return _config; }
+			public function get componentId():String{ return _component.componentId; }
+			
+			public function init():void{
+				_dragEnabled = !(_config.@disabled == true); //not specified == enabled 
+				if(_config.prefsize != undefined){
+					_dragOutlineWidth = new Number(_config.prefsize.@width);
+					_dragOutlineHeight = new Number(_config.prefsize.@height);
+				}
+				
+				lbl_Title.text = new String(_config.@title);
+				cnv_Overlay.toolTip = lbl_Title.text;
+				
+				_component = BEVComponentFactory.instance.getComponentByXML(_config);
+				_component.displayMode = BEVComponent.GALLERY_DISPLAY_MODE; //prevents component from subscribing to data
+				_component.percentWidth = 100;
+				_component.percentHeight = 100;
+				_component.x = _component.y = 0;
+				_component.pixelDimensions = new Rectangle(0, 0, _dragOutlineWidth, _dragOutlineHeight);
+				if(_config.@disabled == true){
+					disableMetric();
+				}
+				vb_ComponentAndLabel.addChildAt(_component, 0);
+				_component.init();
+				defaultZoom.play([this]);
+			}
+			
+			private function moveMe(event:MouseEvent):void{
+				if(!_dragEnabled){ return; }
+				var dragSource:DragSource = new DragSource();
+				var dragProxy:Canvas = new Canvas();
+				dragProxy.x = (event.target as UIComponent).x;
+				dragProxy.y = (event.target as UIComponent).y;
+				dragProxy.alpha = 0.4;
+				dragProxy.setStyle("backgroundColor", 0x3344dd);
+				dragProxy.width = _dragOutlineWidth;
+				dragProxy.height = _dragOutlineHeight;
+				DragManager.doDrag(this, dragSource, event, dragProxy);
+			}
+			
+			public function get content():Object{
+				return _component;
+			}
+			
+			public function handleMouseDrop():void{
+				//show processing animation, or something?
+			}
+			
+			public function handleDropComplete(success:Boolean):void{
+				if(success){
+					disableMetric();
+				}
+				else{
+					Alert.show("Failed to add the component!", "ERROR");
+				}
+			}
+			
+			private function disableMetric():void{
+				_dragEnabled = false;
+				cnv_Overlay.toolTip = lbl_Title.text + "\n(Already on Dashboard)";
+				_component.alpha = .3;
+			}
+			
+			public function enableMetric():void{
+				_dragEnabled = true;
+				cnv_Overlay.toolTip = lbl_Title.text.replace("\n(Already on Dashboard)", "");
+				_component.alpha = 1;
+			}
+			
+		]]>
+	</mx:Script>
+	
+	<mx:Zoom id="defaultZoom" duration="0" zoomHeightTo="0.8" zoomWidthTo="0.8" />
+	<mx:Zoom id="enlarge" duration="100" zoomHeightTo="1" zoomWidthTo="1" />
+	<mx:Zoom id="semiEnlarge" duration="100" zoomHeightTo="0.75" zoomWidthTo="0.75" />
+	<mx:Zoom id="revert" duration="100" zoomHeightTo="0.8" zoomWidthTo="0.8" />
+	
+	<mx:Canvas id="cnv_Container" width="100%" height="100%" verticalScrollPolicy="off" horizontalScrollPolicy="off">
+		<mx:VBox id="vb_ComponentAndLabel" width="100%" height="100%" verticalGap="0">
+			<mx:Label id="lbl_Title" width="100%" height="25" textAlign="center" fontWeight="bold" />	
+		</mx:VBox>
+		<mx:Canvas id="cnv_Overlay" x="0" y="0" width="100%" height="100%" alpha="0" />
+	</mx:Canvas>
+	
+</mx:VBox>

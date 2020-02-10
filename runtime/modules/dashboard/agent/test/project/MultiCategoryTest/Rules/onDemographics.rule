@@ -1,0 +1,21 @@
+/**
+ * @description
+ * @author anpatil-dt
+ */
+rule Rules.onDemographics {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Events.E_Demographics demographics;
+	}
+	when {
+
+	}
+	then {
+		System.debugOut("Received Events.E_Demographics[country="+demographics.Country+",region="+demographics.Region+",sex="+demographics.Sex+",population="+demographics.Population+",averageage="+demographics.AverageAge+"]");
+		Dashboards.Metrics.M_Demographics demographicMetric = Dashboards.Metrics.M_Demographics.compute(demographics.Country, demographics.Region, demographics.Sex, demographics.Population, demographics.AverageAge);
+		System.debugOut("Computed Dashboards.Metrics.M_Demographics[country="+demographicMetric.Country+",region="+demographicMetric.Region+",sex="+demographicMetric.Sex+",population="+demographicMetric.Population+",averageage="+demographicMetric.AverageAge+"]");
+	}
+}

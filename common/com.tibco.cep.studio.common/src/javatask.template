@@ -1,0 +1,26 @@
+%packageKeyWord% %package_name% 
+  
+import com.tibco.cep.bpmn.runtime.activity.tasks.JavaTaskContext;
+import com.tibco.cep.bpmn.runtime.activity.tasks.ModelType;
+import com.tibco.cep.bpmn.runtime.activity.tasks.ModelTypeMap;
+import com.tibco.cep.bpmn.runtime.activity.tasks.TaskContextType;
+import com.tibco.cep.bpmn.runtime.model.JavaTask;
+import com.tibco.cep.bpmn.runtime.model.JavaTaskMethod;
+import com.tibco.cep.runtime.session.RuleServiceProvider;
+import com.tibco.cep.runtime.session.RuleSession;
+  
+@JavaTask
+public class %class_name% {
+    @JavaTaskContext(TaskContextType.NAME)
+    String taskName;
+    @JavaTaskContext(TaskContextType.RULE_SERVICE_PROVIDER)
+    RuleServiceProvider rsp;
+    @JavaTaskContext(TaskContextType.RULE_SESSION)
+    RuleSession ruleSession;
+     
+    @JavaTaskMethod
+    @ModelTypeMap(type=ModelType.STRING) /*return Type String*/
+    public String taskFunction /*can rename this sample function name*/ (@ModelTypeMap(type=ModelType.STRING) String s /*Argument Type String*/ ) {
+        return null;
+    }
+}

@@ -1,0 +1,61 @@
+/**
+ * @description 
+ */
+void rulefunction WebStudio.Core.RuleFunctions.Utils.WS_RF_SetToBaseRevision {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		WebStudio.Core.Concepts.WS_C_UserArtifact userArtifact;
+		String projectName;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.WS_RF_SetToBaseRevision");
+		
+		//Local fix to Scenario - Sync operation on a Rejected artifact that has never been approved (No master revision)
+		//The sync operation will set the latest revision as the base user revision
+		WS_C_UserArtifactRevision checkpointRevision = Instance.PropertyAtom.getConceptReference(userArtifact.checkpointRevision, 1L);
+		if (checkpointRevision != null) {
+			Log.log(LOGGER, "Debug", "checkpointRevision != null");
+			WS_C_LifecycleMetadata lifecycleMetadata = Instance.PropertyAtom.getContainedConcept(checkpointRevision.lifecycleMetadata, 1L);
+			WS_C_ArtifactBaseState artifactCurrentState = Instance.PropertyAtom.getConceptReference(lifecycleMetadata.currentState, 1L);
+			if (artifactCurrentState instanceof WS_C_ArtifactRejectedState) {
+				Log.log(LOGGER, "Debug", "artifactCurrentState instanceof WS_C_ArtifactRejectedState");
+				String[] revisionIds = Instance.PropertyArray.toArrayString(userArtifact.artifactRevisionIds);
+				
+				if (revisionIds@length > 1) {				
+					WS_C_UserArtifactRevision artifactBaseRevision = Instance.getByExtIdByUri(revisionIds[0], "/WebStudio/Core/Concepts/WS_C_UserArtifactRevision");
+					if (artifactBaseRevision != null) {
+						Log.log(LOGGER, "Debug", "artifactBaseRevision != null");
+						Instance.PropertyArray.appendString(userArtifact.artifactRevisionIds, artifactBaseRevision@extId, 1L);
+						WS_RF_SetCheckpointRevisionConceptReference(userArtifact, artifactBaseRevision);
+					}
+				} else {
+					// case when the only change was done via studio (so only 1 revision) and its rejected
+					Instance.PropertyArray.removeString(userArtifact.artifactRevisionIds, revisionIds[0]);
+					userArtifact.currentArtifactVersion = 0;
+					
+					WS_C_UserArtifactRevision artifactBaseRevision = Instance.getByExtIdByUri(revisionIds[0], "/WebStudio/Core/Concepts/WS_C_UserArtifactRevision");
+					if (artifactBaseRevision != null) {
+						Log.log(LOGGER, "Debug", "Deleting Artifact with ExtId - %s",  artifactBaseRevision@extId);
+						Instance.PropertyAtom.setConceptReference(userArtifact.checkpointRevision, null, 1L);
+						Instance.deleteInstance(artifactBaseRevision);
+					}
+					
+					//TODO* need to check number of '@' to identify the position
+					String userName = String.substring(userArtifact@extId, String.lastIndexOfString(userArtifact@extId, 0, "@")+1, String.length(userArtifact@extId));
+					String userExtId = WS_RF_CreateUserArtifactExtId("webstudio", null, null, userName, null, null);
+					Log.log(LOGGER, "Debug", "User Name - %s",  userName);
+
+					String[] userRoles = null;
+					WS_C_LoggedInUser user = Instance.getByExtIdByUri(userExtId, "/WebStudio/Security/Authn/Concepts/WS_C_LoggedInUser");
+					if (user != null) {
+						userRoles = Instance.PropertyArray.toArrayString(user.roles);
+					}
+									
+					Log.log(LOGGER, "Debug", "Total Revision Count - %s",  userArtifact.artifactRevisionIds@length);
+				}
+			}
+		}
+	}
+}

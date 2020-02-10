@@ -1,0 +1,80 @@
+#
+# Copyright (c) 2004-2019 TIBCO Software Inc.
+# All Rights Reserved.
+#
+# This software is the confidential and proprietary information of
+# TIBCO Software Inc.
+#
+#==========================================================
+# Common environment variables.
+#==========================================================
+#
+
+tibco.env.PSP=%PS%
+tibco.env.TIB_HOME=%TIBCO_HOME_ESC%
+tibco.env.BE_HOME=%TIBCO_BE_HOME_ESC%
+
+#==========================================================
+# JVM related settings. Choose your options carefully.
+#==========================================================
+
+tibco.env.TIB_JAVA_HOME=%TIBCO_JAVA_HOME_ESC%
+#
+# Ensure that the JVM_LIB_PATH points to the appropriate JVM Server DLL or SO.
+#
+# Example:
+#    64 bit Sun JVM for Intel or AMD on Linux should use JVM_LIB_PATH =
+#    %TIB_JAVA_HOME%/lib/amd64/server/libjvm.so
+#
+#    64 bit Sun JVM for Intel or AMD on Windows should use JVM_LIB_PATH =
+#    %TIB_JAVA_HOME%/lib/amd64/server/libjvm.dll
+#
+#    32 bit Sun JVM for Intel or AMD on Windows should use JVM_LIB_PATH =
+#    %TIB_JAVA_HOME%/lib/i386/server/libjvm.dll
+#
+#
+tibco.env.JVM_LIB_PATH=%TIBCO_JVM_LIB_SERVER_ESC%
+tibco.env.JVM_LIB_DIR=%TIBCO_JVM_LIB_DIR_ESC%
+tibco.env.JDK_LIB=%TIB_JAVA_HOME%/lib
+
+# Java VM parameters
+#
+#java.extended.properties=-Xms256m -XX:+UseParallelGC -XX:+UseAdaptiveSizePolicy
+#java.extended.properties=-Xms256m -verbose:gc
+
+java.extended.properties=-server -Xms1024m -Xmx1024m -Xss2m -javaagent:%BE_HOME%/lib/cep-base.jar
+# java.extended.properties=-server -d64 -Xms2048m -Xmx2048m -javaagent:%BE_HOME%/lib/cep-base.jar
+
+# TIBCO Standard Classpath
+#
+tibco.env.STD_EXT_CP %BE_HOME%/lib
+
+# TIBCO Standard Path (Applicable to all Platforms)
+#
+tibco.env.PATH %BE_HOME%/bin
+
+tibco.env.LIBPATH %JVM_LIB_DIR%/server
+
+# Specifies the classpath with expansion on
+#
+tibco.class.path.extended %CUSTOM_EXT_PREPEND_CP%%PSP%%STD_EXT_CP%%PSP%%CUSTOM_EXT_APPEND_CP%%PSP%
+
+# Specifies the JVM to be used to launch this application
+#
+java.library %JVM_LIB_PATH%
+
+
+# Specifies the JVM to be used to launch this application
+#
+java.start.class com.tibco.be.maven.BEMavenPomGenerator
+
+# Specifies the main function in invoke
+#
+java.start.method main
+
+# Other arguments to application
+tibco.env.HEAP_SIZE=1024M
+
+# Specifies the initial Java heap size to allocate
+#
+java.heap.size.max %HEAP_SIZE%

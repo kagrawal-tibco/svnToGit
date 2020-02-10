@@ -1,0 +1,151 @@
+<!doctype html public "-//w3c//dtd html 3.2 final//en">
+<html>
+<head>
+    <title>Search</title>
+	<link rel="stylesheet" type="text/css" href="/drilldown/css/tabletree.css" />
+	<link rel="stylesheet" type="text/css" href="/drilldown/css/popupmenu.css"/>
+	<link rel="stylesheet" type="text/css" href="/drilldown/css/page.css"/>
+
+<script language="JavaScript">
+	var removeOnCollapse = false;
+	var bExpandCollapseRequest = false;
+	var sessionKeeperId = 0;
+	
+	function runCommands() {
+		#foreach( $runCommand in $runCommands )
+		    $runCommand
+		#end
+	}
+	
+	function postRequest(url, target) {
+		var qp = new QueryParser(url);
+		var kvp = qp.getKeyValuePairs();
+		var submitter = window.document.submitter;
+		var requestElem = window.document.submitter.request;
+		requestElem.value = createRequest(null, null, null, kvp);
+		if (typeof target == 'undefined') {
+			submitter.target = "ifrmMain*events";
+		}
+		else {
+			if (target == ""){
+				submitter.target = "_self";
+			}
+			else{
+				submitter.target = target;
+			}
+		}
+		submitter.submit();
+	}
+	
+	function exportresults() {
+            window.document.body.style.cursor = "wait";
+            var callbackfn = function(responseText){
+	            var retVal = window.showModalDialog('/exportdialogholder.html', responseText, "dialogHeight:150px; dialogWidth:350px; help: No; resizable: Yes; status: No; scroll: No;");
+	            if (retVal != undefined && retVal.length != 0){
+					var qp = new QueryParser(retVal);
+					window.document.downloadFrm.request.value = createRequest(null, null, null, qp.getKeyValuePairs());
+	                window.document.downloadFrm.submit();
+	            }
+	            window.top.document.body.style.cursor = "auto";
+            };
+			var qp = new QueryParser('$exporturl');
+			var kvp = qp.getKeyValuePairs();
+            sendRequest("$pullrequestbaseurl", null, null, null, kvp, callbackfn);
+    }
+    
+    function launchExternalLink(typeid,instanceid,fieldname) {
+		var callbackfn = function(responseText) {
+			var parsedXML = parseXML(responseText);
+			var state = parsedXML.getElementsByTagName("state")[0].text;
+			if (state == "OK") {
+				var content = parsedXML.getElementsByTagName("content")[0].text;
+				window.open(content);		
+			}
+			else if (state == "ERROR"){
+				var message = parsedXML.getElementsByTagName("message")[0].text;
+				alert(message);
+			}
+			else {
+				//unknown state
+				alert("Unknown response from server : "+responseText);
+			}
+		}
+		var params = new Array();
+		params[0] = new Array("typeid",typeid);
+		params[1] = new Array("tupid",instanceid);
+		params[2] = new Array("fieldname",fieldname); 
+		try {
+			sendRequest("$pullrequestbaseurl", "$stoken", "$sessionid", "launchexternallink", params, callbackfn);
+		} catch (err) {
+			//do nothing;
+		}    	
+    }
+    
+    function startSessionKeeper(){
+    	if (sessionKeeperId != 0){
+    		//alert("Clearing Session Keeper");
+    		clearInterval(sessionKeeperId);
+    	}
+    	//alert("Starting Session Keeper");
+    	sessionKeeperId = setInterval("fireSessionKeeperRequest()", $sessionkeeperinterval);
+    }
+    
+    function fireSessionKeeperRequest(){
+    	//alert("Firing Session Keeper");
+		try {
+			var params = new Array();
+			params[0] = new Array("sessionKeeperId",sessionKeeperId);
+			sendRequest("$pullrequestbaseurl", "$stoken", "$sessionid", "keepsessionalive", params, null);
+		} catch (err) {
+			//do nothing;
+		}     
+    }
+</script>
+	<script language="javascript" src="/drilldown/js/popupmenu.js"></script>
+	<script language="javascript" src="/drilldown/js/querystring.js"></script>
+	<script language="javascript" src="/drilldown/js/tabletree.js"></script>
+	<script language="javascript" src="/drilldown/js/sortTableTree.js"></script>
+	<script language="javascript" src="/drilldown/js/drilldownmenu.js"></script>
+	<script language="javascript" src="/scripts/servercomm.js"></script>
+	
+</head>
+<body $bodyOnLoad class="pagebackgrd" leftmargin="10" bottommargin="10" rightmargin="10" topmargin="10">
+<table border="0" cellpadding="0" cellspacing="0" width="100%" height="100%">
+		<tr align="left" valign="middle" height="24px">
+		    <td class="paglettitleleft" valign="middle" nowrap align="left" height="24px">&nbsp;</td>
+		    <td class="paglettitle" valign="middle"  width="100%" nowrap align="left" height="24px">DrillDown Results</td>
+		    <td class="paglettitlelink" valign="middle" nowrap align="right" height="24px" onclick="exportresults('$exporturl');">Export Data</td>
+		    <td class="paglettitleright" valign="middle" nowrap align="left" height="24px">&nbsp;</td>    
+		</tr>
+		<tr align="center" valign="middle" height="98%">
+		    <td class="pageletbody" valign="top" height="100%" colspan="4">
+				$tableTreeHtml
+				
+				$popupMenuHtml
+				
+				
+				<form action="$pullrequestbaseurl" target="ifrmMain*events" method="post" enctype="application/x-www-form-urlencoded" name="submitter" id="submitter">
+					<input type="hidden" name="request" value="" id="request"/>
+				</form>
+				
+				<form name="downloadFrm"  action="$pullrequestbaseurl" method="post" target="hiddenframe">
+					<input type="hidden" name="request" value="" id="request"/>
+				</form>
+				
+				<iframe
+				    name="hiddenframe"
+				    src=""
+				    scrolling="no"
+				    border="0"
+				    frameborder="0"
+				    marginwidth="0"
+				    marginheight="0"
+				    height="0"
+				    width="0"
+				    allowtransparency="true">
+				</iframe>
+		    </td>
+		</tr>
+</table>
+</body>
+</html>

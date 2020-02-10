@@ -1,0 +1,61 @@
+/**
+ * @description 
+ */
+void rulefunction WebStudio.Core.RuleFunctions.Actions.Lifecycle.Review.WS_RF_PerformStateChangeValidation {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		WebStudio.Core.Concepts.Lifecycle.WS_C_CommittableDeltaEntry committableDeltaEntry;
+		WebStudio.Core.Concepts.Lifecycle.States.WS_C_ArtifactBaseState currentCommittableState;
+		String newReviewStatus;
+		String path;
+		String projectName;
+		String subscriptionId;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.Lifecycle.Review.WS_RF_PerformStateChangeValidation");
+		
+		Log.log(LOGGER, "Debug", "committableDeltaEntry - %s, currentCommittableState - %s & newReviewStatus - %s", committableDeltaEntry, currentCommittableState.stateName, newReviewStatus);
+		
+		boolean changeCommitableStatus = false;
+		if (currentCommittableState instanceof WS_C_ArtifactCommittedState && newReviewStatus == "Approve") {
+			changeCommitableStatus = true;
+		} else if (currentCommittableState instanceof WS_C_ArtifactCommittedState && newReviewStatus == "Reject") {
+			changeCommitableStatus = true;
+		} else if (currentCommittableState instanceof WS_C_ArtifactApprovedState && newReviewStatus == "Reject") {
+			changeCommitableStatus = false;
+		} else if (currentCommittableState instanceof WS_C_ArtifactApprovedState && newReviewStatus == "BuildAndDeploy") {
+			changeCommitableStatus = true;
+		} else if (currentCommittableState instanceof WS_C_ArtifactDeployedState && newReviewStatus == "BuildAndDeploy") {
+			changeCommitableStatus = true;
+		} else if (currentCommittableState instanceof WS_C_ArtifactDeployedState && newReviewStatus == "Approve") {
+			changeCommitableStatus = false;
+		} else if (currentCommittableState instanceof WS_C_ArtifactDeployedState && newReviewStatus == "Reject") {
+			changeCommitableStatus = false;
+		} else if (currentCommittableState instanceof WS_C_ArtifactApprovedState && newReviewStatus == "Approve") {
+			changeCommitableStatus = false;
+		} else if (currentCommittableState instanceof WS_C_ArtifactRejectedState && newReviewStatus == "Reject") {
+			changeCommitableStatus = false;
+		} else if (currentCommittableState instanceof WS_C_ArtifactDeployedState && newReviewStatus == "BuildAndDeploy") {
+			changeCommitableStatus = false;
+		} else if (currentCommittableState instanceof WS_C_ArtifactRejectedState && newReviewStatus == "Approve") {
+			changeCommitableStatus = false;
+		} else if (currentCommittableState instanceof WS_C_ArtifactRejectedState && newReviewStatus == "BuildAndDeploy") {
+			changeCommitableStatus = false;
+		}
+		
+		Log.log(LOGGER, "Debug", "Review Validation status (changeCommitableStatus) - %s", changeCommitableStatus);
+		
+		if (changeCommitableStatus) {
+			String masterArtifactExtId = WS_RF_CreateUserArtifactExtId(null, path, projectName, null, subscriptionId, null);
+			WS_C_MasterArtifact masterArtifact = Instance.getByExtIdByUri(masterArtifactExtId, "/WebStudio/Core/Concepts/Lifecycle/WS_C_MasterArtifact");
+			if (masterArtifact != null) {
+			    masterArtifact.preMasterRevision = null;
+			}
+			WS_RF_ChangeCommittableStatus(committableDeltaEntry, newReviewStatus);
+		} else {
+			WS_RF_FlagIllegalStatusChange(currentCommittableState.stateName, newReviewStatus, committableDeltaEntry);
+		}
+	}
+}

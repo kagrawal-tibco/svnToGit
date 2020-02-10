@@ -1,0 +1,121 @@
+/**
+ * @description 
+ * @author 
+ */
+rule Shared.Rules.TopologyRuleSet.OnPUDeploy_ValidToken {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		
+		
+		Shared.Events.topology.PuDeployEvent pudeployevent;
+	}
+	when {
+		pudeployevent.token != null && String.length(pudeployevent.token) != 0;
+	}
+	then {
+//		NOTE:	This rule should be called OnDUDeploy_ValidToken instead. We only left PU instead of DU to avoid refactoring a lot of code
+		String family = "OnPUDeployEvent";
+		String methodFQName ="";
+		String entityType="";
+		String monitoredEntityName ="";
+
+		try {
+			Shared.RuleFunctions.log(family,"DEBUG","Rule " + family + " fired");
+			Shared.RuleFunctions.log(family,"DEBUG","TOKEN: " + pudeployevent.token);
+			Shared.Concepts.LoggedInUser user = Instance.getByExtId(pudeployevent.token);
+
+			if (user == null) {
+			    Shared.Events.reqres.FailureResponseEvent event = Shared.Events.reqres.FailureResponseEvent.FailureResponseEvent(null,null,"001","Invalid token: " + pudeployevent.token);
+			    Event.replyEvent(pudeployevent, event);
+			    Event.consumeEvent(pudeployevent);
+			    return;
+			}
+			
+			String m_extid = pudeployevent.monitorableid;
+			Shared.Concepts.MonitorableEntity machine = Instance.getByExtId(m_extid);
+			
+			if (machine == null) {
+				String warnMsg = "Monitorable object associated with the machine with monitorable id '" + m_extid + "' is NULL. Machine NOT FOUND!";
+			    Shared.RuleFunctions.log(family,"WARN",warnMsg);
+			    Shared.Events.reqres.FailureResponseEvent event = Shared.Events.reqres.FailureResponseEvent.FailureResponseEvent(null,null,"001",warnMsg);
+			    Event.replyEvent(pudeployevent, event);
+			    Event.consumeEvent(pudeployevent);
+			    return;
+			} else {
+				entityType = machine.type;
+				methodFQName = "/"+entityType + "/deployDU";
+				monitoredEntityName = getFQName(machine);
+				Shared.RuleFunctions.log(family,"DEBUG","MonitorableEntity ID: " + m_extid);
+				
+				if(machine.predefined == false){
+					String warnMsg = "Remote deployment is only available for hosts that are predefined in a site topology file. '" + machine.name + "' is not predefined.";
+				    Shared.RuleFunctions.log(family,"WARN",warnMsg);
+				    Shared.Events.reqres.FailureResponseEvent event = Shared.Events.reqres.FailureResponseEvent.FailureResponseEvent(null,null,"001",warnMsg);
+				    Event.replyEvent(pudeployevent, event);
+				    Event.consumeEvent(pudeployevent);
+				    return;
+				}
+				
+				String machine_name = machine.topologyProps[1];
+				
+				Shared.RuleFunctions.log(family,"DEBUG","Deploying DU's '" + BEMM.util.urlDecodeString(pudeployevent.dusStIdsTokenStr,"UTF-8") + "' to host: " + machine_name);
+				
+				//'$' is the token separating PAIRS
+				//DU_NAME#DEPLOYMENT_STATUS#DEPLOYMENT_TIME$DU_NAME_1#DEPLOYMENT_STATUS_1#DEPLOYMENT_TIME_1$....
+				//'#' is the token separating DU_NAME#DEPLOYMENT_STATUS#DEPLOYMENT_TIME
+                //The last substring after the last '$' token contains the XML 
+                //with the deployment status for all the DU's selected for deployment
+				//I am using this tokenized String due to the difficulty to parse XML
+				//in the rule and to send String[] (at some point passing String[] was broken).
+
+                //username, password are the credentials to login to the remote host
+                //uiUserName, uiPwd are the credentials the user used to login the MM UI.
+
+				String resultsTokenStr = BEMM.topology.deployDeploymentUnits(machine_name, pudeployevent.dusStIdsTokenStr,
+                            pudeployevent.username, pudeployevent.password, pudeployevent.uiUserName, pudeployevent.uiPwd);
+
+				//First length-1 elements of the array are Strings containing several pairs DU_NAME#DEPLOYMENT_STATUS#DEPLOYMENT_TIME
+				//Last element of this array is a XML String containing the deployment
+				//status for all the DU's selected for deployment  							
+				String[] duNameDepStatusPairAndStatusXml= String.split(resultsTokenStr,"\\$");  // \\$ because $ has a special meaning in RegEx
+				
+				//This for loop does NOT iterate over the last element of the array (statusXML),
+				//therefore it includes only the pairs DU_NAME#DEPLOYMENT_STATUS 
+				for(int j=0; j<duNameDepStatusPairAndStatusXml@length-1; j++) {	
+					String[] duNameAndDepStatus = String.split(duNameDepStatusPairAndStatusXml[j],"#");
+					
+					for(int i=0;i<machine.children@length;i++){
+						Shared.RuleFunctions.log(family,"DEBUG","machine.children[" + i + "].name= " + machine.children[i].name);
+						Shared.RuleFunctions.log(family,"DEBUG","machine.children[" + i + "].topologyProps[0]= " + machine.children[i].topologyProps[0]);
+
+                        if (String.contains(machine.children[i].topologyProps[0], duNameAndDepStatus[0]) ) {
+							Shared.RuleFunctions.log(family,"DEBUG","Deploying DU associated with pu.name: " + machine.children[i].name);
+							if (String.equals(duNameAndDepStatus[1],"SUCCESS")) {
+								machine.children[i].deployed = true;
+								machine.children[i].lastDeploy = duNameAndDepStatus[2];
+							} else {
+								machine.children[i].deployed = false;
+                                machine.children[i].lastDeploy = "";
+							}
+							Shared.RuleFunctions.log(family,"DEBUG","Deployment Unit '" + duNameAndDepStatus[0] + 
+									"' deployment = " + duNameAndDepStatus[1] + " time = " + machine.children[i].lastDeploy);
+						}
+					}
+				}												 
+										
+				String deployStatusXml = duNameDepStatusPairAndStatusXml[duNameDepStatusPairAndStatusXml@length-1];															
+				Shared.RuleFunctions.log(family,"DEBUG","Deployment status XML: " + deployStatusXml);																			
+				Shared.Events.reqres.SuccessXMLResponseEvent event = Shared.Events.reqres.SuccessXMLResponseEvent.SuccessXMLResponseEvent(null,deployStatusXml);
+				Event.replyEvent(pudeployevent, event);
+			} //else (machine != null)
+		} catch (Exception e) {
+		    Management.RuleFunctions.Exceptions.printAndSendException(e /*Except Object */,
+									family/*family String */,methodFQName/*methodFQName String */,
+									monitoredEntityName /*monitoredEntityName String */,pudeployevent/*requestevent Event */);
+		}
+		Event.consumeEvent(pudeployevent);
+	}
+}

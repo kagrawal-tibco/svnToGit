@@ -1,0 +1,100 @@
+/**
+ * @description 
+ */
+WebStudio.Core.Concepts.Process.WS_C_ProcessView rulefunction WebStudio.Core.RuleFunctions.Utils.Process.WS_RF_CreateProcessConceptFromSCS {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String userName;
+		String projectName;
+		Object processEMFWrapper;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.Process.WS_RF_CreateProcessConceptFromSCS");
+		
+		// Process properties
+		String PROP_NAME = "name";
+		String PROP_PATH = "path";
+		String PROP_ISARRAY = "isArray";
+		String PROP_TYPE = "type";
+		String PROP_DOC_ID = "docId";
+		String PROP_DOC_TEXT = "docText";
+		
+		WS_C_ProcessView processView = Instance.newInstance("/WebStudio/Core/Concepts/Process/WS_C_ProcessView", "PROCESS_" + WS.Common.generateUUID());
+		
+		WS_C_Process process = Instance.newInstance("/WebStudio/Core/Concepts/Process/WS_C_Process", null);
+		Instance.PropertyAtom.setContainedConcept(processView.processDef, process, 1L);
+		
+		process.processId = WS.Process.getId(processEMFWrapper);
+		process.processType = WS.Process.getType(processEMFWrapper);
+		process.label = WS.Process.getLabel(processEMFWrapper);
+		process.version = WS.Process.getVersion(processEMFWrapper);
+		process.author = WS.Process.getAuthor(processEMFWrapper);
+		process.creationDate = WS.Process.getCreationDate(processEMFWrapper);
+		process.lastModificationDate = WS.Process.getLastModificationDate(processEMFWrapper);
+		
+		// fetch process properties
+		Object[] processProperties = WS.Process.getProperties(processEMFWrapper);
+		if (processProperties != null && processProperties@length > 0) {
+			WS_C_Properties properties = Instance.newInstance("/WebStudio/Core/Concepts/Process/WS_C_Properties", null);
+			Instance.PropertyAtom.setContainedConcept(process.properties, properties, 1L);
+			
+			for (int i = 0; i < processProperties@length; i++) {
+				Object propertyDetails = WS.Process.getPropertyDetails(processProperties[i]);
+				if (Collections.Map.size(propertyDetails) > 0) {
+					WS_C_Property property = Instance.newInstance("/WebStudio/Core/Concepts/Process/WS_C_Property", null);
+					
+					property.name = Collections.Map.get(propertyDetails, PROP_NAME);
+					property.isMultiple = Collections.Map.get(propertyDetails, PROP_ISARRAY);
+					property.type = Collections.Map.get(propertyDetails, PROP_TYPE);
+					if (Collections.Map.containsKey(propertyDetails, PROP_PATH)) {
+						property.path = Collections.Map.get(propertyDetails, PROP_PATH);
+					}
+					
+					Instance.PropertyArray.appendContainedConcept(properties.property, property, 1L);
+				}
+			}
+		}
+		
+		// fetch documentation if any 
+		Object documentDetails = WS.Process.getDocumentation(processEMFWrapper);
+		if (Collections.Map.size(documentDetails) > 0) {
+			WS_C_ProcessDocumentation documentation = Instance.newInstance("/WebStudio/Core/Concepts/Process/Common/WS_C_ProcessDocumentation", null);
+			
+			String docId = Collections.Map.get(documentDetails, PROP_DOC_ID);
+			Instance.PropertyAtom.setString(documentation.docId, docId, 1L);
+				
+			String docText = Collections.Map.get(documentDetails, PROP_DOC_TEXT);
+			Instance.PropertyAtom.setString(documentation.text, docText, 1L);
+			
+			Instance.PropertyAtom.setContainedConcept(process.documentation, documentation, 1L);
+		}
+		
+		// fetch lane sets and lanes
+		Object[] laneSets = WS.Process.getLaneSets(processEMFWrapper);
+		for (int i = 0; i < laneSets@length; i++) {
+			Object[] lanes = WS.Process.getLanes(laneSets[i]);
+			if (lanes != null && lanes@length > 0) {
+				WS_C_LaneSet laneset = Instance.newInstance("/WebStudio/Core/Concepts/Process/WS_C_LaneSet", null);
+				Instance.PropertyAtom.setContainedConcept(process.laneset, laneset, 1L);
+				
+				for (int j = 0; j < lanes@length; j++) {
+					WS_C_Lane lane = WS_RF_GetLanes(lanes[j]);
+					Instance.PropertyArray.appendContainedConcept(laneset.lane, lane, 1L);
+				}
+			}
+		}
+		
+		// fetch sequence flows		
+		WS_RF_LoadAndParseSequenceFlows(process, processEMFWrapper);
+		
+		// fetch flow nodes
+		WS_RF_LoadAndParseFlowNodes(process, processEMFWrapper);
+		
+		// fetch associations and text annotations
+		WS_RF_LoadAndParseAnnotationsAndAssociations(process, processEMFWrapper);
+		
+		return processView;
+	}
+}

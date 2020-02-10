@@ -1,0 +1,138 @@
+/**
+ * @description Send State change Notification
+ */
+void rulefunction WebStudio.Core.RuleFunctions.Actions.Lifecycle.Review.WS_RF_SendStateChangeNotification {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String reviewer;
+		WebStudio.Core.Concepts.Lifecycle.WS_C_CommittableDeltaEntry[] commitables;
+		Object asyncContextObject;	
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.Lifecycle.Review.WS_RF_SendStateChangeNotification");
+
+		//Is notification enabled
+		boolean notifyEnabled = System.getSystemPropertyAsBoolean("ws.notify.enabled", false);
+		if (!notifyEnabled) {
+			Log.log(LOGGER, "Debug", "Email Notification is Disabled.");
+			return;	
+		}
+		Object servletRequest = HTTP.Servlet.getServletRequest(asyncContextObject);	
+		Object currDatetime = DateTime.now();
+		String currTimeStamp = DateTime.format(currDatetime, "HH:mm:ss:SSS");
+				
+		String notifyDataItemsMapId = "NOTIFY_DATA_ITEMS@" + reviewer + "@" + currTimeStamp;
+		
+		Util.HashMap.createMap(notifyDataItemsMapId);
+		Util.HashMap.clear(notifyDataItemsMapId); //make sure that the map is clear
+				
+		for (int loop = 0; loop < commitables@length; loop++) {
+			WS_C_CommittableDeltaEntry commitable = commitables[loop];
+			WS_C_UserCheckin userCheckin = Instance.getByExtIdByUri(commitable.parentCheckinId, "/WebStudio/Core/Concepts/Lifecycle/WS_C_UserCheckin"); 
+			if (userCheckin != null) {
+				String revisionId = String.valueOfLong(userCheckin.revisionId);
+				Object commitableStack = Util.HashMap.getObject(notifyDataItemsMapId, revisionId);
+				if (commitableStack == null) {
+					commitableStack = WS.Common.Stack.create(notifyDataItemsMapId + "@" + revisionId);
+					Util.HashMap.putObject(notifyDataItemsMapId, revisionId, commitableStack);	
+				}
+				WS.Common.Stack.push(commitableStack, commitable);				 
+			} else {
+				Log.log(LOGGER, "Error", "No UserCheckin found with Id %s", commitable.parentCheckinId);
+			}	
+		}
+				
+		String[] revisionIds = Util.HashMap.getMapKeys(notifyDataItemsMapId);		
+		if (revisionIds@length > 0) {
+			Log.log(LOGGER, "Debug", "Email Notification for Revisions %s", revisionIds);
+		} else {
+			Log.log(LOGGER, "Debug", "No Revisions found for Email Notification");	
+		}
+		
+		String subscriptionId = WS_RF_GetSubscriptionId(reviewer);
+		String notficationPreferencesExtId = WS_RF_CreateUserArtifactExtId("NOTIFY_PREFERENCES", null, null, null, subscriptionId, null);
+		
+		//For each revision
+		for (int loop = 0; loop < revisionIds@length; loop++) {
+			Object commitableStack = Util.HashMap.getObject(notifyDataItemsMapId, revisionIds[loop]);
+			WS_C_CommittableDeltaEntry[] applicableCommitables = 
+							WS.Common.Stack.toArray(commitableStack, "be.gen.WebStudio.Core.Concepts.Lifecycle.WS_C_CommittableDeltaEntry", "com.tibco.cep.runtime.service.loader.BEClassLoader");
+ 			
+			if (applicableCommitables@length > 0) {			
+				WS_C_UserCheckin userCheckin = Instance.getByExtIdByUri(applicableCommitables[0].parentCheckinId, "/WebStudio/Core/Concepts/Lifecycle/WS_C_UserCheckin");	
+		        WS_C_NotificationPreferences notificationPreferences = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(notficationPreferencesExtId, false, "/WebStudio/Core/Concepts/WS_C_NotificationPreferences");
+		        boolean hasEntry = false;
+		        if (notificationPreferences!=null) {
+			        String actionList;
+			        for (int count = 0; count < notificationPreferences.emailPreference@length; count++) {
+						WS_C_AbstractEmailPreference emailpreference = notificationPreferences.emailPreference[count];
+						if (emailpreference.project == userCheckin.managedProjectName) {
+							actionList = emailpreference.actions;
+							if (String.equals(actionList,"NO_ACTIONS") || String.equals(actionList,"commit")) {
+								hasEntry = false;
+							} else {
+								for (int i = 0; i < userCheckin.committables@length; i++) {
+									WS_C_CommittableDeltaEntry entry = userCheckin.committables[i];
+									WS_C_ArtifactBaseState state = entry.commitLifeCycleState;
+									if (String.contains(actionList, String.toLowerCase(state.stateName))) {
+										hasEntry = true;
+										break;
+									}
+								}
+							}
+							break;
+						}
+			         }
+		        }
+		        if (hasEntry) {			
+					//Create the context properties map
+					Object reusableBuffer = String.createBuffer(0);		
+					String.append(reusableBuffer, "NOTIFY_CONTEXT_PROPS@");	
+					String.append(reusableBuffer, reviewer);
+					String.append(reusableBuffer, "@");
+					String.append(reusableBuffer, revisionIds[loop]);
+					String.append(reusableBuffer, "@");
+					String.append(reusableBuffer, currTimeStamp);				
+					String notifyContextPropsMapId =  String.convertBufferToString(reusableBuffer);		
+					String.clearBuffer(reusableBuffer);		
+					Util.HashMap.createMap(notifyContextPropsMapId);						
+					//Set the receivers in the notify context
+					String workItemOwnerId = WebStudio.Core.RuleFunctions.Utils.Lifecycle.WS_RF_GetUserNotificationId(userCheckin.username);
+					String reviewerId = WebStudio.Core.RuleFunctions.Utils.Lifecycle.WS_RF_GetUserNotificationId(reviewer);
+					Util.HashMap.put(notifyContextPropsMapId, "RECEIVER_EMAIL", workItemOwnerId + "," + reviewerId);
+					String receiverCCEmails = WebStudio.Core.RuleFunctions.Utils.Lifecycle.WS_RF_GetNotificationCCEmails(reviewer,userCheckin.managedProjectName);
+					Util.HashMap.put(notifyContextPropsMapId, "RECEIVER_CC_EMAILS", receiverCCEmails);				
+					
+					//Create a stack to hold list of created Maps Ids	
+					String.append(reusableBuffer, "CREATED_MAP_IDS@");	
+					String.append(reusableBuffer, reviewer);
+					String.append(reusableBuffer, "@");
+					String.append(reusableBuffer, revisionIds[loop]);
+					String.append(reusableBuffer, "@");
+					String.append(reusableBuffer, currTimeStamp);				
+					String createdMapIdsMap_Id =  String.convertBufferToString(reusableBuffer);		
+					String.clearBuffer(reusableBuffer);		
+					Util.HashMap.createMap(createdMapIdsMap_Id);
+					//Bind the variables
+					String revisionId = String.valueOfLong(userCheckin.revisionId);
+					String messageDataMapId = WS_RF_BindStateChangeNotificationMessageVariables(reviewer, revisionId, currTimeStamp, userCheckin, applicableCommitables, servletRequest, createdMapIdsMap_Id);				
+					Log.log(LOGGER, "Debug", "Email Notification for Revision [%s] - Reviewer [%s], WorkItemOwner [%s]", revisionIds[loop], reviewer, userCheckin.username);
+					
+					//Generate the Notification	event		
+					WS_E_SendNotificationEvent sendNotificationEvent = Event.createEvent("xslt://{{/WebStudio/Core/Events/Lifecycle/WS_E_SendNotificationEvent}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"1.0\" exclude-result-prefixes=\"xsl xsd\">\n    <xsl:output method=\"xml\"/>\n    <xsl:param name=\"notifyContextPropsMapId\"/>\n    <xsl:param name=\"messageDataMapId\"/>\n    <xsl:param name=\"createdMapIdsMap_Id\"/>\n    <xsl:template match=\"/\">\n        <createEvent>\n            <event>\n                <notifyType>\n                    <xsl:value-of select=\"&quot;approval&quot;\"/>\n                </notifyType>\n                <notifyContextPropsMapId>\n                    <xsl:value-of select=\"$notifyContextPropsMapId\"/>\n                </notifyContextPropsMapId>\n                <notifyMessageDataMapId>\n                    <xsl:value-of select=\"$messageDataMapId\"/>\n                </notifyMessageDataMapId>\n                <createdMapIdsMapId>\n                    <xsl:value-of select=\"$createdMapIdsMap_Id\"/>\n                </createdMapIdsMapId>\n            </event>\n        </createEvent>\n    </xsl:template>\n</xsl:stylesheet>");
+					Event.assertEvent(sendNotificationEvent);
+					Log.log(LOGGER, "Debug", "Send Notification Event for Revision [%s] asserted", revisionIds[loop]);
+				}
+			}												
+		}
+
+		//Clear the commitableStck
+		for (int loop = 0; loop < revisionIds@length; loop++) {
+			WS.Common.Stack.delete(notifyDataItemsMapId + "@" + revisionIds[loop]);
+		}
+		//Delete the map
+		Util.HashMap.deleteMap(notifyDataItemsMapId);
+	}
+}

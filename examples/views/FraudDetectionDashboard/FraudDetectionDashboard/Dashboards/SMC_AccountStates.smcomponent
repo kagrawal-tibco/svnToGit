@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beviewsconfig:StateMachineComponent xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:beviewsconfig="http://www.tibco.com/be/designer" namespace="/Dashboards/" folder="/Dashboards/" name="SMC_AccountStates" description="" GUID="8929D3FE-2741-D067-2A86-F5F397F61022" ownerProjectName="FraudDetectionDashboard" version="1327086397279" displayName="Account States">
+  <visualization xsi:type="beviewsconfig:StateVisualization" namespace="/Dashboards/" folder="/Dashboards/" name="SV_" description="" GUID="5CD9BCF5-B3E4-FF3A-EA6B-12365141D716" ownerProjectName="FraudDetectionDashboard" version="1300475126559" stateRefID="B9AF0A6F-C268-A75D-30FD-61C330532946">
+    <seriesConfig xsi:type="beviewsconfig:StateSeriesConfig" namespace="/Dashboards/" folder="/Dashboards/" name="SSC_CONTENT" description="" GUID="31BADA75-4F82-67AA-5756-3937940B3397" ownerProjectName="FraudDetectionDashboard" version="1300475126559" displayName="Content Settings">
+      <actionRule namespace="/Dashboards/" folder="/Dashboards/" name="AR_" description="" GUID="44DE7E05-1F28-6665-DF21-017E207640E7" ownerProjectName="FraudDetectionDashboard" version="1300475126560" threshold="1" thresholdUnit="count">
+        <dataSource href="DS_DailyAccountStatesCntByState.datasource#/"/>
+        <alert xsi:type="beviewsconfig:RangeAlert" namespace="/Dashboards/" folder="/Dashboards/" name="Under" description="" GUID="D240615C-CAB0-10E3-C2CE-141246DF6492" ownerProjectName="FraudDetectionDashboard" version="1299883685945" enabled="true" upperValue="2.0">
+          <action xsi:type="beviewsconfig:VisualAlertAction" namespace="/Dashboards/" folder="/Dashboards/" name="A_" description="" GUID="37B45FEE-DFB2-EFEC-1877-2275C2984C00" ownerProjectName="FraudDetectionDashboard" version="1299883183931" enabled="true" fillColor="ff0000" fontSize="10" fontStyle="normal" fontColor="000000"/>
+        </alert>
+        <alert xsi:type="beviewsconfig:RangeAlert" namespace="/Dashboards/" folder="/Dashboards/" name="Over" description="" GUID="6E0B0FA4-F597-8ACF-7AF3-8ECB58863900" ownerProjectName="FraudDetectionDashboard" version="1299883685945" enabled="true" lowerValue="2.0">
+          <action xsi:type="beviewsconfig:VisualAlertAction" namespace="/Dashboards/" folder="/Dashboards/" name="A_" description="" GUID="65F5E9E2-25A9-8C86-B48F-FC07BE7F2673" ownerProjectName="FraudDetectionDashboard" version="1299883183932" enabled="true" fillColor="00FF00" fontSize="10" fontStyle="normal" fontColor="000000"/>
+        </alert>
+        <params namespace="/Dashboards/" folder="/Dashboards/" name="state" description="" GUID="501B613E-2D72-0CDE-404D-38D64ED844E3" ownerProjectName="FraudDetectionDashboard" version="1300475126561" value="create" type="String"/>
+        <params namespace="/Dashboards/" folder="/Dashboards/" name="snapshotdate" description="" GUID="D8958AB1-B039-C9E9-3DE4-C93D247E5F15" ownerProjectName="FraudDetectionDashboard" version="1300475126562" value="#TODAY" type="DateTime"/>
+      </actionRule>
+      <valueDataConfig xsi:type="beviewsconfig:StateDataConfig">
+        <extractor>
+          <sourceField href="M_AccountStates.metric#//@properties.1"/>
+        </extractor>
+        <formatter xsi:type="beviewsconfig:ProgressBarFieldFormat" toolTipFormat="{Cnt} accounts created" displayFormat="{Cnt}">
+          <minValue xsi:type="beviewsconfig:ConstantValueOption"/>
+          <maxValue xsi:type="beviewsconfig:ConstantValueOption" value="10.0"/>
+        </formatter>
+      </valueDataConfig>
+    </seriesConfig>
+    <relatedElement href="C_DailyNormalAccountsInfo.chart#/"/>
+    <relatedElement href="C_DailyAccountCurrCntByStatus.chart#/"/>
+    <relatedElement href="C_DailySuspendedAccountsInfo.chart#/"/>
+  </visualization>
+  <visualization xsi:type="beviewsconfig:StateVisualization" namespace="/Dashboards/" folder="/Dashboards/" name="SV_2" description="" GUID="EED75267-04D9-8D2E-031F-B42AD8FB7283" ownerProjectName="FraudDetectionDashboard" version="1300475210362" stateRefID="B23A0622-73D1-68BE-57F9-3FF7CE7F29D3">
+    <seriesConfig xsi:type="beviewsconfig:StateSeriesConfig" namespace="/Dashboards/" folder="/Dashboards/" name="SSC_CONTENT" description="" GUID="74249E65-136B-A633-A01C-8D0101B982F8" ownerProjectName="FraudDetectionDashboard" version="1300475137694" displayName="Content Settings">
+      <actionRule namespace="/Dashboards/" folder="/Dashboards/" name="AR_" description="" GUID="8699EE3C-9275-63AB-E715-1AB545AEF91A" ownerProjectName="FraudDetectionDashboard" version="1300475137695" threshold="1" thresholdUnit="count">
+        <dataSource href="DS_DailyAccountStatesCntByState.datasource#/"/>
+        <params namespace="/Dashboards/" folder="/Dashboards/" name="state" description="" GUID="9C8BC555-6F3E-39B9-B239-6AFDA8DDA6B2" ownerProjectName="FraudDetectionDashboard" version="1300475137696" value="transactions" type="String"/>
+        <params namespace="/Dashboards/" folder="/Dashboards/" name="snapshotdate" description="" GUID="67189F1B-0A9F-FC8F-1ABB-56543F539D10" ownerProjectName="FraudDetectionDashboard" version="1300475137697" value="#TODAY" type="DateTime"/>
+      </actionRule>
+      <valueDataConfig xsi:type="beviewsconfig:StateDataConfig">
+        <extractor>
+          <sourceField href="M_AccountStates.metric#//@properties.1"/>
+        </extractor>
+        <formatter xsi:type="beviewsconfig:TextFieldFormat" toolTipFormat="{Cnt} transactions commited" displayFormat="{Cnt}"/>
+      </valueDataConfig>
+    </seriesConfig>
+    <seriesConfig xsi:type="beviewsconfig:StateSeriesConfig" namespace="/Dashboards/" folder="/Dashboards/" name="SSC_INDICATOR" description="" GUID="D9A66C7C-6432-7F9E-EA9A-484ABCEFB09A" ownerProjectName="FraudDetectionDashboard" version="1300475210362" displayName="Indicator Settings">
+      <actionRule namespace="/Dashboards/" folder="/Dashboards/" name="AR_" description="" GUID="0EE7B188-C788-6C0C-EA2F-2A6297B6AF80" ownerProjectName="FraudDetectionDashboard" version="1300475210362" threshold="1" thresholdUnit="count">
+        <dataSource href="DS_DailyAccountStatesCntByState.datasource#/"/>
+        <alert xsi:type="beviewsconfig:RangeAlert" namespace="/Dashboards/" folder="/Dashboards/" name="Under" description="" GUID="0CAB2069-9DBB-FD7C-1E77-EE43661DEFD0" ownerProjectName="FraudDetectionDashboard" version="1299883543195" enabled="true" upperValue="2.0">
+          <action xsi:type="beviewsconfig:VisualAlertAction" namespace="/Dashboards/" folder="/Dashboards/" name="A_" description="" GUID="BEFED944-E4FB-B129-301A-96F4D642E9A5" ownerProjectName="FraudDetectionDashboard" version="1299883410684" enabled="true" fillColor="ff0000" fontSize="10" fontStyle="normal" fontColor="000000"/>
+        </alert>
+        <alert xsi:type="beviewsconfig:RangeAlert" namespace="/Dashboards/" folder="/Dashboards/" name="Over" description="" GUID="F65EB418-0127-26CF-0822-BDFA4EF7DF75" ownerProjectName="FraudDetectionDashboard" version="1299883543195" enabled="true" lowerValue="2.0">
+          <action xsi:type="beviewsconfig:VisualAlertAction" namespace="/Dashboards/" folder="/Dashboards/" name="A_" description="" GUID="1B00D15D-60AD-548B-7C83-3C8CFF8DFE52" ownerProjectName="FraudDetectionDashboard" version="1299883410685" enabled="true" fillColor="00FF00" fontSize="10" fontStyle="normal" fontColor="000000"/>
+        </alert>
+        <params namespace="/Dashboards/" folder="/Dashboards/" name="state" description="" GUID="8C9A41E9-73A9-D985-F195-8752D3467E85" ownerProjectName="FraudDetectionDashboard" version="1300475210364" value="transactions" type="String"/>
+        <params namespace="/Dashboards/" folder="/Dashboards/" name="snapshotdate" description="" GUID="DB99902A-5EE4-78D1-DD96-DF5FC48B8633" ownerProjectName="FraudDetectionDashboard" version="1300475210364" value="#TODAY" type="DateTime"/>
+      </actionRule>
+      <valueDataConfig xsi:type="beviewsconfig:StateDataConfig">
+        <extractor>
+          <sourceField href="M_AccountStates.metric#//@properties.1"/>
+        </extractor>
+        <formatter xsi:type="beviewsconfig:IndicatorFieldFormat" toolTipFormat="{Cnt} transactions commited"/>
+      </valueDataConfig>
+    </seriesConfig>
+    <relatedElement href="C_BottomTenAccountsByBalance.chart#/"/>
+    <relatedElement href="C_LastTenModifiedAccounts.chart#/"/>
+    <relatedElement href="C_DebitTraffic.chart#/"/>
+    <relatedElement href="C_FraudTracking.chart#/"/>
+    <relatedElement href="C_TopTenAccountsByBalance.chart#/"/>
+  </visualization>
+  <visualization xsi:type="beviewsconfig:StateVisualization" namespace="/Dashboards/" folder="/Dashboards/" name="SV_3" description="" GUID="0830E5FB-913C-0A37-C77B-BC8ABB97A376" ownerProjectName="FraudDetectionDashboard" version="1300475222353" stateRefID="A25CB0FB-5BA2-78A3-59E1-45097EC90409">
+    <seriesConfig xsi:type="beviewsconfig:StateSeriesConfig" namespace="/Dashboards/" folder="/Dashboards/" name="SSC_CONTENT" description="" GUID="E459903B-D44B-C1F4-8AB0-1A9D17A829B9" ownerProjectName="FraudDetectionDashboard" version="1300475147877" displayName="Content Settings">
+      <actionRule namespace="/Dashboards/" folder="/Dashboards/" name="AR_" description="" GUID="C7A14354-DDAE-7C53-C50C-0D3206544619" ownerProjectName="FraudDetectionDashboard" version="1300475147878" threshold="1" thresholdUnit="count">
+        <dataSource href="DS_DailyAccountStatesCntByState.datasource#/"/>
+        <params namespace="/Dashboards/" folder="/Dashboards/" name="state" description="" GUID="E2CC4703-A172-9F13-8B88-1250607226E9" ownerProjectName="FraudDetectionDashboard" version="1300475147879" value="credit" type="String"/>
+        <params namespace="/Dashboards/" folder="/Dashboards/" name="snapshotdate" description="" GUID="695A2BC9-5092-2796-0DF1-D4F64675E128" ownerProjectName="FraudDetectionDashboard" version="1300475147880" value="#TODAY" type="DateTime"/>
+      </actionRule>
+      <valueDataConfig xsi:type="beviewsconfig:StateDataConfig">
+        <extractor>
+          <sourceField href="M_AccountStates.metric#//@properties.1"/>
+        </extractor>
+        <formatter xsi:type="beviewsconfig:TextFieldFormat" toolTipFormat="{Cnt} credits processed" displayFormat="{Cnt}"/>
+      </valueDataConfig>
+    </seriesConfig>
+    <seriesConfig xsi:type="beviewsconfig:StateSeriesConfig" namespace="/Dashboards/" folder="/Dashboards/" name="SSC_INDICATOR" description="" GUID="151BF905-EC35-245D-7B8A-6C546B7ED36A" ownerProjectName="FraudDetectionDashboard" version="1300475222353" displayName="Indicator Settings">
+      <actionRule namespace="/Dashboards/" folder="/Dashboards/" name="AR_" description="" GUID="6200D981-1790-6A4F-D078-5D9A207DF771" ownerProjectName="FraudDetectionDashboard" version="1300475222354" threshold="1" thresholdUnit="count">
+        <dataSource href="DS_DailyAccountStatesCntByState.datasource#/"/>
+        <alert xsi:type="beviewsconfig:RangeAlert" namespace="/Dashboards/" folder="/Dashboards/" name="Over" description="" GUID="07B0F92A-F2FA-CFD8-AD2F-C7D3C78FAEFB" ownerProjectName="FraudDetectionDashboard" version="1299883497608" enabled="true" lowerValue="1.0">
+          <action xsi:type="beviewsconfig:VisualAlertAction" namespace="/Dashboards/" folder="/Dashboards/" name="A_" description="" GUID="47AA7222-0BCD-5C84-2825-6DF06CD8177B" ownerProjectName="FraudDetectionDashboard" version="1299883454215" enabled="true" fillColor="00FF00" fontSize="10" fontStyle="normal" fontColor="000000"/>
+        </alert>
+        <params namespace="/Dashboards/" folder="/Dashboards/" name="state" description="" GUID="B19F4CD3-3B80-EF7F-E4CF-CFAB1721690D" ownerProjectName="FraudDetectionDashboard" version="1300475222355" value="credit" type="String"/>
+        <params namespace="/Dashboards/" folder="/Dashboards/" name="snapshotdate" description="" GUID="2F3E3AC0-F979-0592-2574-43F5B457088E" ownerProjectName="FraudDetectionDashboard" version="1300475222355" value="#TODAY" type="DateTime"/>
+      </actionRule>
+      <valueDataConfig xsi:type="beviewsconfig:StateDataConfig">
+        <extractor>
+          <sourceField href="M_AccountStates.metric#//@properties.1"/>
+        </extractor>
+        <formatter xsi:type="beviewsconfig:IndicatorFieldFormat" toolTipFormat="{Cnt} credits processed"/>
+      </valueDataConfig>
+    </seriesConfig>
+    <relatedElement href="C_BottomTenAccountsByBalance.chart#/"/>
+    <relatedElement href="C_LastTenModifiedAccounts.chart#/"/>
+    <relatedElement href="C_TopTenAccountsByBalance.chart#/"/>
+  </visualization>
+  <visualization xsi:type="beviewsconfig:StateVisualization" namespace="/Dashboards/" folder="/Dashboards/" name="SV_4" description="" GUID="971A26D2-CE83-0D00-78DD-94D3A5789F25" ownerProjectName="FraudDetectionDashboard" version="1300475230489" stateRefID="67A8BCD2-69C3-4372-EABD-FB2C2FF1DB5A">
+    <seriesConfig xsi:type="beviewsconfig:StateSeriesConfig" namespace="/Dashboards/" folder="/Dashboards/" name="SSC_CONTENT" description="" GUID="96C5B23D-C9B8-7A0F-2AF3-FD77D861892F" ownerProjectName="FraudDetectionDashboard" version="1300475156741" displayName="Content Settings">
+      <actionRule namespace="/Dashboards/" folder="/Dashboards/" name="AR_" description="" GUID="B93CE585-635E-DD3D-0FBD-3EA307853F68" ownerProjectName="FraudDetectionDashboard" version="1300475156742" threshold="1" thresholdUnit="count">
+        <dataSource href="DS_DailyAccountStatesCntByState.datasource#/"/>
+        <params namespace="/Dashboards/" folder="/Dashboards/" name="state" description="" GUID="B893BB5A-317F-4039-101E-B893B61A0D13" ownerProjectName="FraudDetectionDashboard" version="1300475156743" value="debit" type="String"/>
+        <params namespace="/Dashboards/" folder="/Dashboards/" name="snapshotdate" description="" GUID="08ED6C07-5D24-551B-3928-6FAE9B84C0E2" ownerProjectName="FraudDetectionDashboard" version="1300475156744" value="#TODAY" type="DateTime"/>
+      </actionRule>
+      <valueDataConfig xsi:type="beviewsconfig:StateDataConfig">
+        <extractor>
+          <sourceField href="M_AccountStates.metric#//@properties.1"/>
+        </extractor>
+        <formatter xsi:type="beviewsconfig:TextFieldFormat" toolTipFormat="{Cnt} debits processed" displayFormat="{Cnt}"/>
+      </valueDataConfig>
+    </seriesConfig>
+    <seriesConfig xsi:type="beviewsconfig:StateSeriesConfig" namespace="/Dashboards/" folder="/Dashboards/" name="SSC_INDICATOR" description="" GUID="A4BA8F3C-3CBA-9CA9-CDD4-9114AB4EC7DF" ownerProjectName="FraudDetectionDashboard" version="1300475230489" displayName="Indicator Settings">
+      <actionRule namespace="/Dashboards/" folder="/Dashboards/" name="AR_" description="" GUID="B38CBFF1-02D0-925E-33E5-12CEA0A203A5" ownerProjectName="FraudDetectionDashboard" version="1300475230489" threshold="1" thresholdUnit="count">
+        <dataSource href="DS_DailyAccountStatesCntByState.datasource#/"/>
+        <alert xsi:type="beviewsconfig:RangeAlert" namespace="/Dashboards/" folder="/Dashboards/" name="Over" description="" GUID="C5364BD3-530E-C2B9-9D88-23BA996450FD" ownerProjectName="FraudDetectionDashboard" version="1299883519841" enabled="true" lowerValue="1.0">
+          <action xsi:type="beviewsconfig:VisualAlertAction" namespace="/Dashboards/" folder="/Dashboards/" name="A_" description="" GUID="467E5356-5D46-B9E8-B33E-7CC7D7BE4504" ownerProjectName="FraudDetectionDashboard" version="1299883497611" enabled="true" fillColor="ff0000" fontSize="10" fontStyle="normal" fontColor="000000"/>
+        </alert>
+        <params namespace="/Dashboards/" folder="/Dashboards/" name="state" description="" GUID="38D5F40F-7927-297D-B1C7-AF1754FE843F" ownerProjectName="FraudDetectionDashboard" version="1300475230491" value="debit" type="String"/>
+        <params namespace="/Dashboards/" folder="/Dashboards/" name="snapshotdate" description="" GUID="F71B8901-11BE-B52E-0489-702CFFAC7EAC" ownerProjectName="FraudDetectionDashboard" version="1300475230491" value="#TODAY" type="DateTime"/>
+      </actionRule>
+      <valueDataConfig xsi:type="beviewsconfig:StateDataConfig">
+        <extractor>
+          <sourceField href="M_AccountStates.metric#//@properties.1"/>
+        </extractor>
+        <formatter xsi:type="beviewsconfig:IndicatorFieldFormat" toolTipFormat="{Cnt} debits processed"/>
+      </valueDataConfig>
+    </seriesConfig>
+    <relatedElement href="C_BottomTenAccountsByBalance.chart#/"/>
+    <relatedElement href="C_LastTenModifiedAccounts.chart#/"/>
+    <relatedElement href="C_DebitTraffic.chart#/"/>
+    <relatedElement href="C_TopTenAccountsByBalance.chart#/"/>
+  </visualization>
+  <visualization xsi:type="beviewsconfig:StateVisualization" namespace="/Dashboards/" folder="/Dashboards/" name="SV_5" description="" GUID="FA397CEF-EA86-2166-239E-AA90BDAA7598" ownerProjectName="FraudDetectionDashboard" version="1300475186835" stateRefID="A9FA8EBF-7DDE-4C3F-F7A3-BD9A54C8D03A">
+    <seriesConfig xsi:type="beviewsconfig:StateSeriesConfig" namespace="/Dashboards/" folder="/Dashboards/" name="SSC_CONTENT" description="" GUID="89D67D03-5DFF-89C2-4007-D2CC1426C934" ownerProjectName="FraudDetectionDashboard" version="1300475186835" displayName="Content Settings">
+      <actionRule namespace="/Dashboards/" folder="/Dashboards/" name="AR_" description="" GUID="5C82B354-FA50-944C-1943-4089E7A0DA0C" ownerProjectName="FraudDetectionDashboard" version="1300475186836" threshold="1" thresholdUnit="count">
+        <dataSource href="DS_DailyAccountStatesCntByState.datasource#/"/>
+        <alert xsi:type="beviewsconfig:RangeAlert" namespace="/Dashboards/" folder="/Dashboards/" name="Under" description="" GUID="83954108-67E5-5CF7-67CB-C304FC9E1370" ownerProjectName="FraudDetectionDashboard" version="1299884183171" enabled="true" upperValue="2.0">
+          <action xsi:type="beviewsconfig:VisualAlertAction" namespace="/Dashboards/" folder="/Dashboards/" name="A_" description="" GUID="F88CBEED-6F2E-3905-20BB-D3D7A213B9BA" ownerProjectName="FraudDetectionDashboard" version="1299883217652" enabled="true" fillColor="00FF00" fontSize="10" fontStyle="normal" fontColor="000000"/>
+        </alert>
+        <alert xsi:type="beviewsconfig:RangeAlert" namespace="/Dashboards/" folder="/Dashboards/" name="Over" description="" GUID="C2C380D5-4C8C-3EAD-A95E-B92C9F3420C0" ownerProjectName="FraudDetectionDashboard" version="1299884183171" enabled="true" lowerValue="2.0">
+          <action xsi:type="beviewsconfig:VisualAlertAction" namespace="/Dashboards/" folder="/Dashboards/" name="A_" description="" GUID="C098697B-1F14-5F28-0C76-DE926FDBBE1A" ownerProjectName="FraudDetectionDashboard" version="1299883217653" enabled="true" fillColor="ff0000" fontSize="10" fontStyle="normal" fontColor="000000"/>
+        </alert>
+        <params namespace="/Dashboards/" folder="/Dashboards/" name="state" description="" GUID="9617EA14-5DEB-F0F9-2010-130119AA388D" ownerProjectName="FraudDetectionDashboard" version="1300475186837" value="suspended" type="String"/>
+        <params namespace="/Dashboards/" folder="/Dashboards/" name="snapshotdate" description="" GUID="BF5BD527-8A27-62AD-D23C-1022ED21A5AE" ownerProjectName="FraudDetectionDashboard" version="1300475186838" value="#TODAY" type="DateTime"/>
+      </actionRule>
+      <valueDataConfig xsi:type="beviewsconfig:StateDataConfig">
+        <extractor>
+          <sourceField href="M_AccountStates.metric#//@properties.1"/>
+        </extractor>
+        <formatter xsi:type="beviewsconfig:ProgressBarFieldFormat" toolTipFormat="{Cnt} accounts suspended" displayFormat="{Cnt}">
+          <minValue xsi:type="beviewsconfig:ConstantValueOption"/>
+          <maxValue xsi:type="beviewsconfig:ConstantValueOption" value="10.0"/>
+        </formatter>
+      </valueDataConfig>
+    </seriesConfig>
+    <relatedElement href="C_DailySuspendedAccountsInfo.chart#/"/>
+    <relatedElement href="C_FraudTracking.chart#/"/>
+  </visualization>
+  <visualization xsi:type="beviewsconfig:StateVisualization" namespace="/Dashboards/" folder="/Dashboards/" name="SV_6" description="" GUID="69E5CD46-4EFB-B599-4729-7C51E90D3372" ownerProjectName="FraudDetectionDashboard" version="1300475242392" stateRefID="A7FAC130-A7BA-5844-74A1-3E9F9B07DF7C">
+    <seriesConfig xsi:type="beviewsconfig:StateSeriesConfig" namespace="/Dashboards/" folder="/Dashboards/" name="SSC_CONTENT" description="" GUID="A5668E48-C0D7-D2E6-B8D7-F7957A1E81F6" ownerProjectName="FraudDetectionDashboard" version="1300475175924" displayName="Content Settings">
+      <actionRule namespace="/Dashboards/" folder="/Dashboards/" name="AR_" description="" GUID="DB9B5489-5F93-99F0-DF72-762DC4346250" ownerProjectName="FraudDetectionDashboard" version="1300475175924" threshold="1" thresholdUnit="count">
+        <dataSource href="DS_DailyAccountStatesCntByState.datasource#/"/>
+        <params namespace="/Dashboards/" folder="/Dashboards/" name="state" description="" GUID="828C30B1-25B8-8B1B-9033-8494A2959887" ownerProjectName="FraudDetectionDashboard" version="1300475175926" value="fraud" type="String"/>
+        <params namespace="/Dashboards/" folder="/Dashboards/" name="snapshotdate" description="" GUID="DAD1FD44-FBFD-A9E8-D591-AA38736644EA" ownerProjectName="FraudDetectionDashboard" version="1300475175926" value="#TODAY" type="DateTime"/>
+      </actionRule>
+      <valueDataConfig xsi:type="beviewsconfig:StateDataConfig">
+        <extractor>
+          <sourceField href="M_AccountStates.metric#//@properties.1"/>
+        </extractor>
+        <formatter xsi:type="beviewsconfig:TextFieldFormat" toolTipFormat="{Cnt} frauds detected" displayFormat="{Cnt}"/>
+      </valueDataConfig>
+    </seriesConfig>
+    <seriesConfig xsi:type="beviewsconfig:StateSeriesConfig" namespace="/Dashboards/" folder="/Dashboards/" name="SSC_INDICATOR" description="" GUID="A92B5169-558C-82B0-5E1D-7E4E3CAF3982" ownerProjectName="FraudDetectionDashboard" version="1300475242392" displayName="Indicator Settings">
+      <actionRule namespace="/Dashboards/" folder="/Dashboards/" name="AR_" description="" GUID="2815B649-DE68-A88C-323D-6432B4FCD846" ownerProjectName="FraudDetectionDashboard" version="1300475242392" threshold="1" thresholdUnit="count">
+        <dataSource href="DS_DailyAccountStatesCntByState.datasource#/"/>
+        <alert xsi:type="beviewsconfig:RangeAlert" namespace="/Dashboards/" folder="/Dashboards/" name="Under" description="" GUID="281FB564-A489-3070-BFF4-1858E7C2E4C9" ownerProjectName="FraudDetectionDashboard" version="1299883283896" enabled="true" upperValue="2.0">
+          <action xsi:type="beviewsconfig:VisualAlertAction" namespace="/Dashboards/" folder="/Dashboards/" name="A_" description="" GUID="A21392AA-4172-758A-1738-96B80075FB64" ownerProjectName="FraudDetectionDashboard" version="1299883283896" enabled="true" fillColor="00FF00" fontSize="10" fontStyle="normal" fontColor="000000"/>
+        </alert>
+        <alert xsi:type="beviewsconfig:RangeAlert" namespace="/Dashboards/" folder="/Dashboards/" name="Over" description="" GUID="74CAD839-E16C-DD2A-D6D3-91EC6235E4E9" ownerProjectName="FraudDetectionDashboard" version="1299883283896" enabled="true" lowerValue="2.0">
+          <action xsi:type="beviewsconfig:VisualAlertAction" namespace="/Dashboards/" folder="/Dashboards/" name="A_" description="" GUID="E5904A29-DD97-73A1-F099-FBD9EE7E298D" ownerProjectName="FraudDetectionDashboard" version="1299883283897" enabled="true" fillColor="ff0000" fontSize="10" fontStyle="normal" fontColor="000000"/>
+        </alert>
+        <params namespace="/Dashboards/" folder="/Dashboards/" name="state" description="" GUID="4EB581D6-91FF-217D-37D6-5D5A5D5F3259" ownerProjectName="FraudDetectionDashboard" version="1300475242394" value="fraud" type="String"/>
+        <params namespace="/Dashboards/" folder="/Dashboards/" name="snapshotdate" description="" GUID="4F41695E-AC3A-D2A9-7F94-C7BCA22299FC" ownerProjectName="FraudDetectionDashboard" version="1300475242394" value="#TODAY" type="DateTime"/>
+      </actionRule>
+      <valueDataConfig xsi:type="beviewsconfig:StateDataConfig">
+        <extractor>
+          <sourceField href="M_AccountStates.metric#//@properties.1"/>
+        </extractor>
+        <formatter xsi:type="beviewsconfig:IndicatorFieldFormat" toolTipFormat="{Cnt} frauds detected"/>
+      </valueDataConfig>
+    </seriesConfig>
+    <relatedElement href="C_FraudTracking.chart#/"/>
+  </visualization>
+  <stateMachine href="../Concepts/AccountStates.statemachine#/"/>
+</beviewsconfig:StateMachineComponent>

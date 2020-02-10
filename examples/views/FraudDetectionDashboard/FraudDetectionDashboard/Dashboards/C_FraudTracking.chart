@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beviewsconfig:ChartComponent xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:beviewsconfig="http://www.tibco.com/be/designer" xmlns:designtime="http:///com/tibco/cep/designtime/core/model/designtime_ontology.ecore" namespace="/Dashboards/" folder="/Dashboards/" name="C_FraudTracking" description="Shows Frauds Detected By Time" GUID="C813F377-8A99-4B94-D524-C8C9656B0DE5" ownerProjectName="FraudDetectionDashboard" version="1304549736499" displayName="Frauds" componentColorSetIndex="0" seriesColorIndex="0">
+  <extendedProperties>
+    <properties xsi:type="designtime:SimpleProperty" name="Category">
+      <extendedProperties>
+        <properties xsi:type="designtime:SimpleProperty" name="03:00"/>
+        <properties xsi:type="designtime:SimpleProperty" name="03:10"/>
+        <properties xsi:type="designtime:SimpleProperty" name="03:20"/>
+        <properties xsi:type="designtime:SimpleProperty" name="03:30"/>
+        <properties xsi:type="designtime:SimpleProperty" name="03:40"/>
+        <properties xsi:type="designtime:SimpleProperty" name="03:50"/>
+        <properties xsi:type="designtime:SimpleProperty" name="04:00"/>
+      </extendedProperties>
+    </properties>
+    <properties xsi:type="designtime:SimpleProperty" name="MaxValue" value="10.0"/>
+    <properties xsi:type="designtime:SimpleProperty" name="MinValue" value="0.0"/>
+  </extendedProperties>
+  <visualization xsi:type="beviewsconfig:LineChartVisualization" namespace="/Dashboards/" folder="/Dashboards/" name="TCV_" description="" GUID="0860E50B-2B52-F79C-C469-B66826B80F9E" ownerProjectName="FraudDetectionDashboard" version="1304549736499" lineThickness="3" dataPlotting="all" plotShape="circle" plotShapeDimension="3">
+    <seriesConfig xsi:type="beviewsconfig:ChartSeriesConfig" namespace="/Dashboards/" folder="/Dashboards/" name="Frauds" description="" GUID="4BA93D6D-A77F-46A6-0A98-C6AF074C3E7C" ownerProjectName="FraudDetectionDashboard" version="1304549736499" anchor="Q1">
+      <actionRule namespace="/Dashboards/" folder="/Dashboards/" name="Series__AR" description="" GUID="FEE099D9-1F13-C333-A35F-81CF3222A1AB" ownerProjectName="FraudDetectionDashboard" version="1304549736499" threshold="-1" thresholdUnit="hour">
+        <dataSource href="DS_FraudTrackingByMin.datasource#/"/>
+        <drillableFields href="M_FraudTrackingByMin.metric#//@properties.0"/>
+        <params namespace="/Dashboards/" folder="/Dashboards/" name="startofday" description="" GUID="F9E17DF6-B29A-8A97-F9EB-AE7329D299DE" ownerProjectName="FraudDetectionDashboard" version="1304549736500" value="${SYS:STARTOFDAY}" type="DateTime"/>
+        <params namespace="/Dashboards/" folder="/Dashboards/" name="endofday" description="" GUID="44242906-12AE-6169-2FFB-BB3E09BADE1B" ownerProjectName="FraudDetectionDashboard" version="1304549736500" value="${SYS:ENDOFDAY}" type="DateTime"/>
+      </actionRule>
+      <valueDataConfig xsi:type="beviewsconfig:ChartValueDataConfig">
+        <extractor>
+          <sourceField href="M_FraudTrackingByMin.metric#//@properties.1"/>
+        </extractor>
+        <formatter xsi:type="beviewsconfig:TextFieldFormat" toolTipFormat="{SnapshotTime}={Detections}" displayFormat="{Detections}" showLabel="true">
+          <formatStyle fontSize="10" fontStyle="normal"/>
+        </formatter>
+      </valueDataConfig>
+      <categoryDataConfig xsi:type="beviewsconfig:ChartCategoryDataConfig">
+        <extractor>
+          <sourceField href="M_FraudTrackingByMin.metric#//@properties.0"/>
+        </extractor>
+        <formatter xsi:type="beviewsconfig:TextFieldFormat" displayFormat="{SnapshotTime,date,hh:mm}"/>
+      </categoryDataConfig>
+    </seriesConfig>
+  </visualization>
+  <layoutConstraint xsi:type="beviewsconfig:FlowLayoutConstraint" componentRowSpan="1" componentColSpan="3"/>
+  <plotArea>
+    <foreground line="both"/>
+  </plotArea>
+  <categoryGuidelineConfig headerName="Time" sortOrder="unsorted">
+    <headerFormatStyle fontSize="10" fontStyle="normal"/>
+    <labelFormatStyle fontSize="10" fontStyle="normal"/>
+  </categoryGuidelineConfig>
+  <valueGuidelineConfig headerName="Frauds" scale="normal" division="5">
+    <headerFormatStyle fontSize="10" fontStyle="normal"/>
+    <labelFormatStyle fontSize="10" fontStyle="normal"/>
+  </valueGuidelineConfig>
+</beviewsconfig:ChartComponent>

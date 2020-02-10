@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.2"?>
+<plugin>  
+    <extension
+        point="org.eclipse.ui.views">
+        <view
+             category="com.tibco.cep.studio.ui.category"
+             class="com.tibco.cep.studio.decision.table.ui.constraintpane.DecisionTableTestDataCoverageView"
+             icon="icons/testdata_coverage.png"
+             id="com.tibco.cep.studio.decision.table.constraintpane.testdataCoverageView"
+             name="Test Data Coverage">
+        </view>        
+        <view
+             category="com.tibco.cep.studio.ui.category"
+             class="com.tibco.cep.studio.decision.table.constraintpane.DecisionTableAnalyzerView"
+             icon="icons/analyzer16x16.png"
+             id="com.tibco.cep.studio.decision.table.constraintpane.decisionTableAnalyzerView"
+             name="Table Analyzer">
+        </view>
+   </extension>
+   <extension
+        point="org.eclipse.ui.perspectives">
+      <perspective
+           class="com.tibco.cep.studio.decision.table.ui.perspective.DecisionTablePerspective"
+           icon="icons/deploy_decision_table_16x16.png"
+           id="com.tibco.cep.decision.table.perspective"
+           name="BusinessEvents Studio Decision Table">
+      </perspective>
+   </extension>
+   <extension
+         point="org.eclipse.ui.editors">
+      <editor
+            class="com.tibco.cep.studio.decision.table.ui.editors.DecisionTableEditor"
+            contributorClass="com.tibco.cep.studio.decision.table.editor.DecisionTableEditorContributor"
+            default="true"
+            extensions="rulefunctionimpl"
+            icon="icons/decisiontablerulefunctions_16x16.png"
+            id="com.tibco.cep.decision.table.editor"
+            name="Decision Table Editor">
+      </editor>
+   </extension>
+   <extension
+         point="org.eclipse.ui.exportWizards">
+      <wizard
+            category="com.tibco.cep.studio.ui.export.category"
+            class="com.tibco.cep.studio.decision.table.ui.wizard.DTExcelExportWizard"
+            icon="icons/import_excel19x19.png"
+            id="com.tibco.cep.studio.ui.wizards.DTExportExcelWizard"
+            name="Export Decision Table To Excel">
+         <description>
+            Export Decision Table to a Microsoft Excel File
+         </description>
+      </wizard>
+   </extension>
+	<extension
+         point="org.eclipse.ui.newWizards">
+      <wizard
+            category="com.tibco.cep.studio.ui.category"
+            class="com.tibco.cep.studio.decision.table.ui.wizard.NewDecisionTableWizard"
+            finalPerspective="com.tibco.cep.studio.application.perspective"
+            hasPages="true"
+            icon="icons/decisiontablerulefunctions_16x16.png"
+            id="com.tibco.cep.studio.decision.table.ui.wizard.NewDecisionTableWizard"
+            name="Decision Table">
+         <description>
+            Create a new Decision Table.
+         </description>
+      </wizard>
+   </extension>
+   <extension
+         point="org.eclipse.ui.navigator.navigatorContent">
+                <navigatorContent
+                      activeByDefault="true"
+                      contentProvider="com.tibco.cep.studio.decision.table.ui.navigation.DecisionTableNavigatorContentProvider"
+                      id="com.tibco.cep.decision.table.navigator.content"
+                      labelProvider="com.tibco.cep.studio.decision.table.ui.navigation.DecisionTableNavigatorLabelProvider"
+                      name="Decision Table Arguments"
+                      priority="normal">
+         <triggerPoints>
+              <instanceof
+                  value="org.eclipse.core.resources.IFile">
+            </instanceof>
+            <test
+                  forcePluginActivation="true"
+                  property="org.eclipse.core.resources.extension"
+                  value="rulefunctionimpl">
+            </test>
+         </triggerPoints>
+      </navigatorContent>
+                <navigatorContent
+                      activeByDefault="true"
+                      contentProvider="com.tibco.cep.studio.decision.table.ui.navigation.ArgumentsContentProvider"
+                      id="com.tibco.cep.decision.table.arguments.navigator.content"
+                      labelProvider="com.tibco.cep.studio.decision.table.ui.navigation.ArgumentsLabelProvider"
+                      name="Arguments Contets"
+                      priority="normal">
+                   <triggerPoints>
+                      <instanceof
+                            value="com.tibco.cep.decisionproject.ontology.AbstractResource">
+                      </instanceof>
+                   </triggerPoints>
+                </navigatorContent>
+   </extension>
+   <extension
+         point="org.eclipse.ui.preferencePages">
+      <page
+            category="com.tibco.cep.studio.ui.preference.page.designer"
+            class="com.tibco.cep.studio.decision.table.preferences.DTPreferencePage"
+            id="com.tibco.cep.decision.table.dtPreferencePage"
+            name="Decision Table">
+      </page>
+      <page
+            category="com.tibco.cep.decision.table.dtPreferencePage"
+            class="com.tibco.cep.studio.decision.table.preferences.DTAppearancePreferencePage"
+            id="com.tibco.cep.decision.table.dtAppearancePage"
+            name="Appearance">
+      </page>
+       <page
+            category="com.tibco.cep.decision.table.dtPreferencePage"
+            class="com.tibco.cep.studio.decision.table.preferences.DTAnalyzerPreferencePage"
+            id="com.tibco.cep.decision.table.dtAnalyzer"
+             name="Analyzer">
+      </page>
+       <page
+             category="com.tibco.cep.decision.table.dtPreferencePage"
+             class="com.tibco.cep.studio.decision.table.preferences.DTDomainPreferencePage"
+             id="com.tibco.cep.decision.table.dtdomain"
+             name="Domain Model">
+       </page>
+   </extension>
+ <extension
+       point="org.eclipse.ui.importWizards">
+    <wizard
+          category="com.tibco.cep.studio.ui.category"
+          class="com.tibco.cep.studio.decision.table.ui.wizard.DTImportWizard"
+          icon="icons/import_DT.png"
+          id="com.tibco.cep.studio.ui.wizards.ImportExcelWizard"
+          name="Decision Table">
+       <description>
+          Create a new TIBCO BusinessEvents Decision Table from an excel file
+       </description>
+    </wizard>
+ </extension>
+ <extension
+       point="com.tibco.cep.decision.table.ui.tableAnalyzerExtension">
+    <tableAnalyzerExtension
+          extension="com.tibco.cep.studio.decision.table.ui.constraintpane.TesterSupportedDTAnalyzerExtension">
+    </tableAnalyzerExtension>
+ </extension>
+
+</plugin>

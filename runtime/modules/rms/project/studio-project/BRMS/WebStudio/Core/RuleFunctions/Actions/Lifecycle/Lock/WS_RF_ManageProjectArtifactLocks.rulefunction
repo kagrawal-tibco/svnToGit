@@ -1,0 +1,32 @@
+/**
+ * @description Action (/ws/manageProjectLocks) to manage project artifact Locks
+ */
+WebStudio.Core.Concepts.DataSources.WS_C_TemporaryReturnData rulefunction WebStudio.Core.RuleFunctions.Actions.Lifecycle.Lock.WS_RF_ManageProjectArtifactLocks {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object servletRequest;
+		WebStudio.Security.Authn.Concepts.WS_C_LoggedInUser loggedInUser;
+		String contentType;	
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.Lifecycle.Lock.WS_RF_ManageArtifactLocks");
+		
+		WS_C_TemporaryReturnData tempReturnData = null;
+		
+		//If request is get route it to fetch artifacts.
+		String httpMethod = HTTP.Servlet.Request.getMethod(servletRequest);
+		
+		if (String.equals(httpMethod, "GET")) {
+			Log.log(LOGGER, "Info", "Fetching artifacts lock info");
+			String projectName = HTTP.Servlet.Request.getRequestParameter(servletRequest, "projectName");
+			tempReturnData = WS_RF_FetchProjectArtifactsLockInfo(projectName, loggedInUser.username);
+		} else if (String.equals(httpMethod, "POST")) {
+			Log.log(LOGGER, "Info", "Request to Release artifact locks");
+			tempReturnData = WS_RF_UnLockArtifact(servletRequest, loggedInUser, contentType);
+		}
+
+		return tempReturnData;	
+	}
+}

@@ -1,0 +1,31 @@
+/**
+ * @description Get existing delta entry for a revision for an artifact.
+ */
+WebStudio.Core.Concepts.Lifecycle.WS_C_CommittableDeltaEntry rulefunction WebStudio.Core.RuleFunctions.Utils.Lifecycle.WS_RF_QueryCommitableDeltaEntry {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		WebStudio.Core.Concepts.Lifecycle.WS_C_WorkspaceCommittableDelta workspaceCommittableDelta;
+		WebStudio.Core.Concepts.WS_C_UserArtifactRevision userArtifactRevision;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.Lifecycle.WS_RF_QueryCommitableDeltaEntry");
+		
+		if (workspaceCommittableDelta != null) {
+			//Check if a committable entry exists in the ws committable delta for an artifact revision for the same artifact path
+			//as the one pointed by this revision.
+			WS_C_CommittableDeltaEntry[] committableDeltaEntries = Instance.PropertyArray.toArrayConcept(workspaceCommittableDelta.deltaEntry);
+			for (int loop = 0; loop < committableDeltaEntries@length; loop++) {
+				WS_C_CommittableDeltaEntry committableDeltaEntry = committableDeltaEntries[loop];
+				WS_C_UserArtifactRevision committableEntryRevision = Instance.PropertyAtom.getConceptReference(committableDeltaEntry.userArtifactRevision, 1L);
+				if (String.equals(committableEntryRevision.parentArtifactId, userArtifactRevision.parentArtifactId)) {
+					Log.log(LOGGER, "Info", "Entry present for artifact in workspace commit list. Reusing it");
+					//Match found since there was a committable entry for same artifact earlier.
+					return committableDeltaEntry;
+				}
+			}
+		}
+		return null;
+	}
+}

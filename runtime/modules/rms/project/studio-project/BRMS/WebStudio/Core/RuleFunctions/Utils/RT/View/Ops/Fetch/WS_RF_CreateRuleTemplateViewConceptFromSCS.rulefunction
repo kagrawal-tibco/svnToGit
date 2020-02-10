@@ -1,0 +1,66 @@
+/**
+ * @description Create view part for RULETEMPLATE loaded from SCS.
+ */
+WebStudio.Core.Concepts.RuleTemplateInstance.View.WS_C_RuleTemplateInstanceView rulefunction WebStudio.Core.RuleFunctions.Utils.RT.View.Ops.Fetch.WS_RF_CreateRuleTemplateViewConceptFromSCS {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String projectName;
+		String username;
+		String scsIntegrationType;
+		String scsRootURL;
+		String artifactPath;
+		Object ruleTemplateObject;
+		String[] roles;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.RT.View.Ops.Fetch.WS_RF_CreateRuleTemplateViewConceptFromSCS");
+		
+		//Create a concept now
+        WS_C_RuleTemplateInstanceView ruleTemplateInstanceView = 
+        	Instance.newInstance("/WebStudio/Core/Concepts/RuleTemplateInstance/View/WS_C_RuleTemplateInstanceView", "RTI_VIEW_" + WS.Common.generateUUID());
+        	
+        	int rulePriority = WS.RT.getRuleTemplatePriority(ruleTemplateObject);
+        	ruleTemplateInstanceView.rulePriority = rulePriority;
+		
+		WS_C_View viewPart = 
+        	Instance.newInstance("/WebStudio/Core/Concepts/RuleTemplateInstance/View/WS_C_View", null);
+        
+        Instance.PropertyAtom.setContainedConcept(ruleTemplateInstanceView.view, viewPart, 1L);	            	
+		//Get bindings
+		Object[] rtBindings = WS.RT.View.getRuleTemplateBindings(ruleTemplateObject);
+				
+		for (int loop = 0; loop < rtBindings@length; loop++) {
+			Object rtBinding = rtBindings[loop];
+			String bindingIdName = WS.RT.View.getBindingId(rtBinding);
+			String bindingType = WS.RT.View.getBindingType(rtBinding);
+			String bindingExpression = WS.RT.View.getBindingExpression(rtBinding);
+
+			//Create concept for each
+			WS_C_BindingInfo bindingConcept = 
+				Instance.newInstance("/WebStudio/Core/Concepts/RuleTemplateInstance/View/WS_C_BindingInfo", null);
+			bindingConcept.bindingId = bindingIdName;
+			bindingConcept.type = bindingType;
+			bindingConcept.value = bindingExpression;	
+			
+			Instance.PropertyArray.appendContainedConcept(viewPart.bindingInfo, bindingConcept, 1L);
+			
+			//Get all domains as well
+			String[] domainPaths = WS.RT.View.getDomainPathsForBinding(rtBinding);
+			
+			for (int domainLoop = 0; domainLoop < domainPaths@length; domainLoop++) {
+				WS_C_Domain domainInfoConcept = WS_RF_FetchDomainEntries(username, roles, projectName, domainPaths[domainLoop], "domain", true);
+				//Append to binding concept
+				Instance.PropertyArray.appendConceptReference(bindingConcept.domainInfo, domainInfoConcept, 1L);
+				WS.Common.assertInstance(domainInfoConcept, false);
+			}						
+		}
+		//Get presentation text
+		String presentationText = 
+			WS.RT.View.getPresentationText(scsIntegrationType, scsRootURL, projectName, ruleTemplateObject);
+		viewPart.htmlText = presentationText;
+			
+		return ruleTemplateInstanceView; 	
+	}
+}

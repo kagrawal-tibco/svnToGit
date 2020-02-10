@@ -1,0 +1,90 @@
+/**
+ * @description 
+ */
+void rulefunction WebStudio.Core.RuleFunctions.Utils.Subscription.WS_RF_DeleteProjectDependencies {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		WebStudio.Core.Concepts.WS_C_UserProject userProject;
+		String subscriptionId;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.Subscription.WS_RF_DeleteUserProjectAndArtifacts");
+		
+		Log.log(LOGGER, "Debug", "Processing Project [%s] for deletion", userProject.name);
+		
+		// Delete all user artifacts
+		WS_C_UserArtifact[] userArtifacts = Instance.PropertyArray.toArrayContainedConcept(userProject.userArtifacts);
+		for (int i=0; i<userArtifacts@length; i++) {
+			Log.log(LOGGER, "Debug", "Processing Artifact [%s] for deletion", userArtifacts[i].artifactPath);
+			
+			// Delete artifact revisions
+			String[] artifactRevisions = Instance.PropertyArray.toArrayString(userArtifacts[i].artifactRevisionIds);
+			Log.log(LOGGER, "Debug", "Total Artifact revisions to clean up - [%s]", artifactRevisions@length);
+			for (int l=0; l<artifactRevisions@length; l++) {
+				WS_C_UserArtifactRevision artifactRevision = Instance.getByExtIdByUri(artifactRevisions[l], "/WebStudio/Core/Concepts/WS_C_UserArtifactRevision");
+				if (artifactRevision != null) {
+					WS_RF_DeleteArtifactRevision(artifactRevision);
+				} else {
+					Log.log(LOGGER, "Debug", "Artifact Revision with ExtId [%s] does not exits.", artifactRevisions[l]);
+				}
+			}
+			
+			// delete checkpoint revision
+			if (userArtifacts[i].checkpointRevision != null) {
+				Log.log(LOGGER, "Debug", "Deleting checkpoint revision [%s]", userArtifacts[i].checkpointRevision@extId);
+				WS_RF_DeleteArtifactRevision(userArtifacts[i].checkpointRevision);
+			}
+			
+			// delete User Artifact
+			Log.log(LOGGER, "Debug", "Deleting artifact [%s]", userArtifacts[i].artifactPath);
+			Instance.deleteInstance(userArtifacts[i]);
+			
+			// check for master Artifact
+			String masterArtifactExtId = WS_RF_CreateUserArtifactExtId(null, userArtifacts[i].artifactPath, userProject.name, null, subscriptionId, null);
+			WS_C_MasterArtifact masterArtifact = Instance.getByExtIdByUri(masterArtifactExtId, "/WebStudio/Core/Concepts/Lifecycle/WS_C_MasterArtifact");
+			if (masterArtifact != null) {
+				WS_RF_DeleteMasterArtifact(masterArtifact, subscriptionId);
+			} else {
+				Log.log(LOGGER, "Debug", "Master Artifact with ExtId [%s] does not exits or is already deleted.", masterArtifactExtId);
+			}
+		}
+		
+		// clearing all the artifacts from the project
+		Log.log(LOGGER, "Debug", "Clearing all the artifacts from the project [%s]", userProject.name);
+		Instance.PropertyArray.clear(userProject.userArtifacts);
+		
+		// Delete project subscription review sink
+		String projectSubscriptionExtId = WS_RF_CreateUserArtifactExtId(null, null, userProject.name, null, subscriptionId, "REVIEW_SINK");
+		WS_C_CommonReviewSink projectSubscriptionSink = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(projectSubscriptionExtId, true, "/WebStudio/Core/Concepts/Lifecycle/WS_C_CommonReviewSink");
+		if (projectSubscriptionSink != null) {
+			WS_RF_DeleteReviewSink(projectSubscriptionSink);
+		} else {
+			Log.log(LOGGER, "Debug", "Review Sink with ExtId [%s] does not exist", projectSubscriptionExtId);
+		}
+		
+		// Removing LOCKS_REGISTRY
+		String locksRegistryExtId = WS_RF_CreateUserArtifactExtId("LOCKS_REGISTRY", null, userProject.name, null, subscriptionId, null);
+		WS_C_ProjectArtifactLocksRegistry projectLocksRegistry = Instance.getByExtIdByUri(locksRegistryExtId, "/WebStudio/Core/Concepts/Lifecycle/Lock/WS_C_ProjectArtifactLocksRegistry");
+		if (projectLocksRegistry != null) {
+			String[] lockedArtifacts = Instance.PropertyArray.toArrayString(projectLocksRegistry.artifactLockId);
+			Log.log(LOGGER, "Debug", "Total locked artifacts to clear from Locks Registry - %s", lockedArtifacts@length);
+			for (int i=0; i<lockedArtifacts@length; i++) {
+				WS_C_MasterArtifactLock masterArtifactLock = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(lockedArtifacts[i], true, "/WebStudio/Core/Concepts/Lifecycle/WS_C_MasterArtifactLock");
+				if (masterArtifactLock != null) {
+					Log.log(LOGGER, "Debug", "Deleting Master Artifact Lock - %s", masterArtifactLock@extId);
+					Instance.deleteInstance(masterArtifactLock);
+				} else {
+					Log.log(LOGGER, "Debug", "Locked Master Artifact with ExtId [%s] does not exits.", lockedArtifacts[i]);
+				}
+			}
+		} else {
+			Log.log(LOGGER, "Debug", "Project Locks Registry - %s does not exist", locksRegistryExtId);
+		}
+		
+		// finally delete the project
+		Log.log(LOGGER, "Debug", "Deleting User project [%s]", userProject@extId);
+		Instance.deleteInstance(userProject);
+	}
+}

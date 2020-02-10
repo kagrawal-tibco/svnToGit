@@ -1,0 +1,57 @@
+/**
+ * @description Maintain checkin history for a master artifact.
+ */
+void rulefunction WebStudio.Core.RuleFunctions.Utils.Lifecycle.WS_RF_MaintainArtifactCheckinBookkeepingInfo {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		WebStudio.Core.Concepts.Lifecycle.WS_C_CommittableDeltaEntry userCommittableDeltaEntry;
+		WebStudio.Core.Concepts.Lifecycle.WS_C_UserCheckin userCheckin;
+		String subscriptionId;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.Lifecycle.WS_RF_MaintainArtifactCheckinBookkeepingInfo");
+		
+		WS_C_UserArtifactRevision checkinUserArtifactRevision = Instance.PropertyAtom.getConceptReference(userCommittableDeltaEntry.userArtifactRevision, 1L);
+		//Get parent artifact
+		WS_C_UserArtifact parentUserArtifact = WS_RF_IsUserArtifact(checkinUserArtifactRevision.parentArtifactId, checkinUserArtifactRevision.parentArtifactType);
+		String userArtifactPath = parentUserArtifact.artifactPath;
+		
+		String managedProjectName = userCheckin.managedProjectName;
+		String masterArtifactExtId = WS_RF_CreateUserArtifactExtId(null, userArtifactPath, managedProjectName, null, subscriptionId, null);
+		
+		//There is no way to lock this in PP.
+		boolean masterArtifactLock = Cluster.DataGrid.Lock(masterArtifactExtId, -1, false);
+		WS_C_MasterArtifact masterArtifact = null;
+		if (masterArtifactLock) {
+			masterArtifact = Instance.getByExtIdByUri(masterArtifactExtId, "/WebStudio/Core/Concepts/Lifecycle/WS_C_MasterArtifact");
+			if (masterArtifact == null) {
+				masterArtifact = Instance.newInstance("/WebStudio/Core/Concepts/Lifecycle/WS_C_MasterArtifact", masterArtifactExtId);
+				masterArtifact.artifactPath = userArtifactPath;
+				masterArtifact.artifactType = parentUserArtifact.artifactType;
+				masterArtifact.managedProjectName = managedProjectName;
+			}
+			masterArtifact.preMasterRevision = checkinUserArtifactRevision;
+		}
+		if (masterArtifact != null) {
+			long revisionId = userCheckin.revisionId;
+			Log.log(LOGGER, "Debug", "Revision id for new checkin [%s]", revisionId);
+			//Check if it has history
+			AMS_C_ArtifactCheckinHistory checkinHistoryInstance = Instance.PropertyAtom.getContainedConcept(masterArtifact.checkinHistory, 1L);
+			if (checkinHistoryInstance == null) {
+				Log.log(LOGGER, "Debug", "No history found for artifact [%s]", userArtifactPath);
+				checkinHistoryInstance = 
+						Instance.newInstance("/Approval/Concepts/ArtifactsConcepts/AMS_C_ArtifactCheckinHistory", null);
+				Instance.
+					PropertyAtom.
+						setContainedConcept(masterArtifact.checkinHistory, checkinHistoryInstance, 1);	
+			}
+			//Create new book-keeping entry
+			AMS_C_ArtifactCheckinHistoryEntry checkinHistoryEntryInstance = 
+				Instance.newInstance("/Approval/Concepts/ArtifactsConcepts/AMS_C_ArtifactCheckinHistoryEntry", null);
+			checkinHistoryEntryInstance.revisionId = revisionId;	
+			Instance.PropertyArray.appendContainedConcept(checkinHistoryInstance.checkinEntries, checkinHistoryEntryInstance, 1L);
+		}
+	}
+}

@@ -1,0 +1,25 @@
+/**
+ * @description 
+ */
+void rulefunction Monitoring.RuleFunctions.cqueries.DummyCallBack {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String	resultName;
+		boolean	isBatchEnd;
+		boolean	hasEnded;
+		Object	row;
+		Object	closure;
+	}
+	body {
+		if (isBatchEnd) {
+		    return;
+		} else if (hasEnded) {
+		    return;
+		} else {
+		    Object[] columns = row;
+		    Shared.RuleFunctions.log("DummyCallBack","DEBUG","Received ["+BEMM.util.join(columns,",")+"] for "+resultName);
+		}
+	}
+}

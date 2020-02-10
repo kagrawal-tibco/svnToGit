@@ -1,0 +1,50 @@
+<?xml version="1.0"?>
+
+<project name="MAL Manager Code Generator Build" basedir="../" default="jar">
+
+    <target name="init" description="Initializes the build envoirenment">
+        <mkdir dir="${views.dashboard.codegenerator.classes.dir}"/>
+        <mkdir dir="${views.dashboard.codegenerator.lib.dir}"/>
+    </target>
+
+    <target name="compile" depends="init">
+        <!-- compile the mal managers code generator code -->
+        <javac
+            srcdir="${views.dashboard.codegenerator.src.dir}"
+            destdir="${views.dashboard.codegenerator.classes.dir}"
+            classpathref="project.classpath"         	
+        	source="1.6"
+        	target="1.6" >
+            <classpath>
+                <fileset dir="${XDOCLET_LIB}" includes="*.jar" />
+            </classpath>
+        </javac>
+    </target>
+
+    <target name="jar" depends="compile">
+        <path id="views.dashboard.codegenerator.xdoclet.path">
+            <fileset dir="${XDOCLET_LIB}">
+                <include name="*.jar"/>
+            </fileset>
+        </path>
+
+        <taskdef name="xdoclet" classname="xdoclet.DocletTask" classpathref="views.dashboard.codegenerator.xdoclet.path" />
+
+        <xdoclet destdir="${views.dashboard.codegenerator.classes.dir}/META-INF">
+            <fileset dir="${views.dashboard.codegenerator.src.dir}">
+                <include name="com/tibco/cep/dashboard/mal/codegen/*Handler.java" />
+            </fileset>
+            <template templateFile="${views.dashboard.codegenerator.template.dir}/xdoclet-xml.xdt" destinationFile="xdoclet.xml" />
+        </xdoclet>
+
+        <jar destfile="${views.dashboard.codegenerator.lib.dir}/${views.dashboard.codegenerator.lib.name}" basedir="${views.dashboard.codegenerator.classes.dir}"/>
+    </target>
+
+    <target name="clean">
+        <delete dir="${views.dashboard.codegenerator.classes.dir}" failonerror="false"/>
+        <delete failonerror="false">
+            <fileset dir="${views.dashboard.codegenerator.lib.dir}" includes="${views.dashboard.codegenerator.lib.name}"/>
+        </delete>
+    </target>
+
+</project>

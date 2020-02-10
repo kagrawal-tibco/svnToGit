@@ -1,0 +1,57 @@
+/**
+ * @description Convert single filter and children to concept model.
+ */
+void rulefunction WebStudio.Core.RuleFunctions.Utils.RT.Builder.Ops.Fetch.Serialize.WS_RF_SerializeSingleFilter {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object filterEModel;
+		//Keep generic
+		Concept containerConcept;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.RT.Builder.Ops.Fetch.Serialize.WS_RF_SerializeSingleFilter");
+		
+		//This filter can be child of a multi filter or an action command.
+		WS_C_AbstractConditionsFilter filterConcept = 
+			Instance.newInstance("/WebStudio/Core/Concepts/RuleTemplateInstance/Builder/WS_C_AbstractConditionsFilter", null);
+			
+		if (containerConcept instanceof WS_C_AbstractConditionsFilter) {
+			Log.log(LOGGER, "Debug", "Appending filter as a child of a multi filter");
+			WS_C_AbstractConditionsFilter containerFilter = containerConcept;
+			//Append this as a reference
+			Instance.PropertyArray.appendConceptReference(containerFilter.filter, filterConcept, 1L);
+		} else if (containerConcept instanceof WS_C_CommandInfo) {
+			Log.log(LOGGER, "Debug", "Appending filter to action command");
+			WS_C_CommandInfo containerCommand = containerConcept;
+			//Append this as a reference
+			Instance.PropertyArray.appendConceptReference(containerCommand.filter, filterConcept, 1L);
+		}
+		
+		// set Filter Id
+		filterConcept.filterId = WS.RTI.getFilterId(filterEModel);
+		
+		//Set operator
+		String filterOperator = WS.RTI.getFilterOperator(filterEModel);
+		filterConcept.operator = filterOperator;
+		Log.log(LOGGER, "Debug", "NOperator for this filter %s is %s", filterEModel, filterOperator);
+		//Process links
+		Object[] links = WS.RTI.getLinks(filterEModel);
+		Log.log(LOGGER, "Debug", "Number of related links in filter %s are %s", filterEModel, links@length);
+		
+		for (int loop = 0; loop < links@length; loop++) {
+			Object linkEModel = links[loop];
+			WebStudio.
+				Core.
+					RuleFunctions.Utils.RT.Builder.Ops.Fetch.Serialize.WS_RF_SerializeLink(linkEModel, filterConcept);
+		}
+		//Process value if any
+		Object filterValueEModel = WS.RTI.getGenericFilterValue(filterEModel);
+		if (filterValueEModel != null) {
+			WebStudio.
+				Core.
+					RuleFunctions.Utils.RT.Builder.Ops.Fetch.Serialize.WS_RF_SerializeFilterValue(filterValueEModel, filterConcept);
+		}	
+	}
+}

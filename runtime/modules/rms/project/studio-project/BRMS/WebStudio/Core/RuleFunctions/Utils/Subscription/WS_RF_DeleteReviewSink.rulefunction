@@ -1,0 +1,30 @@
+/**
+ * @description 
+ */
+void rulefunction WebStudio.Core.RuleFunctions.Utils.Subscription.WS_RF_DeleteReviewSink {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		WebStudio.Core.Concepts.Lifecycle.WS_C_CommonReviewSink reviewSink;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.Subscription.WS_RF_DeleteReviewSink");
+		
+		Log.log(LOGGER, "Debug", "Processing Review Sink [%s] for deletion", reviewSink@extId);
+		String[] reviewTasks = Instance.PropertyArray.toArrayString(reviewSink.reviewTaskExtIds);
+		Log.log(LOGGER, "Debug", "Total review tasks to clean up - %s", reviewTasks@length);
+		
+		for (int i=0; i<reviewTasks@length; i++) {
+			WS_C_ReviewTask reviewTask = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(reviewTasks[i], true, "/WebStudio/Core/Concepts/Lifecycle/WS_C_ReviewTask");
+			if (reviewTask != null) {
+				WS_RF_DeleteReviewTask(reviewTask);
+			} else {
+				Log.log(LOGGER, "Debug", "Review Task with ExtId [%s] does not exits.", reviewTasks[i]);
+			}
+		}
+		
+		Log.log(LOGGER, "Debug", "Deleting ReviewSink - %s", reviewSink@extId);
+		Instance.deleteInstance(reviewSink);
+	}
+}

@@ -1,0 +1,114 @@
+/**
+ * @description 
+ * @author 
+ */
+rule Shared.Rules.TopologyRuleSet.PurgeTopology_ValidToken {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Shared.Events.reqres.topology.PurgeTopologyRequestEvent	purgetopologyrequestevent;
+		
+	}
+	when {
+		purgetopologyrequestevent.token != null && String.length(purgetopologyrequestevent.token) != 0;
+	}
+	then {
+		Shared.RuleFunctions.log("PurgeTopology_ValidToken","DEBUG","Received PurgeTopologyRequestEvent[token="+purgetopologyrequestevent.token+"]");
+		Shared.Concepts.LoggedInUser user = Instance.getByExtId(purgetopologyrequestevent.token);
+		if (user == null) {
+		    Shared.Events.reqres.FailureResponseEvent event = Shared.Events.reqres.FailureResponseEvent.FailureResponseEvent(null,null,"001","Invalid token");
+		    Event.replyEvent(purgetopologyrequestevent, event);
+		    Event.consumeEvent(purgetopologyrequestevent);
+		    return;
+		}
+		Shared.Concepts.GlobalScoreCard.purgeCounts = Shared.Concepts.GlobalScoreCard.purgeCounts + 1;
+		user.lastAccessTime = System.currentTimeMillis();
+		String siteID = Shared.Concepts.GlobalScoreCard.siteID;
+		if (siteID == null || String.length(String.trim(siteID)) == 0){
+		    Shared.Events.reqres.FailureResponseEvent event = Shared.Events.reqres.FailureResponseEvent.FailureResponseEvent(null,null,"003","Invalid siteid");
+		    Event.replyEvent(purgetopologyrequestevent, event);
+		    Event.consumeEvent(purgetopologyrequestevent);
+		    return;
+		}
+		BEMMUtil.LinkedList.createList("purgetopologystack");
+		BEMMUtil.LinkedList.createList("purgedmonitorableentities");
+		BEMMUtil.LinkedList.createList("purgedviews");
+		boolean scheduleSweep = false;
+		//add the site entity to the top
+		Shared.Concepts.MonitorableEntity site = Instance.getByExtId(siteID);
+		if (site != null) {
+		    Shared.Concepts.MonitorableEntity selectableEntity = null;
+		    BEMMUtil.LinkedList.add("purgetopologystack",0,site);
+		    //repeat the loop till the stack is empty
+		    while (BEMMUtil.LinkedList.isEmpty("purgetopologystack") == false) {
+		        //remove the top most element
+		        Shared.Concepts.MonitorableEntity entity = BEMMUtil.LinkedList.removeByIndex("purgetopologystack",0);
+		        //cycle through it's children and unregister them
+		        int childCnt = entity.children@length;
+		        int i = 0;
+		        while (i < childCnt){
+		            Shared.Concepts.MonitorableEntity child = entity.children[i];
+		            String fqName = getFQName(child);
+		            Shared.RuleFunctions.log("PurgeTopology_ValidToken","DEBUG","Checking active status of "+fqName);
+		            if (child.active == false && child.predefined != true && child.name != "Monitored Objects"){
+		                String typePath = Shared.RuleFunctions.topology.getTypePath(child);
+		                Shared.RuleFunctions.log("PurgeTopology_ValidToken","DEBUG","Attempting to purge "+fqName);
+		                //we mark the entity as purged to prevent reintroduction into the topology via discoverChildren
+		                child.purged = true;
+		                //move the entity to the purged list
+		                if (BEMMUtil.LinkedList.indexOf("purgedmonitorableentities",child) == -1) {
+		                    BEMMUtil.LinkedList.add("purgedmonitorableentities",BEMMUtil.LinkedList.size("purgedmonitorableentities"),child);
+		                    //unregister the health pinger
+		                    BEMM.topology.unregisterPinger(String.split(getFQName(child),":"));
+		                }
+		                //search for all existing views based on the monitorable entity
+	                    for (int j = 0 ; j < child.monitorViews@length ; j = j + 1){
+	                        Shared.Concepts.AbstractMonitorView view = child.monitorViews[j];
+	                        Shared.RuleFunctions.log("PurgeTopology_ValidToken","DEBUG","Attempting to purge "+view@extId);
+	                        if (BEMMUtil.LinkedList.indexOf("purgedviews",view) == -1) {
+	                            BEMMUtil.LinkedList.add("purgedviews",BEMMUtil.LinkedList.size("purgedviews"),view);
+	                            //we do unsubscribe since we want are purging the view
+	                            unsubscribeView(view);
+	                        }
+	                    }
+		                //check if the current user is viewing this entity
+		                if (user.monitoring == child){
+		                    selectableEntity = child.parent;
+		                    while(selectableEntity != null && selectableEntity.active != true){
+		                        selectableEntity = selectableEntity.parent;
+		                    }
+		                    //we need to clean out the list of views
+		                    Instance.PropertyArray.clear(user.monitorView);
+		                }
+		                scheduleSweep = true;
+		            }
+		            i = i + 1;
+		            //add the child to the bottom of the stack
+		            BEMMUtil.LinkedList.add("purgetopologystack", BEMMUtil.LinkedList.size("purgetopologystack"),child);
+		        }
+		    }
+		    if (scheduleSweep == true) {
+		        Shared.RuleFunctions.scheduleSweepEvent();
+		    }
+		    if (selectableEntity == null){
+		        if (user.monitoring != null && user.monitoring.active == true) {
+		            selectableEntity = user.monitoring;
+		        }
+		        else {
+		            selectableEntity = site;
+		        }
+		    }
+		    String siteXML = toXML(site,10,selectableEntity,Shared.Concepts.GlobalScoreCard.purgeCounts);
+		    Shared.RuleFunctions.log("PurgeTopology_ValidToken","DEBUG","Sending "+siteXML+" to User[token="+user@extId+",username="+user.userName+"]");
+		    Shared.Events.reqres.SuccessXMLResponseEvent event = Shared.Events.reqres.SuccessXMLResponseEvent.SuccessXMLResponseEvent(null,siteXML);
+		    Event.replyEvent(purgetopologyrequestevent, event);
+		}
+		else {
+		    Shared.Events.reqres.FailureResponseEvent event = Shared.Events.reqres.FailureResponseEvent.FailureResponseEvent(null,null,"011","Invalid siteID");
+		    Event.replyEvent(purgetopologyrequestevent, event);
+		}
+		Event.consumeEvent(purgetopologyrequestevent);
+	}
+}

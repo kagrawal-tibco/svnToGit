@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<RuleEntityAttrMap xmlns="http://www.tibco.com/cep/bemm/monitoring/metric/config/attrmapconfig" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.tibco.com/cep/bemm/monitoring/rule/config/generated/attrsmap ../xsds/RuleEntityAttrMap.xsd " name="RuleEntityAttrMap">
+   <entity name="instance" displayName="Processing Unit" index="2" schema="BE_MM" cube="BEMMCube" hierarchy="instancehealthhierarchy" dimLevel="minutes" healthParam="instancehealth" healthEntity="instance">
+      <alertText>Processing Unit ${instance.name} is in ${entity.health} state</alertText>
+      <mappings>
+         <!-- Measurements -->
+         <mapping name="threadcount" displayName="Thread Count" type="measurement" index="1" />
+         <mapping name="deadlockedthreadcount" displayName="Deadlocked Thread Count" type="measurement" index="2" />
+         <mapping name="instanceisactive" displayName="Is Running" type="measurement" displayType="BOOLEAN" index="3" />
+         <mapping name="avgcpuusage" displayName="Average CPU(%)" type="measurement" index="4" />
+         <mapping name="avgmemusage" displayName="Average Used Memory(%)" type="measurement" index="5" />
+         <!-- Dimensions -->
+         <mapping name="pu" displayName="Processing Unit" type="dimension" index="6" />
+         <mapping name="instance" displayName="Processing Unit Name" type="dimension" index="7" />
+      </mappings>
+      <actions>
+         <action name="Set-Health-Action" displayName="Set Health" isAdminAction="true" index="1">
+            <alertText>Processing Unit ${instance.name} is in ${entity.health} state</alertText>
+         </action>
+         <action name="Log-Action" displayName="Log To File" index="2">
+            <alertText>Log-Action triggered for Processing Unit ${instance.name}</alertText>
+         </action>
+         <action name="Email-Action" displayName="Send Email" index="3">
+            <alertText>Email-Action triggered for Processing Unit ${instance.name}</alertText>
+         </action>
+         <action name="Alert-Only" displayName="Alert" index="4">
+            <alertText>Alert-Only triggered for Processing Unit ${instance.name}</alertText>
+         </action>
+      </actions>
+   </entity>
+   <entity name="app" displayName="Cluster" schema="BE_MM" cube="BEMMCube" hierarchy="clusterhealthhierarchy" dimLevel="app" index="1" healthParam="apphealth" healthEntity="app">
+      <alertText>Cluster ${application.name} is in ${entity.health} state</alertText>
+      <mappings>
+         <!-- Measurements -->
+         <mapping name="instancepercentactive" displayName="Processing Units Running(%)" type="measurement" index="4" />
+         <mapping name="instancepercentokhealth" displayName="Processing Units in Normal (%)" type="measurement" index="3" />
+         <mapping name="instancepercentwarnhealth" displayName="Processing Units in Warning (%)" type="measurement" index="2" />
+         <mapping name="instancepercentcrithealth" displayName="Processing Units in Critical (%)" type="measurement" index="1" />
+      </mappings>
+      <actions>
+         <action name="Set-Health-Action" displayName="Set Health" isAdminAction="true" index="1">
+            <alertText>Cluster ${application.name} is in ${entity.health} state</alertText>
+         </action>
+         <action name="Log-Action" displayName="Log To File" index="2">
+            <alertText>Log-Action triggered for Cluster ${application.name}</alertText>
+         </action>
+         <action name="Email-Action" displayName="Send Email" index="3">
+            <alertText>Email-Action triggered for Cluster ${application.name}</alertText>
+         </action>
+         <action name="Alert-Only" displayName="Alert" index="4">
+            <alertText>Alert-Only triggered for Cluster ${application.name}</alertText>
+         </action>
+      </actions>
+   </entity>
+   <entity name="inference" type="inference-class" index="3" displayName="RTC Transactions" schema="BE_MM" cube="BEMMCube" hierarchy="inferencehealthhierarchy" dimLevel="minutes" healthParam="instancehealth" healthEntity="instance">
+      <alertText>Processing Unit ${instance.name} is in ${entity.health} state</alertText>
+      <mappings>
+         <!-- Measurements -->
+         <mapping name="pendinglockstorelease" displayName="Pending Locks" type="measurement" index="1" />
+         <mapping name="successfultxn" displayName="RTC Transaction Count" type="measurement" index="2" />
+         <!-- Dimensions -->
+         <mapping name="pu" displayName="Processing Unit" type="dimension" index="3" />
+         <mapping name="instance" displayName="Processing Unit Name" type="dimension" index="4" />
+         <mapping name="agent" displayName="Agent Name" type="dimension" index="5" />
+      </mappings>
+      <actions>
+         <action name="Set-Health-Action" displayName="Set Health" isAdminAction="true" index="1">
+            <alertText>Processing Unit ${instance.name} is in ${entity.health} state</alertText>
+         </action>
+         <action name="Log-Action" displayName="Log To File" index="2">
+            <alertText>Log-Action triggered for Processing Unit ${instance.name}</alertText>
+         </action>
+         <action name="Email-Action" displayName="Send Email" index="3">
+            <alertText>Email-Action triggered for Processing Unit ${instance.name}</alertText>
+         </action>
+         <action name="Alert-Only" displayName="Alert" index="4">
+            <alertText>Alert-Only triggered for Processing Unit ${instance.name}</alertText>
+         </action>
+      </actions>
+   </entity>
+  
+   <entity name="destination" index="4" displayName="Event Throughput" schema="BE_MM" cube="BEMMCube" hierarchy="eventhealthhierarchy" dimLevel="minutes" healthParam="instancehealth" healthEntity="instance">
+      <alertText>Processing Unit ${instance.name} is in ${entity.health} state</alertText>
+      <mappings>
+         <!-- Measurements -->
+         <mapping name="eventreceiverate" displayName="Event Throughput" type="measurement" index="1" />
+         <!-- Dimensions -->
+         <mapping name="pu" displayName="Processing Unit" type="dimension" index="2" />
+         <mapping name="instance" displayName="Processing Unit Name" type="dimension" index="3" />
+         <mapping name="agent" displayName="Agent Name" type="dimension" index="4" />
+         <mapping name="destination" displayName="Destination URI" type="dimension" index="5" />
+      </mappings>
+      <actions>
+         <action name="Set-Health-Action" displayName="Set Health" isAdminAction="true" index="1">
+            <alertText>Processing Unit ${instance.name} is in ${entity.health} state</alertText>
+         </action>
+         <action name="Log-Action" displayName="Log To File" index="2">
+            <alertText>Log-Action triggered for Processing Unit ${instance.name}</alertText>
+         </action>
+         <action name="Email-Action" displayName="Send Email" index="3">
+            <alertText>Email-Action triggered for Processing Unit ${instance.name}</alertText>
+         </action>
+         <action name="Alert-Only" displayName="Alert" index="4">
+            <alertText>Alert-Only triggered for Processing Unit ${instance.name}</alertText>
+         </action>
+      </actions>
+   </entity>
+   <entity name="rule" index="5" displayName="BusinessEvents Rules" schema="BE_MM" cube="BEMMCube" hierarchy="rulehealthhierarchy" dimLevel="rule" healthParam="instancehealth" healthEntity="instance">
+      <alertText>Processing Unit ${instance.name} is in ${entity.health} state</alertText>
+      <mappings>
+         <!--  Measurements-->
+         <mapping name="avgexecutiontime" displayName="Rule Execution Time" type="measurement" index="1" />
+         <!--  Dimensions   -->
+         <mapping name="pu" displayName="Processing Unit" type="dimension" index="2" />
+         <mapping name="instance" displayName="Processing Unit Name" type="dimension" index="3" />
+         <mapping name="agent" displayName="Agent Name" type="dimension" index="4" />
+         <mapping name="rule" displayName="Rule Name" type="dimension" index="5" />
+      </mappings>
+      <actions>
+         <action name="Set-Health-Action" displayName="Set Health" isAdminAction="true" index="1">
+            <alertText>Processing Unit ${instance.name} is in ${entity.health} state</alertText>
+         </action>
+         <action name="Log-Action" displayName="Log To File" index="2">
+            <alertText>Log-Action triggered for Processing Unit ${instance.name}</alertText>
+         </action>
+         <action name="Email-Action" displayName="Send Email" index="3">
+            <alertText>Email-Action triggered for Processing Unit ${instance.name}</alertText>
+         </action>
+         <action name="Alert-Only" displayName="Alert" index="4">
+            <alertText>Alert-Only triggered for Processing Unit ${instance.name}</alertText>
+         </action>
+      </actions>
+   </entity>
+</RuleEntityAttrMap>

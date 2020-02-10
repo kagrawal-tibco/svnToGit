@@ -1,0 +1,82 @@
+/**
+ * @description 
+ * @author Nick-PC
+ */
+rule Shared.Rules.TopologyRuleSet.OnGetGlobalVariables_ValidToken {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		
+		Shared.Events.topology.GetGlobalVariablesEvent getgvevent;
+	}
+	when {
+		getgvevent.token != null && String.length(getgvevent.token) != 0;
+	}
+	then {
+		String family = "OnGetGlobalVariablesEvent";
+		String methodFQName ="";
+		String entityType="";
+		String monitoredEntityName ="";
+
+		try {
+			Shared.RuleFunctions.log(family,"DEBUG","Rule " + family + " fired");
+			Shared.RuleFunctions.log(family,"DEBUG","Monitorable ID: " + getgvevent.token);
+			Shared.Concepts.LoggedInUser user = Instance.getByExtId(getgvevent.token);
+			
+			if (user == null) {
+			    Shared.Events.reqres.FailureResponseEvent event = Shared.Events.reqres.FailureResponseEvent.FailureResponseEvent(null,null,"001","Invalid token");
+			    Event.replyEvent(getgvevent, event);
+			    Event.consumeEvent(getgvevent);
+			    return;
+			}
+			
+			String m_extid = getgvevent.monitorableid;
+			Shared.Concepts.MonitorableEntity machine = Instance.getByExtId(m_extid);
+			if (machine == null) {
+			    Shared.RuleFunctions.log(family,"DEBUG","machine=NULL");
+			    Shared.Events.reqres.FailureResponseEvent event = Shared.Events.reqres.FailureResponseEvent.FailureResponseEvent(null,null,"001","machine not found");
+			    Event.replyEvent(getgvevent, event);
+			    Event.consumeEvent(getgvevent);
+			    return;
+			} else {
+				entityType = machine.type;
+				methodFQName = "/"+entityType + "/getglobalvariables";
+				monitoredEntityName = getFQName(machine);
+				Shared.RuleFunctions.log(family,"DEBUG","MonitorableEntity ID: " + m_extid);
+				
+				if(machine.predefined == false){
+				    Shared.Events.reqres.FailureResponseEvent event = Shared.Events.reqres.FailureResponseEvent.FailureResponseEvent(null,null,"001","can only edit GV for predefined machine");
+				    Event.replyEvent(getgvevent, event);
+				    Shared.RuleFunctions.log(family,"DEBUG","Cannot edit GV and deploy for a non-predefined machine!");
+				    Event.consumeEvent(getgvevent);
+				    return;
+				}
+				
+				String machine_name = machine.topologyProps[1];
+				Shared.RuleFunctions.log(family,"DEBUG","machine_name: " + machine_name + 
+					". About to call getDeploymentGV for dus: " + BEMM.util.urlDecodeString(getgvevent.dusStIdsTokenStr,"UTF-8"));
+				
+				String result = BEMM.topology.getDeploymentGV(machine_name, getgvevent.dusStIdsTokenStr);
+				
+				if(result == null){
+				    Shared.Events.reqres.FailureResponseEvent event = Shared.Events.reqres.FailureResponseEvent.FailureResponseEvent(null,null,"001","Could not get global variables. ");
+				    Event.replyEvent(getgvevent, event);
+				    Shared.RuleFunctions.log(family,"DEBUG","Could not get global variables.");
+				    Event.consumeEvent(getgvevent);
+				    return;
+				}
+				
+				Shared.RuleFunctions.log(family,"DEBUG","GVs XML: " + result);
+		    	Shared.Events.reqres.SuccessXMLResponseEvent event = Shared.Events.reqres.SuccessXMLResponseEvent.SuccessXMLResponseEvent(null,result);
+		    	Event.replyEvent(getgvevent, event);
+			}
+		} catch (Exception e) {
+		    Management.RuleFunctions.Exceptions.printAndSendException(e /*Except Object */,
+									family/*family String */,methodFQName/*methodFQName String */,
+									monitoredEntityName /*monitoredEntityName String */,getgvevent/*requestevent Event */);
+		}
+		Event.consumeEvent(getgvevent);
+	}
+}

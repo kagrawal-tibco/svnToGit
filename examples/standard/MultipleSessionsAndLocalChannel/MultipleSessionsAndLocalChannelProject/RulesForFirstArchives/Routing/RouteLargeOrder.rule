@@ -1,0 +1,22 @@
+/**
+ * @description 
+ * @author 
+ */
+rule RulesForFirstArchives.Routing.RouteLargeOrder {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Events.OrderEvent	order;
+		
+	}
+	when {
+		
+	}
+	then {
+		System.debugOut("Routing to 'toLarge' destination in Local channel. ");
+		Event.routeTo(order, "/Channels/Local/toLarge", "");
+		Event.consumeEvent(order);
+	}
+}

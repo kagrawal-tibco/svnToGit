@@ -1,0 +1,152 @@
+/**
+ * @description Checks single filter of RTI for validation errors.
+ */
+WebStudio.Core.Concepts.DataSources.Problems.WS_C_Problem rulefunction WebStudio.Core.RuleFunctions.Utils.RT.WS_RF_CheckSingleFilter {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		WebStudio.Core.Concepts.RuleTemplateInstance.Builder.WS_C_AbstractConditionsFilter singleFilter;
+		boolean isConditionFilter;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.WS_RF_CheckSingleFilter");
+		boolean isEmptyValue = false;
+		
+		// case for empty RF in Actions, no validation needed in this case
+		if (!isConditionFilter && singleFilter.link@length == 0) { 
+			return null;
+		}
+		
+		// check for empty condition area
+		WebStudio.Core.Concepts.DataSources.Problems.WS_C_Problem problem = null;
+		if (isConditionFilter && singleFilter.link@length == 0 && singleFilter.value == null) {
+			problem = Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/Problems/WS_C_Problem");
+			problem.location = " " + "Filter-Id: " + singleFilter.filterId ;
+			problem.errorMessage = "No conditions defined.";
+			problem.errorCode = "115";
+			problem.problemType = "Semantic";
+			
+			return problem;
+		}
+		
+		//Finding the link type of the filter.
+		WS_C_Link link = singleFilter.link[singleFilter.link@length -1];
+		String linkType = link.type;
+		if (String.indexOfString(linkType, 0, ".") != -1) {
+			linkType = String.substring(linkType,0, String.indexOfString(linkType, 0, "."));
+		}
+		linkType = String.trim(linkType);
+		
+		Log.log(LOGGER,"debug","Link Type of filter is [%s]",linkType);
+		
+		String errorValue = "";
+		
+		//Finding the value of the codition filter.
+		String value = null;
+		if (singleFilter.value.simple != null && !String.equals(singleFilter.value.simple,"")) {
+			value = singleFilter.value.simple;
+		} else if (singleFilter.value.link != null && singleFilter.value.link@length > 0) {
+			WS_C_Link lastLink = singleFilter.value.link[singleFilter.value.link@length -1];
+			value = lastLink.type;
+			if (String.indexOfString(value,0,".") != -1) {
+				value = String.substring(value,0, String.indexOfString(value,0,"."));
+			}
+		} else {
+			if (String.equals(singleFilter.operator,"is true") || String.equals(singleFilter.operator,"set to true")) {
+				value = "true";
+			} else if (String.equals(singleFilter.operator,"is false") || String.equals(singleFilter.operator,"set to false")) {
+				value = "false";
+			} else if (String.equals(singleFilter.operator,"is null") || String.equals(singleFilter.operator,"set to null")) {
+				value = "null";
+			} else if (String.equals(singleFilter.operator,"is not null")) {
+				value = "!null";
+			} else {
+				value = "";
+			}
+			isEmptyValue = true;
+		}
+		value = String.trim(value);
+		
+		String type = linkType;
+		if (String.equals("int",type)) {
+			type = "integer";
+		} 		
+		
+		boolean isValid = true;
+		boolean matchingTypes = false;
+		Object errorMsgBuffer =  String.createBuffer(0);
+		
+		//Check if the filter is simple or empty and then validate the filter value by the filter link type 
+		if (singleFilter.value.simple != null || isEmptyValue) {
+			if (!WS_RF_ValidateValueByType(linkType,value)) {
+				isValid = false;
+				String.clearBuffer(errorMsgBuffer);
+				String.append(errorMsgBuffer,"Incorrect value specified, expected value type '");
+				String.append(errorMsgBuffer,type);
+				String.append(errorMsgBuffer,"'");
+				if (String.equals("DateTime",linkType)) {
+					String.append(errorMsgBuffer,"(Format 'yyyy-MM-dd'T'HH:mm:ss.SSSZ').");
+				} else {
+					String.append(errorMsgBuffer,".");
+				}
+				errorValue = "12";
+			}
+		} else {
+			//Compare the type of the value and link type.
+			if (!(String.indexOfString(value,0,"concept") != -1 || String.indexOfString(value,0,"event") != -1 || String.indexOfString(value,0,"/") != -1)) {
+				if(String.equals(linkType,value)) {
+					matchingTypes = true;
+				}
+			} else if (String.equals(value,linkType) || (String.equals(linkType,"int") && (String.equals(value,"double") || String.equals(value,"long"))) ||
+				(String.equals(linkType,"double") && (String.equals(value,"int") || String.equals(value,"long"))) ||
+				(String.equals(linkType,"long") && (String.equals(value,"int") || String.equals(value,"double"))) ||
+				(String.equals(linkType,"String") && (String.equals(value,"int") || String.equals(value,"double") || String.equals(value,"long") || String.equals(value,"boolean")))
+			) {
+				matchingTypes = true;
+			}
+			if (!matchingTypes) {
+				isValid = false;
+				
+				String.clearBuffer(errorMsgBuffer);
+				String.append(errorMsgBuffer,"Type mismatch, expected type '");
+				String.append(errorMsgBuffer,type);
+				String.append(errorMsgBuffer,"'.");
+				
+				errorValue = "13";
+			}
+		} 
+		
+		//Check if the type of the link matches the operator.
+		if (!WS_RF_ValidateOpertorByType(linkType,singleFilter.operator,isConditionFilter)) {
+			isValid = false;
+					
+			String.clearBuffer(errorMsgBuffer);
+			String.append(errorMsgBuffer,"Invalid operator specified for type '");
+			String.append(errorMsgBuffer,type);
+			String.append(errorMsgBuffer,"'.");			
+				
+			errorValue = "14";	
+		}
+				
+		if (!isValid) {
+			Object linkBuffer = String.createBuffer(0);
+			for (int linkCnt = 0; linkCnt < singleFilter.link@length; linkCnt++) {
+				String.append(linkBuffer,singleFilter.link[linkCnt].name);
+				String.append(linkBuffer,".");
+			}
+			problem = Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/Problems/WS_C_Problem");
+			problem.errorMessage = String.convertBufferToString(errorMsgBuffer);
+			if (isConditionFilter) {
+				problem.errorCode = "1" + errorValue;
+			} else {
+				problem.errorCode = "2" + errorValue;
+			}
+			problem.problemType = "Semantic";
+			String linkNames = String.convertBufferToString(linkBuffer);
+			linkNames = String.substring(linkNames,0,String.length(linkNames)-1);
+			problem.location = linkNames + " " + "Filter-Id: " + singleFilter.filterId;
+		}
+		return problem;
+	}
+}

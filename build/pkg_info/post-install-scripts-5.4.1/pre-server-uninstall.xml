@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<project name="pre-uninstall" default="pre-uninstall" basedir=".">
+	<property file="post-install.properties"/>
+	<import file="common-tasks.xml"/>
+	<target name="pre-uninstall" depends="restore-tra-files, restore-runtime-plugins,restore-creditcard-app-files">
+			<echo message="Done pre-uninstallation tasks." />
+		</target>
+
+		<target name="restore-tra-files">
+			<echo message="Restoring tra files"/>
+			<move todir="${tibco.home}/be/5.4/bin">
+				<fileset dir="${tibco.home}/be/5.4/backup/5.4.1_pre/bin">
+					<include name="be-engine.tra"/>
+				</fileset>
+			</move>
+		</target>
+
+		<target name="restore-runtime-plugins">
+			<echo message="Restoring runtime plugins" />
+			<if>
+				<available file="${tibco.home}/be/5.4/backup/5.4.1_pre" type="dir"/>
+				<then>
+					<move todir="${tibco.home}/be/5.4/lib/eclipse/plugins">
+						<fileset dir="${tibco.home}/be/5.4/backup/5.4.1_pre/lib/eclipse/plugins">
+							<include name="com.tibco.cep.tra_5.4.*.jar*" />
+							<include name="com.tibco.cep.datamodeling.common_5.4.*.jar*"/>
+							<include name="com.tibco.cep.eventstreamprocessing.common_5.4.*.jar*"/>
+						</fileset>
+					</move>
+					<move todir="${tibco.home}/be/5.4/lib/ext/tpcl/apache">
+						<fileset dir="${tibco.home}/be/5.4/backup/5.4.1_pre/lib/ext/tpcl/apache">
+							<include name="ecj-4.2.2.jar*"/>
+						</fileset>
+					</move>
+					<move todir="${tibco.home}/be/5.4/lib/ext/tpcl/tomsawyer">
+						<fileset dir="${tibco.home}/be/5.4/backup/5.4.1_pre/lib/ext/tpcl/tomsawyer">
+							<include name="tsallperspectives40dep.jar*" />
+							<include name="tsgwtperspectives40dep.jar*"/>
+						</fileset>
+					</move>
+					<move todir="${tibco.home}/be/5.4/lib/ext/tpcl">
+						<fileset dir="${tibco.home}/be/5.4/backup/5.4.1_pre/lib/ext/tpcl">
+							<include name="slf4j-api-1.5.2.jar*" />
+							<include name="slf4j-log4j12-1.5.2.jar*"/>
+						</fileset>
+					</move>
+				</then>
+			</if>
+		</target>
+		
+		<target name="restore-creditcard-app-files">
+			<echo message="Restoring creditcard application files" />
+			<if>
+				<available file="${tibco.home}/be/5.4/backup/5.4.1_pre/examples/standard/WebStudio/CreditCardApplication/Events" type="dir"/>
+				<then>
+					<if>
+						<not>
+							<available file="${tibco.home}/be/5.4/examples/standard/WebStudio/CreditCardApplication/Events" type="dir"/>
+						</not>	
+						<then>
+							<mkdir dir="${tibco.home}/be/5.4/examples/standard/WebStudio/CreditCardApplication/Events"/>
+						</then>
+					</if>
+					<move todir="${tibco.home}/be/5.4/examples/standard/WebStudio/CreditCardApplication/Events">
+					<fileset dir="${tibco.home}/be/5.4/backup/5.4.1_pre/examples/standard/WebStudio/CreditCardApplication/Events">
+						<include name="AddNewApplicant.event"/>
+						<include name="AddNewApplicant_EndEvent.event"/>
+						<include name="ProcessNewCreditCardApplicationEvent.event"/>
+						<include name="ProcessNewCreditCardApplication_EndEvent.event"/>
+					</fileset>
+				</move>
+				</then>
+			</if>
+			<if>
+				<available file="${tibco.home}/be/5.4/backup/5.4.1_pre/examples/standard/WebStudio/CreditCardApplication/Processess" type="dir"/>
+				<then>
+					<if>
+						<not>
+							<available file="${tibco.home}/be/5.4/examples/standard/WebStudio/CreditCardApplication/Processess" type="dir"/>
+						</not>	
+						<then>
+							<mkdir dir="${tibco.home}/be/5.4/examples/standard/WebStudio/CreditCardApplication/Processess"/>
+						</then>
+					</if>		
+					<move todir="${tibco.home}/be/5.4/examples/standard/WebStudio/CreditCardApplication/Processess">
+					<fileset dir="${tibco.home}/be/5.4/backup/5.4.1_pre/examples/standard/WebStudio/CreditCardApplication/Processess">
+						<include name="AddNewApplicant.beprocess"/>
+						<include name="CreditCardApplicationProcess.beprocess"/>
+					</fileset>
+				</move>
+				</then>
+			</if>
+		</target>
+		
+</project>	

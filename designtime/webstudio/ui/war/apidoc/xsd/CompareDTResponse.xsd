@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema attributeFormDefault="unqualified"
+	elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+	<xs:element name="response">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element type="xs:int" name="status" />
+				<xs:element type="xs:int" name="startRow" />
+				<xs:element type="xs:int" name="endRow" />
+				<xs:element type="xs:int" name="totalRows" />
+				<xs:element type="xs:string" name="errorCode" maxOccurs="1"
+					minOccurs="0" />
+				<xs:element name="data" maxOccurs="1" minOccurs="0">
+					<xs:complexType mixed="true">
+						<xs:sequence>
+							<xs:element name="record" maxOccurs="unbounded"
+								minOccurs="0">
+								<xs:complexType>
+									<xs:all>
+										<xs:element type="DecisionTableResponse" name="currentVersionContents"
+											minOccurs="0" maxOccurs="1" />
+										<xs:element type="DecisionTableResponse" name="previousVersionContents"
+											minOccurs="0" maxOccurs="1" />
+										<xs:element type="DecisionTableResponse" name="serverContents"
+											minOccurs="0" maxOccurs="1" />
+										<xs:element type="xs:string" name="artifactPath"
+											minOccurs="0" maxOccurs="1" />
+										<xs:element type="xs:string" name="artifactType"
+											minOccurs="0" maxOccurs="1" />
+										<xs:element type="xs:string" name="no" minOccurs="0"
+											maxOccurs="1" />
+									</xs:all>
+									<xs:attribute type="xs:int" name="Id" />
+									<xs:attribute type="xs:string" name="type" use="optional" />
+								</xs:complexType>
+							</xs:element>
+						</xs:sequence>
+						<xs:attribute type="xs:int" name="Id" />
+						<xs:attribute type="xs:string" name="type" use="optional" />
+					</xs:complexType>
+				</xs:element>
+			</xs:sequence>
+			<xs:attribute type="xs:int" name="Id" />
+			<xs:attribute type="xs:string" name="type" use="optional" />
+		</xs:complexType>
+	</xs:element>
+	<xs:complexType name="DecisionTableResponse">
+		<xs:sequence>
+			<xs:element type="xs:string" name="artifactPath" />
+			<xs:element type="xs:string" name="projectName" />
+			<xs:element type="xs:string" name="tableName" />
+			<xs:element type="xs:string" name="folderPath" />
+			<xs:element type="xs:string" name="implementsPath" />
+			<xs:element name="arguments" maxOccurs="unbounded"
+				minOccurs="0">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="argument" maxOccurs="unbounded"
+							minOccurs="0">
+							<xs:complexType>
+								<xs:sequence>
+									<xs:element type="xs:string" name="direction" />
+									<xs:element type="xs:string" name="path" />
+									<xs:element type="xs:string" name="argumentAlias" />
+									<xs:element type="xs:string" name="resourceType" />
+									<xs:element type="xs:boolean" name="isArray" />
+								</xs:sequence>
+								<xs:attribute type="xs:int" name="Id" />
+								<xs:attribute type="xs:string" name="type" use="optional" />
+							</xs:complexType>
+						</xs:element>
+					</xs:sequence>
+					<xs:attribute type="xs:int" name="Id" />
+					<xs:attribute type="xs:string" name="type" use="optional" />
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="decisionTableColumns" maxOccurs="unbounded"
+				minOccurs="0">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="column" maxOccurs="unbounded"
+							minOccurs="0">
+							<xs:complexType>
+								<xs:sequence>
+									<xs:element type="xs:int" name="columnId" minOccurs="0"
+										maxOccurs="1" />
+									<xs:element type="xs:string" name="name" minOccurs="0"
+										maxOccurs="1" />
+									<xs:element type="xs:string" name="property"
+										minOccurs="0" maxOccurs="1" />
+									<xs:element type="xs:string" name="columnType"
+										minOccurs="0" maxOccurs="1" />
+									<xs:element type="xs:string" name="columnAlias"
+										minOccurs="0" maxOccurs="1" />
+									<xs:element type="xs:boolean" name="isArrayProperty"
+										minOccurs="0" maxOccurs="1" />
+									<xs:element type="xs:int" name="propertyType"
+										minOccurs="0" maxOccurs="1" />
+									<xs:element type="xs:boolean" name="isSubstitution"
+										minOccurs="0" maxOccurs="1" />
+									<xs:element type="xs:boolean" name="associatedDM"
+										minOccurs="0" maxOccurs="1" />
+									<xs:element type="xs:string" name="defaultCellText"
+										minOccurs="0" maxOccurs="1" />
+								</xs:sequence>
+								<xs:attribute type="xs:int" name="Id" />
+								<xs:attribute type="xs:string" name="type" use="optional" />
+							</xs:complexType>
+						</xs:element>
+					</xs:sequence>
+					<xs:attribute type="xs:int" name="Id" use="optional" />
+					<xs:attribute type="xs:string" name="type" use="optional" />
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="decisionTablePage">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="tableRule" maxOccurs="unbounded" minOccurs="1">
+							<xs:complexType>
+								<xs:sequence>
+									<xs:element name="metadata">
+										<xs:complexType>
+											<xs:sequence>
+												<xs:element name="property" maxOccurs="unbounded" minOccurs="0">
+													<xs:complexType>
+														<xs:sequence>
+															<xs:element type="xs:string" name="name" />
+															<xs:element type="xs:string" name="type" />
+															<xs:element type="xs:string" name="value" maxOccurs="1" minOccurs="0" />
+														</xs:sequence>
+														<xs:attribute type="xs:int" name="Id" />
+														<xs:attribute type="xs:string" name="type" use="optional" />
+													</xs:complexType>
+												</xs:element>
+											</xs:sequence>
+											<xs:attribute type="xs:int" name="Id" />
+											<xs:attribute type="xs:string" name="type" use="optional" />
+										</xs:complexType>
+									</xs:element>
+									<xs:element name="condition" maxOccurs="unbounded" minOccurs="1">
+										<xs:complexType>
+											<xs:sequence>
+												<xs:element type="xs:int" name="ruleId"
+													minOccurs="0" maxOccurs="1" />
+												<xs:element type="xs:string" name="expression"
+													minOccurs="0" maxOccurs="1" />
+												<xs:element type="xs:string" name="displayValue"
+													minOccurs="0" maxOccurs="1" />
+												<xs:element type="xs:string" name="comment"
+													minOccurs="0" maxOccurs="1" />
+												<xs:element type="xs:int" name="columnId"
+													minOccurs="0" maxOccurs="1" />
+												<xs:element type="xs:string" name="varId"
+													minOccurs="0" maxOccurs="1" />
+												<xs:element type="xs:boolean" name="isEnabled"
+													minOccurs="0" maxOccurs="1" />
+											</xs:sequence>
+											<xs:attribute type="xs:int" name="Id" use="optional" />
+											<xs:attribute type="xs:string" name="type" use="optional" />
+										</xs:complexType>
+									</xs:element>
+									<xs:element name="action" maxOccurs="unbounded"
+										minOccurs="1">
+										<xs:complexType>
+											<xs:sequence>
+												<xs:element type="xs:int" name="ruleId" minOccurs="0" maxOccurs="1"/>
+												<xs:element type="xs:string" name="expression" minOccurs="0" maxOccurs="1"/>
+												<xs:element type="xs:string" name="displayValue" minOccurs="0" maxOccurs="1"/>
+												<xs:element type="xs:int" name="columnId" minOccurs="0" maxOccurs="1"/>
+												<xs:element type="xs:string" name="varId" minOccurs="0" maxOccurs="1"/>
+												<xs:element type="xs:boolean" name="isEnabled" minOccurs="0" maxOccurs="1"/>
+											</xs:sequence>
+											<xs:attribute type="xs:int" name="Id" use="optional" />
+											<xs:attribute type="xs:string" name="type" use="optional" />
+										</xs:complexType>
+									</xs:element>
+									<xs:element type="xs:int" name="ruleId" />
+								</xs:sequence>
+								<xs:attribute type="xs:int" name="Id" use="optional" />
+								<xs:attribute type="xs:string" name="type" use="optional" />
+							</xs:complexType>
+						</xs:element>
+						<xs:element type="xs:int" name="pageNumber" minOccurs="0" maxOccurs="1"/>
+					</xs:sequence>
+					<xs:attribute type="xs:int" name="Id" use="optional" />
+					<xs:attribute type="xs:string" name="type" use="optional" />
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="exceptionTableColumns">
+				<xs:complexType>
+					<xs:attribute type="xs:int" name="Id" />
+					<xs:attribute type="xs:string" name="type" use="optional" />
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="exceptionTablePage">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element type="xs:int" name="pageNumber" minOccurs="0" maxOccurs="1" />
+					</xs:sequence>
+					<xs:attribute type="xs:int" name="Id" />
+					<xs:attribute type="xs:string" name="type" use="optional" />
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="metadata">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="property" maxOccurs="unbounded"
+							minOccurs="0">
+							<xs:complexType>
+								<xs:sequence>
+									<xs:element type="xs:string" name="name" />
+									<xs:element type="xs:string" name="type" />
+									<xs:element type="xs:string" name="value" maxOccurs="1"
+										minOccurs="0" />
+								</xs:sequence>
+								<xs:attribute type="xs:int" name="Id" />
+								<xs:attribute type="xs:string" name="type" use="optional" />
+							</xs:complexType>
+						</xs:element>
+					</xs:sequence>
+					<xs:attribute type="xs:int" name="Id" />
+					<xs:attribute type="xs:string" name="type" use="optional" />
+				</xs:complexType>
+			</xs:element>
+			<xs:element type="xs:int" name="decisionTableTotalPages" />
+			<xs:element type="xs:int" name="exceptionTableTotalPages" />
+			<xs:element type="xs:int" name="decisionTableLastRuleId" />
+			<xs:element type="xs:int" name="exceptionTableLastRuleId" />
+			<xs:element type="xs:boolean" name="decisionTableSinglePageView" />
+		</xs:sequence>
+		<xs:attribute type="xs:int" name="Id" />
+		<xs:attribute type="xs:string" name="type" use="optional" />
+	</xs:complexType>
+</xs:schema>

@@ -1,0 +1,126 @@
+/**
+ * @description Create an instance of view part of RTI based on contained input in save request.
+ */
+WebStudio.Core.Concepts.RuleTemplateInstance.View.WS_C_RuleTemplateInstanceView rulefunction WebStudio.Core.RuleFunctions.Utils.RT.View.Ops.Save.WS_RF_CreateRuleTemplateInstanceContainedView {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String username;
+		String[] roles;
+		String projectName;
+		String artifactContent;
+		String artifactType; 
+		String implementsPath;
+		//Pass reference to child RTI artifact in case it exists.
+		WebStudio.Core.Concepts.RuleTemplateInstance.WS_C_RuleTemplateInstanceUserArtifact childRuleTemplateInstanceUserArtifact;
+		//The base RuleTemplate user artifact created during entity details fetch after checkout.
+		WebStudio.Core.Concepts.RuleTemplateInstance.WS_C_RuleTemplateInstanceUserArtifact baseRuleTemplateUserArtifact;
+		String contentType;
+		int rulePriority;
+		String description;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.RT.View.Ops.Save.WS_RF_CreateRuleTemplateInstanceContainedView");
+		
+		Log.log(LOGGER, "Debug", "Artifact Content %s", artifactContent);
+		WS_C_View ruleTemplateInstanceViewContainedView = null;
+		if (String.equals(contentType, System.getGlobalVariableAsString("WebStudio/CONTENT_TYPE/XML", "application/xml"))) {
+				ruleTemplateInstanceViewContainedView = Instance.
+					createTransientInstanceFromXML("/WebStudio/Core/Concepts/RuleTemplateInstance/View/WS_C_View", artifactContent);
+		} else {
+			ruleTemplateInstanceViewContainedView = Instance.
+					createTransientInstanceFromJSON("/WebStudio/Core/Concepts/RuleTemplateInstance/View/WS_C_View", artifactContent);
+		}
+		WS_C_RuleTemplateInstanceView ruleTemplateInstanceView = 
+			Instance.newTransientInstance("/WebStudio/Core/Concepts/RuleTemplateInstance/View/WS_C_RuleTemplateInstanceView");
+		
+		ruleTemplateInstanceView.implementsPath = implementsPath;	
+		ruleTemplateInstanceView.rulePriority = rulePriority;
+		ruleTemplateInstanceView.description = description;
+		WS.Common.setExtId(ruleTemplateInstanceView, "RTI_VIEW_" + WS.Common.generateUUID());
+		
+		Log.log(LOGGER, "Debug", "Transient instance of rule template instance view details, Implements Path[%s], RulePriority[%s], Description[%s]", implementsPath, rulePriority, description);
+		
+		Instance.PropertyAtom.setContainedConcept(ruleTemplateInstanceView.view, ruleTemplateInstanceViewContainedView, 1L);				
+		//Set domain and other info
+		String[] revisionIds = Instance.PropertyArray.toArrayString(baseRuleTemplateUserArtifact.artifactRevisionIds);
+		//Load instance with this latest revision id
+		String latestRevisionId = revisionIds[0];
+		WS_C_UserArtifactRevision userArtifactRevision = Instance.getByExtIdByUri(latestRevisionId, "/WebStudio/Core/Concepts/WS_C_UserArtifactRevision");
+		
+		Log.log(LOGGER, "Debug", "Base Rule Template View ID for [%s]", userArtifactRevision.artifactContentsId);
+		WS_C_RuleTemplateInstanceView baseRuleTemplateView = WS_RF_GetArtifactContentInstance(userArtifactRevision.artifactContentsId, userArtifactRevision.parentArtifactType);
+		
+		WS_C_View baseContainedView = Instance.PropertyAtom.getContainedConcept(baseRuleTemplateView.view, 1L);
+		//Set presentation text from parent
+		ruleTemplateInstanceViewContainedView.htmlText = baseContainedView.htmlText;
+		Log.log(LOGGER, "Debug", "Base Rule Template Contained View ID for [%s]", baseContainedView@id);
+		WS_C_BindingInfo[] baseRTBindingInfos = Instance.PropertyArray.toArrayContainedConcept(baseContainedView.bindingInfo);
+		
+		// get Rule Template object, useful just incase domaininfo is not found
+		String scsRootURL = WS_RF_GetSCSRootURL(projectName, WS_RF_GetSubscriptionId(username));
+		String artifactContents = WS_RF_FetchContentFromSCS(scsRootURL, projectName, implementsPath, "ruletemplate", username);
+		Object baseRuleTemplateEObject = WS.RT.getBaseRuleTemplate(projectName, artifactContents, "ruletemplate");
+		//Get bindings
+		Object[] rtBindings = WS.RT.View.getRuleTemplateBindings(baseRuleTemplateEObject);
+		
+		//Find ones in the instance
+		WS_C_BindingInfo[] childRTIBindingInfos = Instance.PropertyArray.toArrayContainedConcept(ruleTemplateInstanceViewContainedView.bindingInfo);
+		for (int loop = 0; loop < baseRTBindingInfos@length; loop++) {
+			//TODO check binding id
+			WS_C_BindingInfo baseRTBindingInfo = baseRTBindingInfos[loop];
+			//Find child binding info with this id
+			WS_C_BindingInfo childRTIBindingInfo = WS_RF_GetBindingInfoFromId(childRTIBindingInfos, baseRTBindingInfo.bindingId);
+				
+			if (childRTIBindingInfo != null) {	
+				//Set type as well since type is not obtained in the request.
+				childRTIBindingInfo.type = baseRTBindingInfo.type;	
+			} else {
+				Log.log(LOGGER, "Debug", "Binding ID [%s] not found in child RTI save request", baseRTBindingInfo.bindingId);
+				//Check if previous version exists and has this binding.
+				Log.log(LOGGER, "Debug", "Previous version of artifact [%s] exists", childRuleTemplateInstanceUserArtifact.artifactPath);
+				//This means the artifact exists in WS and at least has one revision.
+				String[] childRTIRevisionIds = Instance.PropertyArray.toArrayString(childRuleTemplateInstanceUserArtifact.artifactRevisionIds);
+				//Get latest
+				if (childRTIRevisionIds@length > 0) {
+					String childRTIRevisionId = childRTIRevisionIds[childRTIRevisionIds@length - 1];
+					WS_C_UserArtifactRevision childRTIPreviousRevision = Instance.getByExtIdByUri(childRTIRevisionId, "/WebStudio/Core/Concepts/WS_C_UserArtifactRevision");
+					
+					Log.log(LOGGER, "Debug", "Previous Artifact Content ID for %s", childRTIPreviousRevision.artifactContentsId);
+					WS_C_RuleTemplateInstanceView previousChildRuleTemplateInstanceView = WS_RF_GetArtifactContentInstance(childRTIPreviousRevision.artifactContentsId, childRTIPreviousRevision.parentArtifactType);
+					WS_C_View previousContainedView = Instance.PropertyAtom.getContainedConcept(previousChildRuleTemplateInstanceView.view, 1L);
+					//Get its bindings
+					WS_C_BindingInfo[] previousChildRTIBindingInfos = Instance.PropertyArray.toArrayContainedConcept(previousContainedView.bindingInfo);
+					//See if this exists in previous version
+					WS_C_BindingInfo previousChildRTIBindingInfo = WS_RF_GetBindingInfoFromId(previousChildRTIBindingInfos, baseRTBindingInfo.bindingId);
+					//If not found, go to base RT.
+					//If found get its value and append it to current child RTI binding to be saved.
+					if (previousChildRTIBindingInfo != null) {
+						Log.log(LOGGER, "Debug", "Previous Artifact Binding Info for binding id [%s] found with ID [%s]", baseRTBindingInfo.bindingId, previousChildRTIBindingInfo@id);
+						childRTIBindingInfo = 
+							Instance.newInstance("/WebStudio/Core/Concepts/RuleTemplateInstance/View/WS_C_BindingInfo", null);
+						childRTIBindingInfo.bindingId = previousChildRTIBindingInfo.bindingId;
+						childRTIBindingInfo.type = previousChildRTIBindingInfo.type;
+						childRTIBindingInfo.value = previousChildRTIBindingInfo.value;
+						//This will ensure that previous saved value is retained and not lost.
+						Instance.PropertyArray.appendContainedConcept(ruleTemplateInstanceViewContainedView.bindingInfo, childRTIBindingInfo, 1L);	
+					}
+				} else {
+					Log.log(LOGGER, "Debug", "No previous Artifact Binding Info for binding ID [%s] found", baseRTBindingInfo.bindingId);
+					childRTIBindingInfo = 
+							Instance.newInstance("/WebStudio/Core/Concepts/RuleTemplateInstance/View/WS_C_BindingInfo", null);
+					childRTIBindingInfo.bindingId = baseRTBindingInfo.bindingId;
+					childRTIBindingInfo.type = baseRTBindingInfo.type;
+					//This will ensure that previous saved value is retained and not lost.
+					Instance.PropertyArray.appendContainedConcept(ruleTemplateInstanceViewContainedView.bindingInfo, childRTIBindingInfo, 1L);
+				}
+			}
+
+			// set Domain model into BindingInfo
+			WS_RF_FetchDomainModelForView(username, roles, projectName, rtBindings, childRTIBindingInfo);
+		}
+		//Return the contained view
+		return ruleTemplateInstanceView;
+	}
+}

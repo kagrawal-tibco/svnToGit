@@ -1,0 +1,58 @@
+/**
+ * @description 
+ * @author 
+ */
+rule Monitoring.Rules.EntityMonitoringRuleSet.onAlertEvent {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Monitoring.Events.cmetrics.AlertEvent	alertevent;
+		
+	}
+	when {
+		alertevent.alertID != null && String.length(String.trim(alertevent.alertID)) != 0 &&
+		alertevent.entityId != null && String.length(String.trim(alertevent.entityId)) != 0;
+	}
+	then {
+		Shared.RuleFunctions.log("onAlertEvent","DEBUG","Received alert event[id="+alertevent.alertID+",entityid="+alertevent.entityId+",severity="+alertevent.severity+",message="+alertevent.message+",received="+alertevent.timeReceived);
+		Shared.Concepts.MonitorableEntity entity = Instance.getByExtId(alertevent.entityId);
+		String fqName = getFQName(entity);
+		BEMM.actions.executeActionOnAlert(fqName, entity.type, alertevent.severity, alertevent.message);
+		Monitoring.Concepts.MonitorableEntityAlertHistory alertHistory = Instance.getByExtId(entity@extId+":alerthistory");
+		if (alertHistory.healthLevelTriggeringAlertID == null) {
+		    Util.HashMap.createMap(alertevent.alertID);
+		    Util.HashMap.put(alertevent.alertID,"id",alertevent.alertID);
+		    Util.HashMap.put(alertevent.alertID,"severity",alertevent.severity);
+		    Util.HashMap.put(alertevent.alertID,"message",alertevent.message);
+		    Util.HashMap.putObject(alertevent.alertID,"received",alertevent.timeReceived);
+		    try {
+		        String healthLevel = Shared.RuleFunctions.topology.determinePropertyValue(entity,"healthLevel",alertevent.alertID);
+		        if (healthLevel != entity.healthLevel){
+		            Shared.RuleFunctions.log("onAlertEvent","DEBUG","Changing health level of "+fqName+" to "+healthLevel);
+		            entity.previousHealthLevel = entity.healthLevel;
+		            entity.healthLevel = healthLevel;
+		            alertHistory.healthLevelTriggeringAlertID = alertevent.alertID;
+		//update health status of parents
+		Shared.Concepts.MonitorableEntity parent = entity.parent;
+		while (parent != null){
+		    String parentFQName = getFQName(parent);
+		    Shared.RuleFunctions.log("onAlertEvent","DEBUG","Triggering "+parentFQName+" health check...");
+		    String newParentHealthLevel = determinePropertyValue(parent,"healthLevel",null);
+		    if (parent.healthLevel != newParentHealthLevel) {
+		        //store current value of health as previous
+		        parent.previousHealthLevel = parent.healthLevel;
+		        parent.healthLevel = newParentHealthLevel;
+		        Shared.RuleFunctions.log("onAlertEvent","DEBUG","Marked "+getFQName(parent)+"'s health level as "+parent.healthLevel);
+		    }
+		    parent = parent.parent;
+		}
+		        }
+		    } finally {
+		        Util.HashMap.deleteMap(alertevent.alertID);
+		    }
+		}
+		Event.consumeEvent(alertevent);
+	}
+}

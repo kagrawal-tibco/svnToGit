@@ -1,0 +1,82 @@
+/**
+ * @description 
+ */
+void rulefunction WebStudio.Core.RuleFunctions.Controller.WS_RF_FrontController {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object asyncContextObject;
+	}
+	body {
+		String BASE_CONTEXT = "/ws/api/";
+		
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Controller.WS_RF_FrontController");
+		
+		Object servletRequest = HTTP.Servlet.getServletRequest(asyncContextObject);
+		
+		WS_C_ResponseData responseData = null;
+		int responseStatus = -1;
+		String errorCode = null;
+		String responseMessage = null;
+		int recordCount = 0;
+		
+		WS_C_TemporaryReturnData tempReturnData = null;
+		
+		// get complete request URL
+		String requestURL = HTTP.Servlet.Request.getRequestURI(servletRequest);
+		Log.log(LOGGER, "Debug", "Request URL %s", requestURL);
+		
+		// interested in only after /ws/api/
+		String contextPath = String.substringAfter(requestURL, BASE_CONTEXT);
+		Log.log(LOGGER, "Debug", "Context Path %s", contextPath);
+		
+		// should have either .xml/.json return type in the request url, else error out
+		String contentType = WS_RF_ValidateContentType(contextPath);
+		if (contentType == null) {
+			contentType = System.getGlobalVariableAsString("WebStudio/CONTENT_TYPE/XML", "application/xml");
+			errorCode = "ERR_4100";
+			responseMessage = "Invalid Request URL, need either .xml/.json suffix.";
+			
+			tempReturnData = WS_RF_CreateTemporaryReturnData(responseStatus, recordCount, errorCode, responseMessage, responseData);
+		} else {
+			// strip off content type from the context path
+			int applicationTypeIndex = String.lastIndexOfString(contextPath, 0, ".");
+			contextPath = String.substring(contextPath, 0, applicationTypeIndex);
+			
+			String loginContext = System.getGlobalVariableAsString("WebStudio/API_CONTEXT/LOGIN", "login");
+			if (String.indexOfString(contextPath, 0, loginContext) != -1) {
+				tempReturnData = WS_RF_PerformLogin(servletRequest, contextPath, null, null);
+				
+			} else {
+				WS_C_LoggedInUser loggedInUser = null;
+				if (contextPath != null && !String.equals(contextPath, System.getGlobalVariableAsString("Webstudio/ApiContext/AboutWebStudio", "about"))) {
+					loggedInUser = WS_RF_ValidateLogin(contextPath, true);
+					if (loggedInUser == null) {
+						responseMessage = "Authentication Failed, User is not logged in.";
+						errorCode = "ERR_1102";
+					
+						tempReturnData = WS_RF_CreateTemporaryReturnData(responseStatus, recordCount, errorCode, responseMessage, responseData);
+					}
+				}
+				
+				if (tempReturnData == null) {
+					String token = WS_RF_GetAPIToken(contextPath);
+					if (String.indexOfString(contextPath, 0, "/") != -1) {
+						contextPath = String.substringAfter(contextPath, token +"/");
+					}
+					// identify, which action to invoke
+					tempReturnData = WS_RF_ActionFactory(contextPath, asyncContextObject, loggedInUser, contentType, token);
+				}
+			}
+		}
+		
+		if (tempReturnData != null) {
+			String responseString = WS_RF_GenerateResponse(tempReturnData, contentType);
+			Log.log(LOGGER, "Debug", "Data source response %s", responseString);
+			
+			//send response
+			WS_RF_SendResponse(asyncContextObject, responseString, contentType, tempReturnData);
+		}
+	}
+}

@@ -1,0 +1,101 @@
+/**
+ * @description 
+ */
+WebStudio.Core.Concepts.DataSources.WS_C_TemporaryReturnData rulefunction WebStudio.Core.RuleFunctions.Actions.WS_RF_FetchUserPreferences {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object servletRequest;
+		WebStudio.Security.Authn.Concepts.WS_C_LoggedInUser loggedInUser;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.WS_RF_FetchUserPreferences");
+		
+		WS_C_ResponseData responseData = null;
+		int responseStatus = 0;
+		int recordCount = 0;
+		String errorCode = null;
+		String responseMessage = null;
+		
+		if (!WS_RF_CheckHTTPMethod(servletRequest, "GET")) {
+			responseStatus = -1;
+			recordCount = 0;
+			errorCode = "ERR_5101";
+			responseMessage = "Invalid HTTP Method, expect method is [GET].";
+		} else {
+			//Lock and load User Preferences concept
+			String userPreferencesExtId = "PREFERENCES@" + loggedInUser.username;
+			Log.log(LOGGER, "Debug", "Trying to acquire lock on User Preference space with ExtId - %s", userPreferencesExtId);
+			boolean userPreferencesLock = Cluster.DataGrid.Lock(userPreferencesExtId, -1, false);
+			if (userPreferencesLock) {
+				Log.log(LOGGER, "Debug", "Lock acquired for User Preference space.");
+				WS_C_UserPreferences userPreferences = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(userPreferencesExtId, false, "/WebStudio/Core/Concepts/WS_C_UserPreferences");
+				
+				if (userPreferences == null) {
+					Log.log(LOGGER, "Debug", "User Preference Space not created yet for this user. Creating one.");
+					userPreferences = Instance.newInstance("/WebStudio/Core/Concepts/WS_C_UserPreferences", userPreferencesExtId);
+					// set default values
+					userPreferences.portalColumns = 2;
+					userPreferences.recentlyOpenedArtifactLimit = 10;
+					userPreferences.favoriteArtifactLimit = 10;
+					userPreferences.itemView = "List";
+					userPreferences.decisionTablePageSize = System.getGlobalVariableAsInt("Webstudio/DecisionTable/pageSize", 100);
+					userPreferences.autoUnLockOnReview = true;
+					userPreferences.groupRelatedArtifacts = true;
+					userPreferences.allowCustomDomainValues = true;
+					userPreferences.showColumnAliasIfPresent = false;
+					userPreferences.autoFitColumnsApproch = "Default";
+					userPreferences.defaultRTIFilterType="Match Any";
+					userPreferences.rtiViewStringWidget = "TextArea";
+				}
+				
+				responseData = 
+					Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/WS_C_ResponseData");
+				
+				WS_C_AbstractDataSourceRecord userPreferencesDataSourceRecord = 
+					Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/Records/WS_C_UserPreferencesDataSourceRecord");
+				WS_C_UserPreferencesDataSourceRecord userPreferencesDSRecord = userPreferencesDataSourceRecord;
+				userPreferencesDSRecord.portalColumns = userPreferences.portalColumns;
+				userPreferencesDSRecord.recentlyOpenedArtifactLimit = userPreferences.recentlyOpenedArtifactLimit;
+				userPreferencesDSRecord.favoriteArtifactLimit = userPreferences.favoriteArtifactLimit;
+				userPreferencesDSRecord.customURL = userPreferences.customURL;
+				userPreferencesDSRecord.scsUserName = userPreferences.scsUserName;
+				userPreferencesDSRecord.scsUserPassword = userPreferences.scsUserPassword;			
+				userPreferencesDSRecord.itemView = userPreferences.itemView;
+				userPreferencesDSRecord.decisionTablePageSize = userPreferences.decisionTablePageSize;
+				userPreferencesDSRecord.autoUnLockOnReview = userPreferences.autoUnLockOnReview;
+				userPreferencesDSRecord.groupRelatedArtifacts = userPreferences.groupRelatedArtifacts;
+				userPreferencesDSRecord.allowCustomDomainValues = userPreferences.allowCustomDomainValues;
+				userPreferencesDSRecord.showColumnAliasIfPresent = userPreferences.showColumnAliasIfPresent;
+				userPreferencesDSRecord.autoFitColumnsApproch = userPreferences.autoFitColumnsApproch;
+				userPreferencesDSRecord.defaultRTIFilterType = userPreferences.defaultRTIFilterType;
+				userPreferencesDSRecord.rtiViewStringWidget = userPreferences.rtiViewStringWidget;
+
+				if (userPreferences.dashboardPortlets != null && userPreferences.dashboardPortlets.portlet@length > 0) {
+					Log.log(LOGGER, "Debug", "Using Dashboard Portlet with instance - %s", userPreferences.dashboardPortlets@id);
+					Log.log(LOGGER, "Debug", "Iterating dashboard portlet associated to the logged in user, total - %s.", userPreferences.dashboardPortlets.portlet@length);
+					
+					userPreferencesDSRecord.dashboardPortlets = Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/WS_C_UserPortlet");
+					for (int i = 0; i < userPreferences.dashboardPortlets.portlet@length; i++) {
+						WS_C_UserPortletDetail userPortletDetail = Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/WS_C_UserPortletDetail");
+						
+						userPortletDetail.portletId = userPreferences.dashboardPortlets.portlet[i].portletId;
+						userPortletDetail.col = userPreferences.dashboardPortlets.portlet[i].col;
+						userPortletDetail.rw = userPreferences.dashboardPortlets.portlet[i].rw;
+						userPortletDetail.height = userPreferences.dashboardPortlets.portlet[i].height;
+						userPortletDetail.colSpan = userPreferences.dashboardPortlets.portlet[i].colSpan;
+						
+						Instance.PropertyArray.appendContainedConcept(userPreferencesDSRecord.dashboardPortlets.portlet, userPortletDetail, 1L);
+					}
+				}
+				
+				Instance.PropertyArray.appendContainedConcept(responseData.record, userPreferencesDataSourceRecord, 1L);
+				
+				recordCount = 1;
+			}
+		}
+		
+		return WS_RF_CreateTemporaryReturnData(responseStatus, recordCount, errorCode, responseMessage, responseData);
+	}
+}

@@ -1,0 +1,127 @@
+<div ng-controller='IndexCtrl' class="appManagementPage tea-theme wrapper row-offcanvas row-offcanvas-left">   
+	<div class="header">
+        <nav class="tbt-top-nav navbar-static-top">
+            <span class="dropdown" dropdown on-toggle="toggled(open)">
+      			<a href class="title dropdown-toggle ng-binding" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+      				<i class="tibcoAbb24x24LogoIcon"></i>
+      				 TIBCO BusinessEvents
+      			</a>
+      			<ul class="dropdown-menu">
+      				<li>        			
+          				<a ng-click="openHelpPageForBETea()">Help</a>
+        			</li>
+      				<li>        			
+          				<a ng-click="showAboutWindowForBETea()">About TIBCO BusinessEvents Enterprise Administrator Agent</a>
+        			</li>
+      			</ul>
+    		</span>
+            <ul class="topNav">
+				<li title="Application" ng-click="showDashboardApplications()" >	
+					<i class="fa fa-cube"></i>					
+					<span>Application Deployments</span>  
+				</li>
+				<li title="Machines" ng-click="showDashboardHosts()" ng-class="{active:true}">
+					<i class="fa fa-desktop"></i>							
+					<span >Machines</span>
+				</li>
+				<li title="Moitoring" ng-click="showAgentStats()">
+					<i class="fa fa-line-chart"></i>							
+					<span >Monitoring</span>
+				</li>
+			</ul>
+        </nav>
+    </div> 
+    <div ng-controller="beMachineViewCtrl">
+    	<div class="adminView row main-frame box-sizing" >
+     		<div ng-show="notification.show">
+      			<div ng-include="'partials/templates/directive/showNotification.html'"></div>
+    		</div>
+    		<div id="loaderdiv" style="display: none;">
+				<img src="images/icons/loader.gif" class="ajax-loader" />
+			</div>
+			<h3>Machine Management</h3>
+			<div ng-include="'partials/templates/aboutBETeaView.html'"></div> 
+        	<div class="row" style="padding-bottom: 10px" ng-if="hasPermission(4)">
+           	 	<ul class="appBox clearfix">  
+					<!-- 
+        			<li class="pull-left">  
+        				<div ng-include="'partials/templates/createHost.html'"></div>        
+        				<div  class="operation"  ng-click="showCreateHost()"> 
+                 			<i class="fa fa-plus-circle fa-lg"></i>
+				 			<span>Add Machine</span>  
+					 	</div>           
+            		</li>   -->     
+            		<li class="button pull-left" ng-if="hasPermission(6)">
+                    	<div ng-class="showOperations()? 'operation' : 'disableOperation'" ng-click="showOperations()? deleteHost(null,true) : null" >
+                       	 	<i  class="fa fa-trash-o"></i>
+                        	<span>Delete</span>
+                    	</div>
+               		 </li>   
+               		<!--  <li class="button pull-left">
+                    	<div ng-class="showOperations()? 'operation' : 'disableOperation'" ng-click="showOperations()? discoverBEHome() : null" >
+                       	 	<i  class="fa fa-search"></i>
+                        	<span>Discover BE Home</span>
+                    	</div>
+               		 </li> -->   
+               		 <li class="button pull-right"> 
+            			<div class="operation" ng-click="reloadPage()">
+      	  		  			<i class="fa fa-refresh"></i>
+				  			<span>Refresh</span> 
+				  		</div>
+            		</li>                  
+        		</ul> 
+        	</div> 
+        	<div class="be_operations_container container">
+        		<div  ng-include="'partials/templates/actionConfirmation.html'"></div>
+        		<div ng-include="'partials/templates/uploadExernalJars.html'"></div>
+	       		<div class="instanceListView">
+		       		<table tea-table class="tea-table" >
+		       			<thead>
+		        			<tr>
+		        				<th class="selection"><input type="checkbox" ng-model="filteredValues.allHostsChecked" ng-change="selectAllHosts()"></th>
+		        				<th>
+		        					Name
+		        					<i title="sort" class="operation fa fa-sort" ng-click="onSortCall('name')" ></i>
+		        				</th>
+		        				<th>
+		        					IP Address
+		        					<i title="sort" class="operation fa fa-sort" ng-click="onSortCall('config.hostIp')" ></i>
+		        				</th>
+		        				<th>
+		        					Status
+		        					<i title="sort" class="operation fa fa-sort" ng-click="onSortCall('status.state')" ></i>
+		        				</th>
+		        				<th>
+		        					OS Type
+		        					<i title="sort" class="operation fa fa-sort" ng-click="onSortCall('config.os')" ></i>
+		        				</th>
+		        				
+		        				<th></th>
+		        			</tr>
+		        		</thead>
+		        		<tbody>
+		        			<tr ng-repeat="host in masterHosts | orderBy:sort.column:sort.descending">
+		        				<td><input type="checkbox" ng-model="host.isChecked" ng-change="selectHostEntity()"></td>
+		        				<td ng-click="showMasterHost(host)"><a>{{host.name}}</a></td>
+		        				<td>{{host.config.hostIp}}</td>
+		        				<td><div class="status" ng-class="{'tea-status-error' : host.config.status=='Unreachable','tea-status-ok':host.config.status=='Reachable','tea-status-warning' : host.config.status=='Starting' || host.config.status=='Stopping'}">{{host.config.status}}</div></td>
+		        				<td>{{host.config.os}}</td>
+		        				<td>
+		        					
+		        					<i title="Delete" style="margin-left: 10px;" class="operation fa fa-trash-o" ng-click="deleteHost(host,false)" ng-if="$parent.hasPermission(6)"></i>
+		        					<!-- <i title="Upload External Jars" style="margin-left: 10px;" class="operation fa fa-upload" ng-click="showUploadExternalJars(host)"></i> -->
+		        				
+		        				</td> 
+		        			</tr>
+		        		</tbody>
+		        		<tfoot>
+		                    <tr>
+		                        <td colspan="11">- END OF DATA -</td>
+		                    </tr>
+		                </tfoot>
+		       		</table>
+		       	</div>
+        	</div>
+		</div>
+    </div> 
+</div>    

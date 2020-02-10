@@ -1,0 +1,23 @@
+/**
+ * @description Rule Function to get referenced checkin from revision id.
+ */
+WebStudio.Core.Concepts.Lifecycle.WS_C_UserCheckin rulefunction Approval.CommonServices.AMS_RF_GetReferencedCheckin {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		long revisionId;
+	}
+	body {
+		//Fetch the task and checkin for this revision id after locking it
+		if (Cluster.DataGrid.Lock("" + revisionId, -1, false)) {
+			WS_C_ReviewTask reviewTask = Instance.getByExtIdByUri("" + revisionId, "/WebStudio/Core/Concepts/Lifecycle/WS_C_ReviewTask");
+			if (reviewTask != null) {
+				//Protected by outer lock.
+				WS_C_UserCheckin referencedCheckin = Instance.getByExtIdByUri(reviewTask.referencedCheckinId, "/WebStudio/Core/Concepts/Lifecycle/WS_C_UserCheckin");
+				return referencedCheckin;
+			}
+		}
+		return null;
+	}
+}

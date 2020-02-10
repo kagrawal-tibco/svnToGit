@@ -1,0 +1,1669 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- edited with XMLSpy v2007 rel. 3 sp1 (http://www.altova.com) by Anand Patil (Syndera) -->
+<xsd:schema xmlns:beviewsconfig="http://www.tibco.com/be/designer" xmlns:designtime="http:///com/tibco/cep/designtime/core/model/designtime_ontology.ecore" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:xsd="http://www.w3.org/2001/XMLSchema" targetNamespace="http://www.tibco.com/be/designer" ecore:nsPrefix="beviewsconfig" ecore:package="com.tibco.cep.designtime.core.model.beviewsconfig">
+	<xsd:annotation>
+		<xsd:documentation>This is the BE Views Configuration Schema</xsd:documentation>
+	</xsd:annotation>
+	<xsd:complexType name="ActionDefinition">
+		<xsd:annotation>
+			<xsd:documentation>
+				Represents the action which can be associated with a
+				visualization
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:BEViewsElement">
+				<xsd:sequence>
+					<xsd:element name="text" type="xsd:string">
+						<xsd:annotation>
+							<xsd:documentation>
+								The name which is to be shown in the
+								menu items
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+					<xsd:element name="type" type="beviewsconfig:ActionEnum"/>
+					<xsd:element name="commandURL" type="xsd:string">
+						<xsd:annotation>
+							<xsd:documentation>
+								Represents the URL which is to be
+								launched if the user clicks on the menu
+								item
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:simpleType name="ActionEnum">
+		<xsd:annotation>
+			<xsd:documentation>
+			Represents the enumeration of the values to be used as 'type' in a 'action'
+            </xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="launchquery"/>
+			<xsd:enumeration value="launchvisualization"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:complexType name="StateDataConfig">
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:DataConfig"/>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="StateSeriesConfig">
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:OneDimSeriesConfig"/>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="StateVisualization">
+		<xsd:annotation>
+			<xsd:appinfo ecore:key="appinfo">&#13;
+				&lt;element isreference="true" name="activity"/&gt;&#13;
+			</xsd:appinfo>
+			<xsd:documentation>
+			Represents the concrete subclass of SeriesConfig to handle activity[step] formatting.
+			Contains two ColumnSeriesConfig [one for indicator and one for content{which can be progressbar/text}]
+			Contains reference to a MDActivity
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:OneDimVisualization">
+				<xsd:attribute name="stateRefID" type="xsd:string"/>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="AlertComponent">
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:ClassifierComponent">
+				<xsd:sequence>
+					<xsd:element name="threshold" type="xsd:int"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="AlertIndicatorStateEnumeration">
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:BEViewsElement">
+				<xsd:sequence>
+					<xsd:element name="fieldName" type="xsd:string"/>
+					<xsd:element name="mapping" type="beviewsconfig:AlertIndicatorStateMap" maxOccurs="unbounded"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="AlertIndicatorStateMap">
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:BEViewsElement">
+				<xsd:sequence>
+					<xsd:element name="fieldValue" type="xsd:string"/>
+					<xsd:element name="indicatorState" type="xsd:string"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="AlertSeriesConfig">
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:ClassifierSeriesConfig">
+				<xsd:sequence>
+					<xsd:element name="indicatorStateEnumeration" type="beviewsconfig:AlertIndicatorStateEnumeration" minOccurs="0" maxOccurs="unbounded"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="AlertVisualization">
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:ClassifierVisualization"/>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:simpleType name="AnchorEnum">
+		<xsd:annotation>
+			<xsd:documentation>
+			Represents the enumeration of the values to be used as 'anchor' [in legend and labelvalue placement]
+            </xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="north"/>
+			<xsd:enumeration value="northeast"/>
+			<xsd:enumeration value="east"/>
+			<xsd:enumeration value="southeast"/>
+			<xsd:enumeration value="south"/>
+			<xsd:enumeration value="southwest"/>
+			<xsd:enumeration value="west"/>
+			<xsd:enumeration value="northwest"/>
+			<xsd:enumeration value="none" ecore:value="-1"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="AnchorPositionEnum">
+		<xsd:annotation>
+			<xsd:documentation>
+			Represents the enumeration of the values to be used as 'anchorposition'
+            </xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="east"/>
+			<xsd:enumeration value="west"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:complexType name="AreaChartVisualization">
+		<xsd:annotation>
+			<xsd:documentation>
+            The extension of chart visualization to handle generation of area charts
+            </xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:LineChartVisualization">
+				<xsd:sequence>
+					<xsd:element name="fillOpacity" type="xsd:int" default="50" minOccurs="0"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="AssetPage">
+		<xsd:annotation>
+			<xsd:documentation>
+            Represents the extension of page type to accomodate asset page type
+            Should contain one instance of 'BluePrintComponent'
+            </xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:Page"/>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="BackgroundFormat">
+		<xsd:annotation>
+			<xsd:documentation>
+			Represents the background color for all visualization.
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:BEViewsElement">
+				<xsd:sequence>
+					<xsd:element name="gradientDirection" type="beviewsconfig:GradientDirectionEnum" minOccurs="0"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="BarChartVisualization">
+		<xsd:annotation>
+			<xsd:documentation>
+            The extension of chart visualization to handle generation of bar charts
+            </xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:ChartVisualization">
+				<xsd:sequence>
+					<xsd:element name="width" type="xsd:int" default="10" minOccurs="0"/>
+					<xsd:element name="topCapThickness" type="xsd:double" default="0.5" minOccurs="0"/>
+					<xsd:element name="overlapPercentage" type="xsd:int" minOccurs="0"/>
+					<xsd:element name="orientation" type="beviewsconfig:OrientationEnum"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="BluePrintComponent">
+		<xsd:annotation>
+			<xsd:documentation>
+			Represents the concrete subclass of Component to handle BluePrint View.
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:Component"/>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="CategoryGuidelineConfig" abstract="true">
+		<xsd:annotation>
+			<xsd:documentation>
+			Represents the base for all category guideline config. This can manifests as 1st column or the chart category axis
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:BEViewsElement">
+				<xsd:sequence>
+					<xsd:element name="headerName" type="xsd:string"/>
+					<xsd:element name="headerFormatStyle" type="beviewsconfig:FormatStyle"/>
+					<xsd:element name="labelFormatStyle" type="beviewsconfig:FormatStyle"/>
+					<xsd:element name="sortOrder" type="beviewsconfig:SortEnum" default="unsorted" minOccurs="0"/>
+				</xsd:sequence>
+				<xsd:attribute name="duplicatesAllowed" type="xsd:boolean"/>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="ChartCategoryDataConfig">
+		<xsd:annotation>
+			<xsd:documentation>
+			Represents the concrete extension for category data extraction,transformation and formatting.
+			Formatter should be an instance of text formatter
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:DataConfig"/>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="ChartCategoryGuidelineConfig">
+		<xsd:annotation>
+			<xsd:documentation>
+            Represents the configuration for category axis in a chart
+            </xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:CategoryGuidelineConfig">
+				<xsd:sequence>
+					<xsd:element name="relativePosition" type="beviewsconfig:RelativeAxisPositionEnum" default="below" minOccurs="0"/>
+					<xsd:element name="placement" type="beviewsconfig:PlacementEnum" default="automatic"/>
+					<xsd:element name="rotation" type="xsd:int" default="0" minOccurs="0"/>
+					<xsd:element name="skipFactor" type="xsd:int" default="0" minOccurs="0"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="ChartComponent">
+		<xsd:annotation>
+			<xsd:documentation>
+			Represents the concrete extension of the component which can handle chart generation.
+			Contains ONLY ChartVisualization(s) and MAX of TWO
+			Single ChartVisualization means a simple chart visualization
+			TWO ChartVisualizations means a overlaid chart visualizaton [currently supports only bar + line, cannot combine pie with bar or line]
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:Component">
+				<xsd:sequence>
+					<xsd:element name="plotArea" type="beviewsconfig:PlotAreaFormat" minOccurs="0"/>
+					<xsd:element name="legend" type="beviewsconfig:LegendFormat" minOccurs="0"/>
+					<xsd:element name="categoryGuidelineConfig" type="beviewsconfig:ChartCategoryGuidelineConfig"/>
+					<xsd:element name="valueGuidelineConfig" type="beviewsconfig:ChartValueGuidelineConfig" minOccurs="0"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="ChartComponentColorSet">
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:ComponentColorSet">
+				<xsd:sequence>
+					<xsd:element name="seriesColor" type="beviewsconfig:SeriesColor" maxOccurs="unbounded" ecore:reference="beviewsconfig:SeriesColor"/>
+					<xsd:element name="guideLineLabelFontColor" type="xsd:string"/>
+					<xsd:element name="guideLineValueLabelFontColor" type="xsd:string"/>
+					<xsd:element name="dataPointLabelFontColor" type="xsd:string"/>
+					<xsd:element name="topCapColor" type="xsd:string"/>
+					<xsd:element name="pieEdgeColor" type="xsd:string"/>
+					<xsd:element name="pieDropShadowColor" type="xsd:string"/>
+					<xsd:element name="lineDropShadowColor" type="xsd:string"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="ChartSeriesConfig">
+		<xsd:annotation>
+			<xsd:appinfo ecore:key="appinfo">&#13;
+			</xsd:appinfo>
+			<xsd:documentation>
+            </xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:TwoDimSeriesConfig">
+				<xsd:sequence>
+					<xsd:element name="anchor" type="beviewsconfig:SeriesAnchorEnum" default="Q1" minOccurs="0"/>
+					<xsd:element name="valueLabelStyle" type="beviewsconfig:ValueLabelStyle" minOccurs="0"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="ChartValueDataConfig">
+		<xsd:annotation>
+			<xsd:documentation>
+			Represents the concrete extension of value data extraction,transformation and formatting.
+			Formatter should be an instance of text formatter
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:DataConfig"/>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="ChartValueGuidelineConfig">
+		<xsd:annotation>
+			<xsd:documentation>
+            Represents the configuration for value axis in a chart
+            </xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:ValueGuidelineConfig">
+				<xsd:sequence>
+					<xsd:element name="labelFormatStyle" type="beviewsconfig:FormatStyle"/>
+					<xsd:element name="headerName" type="xsd:string"/>
+					<xsd:element name="relativePosition" type="beviewsconfig:RelativeAxisPositionEnum" default="left" minOccurs="0"/>
+					<xsd:element name="scale" type="beviewsconfig:ScaleEnum" default="normal"/>
+					<xsd:element name="division" type="xsd:int" default="5"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="ChartVisualization" abstract="true">
+		<xsd:annotation>
+			<xsd:documentation>
+            The base type to handle chart visualizations
+            </xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:TwoDimVisualization">
+				<xsd:sequence>
+					<xsd:element name="sharedCategoryDataConfig" type="beviewsconfig:ChartCategoryDataConfig" minOccurs="0"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="ClassifierComponent">
+		<xsd:annotation>
+			<xsd:documentation>
+			Represents the concrete subclass of Component to handle classifier visualizations. Instead of allowing classifier visualizations
+			to be independent entities we define them inside a component
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:Component"/>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="ClassifierSeriesConfig">
+		<xsd:annotation>
+			<xsd:documentation>
+			Represents the concrete subclass of SeriesConfig to handle classifier formatting.
+			Ignores categoryFormatter present in the SeriesConfig
+			Assumes that the datasource is pointing to a MDClassifier
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:OneDimSeriesConfig"/>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="ClassifierVisualization">
+		<xsd:annotation>
+			<xsd:documentation>
+			Represents the concrete subclass of Visualization to handle classifier formatting.
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:OneDimVisualization"/>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="Component" abstract="true">
+		<xsd:annotation>
+			<xsd:documentation>
+				Represents the component which can be added in a panel
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:BEViewsElement">
+				<xsd:sequence>
+					<xsd:element name="displayName" type="xsd:string"/>
+					<xsd:element name="helpText" type="xsd:string"/>
+					<xsd:element name="componentColorSetIndex" type="xsd:int" default="-1"/>
+					<xsd:element name="seriesColorIndex" type="xsd:int" default="-1" minOccurs="0"/>
+					<xsd:element name="background" type="beviewsconfig:BackgroundFormat"/>
+					<xsd:element name="visualization" type="beviewsconfig:Visualization" maxOccurs="unbounded"/>
+					<xsd:element name="layoutConstraint" type="beviewsconfig:LayoutConstraint" minOccurs="0"/>
+					<xsd:element name="seriesConfigGenerator" type="beviewsconfig:SeriesConfigGenerator" minOccurs="0" maxOccurs="unbounded"/>
+					<xsd:element name="relatedElement" type="beviewsconfig:BEViewsElement" minOccurs="0" maxOccurs="unbounded" ecore:reference="beviewsconfig:Component"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="ComponentColorSet" abstract="true">
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:BEViewsElement">
+				<xsd:sequence>
+					<xsd:element name="displayName" type="xsd:string"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="DashboardPage">
+		<xsd:annotation>
+			<xsd:documentation>
+            Represents the extension of page type to accomodate dashboard page type.
+            One can have many dashboard pages in a beviews config
+            </xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:Page"/>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="DataConfig" abstract="true">
+		<xsd:annotation>
+			<xsd:documentation>
+			Represents the base for all data configuration.
+			This includes extraction and formatting of the data to generate values with appropriate formatting
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:BEViewsElement">
+				<xsd:sequence>
+					<xsd:element name="extractor" type="beviewsconfig:DataExtractor"/>
+					<xsd:element name="formatter" type="beviewsconfig:DataFormat" minOccurs="0"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="DataExtractor">
+		<xsd:annotation>
+			<xsd:appinfo ecore:key="appinfo">&#13;
+				&lt;element isreference="true" name="sourceField"/&gt;&#13;
+			</xsd:appinfo>
+			<xsd:documentation>
+			Represents the extractor which solely extracts data from a 'tuple' using the 'sourceField'
+            - sourceField is an actual md reference to a md field
+            - The field can be actual field or a field from QuerySpec
+            </xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:BEViewsElement">
+				<xsd:sequence>
+					<xsd:element name="sourceField" type="xsd:anyType" ecore:reference="xsd:anyType"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="DataFormat" abstract="true">
+		<xsd:annotation>
+			<xsd:appinfo ecore:key="appinfo">&#13;
+				&lt;element isreference="true" name="actionConfig"/&gt;&#13;
+			</xsd:appinfo>
+			<xsd:documentation>
+			Represents the base for format configuration.
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:BEViewsElement">
+				<xsd:sequence>
+					<xsd:element name="toolTipFormat" type="xsd:string"/>
+					<xsd:element name="displayFormat" type="xsd:string"/>
+					<xsd:element name="formatStyle" type="beviewsconfig:FormatStyle" minOccurs="0"/>
+					<xsd:element name="actionConfig" type="xsd:anyType" minOccurs="0" maxOccurs="unbounded"/>
+				</xsd:sequence>
+				<xsd:attribute name="showLabel" type="xsd:boolean" use="required" ecore:default="true"/>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:simpleType name="DataPlottingEnum">
+		<xsd:annotation>
+			<xsd:documentation>
+			Represents the enumeration of the values to be used as 'dataPlotting' in a 'LineChartVisualization'
+            </xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="none"/>
+			<xsd:enumeration value="all"/>
+			<xsd:enumeration value="edges"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:complexType name="ActionRule">
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:BEViewsElement">
+				<xsd:sequence>
+					<xsd:element name="dataSource" type="beviewsconfig:DataSource" ecore:reference="beviewsconfig:DataSource"/>
+					<xsd:element name="threshold" type="xsd:int"/>
+					<xsd:element name="thresholdUnit" type="beviewsconfig:ThresholdUnitEnum"/>
+					<xsd:element name="alert" type="beviewsconfig:Alert" minOccurs="0" maxOccurs="unbounded" ecore:resolveProxies="true"/>
+					<xsd:element name="params" type="beviewsconfig:QueryParam" minOccurs="0" maxOccurs="unbounded" ecore:resolveProxies="true"/>
+					<xsd:element name="drillableFields" type="xsd:anyType" minOccurs="0" maxOccurs="unbounded" ecore:reference="element:PropertyDefinition"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="DataSource">
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:BEViewsElement">
+				<xsd:sequence>
+					<xsd:element name="query" type="xsd:string"/>
+					<xsd:element name="srcElement" type="xsd:anyType"/>
+					<xsd:element name="params" type="beviewsconfig:QueryParam" minOccurs="0" maxOccurs="unbounded" ecore:resolveProxies="true"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="QueryParam">
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:BEViewsElement">
+				<xsd:sequence>
+					<xsd:element name="value" type="xsd:string"/>
+				</xsd:sequence>
+				<xsd:attribute name="type" type="xsd:string"/>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="Alert">
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:BEViewsElement">
+				<xsd:sequence>
+					<xsd:element name="action" type="beviewsconfig:AlertAction" minOccurs="0" maxOccurs="unbounded" ecore:resolveProxies="true"/>
+				</xsd:sequence>
+				<xsd:attribute name="enabled" type="xsd:boolean" ecore:unsettable="false"/>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="RangeAlert">
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:Alert">
+				<xsd:attribute name="lowerValue" type="xsd:double"/>
+				<xsd:attribute name="upperValue" type="xsd:double"/>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="AlertAction">
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:BEViewsElement">
+				<xsd:attribute name="enabled" type="xsd:boolean" ecore:unsettable="false"/>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="VisualAlertAction">
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:AlertAction">
+				<xsd:sequence>
+					<xsd:element name="fontSize" type="xsd:int" default="11"/>
+					<xsd:element name="fontStyle" type="beviewsconfig:FontStyleEnum" default="normal"/>
+				</xsd:sequence>
+				<xsd:attribute name="fillColor" type="xsd:string"/>
+				<xsd:attribute name="fontColor" type="xsd:string"/>
+				<xsd:attribute name="displayFormat" type="xsd:string"/>
+				<xsd:attribute name="tooltipFormat" type="xsd:string"/>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:simpleType name="DisplayModeEnum">
+		<xsd:annotation>
+			<xsd:documentation>
+			Represents the enumeration of the values to be used as 'displayMode'
+            </xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="inplace"/>
+			<xsd:enumeration value="modaldialog"/>
+			<xsd:enumeration value="nonmodaldialog"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="FieldAlignmentEnum">
+		<xsd:annotation>
+			<xsd:documentation>
+			Represents the enumeration of the values to be used as 'alignment'
+            </xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="left"/>
+			<xsd:enumeration value="center"/>
+			<xsd:enumeration value="right"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:complexType name="FlowLayout">
+		<xsd:annotation>
+			<xsd:documentation>
+            Represents the concrete subclass for layout for handling flow like layouting.
+            </xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:Layout"/>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="FlowLayoutConstraint">
+		<xsd:annotation>
+			<xsd:documentation>
+            Represents the constraints for flow layout.
+            </xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:LayoutConstraint">
+				<xsd:sequence>
+					<xsd:element name="componentRowSpan" type="xsd:int"/>
+					<xsd:element name="componentColSpan" type="xsd:int"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:simpleType name="FontStyleEnum">
+		<xsd:annotation>
+			<xsd:documentation>
+			Represents the enumeration of the values to be used as 'fontstyle'
+            </xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="normal"/>
+			<xsd:enumeration value="italic"/>
+			<xsd:enumeration value="bold"/>
+			<xsd:enumeration value="bold,italic" ecore:name="boldItalic"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:complexType name="ForegroundFormat">
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:BEViewsElement">
+				<xsd:sequence>
+					<xsd:element name="line" type="beviewsconfig:LineEnum" default="both"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="FormatStyle">
+		<xsd:annotation>
+			<xsd:documentation>
+			Represents the visual formatting information for any object being rendered. The font color should be picked up from either the Skin
+			or ComponentColorSet
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:BEViewsElement">
+				<xsd:sequence>
+					<xsd:element name="fontSize" type="xsd:int" default="11"/>
+					<xsd:element name="fontStyle" type="beviewsconfig:FontStyleEnum" default="normal"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:simpleType name="GradientDirectionEnum">
+		<xsd:annotation>
+			<xsd:documentation>
+            </xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="toptobottom"/>
+			<xsd:enumeration value="lefttoright"/>
+			<xsd:enumeration value="bottomtotop"/>
+			<xsd:enumeration value="righttoleft"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:complexType name="IndicatorFieldFormat">
+		<xsd:annotation>
+			<xsd:documentation>
+            Represents the concrete extension of the data format which can handle indicator formatting
+            Depends on visual derivation specs to derive the colors/states of the indicator
+            </xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:TextFieldFormat">
+				<xsd:sequence>
+					<xsd:element name="showTextValue" type="xsd:boolean" default="true"/>
+					<xsd:element name="textValueAnchor" type="beviewsconfig:AnchorPositionEnum" default="east"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="View">
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:BEViewsElement">
+				<xsd:sequence>
+					<xsd:element name="displayName" type="xsd:string"/>
+					<xsd:element name="defaultPage" type="beviewsconfig:Page" ecore:reference="beviewsconfig:Page"/>
+					<xsd:element name="accessiblePage" type="beviewsconfig:Page" maxOccurs="unbounded" ecore:reference="beviewsconfig:Page"/>
+					<xsd:element name="skin" type="beviewsconfig:Skin" ecore:reference="beviewsconfig:Skin"/>
+					<xsd:element name="locale" type="beviewsconfig:ViewLocale"/>
+					<xsd:element name="attribute" type="beviewsconfig:ViewAttribute" minOccurs="0" maxOccurs="unbounded"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="ViewAttribute">
+		<xsd:annotation>
+			<xsd:documentation>
+			Represents any arbitary configuration elements which can be added to the BE Views Config
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:BEViewsElement">
+				<xsd:sequence>
+					<xsd:element name="value" type="xsd:string"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="ViewVersion">
+		<xsd:annotation>
+			<xsd:documentation>
+				Contains information abt the version number of the
+				BE Views Config. Only one instance would exist in a
+				repository and it should not be editable
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:BEViewsElement">
+				<xsd:sequence>
+					<xsd:element name="majorVersionNumber" type="xsd:string"/>
+					<xsd:element name="minorVersionNumber" type="xsd:string"/>
+					<xsd:element name="pointVersionNumber" type="xsd:string"/>
+					<xsd:element name="description" type="xsd:string" minOccurs="0" ecore:name="description1"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="BEViewsElement">
+		<xsd:annotation>
+			<xsd:documentation>
+            The root of all BE views configuration elements.
+            </xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="version" type="xsd:string"/>
+			<xsd:element name="originalElementIdentifier" type="xsd:string"/>
+			<xsd:element name="originalElementVersion" type="xsd:string"/>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="Footer">
+		<xsd:annotation>
+			<xsd:documentation>
+				Contains information which enables customization of the
+				footer in BEViews. Only one instance would exist in a
+				repository
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:BEViewsElement">
+				<xsd:sequence>
+					<xsd:element name="link" type="xsd:string" nillable="true" minOccurs="0" maxOccurs="unbounded"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="Header">
+		<xsd:annotation>
+			<xsd:documentation>
+				Contains information which enables customization of the
+				header in BEViews. Only one instance would exist in a
+				repository
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:BEViewsElement">
+				<xsd:sequence>
+					<xsd:element name="title" type="xsd:string"/>
+					<xsd:element name="brandingImage" type="xsd:string"/>
+					<xsd:element name="brandingText" type="xsd:string"/>
+					<xsd:element name="link" type="xsd:string" nillable="true" minOccurs="0" maxOccurs="unbounded"/>
+					<xsd:element name="headerLink" type="beviewsconfig:HeaderLink" nillable="true" minOccurs="0" maxOccurs="unbounded"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="HeaderLink">
+		<xsd:annotation>
+			<xsd:documentation>
+				Contains information which encapsulates a header link containing
+				URL Name and URL Link
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:BEViewsElement">
+				<xsd:sequence>
+					<xsd:element name="urlName" type="xsd:string"/>
+					<xsd:element name="urlLink" type="xsd:string"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="ViewLocale">
+		<xsd:annotation>
+			<xsd:documentation>
+            We may want to make it reusable element.
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:BEViewsElement">
+				<xsd:sequence>
+					<xsd:element name="displayName" type="xsd:string"/>
+					<xsd:element name="locale" type="xsd:string"/>
+					<xsd:element name="timeZone" type="xsd:string"/>
+					<xsd:element name="timeFormat" type="xsd:string"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="Login">
+		<xsd:annotation>
+			<xsd:documentation>
+				Contains information which enables customization of the
+				BEViews login dialog. Only one instance would exist in a
+				repository
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:BEViewsElement">
+				<xsd:sequence>
+					<xsd:element name="title" type="xsd:string"/>
+					<xsd:element name="imageURL" type="xsd:string"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="Skin">
+		<xsd:annotation>
+			<xsd:documentation>
+				Contains information which enables skinning in BEViews.
+				Contains a default component color set reference and a
+				array of all supported color sets Contains the font
+				color and component background color , optional
+				background gradient color and foreground color
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:BEViewsElement">
+				<xsd:sequence>
+					<xsd:element name="displayName" type="xsd:string"/>
+					<xsd:element name="defaultComponentColorSet" type="beviewsconfig:ComponentColorSet" maxOccurs="unbounded" ecore:reference="beviewsconfig:ComponentColorSet"/>
+					<xsd:element name="componentColorSet" type="beviewsconfig:ComponentColorSet" maxOccurs="unbounded" ecore:reference="beviewsconfig:ComponentColorSet"/>
+					<xsd:element name="fontColor" type="xsd:string"/>
+					<xsd:element name="componentBackGroundColor" type="xsd:string"/>
+					<xsd:element name="componentBackGroundGradientEndColor" type="xsd:string" minOccurs="0"/>
+					<xsd:element name="componentForeGroundColor" type="xsd:string"/>
+					<xsd:element name="visualizationBackGroundColor" type="xsd:string"/>
+					<xsd:element name="visualizationBackGroundGradientEndColor" type="xsd:string" minOccurs="0"/>
+					<xsd:element name="visualizationForeGroundColor" type="xsd:string"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="Layout" abstract="true">
+		<xsd:annotation>
+			<xsd:documentation>
+            Represents the layout for a panel.
+            </xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:BEViewsElement">
+				<xsd:sequence>
+					<xsd:element name="repositioningAllowed" type="xsd:boolean"/>
+					<xsd:element name="componentWidth" type="xsd:int"/>
+					<xsd:element name="componentHeight" type="xsd:int"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="LayoutConstraint" abstract="true">
+		<xsd:annotation>
+			<xsd:documentation>
+            Represents the constraints which can be applied to a component within a layout.
+            </xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:BEViewsElement"/>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="LegendFormat">
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:BEViewsElement">
+				<xsd:sequence>
+					<xsd:element name="orientation" type="beviewsconfig:OrientationEnum"/>
+					<xsd:element name="anchor" type="beviewsconfig:AnchorEnum"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="LineChartVisualization">
+		<xsd:annotation>
+			<xsd:documentation>
+            The extension of chart visualization to handle generation of line charts
+            </xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:ChartVisualization">
+				<xsd:sequence>
+					<xsd:element name="lineThickness" type="xsd:int" default="3" minOccurs="0"/>
+					<xsd:element name="lineSmoothness" type="xsd:string" minOccurs="0"/>
+					<xsd:element name="dataPlotting" type="beviewsconfig:DataPlottingEnum" default="all" minOccurs="0"/>
+					<xsd:element name="plotShape" type="beviewsconfig:PlotShapeEnum" default="circle" minOccurs="0"/>
+					<xsd:element name="plotShapeDimension" type="xsd:int" default="5" minOccurs="0"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:simpleType name="LineEnum">
+		<xsd:annotation>
+			<xsd:documentation>
+			Represents the enumeration of the values to be used as 'lines'
+            </xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="none"/>
+			<xsd:enumeration value="vertical"/>
+			<xsd:enumeration value="horizontal"/>
+			<xsd:enumeration value="both"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:complexType name="OneDimSeriesConfig">
+		<xsd:annotation>
+			<xsd:documentation>
+			Represents the concrete extension of the series config to handle single dimensional series configs.
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:SeriesConfig">
+				<xsd:sequence>
+					<xsd:element name="valueDataConfig" type="beviewsconfig:DataConfig" maxOccurs="unbounded"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="OneDimVisualization">
+		<xsd:annotation>
+			<xsd:documentation>
+			Represents the concrete extension of the visualization to handle single dimensional visualizations.
+			Should contain ONLY one series config of type OneDimSeriesConfig
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:Visualization">
+				<xsd:sequence>
+					<xsd:element name="valueGuidelineConfig" type="beviewsconfig:ValueGuidelineConfig" minOccurs="0"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:simpleType name="OrientationEnum">
+		<xsd:annotation>
+			<xsd:documentation>
+        	Represents the enumeration of the values to be used as 'orientation' [in legend and barchartvisualization]
+            </xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="vertical"/>
+			<xsd:enumeration value="horizontal"/>
+			<xsd:enumeration value="none" ecore:value="-1"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:complexType name="Page" abstract="true">
+		<xsd:annotation>
+			<xsd:documentation>
+				Represents the page in the repository
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:BEViewsElement">
+				<xsd:sequence>
+					<xsd:element name="displayName" type="xsd:string"/>
+					<xsd:element name="displayMode" type="beviewsconfig:DisplayModeEnum" default="inplace"/>
+					<xsd:element name="visualization" type="beviewsconfig:PageVisualization" minOccurs="0" ecore:resolveProxies="true"/>
+					<xsd:element name="partition" type="beviewsconfig:Partition" maxOccurs="unbounded"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="PageSelectorComponent">
+		<xsd:annotation>
+			<xsd:appinfo ecore:key="appinfo">&#13;
+			</xsd:appinfo>
+			<xsd:documentation>
+			Represents the concrete subclass of Component to handle pageset selector component.
+			Contains a single TextVisualization which represents the global indicator.
+				The single TextVisualization should contain a single ColumnSeriesConfig which has a single value formatter which is of type indicator
+			Contains 'n' PageSetVisualization each represents a pageset .
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:Component"/>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="PageVisualization">
+		<xsd:annotation>
+			<xsd:appinfo ecore:key="appinfo">&#13;
+				&lt;element isreference="true" name="pageSet"/&gt;&#13;
+			</xsd:appinfo>
+			<xsd:documentation>
+			Represents the concrete subclass of Visualization to handle pageset selection row in the pageset selector.
+			Contains one/tow ColumnSeriesConfig
+				if one then the ColumnSeriesConfig contains two valueformatters which give the text and indicator
+				if two then the ColumnSeriesConfig need to map to each other via the CategoryFormatter.
+					One ColumnSeriesConfig contains indicator and the other text
+			Contains reference to a PageSet
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:TextVisualization"/>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="Panel">
+		<xsd:annotation>
+			<xsd:appinfo ecore:key="appinfo">&#13;
+				&lt;element isreference="true" name="component"/&gt;&#13;
+			</xsd:appinfo>
+			<xsd:documentation>
+				Represents the panel in a partition. Panel can contain
+				concrete subsclasses of Component. If the panel contains
+				more then one component (as in metric viewer), then the
+				panel should have a layout defined [can be defaulted to
+				FlowLayout for 2.3]
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:BEViewsElement">
+				<xsd:sequence>
+					<xsd:element name="displayName" type="xsd:string"/>
+					<xsd:element name="span" type="xsd:string"/>
+					<xsd:element name="scrollBar" type="beviewsconfig:ScrollBarConfigEnum"/>
+					<xsd:element name="state" type="beviewsconfig:PanelStateEnum"/>
+					<xsd:element name="maximizable" type="xsd:boolean"/>
+					<xsd:element name="minimizable" type="xsd:boolean"/>
+					<xsd:element name="component" type="beviewsconfig:Component" maxOccurs="unbounded" ecore:reference="beviewsconfig:Component"/>
+					<xsd:element name="layout" type="beviewsconfig:Layout" minOccurs="0"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:simpleType name="PanelStateEnum">
+		<xsd:annotation>
+			<xsd:documentation>
+			Represents the enumeration of the values to be used as 'state' in a 'panel'
+            </xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="maximized"/>
+			<xsd:enumeration value="minimized"/>
+			<xsd:enumeration value="normal"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:complexType name="Partition">
+		<xsd:annotation>
+			<xsd:appinfo ecore:key="appinfo">&#13;
+				&lt;element isreference="true" name="panel"/&gt;&#13;
+			</xsd:appinfo>
+			<xsd:documentation>
+            Represents the partition in a page. Partition can be vertical or horizontal.
+            For 2.3 we will support only vertical partitions
+            </xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:BEViewsElement">
+				<xsd:sequence>
+					<xsd:element name="displayName" type="xsd:string"/>
+					<xsd:element name="vertical" type="xsd:boolean" default="true"/>
+					<xsd:element name="span" type="xsd:string"/>
+					<xsd:element name="state" type="beviewsconfig:PartitionStateEnum"/>
+					<xsd:element name="panel" type="beviewsconfig:Panel" maxOccurs="unbounded"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:simpleType name="PartitionStateEnum">
+		<xsd:annotation>
+			<xsd:documentation>
+            Represents the enumeration of the values to be used as 'state' in a 'partition'
+           	</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="open"/>
+			<xsd:enumeration value="closed"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="PieChartDirectionEnum">
+		<xsd:annotation>
+			<xsd:documentation>
+			Represents the enumeration of the values to be used as 'direction'
+            </xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="clockwise"/>
+			<xsd:enumeration value="counterclockwise"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:complexType name="PieChartVisualization">
+		<xsd:annotation>
+			<xsd:documentation>
+            The extension of chart visualization to handle generation of pie charts
+            </xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:ChartVisualization">
+				<xsd:sequence>
+					<xsd:element name="startingAngle" type="xsd:int" default="0" minOccurs="0"/>
+					<xsd:element name="direction" type="beviewsconfig:PieChartDirectionEnum" default="clockwise" minOccurs="0"/>
+					<xsd:element name="sector" type="xsd:int" minOccurs="0"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:simpleType name="PlacementEnum">
+		<xsd:annotation>
+			<xsd:documentation>
+			Represents the enumeration of the values to be used as 'placement'
+            </xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="automatic"/>
+			<xsd:enumeration value="continous"/>
+			<xsd:enumeration value="staggered"/>
+			<xsd:enumeration value="skipped"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:complexType name="PlotAreaFormat">
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:BEViewsElement">
+				<xsd:sequence>
+					<xsd:element name="background" type="beviewsconfig:BackgroundFormat"/>
+					<xsd:element name="foreground" type="beviewsconfig:ForegroundFormat">
+						<xsd:annotation>
+							<xsd:documentation>
+		                    Decides the pattern to be used as background in the plot area. This is an optional element. Absence of this indicates plain plotting area background.
+		                    </xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:simpleType name="PlotShapeEnum">
+		<xsd:annotation>
+			<xsd:documentation>
+			Represents the enumeration of the values to be used as 'plotshape'
+            </xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="square"/>
+			<xsd:enumeration value="circle"/>
+			<xsd:enumeration value="triangle"/>
+			<xsd:enumeration value="cross"/>
+			<xsd:enumeration value="diamond"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:complexType name="StateMachineComponent">
+		<xsd:annotation>
+			<xsd:appinfo ecore:key="appinfo">&#13;
+				&lt;element isreference="true" name="processModel"/&gt;&#13;
+			</xsd:appinfo>
+			<xsd:documentation>
+			Represents the concrete subclass of Component to handle process mode visualization.
+			Contains 'n' ActivityVisualization where 'n' is equal to the number of MDActivity instances in the MDProc
+			Contains reference to a MDProc
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:Component">
+				<xsd:sequence>
+					<xsd:element name="stateMachine" type="xsd:anyType"/>
+				</xsd:sequence>
+				<xsd:attribute default="80" name="stateVisualizationWidth" type="xsd:int"/>
+				<xsd:attribute default="40" name="stateVisualizationHeight" type="xsd:int"/>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="ValueOption" abstract="true">
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:BEViewsElement"/>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="ConstantValueOption">
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:ValueOption">
+				<xsd:attribute name="value" type="xsd:double"/>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="FieldReferenceValueOption">
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:ValueOption">
+				<xsd:sequence>
+					<xsd:element name="field" type="xsd:anyType"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="ProgressBarFieldFormat">
+		<xsd:annotation>
+			<xsd:documentation>
+            Represents the concrete extension of the data format which can handle progress bar formatting
+            Depends on visual derivation specs to derive the colors of the progress bar
+            </xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:IndicatorFieldFormat">
+				<xsd:sequence>
+					<xsd:element name="minValue" type="beviewsconfig:ValueOption"/>
+					<xsd:element name="maxValue" type="beviewsconfig:ValueOption"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="QueryManagerComponent">
+		<xsd:annotation>
+			<xsd:documentation>
+			Represents the concrete subclass of Component to handle query manager view.
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:Component"/>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="RangePlotChartSeriesConfig">
+		<xsd:annotation>
+			<xsd:appinfo ecore:key="appinfo">&#13;
+			</xsd:appinfo>
+			<xsd:documentation>
+            </xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:ChartSeriesConfig">
+				<xsd:sequence>
+					<xsd:element name="type" type="beviewsconfig:RangePlotChartSeriesTypeEnum"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:simpleType name="RangePlotChartSeriesTypeEnum">
+		<xsd:annotation>
+			<xsd:documentation>
+			Represents the enumeration of the values to be used as 'type' in a 'RangePlotChartSeries'
+            </xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="min"/>
+			<xsd:enumeration value="current"/>
+			<xsd:enumeration value="max"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:complexType name="RangePlotChartVisualization">
+		<xsd:annotation>
+			<xsd:documentation>
+            The extension of chart visualization to handle generation of range plot charts
+            </xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:ChartVisualization">
+				<xsd:sequence>
+					<xsd:element name="plotShape" type="beviewsconfig:PlotShapeEnum" default="circle" minOccurs="0"/>
+					<xsd:element name="plotShapeDimension" type="xsd:int" default="3" minOccurs="0"/>
+					<xsd:element name="whiskerThickness" type="xsd:int" default="2" minOccurs="0"/>
+					<xsd:element name="whiskerWidth" type="xsd:int" default="5" minOccurs="0"/>
+					<xsd:element name="orientation" type="beviewsconfig:OrientationEnum"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="RelatedAssetsComponent">
+		<xsd:annotation>
+			<xsd:documentation>
+			Represents the concrete subclass of Component to handle Related Assets View.
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:Component"/>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:simpleType name="RelativeAxisPositionEnum">
+		<xsd:annotation>
+			<xsd:documentation>
+			Represents the enumeration of the values to be used as 'relativeposition' [in category and value axis]
+            </xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="left"/>
+			<xsd:enumeration value="right"/>
+			<xsd:enumeration value="above"/>
+			<xsd:enumeration value="below"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="ScaleEnum">
+		<xsd:annotation>
+			<xsd:documentation>
+			Represents the enumeration of the values to be used as 'scale'
+            </xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="normal"/>
+			<xsd:enumeration value="none"/>
+			<xsd:enumeration value="thousands"/>
+			<xsd:enumeration value="billions"/>
+			<xsd:enumeration value="millions"/>
+			<xsd:enumeration value="trillions"/>
+			<xsd:enumeration value="quadrillions"/>
+			<xsd:enumeration value="logarithmic"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:complexType name="ScatterPlotChartVisualization">
+		<xsd:annotation>
+			<xsd:documentation>
+            The extension of chart visualization to handle generation of line charts
+            </xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:ChartVisualization">
+				<xsd:sequence>
+					<xsd:element name="plotShape" type="beviewsconfig:PlotShapeEnum" default="circle" minOccurs="0"/>
+					<xsd:element name="plotShapeDimension" type="xsd:int" default="5" minOccurs="0"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:simpleType name="ScrollBarConfigEnum">
+		<xsd:annotation>
+			<xsd:documentation>
+			Represents the enumeration of the values to be used as 'scrollbar'
+            </xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="auto"/>
+			<xsd:enumeration value="never"/>
+			<xsd:enumeration value="yes"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:complexType name="SearchPage">
+		<xsd:annotation>
+			<xsd:documentation>
+            Represents the extension of page type to accomodate search page type.
+            Should contain one instance of 'QueryManagerComponent', 'SearchViewComponent' and 'RelatedAssetsComponent'
+            </xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:Page"/>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="SearchViewComponent">
+		<xsd:annotation>
+			<xsd:documentation>
+			Represents the concrete subclass of Component to handle search result view.
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:Component"/>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:simpleType name="SeriesAnchorEnum">
+		<xsd:annotation>
+			<xsd:documentation>
+			Represents the enumeration of the values to be used as 'anchor' in a 'seriesconfig'
+            </xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Q1"/>
+			<xsd:enumeration value="Q2"/>
+			<xsd:enumeration value="Q3"/>
+			<xsd:enumeration value="Q4"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:complexType name="SeriesColor">
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:BEViewsElement">
+				<xsd:sequence>
+					<xsd:element name="baseColor" type="xsd:string"/>
+					<xsd:element name="highlightColor" type="xsd:string" default="FFFFFF" nillable="true" minOccurs="0"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="SeriesConfig" abstract="true">
+		<xsd:annotation>
+			<xsd:appinfo ecore:key="appinfo">&#13;
+				&lt;element isreference="true" name="dataSource"/&gt;&#13;
+				&lt;element isreference="true" name="queryLink"/&gt;&#13;
+				&lt;element isreference="true" name="rollOverConfig"/&gt;&#13;
+			</xsd:appinfo>
+			<xsd:documentation>
+			Represents the base for all series configs. A visualization can contain many series configs.
+			The concrete subclasses dictate what goes in the series configs.
+			DataSource points to MDViewDataSource
+			QueryLink points to a MDLanguageContainer
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:BEViewsElement">
+				<xsd:sequence>
+					<xsd:element name="displayName" type="xsd:string"/>
+					<xsd:element name="toolTip" type="xsd:string" minOccurs="0"/>
+					<xsd:element name="actionRule" type="beviewsconfig:ActionRule" ecore:name="actionRule"/>
+					<xsd:element name="queryLink" type="xsd:anyType" minOccurs="0"/>
+					<xsd:element name="rollOverConfig" type="xsd:anyType" minOccurs="0"/>
+					<xsd:element name="relatedElement" type="beviewsconfig:BEViewsElement" minOccurs="0" maxOccurs="unbounded" ecore:reference="beviewsconfig:Component"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="SeriesConfigGenerator">
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:BEViewsElement">
+				<xsd:sequence>
+					<xsd:element name="field" type="xsd:anyType"/>
+					<xsd:element name="condition" type="xsd:string"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:simpleType name="SortEnum">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="unsorted"/>
+			<xsd:enumeration value="ascending"/>
+			<xsd:enumeration value="descending"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:complexType name="TextCategoryDataConfig">
+		<xsd:annotation>
+			<xsd:documentation>
+			Represents the concrete extension of data config for data category data extraction,transformation and formatting.
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:DataConfig"/>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="TextCategoryGuidelineConfig">
+		<xsd:annotation>
+			<xsd:documentation>
+			Represents the concrete extension of category guide line config.
+			Manifests as the first column in a text metric
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:CategoryGuidelineConfig">
+				<xsd:sequence>
+					<xsd:element name="headerAlignment" type="beviewsconfig:FieldAlignmentEnum" default="center" minOccurs="0"/>
+					<xsd:element name="labelAlignment" type="beviewsconfig:FieldAlignmentEnum" default="center"/>
+					<xsd:element name="width" type="xsd:string"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="TextComponent">
+		<xsd:annotation>
+			<xsd:documentation>
+			Represents the concrete extension of the component which can handle tabular text generation.
+			Contains ONLY TextVisualization(s)
+			Single TextVisualization means a simple text metric visualization
+			Many TextVisualizations means a complex multi metric visualizaton
+				[in this mode, the showHeader should be false and all series configs should have same number of field formatters]
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:Component"/>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="TextComponentColorSet">
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:ComponentColorSet">
+				<xsd:sequence>
+					<xsd:element name="headerColor" type="xsd:string"/>
+					<xsd:element name="headerRollOverColor" type="xsd:string" minOccurs="0"/>
+					<xsd:element name="headerTextFontColor" type="xsd:string"/>
+					<xsd:element name="headerSeparatorColor" type="xsd:string" minOccurs="0"/>
+					<xsd:element name="cellColor" type="xsd:string"/>
+					<xsd:element name="cellTextFontColor" type="xsd:string"/>
+					<xsd:element name="rowSeparatorColor" type="xsd:string"/>
+					<xsd:element name="rowRollOverColor" type="xsd:string"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="TextFieldFormat">
+		<xsd:annotation>
+			<xsd:documentation>
+			Represents the concrete extension of the data format which can handle text formatting
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:DataFormat"/>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="TextSeriesConfig">
+		<xsd:annotation>
+			<xsd:documentation>
+			Represents the concrete extension of TwoDimSeriesConfig to handle text visualization.
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:TwoDimSeriesConfig"/>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="TextValueDataConfig">
+		<xsd:annotation>
+			<xsd:documentation>
+			Represents the concrete extension of data config to handler value data extraction,transformation and formatting.
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:DataConfig">
+				<xsd:sequence>
+					<xsd:element name="headerName" type="xsd:string"/>
+					<xsd:element name="headerFormatStyle" type="beviewsconfig:FormatStyle" minOccurs="0"/>
+					<xsd:element name="width" type="xsd:string"/>
+					<xsd:element name="alignment" type="beviewsconfig:FieldAlignmentEnum" default="center"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="TextValueGuidelineConfig">
+		<xsd:annotation>
+			<xsd:documentation>
+			Represents the concrete extension of value guide line config.
+			Provides global header styling configuration
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:ValueGuidelineConfig">
+				<xsd:sequence>
+					<xsd:element name="headerAlignment" type="beviewsconfig:FieldAlignmentEnum" default="center" minOccurs="0"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="TextVisualization">
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:TwoDimVisualization">
+				<xsd:sequence>
+					<xsd:element name="showHeader" type="xsd:boolean"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="TwoDimSeriesConfig">
+		<xsd:annotation>
+			<xsd:appinfo ecore:key="appinfo">&#13;
+				&lt;element isreference="true" name="dataSource"/&gt;&#13;
+				&lt;element isreference="true" name="queryLink"/&gt;&#13;
+			</xsd:appinfo>
+			<xsd:documentation>
+			Represents the concrete extension of the series config to handle two dimensional series configs.
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:OneDimSeriesConfig">
+				<xsd:sequence>
+					<xsd:element name="categoryDataConfig" type="beviewsconfig:DataConfig" minOccurs="0"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="TwoDimVisualization">
+		<xsd:annotation>
+			<xsd:documentation>
+			Represents the concrete extension of the visualization to handle two dimensional visualizations.
+			Should contain 'n' series configs of type TwoDimSeriesConfig
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:OneDimVisualization">
+				<xsd:sequence>
+					<xsd:element name="categoryGuidelineConfig" type="beviewsconfig:CategoryGuidelineConfig" minOccurs="0"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="ValueGuidelineConfig" abstract="true">
+		<xsd:annotation>
+			<xsd:documentation>
+			Represents the base for all value guideline config. This can manifests as 2nd to 'n' columns or the chart value axis
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:BEViewsElement">
+				<xsd:sequence>
+					<xsd:element name="headerFormatStyle" type="beviewsconfig:FormatStyle"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="ValueLabelStyle">
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:BEViewsElement">
+				<xsd:sequence>
+					<xsd:element name="fontSize" type="xsd:int" default="10"/>
+					<xsd:element name="fontStyle" type="beviewsconfig:FontStyleEnum" default="normal"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="Visualization" abstract="true">
+		<xsd:annotation>
+			<xsd:documentation>
+			Represents the base for all visualizations.
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:BEViewsElement">
+				<xsd:sequence>
+					<xsd:element name="displayName" type="xsd:string"/>
+					<xsd:element name="background" type="beviewsconfig:BackgroundFormat" minOccurs="0"/>
+					<xsd:element name="seriesColorIndex" type="xsd:int" default="-1" minOccurs="0"/>
+					<xsd:element name="action" type="beviewsconfig:ActionDefinition" minOccurs="0" maxOccurs="unbounded"/>
+					<xsd:element name="seriesConfig" type="beviewsconfig:SeriesConfig" maxOccurs="unbounded"/>
+					<xsd:element name="relatedElement" type="beviewsconfig:BEViewsElement" minOccurs="0" maxOccurs="unbounded" ecore:reference="beviewsconfig:Component"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:simpleType name="ThresholdUnitEnum">
+		<xsd:annotation>
+			<xsd:documentation>
+            </xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="count"/>
+			<xsd:enumeration value="second"/>
+			<xsd:enumeration value="minute"/>
+			<xsd:enumeration value="hour"/>
+			<xsd:enumeration value="day"/>
+			<xsd:enumeration value="month"/>
+			<xsd:enumeration value="year"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:complexType name="RolePreference">
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:BEViewsElement">
+				<xsd:sequence>
+					<xsd:element name="role" type="xsd:string" minOccurs="0"/>
+					<xsd:element name="gallery" type="beviewsconfig:ComponentGalleryFolder" minOccurs="0" ecore:resolveProxies="true"/>
+					<xsd:element name="view" type="beviewsconfig:View"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="ComponentGalleryFolder">
+		<xsd:complexContent>
+			<xsd:extension base="beviewsconfig:BEViewsElement">
+				<xsd:sequence>
+					<xsd:element name="subFolder" type="beviewsconfig:ComponentGalleryFolder" minOccurs="0" maxOccurs="unbounded" ecore:resolveProxies="true"/>
+					<xsd:element name="component" type="beviewsconfig:Component" maxOccurs="unbounded"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="RelatedPage">
+	  <xsd:complexContent>
+	    <xsd:extension base="beviewsconfig:Page"/>
+	  </xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="RelatedElementsComponent">
+	  <xsd:complexContent>
+	    <xsd:extension base="beviewsconfig:Component"/>
+	  </xsd:complexContent>
+	</xsd:complexType>
+</xsd:schema>

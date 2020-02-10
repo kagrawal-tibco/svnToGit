@@ -1,0 +1,47 @@
+# put any comments you want here
+
+name startTask
+description Initialize stuff
+transport ems
+target queue Subject.AccountDebit
+count 1
+event /Events/Start
+
+name taskA
+description Create accounts
+transport ems send
+target queue Subject.AccountDebit
+count 5000
+event /Events/CreateAccount
+property AccountId Gabe String true
+property Balance 100000 Double false
+# shellcmd sleep 10
+
+name taskA-Receive
+description Confirm accounts were created
+transport ems receive
+target queue Subject.AccountDebit
+count 5000
+event /Events/CreateAccount
+property AccountId Gabe String true false
+property Balance 100000 Double true
+# shellcmd sleep 10
+
+name taskB
+description Debit some of the accounts
+transport ems send
+target queue Subject.AccountDebit
+count 1000
+event /Events/Debit
+property AccountId Gabe String true
+property Amount 2500 Double false
+
+name endTask
+description End stuff
+transport ems send
+target queue Subject.AccountDebit
+count 1
+event /Events/End
+
+# execute startTask, taskA, followed by taskB executed twice, then taskA again, then endTask
+execute startTask taskA taskB*2 taskA-Receive taskA endTask

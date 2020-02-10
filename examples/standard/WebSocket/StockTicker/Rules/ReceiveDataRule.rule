@@ -1,0 +1,44 @@
+/**
+ * @description 
+ * @author Shrikants-MBP.na.tibco.com
+ */
+ rule Rules.ReceiveDataRule {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Events.GetDataEvent GetDataEvent;
+	}
+	when {	
+	}
+	then {
+		String symbol = GetDataEvent.Symbol;	
+		Concepts.StockToWatch stocktowatch = Instance.getByExtId("StockWatch");
+		if (stocktowatch ==null) stocktowatch = Concepts.StockToWatch.StockToWatch("StockWatch", null);
+    			Concepts.Stock[] stocks = Instance.PropertyArray.toArrayContainedConcept(stocktowatch.Stock);
+    			Concepts.Stock existingStock = null;
+    			for (int i=0; i<stocks@length; i++) {
+				if (symbol == stocks[i].Symbol) {
+					existingStock = stocks[i];
+					break;
+				}
+			}
+			if (existingStock != null) {
+				if (GetDataEvent.Operations == "REMOVE") {
+					Instance.PropertyArray.removeContainedConcept(stocktowatch.Stock, existingStock);
+				}
+			} else {
+				if (GetDataEvent.Operations == "ADD") {
+					Concepts.Stock newStock = Concepts.Stock.Stock(null, GetDataEvent.Symbol, 0);
+					Instance.PropertyArray.appendContainedConcept(stocktowatch.Stock, newStock, -1);
+				}
+			}	
+        Object mapc = Collections.Map.createHashMapWithId("contextId");
+		Object context = HTTP.WebSocket.getSessionContext(GetDataEvent);	
+		if(!Collections.Map.containsKey(mapc, "key")) {
+			Collections.Map.put(mapc, "key", context);
+		}
+		Event.consumeEvent(GetDataEvent);	
+	}
+}

@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ConditionEditor 
+	xmlns="com.tibco.be.views.user.components.drilldown.querymanager.view.*" 
+	xmlns:querymanager="com.tibco.be.views.user.components.drilldown.querymanager.*"
+	xmlns:mx="http://www.adobe.com/2006/mxml" 
+	width="100%" height="100%"
+	dropShadowEnabled="false" 
+	paddingLeft="10"
+	paddingTop="10"
+	paddingBottom="10"
+	paddingRight="10"
+	creationPolicy="all"
+	creationComplete="handleCreationComplete()"
+	xmlns:validators="com.tibco.be.views.user.components.drilldown.querymanager.validators.*">
+	
+	<mx:Script>
+		<![CDATA[
+			import com.tibco.be.views.user.components.drilldown.querymanager.validators.RangeValidator;
+			import com.tibco.be.views.user.components.drilldown.querymanager.events.ConditionUpdatedEvent;
+			import mx.events.ValidationResultEvent;
+			import mx.events.FlexEvent;
+			import mx.controls.Text;
+			import mx.collections.ArrayCollection;
+			
+			private static const NO_PARAMETER_STATE:String = "noParameterState";
+			private static const ONE_PARAMETER_STATE:String = "oneParameterState";
+			private static const TWO_PARAMETER_STATE:String = "twoParameterState";
+			
+			[Bindable]
+			private var requireFieldErrorMsg:String;
+			[Bindable]
+			private var invalidCharsErrorMsg:String;
+			
+			private function handleCreationComplete():void{
+				this.initialize();
+				if(_currentOperator == "Is In The Range"){
+					currentState = TWO_PARAMETER_STATE;
+				}
+				else if(_currentOperator == "Is Any"){
+					currentState = NO_PARAMETER_STATE;
+				}
+				else{
+					currentState = ONE_PARAMETER_STATE;
+				}
+				requireFieldErrorMsg = this._fieldName+": Field value cannot be empty";
+				invalidCharsErrorMsg = this._fieldName+": Invalid characters entered";			 
+			}
+			
+			override public function redraw(operator:String, conditions:ArrayCollection):void{
+				// now show relevant 
+				conditionsCB.selectedItem = operator;
+				
+				if(operator == "Is" || operator == "Is Not" || 	operator == "Is Greater Than Equal To" || 
+					operator == "Is Greater Than" || operator == "Is Less Than Equal To" || 
+					operator == "Is Less Than")
+				{
+					currentState = ONE_PARAMETER_STATE;
+					if(conditions && conditions.length >= 1){
+						txtCondition1.text = conditions[0];
+					}
+					if(_currentConditions.length == 0) {
+						_currentConditions.addItem(txtCondition1.text);
+					}
+					//headerRenderer.lblCondition.text = " "+operator+ " "+txtCondition1.text;
+					_conditionAsString = operator+ " "+txtCondition1.text;;
+				}
+				else if(operator == "Is In The Range"){
+					currentState = TWO_PARAMETER_STATE;
+					txtCondition1.text = conditions[0];
+					txtCondition2.text = conditions[1];
+					switch(_currentConditions.length){
+						case(0):
+							_currentConditions.addItem(txtCondition1.text);
+							_currentConditions.addItem(txtCondition2.text);
+							break;
+						case(1):
+							_currentConditions[0] = txtCondition1.text;
+							_currentConditions.addItem(txtCondition2.text);
+							break;
+						case(2):
+							_currentConditions[0] = txtCondition1.text;
+							_currentConditions[1] = txtCondition2.text;
+							break;
+					}
+					if(txtCondition2.text != ""){
+						//headerRenderer.lblCondition.text = " "+operator+ " "+txtCondition1.text+ " And "+txtCondition2.text;
+						_conditionAsString = operator+ " "+txtCondition1.text+ " And "+txtCondition2.text;
+					}
+				}
+				else if(operator == "Is Any"){
+					//headerRenderer.lblCondition.text = " "+operator;
+					currentState = NO_PARAMETER_STATE;
+					_conditionAsString = operator;
+				}
+				dispatchHeaderChangeEvent(new ConditionUpdatedEvent(ConditionUpdatedEvent.IS_HEADER_CHANGED,true,true,_conditionAsString));
+			}
+			
+			private function handleOperatorSelected():void{
+				_currentOperator = conditionsCB.selectedItem as String;
+//				var selectedOp:String = event.currentTarget.selectedItem;
+				var list:ArrayCollection = new ArrayCollection();
+				list.addItem(txtCondition1 != null ? txtCondition1.text:"");
+				list.addItem(txtCondition2 != null ? txtCondition2.text:"");
+				redraw(_currentOperator, list);
+			}
+			
+			private function valueChange(event:Event):void{
+				var txtInput:TextInput = TextInput(event.currentTarget);
+				_currentConditions.removeAll();
+				
+				if(currentState == ONE_PARAMETER_STATE){
+					_currentConditions.addItem(txtCondition1.text);
+					_conditionAsString = _currentOperator+ " "+txtCondition1.text;
+				}
+				else if(currentState == TWO_PARAMETER_STATE){
+					_currentConditions.addItem(txtCondition1.text);
+					_currentConditions.addItem(txtCondition2.text);
+					if(txtCondition2.text != ""){
+						_conditionAsString = _currentOperator+ " "+txtCondition1.text+ " And "+txtCondition2.text;	
+					}
+				}
+				dispatchHeaderChangeEvent(new ConditionUpdatedEvent(ConditionUpdatedEvent.IS_HEADER_CHANGED,true,true,_conditionAsString));
+			}
+			
+			private function handleNoParameterStateEntered():void{
+				if(conditionsCB){
+					conditionsCB.selectedItem = _currentOperator;
+				}
+			}
+			
+			private function handleOneParameterStateEntered():void{
+				if(txtCondition1 && _currentConditions.length >= 1){
+					txtCondition1.text = _currentConditions[0];
+				}
+			}
+			
+			private function handleTwoParameterStateEntered():void{
+				if(txtCondition2 && _currentConditions.length >= 2){
+					txtCondition2.text = _currentConditions[1];
+				}
+			}
+			
+			override public function doValidation():ValidationResultEvent {
+				if(currentState == ONE_PARAMETER_STATE){
+					return numberValidator1.validate();
+				}
+				if(currentState == TWO_PARAMETER_STATE) {
+					var validation1:ValidationResultEvent = numberValidator1.validate();
+					if( validation1.results!= null && validation1.results.length > 0){
+						return validation1;
+					}
+					var validation2:ValidationResultEvent = numberValidator2.validate();
+					if( validation2.results!= null && validation2.results.length > 0){
+						return validation2;
+					}
+					var fieldArray:Array = [];
+					fieldArray.push(txtCondition1.text);
+					fieldArray.push(txtCondition2.text);
+					return rangeValidator.validate(fieldArray);
+				}
+				return null;
+			}
+		
+		]]>
+	</mx:Script>
+	<mx:NumberValidator 
+		id="numberValidator1" 
+		source="{txtCondition1}" 
+		property="text"
+		requiredFieldError="{requireFieldErrorMsg}"
+		invalidCharError="{invalidCharsErrorMsg}"
+		/>
+	<mx:NumberValidator 
+		id="numberValidator2" 
+		source="{txtCondition2}"
+		property="text"
+		requiredFieldError="{requireFieldErrorMsg}"
+		invalidCharError="{invalidCharsErrorMsg}"
+		/>
+		
+	<validators:RangeValidator id="rangeValidator" property="text" listener="{txtCondition1}" fieldName="{_fieldName}" />
+	
+	<states>
+		<mx:State name="{NO_PARAMETER_STATE}" enterState="handleNoParameterStateEntered()">
+			<mx:AddChild creationPolicy="all">
+				<querymanager:CustomComboBox id="conditionsCB" width="75%" change="handleOperatorSelected()">	
+					<mx:ArrayCollection>
+						<mx:String>Is</mx:String>
+						<mx:String>Is Not</mx:String>
+						<mx:String>Is Greater Than Equal To</mx:String>
+						<mx:String>Is Greater Than</mx:String>
+						<mx:String>Is Less Than Equal To</mx:String>
+						<mx:String>Is Less Than</mx:String>	
+						<mx:String>Is In The Range</mx:String>
+						<mx:String>Is Any</mx:String>
+					</mx:ArrayCollection>
+				</querymanager:CustomComboBox>
+			</mx:AddChild>
+		</mx:State>
+		<mx:State name="{ONE_PARAMETER_STATE}" basedOn="{NO_PARAMETER_STATE}" enterState="handleOneParameterStateEntered()">
+			<mx:AddChild creationPolicy="all">
+				<mx:TextInput id="txtCondition1" width="100%" change="valueChange(event)"/>
+			</mx:AddChild>
+			<mx:SetProperty target="{txtCondition1}" name="text" />
+		</mx:State>
+		<mx:State name="{TWO_PARAMETER_STATE}" basedOn="{ONE_PARAMETER_STATE}" enterState="handleTwoParameterStateEntered()">
+			<mx:AddChild creationPolicy="all">
+				<mx:Label id="lblAnd" text="And"/>
+			</mx:AddChild>
+			<mx:AddChild creationPolicy="all">
+				<mx:TextInput id="txtCondition2" width="100%" change="valueChange(event)"/>
+			</mx:AddChild>
+		</mx:State>
+	</states>
+</ConditionEditor>

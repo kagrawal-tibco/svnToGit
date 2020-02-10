@@ -1,0 +1,25 @@
+/**
+ * @description Common username validating routine to check against logged in users.
+ */
+AAA.Concepts.AMS_C_LoggedInUser rulefunction Approval.CommonServices.AMS_RF_ValidateUsername {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Approval.Events.ArtifactEvents.AMS_E_AbstractRMSEvent ams_e_abstractrmsevent;
+	}
+	body {
+		if (ams_e_abstractrmsevent.loggedInUserName != null) {
+			ams_e_abstractrmsevent.loggedInUserName = HTTP.decodeURL(ams_e_abstractrmsevent.loggedInUserName, "UTF-8");
+		}
+		String loginToken = ams_e_abstractrmsevent.loginToken;
+		if (loginToken == null) {
+			return null;
+		}
+		//Get session time out value from Global Variable
+		int sessionTimeout = System.getSystemPropertyAsInt("rms.studio.sessionTimeOut", -1);
+		AMS_C_LoggedInUser loggedInUser = AAA.Rules.AuthenRules.RuleFunctions.AMS_RF_ValidateLogin(loginToken, sessionTimeout, "");
+		
+		return loggedInUser;
+	}
+}

@@ -1,0 +1,54 @@
+/**
+ * @description 
+ */
+WebStudio.Core.Concepts.DataSources.Artifacts.Decision.TableAnalyzer.WS_C_TestDataCoverageResponse rulefunction WebStudio.Core.RuleFunctions.Utils.DT.Analyzer.WS_RF_BuildDecisionTableShowCoverageResponse {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		WebStudio.Core.Concepts.Decision.Pagination.WS_C_DecisionTable decisionTable;
+		String[] coveredRules;
+	}
+	body {
+		
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.DT.Analyzer.WS_RF_BuildDecisionTableShowCoverageResponse");
+		
+		//Get the TableRule-Page mappings
+		Object ruleToPageMap = WS_RF_GetDecisionTableRuleToPageMapping(decisionTable);
+			
+		Object pageToCoveredRulesMap = Collections.Map.createHashMap();
+		for (int i = 0; i < coveredRules@length; i++) {			
+			String pageNum = Collections.Map.get(ruleToPageMap, coveredRules[i]);
+			Object ruleIdsList = Collections.Map.get(pageToCoveredRulesMap, pageNum);
+			if (ruleIdsList == null) {
+				ruleIdsList = Collections.List.createArrayList();
+				Collections.Map.put(pageToCoveredRulesMap, pageNum, ruleIdsList);
+			}	
+			Collections.add(ruleIdsList, coveredRules[i]);			
+		}
+		Collections.Map.clear(ruleToPageMap);
+
+		WS_C_TestDataCoverageResponse testDataCoverageResponse = 
+				Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/Artifacts/Decision/TableAnalyzer/WS_C_TestDataCoverageResponse");
+		
+		Object pageNumSet = Collections.Map.keySet(pageToCoveredRulesMap);
+		Object iterator = Collections.iterator(pageNumSet);
+		while (Collections.Iterator.hasNext(iterator)) {
+			WS_C_TestDataCoverageRecord testDataCoverageRecord = 
+					Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/Artifacts/Decision/TableAnalyzer/WS_C_TestDataCoverageRecord");
+			String pageNum = Collections.Iterator.next(iterator);
+			testDataCoverageRecord.recordId = pageNum;
+			Object ruleIdsList = Collections.Map.get(pageToCoveredRulesMap,pageNum);
+			int noOfRules = Collections.size(ruleIdsList);
+			for (int i = 0; i < noOfRules; i++) {
+				String ruleId = Collections.List.get(ruleIdsList, i);
+				Instance.PropertyArray.appendString(testDataCoverageRecord.coveredRuleId, ruleId, 1L);
+			}
+			Instance.PropertyArray.appendContainedConcept(testDataCoverageResponse.record, testDataCoverageRecord, 1L);
+		}		
+		
+		Collections.Map.clear(pageToCoveredRulesMap);
+		
+		return testDataCoverageResponse;	
+	}
+}

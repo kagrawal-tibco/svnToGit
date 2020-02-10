@@ -1,0 +1,15 @@
+/**
+ * @description Actually change status to new status.
+ */
+void rulefunction WebStudio.Core.RuleFunctions.Actions.Lifecycle.Review.WS_RF_ChangeCommittableStatus {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		WebStudio.Core.Concepts.Lifecycle.WS_C_CommittableDeltaEntry committableDeltaEntry;
+		String newReviewStatus;
+	}
+	body {
+		Instance.PropertyAtom.setConceptReference(committableDeltaEntry.commitLifeCycleState, WS_RF_ArtifactStateCreationFactory(newReviewStatus), 1L);
+	}
+}

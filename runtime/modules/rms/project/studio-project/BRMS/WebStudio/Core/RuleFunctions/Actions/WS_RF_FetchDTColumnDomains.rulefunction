@@ -1,0 +1,108 @@
+/**
+ * @description Rule Function to Fetch the Decision Table Column Domain Values
+ */
+WebStudio.Core.Concepts.DataSources.WS_C_TemporaryReturnData rulefunction WebStudio.Core.RuleFunctions.Actions.WS_RF_FetchDTColumnDomains {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object servletRequest;
+		WebStudio.Security.Authn.Concepts.WS_C_LoggedInUser loggedInUser;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.WS_RF_FetchDTColumnDomains");
+		
+		String responseMessage = null;
+		String errorCode = null;
+		int recordCount = 0;
+		int responseStatus = 0;
+		String username;
+		
+		String scsIntegrationType = System.getSystemPropertyAsString("ws.scs.impl.type", null);
+		
+		String projectName = HTTP.Servlet.Request.getRequestParameter(servletRequest, "projectName");
+		String artifactPath = HTTP.Servlet.Request.getRequestParameter(servletRequest, "argumentPath");
+		String artifactType = HTTP.Servlet.Request.getRequestParameter(servletRequest, "argumentType");			
+		String argumentPropertyName = HTTP.Servlet.Request.getRequestParameter(servletRequest, "argumentPropertyName");
+		String isConditionColumnParam = HTTP.Servlet.Request.getRequestParameter(servletRequest, "isConditionColumn");
+		boolean isConditionColumn = false;
+		if (String.equals("true", isConditionColumnParam)) {
+			isConditionColumn = true;
+		}	
+		
+		String artifactExtn = String.toLowerCase(artifactType);
+		
+		Log.log(LOGGER, "Debug", "Project Name %s", projectName);
+		
+		String subscriptionId = null;
+		if (loggedInUser.jwtToken != null) subscriptionId = loggedInUser.jwtToken.sbsc;
+		
+		String scsRootURL = WS_RF_GetSCSRootURL(projectName, subscriptionId);
+		if (scsRootURL == null) {
+			throw Exception.newException(null, "Source control repository location not present. Set ws.scs.rootURL property", null);
+		}
+
+		WS_C_ResponseData responseData = Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/WS_C_ResponseData");
+		
+		if (!WS_RF_CheckHTTPMethod(servletRequest, "GET")) {
+			responseStatus = -1;
+			recordCount = 0;
+			errorCode = "ERR_5101";
+			responseMessage = "Invalid HTTP Method, expect method is [GET].";
+		} else {
+			username = loggedInUser.username;
+			
+			//Get the User roles
+		    String[] roles = Instance.PropertyArray.toArrayString(loggedInUser.roles);
+						
+			Object argumentProperties = WebStudio.Core.RuleFunctions.Utils.DT.WS_RF_FetchDTArgumentProperties(projectName, artifactPath, artifactType, artifactExtn, username, roles, true);
+			
+			String[] domainPaths = WS.Decision.getDomainPathsForProperty(argumentProperties, argumentPropertyName, scsIntegrationType, scsRootURL, projectName);
+
+			Object domainResponse = String.createBuffer(0);
+			String.append(domainResponse, "<domain>");
+			
+			for (int domainLoop = 0; domainLoop < domainPaths@length; domainLoop++) {
+				String domainFullPath = domainPaths[domainLoop];					
+				//Get all domain entries
+				WebStudio.Core.Concepts.Domain.WS_C_Domain domain = WebStudio.Core.RuleFunctions.Utils.Domain.WS_RF_FetchDomainEntries(username, roles, projectName, domainFullPath, "domain", true);
+				
+				if (isConditionColumn) {
+					WS_C_DomainValueDataSourceRecord domainDataSourceRecord = 
+													Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/Records/WS_C_DomainValueDataSourceRecord");					
+					domainDataSourceRecord.value = "*";
+					domainDataSourceRecord.description = "<NA>";
+					WS_C_AbstractDataSourceRecord dataSourceRecord = domainDataSourceRecord;
+					Instance.PropertyArray.appendContainedConcept(responseData.record, dataSourceRecord, 1L);
+					recordCount++;					
+				}	
+
+				WebStudio.Core.Concepts.Domain.WS_C_DomainEntry[] singleEntries = Instance.PropertyArray.toArrayContainedConcept(domain.singleEntry);									
+				for (int loop = 0; loop < singleEntries@length; loop++) {
+					WS_C_DomainValueDataSourceRecord domainDataSourceRecord = 
+													Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/Records/WS_C_DomainValueDataSourceRecord");					
+					domainDataSourceRecord.value = singleEntries[loop].value;
+					domainDataSourceRecord.description = singleEntries[loop].description;
+					WS_C_AbstractDataSourceRecord dataSourceRecord = domainDataSourceRecord;
+					Instance.PropertyArray.appendContainedConcept(responseData.record, dataSourceRecord, 1L);
+					recordCount++;	
+				}
+
+				WebStudio.Core.Concepts.Domain.WS_C_RangeEntry[] rangeEntries = Instance.PropertyArray.toArrayContainedConcept(domain.rangeEntry);									
+				for (int loop = 0; loop < rangeEntries@length; loop++) {
+					if (isConditionColumn) {
+						WS_C_DomainValueDataSourceRecord domainDataSourceRecord = 
+														Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/Records/WS_C_DomainValueDataSourceRecord");					
+						domainDataSourceRecord.value = rangeEntries[loop].value;
+						domainDataSourceRecord.description = rangeEntries[loop].description;
+						WS_C_AbstractDataSourceRecord dataSourceRecord = domainDataSourceRecord;
+						Instance.PropertyArray.appendContainedConcept(responseData.record, dataSourceRecord, 1L);
+						recordCount++;
+					}		
+				}
+			}			
+		}	
+
+		return WS_RF_CreateTemporaryReturnData(responseStatus, recordCount, errorCode, responseMessage, responseData);																																		 								
+	}
+}

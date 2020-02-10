@@ -1,0 +1,610 @@
+<!--
+    This document describes the insight config object hierarchy.
+    NOTE: Forward references are not allowed here.
+
+    If B refers to A, A should appear before B in this document.
+
+-->
+<!--
+   TODO Items
+   * Classifier Component
+-->
+<viewsconfig>
+
+    <enum name="Dummy"/>
+
+    <enum name="FontStyleEnum">
+        <map localvalue="Normal" mdvalue="normal"/>
+        <map localvalue="Bold" mdvalue="bold"/>
+        <map localvalue="Italic" mdvalue="italic"/>
+        <map localvalue="Bold,Italic" mdvalue="bold,italic"/>
+    </enum>
+
+    <enum name="LineEnum">
+        <map localvalue="None" mdvalue="none"/>
+        <map localvalue="Vertical" mdvalue="vertical"/>
+        <map localvalue="Horizontal" mdvalue="horizontal"/>
+        <map localvalue="Both" mdvalue="both"/>
+    </enum>
+
+    <enum name="OrientationEnum">
+        <map localvalue="Vertical" mdvalue="vertical"/>
+        <map localvalue="Horizontal" mdvalue="horizontal"/>
+    </enum>
+
+    <enum name="OrientationWithNoneEnum">
+        <map localvalue="None" mdvalue=""/>
+        <map localvalue="Vertical" mdvalue="vertical"/>
+        <map localvalue="Horizontal" mdvalue="horizontal"/>
+    </enum>
+
+    <enum name="AnchorEnum">
+        <map localvalue="None" mdvalue=""/>
+        <map localvalue="North" mdvalue="north"/>
+        <map localvalue="East" mdvalue="east"/>
+        <map localvalue="South" mdvalue="south"/>
+        <map localvalue="West" mdvalue="west"/>
+    </enum>
+
+    <enum name="AnchorPositionEnum">
+        <map localvalue="None" mdvalue=""/>
+        <map localvalue="East" mdvalue="east"/>
+        <map localvalue="West" mdvalue="west"/>
+    </enum>
+
+    <enum name="SortEnum">
+        <map localvalue="As Listed" mdvalue="unsorted"/>
+        <map localvalue="Ascending" mdvalue="ascending"/>
+        <map localvalue="Descending" mdvalue="descending"/>
+    </enum>
+
+    <enum name="ScaleEnum">
+        <map localvalue="Auto" mdvalue="normal"/>
+        <map localvalue="None" mdvalue="none"/>
+        <map localvalue="Thousands" mdvalue="thousands"/>
+        <map localvalue="Millions" mdvalue="millions"/>
+        <map localvalue="Billions" mdvalue="billions"/>
+        <map localvalue="Trillions" mdvalue="trillions"/>
+        <!-- Reserved for future usage
+        <map localvalue="Quadrillions" mdvalue="quadrillions"/>
+        <map localvalue="logarithmic" mdvalue="logarithmic"/>
+        -->
+    </enum>
+
+        <!--
+    <enum name="GradientDirectionEnum">
+        <map localvalue="Top to bottom" mdvalue="toptobottom"/>
+        <map localvalue="Left to right" mdvalue="lefttoright"/>
+        <map localvalue="Bottom to top" mdvalue="bottomtotop"/>
+        <map localvalue="Right to left" mdvalue="righttoleft"/>
+    </enum>
+        -->
+
+    <enum name="FieldAlignmentEnum">
+        <map localvalue="Left" mdvalue="left"/>
+        <map localvalue="Center" mdvalue="center"/>
+        <map localvalue="Right" mdvalue="right"/>
+    </enum>
+
+    <enum name="SeriesAnchorEnum">
+        <map localvalue="Q1" mdvalue="Q1"/>
+        <map localvalue="Q2" mdvalue="Q2"/>
+        <map localvalue="Q3" mdvalue="Q3"/>
+        <map localvalue="Q4" mdvalue="Q4"/>
+    </enum>
+
+    <enum name="RangePlotChartSeriesTypeEnum">
+        <map localvalue="Min" mdvalue="min"/>
+        <map localvalue="Current" mdvalue="current"/>
+        <map localvalue="Max" mdvalue="max"/>
+    </enum>
+
+    <enum name="DataPlottingEnum">
+        <map localvalue="None" mdvalue="none"/>
+        <map localvalue="All" mdvalue="all"/>
+        <map localvalue="Edges" mdvalue="edges"/>
+    </enum>
+
+    <enum name="PlotShapeEnum">
+        <map localvalue="Square" mdvalue="square"/>
+        <map localvalue="Circle" mdvalue="circle"/>
+        <map localvalue="Triangle" mdvalue="triangle"/>
+        <map localvalue="Cross" mdvalue="cross"/>
+        <map localvalue="Diamond" mdvalue="diamond"/>
+    </enum>
+
+    <enum name="PieChartDirectionEnum">
+        <map localvalue="Clockwise" mdvalue="clockwise"/>
+        <map localvalue="Counter-clockwise" mdvalue="counterclockwise"/>
+    </enum>
+
+    <enum name="DisplayModeEnum">
+        <map localvalue="Inplace" mdvalue="inplace"/>
+        <map localvalue="ModalDialog" mdvalue="modaldialog"/>
+        <map localvalue="NonModalDialog" mdvalue="nonmodaldialog"/>
+    </enum>
+
+    <enum name="PartitionStateEnum">
+        <map localvalue="Open" mdvalue="open"/>
+        <map localvalue="Closed" mdvalue="closed"/>
+    </enum>
+
+    <enum name="PanelStateEnum">
+        <map localvalue="Maximized" mdvalue="maximized"/>
+        <map localvalue="Minimized" mdvalue="minimized"/>
+        <map localvalue="Normal" mdvalue="normal"/>
+    </enum>
+
+    <enum name="ScrollBarConfigEnum">
+        <map localvalue="Auto" mdvalue="auto"/>
+        <map localvalue="Never" mdvalue="never"/>
+        <map localvalue="Yes" mdvalue="yes"/>
+    </enum>
+
+    <enum name="ThresholdUnitEnum">
+        <map localvalue="Count (s)" mdvalue="count"/>
+        <map localvalue="Second (s)" mdvalue="second"/>
+        <map localvalue="Minute (s)" mdvalue="minute"/>
+        <map localvalue="Hour (s)" mdvalue="hour"/>
+        <map localvalue="Day (s)" mdvalue="day"/>
+        <map localvalue="Month (s)" mdvalue="month"/>
+        <map localvalue="Year (s)" mdvalue="year"/>
+    </enum>
+
+    <particle name="SeriesColor">
+        <property name="BaseColor" path="baseColor" type="Color" default="000000"/>
+        <property name="HighlightColor" path="highlightColor" type="Color" optional="true"/>
+    </particle>
+
+    <particle name="TextFieldFormat"/>
+    <particle name="IndicatorFieldFormat"/>
+    <particle name="ProgressBarFieldFormat"/>
+
+    <particle name="ComponentColorSet">
+        <property name="Display Name" path="displayName" type="String" optional="true"/>
+    </particle>
+
+    <particle name="ChartComponentColorSet" extends="ComponentColorSet">
+        <property name="GuidelineLabelFontColor" path="guideLineLabelFontColor" type="Color" default="414141"/>
+        <property name="GuidelineValueLabelFontColor" path="guideLineValueLabelFontColor" type="Color" default="333333"/>
+        <property name="DataPointLabelFontColor" path="dataPointLabelFontColor" type="Color" default="333333"/>
+        <property name="TopCapColor" path="topCapColor" type="Color" default="333333"/>
+        <property name="PieEdgeColor" path="pieEdgeColor" type="Color" optional="true" default="333333"/>
+        <property name="PieDropShadowColor" path="pieDropShadowColor" type="Color" optional="true" default="333333"/>
+        <property name="LineDropShadowColor" path="lineDropShadowColor" type="Color" optional="true" default="333333"/>
+        <particle name="SeriesColor" path="@seriesColor" type="SeriesColor" max="-1"/>
+    </particle>
+
+    <particle name="TextComponentColorSet" extends="ComponentColorSet">
+        <property name="HeaderColor" path="headerColor" type="Color" default="FFFFFF"/>
+        <property name="HeaderRollOverColor" path="headerRollOverColor" type="Color" default="FFFFFF"/>
+        <property name="HeaderTextFontColor" path="headerTextFontColor" type="Color" default="333333"/>
+        <property name="HeaderSeparatorColor" path="headerSeparatorColor" type="Color" optional="true" default="333333"/>
+        <property name="CellColor" path="cellColor" type="Color" default="FFFFFF"/>
+        <property name="CellTextFontColor" path="cellTextFontColor" type="Color" default="333333"/>
+        <property name="RowSeparatorColor" path="rowSeparatorColor" type="Color" default="333333"/>
+        <property name="RowRollOverColor" path="rowRollOverColor" type="Color" default="FFFFFF"/>
+    </particle>
+
+    <particle name="Skin">
+        <property name="Display Name" path="displayName" type="String" optional="true"/>
+        <property name="FontColor" path="fontColor" type="Color" optional="true" default="333333"/>
+        <property name="ComponentBackGroundColor" path="componentBackGroundColor" type="Color" default="FFFFFF"/>
+        <property name="ComponentBackGroundGradientEndColor" path="componentBackGroundGradientEndColor" type="Color" optional="true"/>
+        <property name="ComponentForeGroundColor" path="componentForeGroundColor" type="Color" default="FFFFFF"/>
+        <property name="VisualizationBackGroundColor" path="visualizationBackGroundColor" type="Color" default="FFFFFF"/>
+        <property name="VisualizationBackGroundGradientEndColor" path="visualizationBackGroundGradientEndColor" type="Color" optional="true"/>
+        <property name="VisualizationForeGroundColor" path="visualizationForeGroundColor" type="Color" default="E3E3E3"/>
+        <!-- we will let the implementation com.tibco.cep.studio.dashboard.core.insight.model.configs.LocalSkin handle the validation of component color set -->
+        <particle name="ComponentColorSet" path="@componentColorSet" type="ComponentColorSet" min="0" max="-1"/>
+        <!-- we will let the implementation com.tibco.cep.studio.dashboard.core.insight.model.configs.LocalSkin handle the validation of default component color set -->
+        <particle name="DefaultComponentColorSet" path="@defaultComponentColorSet" type="ComponentColorSet" min="0" max="-1"/>
+    </particle>
+
+    <particle name="TextValueDataConfig">
+        <property name="Field" path="extractor:{DataExtractor}.@sourceField" type="PropertyDefinition" references="PropertyDefinition"/>
+        <property name="HeaderName" path="headerName" type="String" default="Value Column"/>
+        <property name="DisplayFormat" path="formatter:{TextFieldFormat}.displayFormat" type="String" optional="true" references="PropertyDefinition"/>
+        <property name="TooltipFormat" path="formatter:{TextFieldFormat}.toolTipFormat" type="String" optional="true" references="PropertyDefinition"/>
+        <property name="Alignment" path="alignment" type="String" enum="FieldAlignmentEnum" default="Left"/>
+
+        <!--
+        <property name="ShowTextValue" path="formatter:{IndicatorFieldFormat}.showTextValue" type="boolean" optional="true"/>
+        <property name="TextValueAnchor" path="formatter:{IndicatorFieldFormat}.textValueAnchor" type="String" enum="AnchorPositionEnum" default="None" optional="true"/>
+        <property name="Threshold" path="formatter:{ProgressBarFieldFormat}.threshold" type="Integer" min="0" max="100"/>
+        <property name="MinValue" path="formatter:{ProgressBarFieldFormat}.minValue" type="Double" default="0"/>
+        <property name="MaxValue" path="formatter:{ProgressBarFieldFormat}.maxValue" type="Double" default="0"/>
+         -->
+        <!-- Fake property to handle field format type -->
+        <!--
+        <property name="FieldFormatType" path="formatter:{TextFieldFormat}.displayName" type="String" default="TextFieldFormat"/>
+        <property name="TextFieldFormat" pseudo="true" optional="true" path="formatter" type="TextFieldFormat"/>
+        <property name="IndicatorFieldFormat" pseudo="true" optional="true" path="formatter" type="IndicatorFieldFormat"/>
+        <property name="ProgressBarFieldFormat" pseudo="true" optional="true" path="formatter" type="ProgressBarFieldFormat"/>
+         -->
+         <!-- End fake properties -->
+        <!--
+        <property name="ValueColumnFieldDisplayFontSize" path="formatter:{TextFieldFormat}.formatStyle:{FormatStyle}.fontSize" type="Integer" min="8" max="12" default="10"/>
+        <property name="ValueColumnFieldDisplayFontStyle" path="formatter:{TextFieldFormat}.formatStyle:{FormatStyle}.fontStyle" type="String" enum="FontStyleEnum" default="Normal"/>
+        <property name="ValueColumnFieldWidth" path="width" type="String" min="0%" max="100%" default="50%"/>
+        -->
+    </particle>
+
+    <particle name="QueryParam">
+        <property name="Type" path="type" type="String" default="String"/>
+        <property name="Value" path="value" type="String" default="" optional="true"/>
+    </particle>
+
+    <particle name="DataSource">
+        <particle name="SrcElement" path="@srcElement" type="Metric" min="0" max="1"/>
+        <particle name="QueryParam" path="params" type="QueryParam" min="0" max="-1"/>
+        <property name="Query" path="query" type="String" references="PropertyDefinition"/>
+    </particle>
+
+    <particle name="AlertAction">
+        <property name="Enabled" path="enabled" type="Boolean" default="true"/>
+    </particle>
+
+    <particle name="VisualAlertAction" extends="AlertAction">
+        <property name="FillColor" path="fillColor" type="Color" optional="true" default="ff0000"/>
+        <property name="FontSize" path="fontSize" type="Integer" min="8" max="12" optional="true" default="10"/>
+        <property name="FontStyle" path="fontStyle" type="String" enum="FontStyleEnum" optional="true" default="Normal"/>
+        <property name="FontColor" path="fontColor" type="Color" optional="true" default="000000"/>
+        <property name="DisplayFormat" path="displayFormat" type="String" optional="true" references="PropertyDefinition"/>
+        <property name="TooltipFormat" path="tooltipFormat" type="String" optional="true" references="PropertyDefinition"/>
+    </particle>
+
+    <particle name="Alert">
+        <property name="Enabled" path="enabled" type="Boolean" default="true"/>
+        <particle name="Action" path="action" type="Action" min="0" max="-1"/>
+    </particle>
+
+    <particle name="RangeAlert" extends="Alert">
+        <property name="LowerValue" path="lowerValue" type="Double" optional="true"/>
+        <property name="UpperValue" path="upperValue" type="Double" optional="true"/>
+        <particle name="Action" path="action" type="VisualAlertAction" min="0" max="-1"/>
+    </particle>
+
+    <particle name="ActionRule">
+        <property name="ThresholdUnit" path="thresholdUnit" type="ThresholdUnitEnum" default="count"/>
+        <property name="Threshold" path="threshold" type="Integer" default="0" allownegative="true"/>
+        <particle name="DataSource" path="@dataSource" type="DataSource" max="1"/>
+        <particle name="Alert" path="alert" type="RangeAlert" min="0" max="-1"/>
+        <particle name="DrillableFields" path="@drillableFields" type="PropertyDefinition" min="0" max="-1"/>
+        <particle name="QueryParam" path="params" type="QueryParam" min="0" max="-1"/>
+    </particle>
+
+    <particle name="SeriesConfig">
+		<!-- TODO find out if any one is using Display Name -->
+        <property name="Display Name" path="displayName" type="String" optional="true"/>
+        <property name="ToolTip" path="toolTip" type="String" optional="true"/>
+        <particle name="ActionRule" path="actionRule" type="ActionRule" max="1"/>
+    </particle>
+
+    <particle name="ChartSeriesConfig" extends="SeriesConfig">
+		<!-- Anchor Setting -->
+        <property name="Anchor" path="anchor" type="String" enum="SeriesAnchorEnum"/>
+		<!-- Category Field Settings -->
+        <property name="CategoryAxisField" path="categoryDataConfig:{ChartCategoryDataConfig}.extractor:{DataExtractor}.@sourceField" type="PropertyDefinition" references="PropertyDefinition"/>
+        <property name="CategoryAxisFieldDisplayFormat" path="categoryDataConfig:{ChartCategoryDataConfig}.formatter:{TextFieldFormat}.displayFormat" type="String" optional="true" references="PropertyDefinition"/>
+		<!-- Value Field Settings -->
+		<property name="ValueAxisField" path="valueDataConfig[formatter=TextFieldFormat]:{ChartValueDataConfig}.extractor:{DataExtractor}.@sourceField" type="PropertyDefinition" references="PropertyDefinition"/>
+		<!-- Value Field Display Label Settings -->
+        <property name="ShowDataValue" path="valueDataConfig[formatter=TextFieldFormat]:{ChartValueDataConfig}.formatter:{TextFieldFormat}.showLabel" type="boolean" default="true"/>
+        <property name="ValueLabelFontSize" path="valueDataConfig[formatter=TextFieldFormat]:{ChartValueDataConfig}.formatter:{TextFieldFormat}.formatStyle:{FormatStyle}.fontSize" type="Integer" min="8" max="12" optional="true" default="10"/>
+        <property name="ValueLabelFontStyle" path="valueDataConfig[formatter=TextFieldFormat]:{ChartValueDataConfig}.formatter:{TextFieldFormat}.formatStyle:{FormatStyle}.fontStyle" type="String" enum="FontStyleEnum" optional="true" default="Normal"/>
+        <property name="ValueAxisFieldDisplayFormat" path="valueDataConfig[formatter=TextFieldFormat]:{ChartValueDataConfig}.formatter:{TextFieldFormat}.displayFormat" type="String" optional="true" references="PropertyDefinition"/>
+        <property name="ValueAxisFieldTooltipFormat" path="valueDataConfig[formatter=TextFieldFormat]:{ChartValueDataConfig}.formatter:{TextFieldFormat}.toolTipFormat" type="String" optional="true" references="PropertyDefinition"/>
+    </particle>
+
+    <particle name="RangePlotChartSeriesConfig" extends="ChartSeriesConfig">
+        <property name="Type" path="type" type="String" enum="RangePlotChartSeriesTypeEnum"/>
+    </particle>
+
+    <particle name="TextSeriesConfig" extends="SeriesConfig">
+		<!-- Category Field Settings -->
+        <property name="CategoryColumnField" path="categoryDataConfig:{TextCategoryDataConfig}.extractor:{DataExtractor}.@sourceField" type="PropertyDefinition" references="PropertyDefinition"/>
+        <property name="CategoryColumnFieldDisplayFormat" path="categoryDataConfig:{TextCategoryDataConfig}.formatter:{TextFieldFormat}.displayFormat" type="String" optional="true" references="PropertyDefinition"/>
+		<!-- Value Field As Text Settings -->
+		<property name="TextValueColumnField" path="valueDataConfig[formatter=TextFieldFormat]:{TextValueDataConfig}.extractor:{DataExtractor}.@sourceField" type="PropertyDefinition" references="PropertyDefinition"/>
+		<!-- Value Field As Text Column Setting -->
+		<property name="TextValueColumnFieldHeaderName" path="valueDataConfig[formatter=TextFieldFormat]:{TextValueDataConfig}.headerName" type="String" default="Value Column"/>
+        <property name="TextValueColumnFieldWidth" path="valueDataConfig[formatter=TextFieldFormat]:{TextValueDataConfig}.width" type="String" min="0%" max="100%" default="50%"/>
+        <property name="TextValueColumnFieldAlignment" path="valueDataConfig[formatter=TextFieldFormat]:{TextValueDataConfig}.alignment" type="String" enum="FieldAlignmentEnum" default="Right"/>
+        <!-- Value Field As Text Display Label Settings -->
+        <property name="TextShowDataValue" path="valueDataConfig[formatter=TextFieldFormat]:{TextValueDataConfig}.formatter:{TextFieldFormat}.showLabel" type="boolean" default="true"/>
+        <property name="TextValueColumnFieldDisplayFormat" path="valueDataConfig[formatter=TextFieldFormat]:{TextValueDataConfig}.formatter:{TextFieldFormat}.displayFormat" type="String" optional="true" references="PropertyDefinition"/>
+        <property name="TextValueColumnFieldDisplayFontSize" path="valueDataConfig[formatter=TextFieldFormat]:{TextValueDataConfig}.formatter:{TextFieldFormat}.formatStyle:{FormatStyle}.fontSize" type="Integer" min="8" max="12" default="10"/>
+        <property name="TextValueColumnFieldDisplayFontStyle" path="valueDataConfig[formatter=TextFieldFormat]:{TextValueDataConfig}.formatter:{TextFieldFormat}.formatStyle:{FormatStyle}.fontStyle" type="String" enum="FontStyleEnum" default="Normal"/>
+        <property name="TextValueColumnFieldTooltipFormat" path="valueDataConfig[formatter=TextFieldFormat]:{TextValueDataConfig}.formatter:{TextFieldFormat}.toolTipFormat" type="String" optional="true" references="PropertyDefinition"/>
+		<!-- Value Field As Indicator Settings -->
+		<property name="IndicatorValueColumnField" path="valueDataConfig[formatter=IndicatorFieldFormat]:{TextValueDataConfig}.extractor:{DataExtractor}.@sourceField" type="PropertyDefinition" references="PropertyDefinition"/>
+		<!-- Value Field As Indicator Column Setting -->
+		<property name="IndicatorValueColumnFieldHeaderName" path="valueDataConfig[formatter=IndicatorFieldFormat]:{TextValueDataConfig}.headerName" type="String" default="Value Column"/>
+        <property name="IndicatorValueColumnFieldWidth" path="valueDataConfig[formatter=IndicatorFieldFormat]:{TextValueDataConfig}.width" type="String" min="0%" max="100%" default="50%"/>
+        <property name="IndicatorValueColumnFieldAlignment" path="valueDataConfig[formatter=IndicatorFieldFormat]:{TextValueDataConfig}.alignment" type="String" enum="FieldAlignmentEnum" default="Right"/>
+        <!-- Value Field As Indicator Display Label Settings -->
+        <property name="IndicatorShowDataValue" path="valueDataConfig[formatter=IndicatorFieldFormat]:{TextValueDataConfig}.formatter:{IndicatorFieldFormat}.showLabel" type="boolean" default="true"/>
+        <property name="IndicatorValueColumnFieldDisplayFormat" path="valueDataConfig[formatter=IndicatorFieldFormat]:{TextValueDataConfig}.formatter:{IndicatorFieldFormat}.displayFormat" type="String" optional="true" references="PropertyDefinition"/>
+        <property name="IndicatorValueColumnFieldDisplayFontSize" path="valueDataConfig[formatter=IndicatorFieldFormat]:{TextValueDataConfig}.formatter:{IndicatorFieldFormat}.formatStyle:{FormatStyle}.fontSize" type="Integer" min="8" max="12" default="10"/>
+        <property name="IndicatorValueColumnFieldDisplayFontStyle" path="valueDataConfig[formatter=IndicatorFieldFormat]:{TextValueDataConfig}.formatter:{IndicatorFieldFormat}.formatStyle:{FormatStyle}.fontStyle" type="String" enum="FontStyleEnum" default="Normal"/>
+        <property name="IndicatorValueColumnFieldTooltipFormat" path="valueDataConfig[formatter=IndicatorFieldFormat]:{TextValueDataConfig}.formatter:{IndicatorFieldFormat}.toolTipFormat" type="String" optional="true" references="PropertyDefinition"/>
+		<!-- Value Field As Indicator Bulb Anchor Settings -->
+		<property name="IndicatorShowValueColumnFieldTextValue" path="valueDataConfig[formatter=IndicatorFieldFormat]:{TextValueDataConfig}.formatter:{IndicatorFieldFormat}.showTextValue" type="boolean" optional="true"/>
+        <property name="IndicatorValueColumnFieldTextValueAnchor" path="valueDataConfig[formatter=IndicatorFieldFormat]:{TextValueDataConfig}.formatter:{IndicatorFieldFormat}.textValueAnchor" type="String" enum="AnchorPositionEnum" default="None" optional="true"/>
+    </particle>
+
+    <!-- Possible Combinations are -->
+    <!-- Indicator + Progress -->
+    <!-- Indicator + Text -->
+    <!-- Progress -->
+    <!-- Text -->
+    <particle name="StateSeriesConfig" extends="SeriesConfig">
+        <!-- Indicator Properties  -->
+        <property name="IndicatorValueField" path="valueDataConfig[formatter=IndicatorFieldFormat]:{StateDataConfig}.extractor:{DataExtractor}.@sourceField" type="PropertyDefinition" optional="true"/>
+        <property name="IndicatorTooltipFormat" path="valueDataConfig[formatter=IndicatorFieldFormat]:{StateDataConfig}.formatter:{IndicatorFieldFormat}.toolTipFormat" type="String"  optional="true"/>
+        <!-- Progress Bar Properties  -->
+        <property name="ProgressValueField" path="valueDataConfig[formatter=ProgressBarFieldFormat]:{StateDataConfig}.extractor:{DataExtractor}.@sourceField" type="PropertyDefinition"  optional="true"/>
+        <property name="ProgressDisplayFormat" path="valueDataConfig[formatter=ProgressBarFieldFormat]:{StateDataConfig}.formatter:{ProgressBarFieldFormat}.displayFormat" type="String"  optional="true"/>
+        <property name="ProgressTooltipFormat" path="valueDataConfig[formatter=ProgressBarFieldFormat]:{StateDataConfig}.formatter:{ProgressBarFieldFormat}.toolTipFormat" type="String"  optional="true"/>
+        <property name="ProgressMinValue" path="valueDataConfig[formatter=ProgressBarFieldFormat]:{StateDataConfig}.formatter:{ProgressBarFieldFormat}.minValue:{ConstantValueOption}.value" type="Double" allownegative="true" optional="true"/>
+        <property name="ProgressMaxValue" path="valueDataConfig[formatter=ProgressBarFieldFormat]:{StateDataConfig}.formatter:{ProgressBarFieldFormat}.maxValue:{ConstantValueOption}.value" type="Double" allownegative="true" optional="true"/>
+        <property name="ProgressMinField" path="valueDataConfig[formatter=ProgressBarFieldFormat]:{StateDataConfig}.formatter:{ProgressBarFieldFormat}.minValue:{FieldReferenceValueOption}.@field" type="PropertyDefinition"  optional="true"/>
+        <property name="ProgressMaxField" path="valueDataConfig[formatter=ProgressBarFieldFormat]:{StateDataConfig}.formatter:{ProgressBarFieldFormat}.maxValue:{FieldReferenceValueOption}.@field" type="PropertyDefinition"  optional="true"/>
+        <!-- Text Properties  -->
+        <property name="TextValueField" path="valueDataConfig[formatter=TextFieldFormat]:{StateDataConfig}.extractor:{DataExtractor}.@sourceField" type="PropertyDefinition"  optional="true"/>
+        <property name="TextDisplayFormat" path="valueDataConfig[formatter=TextFieldFormat]:{StateDataConfig}.formatter:{TextFieldFormat}.displayFormat" type="String"  optional="true"/>
+        <property name="TextTooltipFormat" path="valueDataConfig[formatter=TextFieldFormat]:{StateDataConfig}.formatter:{TextFieldFormat}.toolTipFormat" type="String"  optional="true"/>
+    </particle>
+
+    <particle name="Visualization">
+        <property name="Display Name" path="displayName" type="String" optional="true"/>
+        <!-- Not  in Anand's list
+        <property name="BackgroundColorGradientDirection" path="background.gradientDirection" type="String" enum="GradientDirectionEnum"/>
+        -->
+        <!-- The semantic of seriesColorIndex is SeriesColor object. However, just expose it as index in this release. -->
+        <!-- Suresh and Anand decided not to expose this property since it is exposed in the component already - 10/24/2005 -->
+        <!--<property name="SeriesColor" path="seriesColorIndex" type="Integer"/>-->
+    </particle>
+
+    <particle name="ScatterPlotChartVisualization" extends="Visualization">
+        <property name="PlotShape" path="plotShape" type="String" enum="PlotShapeEnum" default="Circle" optional="true"/>
+        <property name="PlotShapeDimension" path="plotShapeDimension" type="int" min="1" max="5" default="3" optional="true"/>
+        <particle name="ChartSeriesConfig" path="seriesConfig" type="ChartSeriesConfig" min="0" max="-1"/>
+    </particle>
+
+    <particle name="LineChartVisualization" extends="Visualization">
+        <property name="LineThickness" path="lineThickness" type="Integer" min="2" default="2" optional="true" max="5"/>
+        <property name="DataPoints" path="dataPlotting" type="String" enum="DataPlottingEnum" default="Edges"/>
+        <property name="PlotShape" path="plotShape" type="String" enum="PlotShapeEnum" default="Circle" optional="true"/>
+        <property name="PlotShapeDimension" path="plotShapeDimension" type="int" min="1" max="5" default="3" optional="true"/>
+        <particle name="ChartSeriesConfig" path="seriesConfig" type="ChartSeriesConfig" min="0" max="-1"/>
+    </particle>
+
+    <particle name="BarChartVisualization" extends="Visualization">
+        <property name="BarWidth" path="width" type="Integer" optional="true" default="10" min="4" max="20"/>
+        <property name="TopCapThickness" path="topCapThickness" optional="true" type="Double" min="0.0" max="1.0" default="0.5"/>
+        <property name="OverLapPercentage" path="overlapPercentage" optional="true" type="Integer" min="0" max="100" default="0"/>
+        <property name="Orientation" path="orientation" type="String" enum="OrientationEnum" default="Vertical"/>
+        <particle name="ChartSeriesConfig" path="seriesConfig" type="ChartSeriesConfig" min="0" max="-1"/>
+    </particle>
+
+    <particle name="PieChartVisualization" extends="Visualization">
+        <property name="StartingAngle" path="startingAngle" type="Integer" optional="true" default="0" min="0" max="360"/>
+        <property name="Direction" path="direction" type="String" enum="PieChartDirectionEnum" default="Clockwise"/>
+        <property name="Sector" path="sector" type="Integer" optional="true" default="0" min="0"/>
+        <particle name="ChartSeriesConfig" path="seriesConfig" type="ChartSeriesConfig" min="0" max="-1"/>
+    </particle>
+
+    <particle name="RangePlotChartVisualization" extends="Visualization">
+        <property name="Orientation" path="orientation" type="String" enum="OrientationEnum" default="Vertical"/>
+        <particle name="RangePlotChartSeriesConfig" path="seriesConfig" type="RangePlotChartSeriesConfig" min="0" max="-1"/>
+    </particle>
+
+    <particle name="AreaChartVisualization" extends="LineChartVisualization">
+        <property name="FillingOpacity" path="fillOpacity" optional="true" default="33" type="Integer" min="0" max="100"/>
+    </particle>
+
+    <particle name="TextVisualization" extends="Visualization">
+        <property name="ShowHeader" path="showHeader" type="Boolean" default="true"/>
+        <property name="CategoryColumnHeaderName" path="categoryGuidelineConfig:{TextCategoryGuidelineConfig}.headerName" type="String" default="Categories"/>
+        <property name="CategoryColumnHeaderFontSize" path="categoryGuidelineConfig:{TextCategoryGuidelineConfig}.headerFormatStyle:{FormatStyle}.fontSize" type="Integer" min="8" max="12" default="10"/>
+        <property name="CategoryColumnHeaderFontStyle" path="categoryGuidelineConfig:{TextCategoryGuidelineConfig}.headerFormatStyle:{FormatStyle}.fontStyle" type="String" enum="FontStyleEnum" default="Bold"/>
+        <property name="CategoryColumnLabelFontSize" path="categoryGuidelineConfig:{TextCategoryGuidelineConfig}.labelFormatStyle:{FormatStyle}.fontSize" type="Integer" min="8" max="12" default="10"/>
+        <property name="CategoryColumnLabelFontStyle" path="categoryGuidelineConfig:{TextCategoryGuidelineConfig}.labelFormatStyle:{FormatStyle}.fontStyle" type="String" enum="FontStyleEnum" default="Normal"/>
+        <property name="CategoryColumnLabelSortOrder" path="categoryGuidelineConfig:{TextCategoryGuidelineConfig}.sortOrder" type="String" enum="SortEnum" default="As Listed"/>
+        <property name="CategoryColumnLabelAllowDuplicates" path="categoryGuidelineConfig:{TextCategoryGuidelineConfig}.duplicatesAllowed" type="Boolean" optional="true" default="true"/>
+        <property name="CategoryColumnHeaderAlignment" path="categoryGuidelineConfig:{TextCategoryGuidelineConfig}.headerAlignment" type="String" enum="FieldAlignmentEnum" default="Left"/>
+        <property name="CategoryColumnLabelAlignment" path="categoryGuidelineConfig:{TextCategoryGuidelineConfig}.labelAlignment" type="String" enum="FieldAlignmentEnum" default="Left"/>
+        <property name="CategoryColumnWidthPercentage" path="categoryGuidelineConfig:{TextCategoryGuidelineConfig}.width" type="String" default="50%"/>
+        <property name="ValueColumnHeaderFontSize" path="valueGuidelineConfig:{TextValueGuidelineConfig}.headerFormatStyle:{FormatStyle}.fontSize" type="Integer" min="8" max="12" default="10"/>
+        <property name="ValueColumnHeaderFontStyle" path="valueGuidelineConfig:{TextValueGuidelineConfig}.headerFormatStyle:{FormatStyle}.fontStyle" type="String" enum="FontStyleEnum" default="Bold"/>
+        <property name="ValueColumnHeaderAlignment" path="valueGuidelineConfig:{TextValueGuidelineConfig}.headerAlignment" type="String" enum="FieldAlignmentEnum" default="Right"/>
+        <particle name="TextSeriesConfig" path="seriesConfig" type="TextSeriesConfig" min="0" max="-1"/>
+    </particle>
+
+    <particle name="PageVisualization" extends="Visualization">
+        <particle name="TextSeriesConfig" path="seriesConfig" type="TextSeriesConfig" min="0" max="-1"/>
+    </particle>
+
+    <particle name="StateVisualization" extends="Visualization">
+        <property name="Display Name" path="displayName" type="String" optional="true"/>
+        <!-- the state particle should be psuedo -->
+        <particle name="State" path="@state" type="{StateEntity}"/>
+        <particle name="StateSeriesConfig" path="seriesConfig" type="StateSeriesConfig" min="0" max="-1"/>
+        <particle name="RelatedComponent" path="@relatedElement" type="Component" min="0" max="-1"/>
+    </particle>
+
+    <particle name="Component">
+        <property name="Display Name" path="displayName" type="String" optional="true"/>
+        <!-- Not in Anand's list
+        <property name="BackgroundColorGradientDirection" path="background.gradientDirection" type="String" enum="GradientDirectionEnum"/>
+        -->
+    </particle>
+
+    <particle name="ChartComponent" extends="Component">
+		<!-- About Help Setting -->
+        <property name="About This Chart" path="helpText" type="String" optional="true"/>
+		<!-- Component Size Settings -->
+        <property name="RowSpan" path="layoutConstraint:{FlowLayoutConstraint}.componentRowSpan" type="Integer" min="1"/> <!-- max="3" -->
+        <property name="ColSpan" path="layoutConstraint:{FlowLayoutConstraint}.componentColSpan" type="Integer" min="1"/> <!-- max="3" -->
+        <!-- Component Skin Settings -->
+        <property name="ColorSet" path="componentColorSetIndex" type="Integer" min="-1"/>
+        <property name="SeriesColor" path="seriesColorIndex" type="Integer" min="-1"/>
+		<!-- Plot Area Settings -->
+		<property name="GridStyle" path="plotArea:{PlotAreaFormat}.foreground:{ForegroundFormat}.line" type="String" enum="LineEnum" default="Both"/>
+		<!-- Legend Settings -->
+        <property name="LegendOrientation" path="legend:{LegendFormat}.orientation" type="String" enum="OrientationWithNoneEnum" default="None" optional="true"/>
+        <property name="LegendAnchor" path="legend:{LegendFormat}.anchor" type="String" enum="AnchorEnum" default="None" optional="true"/>
+		<!-- Category Axis Settings -->
+        <property name="CategoryAxisHeaderName" path="categoryGuidelineConfig:{ChartCategoryGuidelineConfig}.headerName" type="String" default="" optional="true"/>
+        <property name="CategoryAxisHeaderFontSize" path="categoryGuidelineConfig:{ChartCategoryGuidelineConfig}.headerFormatStyle:{FormatStyle}.fontSize" type="Integer" min="8" max="12" default="10"/>
+        <property name="CategoryAxisHeaderFontStyle" path="categoryGuidelineConfig:{ChartCategoryGuidelineConfig}.headerFormatStyle:{FormatStyle}.fontStyle" type="String" enum="FontStyleEnum" default="Normal"/>
+        <property name="CategoryAxisLabelFontSize" path="categoryGuidelineConfig:{ChartCategoryGuidelineConfig}.labelFormatStyle:{FormatStyle}.fontSize" type="Integer" min="8" max="12" default="10"/>
+        <property name="CategoryAxisLabelFontStyle" path="categoryGuidelineConfig:{ChartCategoryGuidelineConfig}.labelFormatStyle:{FormatStyle}.fontStyle" type="String" enum="FontStyleEnum" default="Normal"/>
+        <property name="CategoryAxisLabelSortOrder" path="categoryGuidelineConfig:{ChartCategoryGuidelineConfig}.sortOrder" type="String" enum="SortEnum" default="As Listed"/>
+        <property name="CategoryAxisLabelAllowDuplicates" path="categoryGuidelineConfig:{ChartCategoryGuidelineConfig}.duplicatesAllowed" type="Boolean" optional="true" default="true"/>
+		<!-- Value Axis Settings -->
+        <property name="ValueAxisHeaderName" path="valueGuidelineConfig:{ChartValueGuidelineConfig}.headerName" type="String" default="" optional="true"/>
+        <property name="ValueAxisHeaderFontSize" path="valueGuidelineConfig:{ChartValueGuidelineConfig}.headerFormatStyle:{FormatStyle}.fontSize" type="Integer" min="8" max="12" default="10"/>
+        <property name="ValueAxisHeaderFontStyle" path="valueGuidelineConfig:{ChartValueGuidelineConfig}.headerFormatStyle:{FormatStyle}.fontStyle" type="String" enum="FontStyleEnum" default="Normal"/>
+        <property name="ValueAxisLabelFontSize" path="valueGuidelineConfig:{ChartValueGuidelineConfig}.labelFormatStyle:{FormatStyle}.fontSize" type="Integer" min="8" max="12" default="10"/>
+        <property name="ValueAxisLabelFontStyle" path="valueGuidelineConfig:{ChartValueGuidelineConfig}.labelFormatStyle:{FormatStyle}.fontStyle" type="String" enum="FontStyleEnum" default="Normal"/>
+        <property name="ValueAxisScale" path="valueGuidelineConfig:{ChartValueGuidelineConfig}.scale" type="String" enum="ScaleEnum" default="Auto"/>
+        <property name="ValueAxisDivisionCount" path="valueGuidelineConfig:{ChartValueGuidelineConfig}.division" type="Integer" min="1" max="10" default="5"/>
+		<!-- Design Time Data Settings -->
+		<property name="DesignCategories" path="Category" type="String" array="true" optional="true"/>
+		<property name="MaxValue" path="MaxValue" type="Double" optional="true"/>
+		<property name="MinValue" path="MinValue" type="Double" optional="true"/>
+        <!-- Visualizations -->
+        <particle name="BarChartVisualization" path="visualization" type="BarChartVisualization" min="0" max="-1"/>
+        <particle name="LineChartVisualization" path="visualization" type="LineChartVisualization" min="0" max="-1"/>
+        <particle name="AreaChartVisualization" path="visualization" type="AreaChartVisualization" min="0" max="-1"/>
+        <particle name="PieChartVisualization" path="visualization" type="PieChartVisualization" min="0" max="-1"/>
+        <particle name="RangePlotChartVisualization" path="visualization" type="RangePlotChartVisualization" min="0" max="-1"/>
+        <particle name="ScatterPlotChartVisualization" path="visualization" type="ScatterPlotChartVisualization" min="0" max="-1"/>
+		<!-- Related Component Settings -->
+		<particle name="RelatedComponent" path="@relatedElement" type="Component" min="0" max="-1"/>
+    </particle>
+
+	<particle name="TextComponent" extends="Component">
+		<!-- About Help Setting -->
+        <property name="About This Chart" path="helpText" type="String" optional="true"/>
+		<!-- Component Size Settings -->
+        <property name="RowSpan" path="layoutConstraint:{FlowLayoutConstraint}.componentRowSpan" type="Integer" min="1"/> <!-- max="3" -->
+        <property name="ColSpan" path="layoutConstraint:{FlowLayoutConstraint}.componentColSpan" type="Integer" min="1"/> <!-- max="3" -->
+        <!-- Component Skin Settings -->
+        <property name="ColorSet" path="componentColorSetIndex" type="Integer" min="-1"/>
+		<!-- Sub Type Settings -->
+		<property name="subType" path="subtype" type="String" optional="true"/>
+		<!-- Design Time Data Settings -->
+		<property name="DesignCategories" path="Category" type="String" array="true" optional="true"/>
+		<property name="MaxValue" path="MaxValue" type="Double" optional="true"/>
+		<property name="MinValue" path="MinValue" type="Double" optional="true"/>
+		<!-- Visualizations -->
+        <particle name="TextVisualization" path="visualization" type="TextVisualization" min="0" max="-1"/>
+		<!-- Related Component Settings -->
+		<particle name="RelatedComponent" path="@relatedElement" type="Component" min="0" max="-1"/>
+    </particle>
+
+    <particle name="PageSelectorComponent" extends="Component">
+    </particle>
+
+    <particle name="StateMachineComponent" extends="Component">
+        <property name="Display Name" path="displayName" type="String" optional="true"/>
+        <property name="StateVisualizationWidth" path="stateVisualizationWidth" type="integer" optional="true" default="80"/>
+        <property name="StateVisualizationHeight" path="stateVisualizationHeight" type="integer" optional="true" default="40"/>
+        <particle name="StateMachine" path="@stateMachine" type="{StateMachine}"/>
+        <particle name="StateVisualization" path="visualization" type="StateVisualization" min="0" max="-1"/>
+    </particle>
+
+    <particle name="ClassifierComponent" extends="Component">
+        <particle name="ClassifierVisualization" path="visualization" type="ClassifierVisualization" min="0" max="-1"/>
+    </particle>
+
+    <particle name="Panel">
+        <property name="Display Name" path="displayName" type="String" optional="true"/>
+        <property name="Maximizable" pseudo="true" path="maximizable" type="Boolean" default="true"/>
+        <property name="Minimizable" pseudo="true" path="minimizable" type="Boolean" default="true"/>
+        <property name="SpanPercentage" path="span" type="String" min="1%" max="100%"/>
+        <property name="ScrollBar" pseudo="true" path="scrollBar" type="String" enum="ScrollBarConfigEnum" default="Auto"/>
+        <property name="State" pseudo="true" path="state" type="String" enum="PanelStateEnum" default="Normal"/>
+        <particle name="Component" path="@component" type="Component" min="0" max="-1"/>
+        <!--
+            The following three *should be* set if the panel
+            contains any text/chart component and *should not be* set
+            otherwise.
+        -->
+        <property name="LayoutRepositioningAllowed" pseudo="true" path="layout:{FlowLayout}.repositioningAllowed" type="boolean" optional="true" default="true"/>
+        <property name="LayoutComponentWidth" pseudo="true" path="layout:{FlowLayout}.componentWidth" type="Integer" optional="true" default="200"/>
+        <property name="LayoutComponentHeight" pseudo="true" path="layout:{FlowLayout}.componentHeight" type="Integer" optional="true" default="140"/>
+    </particle>
+
+    <particle name="Partition">
+        <property name="Display Name" path="displayName" type="String" optional="true"/>
+        <property name="Vertical" pseudo="true" path="vertical" type="Boolean" default="true"/>
+        <property name="SpanPercentage" path="span" type="String" min="1%" max="100%"/>
+        <property name="State" pseudo="true" path="state" type="String" enum="PartitionStateEnum" default="Open"/>
+        <particle name="Panel" path="panel" type="Panel" max="-1"/>
+    </particle>
+
+    <particle name="Page">
+        <property name="Display Name" path="displayName" type="String" optional="true"/>
+        <property name="DisplayMode" pseudo="true" path="displayMode" type="String" enum="DisplayModeEnum" default="inplace"/>
+        <particle name="Partition" path="partition" type="Partition" max="-1"/>
+        <particle name="PageVisualization" path="visualization" type="PageVisualization" min="0" max="1"/>
+    </particle>
+
+    <particle name="DashboardPage" extends="Page"/>
+
+    <particle name="View">
+        <property name="Display Name" path="displayName" type="String" optional="true"/>
+        <particle name="DefaultPage" path="@defaultPage" type="Page" min="1" max="1"/>
+        <particle name="Page" path="@accessiblePage" type="Page" min="1" max="-1"/>
+        <!-- Special case: changed Skin from particle to property with drop down list. Java.
+        <particle name="Skin" path="@skin" type="Skin"/>
+        <property name="Skin" path="@skin" type="Skin" enum="Dummy"/>
+        -->
+
+        <particle name="Skin" path="@skin" type="Skin" min="0" max="1"/>
+
+        <!-- Not supported per Anannd
+        <particle name="Locale" path="@locale" type="Locale"/>
+        -->
+        <particle name="Attribute" path="attribute" type="ViewAttribute" min="0" max="-1"/>
+    </particle>
+
+    <particle name="ContextActionRuleSet">
+        <property name="ApplicationContext" path="diContext" type="String"/>
+        <particle name="ActionRule" path="@actionRule" type="{MDActionRule}" min="0" max="-1"/>
+    </particle>
+
+    <particle name="Login">
+        <property name="Title" path="title" type="String" optional="true"/>
+        <property name="Image URL" path="imageURL" type="ImageURL" optional="true"/>
+    </particle>
+
+    <particle name="HeaderLink">
+        <property name="URLName" path="urlName" type="String"/>
+        <property name="URLLink" path="urlLink" type="String"/>
+    </particle>
+
+    <particle name="Header">
+        <property name="Title" path="title" type="String" optional="true" pseudo="true" default=""/>
+        <property name="Image URL" path="brandingImage" optional="true" type="ImageURL"/>
+        <property name="brandingText" pseudo="true" path="brandingText" type="String" optional="true" default=""/>
+        <particle name="HeaderLinks" path="headerLink" type="HeaderLink" min="0" max="5"/>
+    </particle>
+
+    <particle name="ComponentGalleryFolder">
+        <particle name="SubFolder" path="subFolder" type="ComponentGalleryFolder" min="0" max="-1"/>
+        <particle name="Component" path="@component" type="Component" min="0" max="-1"/>
+    </particle>
+
+    <particle name="RolePreference">
+    	<property name="Role" path="role" type="String" optional="true" default=""/>
+        <particle name="Gallery" path="gallery" type="ComponentGalleryFolder" min="0" max="1"/>
+        <particle name="View" path="@view" type="View" min="1" max="1"/>
+    </particle>
+
+</viewsconfig>

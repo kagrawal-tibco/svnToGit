@@ -1,0 +1,140 @@
+/**
+ * @description 
+ */
+WebStudio.Core.Concepts.DataSources.WS_C_TemporaryReturnData rulefunction WebStudio.Core.RuleFunctions.Actions.Dashboard.WS_RF_FetchUserGroups {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object servletRequest;
+		WebStudio.Security.Authn.Concepts.WS_C_LoggedInUser loggedInUser;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.Dashboard.WS_RF_FetchUserGroups");
+			
+		WS_C_ResponseData responseData = null;
+		int responseStatus = 0;
+		int recordCount = 0;
+		String errorCode = null;
+		String responseMessage = null;
+
+		if (!WS_RF_CheckHTTPMethod(servletRequest, "GET")) {
+			responseStatus = -1;
+			recordCount = 0;
+			errorCode = "ERR_5101";
+			responseMessage = "Invalid HTTP Method, expect method is [GET].";
+		} else {
+			//Lock and load User Dashboard concept
+			String userDashboardExtId = WS_RF_CreateUserArtifactExtId("DASHBOARD", null, null, loggedInUser.username, null, null);
+			Log.log(LOGGER, "Debug", "Trying to acquire lock on Dashboard space with ExtId - %s", userDashboardExtId);
+			boolean userDashboardLock = Cluster.DataGrid.Lock(userDashboardExtId, -1, false);
+			if (userDashboardLock) {
+				Log.log(LOGGER, "Debug", "Lock acquired for Dashboard space.");
+				WS_C_UserDashboard userDashboard = Instance.getByExtIdByUri(userDashboardExtId, "/WebStudio/Core/Concepts/Dashboard/WS_C_UserDashboard");
+				
+				if (userDashboard == null) {
+					Log.log(LOGGER, "DEBUG", "Creating a new object for Dashboard Space");
+					//Create a new one
+					userDashboard = 
+						    Instance.newInstance("/WebStudio/Core/Concepts/Dashboard/WS_C_UserDashboard", userDashboardExtId);
+				}
+				Log.log(LOGGER, "Debug", "User Dashboard instance id %s", userDashboard@id);
+				
+				if (userDashboard.userGroups@length == 0) {
+					// create System Groups
+					String groupExtId = userDashboardExtId + "@Projects";
+					boolean groupLock = Cluster.DataGrid.Lock(groupExtId, -1, false);
+					WS_C_Group newGroup = null;
+					if (groupLock) {
+						newGroup = Instance.getByExtIdByUri(groupExtId, "/WebStudio/Core/Concepts/Dashboard/WS_C_Group");
+						if (newGroup == null) {
+							newGroup = Instance.newInstance("/WebStudio/Core/Concepts/Dashboard/WS_C_Group", groupExtId);
+							newGroup.name = "Projects";
+							newGroup.systemGroup = true;
+							newGroup.icon = "projectexplorer.png";
+							newGroup.fileType = null;
+							
+							Instance.PropertyArray.appendContainedConcept(userDashboard.userGroups, newGroup, 1L);
+							WS_RF_AddAuditTrailEntry(loggedInUser.username, null, null, null, "CREATE", "Group " + newGroup.name + " Created");
+						}
+					}
+					
+					groupExtId = userDashboardExtId + "@BusinessRules";
+					groupLock = Cluster.DataGrid.Lock(groupExtId, -1, false);
+					if (groupLock) {
+						newGroup = Instance.getByExtIdByUri(groupExtId, "/WebStudio/Core/Concepts/Dashboard/WS_C_Group");
+						if (newGroup == null) {
+							newGroup = Instance.newInstance("/WebStudio/Core/Concepts/Dashboard/WS_C_Group", groupExtId);
+							newGroup.name = "Business Rules";
+							newGroup.systemGroup = true;
+							newGroup.icon = "rulesTemplateInstance.png";
+							newGroup.fileType = "ruletemplateinstance";
+							
+							Instance.PropertyArray.appendContainedConcept(userDashboard.userGroups, newGroup, 1L);
+							WS_RF_AddAuditTrailEntry(loggedInUser.username, null, null, null, "CREATE", "Group " + newGroup.name + " Created");
+						} 
+					}
+					
+					groupExtId = userDashboardExtId + "@DecisionTables";
+					groupLock = Cluster.DataGrid.Lock(groupExtId, -1, false);
+					if (groupLock) {
+						newGroup = Instance.getByExtIdByUri(groupExtId, "/WebStudio/Core/Concepts/Dashboard/WS_C_Group");
+						if (newGroup == null) {
+							newGroup = Instance.newInstance("/WebStudio/Core/Concepts/Dashboard/WS_C_Group", groupExtId);
+							newGroup.name = "Decision Tables";
+							newGroup.systemGroup = true;
+							newGroup.icon = "decisiontable.png";
+							newGroup.fileType = "rulefunctionimpl";
+							
+							Instance.PropertyArray.appendContainedConcept(userDashboard.userGroups, newGroup, 1L);
+							WS_RF_AddAuditTrailEntry(loggedInUser.username, null, null, null, "CREATE", "Group " + newGroup.name + " Created");
+						}
+					}
+					
+//					groupExtId = userDashboardExtId + "@Processes";
+//					groupLock = Cluster.DataGrid.Lock(groupExtId, -1, false);
+//					if (groupLock) {
+//						newGroup = Instance.getByExtIdByUri(groupExtId, "/WebStudio/Core/Concepts/Dashboard/WS_C_Group");
+//						if (newGroup == null) {
+//							newGroup = Instance.newInstance("/WebStudio/Core/Concepts/Dashboard/WS_C_Group", groupExtId);
+//							newGroup.name = "Processes";
+//							newGroup.systemGroup = true;
+//							newGroup.icon = "process.png";
+//							newGroup.fileType = "beprocess";
+//							
+//							Instance.PropertyArray.appendContainedConcept(userDashboard.userGroups, newGroup, 1L);
+//						}
+//					}
+					
+					Log.log(LOGGER, "Debug", "All System groups created");
+				}
+							
+				responseData = 
+					Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/WS_C_ResponseData");
+				
+				WS_C_Group[] groups = Instance.PropertyArray.toArrayContainedConcept(userDashboard.userGroups);
+				for (int i = 0; i < groups@length; i++) {
+					WS_C_AbstractDataSourceRecord userGroupDataSourceRecord = 
+						Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/Records/WS_C_UserGroupDataSourceRecord");
+					WS_C_UserGroupDataSourceRecord userGroupDSRecord = userGroupDataSourceRecord;
+					
+					userGroupDSRecord.name = groups[i].name;
+					userGroupDSRecord.systemGroup = groups[i].systemGroup;
+					userGroupDSRecord.icon = groups[i].icon;
+					userGroupDSRecord.fileType = groups[i].fileType;
+				
+					Instance.PropertyArray.appendContainedConcept(responseData.record, userGroupDataSourceRecord, 1L);
+				}
+				
+				recordCount = groups@length;
+			} else {
+				responseStatus = -1;
+				recordCount = 0;
+				errorCode = "ERR_1105";
+				responseMessage = "User Dashboard space locked";
+			}
+		}
+
+		return WS_RF_CreateTemporaryReturnData(responseStatus, recordCount, errorCode, responseMessage, responseData);
+	}
+}

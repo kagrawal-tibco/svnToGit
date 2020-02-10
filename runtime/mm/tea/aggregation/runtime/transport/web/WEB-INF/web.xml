@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE web-app PUBLIC
+        "-//Sun Microsystems, Inc.//DTD Web Application 2.3//EN"
+        "http://java.sun.com/dtd/web-app_2_3.dtd" >
+<web-app
+    xmlns="http://java.sun.com/xml/ns/j2ee"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd"
+    version="2.4">
+
+    <display-name>SPM</display-name>
+    <description>SPM</description>
+
+    <welcome-file-list>
+        <welcome-file>ping</welcome-file>
+    </welcome-file-list>
+
+    <!--<listener>
+      <listener-class>com.tibco.rta.service.transport.http.tomcat.StartupContextListener</listener-class>
+    </listener>-->
+    <listener>
+        <listener-class>
+            org.jboss.resteasy.plugins.server.servlet.ResteasyBootstrap
+        </listener-class>
+    </listener>
+
+    <servlet>
+        <servlet-name>startup</servlet-name>
+        <servlet-class>com.tibco.rta.service.transport.http.SPMStarterServlet</servlet-class>
+        <init-param>
+            <param-name>spmConfigLocation</param-name>
+	    <param-value>/media/Windows7/dev/spm/2.1/config/spm-config.properties</param-value>
+        </init-param>
+	<load-on-startup>1</load-on-startup>
+    </servlet>
+
+    <servlet>
+        <servlet-name>service</servlet-name>
+        <servlet-class>com.tibco.rta.service.rs.SPMRestServlet</servlet-class>
+        <init-param>
+            <param-name>applicationConfigLocation</param-name>
+            <param-value>/WEB-INF/application</param-value>
+        </init-param>
+        <init-param>
+            <param-name>propertiesLocation</param-name>
+            <param-value>/WEB-INF/application.properties</param-value>
+        </init-param>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>service</servlet-name>
+        <url-pattern>/*</url-pattern>
+    </servlet-mapping>
+
+    <context-param>
+       <param-name>javax.ws.rs.core.Application</param-name>
+       <param-value>com.tibco.rta.service.rs.SPMRestApplication</param-value>
+    </context-param>
+
+
+    <context-param>
+        <param-name>resteasy.servlet.mapping.prefix</param-name>
+        <param-value>/</param-value>
+    </context-param>
+
+    <servlet>
+        <servlet-name>restSdkAdmin</servlet-name>
+        <servlet-class>org.apache.wink.server.internal.servlet.AdminServlet</servlet-class>
+        <load-on-startup>2</load-on-startup>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>restSdkAdmin</servlet-name>
+        <url-pattern>/wink</url-pattern>
+    </servlet-mapping>
+
+
+</web-app>

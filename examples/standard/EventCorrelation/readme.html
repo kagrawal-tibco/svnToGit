@@ -1,0 +1,201 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>     Event Correlation
+
+- TIBCO BusinessEvents&reg; Examples
+</title>
+<meta http-equiv="Content-type" content="text/html; charset=iso-8859-1" />
+<meta http-equiv="Content-Language" content="en-us" />
+<link rel="Shortcut Icon" href="../../_resources/icon.gif" type="image/gif" />
+<style type="text/css" media="all">@import "../../_resources/examples.css";</style>
+<script type="text/javascript" src="../../_resources/examples.js" /></script>
+<script type="text/javascript">
+function InputData(alertId,nodeId,catId,tstamp) {
+  //alert(alertId);
+  this.alertId = alertId;
+  this.nodeId = nodeId;
+  this.catId = catId;
+  this.tstamp = tstamp;
+
+  this.getAlertId = function() {
+	//alert(this.alertId);
+    return this.alertId;
+  };
+  this.getNodeId = function() {
+    return this.nodeId;
+  };
+  this.getCatId = function() {
+    return this.catId;
+  };
+  this.getTimestamp = function() {
+    return this.tstamp;
+  };
+
+ }
+
+function buildForms() {
+ var inputArray = [
+	new InputData("1","Node1","Cat1","2004-11-16T02:00:01"),
+	new InputData("2","Node2","Cat1","2004-11-16T02:00:02"),
+	new InputData("3","Node1","Cat2","2004-11-16T02:00:03"),
+	new InputData("4","Node1","Cat1","2004-11-16T02:00:03"),
+	new InputData("5","Node1","Cat1","2004-11-16T02:00:04"),
+	new InputData("6","Node1","Cat1","2004-11-16T02:00:07")
+	];
+
+ var form;
+ SendEventForm.setServer("http://localhost:8106");
+
+ for(var i=0;i<6;i++) {
+	 var x = inputArray[i];
+	 form = SendEventForm.get("postInputForm"+x.getAlertId());
+	 form.setDestinationPath("/Channels/HTTPChannel/inputAlert");
+	 form.setEventPath("/Events/InputAlertEvent");
+	 form.addProperty("AlertId", x.getAlertId());
+	 form.addProperty("NodeId", x.getNodeId());
+	 form.addProperty("CategoryId", x.getCatId());
+	 form.addProperty("Timestamp", x.getTimestamp());
+	 form.build();
+ }
+
+
+}
+
+function pause(millis)
+ {
+  var date = new Date();
+  var curDate = null;
+  do { curDate = new Date(); }
+  while(curDate-date < millis);
+}
+
+
+function sendAll() {
+	for(var i=1; i <= 6; i++) {
+		//setTimeout('document.getElementById("postInputForm' + i + '").submit();',1000 * i);
+		var x = document.getElementById("postInputForm"+i);
+		x.submit();
+		pause(1600);
+	}
+}
+
+</script>
+</head>
+<body onLoad="buildForms()">
+
+
+<h1>Event Correlation</h1>
+
+
+<h2>Purpose of This Example</h2>
+
+<p>This example demonstrates rule priority and event correlation in TIBCO BusinessEvents&reg;. The scenario is that various devices on the network send alerts when they experience problems. These devices continue to send alerts until the problem is fixed. This example shows you can configure the TIBCO BusinessEvents rule engine so that when multiple alerts are sent by the same device within a five second period, the rule engine forwards only one alert. This reduces the number of unwanted messages.</p>
+
+<h2>How to Run the Example</h2>
+<ol>
+
+
+<li>
+<p>Open a command window and at the command prompt, start the TIBCO BusinessEvents engine using the following command: </p>
+
+<pre class="commands">
+cd <i>BE_HOME</i>/examples/standard/EventCorrelation
+<i>BE_HOME</i>/bin/be-engine --propFile <i>BE_HOME</i>/be-engine.tra -u default -c EventCorrelationRepo/EventCorrelationRepo.cdd EventCorrelationExample.ear
+</pre>
+
+<p>Adapt the command as needed. For example, if you customized the example project, or if you are running it from a different directory:</p>
+</li>
+
+<ol>
+<p>Send the events the following order:</p>
+<li>
+<p>Create an input alert event and give it a value as desired.</p>
+
+<form id="postInputForm1"></form>
+</li>
+<li>
+<p>Create an input alert event and give it a different value as desired.</p>
+
+<form id="postInputForm2"></form>
+
+</li>
+
+<li>
+<p>Create an input alert event and give it a different value as desired.</p>
+
+<form id="postInputForm3"></form>
+
+</li>
+
+<li>
+<p>Create an input alert event and give it a different value as desired.</p>
+
+<form id="postInputForm4"></form>
+
+</li>
+
+<li>
+<p>Create an input alert event and give it a different value as desired.</p>
+
+<form id="postInputForm5"></form>
+
+</li>
+
+<li>
+<p>Create an input alert event and give it a different value as desired.</p>
+
+<form id="postInputForm6"></form>
+
+</li>
+<li>
+<p> Send all 6 events in sequence</p>
+<button onClick="sendAll()">Send All</button>
+</li>
+</ol>
+
+<li>
+<p>In the command window you see messages like this:
+<span class="logs">closing request:be.gen.Events.InputAlertEvent@id=3
+AlertId: 1 : Node Id : Node1 : Concept does not exist.... Creating now and forwarding event
+__________________________ Sending output alert _______________________________
+Alert ID:1
+Alert Category:Cat1
+Alert.Node ID:Node1
+closing request:be.gen.Events.InputAlertEvent@id=7
+AlertId: 2 : Node Id : Node2 : Concept does not exist.... Creating now and forwarding event
+__________________________ Sending output alert _______________________________
+Alert ID:2
+Alert Category:Cat1
+Alert.Node ID:Node2
+closing request:be.gen.Events.InputAlertEvent@id=11
+AlertId: 3 : Node Id : Node1 : Concept does not exist.... Creating now and forwarding event
+__________________________ Sending output alert _______________________________
+Alert ID:3
+Alert Category:Cat2
+Alert.Node ID:Node1
+closing request:be.gen.Events.InputAlertEvent@id=15
+AlertId: 4 : Node Id : Node1 : Concept exists.... created in last 5 second...no action... just consume event
+closing request:be.gen.Events.InputAlertEvent@id=16
+AlertId: 5 : Node Id : Node1 : Concept exists.... created in last 5 second...no action... just consume event
+closing request:be.gen.Events.InputAlertEvent@id=17
+AlertId: 6 : Node Id : Node1 : Concept exists.... created before last 5 second...send output event and consume input event
+__________________________ Sending output alert _______________________________
+Alert ID:6
+Alert Category:Cat1
+Alert.Node ID:Node1
+</span></p>
+</li>
+
+</ol>
+
+
+
+<div class="footer">
+<p>TIBCO BusinessEvents&reg; 5.6<br />
+Copyright&copy; 2004-2019 TIBCO Software Inc. All rights reserved.</p>
+</div>
+</body>
+</html>

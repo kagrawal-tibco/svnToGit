@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas
+	xmlns:mx="http://www.adobe.com/2006/mxml"
+	xmlns:containers="com.tibco.be.views.ui.containers.*"
+	implements="com.tibco.be.views.core.ui.dashboard.IBEVComponentContext, com.tibco.be.views.core.ui.actions.IActionContextProvider"
+	verticalScrollPolicy="off"
+	horizontalScrollPolicy="off"
+	creationComplete="init()"
+	borderStyle="none"
+>
+
+	<mx:Script>
+		<![CDATA[
+			import com.tibco.be.views.core.ui.actions.IActionContextProvider;
+			import com.tibco.be.views.core.ui.dashboard.BEVComponent;
+			import com.tibco.be.views.core.ui.menu.DynamicMenuDefinition;
+			import com.tibco.be.views.core.ui.actions.ActionContext;
+			import mx.controls.scrollClasses.ScrollBar;
+			import mx.controls.Button;
+			import mx.managers.DragManager;
+			import mx.core.BitmapAsset;
+			import mx.controls.Image;
+			import mx.graphics.ImageSnapshot;
+			import mx.core.DragSource;
+			import com.tibco.be.views.core.ui.dashboard.IBEVContainer;
+			
+			public static const HEADER_HEIGHT:int = 25;			
+			public static const DRAG_OVER_RIGHT:int = 0;
+			public static const DRAG_OVER_LEFT:int = 1;
+			
+			protected var _controller:BEVChartComponentHolderController;
+			protected var _component:BEVComponent;
+			
+			/**
+			 * Initializes the component holder. Note that the component MUST be set prior to adding
+			 * this container to a UI object so that when init is called on creation complete, the
+			 * component will be displayed properly.
+			*/
+			protected function init():void{
+				_controller = new BEVChartComponentHolderController(this);
+				addHeaderButtons();
+				if(_component != null){
+					vb_ComponentSpace.addChildAt(_component, vb_ComponentSpace.numChildren);
+				}
+				else{
+					trace("ERROR: BEVChartComponentHolder.init - Tried to display NULL component!");
+				}
+//				vb_ComponentSpace.addChild(new TestChart());
+				hb_TitleBar.addEventListener(MouseEvent.MOUSE_DOWN, handleDragStart);
+			}
+			
+			public function get title():String{ return _component == null ? "empty":component.componentTitle; }
+			public function get component():BEVComponent{ return _component; }
+			public function set component(value:BEVComponent):void{ _component = value; }
+			
+			public function getComponentByName(name:String, searchPeers:Boolean):BEVComponent{
+				return _controller.getComponentByName(name, searchPeers);
+			}
+			
+			public function getActionContext(parentActionConfig:XML, actionConfig:XML):ActionContext{
+				return _controller.getActionContext(parentActionConfig, actionConfig);
+			}
+			
+			protected function addHeaderButtons():void{
+				_controller.addHeaderButtons();
+			}
+			
+			public function log(logLevel:Number,logMessage:String):void{
+				return _controller.log(logLevel, logMessage);
+			}
+			 
+			public function handleException(logLevel:Number, exceptionMessage:String, exception:Error):void{
+				return _controller.handleException(logLevel, exceptionMessage, exception);
+			}
+			
+			public function setComponentInteractions(actionConfig:XML):void{
+				return _controller.setComponentInteractions(actionConfig);
+			}
+			
+			public function showTooltip(x:int, y:int, tooltip:String):void{
+				return _controller.showTooltip(x, y, tooltip);
+			}
+			
+			public function showDynamicMenu(x:int, y:int, menuDefinition:DynamicMenuDefinition, actionCtxProvider:IActionContextProvider):void{
+				return _controller.showDynamicMenu(x, y, menuDefinition, actionCtxProvider);
+			}
+			
+			public function showMenu(x:int, y:int, menuDefinition:XML, actionCtxProvider:IActionContextProvider):void{
+				return _controller.showMenu(x, y, menuDefinition, actionCtxProvider);
+			}
+			
+			protected function handleDragStart(event:MouseEvent):void{
+				//Click and Drag valid on title bar only (title bar or title bar text)...
+				if(event.target != hb_TitleBar && event.target.parent != null && event.target.parent.parent != hb_TitleBar){
+					return;
+				}
+				var dragSource:DragSource = new DragSource();
+				var dragProxy:ImageSnapshot = new ImageSnapshot();
+				var img:Image = new Image();
+				var bmd:BitmapData = ImageSnapshot.captureBitmapData(this);
+				img.source = new BitmapAsset(bmd);
+				img.alpha = 0.6;
+				img.width = this.width;
+				img.height = this.height;
+				DragManager.doDrag(this, dragSource, event, img);
+			}
+			
+			public function showDragOverEffect(dragOverLocation:int):void{
+				switch(dragOverLocation){
+					case(DRAG_OVER_LEFT):
+						vb_ComponentSpace.styleName = "BEVChartComponentHolderContentHolderDragOver";
+						vb_ComponentSpace.setStyle("borderSides", "left");
+						break;
+					case(DRAG_OVER_RIGHT):
+						vb_ComponentSpace.styleName = "BEVChartComponentHolderContentHolderDragOver";
+						vb_ComponentSpace.setStyle("borderSides", "right");
+						break;
+					default:
+						//nada
+				}
+			}
+			
+			public function removeDragOverEffect():void{
+				vb_ComponentSpace.styleName = "BEVChartComponentHolderContentHolderDefault";
+				vb_ComponentSpace.setStyle("borderSides", "left right bottom");
+			}
+			
+		]]>
+	</mx:Script>
+	<containers:CommonHeaderBar id="hb_TitleBar" x="0" y="0" height="{HEADER_HEIGHT}" width="100%" verticalScrollPolicy="off" horizontalScrollPolicy="off">
+		<mx:Label id="lbl_Title" width="{0.8*width}" height="100%" styleName="componentHolderTitle" truncateToFit="true" />
+		<mx:HBox id="hb_CaptionButtons" width="100%" height="100%" horizontalGap="0" horizontalAlign="right" verticalAlign="middle" horizontalScrollPolicy="off" verticalScrollPolicy="off" paddingRight="5"></mx:HBox>
+	</containers:CommonHeaderBar>
+	<mx:VBox id="vb_ComponentSpace" x="0" y="25" width="100%" height="100%" verticalScrollPolicy="off" horizontalScrollPolicy="off" styleName="BEVChartComponentHolderContentHolderDefault">
+		
+	</mx:VBox>
+</mx:Canvas>

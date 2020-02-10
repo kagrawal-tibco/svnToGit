@@ -1,0 +1,43 @@
+<div ng-controller='IndexCtrl' class="appManagementPage tea-theme wrapper row-offcanvas row-offcanvas-left">
+   	<div ng-include src="'partials/templates/header.html'"></div>
+    <div class="beTeaAgentView"> 	
+   		<aside class="left-side sidebar-offcanvas" ng-class="">
+        	<div ng-include src="'partials/templates/leftNav.html'"></div>
+    	</aside>
+		<div ng-controller="machineViewCtrl" >
+     		<div ng-show="notification.show">
+      			<div ng-include="'partials/templates/directive/showNotification.html'"></div>
+     		</div>   
+		 	<div class="adminView">
+		 		<div id="loaderdiv" style="display: none;">
+					<img src="images/icons/loader.gif" class="ajax-loader" />
+				</div>
+        		<h3>Machines</h3>    
+        		<div ng-include="'partials/templates/aboutBETeaView.html'"></div> 
+        		<div class="row" style="padding-bottom: 10px">
+            		<div class="col-md-4 appSearch" style="padding-left: 0px;">               
+                		<div class="input-prepend-inner pull-left" >
+                    		<span class="add-on"><i class="fa fa-filter fa-lg"></i></span>
+                    		<input ng-model="search.name" class="appSearchInput col-md-7" placeholder="Filter hosts">
+                   		 	<i class="global-filter-reset ng-hide" ng-show="nameFilter" ng-click="nameFilter = ''"></i>
+                		</div>
+            		</div>
+            		<!-- <div class="importButton pull-left" >
+                		<div ng-include="'partials/templates/createHost.html'"></div>           
+                		<button class="btn tbt-btn btn-primary" title="Create Host" ng-click="showCreateHost()" style="padding: 4px 20px 4px 20px;line-height: 20px;font-size: 12px;">
+                   		 Add Machine
+      	  				</button>  
+            		</div> -->
+        		</div>      
+        		<div>	
+        			<div  ng-include="'partials/templates/actionConfirmation.html'"></div>		   
+					<ul class="appManagement_appList clearfix">   
+						<li class="appManagement_appItem" ng-repeat="host in hosts| filter:{name:search.name}">				
+					 		<hostdiv be-host-object="host"></hostdiv>	
+						</li>		
+					</ul>
+     			</div>        
+     		</div> 
+     	</div> 
+     </div> 
+</div>    

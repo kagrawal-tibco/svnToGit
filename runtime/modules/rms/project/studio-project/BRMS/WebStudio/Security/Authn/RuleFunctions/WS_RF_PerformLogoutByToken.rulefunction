@@ -1,0 +1,91 @@
+/**
+ * @description 
+ */
+WebStudio.Core.Concepts.DataSources.WS_C_TemporaryReturnData rulefunction WebStudio.Security.Authn.RuleFunctions.WS_RF_PerformLogoutByToken {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object servletRequest;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Security.Authn.RuleFunctions.WS_RF_CheckToken");
+		
+		WS_C_ResponseData responseData = null;
+		int responseStatus = 0;
+		String errorCode = null;
+		String responseMessage = null;
+		
+		if (!WS_RF_CheckHTTPMethod(servletRequest, "POST")) {
+			responseStatus = -1;
+			errorCode = "ERR_5101";
+			responseMessage = "Invalid HTTP Method, expect method is [POST].";
+		} else {
+			responseData = Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/WS_C_ResponseData");
+			
+			String rawToken = HTTP.Servlet.Request.getRequestHeader(servletRequest, "X-Atmosphere-Token");
+						
+			if (rawToken != null) {
+				String[] tokenSplit = String.split(rawToken, "[.]");
+				Log.log(LOGGER, "Debug", "Token Length - %s", tokenSplit@length);
+				
+				if (tokenSplit@length == 3) {
+					// handle edge cases for non-multiple of 4
+					int base64Delta = tokenSplit[1]@length%4;
+					if (base64Delta != 0) tokenSplit[1] = String.substring(tokenSplit[1], 0, tokenSplit[1]@length - base64Delta);
+					String payloadPart = HTTP.fromBase64(tokenSplit[1], "UTF-8");
+					
+					if (payloadPart != null && !String.equals(payloadPart, "")) {
+						Log.log(LOGGER, "Debug", "Token Contents - %s", payloadPart);
+						
+						// serialize the payload to an transient concept
+						WS_C_JWTToken jwtToken = Instance.createTransientInstanceFromJSON("/WebStudio/Security/Authn/Concepts/WS_C_JWTToken", payloadPart);
+						if (jwtToken != null) {
+							Log.log(LOGGER, "Debug", "Payload Serialized - %s", Instance.serializeToJSON(jwtToken, true, null));
+							
+							// check if the user with the same username and role already exists
+							boolean userExists = false;
+							Object userEntry = WS.Acl.getUser(jwtToken.uname,jwtToken.sbsc);
+						    if (userEntry != null) userExists = true;
+						    
+						    if (!userExists) {
+							    responseStatus = -1;
+								errorCode = "ERR_3100";
+								responseMessage = "User found in JWT token does not exist in the system.";
+						    } else {
+						    		String uname = jwtToken.uname;
+						    		
+						    		// just delete the local jwt token instance
+						   		Instance.deleteInstance(jwtToken);
+						   		
+						   		// logout with this user and return the data off the logoutRF
+						   		WebStudio.Core.Concepts.DataSources.WS_C_TemporaryReturnData temporaryData = WS_RF_PerformLogout(servletRequest, null, uname);
+						   		return temporaryData;
+						    }
+						} else {
+							// token found, format is fine, but deserialization failed
+							responseStatus = -1;
+							errorCode = "ERR_3101";
+							responseMessage = "JWT token found, but serialization to entity failed.";
+						}					
+					} else {
+						responseStatus = -1;
+						errorCode = "ERR_3102";
+						responseMessage = "No payload part found in JWT token.";
+					}
+				} else {
+					// exact token is present but not in the right format, this should return an error
+					responseStatus = -1;
+					errorCode = "ERR_3103";
+					responseMessage = "Invalid format for JWT token.";
+				}
+			} else {
+				responseStatus = -1;
+				errorCode = "ERR_3104";
+				responseMessage = "JWT token does not exist";
+				Log.log(LOGGER, "Debug", responseMessage);
+			}
+		}
+		return WS_RF_CreateTemporaryReturnData(responseStatus, 0, errorCode, responseMessage, responseData);	
+	}
+}

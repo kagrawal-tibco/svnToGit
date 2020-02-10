@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<event icon="" name="PersonEvent" description="" guid="1192148482118-1740106406" bindings="" namespace="" folder="/" type="simple" specifiedTime="-1" timeInterval="-1" intervalUnit="0" ttl="10" units="Seconds" schedule="ruleBased" super="" timeEventCount="1" serializationFormat="0">
+    <lastModified/>
+    <hiddenProperties/>
+    <subEvents/>
+    <destination name="" path=""/>
+    <userProperties>
+        <userProperty>
+            <name>firstName</name>
+            <type>String</type>
+        </userProperty>
+        <userProperty>
+            <name>lastName</name>
+            <type>String</type>
+        </userProperty>
+        <userProperty>
+            <name>age</name>
+            <type>int</type>
+        </userProperty>
+    </userProperties>
+    <referringRuleSets>
+        <referringRuleSet path="/RuleSet">
+            <referringRule>PersonEventListener</referringRule>
+        </referringRuleSet>
+        <referringRuleSet path="/PersonEvent">
+            <referringRule>expiryAction</referringRule>
+        </referringRuleSet>
+    </referringRuleSets>
+    <ruleset icon="" name="PersonEvent" description="" guid="1192148482118-869371967" bindings="" namespace="" folder="/">
+        <lastModified/>
+        <hiddenProperties/>
+        <rules>
+            <rule icon="" name="expiryAction" description="" guid="1192148482149-2092450281" bindings="" namespace="" isAFunction="false" isAConditionFunction="false" compilationStatus="0">
+                <lastModified>2007-10-12T14:34:07.346-07:00</lastModified>
+                <hiddenProperties/>
+                <priority>5</priority>
+                <testInterval>-1</testInterval>
+                <startTime>-1</startTime>
+                <doesRequeue>false</doesRequeue>
+                <maxRules>1</maxRules>
+                <fwdChain>true</fwdChain>
+                <bwdChain>false</bwdChain>
+                <declarations>
+                    <declaration identifier="event" entity="/PersonEvent">
+                        <domain>
+                            <entries/>
+                        </domain>
+                    </declaration>
+                </declarations>
+                <condition/>
+                <action>System.debugOut("!! Expiry action:" + event.firstName + " " + event.lastName + " " + event.age);</action>
+                <requeueVars/>
+                <template/>
+                <author/>
+            </rule>
+        </rules>
+    </ruleset>
+</event>

@@ -1,0 +1,29 @@
+/**
+ * @description Convert a single filter concept to equivalent EMF for persistence.
+ */
+void rulefunction WebStudio.Core.RuleFunctions.Utils.RT.Builder.Ops.Save.WS_RF_ConvertSingleFilterToEMF {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		//The EModel object which will contain this single filter.
+		Object containerEObject;
+		WebStudio.Core.Concepts.RuleTemplateInstance.Builder.WS_C_AbstractConditionsFilter singleFilterConcept;
+	}
+	body {
+		//Can be under a multi filter or a command. 
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.RT.Builder.Ops.Save.WS_RF_ConvertSingleFilterToEMF");
+		//Explicitly assert this.
+		WS.Common.assertInstance(singleFilterConcept, false);
+		
+		Object singleFilterEModel = WS.RTI.createRuleTemplateInstanceConditionsSingleFilter();
+		//Add to parent multi filter or command.
+		WS.RTI.addChildMultiFilter(containerEObject, singleFilterEModel);
+		
+		//Process links and such if any
+		WebStudio.
+			Core.
+				RuleFunctions.
+					Utils.RT.Builder.Ops.Save.WS_RF_ConvertFilterLinksAndValuesToEMF(singleFilterEModel, singleFilterConcept);
+	}
+}

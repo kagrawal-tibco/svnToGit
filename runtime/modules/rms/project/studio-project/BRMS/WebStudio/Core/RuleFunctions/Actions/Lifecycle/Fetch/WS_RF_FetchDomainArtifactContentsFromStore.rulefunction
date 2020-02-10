@@ -1,0 +1,28 @@
+/**
+ * @description 
+ */
+String rulefunction WebStudio.Core.RuleFunctions.Actions.Lifecycle.Fetch.WS_RF_FetchDomainArtifactContentsFromStore {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		WebStudio.Core.Concepts.WS_C_UserArtifact userArtifact;
+		WebStudio.Core.Concepts.DataSources.WS_C_AnyArtifactDetails artifactContents;		
+		String userName;
+		String projectName;
+		String contentType;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.Lifecycle.Fetch.WS_RF_FetchDomainArtifactContentsFromStore");
+		String responseMessage = null;
+		WS_C_ResponseData responseData = WebStudio.
+								Core.
+									RuleFunctions.
+										Utils.
+											WS_RF_ResponseDSXMLBuilder(projectName, userArtifact.artifactPath, userArtifact.artifactFileExtn, artifactContents, null, userName, 0);
+		
+		String responseDSXML = WS_RF_CreateAndSerializeResponseDataSource(0, 1, null, null, responseData, contentType);
+											
+		return responseDSXML;																		
+	}
+}

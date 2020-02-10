@@ -1,0 +1,28 @@
+/**
+ * @description 
+ * @author TIBCO
+ */
+rule Rules.onTicker {
+  attribute {
+    priority = 5;
+    forwardChain = true;
+  }
+  declare {
+    Events.Ticker ticker;
+  }
+  when {
+
+  }
+  then {
+    System.debugOut("Received Ticker Event[ticker="+ticker.Ticker+",price="+ticker.Price+",volume="+ticker.Volume+",company="+ticker.CompanyName+"]");
+    //compute the M_Ticker metric
+    Dashboards.M_TickerTracker tickerTracker = Dashboards.M_TickerTracker.compute(ticker.Ticker,ticker.Price,ticker.Volume, ticker.CompanyName);
+    System.debugOut("Computed Dashboards.M_TickerTracker[ticker="+tickerTracker.Ticker+",price="+tickerTracker.Price+",volume="+tickerTracker.Volume+"]");
+    //Add concept instances for Company and Employees (used for an internal URL link in M_TickerTracker.metric)
+    if (Instance.getByExtId(ticker.Ticker+"_Company") == null) {
+      Concepts.Employees employees = Concepts.Employees.Employees(ticker.Ticker+"_Employee",Math.round(Math.random()) * 1000);
+      Concepts.Company company = Concepts.Company.Company(ticker.Ticker+"_Company",ticker.CompanyName,ticker.Ticker,employees);
+
+    }
+  }
+}

@@ -1,0 +1,33 @@
+<ul class="menu__level--current">
+	<li draggable *ngFor="let item of input" [@filtered]='item.state' 
+		class="menu__item" [dragData]="item"
+		(click)="toggleState(item, $event)"
+		(contextmenu)='rightClick(item, $event)'>
+		<span class='menu__link menu__link_icon' [class.expanded]='item.expanded' *ngIf="item.isFolder; else artifactItem">
+			<span class="fa-stack fa-stack-small">
+			   <i class="{{item.icon()}} fa-stack-2x overlayIconBase"></i>
+			   <!-- TODO: Add overlays for folders/projects -->
+			   <!-- <i class="fa fa-lock fa-stack-1x fa-inverse overlayIcon bottomLeft"></i> -->
+			</span>
+			<span class='menu__link_label'>{{item.text}}</span>
+			<span *ngIf='treeNav()' class='menu__link_submenu fa fa-chevron-left' [@expansionChangedSpan]='item.expanded'></span>
+			<span *ngIf='!treeNav()' class='menu__link_submenu fa fa-ellipsis-h'></span>
+		</span>
+		<content-tree *ngIf='item.children && item.expanded' [input]='item.children' [eventEmitter]='eventEmitter' [navMode]='navMode' [@expansionChanged]='item.expanded' class="content-pane" >
+		</content-tree>
+		<ng-template #artifactItem>
+ 			<ng-template #infoTemplate><div><h4 class="text-white" i18n>{{i18n('Artifact details:')}}</h4><div style="word-wrap:break-word;" [innerHtml]="item.info()"></div></div></ng-template> 
+			<span class="menu__link menu__link_icon" style="display: flex;" [class.itemActivated]='item.selected' 
+				[tooltip]="infoTemplate" 
+					placement="{{isRtl() ? 'left' : 'right' }}" container="body" containerClass="animated fadeIn">
+				<span class="fa-stack fa-stack-small">
+				   <i class="{{item.icon()}} fa-stack-2x overlayIconBase"></i>
+				   <i *ngIf='getItemLockStatus(item)' class="fa fa-lock fa-stack-1x fa-inverse overlayIcon bottomRight overlayLock"></i>
+				   <i *ngIf='item.payload.isCheckedOutArtifact' class="{{item.overlayIcon()}} fa-stack-1x overlayIcon bottomLeft"></i>
+				   <i *ngIf='item.payload.needSync' class="fa fa-arrow-down fa-stack-1x overlayIcon overlay-warning topLeft"></i>
+				</span>
+			<span class='menu__link_label' style="padding-right: 5px;">{{item.label()}}</span>
+			</span> 
+		 </ng-template>
+	</li>
+</ul>

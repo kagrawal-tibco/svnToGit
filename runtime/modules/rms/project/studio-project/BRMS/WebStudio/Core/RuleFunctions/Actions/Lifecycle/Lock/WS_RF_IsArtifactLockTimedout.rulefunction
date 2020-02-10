@@ -1,0 +1,26 @@
+/**
+ * @description returns true if the arifact lock has timedout, false otherwise
+ */
+boolean rulefunction WebStudio.Core.RuleFunctions.Actions.Lifecycle.Lock.WS_RF_IsArtifactLockTimedout {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		WebStudio.Core.Concepts.Lifecycle.WS_C_MasterArtifactLock artifactLock;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.Lifecycle.Lock.WS_RF_IsArtifactLockTimedout");
+		
+		long lockTimeout = System.getSystemPropertyAsLong("ws.scs.lock.timeout", 0);
+		long lockTimeoutInMillis = lockTimeout * 1000;
+		Log.log(LOGGER, "Debug", "SCS Locking - Lock timeout is %s (milisecs) ", lockTimeoutInMillis);
+		
+		if (lockTimeout > 0) {
+			long lockHeldPeriod = DateTime.getTimeInMillis(DateTime.now()) - DateTime.getTimeInMillis(artifactLock.lockedTime);
+			Log.log(LOGGER, "Debug", "Lock held on artifact [%s] by user [%s] for a period of [%s (milisecs)] ", artifactLock.artifactPath, artifactLock.lockedBy, lockHeldPeriod);
+			return (lockHeldPeriod > lockTimeoutInMillis);		
+		}
+		
+		return false;	
+	}
+}

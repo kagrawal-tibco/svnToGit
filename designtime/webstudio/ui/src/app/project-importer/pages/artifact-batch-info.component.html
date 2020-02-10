@@ -1,0 +1,71 @@
+<div class='card panel-sm page'>
+  <div class='card-header'>
+    {{heading}}
+  </div>
+  <div class='card-body page-body'>
+    <div 
+      class='row'
+      *ngFor='let artifact of params.artifacts; let idx = index'
+      [hidden]='currPage !== idx+1'
+      >
+      <div class='col-sm-12'>
+      </div>
+    </div>
+    <div class='row'>
+      <div class='col-sm-12'>
+        <tabset>
+          <tab
+            *ngFor='let tab of tabs; let idx = index'
+            [active]='currArtifact === tab'
+            (select)="onSelect(tab)"
+          >
+            <ng-template tabHeading>
+              <small *ngIf='tab !== newArtifact'>
+                <i 
+                  *ngIf='!isArtifactValid(tab)'
+                  class="fa fa-bell"
+                  ></i> {{idx+1}}</small>
+              <small *ngIf='tab === newArtifact'>
+                <i class="fa fa-plus"></i></small>
+            </ng-template>
+            <br>
+            <artifact-info
+              *ngIf='showInfo.get(tab) || tab === newArtifact'
+              [edit]='true'
+              [input]='tab'
+              [projectName]='params.projectInfo.projectName'
+              [baseDir]='"/"'
+              [checkPathUnique]='getExistingArtifactPaths(tab)'
+              (checkPathUniqueSuccess)='setArtifactValid(tab, $event)'
+              (checkDirty)='setDirty(tab, $event)'
+            ></artifact-info>
+            <div 
+              *ngIf='tab !== newArtifact'
+              class='top-pad divider-top text-center'>
+              <button 
+                type="button"
+                (click)='onRemove(tab)'
+                class='btn btn-sm btn-danger'
+              ><span class="fa fa-trash-o"></span><ng-container i18n>{{i18n('Remove')}}</ng-container></button>
+            </div>
+             <div 
+              *ngIf='tab === newArtifact'
+              class='top-pad divider-top text-center'>
+              <button 
+                type="button"
+                (click)='onCancelCreateNewArtifact()'
+                class='btn btn-sm btn-primary' i18n
+              >{{i18n('Cancel')}}</button>
+              <button 
+                type="button"
+                [disabled]='!isArtifactValid(tab) || !newArtifactDirty'
+                (click)='onCreateNewArtifact()'
+                class='btn btn-sm btn-primary' i18n
+              >{{i18n('Confirm')}}</button>
+            </div>
+          </tab>
+        </tabset>
+      </div>
+    </div>
+  </div>
+</div>

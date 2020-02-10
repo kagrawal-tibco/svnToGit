@@ -1,0 +1,144 @@
+/**
+ * @description Import Decision Table from Excel
+ */
+WebStudio.Core.Concepts.DataSources.WS_C_TemporaryReturnData rulefunction WebStudio.Core.RuleFunctions.Actions.WS_RF_ImportDecisionTableFromExcel {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object servletRequest;
+		WebStudio.Security.Authn.Concepts.WS_C_LoggedInUser loggedInUser;
+		String contentType;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.DT.WS_RF_ImportDecisionTableFromExcel");
+	
+		int responseStatus = -1;
+		int recordCount = 0;
+		String errorCode = null;
+		String responseMessage = "";
+		WS_C_ResponseData responseData = Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/WS_C_ResponseData");
+		
+		WS_C_TemporaryReturnData tempReturnData = null;
+
+		if (!WS_RF_CheckHTTPMethod(servletRequest, "POST")) {
+			errorCode = "ERR_5101";
+			responseMessage = "Invalid HTTP Method, expect method is [POST].";
+		} else {
+			Object multiPartData = HTTP.Servlet.Request.getMultipartContent(servletRequest);
+			String projectName = HTTP.Servlet.Request.getPartContent(multiPartData, "projectName");
+			String artifactPath = HTTP.Servlet.Request.getPartContent(multiPartData, "artifactPath");
+			String artifactExtn = HTTP.Servlet.Request.getPartContent(multiPartData, "artifactExtension");
+			String dtName = HTTP.Servlet.Request.getPartContent(multiPartData, "resourceName");
+			String dtFolderPath = HTTP.Servlet.Request.getPartContent(multiPartData, "resourceFolderPath");
+			String overwriteParam = HTTP.Servlet.Request.getPartContent(multiPartData, "overwrite");
+	
+			boolean overwrite = false;
+			if (String.equals("true", overwriteParam)) {
+				overwrite = true;
+			}	
+		
+			String username = loggedInUser.username;
+			String[] roles = Instance.PropertyArray.toArrayString(loggedInUser.roles);
+			
+			String subscriptionId = null;
+			if (loggedInUser.jwtToken != null) subscriptionId = loggedInUser.jwtToken.sbsc;
+			
+			boolean hasAccess = true;
+			if (String.equals("rulefunction", artifactExtn)) {
+				hasAccess = RMS.Authorization.ensureAccess(projectName, subscriptionId, roles, artifactPath, String.toUpperCase(artifactExtn), "add_impl");							
+			}
+			if (!hasAccess) {
+				Log.log(LOGGER, "Debug", "Access Denied to import Decision Table for Virtual RuleFunction %s in project %s.", artifactPath, projectName);
+				responseMessage = String.format("Access Denied to create Decision Table for Virtual RuleFunction %s in project %s.", artifactPath, projectName);
+				errorCode = "ERR_1103";											
+			} else {				 					
+				String pathSeparator = "/";
+				String scsRootURL = WS_RF_GetSCSRootURL(projectName, subscriptionId);
+				if (scsRootURL == null) {
+					throw Exception.newException(null, "Source control repository location not present. Set ws.scs.rootURL property", null);
+				}
+	
+				Object reusableBuffer = String.createBuffer(0);
+				String sharedLocation = System.getSystemPropertyAsString("ws.artifact.deploy.location", null);					
+				String.append(reusableBuffer, sharedLocation);
+				String.append(reusableBuffer, pathSeparator);
+				if (subscriptionId != null && !String.equals(subscriptionId, "")) {
+					String.append(reusableBuffer, subscriptionId);
+					String.append(reusableBuffer, pathSeparator);
+				}
+				String.append(reusableBuffer, projectName);
+				String.append(reusableBuffer, pathSeparator);
+				String.append(reusableBuffer, projectName);
+				String.append(reusableBuffer, ".ear");						
+				String earPath = String.convertBufferToString(reusableBuffer);
+				String.clearBuffer(reusableBuffer);				
+	
+				String[] response = null;
+				try {								
+					Object data = HTTP.Servlet.Request.getPartContent(multiPartData, "selectResource");
+					Object tableModel = WS.Decision.importDecisionTableFromExcel(scsRootURL, projectName, earPath, dtName, artifactPath, data);
+		
+					if (overwrite) {
+						WS_C_SaveRequest saveRequest = Instance.newTransientInstance("/WebStudio/Core/Concepts/Request/Usecases/Save/WS_C_SaveRequest"); 
+						WS_C_SaveRequestData saveRequestData = Instance.newTransientInstance("/WebStudio/Core/Concepts/Request/Usecases/Save/WS_C_SaveRequestData");
+						WS_C_SaveRequestProject saveRequestProject = Instance.newTransientInstance("/WebStudio/Core/Concepts/Request/Usecases/Save/WS_C_SaveRequestProject");
+						saveRequestProject.name = projectName;
+						WS_C_ArtifactSaveDataItem artifactItem	= Instance.newTransientInstance("/WebStudio/Core/Concepts/Request/Usecases/Save/WS_C_ArtifactSaveDataItem");						
+						artifactItem.artifactPath = dtFolderPath + "/" + dtName;
+						artifactItem.artifactType = "rulefunctionimpl";
+						artifactItem.fileExtension = "rulefunctionimpl";
+						artifactItem.implementsPath = artifactPath;
+						artifactItem.artifactContent = WS_RF_CreateDecisionTablePageSaveDataItem(username, projectName, tableModel, contentType, roles); 
+						Instance.PropertyArray.appendContainedConcept(saveRequestProject.artifactItem, artifactItem, 1L);
+						Instance.PropertyArray.appendContainedConcept(saveRequestData.project, saveRequestProject, 1L);
+						Instance.PropertyAtom.setContainedConcept(saveRequest.data, saveRequestData, 1L);
+												 								
+						response = WS_RF_SaveLocalChangesToWorkspaceUtil(loggedInUser, saveRequest, contentType);
+						responseStatus = Number.intValue(response[0], 10);
+						responseMessage = response[1];
+					} else {
+						String dtPath = dtFolderPath + "/" + dtName;
+						
+						//Get workspace copy
+						WS_C_ResponseTransferObjectData responseTransferObject = WS_RF_GetArtifactContentsFromStore(username, roles, projectName, dtPath, "rulefunctionimpl");
+						WS_C_AnyArtifactDetails artifactWorkspaceContents = WebStudio.Core.RuleFunctions.Utils.DT.WS_RF_GetDecisionTableContentsForDiff(projectName, dtPath, responseTransferObject.artifactContents);
+						// De-reference the artifact contents
+			        		Instance.PropertyAtom.setConceptReference(responseTransferObject.artifactContents, null, 1L);
+
+						//Imported copy
+						WS_C_AnyArtifactDetails importedVersionContents = WebStudio.Core.RuleFunctions.Utils.DT.WS_RF_GetDecisionTableContentsFromEMFObjectForDiff(projectName, dtPath, tableModel);
+						
+						WS_C_AbstractDataSourceRecord abstractDataSourceRecord = Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/Records/WS_C_ArtifactVersionDiffContentDataSourceRecord");
+						WS_C_ArtifactVersionDiffContentDataSourceRecord artifactVersionDiffContentDSR = abstractDataSourceRecord;
+						artifactVersionDiffContentDSR.artifactPath = dtPath;
+						artifactVersionDiffContentDSR.artifactType = "rulefunctionimpl";						
+						artifactVersionDiffContentDSR.currentVersionContents = importedVersionContents;
+						artifactVersionDiffContentDSR.previousVersionContents = artifactWorkspaceContents;
+						Instance.PropertyArray.appendContainedConcept(responseData.record, abstractDataSourceRecord, 1L);
+
+						responseStatus = 0;
+						
+						tempReturnData = WS_RF_CreateTemporaryReturnData(responseStatus, recordCount, errorCode, responseMessage, responseData);					
+					}
+					WS_RF_AddAuditTrailEntry(username, projectName, dtFolderPath + "/" + dtName, "rulefunctionimpl", "IMPORT", null);											
+				} catch (Exception ex) {
+					responseStatus = -1;
+					responseMessage = ex@message;
+					if (String.contains(responseMessage, "java.lang.RuntimeException")) {
+					  responseMessage = String.replaceAll(responseMessage, "java.lang.RuntimeException:", "");
+					}
+					Log.logException(LOGGER, "Error", "Error importing decision table from excel", ex);				
+				}
+				
+				
+			}		
+		}
+		
+		if (tempReturnData == null) {
+			tempReturnData = WS_RF_CreateTemporaryReturnData(responseStatus, recordCount, errorCode, responseMessage, responseData);
+		}					
+		
+		return 	tempReturnData;
+	}
+}

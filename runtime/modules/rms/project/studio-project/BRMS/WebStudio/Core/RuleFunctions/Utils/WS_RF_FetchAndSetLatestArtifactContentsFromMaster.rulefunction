@@ -1,0 +1,79 @@
+/**
+ * @description Set master revision as checkpoint upon first checkout/update. Return true if
+ * master exists and has at least one approved revision.
+ */
+boolean rulefunction WebStudio.Core.RuleFunctions.Utils.WS_RF_FetchAndSetLatestArtifactContentsFromMaster {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String projectName;
+		WebStudio.Core.Concepts.WS_C_UserArtifact userArtifact;
+		WebStudio.Core.Concepts.WS_C_UserArtifactRevision userArtifactRevision;
+		String subscriptionId;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.WS_RF_FetchAndSetLatestArtifactContentsFromMaster");
+		
+		String artifactPath = userArtifact.artifactPath;
+		String masterArtifactExtId = WS_RF_CreateUserArtifactExtId(null, artifactPath, projectName, null, subscriptionId, null);
+		Log.log(LOGGER, "Debug", "Master artifact extId [%s]", masterArtifactExtId);
+		//There is no way to lock this in PP.
+		boolean masterArtifactLock = Cluster.DataGrid.Lock(masterArtifactExtId, -1, false);
+		WS_C_MasterArtifact masterArtifact = null;
+		if (masterArtifactLock) {
+			Log.log(LOGGER, "Debug", "Lock acquired State - ", masterArtifactLock);
+			masterArtifact = Instance.getByExtIdByUri(masterArtifactExtId, "/WebStudio/Core/Concepts/Lifecycle/WS_C_MasterArtifact");
+			if (masterArtifact != null) {
+				Log.log(LOGGER, "Debug", "masterArtifact != null");
+				//Get current revision
+				WS_C_UserArtifactRevision masterRevision = Instance.PropertyAtom.getConceptReference(masterArtifact.currentMasterRevision, 1L);
+				if (masterRevision != null) {
+					Log.log(LOGGER, "Debug", "Master artifact revision id [%s]", masterRevision@id);
+					//Set this as artifacts latest revision and checkpoint revision
+					WS_RF_SetCheckpointRevisionConceptReference(userArtifact, masterRevision);
+					//Set contents id of passed revision to this if userArtifactRevision != null
+					if (userArtifactRevision != null) {
+						masterRevision.artifactContentsId = userArtifactRevision.artifactContentsId;
+						Instance.PropertyArray.appendString(userArtifact.artifactRevisionIds, userArtifactRevision@extId, 1L);	
+					} else { //Create a new revision for sync (modify/merge)
+						//Get current version number.
+						double currentVersionNumber = userArtifact.currentArtifactVersion;
+						currentVersionNumber = currentVersionNumber + 1;
+						//Create a new revision instance.
+						Object buffer = String.createBuffer(0);
+						String.append(buffer, userArtifact@extId);
+						String.append(buffer, "" + currentVersionNumber);
+						String revisionArtifactConceptExtId = String.convertBufferToString(buffer);
+						String.clearBuffer(buffer);
+						
+						WS_C_UserArtifactRevision nextRevision = 
+							Instance.newInstance("/WebStudio/Core/Concepts/WS_C_UserArtifactRevision", revisionArtifactConceptExtId);
+						//Set parent artifact reference
+						nextRevision.parentArtifactId = userArtifact@extId;
+						nextRevision.parentArtifactType = userArtifact.artifactType;							
+						nextRevision.artifactContentsId = masterRevision.artifactContentsId;
+						nextRevision.version = currentVersionNumber;
+						nextRevision.creationTime = DateTime.now();
+						
+						WS_C_LifecycleMetadata lifecycleMetadata = Instance.newInstance("/WebStudio/Core/Concepts/Lifecycle/WS_C_LifecycleMetadata", null);
+						WS_C_AbstractOperation operation = WS_RF_ArtifactOperationCreationFactory("Fetch");
+						WS.Common.assertInstance(operation, false);
+						Instance.PropertyAtom.setContainedConcept(nextRevision.lifecycleMetadata, lifecycleMetadata, 1L);
+						Instance.PropertyAtom.setConceptReference(lifecycleMetadata.lastOperation, operation, 1L);
+						Instance.PropertyAtom.setConceptReference(lifecycleMetadata.currentState, WS_RF_ArtifactStateCreationFactory("Borrowed"), 1L);
+						
+						Instance.PropertyArray.appendString(userArtifact.artifactRevisionIds, nextRevision@extId, 1L);						
+					}
+					return true;
+				} else {
+					Log.log(LOGGER, "Debug", "Local fix in  WS_RF_FetchAndSetLatestArtifactContentsFromMaster");
+					WS_RF_SetToBaseRevision(userArtifact, projectName);
+				}	
+			} else {
+				Log.log(LOGGER, "Debug", "Master Artifact does not exist yet for [%s]", userArtifact.artifactPath);
+			}
+		}
+		return false;
+	}
+}

@@ -1,0 +1,51 @@
+/**
+ * @description 
+ */
+void rulefunction WebStudio.Core.RuleFunctions.Actions.Dashboard.WS_RF_UpdateDashboardArtifacts {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		WebStudio.Core.Concepts.WS_C_UserPreferences userPreferences;
+		String userName;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.Dashboard.WS_RF_UpdateDashboardArtifacts");
+		
+		//Lock and load User Dashboard concept
+		String userDashboardExtId = WS_RF_CreateUserArtifactExtId("DASHBOARD", null, null, userName, null, null);
+		Log.log(LOGGER, "Debug", "Trying to acquire lock on Dashboard space with ExtId - %s", userDashboardExtId);
+		
+		boolean userDashboardLock = Cluster.DataGrid.Lock(userDashboardExtId, -1, false);			
+		if (userDashboardLock) {
+			Log.log(LOGGER, "Debug", "Lock acquired for Dashboard space.");
+			WS_C_UserDashboard userDashboard = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(userDashboardExtId, false, "/WebStudio/Core/Concepts/Dashboard/WS_C_UserDashboard");
+			
+			if (userDashboard != null) {
+				WS_C_FavoriteArtifacts[] favoriteArtifacts = Instance.PropertyArray.toArrayContainedConcept(userDashboard.favoriteArtifacts);
+				if (favoriteArtifacts@length > userPreferences.favoriteArtifactLimit) {
+					int cnt = 1;
+					for (int i = favoriteArtifacts@length-1; i >= 0; i--) {
+						if (cnt > userPreferences.favoriteArtifactLimit) {
+							Instance.PropertyArray.removeContainedConcept(userDashboard.favoriteArtifacts, favoriteArtifacts[i]);
+						}
+						cnt++;
+					} 
+				}
+				
+				WS_C_RecentlyOpenedArtifacts[] recentlyOpenedArtifacts = Instance.PropertyArray.toArrayContainedConcept(userDashboard.recentlyOpenedArtifacts);
+				if (recentlyOpenedArtifacts@length > userPreferences.recentlyOpenedArtifactLimit) {
+					if (recentlyOpenedArtifacts@length > userPreferences.recentlyOpenedArtifactLimit) {
+						int cnt = 1;
+						for (int i = recentlyOpenedArtifacts@length-1; i >= 0; i--) {
+							if (cnt > userPreferences.recentlyOpenedArtifactLimit) {
+								Instance.PropertyArray.removeContainedConcept(userDashboard.recentlyOpenedArtifacts, recentlyOpenedArtifacts[i]);
+							}
+							cnt++;
+						} 
+					}
+				}
+			}
+		}
+	}
+}

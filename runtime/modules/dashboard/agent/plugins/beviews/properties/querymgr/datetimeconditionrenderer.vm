@@ -1,0 +1,293 @@
+#set ($months = ["January","February","March","April","May","June","July","August","September","October","November","December"] )
+#set ($ampms = ["AM","PM"] )
+#set ($scales = ["minutes","hours","days","months","years"] )
+#if ($values.size() > 0)
+    #set ($value0 = $values.get(0))
+    #if ($values.size() > 1)
+        #set ($value1 = $values.get(1))
+    #else 
+        #set ($value1 = $values.get(0))
+    #end    
+#else
+    #set ($value0 = "")
+    #set ($value1 = "")
+#end
+#set ($yearCounterStart = 0)
+#set ($yearCounterEnd = $value0.today_year - 1900)
+<table border="0" cellspacing="0" cellpadding="0" width="100%" height="100%">
+    <tr height="150px">
+        <td id="contentpanel" valign="top" class="conditionpnl" style="padding-left:20px" colspan="3">
+            <table border="0" cellspacing="0" cellpadding="0" width="90%">
+                <form name="actualinputform" action="" onsubmit="return false;">
+                    <tr>
+                        <td colspan="2">&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <td colspan="2" align="left">
+                            <select name="operators" size="1" class="inputtype" onchange="return operatorChanged();">
+                            #foreach ($operator in $supportedoperators)
+                                #if ($operator == $operatortoselect)
+                                <option value="$operator" selected>$operator</option>
+                                #else
+                                <option value="$operator">$operator</option>
+                                #end
+                            #end
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="2">&nbsp;</td>
+                    </tr>
+                    #if ($operatortoselect == "Is Before" || $operatortoselect == "Is After" == true || $operatortoselect == "Is" || $operatortoselect == "Is In The Range")
+                        #set ($firstvaluerowdisplayattr = "")
+                    #else
+                        #set ($firstvaluerowdisplayattr = "none")
+                    #end
+                    <tr id="firstvaluerow" style="display:$firstvaluerowdisplayattr">
+                        <td>&nbsp;</td>
+                        <td align="left">
+                            &nbsp;
+                            <select name="month0" size="1" class="inputtype" onchange="changedays(0);">
+                                #foreach ($month in $months)
+                                    #set ($monthid = $velocityCount - 1)
+                                    #if ($month == $value0.month)
+                                <option value="$monthid" selected>$month</option>
+                                    #else
+                                <option value="$monthid">$month</option>
+                                    #end
+                                 #end
+                            </select>
+                            <select name="day0" size="1" class="inputtype">
+                                #foreach ($day in [1..31])
+                                    #if ($day < 10)
+                                        #set ($formattedday = "0$day")
+                                     #else
+                                        #set ($formattedday = $day)
+                                    #end                                  
+                                    #if ($day == $value0.dayofmonth)
+                                <option value="$day" selected>$formattedday</option>
+                                    #else
+                                <option value="$day">$formattedday</option>
+                                    #end
+                                 #end
+                            </select>
+                            <select name="year0" size="1" class="inputtype" onchange="changedays(0);">
+                                #foreach ($yearcounter in [$yearCounterStart..$yearCounterEnd])
+                                    #set ($currentyear = $value0.today_year - $yearcounter)
+                                    #if ($currentyear == $value0.year)
+                                <option value="$currentyear" selected>$currentyear</option>
+                                    #else
+                                <option value="$currentyear">$currentyear</option>
+                                    #end
+                                 #end
+                            </select>
+                            <select name="hour0" size="1" class="inputtype">
+                                #foreach ($hour in [1..12])
+                                    #if ($hour < 10)
+                                        #set ($formattedhour = "0$hour")
+                                     #else
+                                        #set ($formattedhour = $hour)
+                                    #end                                 
+                                    #if ($hour == $value0.hour)
+                                <option value="$hour" selected>$formattedhour</option>
+                                    #else
+                                <option value="$hour">$formattedhour</option>
+                                    #end
+                                 #end
+                            </select>
+                            <select name="minutes0" size="1" class="inputtype">
+                                #foreach ($minute in [0..59])
+                                    #if ($minute < 10)
+                                        #set ($formattedmin = "0$minute")
+                                     #else
+                                        #set ($formattedmin = $minute)
+                                    #end
+                                    #if ($minute == $value0.minute)
+                                <option value="$minute" selected>$formattedmin</option>
+                                    #else
+                                <option value="$minute">$formattedmin</option>
+                                    #end
+                                 #end
+                            </select>
+                            <select name="ampm0" size="1" class="inputtype">
+                                #foreach ($ampm in $ampms)
+                                #set ($ampmid = $velocityCount - 1)
+                                    #if ($ampm.equalsIgnoreCase($value0.ampm))
+                                <option value="$ampmid" selected>$ampm</option>
+                                    #else
+                                <option value="$ampmid">$ampm</option>
+                                    #end
+                                 #end
+                            </select>
+                        </td>
+                    </tr>
+                    <tr id ="rangegap" style="display:$firstvaluerowdisplayattr" >
+                        <td colspan="2">&nbsp;</td>
+                    </tr>
+                    #set ($secondvaluerowdisplayattr = "none")
+                    #if ($operatortoselect == "Is In The Range")
+                        #set ($secondvaluerowdisplayattr = "")
+                    #end
+                    <tr id="secondvaluerow" style="display:$secondvaluerowdisplayattr">
+                        <td><font class="inputlabel">&nbsp;to</font></td>
+                        <td align="left">
+                            &nbsp;
+                            <select name="month1" size="1" class="inputtype" onchange="changedays(1);">
+                                #foreach ($month in $months)
+                                    #set ($monthid = $velocityCount - 1)
+                                    #if ($month == $value1.month)
+                                <option value="$monthid" selected>$month</option>
+                                    #else
+                                <option value="$monthid">$month</option>
+                                    #end
+                                 #end
+                            </select>
+                            <select name="day1" size="1" class="inputtype">
+                                #foreach ($day in [1..31])
+                                    #if ($day < 10)
+                                        #set ($formattedday = "0$day")
+                                     #else
+                                        #set ($formattedday = $day)
+                                    #end                                  
+                                    #if ($day == $value1.dayofmonth)
+                                <option value="$day" selected>$formattedday</option>
+                                    #else
+                                <option value="$day">$formattedday</option>
+                                    #end
+                                 #end
+                            </select>
+                            <select name="year1" size="1" class="inputtype" onchange="changedays(1);">
+                                #foreach ($yearcounter in [$yearCounterStart..$yearCounterEnd])
+                                    #set ($currentyear = $value1.today_year - $yearcounter)
+                                    #if ($currentyear == $value1.year)
+                                <option value="$currentyear" selected>$currentyear</option>
+                                    #else
+                                <option value="$currentyear">$currentyear</option>
+                                    #end
+                                 #end
+                            </select>
+                            <select name="hour1" size="1" class="inputtype">
+                                #foreach ($hour in [1..12])
+                                    #if ($hour < 10)
+                                        #set ($formattedhour = "0$hour")
+                                     #else
+                                        #set ($formattedhour = $hour)
+                                    #end                                 
+                                    #if ($hour == $value1.hour)
+                                <option value="$hour" selected>$formattedhour</option>
+                                    #else
+                                <option value="$hour">$formattedhour</option>
+                                    #end
+                                 #end
+                            </select>
+                            <select name="minutes1" size="1" class="inputtype">
+                                #foreach ($minute in [0..59])
+                                    #if ($minute < 10)
+                                        #set ($formattedmin = "0$minute")
+                                     #else
+                                        #set ($formattedmin = $minute)
+                                    #end
+                                    #if ($minute == $value1.minute)
+                                <option value="$minute" selected>$formattedmin</option>
+                                    #else
+                                <option value="$minute">$formattedmin</option>
+                                    #end
+                                 #end
+                            </select>
+                            <select name="ampm1" size="1" class="inputtype">
+                                #foreach ($ampm in $ampms)
+                                #set ($ampmid = $velocityCount - 1)
+                                    #if ($ampm.equalsIgnoreCase($value1.ampm))
+                                <option value="$ampmid" selected>$ampm</option>
+                                    #else
+                                <option value="$ampmid">$ampm</option>
+                                    #end
+                                 #end
+                            </select>
+                        </td>
+                    </tr>
+                     #set ($thirdvaluerowdisplayattr = "none")
+                     #set ($startduration = "")
+                     #set ($startscale = $scales.get(0))
+                     #if ($operatortoselect == "Is In The Historical Range")
+                        #set ($thirdvaluerowdisplayattr = "")
+                        #set ($startduration = $value0.adjustment)
+                        #set ($startscale = $value0.scale)
+                     #end
+                    <tr id="thirdvaluerow" style="display:$thirdvaluerowdisplayattr" >
+                            <td>&nbsp;</td>
+                            <td align ="left" >&nbsp;<font class="inputtype">Starting</font>&nbsp;<input type="text" name="startduration" size="2" class="inputtype" value="$startduration"/>
+                                <select name="startscale" size="1" class="inputtype">
+                                    #foreach ($scale in $scales)
+                                        #if ($scale == $startscale)
+                                    <option value="$scale" selected>$scale ago</option>
+                                        #else
+                                    <option value="$scale">$scale(s) ago</option>
+                                        #end
+                                    #end
+                                </select>
+                            </td>
+                    </tr>
+                   <tr id="historicalrangegap" style="display:$thirdvaluerowdisplayattr">
+                        <td colspan="2">&nbsp;</td>
+                    </tr>
+                     #set ($fourthvaluerowdisplayattr = "none")
+                     #set ($endduration = "")
+                     #set ($endoperator = $scales.get(0))
+                     #if ($operatortoselect == "Is In The Historical Range")
+                        #set ($fourthvaluerowdisplayattr = "")
+                        #set ($endduration = $value1.adjustment)
+                        #set ($endoperator = $value1.scale)
+                     #end
+                    <tr id="fourthvaluerow" style="display:$fourthvaluerowdisplayattr" >
+                            <td>&nbsp;</td>
+                            <td align ="left" >&nbsp;<font class="inputtype">Lasting</font>&nbsp;&nbsp;<input type="text" name="endduration" size="2" class="inputtype" value="$endduration"/>
+                                <select name="endoperator" size="1" class="inputtype">
+                                    #foreach ($scale in $scales)
+                                        #if ($scale == $endoperator)
+                                    <option value="$scale" selected>$scale ago</option>
+                                        #else
+                                    <option value="$scale">$scale(s) ago</option>
+                                        #end
+                                    #end
+                                </select>
+                            </td>
+                    </tr>
+                     #set ($fifthvaluerowdisplayattr = "none")
+                     #set ($lastduration = "")
+                     #set ($lastoperator = $scales.get(0))
+                     #if ($operatortoselect == "Is In The Last")
+                        #set ($fifthvaluerowdisplayattr = "")
+                        #set ($lastduration = $value0.adjustment)
+                        #set ($lastoperator = $value0.scale)
+                     #end
+                    <tr id="fifthvaluerow" style="display:$fifthvaluerowdisplayattr" >
+                            <td>&nbsp;</td>
+                            <td align ="left" >&nbsp;<input type="text" name="lastduration" size="3" class="inputtype" value="$lastduration"/>
+                                <select name="lastoperator" size="1" class="inputtype">
+                                    #foreach ($scale in $scales)
+                                        #if ($scale == $lastoperator)
+                                    <option value="$scale" selected>$scale(s) ago</option>
+                                        #else
+                                    <option value="$scale">$scale(s) ago</option>
+                                        #end
+                                    #end
+                                </select>
+                            </td>
+                    </tr>
+                </form>
+            </table>
+        </td>
+    </tr>
+    <tr id="buttonPanel" class="conditionbtnpnl">
+        <td valign="middle">
+            <a class="button" href="#" onclick="this.blur();okClicked();" style="width:100px"><span>Ok</span></a>
+        </td>
+        <td>    
+            <a class="button" href="#" onclick="this.blur();cancelClicked();" style="width:100px"><span>Cancel</span></a>
+        </td>
+        <td width="100%">
+            &nbsp;
+        </td>
+    </tr>
+</table>

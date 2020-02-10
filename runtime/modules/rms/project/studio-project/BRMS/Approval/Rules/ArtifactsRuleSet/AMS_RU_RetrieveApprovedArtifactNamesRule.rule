@@ -1,0 +1,206 @@
+/**
+ * @description Fetch all approved artifacts of a project
+ * @author aathalye-lt
+ */
+rule Approval.Rules.ArtifactsRuleSet.AMS_RU_RetrieveApprovedArtifactNamesRule {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Approval.Events.ArtifactEvents.Checkout.AMS_E_RetrieveArtifactNamesRequestEvent ams_e_retrieveartifactnamesrequestevent;
+	}
+	when {
+		ams_e_retrieveartifactnamesrequestevent.projectname != null;
+	}
+	then {
+		Object LOGGER = Log.getLogger("Approval.Rules.ArtifactsRuleSet.AMS_RU_RetrieveApprovedArtifactNamesRule");
+	
+		String pathSeparator = "/";
+		//The name of the project passed
+		String projectName = ams_e_retrieveartifactnamesrequestevent.projectname;
+		//Required for granular update case
+		String updatePath = ams_e_retrieveartifactnamesrequestevent.updatePath;
+		
+		Log.log(LOGGER, "Debug", "Invoked rule RetrieveAllArtifactNamesRule for project %s", projectName);
+		String baseProjectDir = System.getSystemPropertyAsString("rms.projects.baselocation", null);
+		Log.log(LOGGER, "Info", "Base Projects Location %s", baseProjectDir);
+		
+		//Check if this project name matches one in RMS
+		String decisionDataDir = System.getSystemPropertyAsString("rms.project.decisiondata", "decisiondata");
+		
+		Object decisionDataAbsPathBuffer = String.createBuffer(0);
+		String.append(decisionDataAbsPathBuffer, baseProjectDir);
+		String.append(decisionDataAbsPathBuffer, pathSeparator);
+		String.append(decisionDataAbsPathBuffer, projectName);
+		String.append(decisionDataAbsPathBuffer, pathSeparator);
+		String.append(decisionDataAbsPathBuffer, decisionDataDir);
+		
+		String decisionDataAbsPath = String.convertBufferToString(decisionDataAbsPathBuffer);
+		String.clearBuffer(decisionDataAbsPathBuffer);
+		
+		boolean dirExists = File.fileExists(decisionDataAbsPath);
+		if (!dirExists) {
+			Exception ex = 
+				Exception.newException("Directory absent", "No directory at location " + decisionDataAbsPath, null);
+			Approval.Events.ArtifactEvents.AMS_E_ErrorEvent	errorEvent = 
+				Approval.CommonServices.AMS_RF_CreateErrorEvent("ARTIFACT_RETRIEVAL_FAILURE", "No directory at location " + decisionDataAbsPath, null);
+			Event.replyEvent(ams_e_retrieveartifactnamesrequestevent, errorEvent);
+			throw ex;
+		}	
+		
+		//Get all approved artifact paths 
+		//We have already loaded this in PP so safe to call getByExtId
+		AMS_C_ApprovedArtifacts approvedArtifacts = Instance.getByExtIdByUri(projectName, "/Approval/Concepts/ArtifactsConcepts/AMS_C_ApprovedArtifacts");
+		
+		if (approvedArtifacts == null) {
+			//This case should not arise.
+			//That means there is no approved artifact yet.
+			Approval.Events.ArtifactEvents.AMS_E_ErrorEvent errorEvent = 
+				Approval.CommonServices.AMS_RF_CreateErrorEvent("GET_ARTIFACT_LIST_ERROR",
+				                                                "No artifacts yet available for fetch",
+				                                                "No artifacts yet available for fetch");
+			Event.consumeEvent(ams_e_retrieveartifactnamesrequestevent);
+			Event.replyEvent(ams_e_retrieveartifactnamesrequestevent, errorEvent);				                                                
+		}  else if (approvedArtifacts.approvedArtifacts@length == 0) {
+			//That means there is no approved artifact yet.
+			Approval.Events.ArtifactEvents.AMS_E_ErrorEvent errorEvent = 
+				Approval.CommonServices.AMS_RF_CreateErrorEvent("GET_ARTIFACT_LIST_ERROR",
+				                                                "No artifacts yet available for fetch",
+				                                                "No artifacts yet available for fetch");
+			Event.consumeEvent(ams_e_retrieveartifactnamesrequestevent);
+			Event.replyEvent(ams_e_retrieveartifactnamesrequestevent, errorEvent);				                                                
+		} 
+			
+		//Get Logged in user
+		AMS_C_LoggedInUser loggedInUser = Instance.getByExtIdByUri(ams_e_retrieveartifactnamesrequestevent.loggedInUserName, "/AAA/Concepts/AMS_C_LoggedInUser");
+		//This has already been checked in PP
+		String allAllowedArtifactTypesString = 
+			Approval.
+				Rules.
+					RuleFunctions.
+						ArtifactRuleFunctions.
+							AMS_RF_GetUnionArtifactTypes(loggedInUser);
+		
+		String[] allAllowedArtifactTypes = String.split(allAllowedArtifactTypesString, ",");
+		
+		//Should there be any filtering
+		boolean filterFiles = true;
+		//This flag is checked for each individual file
+		boolean allowFile = false;
+		for (int counter = 0; counter < allAllowedArtifactTypes@length; counter++) {
+			if (String.equals(allAllowedArtifactTypes[counter], "*")) {
+				filterFiles = false;
+				allowFile = !filterFiles;
+				break;
+			}
+		}	
+		
+		String[] filteredArtifactPaths = null;
+		String rootPath = null;
+				
+		String[] allFilteredArtifactPaths = 
+			Instance.PropertyArray.toArrayString(approvedArtifacts.approvedArtifacts); 
+		if (updatePath == null) {
+			//Fetch all case checkout
+			rootPath = decisionDataAbsPath;
+			filteredArtifactPaths = allFilteredArtifactPaths;
+		} else {
+			rootPath = updatePath;
+			Log.log(LOGGER, "Info", "Update Resource case for %s", rootPath);
+			filteredArtifactPaths = allFilteredArtifactPaths;
+			for (int loop = 0; loop < allFilteredArtifactPaths@length; loop++) {
+				String tempFilteredPath = allFilteredArtifactPaths[loop];
+				//See if update path is substring of this
+				boolean updateMatch = 
+					String.regionMatches(false, tempFilteredPath, 0, rootPath, 0, String.length(rootPath));
+				if (!updateMatch) {
+					//Nullify it
+					filteredArtifactPaths[loop] = null;
+				}	 
+			}
+		}	
+		Log.log(LOGGER, "Debug", "Total Artifacts - %s", allFilteredArtifactPaths@length);
+		
+		boolean isDecisionManagerClient = ams_e_retrieveartifactnamesrequestevent.isDecisionManagerClient;
+		Log.log(LOGGER, "Info", "Is Stand alone DM client %s ", isDecisionManagerClient);
+		
+		String serialized = 
+				"<ns1:approvedArtifacts xmlns:ns1=\"www.tibco.com/be/ontology/Approval/Concepts/ArtifactsConcepts/AMS_C_ApprovedArtifacts\">";
+		//Get all roles of logged in user
+		String roleString = 
+			Approval.
+				CommonServices.
+					AMS_RF_GetLoggedInUserRoles(ams_e_retrieveartifactnamesrequestevent.loggedInUserName);
+		
+		if (roleString != null) {
+			String[] roles = String.split(roleString, ";");	
+			Log.log(LOGGER, "Debug", "Allowed Roles - %s", roleString);
+			//Get path of artifacts
+			for (int loop = 0,length = filteredArtifactPaths@length; loop < length; loop++) { 
+				allowFile = !filterFiles;
+				String filteredArtifactPath = filteredArtifactPaths[loop];
+			
+				String extension = 
+					String.substring(filteredArtifactPath, String.lastIndexOfString(filteredArtifactPath, 0, ".") + 1, String.length(filteredArtifactPath));
+				String EXTENSION = String.toUpperCase(extension);
+				
+				if (filterFiles) {
+					//Check if this extension is contained in allowed artifact type
+					for (int counter = 0; counter < allAllowedArtifactTypes@length; counter++) {
+						if (String.equals(allAllowedArtifactTypes[counter], EXTENSION)) {
+							//This file can be allowed
+							allowFile = true;
+							break;
+						}
+					}
+				}				
+				if (allowFile) {
+					//Check if artifact type is supported
+					boolean isSupported = 
+						Approval.
+							Rules.
+								RuleFunctions.
+									ArtifactRuleFunctions.
+										AMS_RF_IsArtifactTypeSupported(EXTENSION);
+					
+					if (isSupported) {	
+						String artifactPath = String.substringBefore(filteredArtifactPath, ".");
+					
+						AMS_C_Artifact artifact = 
+							Instance.createInstance("xslt://{{/Approval/Concepts/ArtifactsConcepts/AMS_C_Artifact}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"1.0\" exclude-result-prefixes=\"xsl xsd\">\n    <xsl:output method=\"xml\"/>\n    <xsl:param name=\"artifactPath\"/>\n    <xsl:param name=\"extension\"/>\n    <xsl:template match=\"/\">\n        <createObject>\n            <object>\n                <artifactPath>\n                    <xsl:value-of select=\"concat($artifactPath, concat(&quot;.&quot;, $extension))\"/>\n                </artifactPath>\n                <artifactType>\n                    <xsl:value-of select=\"upper-case($extension)\"/>\n                </artifactType>\n            </object>\n        </createObject>\n    </xsl:template>\n</xsl:stylesheet>");
+						
+						boolean hasAccess = false;
+						if (!isDecisionManagerClient) {
+							hasAccess = true;
+						} else {
+					 		hasAccess = 
+								RMS.Authorization.ensureAccess(projectName, null, roles, artifact.artifactPath, artifact.artifactType, "read");
+							Log.log(LOGGER, "Debug", "Access for artifact %s - %s", artifactPath, hasAccess);
+						}
+						
+						Log.log(LOGGER, "Debug", "Artifact Path - %s , Extension - %s , allowFile - %s , isSupported - %s , hasAccess - %s", filteredArtifactPath, extension, allowFile, isSupported, hasAccess);
+						if (hasAccess) {
+							//Serialize it
+							String serializedArtifact = 
+								Instance.serialize(artifact, true, "www.tibco.com/be/ontology/Approval/Concepts/ArtifactsConcepts/AMS_C_Artifact", "approvedArtifact");
+							Instance.deleteInstance(artifact);	
+							serializedArtifact = String.replaceAll(serializedArtifact, "\\<\\?xml (.*)\\?\\>", "");				
+							serialized = String.concat(serialized, serializedArtifact);
+						}
+					}
+				}
+			}
+		}
+		
+		serialized = String.concat(serialized, "\n");
+		serialized = String.concat(serialized, "</ns1:approvedArtifacts>");
+		//Create response event
+		Approval.Events.ArtifactEvents.Checkout.AMS_E_RetrieveArtifactNamesResponseEvent responseEvent = 
+						Approval.Events.ArtifactEvents.Checkout.AMS_E_RetrieveArtifactNamesResponseEvent.AMS_E_RetrieveArtifactNamesResponseEvent(null, serialized);
+						
+		Event.consumeEvent(ams_e_retrieveartifactnamesrequestevent);
+		Event.replyEvent(ams_e_retrieveartifactnamesrequestevent, responseEvent);	
+	
+	}
+}

@@ -1,0 +1,91 @@
+package com.tibco.cep._retired_;
+
+import java.io.*;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+
+/*
+* Author: Ashwin Jayaprakash Date: Mar 17, 2009 Time: 10:52:25 AM
+*/
+public class ClassLoaderBoundaryInvocationHandler implements InvocationHandler {
+    protected Object target;
+
+    protected ClassLoader targetClassLoader;
+
+    protected ClassLoader fromClassLoader;
+
+    public ClassLoaderBoundaryInvocationHandler(String managementTableClassName,
+
+                                                ClassLoader targetClassLoader,
+                                                ClassLoader fromClassLoader)
+            throws ClassNotFoundException, IllegalAccessException, InstantiationException {
+        Class clazz = Class.forName(managementTableClassName, true, targetClassLoader);
+        this.target = clazz.newInstance();
+
+        this.targetClassLoader = targetClassLoader;
+
+        this.fromClassLoader = fromClassLoader;
+    }
+
+    public Object getTarget() {
+        return target;
+    }
+
+    public ClassLoader getTargetClassLoader() {
+        return targetClassLoader;
+    }
+
+    public ClassLoader getFromClassLoader() {
+        return fromClassLoader;
+    }
+
+    protected static Object serializeUsingCL(Object args, ClassLoader classLoader)
+            throws IOException, ClassNotFoundException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ObjectOutputStream oos = new ObjectOutputStream(baos);
+        oos.writeObject(args);
+        oos.close();
+
+        ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
+        ObjectInputStream ois = new ObjectInputStreamWithClassLoader(bais, classLoader);
+        Object[] transformedArgs = (Object[]) ois.readObject();
+        ois.close();
+
+        return transformedArgs;
+    }
+
+    protected Object serializeToTarget(Object args) throws IOException, ClassNotFoundException {
+        return serializeUsingCL(args, targetClassLoader);
+    }
+
+    protected Object serializeFromTarget(Object args) throws IOException, ClassNotFoundException {
+        return serializeUsingCL(args, fromClassLoader);
+    }
+
+    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+        Object[] transformedArgs = (Object[]) serializeToTarget(args);
+
+        Object result = method.invoke(target, transformedArgs);
+
+        Object transformedResult = serializeFromTarget(result);
+
+        return transformedResult;
+    }
+
+    protected static class ObjectInputStreamWithClassLoader extends ObjectInputStream {
+        protected ClassLoader classLoader;
+
+        public ObjectInputStreamWithClassLoader(InputStream in, ClassLoader classLoader)
+                throws IOException {
+            super(in);
+
+            this.classLoader = classLoader;
+        }
+
+        @Override
+        protected Class<?> resolveClass(ObjectStreamClass desc)
+                throws IOException, ClassNotFoundException {
+            return Class.forName(desc.getName(), false, classLoader);
+        }
+    }
+}

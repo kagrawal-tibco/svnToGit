@@ -1,0 +1,16 @@
+/**
+ * @description Flip soft delete state from on to off and vice versa.
+ */
+void rulefunction WebStudio.Core.Rules.Lifecycle.WS_RF_FlipSoftDeleteState {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		WebStudio.Core.Concepts.WS_C_AbstractUserEntity userEntity;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.Rules.Lifecycle.WS_RF_FlipSoftDeleteState");
+		Log.log(LOGGER, "Info", "Flipping existing delete status [%s] of user entity [%s]", userEntity.softDelete, userEntity);
+		userEntity.softDelete = !userEntity.softDelete;
+	}
+}

@@ -1,0 +1,35 @@
+/**
+ * @description 
+ * @author 
+ */
+rule DataGenerator.RuleSet.StockTickPinger {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		DataGenerator.Entities.StockTickPinger	stocktickpinger;
+		
+	}
+	when {
+		
+	}
+	then {
+		int c = DataGenerator.Entities.Counter.stockTickCount;
+		
+		String[] symbols = {"TIBX", "HPQ", "JNJ", "MSFT", "VMW"};
+		String extId = "TICK:" + c;
+		String symbol = symbols[c % 5];
+		int random = Math.random() * 10;
+		int price = 12 + (c % 5) + random;
+		int volume = 500 + (random * 10);
+		String exchange = "NASDAQ";
+		
+		ConceptModel.StockTick s = ConceptModel.StockTick.StockTick(extId, null, symbol, price, volume, exchange);
+		Event.assertEvent(s);
+		System.debugOut("Stock tick: " + s.symbol + " @ " + s.price + " * " + s.volume);
+		
+		c = c + 1;
+		DataGenerator.Entities.Counter.stockTickCount = c;
+	}
+}

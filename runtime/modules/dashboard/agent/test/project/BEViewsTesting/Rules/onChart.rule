@@ -1,0 +1,21 @@
+/**
+ * @description 
+ * @author mwiley-dt
+ */
+rule Rules.onChart {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Events.ChartEvent chartEvent;
+	}
+	when {
+		
+	}
+	then {
+		System.debugOut("Received ChartEvent[category=\"" + chartEvent.category + "\", v01=\"" + chartEvent.v01 + "\", v02=\"" + chartEvent.v02 + "\", v03=\"" + chartEvent.v03 + "\", v04=\"" + chartEvent.v04 + "\"]");
+		Dashboards.Metrics.Charts chartMetric = Dashboards.Metrics.Charts.compute(chartEvent.category, chartEvent.v01, chartEvent.v02, chartEvent.v03, chartEvent.v04);
+		System.debugOut("Computed M_Charts[category=\"" + chartMetric.category + "\", v01=\"" + chartMetric.v01 + "\", v02=\"" + chartMetric.v02 + "\", v03=\"" + chartMetric.v03 + "\", v04=\"" + chartMetric.v04 + "\"]");
+	}
+}

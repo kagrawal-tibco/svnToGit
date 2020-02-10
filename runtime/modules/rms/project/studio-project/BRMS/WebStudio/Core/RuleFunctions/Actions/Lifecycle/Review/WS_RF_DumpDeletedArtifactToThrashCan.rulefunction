@@ -1,0 +1,74 @@
+/**
+ * @description Flush workspace of deleted artifact.
+ */
+void rulefunction WebStudio.Core.RuleFunctions.Actions.Lifecycle.Review.WS_RF_DumpDeletedArtifactToThrashCan {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		WebStudio.Core.Concepts.WS_C_UserProject userProject;
+		WebStudio.Core.Concepts.Lifecycle.WS_C_CommittableDeltaEntry committableDeltaEntry;
+		String subscriptionId;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.Lifecycle.Review.WS_RF_FlushDeletedArtifact");
+		
+		WS_C_ArtifactBaseState commitLifeCycleState = 
+			Instance.PropertyAtom.getConceptReference(committableDeltaEntry.commitLifeCycleState, 1L);
+			
+		String thrashcanExtId = WS_RF_CreateUserArtifactExtId("THRASH_CAN", null, null, null, subscriptionId, null);
+		
+		if (!(commitLifeCycleState instanceof WS_C_ArtifactRejectedState)) {
+			//Get parent artifact
+			WS_C_UserArtifactRevision checkinUserArtifactRevision = Instance.PropertyAtom.getConceptReference(committableDeltaEntry.userArtifactRevision, 1L);
+			WS_C_UserArtifact parentUserArtifact = WS_RF_IsUserArtifact(checkinUserArtifactRevision.parentArtifactId, checkinUserArtifactRevision.parentArtifactType);
+			if (parentUserArtifact.softDelete) {
+				//TODO* - add subscriptionId
+				WS_C_ThrashCan globalThrashCan = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(thrashcanExtId, false, "/WebStudio/Core/Concepts/Lifecycle/WS_C_ThrashCan");
+				if (globalThrashCan == null) {
+					globalThrashCan = 
+						Instance.newInstance("/WebStudio/Core/Concepts/Lifecycle/WS_C_ThrashCan", thrashcanExtId);
+				}
+				//Create an entry in the can for the master artifact
+				String artifactPath = parentUserArtifact.artifactPath;
+				String projectName = userProject.name;
+				
+				String masterArtifactExtId = WS_RF_CreateUserArtifactExtId(null, parentUserArtifact.artifactPath, projectName, null, subscriptionId, null);
+				WS_C_MasterArtifact masterArtifact = Instance.getByExtIdByUri(masterArtifactExtId, "/WebStudio/Core/Concepts/Lifecycle/WS_C_MasterArtifact");
+				if (masterArtifact != null) {
+					Log.log(LOGGER, "Info", "Found master artifact to be thrashed for artifact path [%s]", artifactPath);
+					String thrashArtifactExtId = "THRASH" + "@" + masterArtifactExtId;
+					WS_C_ThrashedArtifact thrashedArtifact = Instance.getByExtIdByUri(thrashArtifactExtId, "/WebStudio/Core/Concepts/Lifecycle/WS_C_ThrashedArtifact");
+					if (thrashedArtifact == null) {
+						Log.log(LOGGER, "Debug", "No existing thrashed artifact object, creating new.");
+						thrashedArtifact = Instance.newInstance("/WebStudio/Core/Concepts/Lifecycle/WS_C_ThrashedArtifact", thrashArtifactExtId);
+						thrashedArtifact.deletedMasterArtifactId = masterArtifact@extId;
+						Instance.PropertyArray.appendContainedConcept(globalThrashCan.thrashedArtifacts, thrashedArtifact, 1L);
+					}
+					//Clear the master revision ref
+					Instance.PropertyAtom.setConceptReference(masterArtifact.currentMasterRevision, null, 1L);
+				}
+			} else {
+				//Artifact not deleted
+				if (commitLifeCycleState instanceof WS_C_ArtifactApprovedState) {
+					//Artifact has been aproved, so clear any stale thrashed entry of any previous deletes from the global TrashCan
+					WS_C_ThrashCan globalThrashCan = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(thrashcanExtId, false, "/WebStudio/Core/Concepts/Lifecycle/WS_C_ThrashCan");
+					if (globalThrashCan != null) {
+						String masterArtifactExtId = WS_RF_CreateUserArtifactExtId(null, parentUserArtifact.artifactPath, userProject.name, null, subscriptionId, null);
+						WS_C_MasterArtifact masterArtifact = Instance.getByExtIdByUri(masterArtifactExtId, "/WebStudio/Core/Concepts/Lifecycle/WS_C_MasterArtifact");
+						if (masterArtifact != null) {
+							Log.log(LOGGER, "Info", "Found master artifact to be removed from Thrash can for artifact path [%s]", parentUserArtifact.artifactPath);
+							String thrashArtifactExtId = WS_RF_CreateUserArtifactExtId("THRASH", null, null, null, null, masterArtifactExtId);
+							WS_C_ThrashedArtifact thrashedArtifact = Instance.getByExtIdByUri(thrashArtifactExtId, "/WebStudio/Core/Concepts/Lifecycle/WS_C_ThrashedArtifact");
+							if (thrashedArtifact != null) {
+								Log.log(LOGGER, "Debug", "Remove Thrashed entry for artifact path [%s] from Thrash can.", parentUserArtifact.artifactPath);
+								Instance.PropertyArray.removeContainedConcept(globalThrashCan.thrashedArtifacts, thrashedArtifact);
+								Instance.deleteInstance(thrashedArtifact);
+							}
+						}
+					}
+				}							
+			}	
+		}
+	}
+}

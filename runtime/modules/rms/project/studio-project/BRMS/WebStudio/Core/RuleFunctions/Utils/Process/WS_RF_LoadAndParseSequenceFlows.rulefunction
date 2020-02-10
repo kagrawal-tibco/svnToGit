@@ -1,0 +1,141 @@
+/**
+ * @description 
+ */
+void rulefunction WebStudio.Core.RuleFunctions.Utils.Process.WS_RF_LoadAndParseSequenceFlows {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		WebStudio.Core.Concepts.Process.WS_C_Process process;
+		Object processEMFWrapper;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.Process.WS_RF_LoadAndParseSequenceFlows");
+		
+		String PROP_ID = "id";
+		String PROP_NAME = "name";
+		String PROP_UNIQUEID = "uniqueId";
+		String PROP_LANEIDS = "laneIds";
+		String PROP_ISIMMEDIATE = "isImmediate";
+		String PROP_POINT_X = "X";
+		String PROP_POINT_Y = "Y";
+		String PROP_REFERENCEIDS = "referenceIds";
+		String PROP_RESOURCE = "resource";
+		String PROP_SEQUENCEIDS = "sequenceIds";
+		String PROP_DOC_ID = "docId";
+		String PROP_DOC_TEXT = "docText";
+		String PROP_EXPRESSION = "expression";
+		
+		Log.log(LOGGER, "Debug", "Started Loading and parsing Sequence Flows");
+		
+		// fetch sequence flows		
+		WS_C_SequenceFlows ws_c_sequenceFlows = Instance.newInstance("/WebStudio/Core/Concepts/Process/FlowElements/WS_C_SequenceFlows", null);
+		Instance.PropertyAtom.setContainedConcept(process.sequenceFlows, ws_c_sequenceFlows, 1L);
+		
+		Object[] sequenceFlows = WS.Process.SequenceFlow.getAllSequenceFlows(processEMFWrapper);
+		for (int i = 0; i < sequenceFlows@length; i++) {
+			WS_C_SequenceElement sequenceElement = Instance.newInstance("/WebStudio/Core/Concepts/Process/FlowElements/WS_C_SequenceElement", null);
+			
+			String sequenceTypeName = WS.Process.FlowNode.getFlowNodeType(sequenceFlows[i]);
+			sequenceElement.elementType = sequenceTypeName;
+			
+			Object sequenceDetails = WS.Process.SequenceFlow.getSequenceDetails(sequenceFlows[i]);
+			if (Collections.Map.size(sequenceDetails) > 0) {
+				sequenceElement.elementId = Collections.Map.get(sequenceDetails, PROP_ID);
+				sequenceElement.elementName = Collections.Map.get(sequenceDetails, PROP_NAME);
+				sequenceElement.uniqueId = Collections.Map.get(sequenceDetails, PROP_UNIQUEID);
+				sequenceElement.isImmediate = Collections.Map.get(sequenceDetails, PROP_ISIMMEDIATE);
+				if(Collections.Map.containsKey(sequenceDetails,PROP_EXPRESSION)){
+					sequenceElement.expression = Collections.Map.get(sequenceDetails, PROP_EXPRESSION);
+				}
+			}
+			Log.log(LOGGER, "Debug", "Completed fetching Sequence Details.");
+			
+			Object laneDetails = WS.Process.FlowNode.getLanes(sequenceFlows[i]);
+			if (Collections.Map.size(laneDetails) > 0) {
+				WS_C_FlowElementLaneSet laneset = Instance.newInstance("/WebStudio/Core/Concepts/Process/FlowElements/WS_C_FlowElementLaneSet", null);
+				Instance.PropertyAtom.setContainedConcept(sequenceElement.lanes, laneset, 1L);
+				
+				String lanes = Collections.Map.get(laneDetails, PROP_LANEIDS);
+				String[] laneIds = String.split(lanes, ",");
+				for (int j = 0; j < laneIds@length; j++) {
+					WS_C_Lane lane = WS_RF_GetLaneFromProcess(laneIds[j], process.laneset);
+					if (lane != null) {
+						Instance.PropertyArray.appendContainedConcept(laneset.lane, lane, 1L);
+					}
+				}
+			}
+			Log.log(LOGGER, "Debug", "Completed fetching Lane Details.");
+			
+			Object startPointDetails = WS.Process.SequenceFlow.getStartPoints(sequenceFlows[i]);
+			if (Collections.Map.size(startPointDetails) > 0) {
+				WS_C_StartPoint startPoint = Instance.newInstance("/WebStudio/Core/Concepts/Process/Common/WS_C_StartPoint", null);
+				startPoint.x = Collections.Map.get(startPointDetails, PROP_POINT_X);
+				startPoint.y = Collections.Map.get(startPointDetails, PROP_POINT_Y);
+				
+				Instance.PropertyAtom.setContainedConcept(sequenceElement.startPoint, startPoint, 1L);
+			}
+			Log.log(LOGGER, "Debug", "Completed fetching Start Point Details.");
+			
+			Object endPointDetails = WS.Process.SequenceFlow.getEndPoints(sequenceFlows[i]);
+			if (Collections.Map.size(endPointDetails) > 0) {
+				WS_C_EndPoint endPoint = Instance.newInstance("/WebStudio/Core/Concepts/Process/Common/WS_C_EndPoint", null);
+				endPoint.x = Collections.Map.get(endPointDetails, PROP_POINT_X);
+				endPoint.y = Collections.Map.get(endPointDetails, PROP_POINT_Y);
+				
+				Instance.PropertyAtom.setContainedConcept(sequenceElement.endPoint, endPoint, 1L);
+			}
+			Log.log(LOGGER, "Debug", "Completed fetching End Point Details.");
+			
+			Object[] bendPointList = WS.Process.SequenceFlow.getBendPointList(sequenceFlows[i]);
+			
+			WS_C_BendPoints bendPoints = null; 
+			if (bendPointList != null && bendPointList@length > 0) {
+				bendPoints = Instance.newInstance("/WebStudio/Core/Concepts/Process/Common/WS_C_BendPoints", null);
+				Instance.PropertyAtom.setContainedConcept(sequenceElement.bendPointList, bendPoints, 1L);
+			}
+			for (int j = 0; j < bendPointList@length; j++) {
+				Object bendPointDetails = WS.Process.SequenceFlow.getBendPoints(bendPointList[j]);
+				
+				if (Collections.Map.size(bendPointDetails) > 0) {
+					WS_C_BendPoint bendPoint = Instance.newInstance("/WebStudio/Core/Concepts/Process/Common/WS_C_BendPoint", null);
+					bendPoint.x = Collections.Map.get(bendPointDetails, PROP_POINT_X);
+					bendPoint.y = Collections.Map.get(bendPointDetails, PROP_POINT_Y);
+					
+					Instance.PropertyArray.appendContainedConcept(bendPoints.bendPoints, bendPoint, 1L);
+				}
+			}
+			Log.log(LOGGER, "Debug", "Completed fetching Bend point Details.");
+			
+			Object sourceReference = WS.Process.SequenceFlow.getSourceReferences(sequenceFlows[i]);
+			if (Collections.Map.size(sourceReference) > 0) {
+				String sourceReferenceIds = Collections.Map.get(sourceReference, PROP_REFERENCEIDS);
+				Instance.PropertyAtom.setString(sequenceElement.sourceReference, sourceReferenceIds, 1L);
+			}
+			Log.log(LOGGER, "Debug", "Completed fetching Source reference Details.");
+			
+			Object targetReference = WS.Process.SequenceFlow.getTargetReferences(sequenceFlows[i]);
+			if (Collections.Map.size(targetReference) > 0) {
+				String targetReferenceIds = Collections.Map.get(targetReference, PROP_REFERENCEIDS);
+				Instance.PropertyAtom.setString(sequenceElement.targetReference, targetReferenceIds, 1L);
+			}
+			Log.log(LOGGER, "Debug", "Completed fetching target reference Details.");
+			
+			Object documentDetails = WS.Process.FlowNode.getDocumentation(sequenceFlows[i]);
+			if (Collections.Map.size(documentDetails) > 0) {
+				WS_C_Documentation documentation = Instance.newInstance("/WebStudio/Core/Concepts/Process/Common/WS_C_Documentation", null);
+				
+				String docId = Collections.Map.get(documentDetails, PROP_DOC_ID);
+				Instance.PropertyAtom.setString(documentation.docId, docId, 1L);
+					
+				String docText = Collections.Map.get(documentDetails, PROP_DOC_TEXT);
+				Instance.PropertyAtom.setString(documentation.text, docText, 1L);
+				
+				Instance.PropertyAtom.setContainedConcept(sequenceElement.documentation, documentation, 1L);
+			}
+			Log.log(LOGGER, "Debug", "Completed fetching documentation Details.");
+			
+			Instance.PropertyArray.appendContainedConcept(ws_c_sequenceFlows.sequenceElement, sequenceElement, 1L);
+		}
+	}
+}

@@ -1,0 +1,9 @@
+package com.tibco.cep.studio.dashboard.core.model.XSD.interfaces;
+
+/**
+ * @
+ *  
+ */
+public interface ISynXSDComplexExtension extends ISynXSDComplexContent {
+
+}

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beviewsconfig:ChartComponent xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:beviewsconfig="http://www.tibco.com/be/designer" namespace="/Dashboards/Charts/TIBX/" folder="/Dashboards/Charts/TIBX/" name="TIBX_ByDayForLastMonth" description="" GUID="954CBF75-33F0-BE40-0A55-999ECDBB5442" ownerProjectName="DisparateTimeCharts" version="1334965385364" displayName="TIBX_ByDayForLastMonth" componentColorSetIndex="-1" seriesColorIndex="-1">
+  <visualization xsi:type="beviewsconfig:LineChartVisualization" namespace="/Dashboards/Charts/TIBX/" folder="/Dashboards/Charts/TIBX/" name="Visualization_" description="" GUID="F0A61C28-5D14-CC2F-D112-88DCC4721FB0" ownerProjectName="DisparateTimeCharts" version="1334965385364" lineThickness="2" dataPlotting="all" plotShape="circle" plotShapeDimension="3">
+    <seriesConfig xsi:type="beviewsconfig:ChartSeriesConfig" namespace="/Dashboards/Charts/TIBX/" folder="/Dashboards/Charts/TIBX/" name="SeriesConfig_" description="" GUID="44110BEC-3823-D04A-93F0-3AB3BB1B4DFF" ownerProjectName="DisparateTimeCharts" version="1334965385364" displayName="TIBX" anchor="Q1">
+      <actionRule namespace="/Dashboards/Charts/TIBX/" folder="/Dashboards/Charts/TIBX/" name="AR_" description="" GUID="00792001-D56D-301C-2FF6-45F40F1454FD" ownerProjectName="DisparateTimeCharts" version="1334965385364" threshold="-1" thresholdUnit="month">
+        <dataSource href="../../DataSources/DailyTickers.datasource#/"/>
+        <params namespace="/Dashboards/Charts/TIBX/" folder="/Dashboards/Charts/TIBX/" name="ticker" description="" GUID="0ECD89F0-961D-E4CE-5AA2-8AF18E35E378" ownerProjectName="DisparateTimeCharts" version="1334965385365" value="TIBX" type="String"/>
+      </actionRule>
+      <valueDataConfig xsi:type="beviewsconfig:ChartValueDataConfig">
+        <extractor>
+          <sourceField href="../../Metrics/DailyTickerMetric.metric#//@properties.2"/>
+        </extractor>
+        <formatter xsi:type="beviewsconfig:TextFieldFormat" toolTipFormat="{SnapShotTime}={Price}" displayFormat="{Price}" showLabel="true">
+          <formatStyle fontSize="10" fontStyle="normal"/>
+        </formatter>
+      </valueDataConfig>
+      <categoryDataConfig xsi:type="beviewsconfig:ChartCategoryDataConfig">
+        <extractor>
+          <sourceField href="../../Metrics/DailyTickerMetric.metric#//@properties.0"/>
+        </extractor>
+        <formatter xsi:type="beviewsconfig:TextFieldFormat" displayFormat="{SnapShotTime,date,dd}"/>
+      </categoryDataConfig>
+    </seriesConfig>
+  </visualization>
+  <layoutConstraint xsi:type="beviewsconfig:FlowLayoutConstraint" componentRowSpan="1" componentColSpan="3"/>
+  <plotArea>
+    <foreground line="both"/>
+  </plotArea>
+  <categoryGuidelineConfig headerName="Time" sortOrder="unsorted" duplicatesAllowed="true">
+    <headerFormatStyle fontSize="10" fontStyle="normal"/>
+    <labelFormatStyle fontSize="10" fontStyle="normal"/>
+  </categoryGuidelineConfig>
+  <valueGuidelineConfig headerName="Price" scale="normal" division="5">
+    <headerFormatStyle fontSize="10" fontStyle="normal"/>
+    <labelFormatStyle fontSize="10" fontStyle="normal"/>
+  </valueGuidelineConfig>
+</beviewsconfig:ChartComponent>

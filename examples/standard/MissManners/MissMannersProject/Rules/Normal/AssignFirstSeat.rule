@@ -1,0 +1,31 @@
+/**
+ * @description 
+ * @author 
+ */
+rule Rules.Normal.AssignFirstSeat {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Model.Context	context;
+		Model.Guest	guest;
+		
+	}
+	when {
+		context.status == "start";
+		context.firstGuestName == guest.name;
+	}
+	then {
+		System.debugOut("Start testing...");
+		System.debugOut("First Guest: " + context.firstGuestName);
+		System.debugOut("Num of Guests: " + context.numGuest);
+		Seat seat = Model.Seat.Seat(null/*extId String */,
+		                 guest/*guest Model.Guest */,
+		                 null/*leftSeat Model.Seat */,
+		                 1/*position int */);
+		context.status = "processing";
+		context.startTime = DateTime.now();
+		context.firstSeat = seat@id;
+	}
+}

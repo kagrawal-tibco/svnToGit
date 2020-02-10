@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Application xmlns:mx="http://www.adobe.com/2006/mxml" 
+	layout="absolute" 
+	width="800" 
+	height="400" 
+	applicationComplete="init()"
+>
+	<mx:Script>
+		<![CDATA[
+			
+			import mx.controls.Alert;
+			import com.tibco.be.views.core.events.EventBus;
+			import com.tibco.be.views.core.events.EventTypes;
+			import com.tibco.be.views.core.events.io.IOEvent;
+			import com.tibco.be.views.core.events.io.StreamDataRequestEvent;
+			import com.tibco.be.views.core.events.io.StreamDataResponseEvent;
+			import com.tibco.be.views.core.io.IOService;
+			import com.tibco.be.views.core.logging.LoggingService;
+			
+			public function init():void{
+//				var example:XMLSocketExample = new XMLSocketExample(txt_ServerOutput);
+				IOService.instance.init();
+				LoggingService.instance.init();
+				
+				registerListeners();
+				
+				var streamRequest:StreamDataRequestEvent = new StreamDataRequestEvent(
+					StreamDataRequestEvent.START_CHANNEL,
+					"testing",
+					this
+				);
+				streamRequest.serverName = "localhost";
+				streamRequest.portNumber = 4444;
+				
+				EventBus.instance.dispatchEvent(streamRequest);
+			}
+			
+			private function handleResponse(event:StreamDataResponseEvent):void{
+				switch(event.requestCommand){
+					case(StreamDataRequestEvent.START_CHANNEL):
+						if(event.status != IOEvent.SUCCESS){
+							errorMsg("ERROR: Failed Starting Stream!");
+						}
+						break;
+					case(StreamDataRequestEvent.SEND_DATA):
+						if(event.status != IOEvent.SUCCESS){
+							errorMsg("ERROR: Failed Sending Data on Stream!");
+						}
+						else{
+							handleDataReceived(event);
+						}
+						break;
+					case(StreamDataRequestEvent.CLOSE_CHANNEL):
+						if(event.status != IOEvent.SUCCESS){
+							errorMsg("ERROR: Failed Closing Stream!");
+						}
+						else{ output("\n\nSocket Closed..."); }
+						break;
+					case("ERROR"):
+						errorMsg("Error Occurred:\n\n" + event + "\n\n" + event.logMessage);
+						break;
+					default:
+						errorMsg("Unrecognized StreamDataResponseEvent command!\n\n" + event.logMessage);
+						break;
+				}
+			}
+			
+			public function handleDataReceived(event:StreamDataResponseEvent):void{
+				output(event.data.toString());
+			}
+			
+			public function registerListeners():void{
+				EventBus.instance.addEventListener(EventTypes.STREAM_DATA_RESPONSE, handleResponse, this);
+			}
+			
+			private function errorMsg(message:String):void{
+				txt_ServerOutput.setStyle("color", "red");
+				txt_ServerOutput.text = message;
+			}
+			
+			private function output(message:String):void{
+				txt_ServerOutput.setStyle("color", "black");
+				txt_ServerOutput.text += message + "\n";
+			}
+			
+		]]>
+	</mx:Script>
+	
+	<mx:Label x="10" y="10" text="Streaming Server Output:" fontSize="24"/>
+	<mx:TextArea x="10" y="53" width="780" height="337" id="txt_ServerOutput" editable="false"/>
+</mx:Application>

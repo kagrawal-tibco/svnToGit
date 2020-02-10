@@ -1,0 +1,38 @@
+/**
+ * @description 
+ */
+boolean rulefunction WebStudio.Core.RuleFunctions.Utils.WS_RF_CheckUserAccess {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		WebStudio.Security.Authn.Concepts.WS_C_LoggedInUser loggedInUser;		
+		String artifactFQN;
+		String operation;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.WS_RF_CheckUserAccess");
+		boolean hasAccess = true;
+		//Get the User roles		
+		String[] userRoles = Instance.PropertyArray.toArrayString(loggedInUser.roles);
+
+		int prjIndx = String.indexOfString(artifactFQN, 0, "/");
+		int extnIndx = String.lastIndexOfString(artifactFQN, 0, ".");
+		if (prjIndx != -1 && extnIndx != -1) {
+			String projectName = String.substring(artifactFQN, 0, prjIndx);
+			String artifactPath = String.substring(artifactFQN, prjIndx, extnIndx);
+			String artifactExtn = String.substring(artifactFQN, extnIndx + 1, artifactFQN@length);
+			String artifactType = String.toUpperCase(artifactExtn);
+			
+			Log.log(LOGGER, "Debug", "Checking access for Project[%s], Artifact Path[%s], Type [%s] & Extn[%s]", projectName, artifactPath, artifactType, artifactExtn);
+			
+			String subscriptionId = null;
+			if (loggedInUser.jwtToken != null) subscriptionId = loggedInUser.jwtToken.sbsc;
+			hasAccess = RMS.Authorization.ensureAccess(projectName, subscriptionId, userRoles, artifactPath, artifactType, operation);
+		
+			Log.log(LOGGER, "Debug", "User %s has %s access to artifact %s : %s", loggedInUser.username, operation, artifactFQN, hasAccess);
+		}
+		
+		return hasAccess;		
+	}
+}

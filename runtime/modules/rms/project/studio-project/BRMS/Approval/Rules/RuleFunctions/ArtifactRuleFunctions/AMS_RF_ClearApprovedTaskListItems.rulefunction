@@ -1,0 +1,61 @@
+/**
+ * @description Checks if a specified task is completed.
+ */
+boolean rulefunction Approval.Rules.RuleFunctions.ArtifactRuleFunctions.AMS_RF_ClearApprovedTaskListItems {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Approval.Concepts.ArtifactsConcepts.AMS_C_Checkin referencedCheckin;
+		AAA.Concepts.AMS_C_Role role;
+		String reviewTaskExtId;
+	}
+	body {
+		Object LOGGER = Log.getLogger("Approval.Rules.RuleFunctions.ArtifactRuleFunctions.AMS_RF_CheckTaskItemCompletion");
+		
+		boolean isCheckinComplete = true;
+		String[] artifactPaths = Instance.PropertyArray.toArrayString(referencedCheckin.artifactPaths);
+		for (int loop = 0; loop < artifactPaths@length; loop++) {
+			String checkinArtifactPath = artifactPaths[loop];
+	        String extId = String.concat(String.concat(referencedCheckin.patternId, "@"), checkinArtifactPath);
+        	Log.log(LOGGER, "Debug", "Ext Id %s", extId);
+        	
+        	//Lock and load this commited artifact
+	        boolean committedArtifactLock = Cluster.DataGrid.Lock(extId, -1, false);
+			if (committedArtifactLock) {
+				AMS_C_ArtifactCommited committed = Cluster.DataGrid.CacheLoadConceptByExtId(extId, false);
+				
+				//Populate applicable stages here
+				AMS_C_ApplicableStages applicableStages = Instance.getByExtIdByUri(committed.applicableStagesConceptId, "/Approval/Concepts/ArtifactsConcepts/AMS_C_ApplicableStages");
+				
+				if (applicableStages.stages@length > 0){
+					isCheckinComplete = false;
+					break;
+				}
+			}	
+		}
+		
+		if (isCheckinComplete){
+			Log.log(LOGGER, "Debug", "Clearing Approved Task with Revision Id - %s", referencedCheckin.revisionId);
+		    // first clear out review task related references
+			Instance.PropertyArray.removeString(role.reviewTasksExtIds, reviewTaskExtId);
+			
+			// Load and Remove the review Task
+			AMS_C_ReviewTask reviewTask = Cluster.DataGrid.CacheLoadConceptByExtId(reviewTaskExtId, false);
+			Instance.deleteInstance(reviewTask);
+									
+			// Retrieve project name
+			String projectName = referencedCheckin.projectName;
+									
+			// Clear any associated checkin concept
+			Instance.deleteInstance(referencedCheckin);
+									
+			// Finally clear any project approved references
+			for (int i=0; i < artifactPaths@length; i++){
+				Approval.Rules.RuleFunctions.ArtifactRuleFunctions.AMS_RF_UpdateApprovedArtifacts(projectName, artifactPaths[i], true);
+			}
+		}
+		
+		return isCheckinComplete;
+	}
+}

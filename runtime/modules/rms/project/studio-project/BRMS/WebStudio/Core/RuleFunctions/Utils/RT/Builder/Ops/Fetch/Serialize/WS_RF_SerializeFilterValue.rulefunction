@@ -1,0 +1,36 @@
+/**
+ * @description Serialize filter value to concept model.
+ */
+void rulefunction WebStudio.Core.RuleFunctions.Utils.RT.Builder.Ops.Fetch.Serialize.WS_RF_SerializeFilterValue {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object filterValueEModel;
+		WebStudio.Core.Concepts.RuleTemplateInstance.Builder.WS_C_AbstractConditionsFilter filterConcept;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.RT.Builder.Ops.Fetch.Serialize.WS_RF_SerializeFilterValue");
+		
+		WS_C_FilterValue filterValueConcept = 
+			Instance.newInstance("/WebStudio/Core/Concepts/RuleTemplateInstance/Builder/WS_C_FilterValue", null);
+		
+		Instance.PropertyAtom.setContainedConcept(filterConcept.value, filterValueConcept, 1L);	
+		//This is contained in a filter
+		if (WS.RTI.isSimpleFilterValue(filterValueEModel)) {
+			String simpleValue = WS.RTI.getSingleFilterValue(filterValueEModel);
+			Log.log(LOGGER, "Debug", "Filter value [%s] is simple type", simpleValue);
+			filterValueConcept.simple = simpleValue;
+		} else {
+			//It may have links
+			Object[] valueLinks = WS.RTI.getLinks(filterValueEModel);
+			Log.log(LOGGER, "Debug", "Number of Filter value links - %s", valueLinks@length);
+			for (int loop = 0; loop < valueLinks@length; loop++) {
+				Object linkEModel = valueLinks[loop];
+				WebStudio.
+					Core.
+						RuleFunctions.Utils.RT.Builder.Ops.Fetch.Serialize.WS_RF_SerializeLink(linkEModel, filterValueConcept);
+			}
+		}
+	}
+}

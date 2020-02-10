@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TSX>
+	<drawingViewActionDefinitions>
+		<folder name="Process Action">
+			<action name="Delete"
+				class="com.tibco.cep.webstudio.client.process.custom.toolbar.ProcessElementDeleteActionItemDefinition" />
+			<action name="Undo"
+				class="com.tibco.cep.webstudio.client.process.custom.toolbar.ProcessElementUndoActionItemDefinition" />
+			<action name="Redo"
+				class="com.tibco.cep.webstudio.client.process.custom.toolbar.ProcessElementRedoActionItemDefinition" />
+		</folder>
+	</drawingViewActionDefinitions>
+	
+	<toolRuleConditionDefinitions>
+		<condition name="IsEdgeAllowed"
+			class="com.tibco.cep.webstudio.server.ui.tools.condition.BpmnBetweenToolRuleConditionDefinition" />
+	</toolRuleConditionDefinitions>
+
+	<compositeUIDefinitions>
+		<node>
+			<group name="General">
+				<ui name="Note"
+					class="com.tibco.cep.webstudio.server.ui.custom.BpmnAnnotaionNodeBuilder"
+					icon="images/note.gif" />
+			</group>
+		</node>
+		<node>
+			<group name="Tasks">
+				<ui name="Task"
+					class="com.tibco.cep.webstudio.server.ui.custom.BpmnTaskNodeBuilder"
+					icon="images/scripttask_16x16.gif" />
+				<ui name="Call Activity"
+					class="com.tibco.cep.webstudio.server.ui.custom.BpmnCallActivityNodeBuilder"
+					icon="images/scripttask_16x16.gif" />
+			</group>
+			<group name="Gateways">
+				<ui name="Exclusive"
+					class="com.tibco.cep.webstudio.server.ui.custom.BpmnExclusiveGatewayNodeBuilder"
+					icon="images/exclusive_16x16.png" />
+				<ui name="Parallel"
+					class="com.tibco.cep.webstudio.server.ui.custom.BpmnParallelGatewayNodeBuilder"
+					icon="images/parallel_16x16.png" />
+			</group>
+			<group name="Start Events">
+				<ui name="Start"
+					class="com.tibco.cep.webstudio.server.ui.custom.BpmnStartEventNodeBuilder"
+					icon="images/noneEnd_16x16.png" />
+				<ui name="Message Start"
+					class="com.tibco.cep.webstudio.server.ui.custom.BpmnMessageStartNodeBuilder"
+					icon="images/messageEnd_16x16.png" />
+				<ui name="Signal Start"
+					class="com.tibco.cep.webstudio.server.ui.custom.BpmnSignalStartNodeBuilder"
+					icon="images/signalEnd_16x16.png" />
+				<ui name="Timer Start"
+					class="com.tibco.cep.webstudio.server.ui.custom.BpmnTimerEventNodeBuilder"
+					icon="images/startTimerEvent_16x16.png" />
+			</group>
+			<group name="End Events">
+				<ui name="End"
+					class="com.tibco.cep.webstudio.server.ui.custom.BpmnEndEventNodeBuilder"
+					icon="images/REDnoneEnd_16x16.png" />
+				<ui name="Message End"
+					class="com.tibco.cep.webstudio.server.ui.custom.BpmnMessageEndNodeBuilder"
+					icon="images/REDmessageEnd_16x16.png" />
+				<ui name="Signal End"
+					class="com.tibco.cep.webstudio.server.ui.custom.BpmnSignalEndNodeBuilder"
+					icon="images/REDnoneEnd_16x16.png" />
+				<ui name="Error End"
+					class="com.tibco.cep.webstudio.server.ui.custom.BpmnErrorEndEventNodeBuilder"
+					icon="images/REDerrorEnd_16x16.png" />
+			</group>
+			<group name="Loops">
+				<ui name="Standard"
+					class="com.tibco.cep.webstudio.server.ui.custom.BpmnStandardLoopNodeBuilder"
+					icon="images/scripttask_16x16.gif" />
+				<ui name="MultiInstance"
+					class="com.tibco.cep.webstudio.server.ui.custom.BpmnMultiInstanceLoopNodeBuilder"
+					icon="images/scripttask_16x16.gif" />
+
+			</group>
+
+		</node>
+		<nodeLabel>
+			<group name="Node Label">
+				<ui name="Custom Node Label"
+					class="com.tibco.cep.webstudio.server.ui.custom.BpmnNodeLabelBuilder"
+					icon="images/scripttask_16x16.gif" />
+			</group>
+		</nodeLabel>
+		<edge>
+			<group name="Edges">
+				<ui name="Association"
+					class="com.tibco.cep.webstudio.server.ui.custom.BpmnAssociationEdgeBuilder"
+					icon="images/association_16x16.png" />
+				<ui name="Sequence"
+					class="com.tibco.cep.webstudio.server.ui.custom.BpmnSequenceEdgeBuilder"
+					icon="images/SequenceFlow.gif" />
+					<ui name="Default Sequence"
+					class="com.tibco.cep.webstudio.server.ui.custom.BpmnDefaultSequenceEdgeBuilder"
+					icon="images/SequenceFlow.gif" />
+			</group>
+		</edge>
+	</compositeUIDefinitions>
+
+	<!--<toolRuleActionDefinitions> -->
+	<!--This section specifies all the additional tool rule actions that you 
+		want to use in drawing view editing tool customization rules. -->
+	<!--For each action, you need to specify the action class and the action 
+		name that you want displayed in Tom Sawyer Perspectives Designer. -->
+	<!--Action class must implement com.tomsawyer.view.behavior.toolcustomization.rule.action.TSToolRuleAction 
+		and have a public no-arg constructor. -->
+	<!--If the action is to be used in a Between Tool it must implement com.tomsawyer.view.behavior.toolcustomization.rule.action.TSBetweenToolRuleAction 
+		instead, and have a public no-arg constructor. -->
+	<!--Action class must be public and cannot be an inner class. -->
+	<!--An example tool rule action specification is provided below. -->
+	<toolRuleActionDefinitions>
+		<action name="Create New Flow Element"
+			class="com.tibco.cep.webstudio.server.ui.tools.NewFlowElementRuleActionDefinition" />
+		<action name="Create New Connection Element"
+			class="com.tibco.cep.webstudio.server.ui.tools.NewBetweenToolRuleActionDefinition" />
+	</toolRuleActionDefinitions>
+</TSX>

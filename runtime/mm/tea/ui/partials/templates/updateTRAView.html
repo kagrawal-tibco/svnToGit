@@ -1,0 +1,70 @@
+ <div class="modal fade box-sizing" id="updateTRAandLog">
+     <form  enctype="multipart/form-data" method="post" name="paramForm" novalidate>
+       <div class="modal-header box-sizing">
+       	 	<button type="button" class="close" data-dismiss="modal" aria-hidden="true">x</button>
+			<span class="lead"><h4>Master Application TRA file</h4></span>
+	   </div>
+	   
+	   <div class="modal-body box-sizing">
+			<table class="be-table">
+				<thead>
+					<tr>
+						<th>Machine</th>
+						<th>TRA file</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr style="" ng-repeat="data in traAndLogUpdates" ng-hide="data.isDeleted">
+						<td style="vertical-align: top;">
+							<select style="margin-top: 10px;" ng-model="data.hostId" ng-change="checkIfTRAConfigAlreadyExists($index,data.hostId);isAllowSaveTRAConfig?null:allowTRAConfigurationSave()">
+					    		<option ng-selected="{{host.config.hostId == data.hostId}}" ng-repeat="host in masterHosts"  value="{{host.config.hostId}}">
+      								{{host.name}}
+    							</option>
+					   		</select>
+					   		<div ng-show="data.isExists" class="fileuploadError">*Host Configuration Already Exists</div>
+						</td>
+						<td>
+							<div style="width:90%;" class="pull-left">
+								<div style="margin-bottom:5px;" class="row">
+									<input type="radio" ng-model="data.uploadFile" name="name{{$index}}" ng-value="true" ng-change="isAllowSaveTRAConfig?null:allowTRAConfigurationSave()"/>Upload
+									<input type="radio" ng-model="data.uploadFile" name="name{{$index}}" ng-value="false" ng-change="isAllowSaveTRAConfig?null:allowTRAConfigurationSave()"/>Path
+								</div>
+								<div ng-if="data.uploadFile">
+									<input name="deploumentPath" type="text" placeholder="Upload location" id="deploumentPath"
+                               			ng-model="data.deploymentPath">
+                               		<div>
+                               			<input type="text" id="trafilepath{{$index}}" disabled="disabled"/>	
+                               			<span><i ng-click="browseFile('uploadTRAfilePath'+$index)" class="fa fa-upload operation">Upload</i></span>	
+                               			<span ng-show="isFileExtensionTRA" class="fileuploadError">Only *.tra file is accepted</span>			
+										<input type="file"  accept=".tra,.TRA" on-read-file="validateFileExtension(data.uploadTRAfile.name, 'tra')" multiple file-model="data.uploadTRAfile" style="visibility: hidden;" id="uploadTRAfilePath{{$index}}" onchange="angular.element(this).scope().setPathValue('trafilepath'+angular.element(this).scope().$index,'uploadTRAfilePath'+angular.element(this).scope().$index);angular.element(this).scope().isAllowSaveTRAConfig?null:angular.element(this).scope().allowTRAConfigurationSave()"/>				
+                               		</div>
+								</div>
+								<div ng-if="!data.uploadFile">
+									<input name="TRA Path" type="text" placeholder="TRA Path" id="traPath"
+                              		 ng-model="data.traFilePath" ng-change="isAllowSaveTRAConfig?null:allowTRAConfigurationSave()">
+								</div>
+							</div>
+							<div ng-click="removeTraAndLogUpdate($index);isAllowSaveTRAConfig?null:allowTRAConfigurationSave()" class="pull-left operation" style="width: 10px;display: inline-block;">  
+        		 				<i class="fa fa-minus-circle"></i>
+                			</div>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+	  	</div>	
+	  	<div class="modal-footer box-sizing">
+	  		<div ng-click="addNewTRAandLogUpdate();isAllowSaveTRAConfig?null:allowTRAConfigurationSave()" class="operation pull-left">    
+        			<i  class="fa fa-plus-circle"></i>
+				   <span>Add New</span>             
+            </div>
+            <div ng-show="$parent.isError" class="pull-left" style="margin-left:25px;">
+				<span class="fileuploadError">{{$parent.errorMessage}}</span>
+			</div>
+	    	<button type="button" ng-disabled="paramForm.$invalid || !isAllowSaveTRAConfig" ng-click="updateTRAConfiguration()"               
+                class="tbt-btn primary-btn" ng-class="{'button_disabled':paramForm.$invalid || !isAllowSaveTRAConfig}">Save</button>
+	    	<button type="button" data-dismiss="modal" aria-hidden="true" class="btn tbt-btn secondary-btn" ng-click="close()">
+		   		 Cancel
+	    	</button>
+    	</div>
+    </form>
+ </div>

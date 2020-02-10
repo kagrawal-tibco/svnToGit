@@ -1,0 +1,35 @@
+/**
+ * @description 
+ */
+void rulefunction Monitoring.RuleFunctions.cqueries.tpoolQueryListener {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String	resultName;
+		boolean	isBatchEnd;
+		boolean	hasEnded;
+		Object	row;
+		Object	closure;
+	}
+	body {
+		if (isBatchEnd) {
+		    return;
+		} else if (hasEnded) {
+		    return;
+		} else {
+		    Object[] columns = row;
+		    if(columns == null) return;
+		    String host = columns[0];
+		    String metricname = columns[1];
+		    long time = columns[2];
+		    int maxThreads = columns[3];
+		    int activeThreads = columns[4];
+		    int queueCapacity = columns[5];
+		    int queueSize = columns[6];
+		    Monitoring.Events.bemetrics.ThreadAndJobPoolMetricEvent event = Monitoring.Events.bemetrics.ThreadAndJobPoolMetricEvent.ThreadAndJobPoolMetricEvent(
+		        null,null,-1,false,false,-1,"",host,metricname,maxThreads,activeThreads,queueCapacity,queueSize,time);
+		    Event.sendEvent(event);
+		}
+	}
+}

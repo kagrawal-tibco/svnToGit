@@ -1,0 +1,122 @@
+/**
+ * @description 
+ */
+void rulefunction WebStudio.Core.RuleFunctions.Utils.Lifecycle.WS_RF_ClearRevisionDetails {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		WebStudio.Core.Concepts.WS_C_UserArtifactRevision userArtifactRevision;
+		String projectName;
+		String userName;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.Lifecycle.WS_RF_ClearRevisionDetails");
+		
+		WS_C_LifecycleMetadata lifecycleMetadata = null;
+		if (userArtifactRevision != null) {
+			// fetch and clear LifeCycleMetadata contents
+			lifecycleMetadata = userArtifactRevision.lifecycleMetadata;
+			
+			WS_C_ArtifactBaseState[] stateHistory = Instance.PropertyArray.toArrayConcept(lifecycleMetadata.stateHistory);
+			if (stateHistory != null) {
+				Log.log(LOGGER, "Debug", "Total State History - %s to remove", stateHistory@length);
+				for (int j=0; j<stateHistory@length; j++) {
+					Log.log(LOGGER, "Debug", "Removing State - %s", stateHistory[j].stateName);
+					Instance.PropertyArray.removeConceptReference(lifecycleMetadata.stateHistory, stateHistory[j]);
+					Instance.deleteInstance(stateHistory[j]);
+				}
+			}
+			
+			if (lifecycleMetadata.currentState != null) {
+				Log.log(LOGGER, "Debug", "Deleting lifecycleMetadata.currentState Id [%s] & Name[%s]", lifecycleMetadata.currentState@id, lifecycleMetadata.currentState.stateName);
+				Instance.deleteInstance(lifecycleMetadata.currentState);
+			}
+			if (lifecycleMetadata.lastOperation != null) {
+				Log.log(LOGGER, "Debug", "Deleting lifecycleMetadata.lastOperation Id [%s] & Name[%s]", lifecycleMetadata.lastOperation@id, lifecycleMetadata.lastOperation.opName);
+				Instance.deleteInstance(lifecycleMetadata.lastOperation);
+			}
+			
+			Log.log(LOGGER, "Debug", "Deleting lifecycleMetadata");
+			Instance.deleteInstance(lifecycleMetadata);
+			
+			Concept contentData = WS_RF_GetArtifactContentInstance(userArtifactRevision.artifactContentsId, userArtifactRevision.parentArtifactType);			
+			if (contentData != null) {
+				if (contentData instanceof WS_C_AbstractRuleTemplate) {
+					WS_C_AbstractRuleTemplate abstractRT = contentData;
+					String implementsPath = abstractRT.implementsPath;
+					Log.log(LOGGER, "Debug", "Base RT Path - %s", implementsPath);
+					
+					boolean baseRTVersionExists = false;
+					if (implementsPath != null && !String.equals(implementsPath, "")) {
+						String baseRTExtId = WS_RF_CreateUserArtifactExtId(null, implementsPath, projectName, userName, null, null);
+						WS_C_RuleTemplateInstanceUserArtifact baseRuleTemplateInstanceUserArtifact = Instance.getByExtIdByUri(baseRTExtId, "/WebStudio/Core/Concepts/RuleTemplateInstance/WS_C_RuleTemplateInstanceUserArtifact");
+						String[] revisionIds = Instance.PropertyArray.toArrayString(baseRuleTemplateInstanceUserArtifact.artifactRevisionIds);
+						if (revisionIds@length > 0) {
+							baseRTVersionExists = true;
+						}
+					}
+					Log.log(LOGGER, "Debug", "baseRTVersionExists - %s", baseRTVersionExists);
+					// manually clear Rule Template Instance Builder contents, 
+					// view largely has contained concepts so that taken care of automatically
+					if (contentData instanceof WS_C_RuleTemplateInstanceBuilder) {
+						Log.log(LOGGER, "Debug", "Content data instance of Rule Template Instance Builder");
+						WS_C_RuleTemplateInstanceBuilder ruleTemplateInstanceBuilder = contentData;
+						
+						WS_C_Conditions conditions = ruleTemplateInstanceBuilder.conditions;
+						if (conditions != null) {
+							WS_C_AbstractConditionsFilter[] conditionsFilter = Instance.PropertyArray.toArrayConcept(conditions.filter);
+							for (int i=0; i < conditionsFilter@length; i++) {
+								WS_RF_ClearConditionFilterDetails(conditionsFilter[i]);
+				
+								Instance.PropertyArray.removeConceptReference(conditions.filter, conditionsFilter[i]);
+								Instance.deleteInstance(conditionsFilter[i]);
+							}
+							Instance.deleteInstance(conditions);
+						}
+						
+						if (!baseRTVersionExists) {
+							WS_C_Symbols symbols = ruleTemplateInstanceBuilder.symbols;
+							if (symbols != null) {
+								WS_C_AbstractSymbolInfo[] symbolInfo = Instance.PropertyArray.toArrayConcept(symbols.symbolInfo);
+								for (int i=0; i < symbolInfo@length; i++) {
+									WS_RF_ClearSymbols(symbolInfo[i]);
+									
+									Instance.PropertyArray.removeConceptReference(symbols.symbolInfo, symbolInfo[i]);
+									Instance.deleteInstance(symbolInfo[i]);
+								}
+								Instance.deleteInstance(symbols);
+							}
+						} else {
+							Log.log(LOGGER, "Debug", "Base RT Version Exists !!");
+						}
+						
+						WS_C_Commands commands = ruleTemplateInstanceBuilder.commands;
+						if (commands != null) {
+							WS_C_CommandInfo[] commandInfo = Instance.PropertyArray.toArrayConcept(commands.commandInfo);
+							for (int i=0; i < commandInfo@length; i++) {
+								WS_C_AbstractConditionsFilter[] commandFilter = Instance.PropertyArray.toArrayConcept(commandInfo[i].filter);
+								for (int j=0; j < commandFilter@length; j++) {
+									WS_RF_ClearConditionFilterDetails(commandFilter[j]);
+					
+									Instance.PropertyArray.removeConceptReference(commandInfo[i].filter, commandFilter[j]);
+									Instance.deleteInstance(commandFilter[j]);
+								}
+								
+						        Instance.PropertyArray.removeConceptReference(commands.commandInfo, commandInfo[i]);
+								Instance.deleteInstance(commandInfo[i]);
+								Log.log(LOGGER, "Debug", "Deleted commandInfo Id - %s", commandInfo[i]@id);
+							}
+							
+							Instance.deleteInstance(commands);
+						}
+					}
+				} 				
+				Instance.deleteInstance(contentData);
+			}
+								
+			// now remove the revision
+			Instance.deleteInstance(userArtifactRevision);				
+		}
+	}
+}

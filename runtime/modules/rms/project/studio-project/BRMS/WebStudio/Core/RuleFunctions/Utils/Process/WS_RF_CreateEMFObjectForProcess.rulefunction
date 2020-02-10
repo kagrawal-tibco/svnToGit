@@ -1,0 +1,313 @@
+/**
+ * @description 
+ */
+Object rulefunction WebStudio.Core.RuleFunctions.Utils.Process.WS_RF_CreateEMFObjectForProcess {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		WebStudio.Core.Concepts.Process.WS_C_ProcessView processView;
+		WebStudio.Core.Concepts.Process.WS_C_ProcessUserArtifact userArtifact;
+		String userName;
+	}
+	body {
+		Object LOGGER = Log.getLogger("Core.RuleFunctions.Utils.Process.WS_RF_CreateEMFObjectForProcess");
+		
+		Object processEMFWrapperObject = null;
+		
+		// store all the gateway objects to process later
+		Object gatewayMap = Collections.Map.createHashMapWithId("GATEWAY_MAP"); 
+		
+		WS_C_UserProject project = Instance.getByExtIdByUri(userArtifact.parentProjectId, "/WebStudio/Core/Concepts/WS_C_UserProject");
+		if (project != null) {
+			String scsRootURL = WS_RF_GetSCSRootURL(project.name, WS_RF_GetSubscriptionId(userName));
+			String projectPath = scsRootURL + "/" + project.name;
+			
+			Log.log(LOGGER, "Debug", "Artifact Path - ", userArtifact.artifactPath);
+						
+			int lastIndex = String.lastIndexOfString(userArtifact.artifactPath, 0, "/");
+			String folderName = String.substring(userArtifact.artifactPath, 0, lastIndex);
+			String artifactName = String.substring(userArtifact.artifactPath, lastIndex+1, String.length(userArtifact.artifactPath));
+			
+			Log.log(LOGGER, "Debug", "ProjectPath - %s, Folder Name - %s & Artifact Name - %s", projectPath, folderName, artifactName);
+			
+			processEMFWrapperObject = WS.Process.createProcessEMFObject(projectPath, artifactName, project.name, folderName);
+			
+			// retrieve process contents from process view
+			WS_C_Process processContents = processView.processDef;
+			
+			// set basic attributes
+			WS.Process.setProcessBaseAttributes(processEMFWrapperObject, processContents.processType, processContents.label, processContents.author, processContents.version, processContents.zoomLevel);
+			WS.Process.setCreationDate(processEMFWrapperObject, processContents.creationDate);
+			WS.Process.setLastModificationDate(processEMFWrapperObject, processContents.lastModificationDate);
+			Log.log(LOGGER, "Debug", "Set basic details...");
+			
+			
+			// add process properties
+			if (processContents.properties != null) {
+				WS_C_Property[] processProperties = Instance.PropertyArray.toArrayContainedConcept(processContents.properties.property);
+				for (int i=0; i<processProperties@length; i++) {
+					WS_C_Property property = processProperties[i];
+					WS.Process.addProperty(processEMFWrapperObject, property.name, property.type, property.isMultiple, property.path);
+				}
+			}
+			Log.log(LOGGER, "Debug", "Set properties...");
+			
+			// add documentation if any
+			WS_C_ProcessDocumentation processdocumentation = processContents.documentation;
+			if (processdocumentation != null) {
+				WS.Process.setDocumentation(processEMFWrapperObject, processdocumentation.docId, processdocumentation.text, processContents.name);
+			}
+			Log.log(LOGGER, "Debug", "Set documentation...");
+			
+			// add lanesets and lanes
+			if (processContents.laneset != null) {
+				Object laneSetWrapper = WS.Process.addLaneSet(processEMFWrapperObject, processContents.laneset.laneSetId);
+				WS_C_Lane[] lanes = Instance.PropertyArray.toArrayConcept(processContents.laneset.lane);
+				for (int i=0; i<lanes@length; i++) {
+					WS_RF_AddLanes(laneSetWrapper, processEMFWrapperObject, lanes[i]);
+				}
+			}
+			Log.log(LOGGER, "Debug", "Set Lanes/LaneSet..");
+			
+			// add flow nodes
+			WS_C_TaskElement[] taskElements = Instance.PropertyArray.toArrayContainedConcept(processContents.flowNodes.flowNodeElement);
+			Log.log(LOGGER, "Debug", "Adding Task Elements, count - %s", taskElements@length);
+			if (taskElements@length > 0) {
+				for (int i=0; i<taskElements@length; i++) {
+					WS_C_TaskElement taskElement = taskElements[i];
+					
+					String laneIds = "";
+					if (taskElement.lanes != null) {
+						WS_C_Lane[] lanes = Instance.PropertyArray.toArrayConcept(taskElement.lanes.lane);
+						for (int j=0; j< lanes@length; j++) {
+							laneIds += lanes[j].laneId + ",";
+						}
+					}
+					
+					laneIds = String.substring(laneIds, 0, String.lastIndexOfString(laneIds, 0, ","));
+					Log.log(LOGGER, "Debug", "Lane Id's to add - %s", laneIds);
+					
+					Log.log(LOGGER, "Debug", "Element Type - %s, Is Check Point - %s", taskElement.elementType, taskElement.checkpoint);
+					
+					String flowElementType = taskElement.elementType;
+					Object flowElementWrapper = WS.Process.FlowNode.createFlowNode(processEMFWrapperObject, flowElementType, laneIds);
+					WS.Process.FlowNode.setFlowElementBaseAttributes(processEMFWrapperObject, flowElementWrapper, taskElement.uniqueId, taskElement.elementName, taskElement.resourcePath, taskElement.elementId);
+					WS.Process.FlowNode.setFlowElementBaseExtentionAttributes(flowElementWrapper, taskElement.elementVersion, null, taskElement.checkpoint, taskElement.toolId);
+					
+					WS_C_Documentation documentation = taskElement.documentation;
+					if (documentation != null) {
+						WS.Process.FlowNode.setDocumentation(processEMFWrapperObject, flowElementWrapper, documentation.docId, documentation.text, taskElement.elementName);
+					}
+					
+					if (taskElement.nodePoint != null) {
+						WS_C_NodePoint nodePoint = taskElement.nodePoint;
+						WS.Process.FlowNode.setFlowNodePoints(flowElementWrapper, nodePoint.x, nodePoint.y);
+					}
+					
+					if (taskElement.labelPoint != null) {
+						WS_C_LabelPoint labelPoint = taskElement.labelPoint;
+						WS.Process.FlowNode.setFlowNodeLabelPoints(flowElementWrapper, labelPoint.x, labelPoint.y);
+					}
+					
+					if (taskElement.timeout != null) {
+						WS_C_Timeout timeout = taskElement.timeout;
+						WS.Process.FlowNode.setTimeout(flowElementWrapper, timeout.expression, timeout.eventURI, timeout.unit);
+					}
+					
+					if (taskElement.loopCharacteristics != null) {
+						WS_C_LoopCharacteristics loopChar = taskElement.loopCharacteristics;
+						WS.Process.FlowNode.setLoopCharacteristics(flowElementWrapper, loopChar.type, loopChar. testBefore, loopChar.loopCondition, loopChar.loopCount, loopChar.isSequential, loopChar.loopCardinality, loopChar.behavior, loopChar.completionCondition);
+						Log.log(LOGGER, "Debug", "Loop Character - %s", taskElement.loopCharacteristics.type);
+					}
+					
+					Log.log(LOGGER, "Debug", "Input Map - %s", taskElement.inputMap);
+					if (taskElement.inputMap != null) {
+						WS_C_IOMapping inputMap = taskElement.inputMap;
+						WS.Process.FlowNode.setFlowNodeInputMapperXslt(flowElementWrapper, inputMap.mapping);
+						Log.log(LOGGER, "Debug", "Input Map - %s", taskElement.inputMap.mapping);
+					}
+					
+					Log.log(LOGGER, "Debug", "Output Map - %s", taskElement.outputMap);
+					if (taskElement.outputMap != null) {
+						WS_C_IOMapping outputMap = taskElement.outputMap;
+						WS.Process.FlowNode.setFlowNodeOutputMapperXslt(flowElementWrapper, outputMap.mapping);
+						Log.log(LOGGER, "Debug", "Output Map - %s", taskElement.outputMap.mapping);
+					}
+					
+					// set specific values based on different types of flow elements
+					if (String.equals(flowElementType, "ReceiveTask")) {
+						WS.Process.FlowNode.setKeyExpression(flowElementWrapper, taskElement.keyExpression);
+						Log.log(LOGGER, "Debug", "ReceiveTask -> Key Expression - %s", taskElement.keyExpression);
+						
+					} else if (String.equals(flowElementType, "ServiceTask")) {
+						WS.Process.FlowNode.setServiceDetails(flowElementWrapper, taskElement.service, taskElement.port, taskElement.operation, taskElement.soapAction, taskElement.opTimeout, taskElement.transport, taskElement.bindingType);
+						Log.log(LOGGER, "Debug", "ServiceTask -> Service - %s", taskElement.service);
+						
+					} else if (String.equals(flowElementType, "BusinessRuleTask")) {
+						if (taskElement.uriList != null) {
+							WS_C_ImplementationURI[] implURI = Instance.PropertyArray.toArrayContainedConcept(taskElement.uriList.implementationURI);
+							for (int j=0; j<implURI@length; j++) {
+								WS.Process.FlowNode.setImplementationURIs(flowElementWrapper, implURI[j].uri, String.equals(implURI[j].isDeployed, "true"));
+							}
+							
+							Log.log(LOGGER, "Debug", "BusinessRuleTask -> Impl URI length - %s", taskElement.uriList.implementationURI@length);
+						}
+						
+					} else if (String.equals(flowElementType, "StartEvent")) {
+						WS.Process.FlowNode.setPriority(flowElementWrapper, taskElement.priorityValue);
+						
+						WS_C_EventDefinition eventDefinition = taskElement.eventDefinition;
+						if (eventDefinition != null) {
+							WS.Process.FlowNode.setEventDefinitionType(processEMFWrapperObject, flowElementWrapper, eventDefinition.definitionType, eventDefinition.definitionId, taskElement.elementName);
+						}
+						
+						Log.log(LOGGER, "Debug", "StartEvent -> Priority - %s", taskElement.priorityValue);
+						
+					} else if (String.equals(flowElementType, "EndEvent")) {
+						WS.Process.FlowNode.setPriority(flowElementWrapper, taskElement.priorityValue);
+						if (taskElement.messageStarterList != null) {
+							WS_C_MessageStarter[] msgStarter = Instance.PropertyArray.toArrayContainedConcept(taskElement.messageStarterList.messageStarter);
+							for (int j=0; j<msgStarter@length; j++) {
+								WS.Process.FlowNode.setMessageStarters(flowElementWrapper, msgStarter[j].msgStarterId, msgStarter[j].replyTo, msgStarter[j].consume);
+							}
+						}
+						
+						WS_C_EventDefinition eventDefinition = taskElement.eventDefinition;
+						if (eventDefinition != null) {
+							WS.Process.FlowNode.setEventDefinitionType(processEMFWrapperObject, flowElementWrapper, eventDefinition.definitionType, eventDefinition.definitionId, taskElement.elementName);
+						}
+						
+						Log.log(LOGGER, "Debug", "EndEvent -> Priority - %s", taskElement.priorityValue);
+						
+					} else if (String.equals(flowElementType, "ExclusiveGateway") || String.equals(flowElementType, "ParallelGateway")) {
+						WS.Process.FlowNode.setGatewayDirection(flowElementWrapper, taskElement.direction);
+						Log.log(LOGGER, "Debug", "Gateway -> Direction - %s", taskElement.direction);
+
+						Collections.Map.put(gatewayMap, flowElementWrapper, taskElement);
+						
+					} else if (String.equals(flowElementType, "ServiceTask")) {
+						WS.Process.FlowNode.setServiceDetails(flowElementWrapper, taskElement.service, taskElement.port, taskElement.operation, taskElement.soapAction, taskElement.opTimeout, taskElement.transport, taskElement.bindingType);
+						Log.log(LOGGER, "Debug", "Service Endpoint Url - %s", taskElement.transport);
+					}
+				}
+				Log.log(LOGGER, "Debug", "Process for adding Task Elements complete");
+			}
+			
+			// add Sequence Flows
+			if (processContents.sequenceFlows != null) {
+				WS_C_SequenceElement[] sequenceElements = Instance.PropertyArray.toArrayContainedConcept(processContents.sequenceFlows.sequenceElement);
+				Log.log(LOGGER, "Debug", "Adding Sequence Elements, count - %s", sequenceElements@length);
+				if (sequenceElements@length > 0) {
+					for (int i=0; i< sequenceElements@length; i++) {
+						WS_C_SequenceElement sequenceElement = sequenceElements[i];
+						
+						String laneIds = "";
+						if (sequenceElement.lanes != null) {
+							WS_C_Lane[] lanes = Instance.PropertyArray.toArrayConcept(sequenceElement.lanes.lane);
+							for (int j=0; j< lanes@length; j++) {
+								laneIds += lanes[j].laneId + ",";
+							}
+						}
+						
+						laneIds = String.substring(laneIds, 0, String.lastIndexOfString(laneIds, 0, ","));
+						Log.log(LOGGER, "Debug", "Lane Id's to add - %s", laneIds);
+						
+						Object sequenceElementWrapper = WS.Process.SequenceFlow.createSequenceFlow(processEMFWrapperObject, laneIds, sequenceElement.sourceReference, sequenceElement.targetReference);
+						WS.Process.SequenceFlow.setBaseSequenceFlowAttributes(processEMFWrapperObject, sequenceElementWrapper, sequenceElement.uniqueId, sequenceElement.elementName, sequenceElement.isImmediate, sequenceElement.elementId,sequenceElement.expression);
+						
+						if (sequenceElement.startPoint != null) {
+							WS_C_StartPoint startPoint = sequenceElement.startPoint;
+							WS.Process.SequenceFlow.setFlowNodeStartPoint(sequenceElementWrapper, startPoint.x, startPoint.y);
+						}
+						
+						if (sequenceElement.endPoint != null) {
+							WS_C_EndPoint endPoint = sequenceElement.endPoint;
+							WS.Process.SequenceFlow.setFlowNodeEndPoint(sequenceElementWrapper, endPoint.x, endPoint.y);
+						}
+						
+						// process bend points
+						if (sequenceElement.bendPointList != null && sequenceElement.bendPointList.bendPoints@length > 0) {
+							WS_C_BendPoint[] bendPoints = Instance.PropertyArray.toArrayConcept(sequenceElement.bendPointList.bendPoints);
+							for (int j=0; j<bendPoints@length; j++) {
+								WS.Process.SequenceFlow.setBendPoint(sequenceElementWrapper, bendPoints[j].x, bendPoints[j].y);
+							}
+						}
+						
+						WS_C_Documentation documentation = sequenceElement.documentation;
+						if (documentation != null) {
+							WS.Process.SequenceFlow.setDocumentation(processEMFWrapperObject, sequenceElementWrapper, documentation.docId, documentation.text, sequenceElement.elementName);
+						}
+					}
+				}
+				Log.log(LOGGER, "Debug", "Process for adding Sequence Elements complete");
+			}
+			
+			// add gateway details
+			if(!Collections.Map.isEmpty(gatewayMap)) {
+				Object gatewayKeySet = Collections.Map.keySet(gatewayMap);
+				Object gatewayKeyIterator = Collections.iterator(gatewayKeySet);
+				while (Collections.Iterator.hasNext(gatewayKeyIterator)) {
+					Object flowElementWrapper = Collections.Iterator.next(gatewayKeyIterator);
+					Object valueElement = Collections.Map.get(gatewayMap, flowElementWrapper);
+					
+					WS_C_TaskElement gatewayElement = valueElement;
+					
+					if (String.equals(gatewayElement.elementType, "ExclusiveGateway")) {
+						WS.Process.FlowNode.setExclusiveGateway(processEMFWrapperObject, flowElementWrapper, gatewayElement.defaultSequenceId, gatewayElement.transformation, gatewayElement.sequenceId);
+						Log.log(LOGGER, "Debug", "ExclusiveGateway -> Default SequenceId - %s", gatewayElement.defaultSequenceId);
+						
+					} else if (String.equals(gatewayElement.elementType, "ParallelGateway")) {
+						WS.Process.FlowNode.setParallelGateway(flowElementWrapper, gatewayElement.joinRuleFunction, gatewayElement.mergeExpression, gatewayElement.forkRuleFunction);
+						Log.log(LOGGER, "Debug", "ParallelGateway -> join RuleFunction - %s", gatewayElement.joinRuleFunction);
+						Log.log(LOGGER, "Debug", "ParallelGateway -> fork RuleFunction - %s", gatewayElement.forkRuleFunction);
+					}
+				}
+				
+				Collections.Map.clear(gatewayMap);
+				Collections.Map.deleteMap("GATEWAY_MAP");
+			}
+			
+			// add text annotations
+			if (processContents.annotations != null) {
+				WS_C_TaskElement[] annotationsElements = Instance.PropertyArray.toArrayContainedConcept(processContents.annotations.annotationElement);
+				Log.log(LOGGER, "Debug", "Adding Annotation Elements, count - %s", annotationsElements@length);
+				if (annotationsElements@length > 0) {
+					for (int i=0; i<annotationsElements@length; i++) {
+						WS_C_AnnotationElement annotationElement = annotationsElements[i];
+						
+						Object annotationElementWrapper = WS.Process.FlowNode.createTextAnnotationNode(processEMFWrapperObject, annotationElement.elementType);
+						WS.Process.FlowNode.setFlowElementBaseAttributes(processEMFWrapperObject, annotationElementWrapper, annotationElement.uniqueId, annotationElement.elementName, annotationElement.resourcePath, annotationElement.elementId);
+						WS.Process.FlowNode.setFlowElementBaseExtentionAttributes(annotationElementWrapper, annotationElement.elementVersion, null, annotationElement.checkpoint, annotationElement.toolId);
+						
+						if (annotationElement.nodePoint != null) {
+							WS_C_NodePoint nodePoint = annotationElement.nodePoint;
+							WS.Process.FlowNode.setFlowNodePoints(annotationElementWrapper, nodePoint.x, nodePoint.y);
+						}
+
+						WS.Process.FlowNode.setTextAnnotationValue(annotationElementWrapper, annotationElement.textValue);
+					}
+				}
+				Log.log(LOGGER, "Debug", "Process for adding Annotation Elements complete");
+			}
+			
+			// add associations
+			if (processContents.associations != null) {
+				WS_C_SequenceElement[] associationElements = Instance.PropertyArray.toArrayContainedConcept(processContents.associations.associationElement);
+				Log.log(LOGGER, "Debug", "Adding association Elements, count - %s", associationElements@length);
+				if (associationElements@length > 0) {
+					for (int i=0; i< associationElements@length; i++) {
+						WS_C_SequenceElement associationElement = associationElements[i];
+						
+						Object associationWrapper = WS.Process.SequenceFlow.createAssociationNode(processEMFWrapperObject, associationElement.sourceReference, associationElement.targetReference, associationElement.elementLabel, associationElement.elementId);
+					}
+				}				
+				Log.log(LOGGER, "Debug", "Process for adding Association Elements complete");
+			}
+			
+		}
+				
+		Object processEObject = WS.Process.getEMFInstance(processEMFWrapperObject);
+		return processEObject;
+	}
+}

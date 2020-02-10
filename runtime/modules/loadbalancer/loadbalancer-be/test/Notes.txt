@@ -1,0 +1,62 @@
+//todo
+
+Ack processing:
+    Whats the point of sending the acks to a different server?
+    Find if there are other sessions connected to that server and relay the acks - by transferring to that session?
+
+
+
+==========================================
+
+
+
+
+Config driven:
+    Do not drop message on error
+    Do not expect acks
+
+Ack service:
+    SimpleMemberCodec
+    SinkStatus needs to be cleared periodically to avoid mem leaks
+
+JMS message formats:
+    file:///C:/tibco/be/4.0/doc/standard/html/tib_be_developers_guide/channels.7.12.htm#2389341
+
+FT:
+    What if the servers are running in max-active mode?
+
+JMX:
+    Basic stats
+    Forcing
+        Membership suspect
+        Sink restart
+        Unmark sink and member
+
+Routing:
+    Table cleanup
+    Hash faster using FNV
+
+API:
+    Expose distribution as a library - findNodes(key)
+
+Unit tests:
+    Clean up
+
+Error handling:
+    Boot time:
+        Starting up with some undeleted files
+
+    TCP:
+        Add debug to client and then kill client - server gets stuck on attemptsend
+
+        Client crash?
+        Server crash?
+        How long can we wait for acks?
+        Ping header + ts (ntp)
+        Respond with ts
+
+        Client and Sender need a way to reconnect TCP on error
+        Header/message corruption:
+            Header not received
+            Content len not received
+            Recover from corrupt stream - Terminate reader and send last intact message Id seen. Then reconnect.

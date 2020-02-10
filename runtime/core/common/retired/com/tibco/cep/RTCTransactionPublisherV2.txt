@@ -1,0 +1,853 @@
+package com.tibco.cep.runtime.service.om.coherence.cluster.agents;
+
+import com.tangosol.net.NamedCache;
+import com.tibco.cep.kernel.model.entity.Entity;
+import com.tibco.cep.kernel.model.entity.Event;
+import com.tibco.cep.kernel.service.Logger;
+import com.tibco.cep.kernel.service.impl.RuleTriggerManager;
+import com.tibco.cep.runtime.model.element.impl.ConceptImpl;
+import com.tibco.cep.runtime.model.element.impl.StateMachineConceptImpl;
+import com.tibco.cep.runtime.model.event.SimpleEvent;
+import com.tibco.cep.runtime.service.om.coherence.EntityConfiguration;
+import com.tibco.cep.runtime.service.om.coherence.cluster.*;
+import com.tibco.cep.runtime.service.om.coherence.cluster.util.SingleValueLiteReusableMap;
+import com.tibco.cep.runtime.service.om.invm.InProgressTxnKeeper;
+import com.tibco.cep.runtime.service.om.api.*;
+import com.tibco.cep.runtime.service.om.api.ClusterEntityProvider;
+import com.tibco.cep.runtime.service.om.api.EventTuple;
+import com.tibco.cep.runtime.session.locks.LockManager;
+
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutput;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedList;
+
+/*
+* Author: Ashwin Jayaprakash Date: Jan 9, 2009 Time: 1:10:30 PM
+*/
+public class RTCTransactionPublisherV2 extends RtcTransactionPublisher {
+    protected LockManager lockManager;
+
+    protected CacheCluster cacheCluster;
+
+    protected ObjectTable objectTable;
+
+    protected MetadataCache metadataCache;
+
+    protected NamedCache txnCache;
+
+    protected InferenceAgentStatsManager statsManager;
+
+    protected boolean backingStoreEnabled;
+
+    protected boolean keepDeleted;
+
+    protected Logger logger;
+
+    /**
+     * @param cacheAgent
+     * @param workPool
+     * @param inProgressTxnKeeper
+     */
+    public void init(InferenceAgent cacheAgent, WorkManager workPool,
+                     InProgressTxnKeeper inProgressTxnKeeper) {
+        super.init(cacheAgent, workPool, inProgressTxnKeeper);
+
+        //---------------
+
+        cacheCluster = cacheAgent.getCluster();
+
+        lockManager = cacheCluster.getLockManager();
+        logger = cacheCluster.getRuleServiceProvider().getLogger();
+        objectTable = cacheCluster.getObjectTableCache();
+        metadataCache = cacheCluster.getMetadataCache();
+        txnCache = cacheAgent.getTxnCache();
+        statsManager = cacheAgent.agentStats;
+
+        backingStoreEnabled = cacheCluster.isBackingStoreEnabled();
+        keepDeleted = cacheCluster.getClusterConfig().isKeepDeleted();
+    }
+
+    @Override
+    protected void applyTransaction(int[] topic, RtcTransaction txn,
+                                    Collection<LockManager.LockData> heldLocks,
+                                    Collection<AgentAction> actions) throws Exception {
+        long startTimeNanos = System.nanoTime();
+
+        CurrentWork work = createWork(txn);
+
+        flushData(work);
+
+        publishTxn(work, topic, txn);
+
+        executeActions(actions);
+
+        releaseLocks(work, heldLocks);
+
+        ackEvents(work);
+
+        endWork(work, startTimeNanos);
+    }
+
+    private CurrentWork createWork(RtcTransaction txn)
+            throws Exception {
+        CurrentWork work = new CurrentWork();
+
+        Collection<RtcTransaction.WriteToCache> entries = null;
+        if (txn == null || (entries = txn.getOperations()) == null) {
+            return work;
+        }
+
+        //-------------
+
+        CacheCluster cachedCC = cacheCluster;
+        boolean cachedPublishAllowed = publishAllowed;
+        ByteArrayOutputStream baos = null;
+        DataOutput dataOutput = null;
+
+        for (RtcTransaction.WriteToCache entry : entries) {
+            if (cachedPublishAllowed) {
+                if (dataOutput == null) {
+                    baos = new ByteArrayOutputStream(64);
+                    dataOutput = new DataOutputStream(baos);
+                }
+
+                RtcTransaction.serializeWriteToCache(dataOutput, entry);
+            }
+
+            //-------------
+
+            Node node = new Node(entry.getRef(), entry.getTypeId(), entry.getType(), cachedCC);
+
+            switch (entry.type) {
+                case RtcTransaction.OP_NEW: {
+                    handleNew(work, node);
+                }
+                break;
+
+                case RtcTransaction.OP_MOD: {
+                    handleModified(work, node);
+                }
+                break;
+
+                case RtcTransaction.OP_DEL:
+                case RtcTransaction.OP_ACK_ONLY: {
+                    handleDeleteOrAckOnly(work, node);
+                }
+                break;
+
+                case RtcTransaction.OP_DEL_ONLY: {
+                    handleDeleteOnly(work, node);
+                }
+                break;
+
+                default:
+                    break;
+            }
+        }
+
+        if (dataOutput != null) {
+            RtcTransaction.serializeWriteToCacheEnd(dataOutput);
+
+            baos.flush();
+            baos.close();
+            byte[] bytes = baos.toByteArray();
+            work.setSerializedRTcTxn(bytes);
+        }
+
+        //---------------
+
+        return work;
+    }
+
+    private void handleNew(CurrentWork work, Node node) throws IOException {
+        EntityProviderContainer container = work.getContainer(node);
+        container.addNewNode(node);
+
+        //---------------
+
+        Entity e = node.getEntity();
+        Long entityId = node.getEntityId();
+
+        if (e instanceof ConceptImpl) {
+            ConceptImpl concept = (ConceptImpl) e;
+
+            concept.setVersion(concept.getVersion() + 1);
+
+            work.addAffectedId(entityId);
+        }
+        else if (e instanceof SimpleEvent) {
+            SimpleEvent simpleEvent = (SimpleEvent) e;
+
+            work.addEventToAcknowledge(simpleEvent);
+
+            //---------------
+
+            if (multiEngineMode) {
+                Class entityClass = node.getEntityClass();
+
+                EntityConfiguration entityConfig = cacheAgent.getEntityConfig(entityClass);
+
+                if (entityConfig != null &&
+                        entityConfig.getCacheMode() == EntityConfiguration.CACHE_MODE_CACHEANDWM) {
+                    EventTuple eventTuple = new EventTuple(entityId, cacheAgent.getAgentId());
+
+                    node.setEventTuple(eventTuple);
+                }
+            }
+        }
+
+        //---------------
+
+        EntityTupleImpl tuple =
+                new EntityTupleImpl(entityId, node.getEntityExtId(), node.getTypeId());
+
+        byte[] bytes = EntityTupleImpl.serialize(tuple);
+
+        node.setSerializedEntityTuple(bytes);
+    }
+
+    private void handleModified(CurrentWork work, Node node) {
+        EntityProviderContainer container = work.getContainer(node);
+        container.addModifiedNode(node);
+
+        //---------------
+
+        Entity e = node.getEntity();
+        if (e instanceof ConceptImpl) {
+            ConceptImpl concept = (ConceptImpl) e;
+
+            concept.setVersion(concept.getVersion() + 1);
+
+            work.addAffectedId(node.getEntityId());
+        }
+    }
+
+    private void handleDeleteOrAckOnly(CurrentWork work, Node node) throws Exception {
+        EntityProviderContainer container = work.getContainer(node);
+        container.addDeleteOrAckOnlyNode(node);
+
+        //---------------
+
+        Entity e = node.getEntity();
+        if (e instanceof ConceptImpl) {
+            work.addAffectedId(node.getEntityId());
+        }
+        else if (e instanceof SimpleEvent) {
+            SimpleEvent simpleEvent = (SimpleEvent) e;
+
+            work.addEventToAcknowledge(simpleEvent);
+        }
+
+        //---------------
+
+        if (multiEngineMode &&
+                node.getTypeId() != StateMachineConceptImpl.StateTimeoutEvent
+                        .STATETIMEOUTEVENT_TYPEID) {
+            handleDeleteOrAckOnlyForBS(node);
+        }
+        else {
+            handleDeleteOrAckOnlyForBS(node);
+        }
+    }
+
+    private void handleDeleteOrAckOnlyForBS(Node node) throws Exception {
+        Entity entity = node.getEntity();
+
+        if (backingStoreEnabled) {
+            if ((entity instanceof Event) && (keepDeleted == false)) {
+                return;
+            }
+
+            EntityTupleImpl tuple =
+                    new EntityTupleImpl(entity.getId(), entity.getExtId(), node.getTypeId());
+            tuple.markDeleted();
+
+            byte[] bytes = EntityTupleImpl.serialize(tuple);
+            node.setSerializedEntityTuple(bytes);
+        }
+    }
+
+    private void handleDeleteOnly(CurrentWork work, Node node) {
+        EntityProviderContainer container = work.getContainer(node);
+        container.addDeleteOnlyNode(node);
+    }
+
+    private void flushData(CurrentWork work) {
+        Collection<EntityProviderContainer> containers = work.getContainers();
+        if (containers == null) {
+            return;
+        }
+
+        //----------
+
+        SingleValueLiteReusableMap singleValMap = new SingleValueLiteReusableMap();
+
+        for (EntityProviderContainer container : containers) {
+            ClusterEntityProvider cacheProvider = container.getEntityProvider();
+
+            processDeleteOnlyNodes(container);
+
+            processDeleteOrAckOnlyNodes(singleValMap, container, cacheProvider);
+
+            processNewNodes(singleValMap, cacheProvider, container);
+
+            processModifiedNodes(singleValMap, container, cacheProvider);
+        }
+
+        singleValMap.clear();
+        work.setLiteReusableMap(singleValMap);
+    }
+
+    /*
+    todo Does an op appear both in NEW and MODIFIED in the Txn? Then we will have to change
+    this logic.
+    */
+    private void releaseEntity(Long entityId) {
+        cacheAgent.markSaved(entityId);
+        inProgressTxnKeeper.release(entityId);
+    }
+
+    private void processNewNodes(SingleValueLiteReusableMap singleValMap,
+                                 ClusterEntityProvider cacheProvider,
+                                 EntityProviderContainer container) {
+        ObjectTable cachedOTC = objectTable;
+
+        for (Node node = container.getNewNodeChain(); node != null;
+             node = node.getNextNodeAndUnlink()) {
+            Long entityId = node.getEntityId();
+
+            singleValMap.put(entityId, node.getEntity());
+            try {
+                cacheProvider.putAll(singleValMap);
+            }
+            catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+
+            //----------
+
+            byte[] bytes = node.getSerializedEntityTuple();
+            if (bytes != null) {
+                singleValMap.put(entityId, bytes);
+                cachedOTC.putAllToObjectIdTable(singleValMap);
+
+                String extId = node.getEntityExtId();
+                if (extId != null) {
+                    singleValMap.put(extId, bytes);
+                    cachedOTC.putAllToObjectExtIdTable(singleValMap);
+                }
+            }
+
+            //-----------
+
+            EventTuple eventTuple = node.getEventTuple();
+            if (eventTuple != null) {
+                com.tibco.cep.runtime.service.om.api.EventTable eventQueue = cacheCluster.getEventQueue(node.getEntityClass());
+
+                singleValMap.put(entityId, eventTuple);
+                eventQueue.addAllEvents(singleValMap);
+            }
+
+            //-----------
+
+            releaseEntity(entityId);
+        }
+    }
+
+    private void processModifiedNodes(SingleValueLiteReusableMap singleValMap,
+                                      EntityProviderContainer container,
+                                      ClusterEntityProvider cacheProvider) {
+        for (Node node = container.getModifiedNodeChain(); node != null;
+             node = node.getNextNodeAndUnlink()) {
+            Long entityId = node.getEntityId();
+
+            singleValMap.put(entityId, node.getEntity());
+            try {
+                cacheProvider.putAll(singleValMap);
+            }
+            catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+
+            //-----------
+
+            releaseEntity(entityId);
+        }
+    }
+
+    private void processDeleteOrAckOnlyNodes(SingleValueLiteReusableMap singleValMap,
+                                             EntityProviderContainer container,
+                                             ClusterEntityProvider cacheProvider) {
+        ObjectTable cachedOTC = objectTable;
+
+        for (Node node = container.getDeleteOrAckOnlyNodeChain(); node != null;
+             node = node.getNextNodeAndUnlink()) {
+            Long entityId = node.getEntityId();
+
+            cacheProvider.remove(entityId);
+
+            byte[] bytes = node.getSerializedEntityTuple();
+            if (bytes != null) {
+                singleValMap.put(entityId, bytes);
+                cachedOTC.putAllToObjectIdTable(singleValMap);
+
+                if (node.getEntity() instanceof SimpleEvent) {
+                    com.tibco.cep.runtime.service.om.api.EventTable eventQueue = cacheCluster.getEventQueue(node.getEntityClass());
+                    eventQueue.consumeEvent(entityId);
+                }
+            }
+            else {
+                cachedOTC.removeFromObjectIdTable(node.getEntityId());
+            }
+
+            String extId = node.getEntityExtId();
+            if (extId != null) {
+                cachedOTC.removeFromObjectExtIdTable(extId);
+            }
+
+            //-----------
+
+            releaseEntity(entityId);
+        }
+    }
+
+    private void processDeleteOnlyNodes(EntityProviderContainer container) {
+        for (Node node = container.getDeleteOnlyNodeChain(); node != null;
+             node = node.getNextNodeAndUnlink()) {
+            Long entityId = node.getEntityId();
+
+            objectTable.removeFromObjectIdTable(entityId);
+
+            //-----------
+
+            releaseEntity(entityId);
+        }
+    }
+
+    private void publishTxn(CurrentWork work, int[] topic, RtcTransaction txn) throws Exception {
+        byte[] bytes = work.getSerializedRTcTxn();
+        if (bytes == null) {
+            return;
+        }
+
+        //-------------
+
+        RtcKey key = txn.getKey(topic);
+
+        SingleValueLiteReusableMap liteReusableMap = work.getLiteReusableMap();
+        if (liteReusableMap == null) {
+            liteReusableMap = new SingleValueLiteReusableMap();
+        }
+
+        liteReusableMap.put(key, bytes);
+
+        txnCache.putAll(liteReusableMap);
+
+        liteReusableMap.clear();
+    }
+
+    private void ackEvents(CurrentWork work) {
+        Collection<SimpleEvent> events = work.getEventsToAcknowledge();
+        if (events == null) {
+            return;
+        }
+
+        for (SimpleEvent event : events) {
+            event.acknowledge();
+        }
+    }
+
+    private void releaseLocks(CurrentWork work, Collection<LockManager.LockData> heldLocks) {
+        if (heldLocks != null) {
+            Collection<Long> affectedIds = (work == null) ? null : work.getAffectedIds();
+
+            lockManager.unlock(heldLocks, affectedIds);
+        }
+    }
+
+    private void executeActions(Collection<AgentAction> actions) {
+        if (actions == null) {
+            return;
+        }
+
+        for (AgentAction action : actions) {
+            while (true) {
+                try {
+                    action.run(cacheAgent);
+
+                    break;
+                }
+                catch (Exception ex) {
+                    logger.logError("Retrying Action: " + action, ex);
+
+                    //todo Retry is not correct. Infinite loop?
+
+                    try {
+                        Thread.sleep(10);
+                    }
+                    catch (InterruptedException e) {
+                    }
+                }
+            }
+        }
+    }
+
+    private void endWork(CurrentWork work, long startTimeNanos) throws Exception {
+        if (work != null) {
+            work.discard();
+        }
+
+        Entity trigger = (Entity) RuleTriggerManager.getCurrentTrigger();
+        if (trigger == null) {
+            return;
+        }
+
+        long durationMillis = (long) ((System.nanoTime() - startTimeNanos) / (1000.0 * 1000));
+
+        cacheAgent.timeTransactionsPublished += durationMillis;
+
+        int typeId = metadataCache.getTypeId(trigger.getClass());
+        statsManager.incrementPostRTC(typeId, durationMillis);
+    }
+
+    //-------------
+
+    protected static class Node {
+        protected final Entity entity;
+
+        protected final Long entityId;
+
+        protected final String entityExtId;
+
+        //-------------
+
+        protected final int typeId;
+
+        protected final ClusterEntityProvider entityProvider;
+
+        protected final byte txnType;
+
+        //-------------
+
+        protected byte[] serializedEntityTuple;
+
+        protected EventTuple eventTuple;
+
+        protected Node nextNode;
+
+        //-------------
+
+        public Node(Entity entity, int typeId, byte txnType, CacheCluster cacheCluster)
+                throws Exception {
+            this.entity = entity;
+            this.entityId = entity.getId();
+            this.entityExtId = entity.getExtId();
+
+            this.entityProvider = cacheCluster.getEntityProvider(entity);
+            this.typeId = typeId;
+            this.txnType = txnType;
+        }
+
+        //-------------
+
+        public Entity getEntity() {
+            return entity;
+        }
+
+        public Long getEntityId() {
+            return entityId;
+        }
+
+        public String getEntityExtId() {
+            return entityExtId;
+        }
+
+        public Class getEntityClass() {
+            return entity.getClass();
+        }
+
+        public int getTypeId() {
+            return typeId;
+        }
+
+        public ClusterEntityProvider getEntityProvider() {
+            return entityProvider;
+        }
+
+        public byte getTxnType() {
+            return txnType;
+        }
+
+        public byte[] getSerializedEntityTuple() {
+            return serializedEntityTuple;
+        }
+
+        public EventTuple getEventTuple() {
+            return eventTuple;
+        }
+
+        public Node getNextNode() {
+            return nextNode;
+        }
+
+        public Node getNextNodeAndUnlink() {
+            if (nextNode == null) {
+                return null;
+            }
+
+            Node next = nextNode;
+            nextNode = null;
+
+            return next;
+        }
+
+        public void setSerializedEntityTuple(byte[] serializedEntityTuple) {
+            this.serializedEntityTuple = serializedEntityTuple;
+        }
+
+        public void setEventTuple(EventTuple eventTuple) {
+            this.eventTuple = eventTuple;
+        }
+
+        public void setNextNode(Node nextNode) {
+            this.nextNode = nextNode;
+        }
+    }
+
+    protected static class EntityProviderContainer {
+        protected ClusterEntityProvider entityProvider;
+
+        protected Node newNodeChain;
+
+        protected Node modifiedNodeChain;
+
+        protected Node deleteOrAckOnlyNodeChain;
+
+        protected Node deleteOnlyNodeChain;
+
+        public EntityProviderContainer(ClusterEntityProvider entityProvider) {
+            this.entityProvider = entityProvider;
+        }
+
+        public ClusterEntityProvider getEntityProvider() {
+            return entityProvider;
+        }
+
+        /**
+         * @return Can be <code>null</code>.
+         */
+        public Node getNewNodeChain() {
+            return newNodeChain;
+        }
+
+        /**
+         * @return Can be <code>null</code>.
+         */
+        public Node getModifiedNodeChain() {
+            return modifiedNodeChain;
+        }
+
+        /**
+         * @return Can be <code>null</code>.
+         */
+        public Node getDeleteOrAckOnlyNodeChain() {
+            return deleteOrAckOnlyNodeChain;
+        }
+
+        /**
+         * @return Can be <code>null</code>.
+         */
+        public Node getDeleteOnlyNodeChain() {
+            return deleteOnlyNodeChain;
+        }
+
+        //------------
+
+        public void addNewNode(Node newNode) {
+            if (newNodeChain == null) {
+                newNodeChain = newNode;
+
+                return;
+            }
+
+            newNode.setNextNode(newNodeChain);
+            newNodeChain = newNode;
+        }
+
+        public void addModifiedNode(Node modifiedNode) {
+            if (modifiedNodeChain == null) {
+                modifiedNodeChain = modifiedNode;
+
+                return;
+            }
+
+            modifiedNode.setNextNode(modifiedNodeChain);
+            modifiedNodeChain = modifiedNode;
+        }
+
+        public void addDeleteOrAckOnlyNode(Node deleteOrAckOnlyNode) {
+            if (deleteOrAckOnlyNodeChain == null) {
+                deleteOrAckOnlyNodeChain = deleteOrAckOnlyNode;
+
+                return;
+            }
+
+            deleteOrAckOnlyNode.setNextNode(deleteOrAckOnlyNodeChain);
+            deleteOrAckOnlyNodeChain = deleteOrAckOnlyNode;
+        }
+
+        public void addDeleteOnlyNode(Node deleteOnlyNode) {
+            if (deleteOnlyNodeChain == null) {
+                deleteOnlyNodeChain = deleteOnlyNode;
+
+                return;
+            }
+
+            deleteOnlyNode.setNextNode(deleteOnlyNodeChain);
+            deleteOnlyNodeChain = deleteOnlyNode;
+        }
+
+        //---------------
+
+        public void discard() {
+            if (newNodeChain != null) {
+                newNodeChain = null;
+            }
+
+            if (modifiedNodeChain != null) {
+                modifiedNodeChain = null;
+            }
+
+            if (deleteOrAckOnlyNodeChain != null) {
+                deleteOrAckOnlyNodeChain = null;
+            }
+
+            if (deleteOnlyNodeChain != null) {
+                deleteOnlyNodeChain = null;
+            }
+        }
+    }
+
+    protected static class CurrentWork {
+        protected HashMap<ClusterEntityProvider, EntityProviderContainer> containers;
+
+        protected LinkedList<Long> affectedIds;
+
+        protected LinkedList<SimpleEvent> eventsToAcknowledge;
+
+        protected SingleValueLiteReusableMap liteReusableMap;
+
+        protected byte[] serializedRTcTxn;
+
+        public EntityProviderContainer getContainer(Node node) {
+            ClusterEntityProvider provider = node.getEntityProvider();
+
+
+            HashMap<ClusterEntityProvider, EntityProviderContainer> c = containers;
+            if (c == null) {
+                containers = new HashMap<ClusterEntityProvider, EntityProviderContainer>(4);
+                c = containers;
+            }
+
+            EntityProviderContainer container = c.get(provider);
+            if (container == null) {
+                container = new EntityProviderContainer(provider);
+                c.put(provider, container);
+            }
+
+            return container;
+        }
+
+        /**
+         * @return Can be <code>null</code>.
+         */
+        public Collection<EntityProviderContainer> getContainers() {
+            return (containers == null) ? null : containers.values();
+        }
+
+        /**
+         * @return Can be <code>null</code>.
+         */
+        public Collection<Long> getAffectedIds() {
+            return affectedIds;
+        }
+
+        /**
+         * @return Can be <code>null</code>.
+         */
+        public Collection<SimpleEvent> getEventsToAcknowledge() {
+            return eventsToAcknowledge;
+        }
+
+        public SingleValueLiteReusableMap getLiteReusableMap() {
+            return liteReusableMap;
+        }
+
+        public void setLiteReusableMap(SingleValueLiteReusableMap liteReusableMap) {
+            this.liteReusableMap = liteReusableMap;
+        }
+
+        public void addAffectedId(Long affectedId) {
+            if (affectedIds == null) {
+                affectedIds = new LinkedList<Long>();
+            }
+
+            affectedIds.add(affectedId);
+        }
+
+        public void addEventToAcknowledge(SimpleEvent eventToAcknowledge) {
+            if (eventsToAcknowledge == null) {
+                eventsToAcknowledge = new LinkedList<SimpleEvent>();
+            }
+
+            eventsToAcknowledge.add(eventToAcknowledge);
+        }
+
+        /**
+         * @return Can be <code>null</code>.
+         */
+        public byte[] getSerializedRTcTxn() {
+            return serializedRTcTxn;
+        }
+
+        public void setSerializedRTcTxn(byte[] serializedRTcTxn) {
+            this.serializedRTcTxn = serializedRTcTxn;
+        }
+
+        //---------------
+
+        public void discard() {
+            if (containers != null) {
+                for (Iterator<EntityProviderContainer> i = containers.values().iterator();
+                     i.hasNext();) {
+                    EntityProviderContainer container = i.next();
+                    i.remove();
+
+                    container.discard();
+                }
+
+                containers = null;
+            }
+
+            if (liteReusableMap != null) {
+                liteReusableMap.clear();
+                liteReusableMap = null;
+            }
+
+            if (affectedIds != null) {
+                affectedIds.clear();
+                affectedIds = null;
+            }
+
+            if (eventsToAcknowledge != null) {
+                eventsToAcknowledge.clear();
+                eventsToAcknowledge = null;
+            }
+        }
+    }
+}

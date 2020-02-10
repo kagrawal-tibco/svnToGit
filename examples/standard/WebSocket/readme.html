@@ -1,0 +1,184 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>     Stock Ticker
+
+- TIBCO BusinessEvents&reg; Examples
+</title>
+<meta http-equiv="Content-type" content="text/html; charset=iso-8859-1" />
+<meta http-equiv="Content-Language" content="en-us" />
+<link rel="Shortcut Icon" href="../../_resources/icon.gif" type="image/gif" />
+<style type="text/css" media="all">@import "../../_resources/examples.css";</style>
+<h1>Stock Ticker</h1>
+
+
+<h2>Purpose of This Example</h2>
+
+<p>This example shows you how to use the TIBCO BusinessEvents&reg; WebSocket using HTTP channel. Once we send the request via Client, server will respond back after every 1 minute.</p>
+
+<p>In this example, Stock symbol and operation is selected and sent. This will trigger the rule ReceiveDataRule. Timer event will trigger TimerRule and send back the Stock Symbols along with their percentage change after every 1 minute.</p>
+
+<h2>Instructions</h2>
+Before you begin, ensure that the EAR file you want to use is in the <i>BE_HOME</i>/examples/standard/WebSocket folder, where this readme is also stored.
+<ol>
+
+
+<li>
+<p>Open a command window and at the command prompt, start the TIBCO BusinessEvents engine using the following command. Substitute your actual value for <i>BE_HOME</i>.</p>
+
+<pre class="commands">
+cd <i>BE_HOME</i>/examples/standard/WebSocket
+<i>BE_HOME</i>/bin/be-engine --propFile <i>BE_HOME</i>/bin/be-engine.tra -u default -c StockTicker/StockTicker.cdd StockTicker.ear
+</pre>
+
+<p>Adapt the command as needed, for example, if you have customized the example project, or are running it from a different directory.</p>
+</li>
+
+<li>
+<p>Message will be displayed below regarding the opening and closing of connection.</p>
+<p>Select the Stock symbol and operation. Client will send the request to the server after clicking submit button</p>
+
+<p>Once the server send the response back, table will get created with the server response i.e. Stock symbols and their percent change. Further, it will get updated after every 1 minute.
+</p>
+</li>
+  </br></br>
+    <select id = "selSymbol">
+      <option value="GOOG">GOOG</option>
+      <option value="FB">FB</option>
+      <option value="TIB">TIB</option>
+    </select>
+
+    <select id = "selOperations">
+      <option value="ADD">ADD</option>
+      <option value="REMOVE">REMOVE</option>
+    </select>
+
+    <button type = "button"
+    onclick = "submit()">
+    Submit
+    </button>
+
+    <h2>Response:</h2>
+
+<div id = "display"></div>
+<div id = "output"></div>
+
+<script language = "javascript" type = "text/javascript">
+
+  var wsUri = "ws://localhost:8110/Channels/WebSocketChannel/GetData";
+  var output;
+
+  function init() {
+    output = document.getElementById("output");
+    runWebSocket();
+  }
+
+  function runWebSocket() {
+    websocket = new WebSocket(wsUri);
+
+    websocket.onopen = function(evt) {
+      onOpen(evt)
+    };
+
+    websocket.onclose = function(evt) {
+      onClose(evt)
+    };
+
+    websocket.onmessage = function(evt) {
+      onMessage(evt)
+    };
+
+    websocket.onerror = function(evt) {
+      onError(evt)
+    };
+  }
+
+  function onOpen(evt) {
+    document.getElementById("conId").innerHTML="Connection is opened";
+  }
+
+  function onClose(evt) {
+    document.getElementById("conId").innerHTML="Connection is closed";
+  }
+
+  function onMessage(evt) {
+
+  var jsonObject = JSON.parse(evt.data);
+  for (var i = 0; i < jsonObject.StockToWatch.Stock.length; i++) {
+      if(jsonObject.StockToWatch.Stock[i].Symbol == "GOOG") {
+        document.getElementById('td1').innerHTML = "GOOG";
+        document.getElementById('td1per').innerHTML = jsonObject.StockToWatch.Stock[i].Percentage;
+    }
+
+    if(jsonObject.StockToWatch.Stock[i].Symbol == "FB") {
+      document.getElementById('td2').innerHTML = "FB";
+      document.getElementById('td2per').innerHTML = jsonObject.StockToWatch.Stock[i].Percentage;
+  }
+
+    if(jsonObject.StockToWatch.Stock[i].Symbol == "TIB") {
+      document.getElementById('td3').innerHTML = "TIB";
+      document.getElementById('td3per').innerHTML = jsonObject.StockToWatch.Stock[i].Percentage;
+    }
+  }
+}
+
+  function onError(evt) {
+    document.getElementById("conId").innerHTML="Connection is closed";
+  }
+
+  function doSend(message) {
+    websocket.send(message);
+  }
+
+  window.addEventListener("load", init, false);
+
+  function submit(){
+    var selSymbol = document.getElementById("selSymbol").value;
+    var selOperations = document.getElementById("selOperations").value;
+    var obj = { Symbol: selSymbol, Operations: selOperations };
+    var table = document.getElementById("mytab");
+    for (var k = 0; row = table.rows[k]; k++) {
+      if ((table.rows[k].cells[0].innerText == selSymbol) && (selOperations == "REMOVE" )) {
+        table.rows[k].cells[0].innerText = "";
+        table.rows[k].cells[1].innerText = "";
+      }
+    }
+    doSend(JSON.stringify(obj));
+
+
+}
+
+  </script>
+  <body>
+    <p id="conId"> </p>
+    <table id=mytab>
+      <tr>
+          <th>Symbol</th>
+          <th>Percent Change</th>
+      </tr>
+        <tr>
+            <td id="td1"></td>
+            <td id="td1per"></td>
+        </tr>
+        <tr>
+            <td id="td2"></td>
+            <td id="td2per"></td>
+        </tr>
+        <tr>
+            <td id="td3"></td>
+            <td id="td3per"></td>
+        </tr>
+    </table>
+</body>
+<style>
+table {
+  empty-cells: hide;
+}
+</style>
+<div class="footer">
+  <p>TIBCO BusinessEvents&reg; 5.6<br />
+      Copyright&copy; 2004-2019 TIBCO Software Inc. All rights reserved.</p>
+</div>
+</html>

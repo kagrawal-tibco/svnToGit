@@ -1,0 +1,78 @@
+/**
+ * @description 
+ */
+void rulefunction WebStudio.Core.RuleFunctions.Utils.RT.WS_RF_CheckForMatchingSuperSymbol {
+	attribute {
+		validity = ACTION;
+	}
+	scope {		
+		String artifactPath;
+		String artifactType;
+		String projectName;
+		String[] roles;
+		String userName;
+		String scsRootURL;
+		String scsIntegrationType;
+		Object[] symbolInfoResults;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.RT.WS_RF_CheckForMatchingSuperSymbol");
+
+		if (symbolInfoResults != null) {
+			boolean matchFound = false;
+			String symbolExtn = null, symbolPath = null;			
+			WS_C_ComplexSymbolInfo symbolInfo = null, querySymbolInfo = null;
+			
+			Log.log(LOGGER, "Debug", "Total records found matching the query - [%s]", symbolInfoResults@length); 
+			String startExtIdIndextString = "SHARED_SYMBOL@";
+			String endExtIdIndexString = "@"+projectName;
+			
+			for (int resultLoop = 0; resultLoop < symbolInfoResults@length; resultLoop++) {
+				Object result = symbolInfoResults[resultLoop];
+				if (result instanceof WS_C_ComplexSymbolInfo) {
+					querySymbolInfo = result;
+					if (String.contains(querySymbolInfo@extId, projectName) && String.contains(querySymbolInfo@extId, userName)) {
+						if (String.indexOfString(querySymbolInfo@extId, 0, "concept") != -1) {
+							symbolExtn = "concept";
+						} else {
+							symbolExtn = "event";
+						}
+											
+						symbolPath = querySymbolInfo.type;
+						if (symbolPath == null) {
+							Log.log(LOGGER, "Debug", "SymbolPath is null, retrieving the value from extId");
+							int sharedSymbolIndex = String.indexOfString(querySymbolInfo@extId, 0, startExtIdIndextString);
+							if (sharedSymbolIndex != -1) {
+								symbolPath = String.substring(querySymbolInfo@extId, sharedSymbolIndex+startExtIdIndextString@length, String.indexOfString(querySymbolInfo@extId, 0, endExtIdIndexString) - endExtIdIndexString@length);
+							}
+						}
+						
+						if (String.indexOfString(symbolPath, 0, ".") != -1) {
+							symbolPath = String.substringBefore(symbolPath, ".");
+						}
+
+						// load symbolInfo from the current rule session rather from Query one
+						symbolInfo = Instance.getByExtIdByUri(querySymbolInfo@extId, "/WebStudio/Core/Concepts/RuleTemplateInstance/Builder/WS_C_ComplexSymbolInfo");
+						
+						Log.log(LOGGER, "Debug", "SymbolPath[%s] & ParentPath[%s]", symbolPath, artifactPath);
+						
+						// make a call to lookup from child to parent for superpath and check for matches
+						matchFound = WS.RT.Builder.isSymbolInfoLoaded(symbolPath, symbolExtn, projectName, artifactPath, scsIntegrationType, scsRootURL);
+						
+						Log.log(LOGGER, "Debug", "Match found [%s], if true adding Symbol[%s]", matchFound, artifactPath);
+						if (matchFound) {
+							WS_RF_AddMissingSymbols(artifactPath, artifactType, projectName, roles, userName, scsRootURL, scsIntegrationType, symbolInfo);						
+						}
+						
+						matchFound = false;
+					} else {
+						Log.log(LOGGER, "Debug", "SymbolInfo does not belong to the project[%s]", projectName);
+					}
+				}
+			}
+
+		} else {
+			Log.log(LOGGER, "Debug", "No Symbols found matching the Query.");
+		}
+	}
+}

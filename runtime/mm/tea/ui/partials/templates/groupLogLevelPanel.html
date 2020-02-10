@@ -1,0 +1,126 @@
+ <div class="modal fade box-sizing" id="groupLogLevel">
+       <div class="modal-header box-sizing">
+       	 	<button type="button" class="close" data-dismiss="modal" aria-hidden="true">x</button>
+			<span class="lead"><h4>{{$parent.groupType}}</h4></span>
+	   </div>
+	   
+	   <div class="modal-body box-sizing">
+			<div class="be_VariablesContainer">
+        		<section ng-if="$parent.isDeployedLogLevel">
+       				<ul class="navTable">
+            			<li ng-click="$parent.showEqualInstances()" ng-class="{active:$parent.isSetVariablesValueType('equals')}"><a>{{$parent.equalTabTitle}}</a></li>
+           				<li  ng-click="$parent.showDifferentInstances()" ng-class="{active:$parent.isSetVariablesValueType('different')}"><a>{{$parent.differentTabTitle}}</a></li>            		
+        			</ul>
+        		</section>				
+				<div class="be_groupVariablesPanel">
+					<div ng-if="$parent.isDeployedLogLevel && $parent.isSetVariablesValueType('equals')">
+						<table class="be-table">
+                			<thead>
+   		 						<tr>
+      								<th>Pattern</th>
+      								<th>Deployed Value</th>
+      								<th>Value</th>
+      								<th></th>
+    							</tr>
+  							</thead>
+  							<tbody>
+    							<tr ng-show="!pattern.deleted" ng-repeat = "pattern in $parent.equalVariables">
+      								<td>
+        					       		<input class = "inputStyle" name="name" type="text" placeholder="pattern"
+                               			ng-model="pattern.name" ng-change="$parent.configurationChangesFlags.isDeployLogLevelChanged = true">
+									</td>
+									<td title="{{pattern.deployedValue}}">{{pattern.deployedValue}}</td>
+        					    	<td>
+                               			<select style="margin-top: 9px;width: 90% !important;" ng-model="pattern.value" ng-change="$parent.configurationChangesFlags.isDeployLogLevelChanged = true">
+               								<option ng-repeat="(key,value) in $parent.allLogLevels" value="{{value}}" ng-selected = "value == pattern.value">{{value}}</option>
+           								</select>
+									</td>
+									<td>
+										<div ng-click="$parent.removeDeployedLogLevel($index,true);$parent.configurationChangesFlags.isDeployLogLevelChanged = true" class="operation pull-right" style="width: 10px;display: inline-block;margin-top:3px;margin-right:10px;">    
+        		 				 			<i class="fa fa-minus-circle"></i>
+                			  			</div>
+									</td>
+    							</tr>
+  					   		</tbody>
+        		    	</table>	
+					</div>
+					<div ng-if="$parent.isDeployedLogLevel && $parent.isSetVariablesValueType('different')">
+						<table class="be-table">
+                			<thead>
+   		 						<tr>
+      								<th>Pattern</th>
+      								<th>Deployed Value</th>
+      								<th>Value</th>
+      								<th>Change Value</th>
+    							</tr>
+  							</thead>
+  							<tbody>
+    							<tr ng-show="!pattern.deleted" ng-repeat = "pattern in $parent.diffVariables">
+      								<td>
+        					       		<input class = "inputStyle" name="name" type="text" placeholder="pattern"
+                               			ng-model="pattern.name">
+									</td>
+									<td title="{{pattern.deployedValue}}">{{pattern.deployedValue}}</td>
+        					    	<td>
+                               			<select ng-disabled="!pattern.hasEqualValue" style="margin-top: 9px;width: 90% !important;" ng-model="pattern.value">
+               								<option ng-repeat="(key,value) in $parent.allLogLevels" value="{{value}}">{{value}}</option>
+           								</select>
+									</td>
+									<td>
+										<input type="checkbox" ng-model="pattern.hasEqualValue" ng-change="$parent.configurationChangesFlags.isDeployLogLevelChanged = true">
+										<div ng-click="$parent.removeDeployedLogLevel($index,false);$parent.configurationChangesFlags.isDeployLogLevelChanged = true" class="operation pull-right" style="width: 10px;display: inline-block;margin-top:3px;margin-right:10px;">    
+        		 				 			<i class="fa fa-minus-circle"></i>
+                			  			</div>
+									</td> 
+    							</tr>
+  					   		</tbody>
+        		    	</table>	
+					</div>
+					<div ng-if="!$parent.isDeployedLogLevel">
+						<div style="padding:20px;margin:20px;">
+                			 <table class="be-table">
+                			  	 <thead>
+                			  	 	<tr>
+                			  	 		<th>Pattern</th>
+                			  	 		<th>Runtime Log Level</th>
+                			  	 		<th></th>
+                			  	 	</tr>
+                			  	 </thead>
+                			  	 <tbody>
+                			  	 	<tr>
+                			  	 		<td><input class="inputStyle" name="Name" type="text" placeholder="pattern" ng-model="$parent.patternObj.pattern" ng-change="$parent.configurationChangesFlags.isRuntimeLogLevelChanged = true" ></td> 
+                			  	 		<td>
+                			  	 			<select style="margin-top: 9px;width: 100% !important;" ng-model="$parent.patternObj.value" ng-change="$parent.configurationChangesFlags.isRuntimeLogLevelChanged = true">
+               									<option ng-repeat="(key,value) in $parent.allLogLevels" value="{{value}}" >{{value}}</option>
+           									</select> 
+                			  	 		</td>
+                			  	 		<td>
+                			  	 			<div ng-if="$parent.hasPermission(17)" ng-click="$parent.configurationChangesFlags.isRuntimeLogLevelChanged?$parent.applyRuntimeLogLevel():null" ng-class="{'operation':$parent.configurationChangesFlags.isRuntimeLogLevelChanged}" class="pull-right" >    
+        		 				 				<i class="fa fa-check-circle"></i>
+				 				 				<span>Apply</span>             
+                			  				</div>
+                			  	 		</td>
+                			  	 	</tr>
+                			  	 </tbody>
+                			  </table>
+                	   </div>
+					</div>
+				</div>
+			</div>
+			<div>
+				<div ng-if="$parent.isDeployedLogLevel && $parent.hasPermission(17) && $parent.isSetVariablesValueType('equals')" ng-click="$parent.addNewDeployedLogLevel();$parent.configurationChangesFlags.isDeployLogLevelChanged = true" class="operation pull-left">    
+        			<i  class="fa fa-plus-circle"></i>
+				   <span>Add New</span>             
+                </div>
+			</div>
+	  	</div>	
+	  	<div class="modal-footer box-sizing">
+	    	<button ng-if="$parent.isDeployedLogLevel && $parent.hasPermission(17)" type="button" ng-click="$parent.configurationChangesFlags.isDeployLogLevelChanged?$parent.saveDeployedLogLevels():null"               
+                ng-class="{'tbt-btn':true, 'primary-btn':true,'button_disabled':!$parent.configurationChangesFlags.isDeployLogLevelChanged}">Save</button>
+           <button ng-if="!$parent.isDeployedLogLevel" type="button" data-dismiss="modal" aria-hidden="true"               
+                ng-class="{'tbt-btn':true, 'primary-btn':true}">Close</button>
+	    	<button type="button" data-dismiss="modal" aria-hidden="true" class="btn tbt-btn secondary-btn" ng-click="close()">
+		   		 Cancel
+	    	</button>
+    	</div>
+ </div>

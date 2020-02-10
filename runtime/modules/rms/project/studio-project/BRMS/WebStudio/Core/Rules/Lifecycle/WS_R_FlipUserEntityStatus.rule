@@ -1,0 +1,61 @@
+/**
+ * @description Flip user entity delete status.
+ * @author aathalye-T410
+ */
+rule WebStudio.Core.Rules.Lifecycle.WS_R_FlipUserEntityStatus {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		WebStudio.Core.Events.Lifecycle.WS_E_FlipProjectStatusEvent flipProjectStatusEvent;
+	}
+	when {
+		flipProjectStatusEvent@payload != null;
+	}
+	then {
+		Object LOGGER = Log.getLogger("WebStudio.Core.Rules.Lifecycle.WS_R_FlipUserEntityStatus");
+		
+		String payload = flipProjectStatusEvent@payload;
+		Log.log(LOGGER, "Debug", "Payload - [%s]", payload);
+		
+		double countEntitiesToFlip = Number.doubleValue(XPath.execute("count($var//entityExtIdToType)", payload, null));
+		Log.log(LOGGER, "Debug", "Total Entities to flip - [%s]", countEntitiesToFlip);
+		
+		for (int i=1; i<=countEntitiesToFlip; i++) {
+			String entityExtIdToType = XPath.execute("$var//entityExtIdToType[" + i + "]/text()", payload, null);
+			Log.log(LOGGER, "Debug", "Entity being flipped - [%s]", entityExtIdToType);
+			
+			String[] entityParts = String.split(entityExtIdToType, ":");
+			if (entityParts != null) {
+				String extId = entityParts[0];
+				String type = null;
+				if (entityParts@length == 2) type = entityParts[1];
+				
+				Log.log(LOGGER, "Debug", "Entity ExtId [%s] & Type[%s]", extId, type);
+				
+				WS_C_AbstractUserEntity userEntity = null;
+				if (type == null) {
+					userEntity = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(extId, false, "/WebStudio/Core/Concepts/WS_C_UserProject");
+				} else {
+					userEntity = WS_RF_IsUserArtifact(extId, type);
+				}
+				
+				if (userEntity != null) {
+					if (userEntity instanceof WS_C_UserProject && userEntity.softDelete) {
+						WS_RF_FlipSoftDeleteState(userEntity);
+						
+					} else if (userEntity.softDeleteViaProjectDelete) {
+						userEntity.softDeleteViaProjectDelete = false;
+						Log.log(LOGGER, "Info", "Flipping soft delete via project delete status to [%s] of user entity [%s]", userEntity.softDeleteViaProjectDelete, userEntity);
+					}
+				} else {
+					Log.log(LOGGER, "Debug", "Entity with ExtId [%s] & Type[%s] not found.", extId, type);
+				}
+				
+			} else {
+				Log.log(LOGGER, "Debug", "Something missing or failed while splitting entity - [%s]", entityExtIdToType);
+			}
+		}
+	}
+}

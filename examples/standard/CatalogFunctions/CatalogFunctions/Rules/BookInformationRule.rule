@@ -1,0 +1,30 @@
+/**
+ * @description 
+ * @author TIBCO Software Inc.
+ */
+rule Rules.BookInformationRule {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		
+		Events.BookDataEvent bookdataevent;
+	}
+	when {
+		
+	}
+	then {
+		
+		System.debugOut("######### Publishing Book Information ##########");
+		System.debugOut("Current Date/Time: "+DateTime.format(DateTime.now(),"yyyy-MM-dd HH:mm:ss.SSS Z"));
+		System.debugOut("Book '"+bookdataevent.BookTitle+"' is written by "+bookdataevent.BookAuthor+".");
+		System.debugOut("Its market price is just $"+bookdataevent.BookPrice);
+		System.debugOut("There is a volume discount for this book:");
+		System.debugOut("For buying     1-10, you get "+String.padFront(String.valueOfDouble(Math.rint(Math.random()*10)),4," ")+"% discount,");
+		System.debugOut("              11-20,         "+String.valueOfDouble(Math.rint(10.0+Math.random()*10))+"% discount,");
+		System.debugOut("              21-30,         "+String.valueOfDouble(Math.rint(20.0+Math.random()*10))+"% discount,");
+		System.debugOut("            over 30,         "+String.valueOfDouble(Math.rint(30.0+Math.random()*10))+"% discount.");
+		Event.consumeEvent(bookdataevent);
+	}
+}

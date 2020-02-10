@@ -1,0 +1,43 @@
+<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+	<xs:element name="response">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element type="xs:int" name="status" />
+				<xs:element type="xs:int" name="startRow" />
+				<xs:element type="xs:int" name="endRow" />
+				<xs:element type="xs:int" name="totalRows" />
+				<xs:element type="xs:string" name="errorCode" maxOccurs="1" minOccurs="0" />
+				<xs:element name="data" maxOccurs="1" minOccurs="0">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="record" maxOccurs="unbounded" minOccurs="0">
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element type="xs:string" name="artifactPath" maxOccurs="1" minOccurs="0"/>
+										<xs:element type="xs:string" name="artifactType" maxOccurs="1" minOccurs="0"/>
+										<xs:element type="xs:string" name="commitOperation" maxOccurs="1" minOccurs="0"/>
+										<xs:element type="xs:string" name="reviewStatus" maxOccurs="1" minOccurs="0"/>
+										<xs:element type="xs:string" name="revisionId" maxOccurs="1" minOccurs="0"/>
+										<xs:element type="xs:string" name="applicableStages" maxOccurs="1" minOccurs="0"/>
+										<xs:element type="xs:string" name="artifactImageName" maxOccurs="1" minOccurs="0"/>
+										<xs:element type="xs:string" name="reviewComments" maxOccurs="1" minOccurs="0"/>
+										<xs:element type="xs:string" name="artifactFileExtn" maxOccurs="1" minOccurs="0"/>
+										<xs:element type="xs:string" name="applicableEnvironments" maxOccurs="1" minOccurs="0"/>
+										<xs:element type="xs:string" name="deployEnvironments" maxOccurs="1" minOccurs="0"/>
+									</xs:sequence>
+									<xs:attribute type="xs:int" name="Id" use="optional" />
+									<xs:attribute type="xs:string" name="type" use="optional" />
+								</xs:complexType>
+							</xs:element>
+						</xs:sequence>
+						<xs:attribute type="xs:int" name="Id" />
+						<xs:attribute type="xs:string" name="type" use="optional" />
+					</xs:complexType>
+				</xs:element>
+				<xs:element type="xs:string" name="responseMessage" maxOccurs="1" minOccurs="0"/>
+			</xs:sequence>
+			<xs:attribute type="xs:int" name="Id" />
+			<xs:attribute type="xs:string" name="type" use="optional" />
+		</xs:complexType>
+	</xs:element>
+</xs:schema>

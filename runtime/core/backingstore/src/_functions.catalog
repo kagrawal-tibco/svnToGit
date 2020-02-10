@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<catalog name="Oracle">
+    <enabled system-property="TIBCO.BE.function.catalog.Oracle">false</enabled>
+    <!--
+     <name>Oracle</name>
+     <function>
+         <name>configure</name>
+         <class>com.tibco.be.oracle.functions.OracleFunctions</class>
+         <args>key, url, userid, password,tableName </args>
+         <async>false</async>
+         <helpUrl/>
+     </function>
+     <function>
+         <name>insertObject</name>
+         <class>com.tibco.be.oracle.functions.OracleFunctions</class>
+         <args>key,entity </args>
+         <async>false</async>
+         <helpUrl/>
+     </function>
+     <function>
+         <name>getObjectById</name>
+         <class>com.tibco.be.oracle.functions.OracleFunctions</class>
+         <args>key,entity </args>
+         <async>false</async>
+         <helpUrl/>
+     </function>
+     <function>
+         <name>getObjectByExtId</name>
+         <class>com.tibco.be.oracle.functions.OracleFunctions</class>
+         <args>key,entity </args>
+         <async>false</async>
+         <helpUrl/>
+     </function>
+     <function>
+         <name>insertEvent</name>
+         <class>com.tibco.be.oracle.functions.OracleFunctions</class>
+         <args>key,entity </args>
+         <async>false</async>
+         <helpUrl/>
+     </function>
+     <function>
+         <name>getEventById</name>
+         <class>com.tibco.be.oracle.functions.OracleFunctions</class>
+         <args>key,entity </args>
+         <async>false</async>
+         <helpUrl/>
+     </function>
+     <function>
+         <name>getEventByExtId</name>
+         <class>com.tibco.be.oracle.functions.OracleFunctions</class>
+         <args>key,entity </args>
+         <async>false</async>
+         <helpUrl/>
+     </function>
+     <function>
+         <name>updateObject</name>
+         <class>com.tibco.be.oracle.functions.OracleFunctions</class>
+         <args>key,entity </args>
+         <async>false</async>
+         <helpUrl/>
+    </function>
+    -->
+    <category>
+        <name>Oracle</name>
+        <function>
+            <name>registerConnection</name>
+            <class>com.tibco.be.oracle.functions.OracleCustomFunctions</class>
+            <args>key, uri, poolSize</args>
+            <async>false</async>
+            <helpUrl/>
+            <tooltip>
+                <synopsis>Creates an Oracle connection pool and registers with the specified key</synopsis>
+                <args>
+                  <paramdesc name="key" type="String">The identifier of the pool to registered with</paramdesc>
+                  <paramdesc name="uri" type="String">The JDBC URI of the resource to be used for getting connections</paramdesc>
+                  <paramdesc name="poolSize" type="int">The desired number of connections in the pool</paramdesc>
+                </args>
+                <returns type="void"></returns>
+            </tooltip>
+        </function>
+        <function>
+            <name>getConnection</name>
+            <class>com.tibco.be.oracle.functions.OracleCustomFunctions</class>
+            <args>key</args>
+            <async>false</async>
+            <helpUrl/>
+            <tooltip>
+                <synopsis>Returns a connection from the pool of connections registered with the specified key</synopsis>
+                <args>
+                  <paramdesc name="key" type="String">The identifier of the pool registered with registerConnection() call</paramdesc>
+                </args>
+                <returns type="Object">Oracle connection object</returns>
+            </tooltip>
+        </function>
+        <function>
+            <name>getConnectionWithTimeout</name>
+            <class>com.tibco.be.oracle.functions.OracleCustomFunctions</class>
+            <args>key, timeout</args>
+            <async>false</async>
+            <helpUrl/>
+            <tooltip>
+                <synopsis>Returns a connection from the pool, if one becomes available before the timeout expires (returns null if time expires without getting a connection)</synopsis>
+                <args>
+                  <paramdesc name="key" type="String">The identifier of the pool registered with registerConnection() call</paramdesc>
+                  <paramdesc name="timeout" type="long">Wait for up to timeout milliseconds for a free connection. 0 doesn't wait, -1 waits indefinitely</paramdesc>
+                </args>
+                <returns type="Object">Oracle connection object</returns>
+            </tooltip>
+        </function>
+        <function>
+            <name>releaseConnection</name>
+            <class>com.tibco.be.oracle.functions.OracleCustomFunctions</class>
+            <args>connection</args>
+            <async>false</async>
+            <helpUrl/>
+            <tooltip>
+                <synopsis>Releases the connection back to the the pool</synopsis>
+                <args>
+                  <paramdesc name="connection" type="Object">The connection previously acquired using one of the getConnection methods</paramdesc>
+                </args>
+                <returns type="void"></returns>
+            </tooltip>
+        </function>
+        <function>
+            <name>commit</name>
+            <class>com.tibco.be.oracle.functions.OracleCustomFunctions</class>
+            <args>connection</args>
+            <async>false</async>
+            <helpUrl/>
+            <tooltip>
+                <synopsis>Makes all changes made by this connection since the previous commit/rollback permanent and releases any database locks</synopsis>
+                <args>
+                  <paramdesc name="connection" type="Object">The connection previously acquired using one of the getConnection methods</paramdesc>
+                </args>
+                <returns type="void"></returns>
+            </tooltip>
+        </function>
+        <function>
+            <name>rollback</name>
+            <class>com.tibco.be.oracle.functions.OracleCustomFunctions</class>
+            <args>connection</args>
+            <async>false</async>
+            <helpUrl/>
+            <tooltip>
+                <synopsis>Undoes all changes made in the current transaction and releases any database locks currently held by this connection</synopsis>
+                <args>
+                  <paramdesc name="connection" type="Object">The connection previously acquired using one of the getConnection methods</paramdesc>
+                </args>
+                <returns type="void"></returns>
+            </tooltip>
+        </function>
+        <function>
+            <name>executeQuery</name>
+            <class>com.tibco.be.oracle.functions.OracleCustomFunctions</class>
+            <args>connection, sql, args</args>
+            <async>false</async>
+            <helpUrl/>
+            <tooltip>
+                <synopsis>Executes the given SQL statement, which may return multiple results through the result-set</synopsis>
+                <args>
+                  <paramdesc name="connection" type="Object">The database connection acquired by getConnection call</paramdesc>
+                  <paramdesc name="sql" type="String">The SQL statement to be executed</paramdesc>
+                  <paramdesc name="args" type="Object[]">The arguments to execute with the SQL statement (bind variables)</paramdesc>
+                </args>
+                <returns type="Object">Resultset object as result of execution of query</returns>
+            </tooltip>
+        </function>
+        <function>
+            <name>next</name>
+            <class>com.tibco.be.oracle.functions.OracleCustomFunctions</class>
+            <args>resultSet</args>
+            <async>false</async>
+            <helpUrl/>
+            <tooltip>
+                <synopsis>Moves the result-set's cursor down one row from its current position. Returns true if the new current row is valid</synopsis>
+                <args>
+                  <paramdesc name="resultSet" type="Object">The result-set (cursor pointing to current row)</paramdesc>
+                </args>
+                <returns type="boolean">True if the new current row is valid, false otherwise</returns>
+            </tooltip>
+        </function>
+        <function>
+            <name>closeResultSet</name>
+            <class>com.tibco.be.oracle.functions.OracleCustomFunctions</class>
+            <args>resultSet</args>
+            <async>false</async>
+            <helpUrl/>
+            <tooltip>
+                <synopsis>Closes the result-set of the query results, and releases it's database and JDBC resources</synopsis>
+                <args>
+                  <paramdesc name="resultSet" type="Object">The result-set (cursor pointing to current row) to be closed</paramdesc>
+                </args>
+                <returns type="void"></returns>
+            </tooltip>
+        </function>
+        <function>
+            <name>getColumnValueByIndex</name>
+            <class>com.tibco.be.oracle.functions.OracleCustomFunctions</class>
+            <args>resultSet, columnIndex</args>
+            <async>false</async>
+            <helpUrl/>
+            <tooltip>
+                <synopsis>Gets the value of the designated column in the current row of this result-set</synopsis>
+                <args>
+                  <paramdesc name="resultSet" type="Object">The result-set (cursor pointing to current row)</paramdesc>
+                  <paramdesc name="columnIndex" type="int">The index of requested column (the first column is 1, the second is 2 so on)</paramdesc>
+                </args>
+                <returns type="Object">The value from the requested column</returns>
+            </tooltip>
+        </function>
+        <function>
+            <name>getColumnValueByName</name>
+            <class>com.tibco.be.oracle.functions.OracleCustomFunctions</class>
+            <args>resultSet, columnName</args>
+            <async>false</async>
+            <helpUrl/>
+            <tooltip>
+                <synopsis>Gets the value of the designated column in the current row of this result-set</synopsis>
+                <args>
+                  <paramdesc name="resultSet" type="Object">The result-set (cursor pointing to current row)</paramdesc>
+                  <paramdesc name="columnName" type="String">The SQL name of requested column</paramdesc>
+                </args>
+                <returns type="Object">The value from the requested column</returns>
+            </tooltip>
+        </function>
+    </category>
+</catalog>

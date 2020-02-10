@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Application
+	xmlns:mx="http://www.adobe.com/2006/mxml"
+	layout="absolute"
+	creationComplete="init()"
+>
+	<mx:Script>
+		<![CDATA[
+			import com.tibco.be.views.core.utils.SortedNumericList;			
+			
+			private function init():void{
+				var list:SortedNumericList = new SortedNumericList();
+				for(var i:int = 0; i < 20; i++){
+					var x:Number = Math.round(Math.random() * 100);
+					list.add(x);
+				}
+				
+				while(list.length > 0){
+					var iDelete:int = Math.floor(Math.random() * list.length);
+					list.remove(list.getNthRankedValue(iDelete));
+				}
+			}
+			
+		]]>
+	</mx:Script>
+</mx:Application>

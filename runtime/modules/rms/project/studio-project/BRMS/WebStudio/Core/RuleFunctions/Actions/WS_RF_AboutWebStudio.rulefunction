@@ -1,0 +1,43 @@
+/**
+ * @description 
+ */
+WebStudio.Core.Concepts.DataSources.WS_C_TemporaryReturnData rulefunction WebStudio.Core.RuleFunctions.Actions.WS_RF_AboutWebStudio {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object servletRequest;
+	}
+	body {		
+		WS_C_ResponseData responseData = null;
+		int responseStatus = 0;
+		int recordCount = 0;
+		String errorCode = null;
+		String responseMessage = null;
+		
+		if (!WS_RF_CheckHTTPMethod(servletRequest, "GET")) {
+			responseStatus = -1;
+			recordCount = 0;
+			errorCode = "ERR_5101";
+			responseMessage = "Invalid HTTP Method, expect method is [GET].";
+		} else {
+			Object serverBuildDetailsMap = WS.Common.getServerBuildDetails();
+			responseData = 
+					Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/WS_C_ResponseData");
+				
+			WS_C_AbstractDataSourceRecord aboutWebStudioDataSourceRecord = 
+				Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/Records/WS_C_AboutWebStudioRecord");
+			WS_C_AboutWebStudioRecord aboutWebStudioDSRecord = aboutWebStudioDataSourceRecord;
+			
+			aboutWebStudioDSRecord.version = Util.HashMap.getValue(serverBuildDetailsMap, "Version");
+			aboutWebStudioDSRecord.build = Util.HashMap.getValue(serverBuildDetailsMap, "Build");
+			aboutWebStudioDSRecord.buildDate = Util.HashMap.getValue(serverBuildDetailsMap, "BuildDate");
+			aboutWebStudioDSRecord.copyright = Util.HashMap.getValue(serverBuildDetailsMap, "Copyright");
+			
+			Instance.PropertyArray.appendContainedConcept(responseData.record, aboutWebStudioDataSourceRecord, 1L);
+			recordCount = 1;
+		}
+		
+		return WS_RF_CreateTemporaryReturnData(responseStatus, recordCount, errorCode, responseMessage, responseData);
+	}
+}

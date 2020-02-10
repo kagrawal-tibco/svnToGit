@@ -1,0 +1,22 @@
+/**
+ * @description Closes requests from the HTTP server
+ */
+void rulefunction RuleFunctions.PreProcessor {
+   
+   attribute {
+      validity = ACTION;
+   }
+   scope {
+      Events.Ticker request;
+      
+   }
+   body {
+   	  //preload the employees and the company concepts
+   	  Cluster.DataGrid.CacheLoadConceptByExtIdByUri(request.Ticker+"_Employee",true,"/Concepts/Employees");
+   	  Cluster.DataGrid.CacheLoadConceptByExtIdByUri(request.Ticker+"_Company",true,"/Concepts/Company");
+	  // Replies to the request event, in order to close the HTTP request.
+	  // To keep it simple, uses the request event as the response. 
+	  Event.replyEvent(request, request);
+   }
+   
+} 

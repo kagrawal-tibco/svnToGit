@@ -1,0 +1,88 @@
+group QueryRule;
+
+
+typeInitMap ::= [
+        "int":"Int",
+        "long":"Long",
+        "double":"Double",
+        "boolean":"Boolean",
+        "String":"String",
+        "Date":"DateTime",
+        "Time":"DateTime",
+        "Timestamp":"DateTime"
+]
+
+QueryRule_Constructor(ruleClassName,model,identifierDepIndex) ::= << 
+{	
+	super("<ruleClassName>", $1);
+	this.dependsOn = new java.lang.String[] {null};
+	super.setPriority(1);
+	super.m_identifiers = new com.tibco.cep.kernel.model.rule.Identifier[] {
+		<model.scopeItems:{ si | <si:QueryRule_Identifier(typeName=si.typeName,name=si.name)>};separator=",\n">
+		<!identifiers.list; separator=",\n"!>
+	};
+	dependencyIndices = new com.tibco.cep.kernel.model.rule.impl.RuleImpl.DependencyIndex[m_identifiers.length ][];
+	<first(model.scopeItems):{si | dependencyIndices[0] = new com.tibco.cep.kernel.model.rule.impl.RuleImpl.DependencyIndex[0] ; }>
+	<rest(model.scopeItems):{ si | dependencyIndices[<i>] = <QueryRule_IdentifierDepIndex(scopeItem=si)>;<\n>}>
+	super.setIdentifierDependencyBitArray(dependencyIndices);
+}
+>>
+
+QueryRule_Identifier(typeName,name) ::= <<
+new com.tibco.cep.kernel.model.rule.impl.IdentifierImpl(com.tibco.cep.util.CodegenFunctions.classForName(java.lang.Thread.currentThread().getContextClassLoader(),"<typeName>"),"<name>")
+>>
+
+QueryRule_IdentifierDepIndex(scopeItem) ::= <<new com.tibco.cep.kernel.model.rule.impl.RuleImpl.DependencyIndex[] {
+	<scopeItem.dependencyAttributes:{ sa |<QueryRule_AttributeDepIndex(identifier=scopeItem.typeName,attribute=sa.name)>};separator=",\n">
+	}
+>>
+
+QueryRule_AttributeDepIndex(identifier,attribute) ::= <<
+new com.tibco.cep.kernel.model.rule.impl.RuleImpl.DependencyIndex(<identifier>.<attribute:mangle_attr()>getLevel(),<identifier>.<attribute:mangle_attr()>getIndex())
+>>
+
+
+mangle_attr() ::=<<$1z<it>.>>
+
+mangle_var() ::=<<$3z<it> >>
+
+QueryRule_evalFunction(model,expr) ::= <<
+{
+
+	<QueryRule_IdentifierDecl(scopeItems=model.scopeItems)>
+	boolean $rv=<expr>;
+	$rv = $rv && ($3z$qe.getExtId().equals(getName()));
+	System.out.println("Eval Function ---" + $rv + " Rule Name :" + getName() + "  Event ExtId -" + $3z$qe.getExtId());
+	return $rv;
+}
+>>
+
+QueryRule_IdentifierDecl(scopeItems) ::= <<
+	<scopeItems:{l | <l.typeName> <l.name:mangle_var()>=(<l.typeName>) $1[<i0>];<\n>} >
+>>
+
+QueryRule_AttributeGet(scopeIdentifier,scopeAttribute) ::= <<(($3z<scopeIdentifier.name>).get$2z<scopeAttribute.name>().get<typeInitMap.(scopeAttribute.typeName)>())>>
+
+QueryRule_varDef(var,type) ::=<< <type> <var>; >>
+
+QueryRule_varDecl(var,type, expr) ::= << <type> <var> = <expr>; >>
+
+QueryRule_UnaryExpression(expr) ::=<<(<expr>)>>
+
+QueryRule_BinaryExpression(lhs,operator,rhs) ::=<<(<lhs> <operator> <rhs>)>>
+
+QueryRule_AndExpr(lhs,rhs) ::=<< <QueryRule_BinaryExpression(lhs=lhs,operator="&&",rhs=rhs)> >>
+
+
+
+
+
+
+
+
+
+
+
+
+
+

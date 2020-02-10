@@ -1,0 +1,100 @@
+/**
+ * @description 
+ * @author moshaikh
+ */
+rule WebStudio.Core.Rules.Lifecycle.WS_R_PerformWorkItemDeletion {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		WebStudio.Core.Events.Lifecycle.WS_E_WorklistDeletionEvent worklistDeletionEvent;
+	}
+	when {
+		worklistDeletionEvent != null;
+	}
+	then {
+		Object LOGGER = Log.getLogger("WebStudio.Core.Rules.Lifecycle.WS_R_PerformWorkItemDeletion");
+		
+		WS_C_ResponseData responseData = Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/WS_C_ResponseData");
+		int responseStatus = 0;
+		int recordCount = 0;
+		String errorCode = null;
+		String responseMessage = null;
+		
+		String[] revisionsToDelete = String.split(worklistDeletionEvent.revisionIds, ",");
+		String deletedRevisionIds = null;
+		String cantDeleteRevsionIds = null;
+		String reviewTaskExtId = null;
+		
+		String subscriptionId = WS_RF_GetSubscriptionId(worklistDeletionEvent.userName);
+		
+		for (int i = 0; i <  revisionsToDelete@length; i++) {
+			reviewTaskExtId = WS_RF_CreateUserArtifactExtId(revisionsToDelete[i], null, null, null, subscriptionId, null);
+			WS_C_AbstractReviewTask reviewTask = Instance.getByExtIdByUri(reviewTaskExtId, "/WebStudio/Core/Concepts/Lifecycle/WS_C_ReviewTask");
+			if (reviewTask != null) {
+				//Get referenced checkin id
+				Concept referencedUserCheckinC = Instance.getByExtIdByUri(reviewTask.referencedCheckinId, "/Approval/Concepts/ArtifactsConcepts/AMS_C_Checkin");
+				if (referencedUserCheckinC == null) referencedUserCheckinC = Instance.getByExtIdByUri(reviewTask.referencedCheckinId, "/WebStudio/Core/Concepts/Lifecycle/WS_C_UserCheckin");
+				
+				WS_RF_FetchWorkItemDetailsForWSFactory(revisionsToDelete[i], referencedUserCheckinC, responseData, subscriptionId);
+				Concept[] records = Instance.PropertyArray.toArrayContainedConcept(responseData.record);
+				
+				boolean canDeleteRevision = true;
+				for (int j = 0 ; j<records@length;j++) {
+					WebStudio.Core.Concepts.DataSources.Records.WS_C_ReviewTaskDetailEntryDataSourceRecord rc = records[j];
+					if (String.equals(rc.reviewStatus,"Committed")) {
+						canDeleteRevision = false;
+						break;
+					}
+				}
+				
+				if (canDeleteRevision) {
+					Instance.deleteInstance(reviewTask);
+					
+					String projectName = null;
+					if (referencedUserCheckinC instanceof WS_C_UserCheckin) {
+						WS_C_UserCheckin referencedWSCheckin = referencedUserCheckinC;
+						projectName = referencedWSCheckin.managedProjectName;
+					} else if (referencedUserCheckinC instanceof AMS_C_Checkin) {
+						AMS_C_Checkin referencedRMSCheckin = referencedUserCheckinC;
+						projectName = referencedRMSCheckin.projectName;
+					}
+					WS_RF_AddAuditTrailEntry(worklistDeletionEvent.userName, projectName, null, null, "WORKLIST", String.format("Deleted revision[%s]", revisionsToDelete[i]));
+					if (deletedRevisionIds == null) {
+						deletedRevisionIds = revisionsToDelete[i];
+					} else {
+						deletedRevisionIds = deletedRevisionIds + ", " + revisionsToDelete[i];
+					}
+				} else {
+					if (cantDeleteRevsionIds == null) {
+						cantDeleteRevsionIds = revisionsToDelete[i];
+					} else {
+						cantDeleteRevsionIds = cantDeleteRevsionIds + ", " + revisionsToDelete[i];
+					}
+				}
+			}
+			
+			// clear the records from last list before processing the next iteration
+			Instance.PropertyArray.clear(responseData.record);
+		}
+		
+		if (deletedRevisionIds == null) {
+			responseMessage = String.format("No Revisions were deleted.");
+		} else {
+			responseMessage = String.format("Revision(s) [%s] successfully deleted.", deletedRevisionIds);
+		}
+		
+		if (cantDeleteRevsionIds != null) {
+			responseMessage = String.format(responseMessage + " Revision(s) [%s] having artifacts which are not yet approved/rejected cannot be deleted.", cantDeleteRevsionIds);
+		}
+		
+		Object asyncContext = Util.HashMap.getObject(worklistDeletionEvent.mapLockKey, worklistDeletionEvent.asyncContextId);
+		Object servletResponse = HTTP.Servlet.getServletResponse(asyncContext);
+		
+		String responseDSXML = WS_RF_CreateAndSerializeResponseDataSource(responseStatus, recordCount, errorCode, responseMessage, responseData, worklistDeletionEvent.contentType);
+		Log.log(LOGGER, "Debug", "Response DS XML %s", responseDSXML);
+		HTTP.Servlet.Response.setResponseHeader(servletResponse, "Content-type", worklistDeletionEvent.contentType + ";charset=utf-8");
+		HTTP.Servlet.Response.setResponseContent(asyncContext, responseDSXML, true);
+	}
+}

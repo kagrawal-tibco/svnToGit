@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beviewsconfig:TextComponent xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:beviewsconfig="http://www.tibco.com/be/designer" xmlns:designtime="http:///com/tibco/cep/designtime/core/model/designtime_ontology.ecore" namespace="/Dashboards/" folder="/Dashboards/" name="C_Tickers" description="Table Chart Showing Ticker Prices With Volume" GUID="CD6861EC-4585-3C81-612E-7B8698324303" ownerProjectName="AdvanceTickerTracker" version="1274906615023" displayName="Tickers" componentColorSetIndex="0" seriesColorIndex="-1">
+  <extendedProperties>
+    <properties xsi:type="designtime:SimpleProperty" name="Category">
+      <extendedProperties>
+        <properties xsi:type="designtime:SimpleProperty" name="TIBX"/>
+        <properties xsi:type="designtime:SimpleProperty" name="CSCO"/>
+        <properties xsi:type="designtime:SimpleProperty" name="GOOG"/>
+        <properties xsi:type="designtime:SimpleProperty" name="IBM"/>
+      </extendedProperties>
+    </properties>
+    <properties xsi:type="designtime:SimpleProperty" name="MaxValue" value="400"/>
+    <properties xsi:type="designtime:SimpleProperty" name="MinValue" value="11"/>
+  </extendedProperties>
+  <visualization xsi:type="beviewsconfig:TextVisualization" namespace="/Dashboards/" folder="/Dashboards/" name="TCV_" description="" GUID="D3884FD6-226C-0958-6D3C-6593B1E2C726" ownerProjectName="AdvanceTickerTracker" version="1274906615023" showHeader="true">
+    <seriesConfig xsi:type="beviewsconfig:TextSeriesConfig" namespace="/Dashboards/" folder="/Dashboards/" name="Price" description="" GUID="F871A653-0D44-2E9F-6637-8B88F9237198" ownerProjectName="AdvanceTickerTracker" version="1274906615023">
+      <actionRule namespace="/Dashboards/" folder="/Dashboards/" name="Series__AR" description="" GUID="BD33DB17-575D-1DE6-9BF0-CB63C25EB33C" ownerProjectName="AdvanceTickerTracker" version="1274906615023" threshold="0" thresholdUnit="count">
+        <dataSource href="DS_TickersSortedByPrice.datasource#/"/>
+      </actionRule>
+      <valueDataConfig xsi:type="beviewsconfig:TextValueDataConfig" headerName="Price" width="30" alignment="right">
+        <extractor>
+          <sourceField href="M_TickerTracker.metric#//@properties.1"/>
+        </extractor>
+        <formatter xsi:type="beviewsconfig:TextFieldFormat" toolTipFormat="{Ticker}={Price}" displayFormat="{Price}" showLabel="true">
+          <formatStyle fontSize="10" fontStyle="normal"/>
+        </formatter>
+      </valueDataConfig>
+      <categoryDataConfig xsi:type="beviewsconfig:TextCategoryDataConfig">
+        <extractor>
+          <sourceField href="M_TickerTracker.metric#//@properties.0"/>
+        </extractor>
+        <formatter xsi:type="beviewsconfig:TextFieldFormat" displayFormat="{Ticker}"/>
+      </categoryDataConfig>
+    </seriesConfig>
+    <seriesConfig xsi:type="beviewsconfig:TextSeriesConfig" namespace="/Dashboards/" folder="/Dashboards/" name="Volume" description="" GUID="32BD2A2F-93A4-67E3-CF27-A65827E3ECA1" ownerProjectName="AdvanceTickerTracker" version="1274906615023">
+      <actionRule namespace="/Dashboards/" folder="/Dashboards/" name="Series__AR" description="" GUID="0146D561-0997-DF72-5B97-94F00957CF35" ownerProjectName="AdvanceTickerTracker" version="1274906615023" threshold="0" thresholdUnit="count">
+        <dataSource href="DS_TickersSortedByPrice.datasource#/"/>
+      </actionRule>
+      <valueDataConfig xsi:type="beviewsconfig:TextValueDataConfig" headerName="Volume" width="40" alignment="right">
+        <extractor>
+          <sourceField href="M_TickerTracker.metric#//@properties.2"/>
+        </extractor>
+        <formatter xsi:type="beviewsconfig:TextFieldFormat" toolTipFormat="{Ticker}={Volume}" displayFormat="{Volume}" showLabel="true">
+          <formatStyle fontSize="10" fontStyle="normal"/>
+        </formatter>
+      </valueDataConfig>
+      <categoryDataConfig xsi:type="beviewsconfig:TextCategoryDataConfig">
+        <extractor>
+          <sourceField href="M_TickerTracker.metric#//@properties.0"/>
+        </extractor>
+        <formatter xsi:type="beviewsconfig:TextFieldFormat" displayFormat="{Ticker}"/>
+      </categoryDataConfig>
+    </seriesConfig>
+    <valueGuidelineConfig xsi:type="beviewsconfig:TextValueGuidelineConfig" headerAlignment="right">
+      <headerFormatStyle fontSize="10" fontStyle="bold"/>
+    </valueGuidelineConfig>
+    <categoryGuidelineConfig xsi:type="beviewsconfig:TextCategoryGuidelineConfig" headerName="Ticker" sortOrder="unsorted" headerAlignment="left" labelAlignment="left" width="30">
+      <headerFormatStyle fontSize="10" fontStyle="bold"/>
+      <labelFormatStyle fontSize="10" fontStyle="normal"/>
+    </categoryGuidelineConfig>
+  </visualization>
+  <layoutConstraint xsi:type="beviewsconfig:FlowLayoutConstraint" componentRowSpan="1" componentColSpan="2"/>
+</beviewsconfig:TextComponent>

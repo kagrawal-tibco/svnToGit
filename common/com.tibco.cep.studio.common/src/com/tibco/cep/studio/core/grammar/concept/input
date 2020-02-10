@@ -1,0 +1,37 @@
+/**
+ * @description 
+ * @GUID 8B208DAE-1513-C9F4-B9D3-C6D559E9EE6A
+ */
+concept Rule_Templates.SpecialOffers extends Parent.ConceptName {
+	attributes {
+		autoStartStateModel = true;
+	}
+	properties {
+		int creditCard;
+		String userID {
+			policy=CHANGES_ONLY;
+			history=5;
+			domain=MyDomains.ConceptDomain;
+		}
+		Concepts.Child applicant {
+			contained=true;
+		}
+	}
+	stateMachines {
+		StateMachines.SM1;
+		StateMachines.SM2;
+		StateMachines.SM3;
+	}
+	metadata {
+		OBJECT_NAME="CUSTOMERS";
+		group_0 {
+			PROP1="SUB_PROPERTY";
+			sub_group_1 {
+				NEWPROP2="MY_NEW PROP VALUE";
+				NEWPROP3="MY_NEW PROP VALUE2";
+			}
+			OutSideProp="TestProp";
+		}
+		LAST_PROP="LastProp";
+	}
+}

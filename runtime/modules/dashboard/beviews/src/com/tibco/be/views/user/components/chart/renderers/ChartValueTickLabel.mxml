@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Label xmlns:mx="http://www.adobe.com/2006/mxml"
+	textAlign="center"
+    selectable="false"
+    styleName="axisLabel"
+    truncateToFit="true"
+>
+    <mx:Script>
+        <![CDATA[
+        	import mx.charts.AxisRenderer;
+        	import mx.events.FlexEvent;
+        	
+        	import com.tibco.be.views.user.components.chart.BEVCartesianChart;
+        	import com.tibco.be.views.user.components.chart.BEVHorizontalBarChart;
+			
+			public static const AUTO:String = "normal";
+        	public static const THOUSANDS:String = "k";
+			public static const MILLIONS:String = "M";
+			public static const BILLIONS:String = "B";
+			public static const TRILLIONS:String = "T";
+			public static const QUADRILLIONS:String = "Q";
+			public static const NONE:String = "none";
+			
+			private var _parentChart:BEVCartesianChart;
+        	private var _fontSize:Number;
+        	private var _precision:String;
+        	private var _isStyled:Boolean = false;
+        
+        	public function configure(parentChart:BEVCartesianChart, numChartLabels:Number, fontSize:int, fontColor:uint, fontStyles:String, placement:String, rotation:Number, skipFactor:Number, scale:String):void{
+        		_parentChart = parentChart;
+        		_fontSize = fontSize;
+        		
+        		//plotArea creates a new rectangle, thus try to avoid calling it multiple times
+//				var widthLimit:Number = 0;
+//    			var widthDivisor:Number = numChartLabels-3 > 0 ? numChartLabels-3:1;
+//    			if(_parentChart is BEViewsHorizontalBarChart){
+//    				widthLimit = _parentChart.plotArea.width/widthDivisor;
+//    			}
+//    			else{
+//    				widthLimit = _parentChart.plotArea.width/4;
+//    			}
+//        		if(widthLimit > 0){ maxWidth = widthLimit; }
+        		
+        		//Process values...
+        		var fontStyle:String = fontStyles.indexOf("italic") >= 0 ? "italic":"normal";
+				var fontWeight:String = fontStyles.indexOf("bold") >= 0 ? "bold":"normal";
+				
+				_isStyled = fontStyle != "normal" || fontWeight != "normal";
+				
+				if(scale != ""){ 
+					switch(scale){
+						case(NONE): _precision = ""; break;
+						case("thousands"): _precision = THOUSANDS; break;
+						case("millions"): _precision = MILLIONS; break;
+						case("billions"): _precision = BILLIONS; break;
+						case("trillions"): _precision = TRILLIONS; break;
+						case("quadrillions"): _precision = QUADRILLIONS; break;
+						case("logarithmic"): /* Needs to be handled elsewhere as it requires different axis renderer type */ break;
+						default: _precision = AUTO;
+					}
+				}
+				
+				setStyle("fontFamily", "Arial");
+        		setStyle("fontSize", _fontSize);
+        		setStyle("color", fontColor);
+        		setStyle("fontStyle", fontStyle);
+        		setStyle("fontWeight", fontWeight);
+        		//...
+        	}
+        	
+        	override public function set data(value:Object):void{
+        		if(value == null){
+        			text="";
+        			return;
+        		}
+        		setTickValueLabel(value);
+        	}
+        	
+        	private function setTickValueLabel(value:Object):void{
+        		var n:Number = Number(value.value);
+        		var precision:String = _precision;
+        		if(precision == AUTO){
+        			var magnitude:int = new String(n.toString().replace(/-/g, "").split(".")[0]).length;
+        			if(magnitude <= 3){//0-999
+        				precision = "";
+        			}
+        			else if(magnitude <= 6){
+        				precision = THOUSANDS;
+        			}
+        			else if(magnitude <= 9){
+        				precision = MILLIONS;
+        			}
+        			else if(magnitude <= 12){
+        				precision = BILLIONS;
+        			}
+        			else if(magnitude <= 15){
+        				precision = TRILLIONS;
+        			}
+        			else{
+        				precision = QUADRILLIONS;
+        			}
+        		}
+        		
+        		if(precision != ""){
+        			switch(precision){
+						case(THOUSANDS): n/=1000; break;
+						case(MILLIONS):  n/=1000000; break;
+						case(BILLIONS):  n/=1000000000; break;
+						case(TRILLIONS): n/=1000000000000; break;
+						case(QUADRILLIONS): n/=1000000000000000; break;
+        			}
+        			text = n + precision;
+        			text += (_isStyled ? " ":""); //add a space to styled text to prevent label display cut-off
+        		}
+        		else{
+        			text = value.text;
+        		}
+        	}
+        	        	
+        	override protected function updateDisplayList(unscaledWidth:Number, unscaledHeight:Number):void{
+        		if(parent == null){ return; } //bug https://bugs.adobe.com/jira/browse/FLEXDMV-1695
+        		super.updateDisplayList(unscaledWidth, unscaledHeight);
+        	}
+
+        ]]>
+    </mx:Script>
+</mx:Label>

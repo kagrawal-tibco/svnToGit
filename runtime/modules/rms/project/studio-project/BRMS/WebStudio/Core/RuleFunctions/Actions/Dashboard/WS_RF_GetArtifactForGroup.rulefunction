@@ -1,0 +1,27 @@
+/**
+ * @description 
+ */
+WebStudio.Core.Concepts.WS_C_UserArtifact rulefunction WebStudio.Core.RuleFunctions.Actions.Dashboard.WS_RF_GetArtifactForGroup {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String artifactPath;
+		String userName;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.Dashboard.WS_RF_GetArtifactForGroup");
+		String projectName = String.substring(artifactPath, 0, String.indexOfString(artifactPath,0,"/"));
+		String path = String.substring(artifactPath, String.indexOfString(artifactPath, 0, "/"), String.indexOfString(artifactPath, 0, "."));
+		
+		String artifactType = "";
+		if (String.indexOfString(artifactPath, 0, ".") != -1) {
+			artifactType = String.substringAfter(artifactPath, ".");
+		}
+				
+		WS_C_UserArtifact userArtifact =  WS_RF_IsUserArtifact(WS_RF_CreateUserArtifactExtId(null, path, projectName, userName, null, null), artifactType);
+		Log.log(LOGGER, "Debug", "Artifact Id - %s", userArtifact@id);
+
+		return userArtifact;
+	}
+}

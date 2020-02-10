@@ -1,0 +1,41 @@
+/**
+ * @description 
+ * @author agawde-MBPR15
+ */
+rule Rules.testPmml {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Events.airQuality request;
+	}
+	when {
+		
+	}
+	then {
+		Concepts.airQuality c = Concepts.airQuality.airQuality("",
+			request.Ozone, 
+			request.SolarR, 
+			request.Wind,
+			request.Temp,
+			request.Month,
+			request.Day
+		);	
+		String airQuality1 = Analytics.Pmml.callConceptModel("airQuality", c);	
+		System.debugOut("a) Pmml Concept test result: " + airQuality1  );					
+		
+		String airQuality2 = Analytics.Pmml.callEventModel("airQuality", request);	
+		System.debugOut("b) Pmml Event test result: " + airQuality2 );					
+				
+		String airQuality3 = Analytics.Pmml.callParsModel("airQuality", 
+			"Ozone", request.Ozone, 
+			"SolarR", request.SolarR, 
+			"Wind", request.Wind,
+			"Temp", request.Temp,
+			"Month", request.Month,
+			"Day", request.Day
+		);	
+		System.debugOut("c) Pmml Parameters test result: " + airQuality3 + "\n");									
+	}
+}

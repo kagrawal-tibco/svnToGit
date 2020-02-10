@@ -1,0 +1,221 @@
+/**
+ * @description Perform the actual checkout process without actually sending file contents for any of the artifacts.
+ */
+WebStudio.Core.Concepts.DataSources.WS_C_TemporaryReturnData rulefunction WebStudio.Core.RuleFunctions.Actions.Lifecycle.Checkout.WS_RF_PerformProjectCheckout {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object servletRequest;
+		WebStudio.Security.Authn.Concepts.WS_C_LoggedInUser loggedInUser;
+		String contentType;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.Lifecycle.Checkout.WS_RF_PerformProjectCheckout");
+
+		int responseStatus = 0;
+		int recordCount = 0;
+		String errorCode = null;
+		String responseMessage = null;
+				
+		if (!WS_RF_CheckHTTPMethod(servletRequest, "POST")) {
+			responseStatus = -1;
+			recordCount = 0;
+			errorCode = "ERR_5101";
+			responseMessage = "Invalid HTTP Method, expect method is [POST].";
+			
+		} else {
+			String requestPostParam = System.getGlobalVariableAsString("WebStudio/requestPostParameter", "data");
+			String requestData = HTTP.Servlet.Request.getRequestParameter(servletRequest, requestPostParam);
+			
+			Log.log(LOGGER, "Debug", "Request Post Data Received %s", requestData);
+			if (requestData == null) {
+				Object requestDataBytes = HTTP.Servlet.Request.getRequestContent(servletRequest);
+				requestData = String.convertByteArrayToString(requestDataBytes, "UTF-8");
+				requestData = WS.Common.cleanupRequestData(requestData);
+				Log.log(LOGGER, "Debug", "Request Post Data Received %s", requestData);
+			}	
+			//Convert to concept model
+			WS_C_CheckoutRequest checkoutRequest = null;
+			if (String.equals(contentType, System.getGlobalVariableAsString("WebStudio/CONTENT_TYPE/XML", "application/xml"))) {
+				checkoutRequest = Instance.createTransientInstanceFromXML("/WebStudio/Core/Concepts/Request/Usecases/Checkout/WS_C_CheckoutRequest", requestData);
+			} else {
+				checkoutRequest = Instance.createTransientInstanceFromJSON("/WebStudio/Core/Concepts/Request/Usecases/Checkout/WS_C_CheckoutRequest", requestData);
+			}
+			
+			Log.log(LOGGER, "Debug", "Request concept deserialized %s", checkoutRequest);
+			
+			WS_C_CheckoutRequestData requestContainedData = checkoutRequest.data;
+			WS_C_CheckoutRequestProject project = Instance.PropertyArray.toArrayContainedConcept(requestContainedData.project)[0];
+			String projectName = project.name;
+			Log.log(LOGGER, "Debug", "Project Name Request value Received %s", projectName);
+			
+			//Replace this with security context once BAAS integration is achieved.
+			String username = loggedInUser.username;
+			Log.log(LOGGER, "Debug", "User Name header value Received %s", username);
+			
+			if (requestData == null) {
+				responseMessage = "Empty Request data not allowed";
+				errorCode = "ERR_1001";
+				
+			} else {
+				WebStudio.Core.Concepts.WS_C_ManagedProjects managedProjects = null;
+				if (projectName != null && username != null) {
+					//Lock and load workspace concept
+					//Use default workspace name for now.
+					String subscriptionId = null;
+					if (loggedInUser.jwtToken != null) subscriptionId = loggedInUser.jwtToken.sbsc;
+				    managedProjects =  WS_RF_LoadProjectsFromSCS(loggedInUser.username, false, subscriptionId);
+				    
+					boolean isProjectAvailable = false;
+					WS_C_ProjectEntry[] managedProjectEntries = Instance.PropertyArray.toArrayContainedConcept(managedProjects.managedProjectNames);
+					String[] roles = Instance.PropertyArray.toArrayString(loggedInUser.roles);		
+					for (int loop = 0; loop < managedProjectEntries@length; loop++) {
+						WS_C_ProjectEntry projectEntry = managedProjectEntries[loop];
+						String pName = projectEntry.name;
+						if (String.contains(pName, ".")) {
+							continue;
+			            }
+			            
+						boolean hasAccess = RMS.Authorization.ensureAccess(pName, subscriptionId, roles, null, "PROJECT", "checkout");
+			            if (hasAccess && String.equals(projectName, pName)) {
+				            	isProjectAvailable = true;
+				            	break;	
+			            }
+					}
+					if (isProjectAvailable) {
+						String resultStackID = "RESULTS_STACK_" + System.nanoTime();
+						Object resultsStack = WS.Common.Stack.create(resultStackID);
+					
+						String userWorkspaceExtId = WS_RF_CreateUserArtifactExtId("WORKSPACE", null, null, username, null, null);
+						boolean userWorkspaceLock = Cluster.DataGrid.Lock(userWorkspaceExtId, 1000, false);
+						if (userWorkspaceLock) {
+							WS_C_UserWorkspace userWorkspace = Instance.getByExtIdByUri(userWorkspaceExtId, "/WebStudio/Core/Concepts/WS_C_UserWorkspace");
+							if (userWorkspace == null) {
+								//Create one
+								userWorkspace = 
+								    Instance.newInstance("/WebStudio/Core/Concepts/WS_C_UserWorkspace", userWorkspaceExtId);
+							}	
+							Log.log(LOGGER, "Debug", "User workspace instance id %s", userWorkspace@id);
+							String userProjectExtId = WS_RF_CreateUserArtifactExtId(null, null, projectName, username, null, null);
+							boolean userProjectLock = Cluster.DataGrid.Lock(userProjectExtId, -1, false);
+							if (userProjectLock) {
+								WS_C_UserProject userProject = Instance.getByExtIdByUri(userProjectExtId, "/WebStudio/Core/Concepts/WS_C_UserProject");
+								if (userProject == null) {
+									userProject = 
+										Instance.newInstance("/WebStudio/Core/Concepts/WS_C_UserProject", userProjectExtId);
+									userProject.name = projectName;	
+									WS_E_CheckoutProjectCompletionEvent checkoutProjectCompletionEvent = 
+										Event.createEvent("xslt://{{/WebStudio/Core/Events/Lifecycle/WS_E_CheckoutProjectCompletionEvent}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"2.0\" exclude-result-prefixes=\"xsl xsd\"><xsl:output method=\"xml\"/><xsl:param name=\"username\"/><xsl:template name=\"Function\" match=\"/\"><createEvent><event><username><xsl:value-of select=\"$username\"/></username></event></createEvent></xsl:template></xsl:stylesheet>");
+									Event.assertEvent(checkoutProjectCompletionEvent);							
+								} else {
+									if (userProject.softDelete) {
+										Log.log(LOGGER, "Debug", "Case for Project[%s] previously marked as deleted but is now being checkedout again.", projectName);
+										WS.Common.Stack.push(resultsStack, userProject@extId);
+									}
+								}
+								Log.log(LOGGER, "Debug", "User project instance id - %s & extId - %s", userProject@id, userProject@extId);
+							
+								//Append checked out artifacts list to it.	
+								//Get number of contained items
+								WS_C_ArtifactCheckoutDataItem[] artifactItems = Instance.PropertyArray.toArrayContainedConcept(project.artifactItem);
+								int numberOfArtifacts = artifactItems@length;
+								Log.log(LOGGER, "Debug", "Number of artifacts %s", numberOfArtifacts);
+								String userArtifactIDs = "";
+								for (int loop = 0; loop < numberOfArtifacts; loop++) {
+									WS_C_ArtifactCheckoutDataItem artifactDataItem = artifactItems[loop];
+									String artifactPath = artifactDataItem.artifactPath;
+				    				    String artifactType = artifactDataItem.artifactType;
+									String artifactFileExtn = artifactDataItem.fileExtension;
+									String baseArtifactPath = artifactDataItem.baseArtifactPath;
+		
+									Log.log(LOGGER, "Debug", "[Artifact Path] - %s, [Artifact Type] - %s, [Artifact Extension] - %s, [Base Artifact Path] - %s", artifactPath, artifactType, artifactFileExtn, baseArtifactPath);
+				    				
+				    				    String type = artifactType;
+									if (type == "ruletemplate") {
+										type = "ruletemplateinstance";
+									}
+									WS_C_UserArtifact userArtifact = WS_RF_IsUserArtifact(WS_RF_CreateUserArtifactExtId(null, artifactPath, projectName, username, null, null), type);
+								
+									if (userArtifact == null) {
+										String userArtifactExtId = WS_RF_CreateUserArtifactExtId(null, artifactPath, projectName, username, null, null);
+										userArtifact = WS_RF_UserArtifactCreationFactory(userArtifactExtId, artifactPath, artifactType, artifactFileExtn, userProject@extId);
+										userArtifact.baseArtifactPath = baseArtifactPath;
+										Log.log(LOGGER, "Debug", "User Artifact from factory instance id %s and ExtId - %s", userArtifact@id, userArtifactExtId);
+									}
+		
+						    		    //Append this to project if not already added (case for checkout after delete)
+									if (Instance.PropertyArray.indexOfContainedConcept(userProject.userArtifacts, userArtifact) == -1) {
+										Log.log(LOGGER, "Debug", "User Artifact(%s) not yet added to Project, adding now.", userArtifact.artifactPath);
+										userArtifactIDs += userArtifact@extId + ":" + userArtifact.artifactType + ";";
+									}
+									
+									if (userArtifact.softDeleteViaProjectDelete) {
+										Log.log(LOGGER, "Debug", "Case for Artifact[%s] previously marked as deleted via Project Delete but is now being checkedout again.", userArtifact.artifactPath);
+										WS.Common.Stack.push(resultsStack, userArtifact@extId + ":" + userArtifact.artifactType);
+									}
+				    				
+				    				    String masterArtifactExtId = WS_RF_CreateUserArtifactExtId(null, artifactPath, projectName, null, subscriptionId, null);
+									//See if master artifact exists
+									WS_C_MasterArtifact masterArtifact = Instance.getByExtIdByUri(masterArtifactExtId, "/WebStudio/Core/Concepts/Lifecycle/WS_C_MasterArtifact");
+									if (masterArtifact != null) {
+										Log.log(LOGGER, "Info", "MasterArtifactExtId - [%s] & MasterArtifact - [%s]", masterArtifactExtId, masterArtifact);
+										WS_RF_PerformMasterSynchronization(masterArtifact, userArtifact);
+									}
+											
+					    				responseMessage = "Checkout successful";		
+					    				responseStatus = 0;
+					    				
+					    				WS_RF_AddAuditTrailEntry(loggedInUser.username, projectName, artifactPath, artifactType, "CHECKOUT", null);
+								}
+								
+								String[] entitiesToFlip = WS.Common.Stack.toArray(resultsStack, "java.lang.String", null);
+								if (entitiesToFlip != null && entitiesToFlip@length > 0) {
+									WS_E_FlipProjectStatusEvent flipProjectStatusEvent = Event.createEvent("xslt://{{/WebStudio/Core/Events/Lifecycle/WS_E_FlipProjectStatusEvent}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" xmlns:tns=\"www.tibco.com/be/ontology/WebStudio/Core/Events/Lifecycle/WS_E_FlipProjectStatusEvent\" version=\"2.0\"><xsl:param name=\"entitiesToFlip\"/><xsl:template name=\"Function\" match=\"/\"><createEvent><event><payload><tns:FlipEntityStatus><xsl:for-each select=\"$entitiesToFlip/elements\"><entityExtIdToType><xsl:value-of select=\".\"/></entityExtIdToType></xsl:for-each></tns:FlipEntityStatus></payload></event></createEvent></xsl:template></xsl:stylesheet>");
+									Event.assertEvent(flipProjectStatusEvent);
+								}
+								WS.Common.Stack.clear(resultsStack);
+								WS.Common.Stack.delete(resultStackID);
+								
+								if (!String.equals(userArtifactIDs,"")) {
+									Log.log(LOGGER, "Debug", "User artifacts extIDs: %s to add to user project: %s", userArtifactIDs, userProject@extId);
+									WS_E_PartialCheckoutCompletionEvent partialCheckoutCompletionEvent = 
+									Event.createEvent("xslt://{{/WebStudio/Core/Events/Lifecycle/WS_E_PartialCheckoutCompletionEvent}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"1.0\" exclude-result-prefixes=\"xsl xsd\"><xsl:output method=\"xml\"/><xsl:param name=\"userArtifactIDs\"/><xsl:param name=\"userProject\"/><xsl:param name=\"loggedInUser\"/><xsl:template name=\"Function\" match=\"/\"><createEvent><event><userArtifact_extIDs><xsl:value-of select=\"$userArtifactIDs\"/></userArtifact_extIDs><xsl:if test=\"$userProject/@extId\"><project_extID><xsl:value-of select=\"$userProject/@extId\"/></project_extID></xsl:if><xsl:if test=\"$loggedInUser/username\"><username><xsl:value-of select=\"$loggedInUser/username\"/></username></xsl:if></event></createEvent></xsl:template></xsl:stylesheet>");
+									Event.assertEvent(partialCheckoutCompletionEvent);
+								}
+								
+								// fetch the preferences for SCS userName/password details
+								String[] scsCredentials = WS_RF_GetSCSCredentials(username);
+								
+								// checkout the project in background on a local box
+								String scsIntegrationType = System.getSystemPropertyAsString("ws.scs.impl.type", null);
+								if (scsIntegrationType != null && !String.equals(scsIntegrationType, "file")) {
+									String scsRootURL = WS_RF_GetSCSRootURL(projectName, subscriptionId);
+									String scsRepotDir = System.getSystemPropertyAsString("ws.scs.repo.dir", null);
+									
+									WS.SCS.checkoutProjectArtifacts(scsIntegrationType, scsRootURL, projectName, scsRepotDir, scsCredentials[0], scsCredentials[1]);
+	
+								}
+								WS_RF_UpdateProjectSummary(projectName, username, "CHECKOUT");
+							}
+						} else {
+							responseStatus = -1;
+							responseMessage = "User workspace locked";		
+					    		errorCode = "ERR_1002";
+						}
+					} else {
+						responseStatus = -1;
+						responseMessage = "Project with provided name not available. Please provide a valid project name.";
+						errorCode = "ERR_5102";	
+					}
+				} else {
+					responseStatus = -1;
+					responseMessage = "Project Name and user name headers cannot be null";		
+			    		errorCode = "ERR_1003";
+				}
+			}
+		}
+		
+		return WS_RF_CreateTemporaryReturnData(responseStatus, recordCount, errorCode, responseMessage, null);
+	}
+}

@@ -1,0 +1,30 @@
+/**
+ * @description Migrate Channels in each RMS managed project.
+ */
+void rulefunction Approval.Rules.RuleFunctions.ArtifactRuleFunctions.Startup.AMS_RF_MigrateArtifacts {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		
+	}
+	body {
+		Object LOGGER = Log.getLogger("Approval.Rules.RuleFunctions.ArtifactRuleFunctions.Startup.AMS_RF_MigrateArtifacts");
+		String pathSeparator = "/";
+		String baseProjectDir = System.getSystemPropertyAsString("rms.projects.baselocation", null);
+		
+		if (baseProjectDir == null) {
+		    throw Exception.newException("Configuration error", "Base Project Location cannot be null", null);
+		}
+
+		String[] projects = 
+	    	RMS.Approval.fetchServedProjectsList(baseProjectDir);
+	    
+	    for (int loop = 0, length = projects@length; loop < length; loop = loop + 1) {
+	    	//Get project's absolute path
+	    	String projectFilePath = baseProjectDir + pathSeparator + projects[loop];
+	    	Log.log(LOGGER, "Info", "Migrating old channels in project %s", projects[loop]);
+	    	RMS.Util.migrateChannels(projectFilePath);
+	    }	
+	}
+}

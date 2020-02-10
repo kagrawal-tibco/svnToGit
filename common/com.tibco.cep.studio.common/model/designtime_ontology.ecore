@@ -1,0 +1,923 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" name="model" nsURI="http:///com/tibco/cep/designtime/core/model/designtime_ontology.ecore"
+    nsPrefix="designtime">
+  <eClassifiers xsi:type="ecore:EClass" name="Entity" abstract="true">
+    <eOperations name="getFullPath" lowerBound="1" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eOperations name="getModelErrors" upperBound="-1" eType="#//validation/ModelError"/>
+    <eOperations name="isValid" lowerBound="1" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="namespace" lowerBound="1"
+        eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="folder" lowerBound="1"
+        eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="name" lowerBound="1" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="description" lowerBound="1"
+        eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="lastModified" lowerBound="1"
+        eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="GUID" lowerBound="1" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="ontology" eType="ecore:EClass http://www.eclipse.org/emf/2002/Ecore#//EObject"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="extendedProperties" eType="#//PropertyMap"
+        containment="true"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="hiddenProperties" eType="#//PropertyMap"
+        containment="true"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="transientProperties" eType="#//PropertyMap"
+        transient="true" containment="true"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="ownerProjectName" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="SimpleProperty" eSuperTypes="#//Entity">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="value" lowerBound="1" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="mandatory" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="type" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="displayName" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="ObjectProperty" eSuperTypes="#//Entity">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="value" lowerBound="1" eType="ecore:EClass http://www.eclipse.org/emf/2002/Ecore#//EObject"
+        containment="true"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="RuleParticipant" abstract="true" eSuperTypes="#//Entity"/>
+  <eClassifiers xsi:type="ecore:EClass" name="PropertyMap">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="properties" upperBound="-1"
+        eType="#//Entity" containment="true"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EEnum" name="PROPERTY_TYPES">
+    <eLiterals name="String"/>
+    <eLiterals name="Integer" value="1" literal="int"/>
+    <eLiterals name="Long" value="2" literal="long"/>
+    <eLiterals name="Double" value="3" literal="double"/>
+    <eLiterals name="Boolean" value="4" literal="boolean"/>
+    <eLiterals name="DateTime" value="5"/>
+    <eLiterals name="Concept" value="6"/>
+    <eLiterals name="ConceptReference" value="7"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EEnum" name="TIMEOUT_UNITS">
+    <eLiterals name="Milliseconds"/>
+    <eLiterals name="Seconds" value="1"/>
+    <eLiterals name="Minutes" value="2"/>
+    <eLiterals name="Hours" value="3"/>
+    <eLiterals name="Days" value="4"/>
+    <eLiterals name="WeekDays" value="5"/>
+    <eLiterals name="Weeks" value="6"/>
+    <eLiterals name="Months" value="7"/>
+    <eLiterals name="Years" value="8"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EEnum" name="METRIC_TYPE">
+    <eLiterals name="Regular"/>
+    <eLiterals name="RollingTime" value="1"/>
+    <eLiterals name="RollingCount" value="2"/>
+    <eLiterals name="PeriodicTime" value="3"/>
+    <eLiterals name="PeriodicCount" value="4"/>
+    <eLiterals name="WindowTime" value="5"/>
+    <eLiterals name="WindowCount" value="6"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EEnum" name="METRIC_AGGR_TYPE">
+    <eLiterals name="Set"/>
+    <eLiterals name="Count" value="1"/>
+    <eLiterals name="Maximum" value="2"/>
+    <eLiterals name="Minimum" value="3"/>
+    <eLiterals name="Sum" value="4"/>
+    <eLiterals name="SumOfSquares" value="5"/>
+    <eLiterals name="Average" value="6"/>
+    <eLiterals name="Variance" value="7"/>
+    <eLiterals name="StandardDeviation" value="8"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EEnum" name="HISTORY_POLICY">
+    <eLiterals name="ChangesOnly"/>
+    <eLiterals name="AllValues" value="1"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EEnum" name="DOMAIN_DATA_TYPES">
+    <eLiterals name="String"/>
+    <eLiterals name="Integer" value="1"/>
+    <eLiterals name="Long" value="2"/>
+    <eLiterals name="Double" value="3"/>
+    <eLiterals name="Boolean" value="4"/>
+    <eLiterals name="DateTime" value="5"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EEnum" name="TIME_UNITS">
+    <eLiterals name="Milliseconds"/>
+    <eLiterals name="Seconds" value="1"/>
+    <eLiterals name="Minutes" value="2"/>
+    <eLiterals name="Hours" value="3"/>
+    <eLiterals name="Days" value="4"/>
+    <eLiterals name="WeekDays" value="5"/>
+    <eLiterals name="Weeks" value="6"/>
+    <eLiterals name="Months" value="7"/>
+    <eLiterals name="Years" value="8"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="Comparable" instanceClassName="java.lang.Comparable"
+      abstract="true" interface="true"/>
+  <eSubpackages name="element" nsURI="http:///com/tibco/cep/designtime/core/model/element"
+      nsPrefix="element">
+    <eClassifiers xsi:type="ecore:EClass" name="Concept" eSuperTypes="#//RuleParticipant">
+      <eOperations name="getStateMachines" upperBound="-1" eType="#//states/StateMachine"/>
+      <eOperations name="getRootStateMachine" eType="#//states/StateMachine"/>
+      <eOperations name="getAllProperties" upperBound="-1" eType="#//element/PropertyDefinition"/>
+      <eOperations name="getAllDomainInstances" upperBound="-1" eType="#//domain/DomainInstance"/>
+      <eOperations name="getPropertyDefinitions">
+        <eGenericType eClassifier="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EEList">
+          <eTypeArguments eClassifier="#//element/PropertyDefinition"/>
+        </eGenericType>
+        <eParameters name="localOnly" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+      </eOperations>
+      <eOperations name="_getPropertyDefinitions">
+        <eParameters name="cept" eType="#//element/Concept"/>
+        <eParameters name="props">
+          <eGenericType eClassifier="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EEList">
+            <eTypeArguments eClassifier="#//element/PropertyDefinition"/>
+          </eGenericType>
+        </eParameters>
+      </eOperations>
+      <eOperations name="getAllPropertyDefinitions">
+        <eGenericType eClassifier="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EEList">
+          <eTypeArguments eClassifier="#//element/PropertyDefinition"/>
+        </eGenericType>
+      </eOperations>
+      <eOperations name="_getAllPropertyDefinitions">
+        <eGenericType eClassifier="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EEList">
+          <eTypeArguments eClassifier="#//element/PropertyDefinition"/>
+        </eGenericType>
+      </eOperations>
+      <eStructuralFeatures xsi:type="ecore:EReference" name="subConcepts" upperBound="-1"
+          eType="#//element/Concept"/>
+      <eStructuralFeatures xsi:type="ecore:EReference" name="properties" upperBound="-1"
+          eType="#//element/PropertyDefinition" containment="true"/>
+      <eStructuralFeatures xsi:type="ecore:EReference" name="ruleSet" eType="#//rule/RuleSet"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="stateMachinePaths" upperBound="-1"
+          eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="rootStateMachinePath"
+          eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+      <eStructuralFeatures xsi:type="ecore:EReference" name="parentConcept" eType="#//element/Concept"
+          transient="true"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="parentConceptPath" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"
+          transient="true"/>
+      <eStructuralFeatures xsi:type="ecore:EReference" name="superConcept" eType="#//element/Concept"
+          transient="true"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="superConceptPath" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="scorecard" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="metric" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"
+          defaultValueLiteral="false"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="contained" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"
+          transient="true"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="POJO" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="transient" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="implClass" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="subConceptsPath" upperBound="-1"
+          eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="autoStartStateMachine"
+          eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+    </eClassifiers>
+    <eClassifiers xsi:type="ecore:EClass" name="Scorecard" eSuperTypes="#//element/Concept"/>
+    <eClassifiers xsi:type="ecore:EClass" name="PropertyDefinition" eSuperTypes="#//Entity">
+      <eOperations name="getOwner" eType="#//RuleParticipant"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="type" eType="#//PROPERTY_TYPES"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="conceptTypePath" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="array" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="ownerPath" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="historyPolicy" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EInt"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="historySize" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EInt"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="order" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EInt"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="defaultValue" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="disjointSet" upperBound="-1"
+          eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="super" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+      <eStructuralFeatures xsi:type="ecore:EReference" name="parent" eType="#//element/PropertyDefinition"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="transitive" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+      <eStructuralFeatures xsi:type="ecore:EReference" name="equivalentProperties"
+          upperBound="-1" eType="#//element/PropertyDefinition" containment="true"/>
+      <eStructuralFeatures xsi:type="ecore:EReference" name="attributeDefinitions"
+          upperBound="-1" eType="#//element/PropertyDefinition" containment="true"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="aggregationType" eType="#//METRIC_AGGR_TYPE"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="groupByField" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="groupByPosition" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//ELong"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="timeWindowField" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+      <eStructuralFeatures xsi:type="ecore:EReference" name="domainInstances" upperBound="-1"
+          eType="#//domain/DomainInstance" containment="true"/>
+    </eClassifiers>
+    <eClassifiers xsi:type="ecore:EClass" name="AttributeDefinition" eSuperTypes="#//element/PropertyDefinition"/>
+    <eClassifiers xsi:type="ecore:EClass" name="Metric" eSuperTypes="#//element/Concept">
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="type" eType="#//METRIC_TYPE"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="windowType" eType="#//TIME_UNITS"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="windowSize" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//ELong"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="recurringTimeType" eType="#//TIME_UNITS"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="recurringFrequency" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//ELong"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="startTime" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//ELong"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="shortName" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="persistent" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="transactionalRolling"
+          eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="enabled" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="retentionTimeType" eType="#//TIME_UNITS"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="retentionTimeSize" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//ELong"/>
+      <eStructuralFeatures xsi:type="ecore:EReference" name="userDefinedFields" upperBound="-1"
+          eType="#//element/PropertyDefinition" containment="true"/>
+    </eClassifiers>
+    <eClassifiers xsi:type="ecore:EClass" name="BaseInstance">
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="resourcePath" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eClassifiers>
+    <eClassifiers xsi:type="ecore:EClass" name="ProcessEntity" eSuperTypes="#//Entity">
+      <eStructuralFeatures xsi:type="ecore:EReference" name="properties" upperBound="-1"
+          eType="#//element/PropertyDefinition" containment="true"/>
+    </eClassifiers>
+  </eSubpackages>
+  <eSubpackages name="event" nsURI="http:///com/tibco/cep/designtime/core/model/event"
+      nsPrefix="event">
+    <eClassifiers xsi:type="ecore:EClass" name="Event" abstract="true" eSuperTypes="#//RuleParticipant">
+      <eOperations name="getAllUserProperties" upperBound="-1" eType="#//element/PropertyDefinition"/>
+      <eOperations name="isSoapEvent" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+      <eOperations name="getAllDomainInstances" upperBound="-1" eType="#//domain/DomainInstance"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="type" eType="#//event/EVENT_TYPE"/>
+      <eStructuralFeatures xsi:type="ecore:EReference" name="superEvent" eType="#//event/Event"
+          transient="true"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="superEventPath" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+      <eStructuralFeatures xsi:type="ecore:EReference" name="subEvents" upperBound="-1"
+          eType="#//event/Event"/>
+      <eStructuralFeatures xsi:type="ecore:EReference" name="ancestorProperties" upperBound="-1"
+          eType="ecore:EClass http://www.eclipse.org/emf/2002/Ecore#//EObject"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="payloadString" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="ttl" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"
+          defaultValueLiteral="0"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="ttlUnits" eType="#//TIMEOUT_UNITS"/>
+      <eStructuralFeatures xsi:type="ecore:EReference" name="properties" upperBound="-1"
+          eType="#//element/PropertyDefinition" containment="true"/>
+      <eStructuralFeatures xsi:type="ecore:EReference" name="ruleSet" eType="#//rule/RuleSet"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="specifiedTime" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//ELong"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="serializationFormat"
+          eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EInt"/>
+      <eStructuralFeatures xsi:type="ecore:EReference" name="namespaceEntries" upperBound="-1"
+          eType="#//event/NamespaceEntry" containment="true"/>
+      <eStructuralFeatures xsi:type="ecore:EReference" name="registryImportEntries"
+          upperBound="-1" eType="#//event/ImportRegistryEntry" containment="true"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="subEventsPath" upperBound="-1"
+          eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+      <eStructuralFeatures xsi:type="ecore:EReference" name="expiryAction" eType="#//rule/Rule"
+          containment="true"/>
+      <eStructuralFeatures xsi:type="ecore:EReference" name="payload" eType="ecore:EClass http://www.eclipse.org/emf/2002/Ecore#//EObject"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="retryOnException" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"
+          defaultValueLiteral="true"/>
+    </eClassifiers>
+    <eClassifiers xsi:type="ecore:EClass" name="NamespaceEntry">
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="prefix" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="namespace" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eClassifiers>
+    <eClassifiers xsi:type="ecore:EClass" name="ImportRegistryEntry">
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="location" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="namespace" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eClassifiers>
+    <eClassifiers xsi:type="ecore:EClass" name="SimpleEvent" eSuperTypes="#//event/Event">
+      <eOperations name="getDestination" eType="#//service/channel/Destination"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="channelURI" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="destinationName" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eClassifiers>
+    <eClassifiers xsi:type="ecore:EClass" name="TimeEvent" eSuperTypes="#//event/Event">
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="scheduleType" lowerBound="1"
+          eType="#//event/EVENT_SCHEDULE_TYPE"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="timeEventCount" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="interval" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"
+          defaultValueLiteral="0"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="intervalUnit" eType="#//TIMEOUT_UNITS"/>
+    </eClassifiers>
+    <eClassifiers xsi:type="ecore:EClass" name="UserProperty">
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="name" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="type" eType="#//PROPERTY_TYPES"/>
+      <eStructuralFeatures xsi:type="ecore:EReference" name="extendedProperties" eType="#//PropertyMap"
+          containment="true"/>
+    </eClassifiers>
+    <eClassifiers xsi:type="ecore:EEnum" name="EVENT_TYPE">
+      <eLiterals name="SimpleEvent"/>
+      <eLiterals name="TimeEvent" value="1"/>
+      <eLiterals name="SoapEvent" value="2" literal="SoapEvent"/>
+      <eLiterals name="AdvisoryEvent" value="3" literal="AdvisoryEvent"/>
+    </eClassifiers>
+    <eClassifiers xsi:type="ecore:EEnum" name="EVENT_SCHEDULE_TYPE">
+      <eLiterals name="RuleBased" literal="ruleBased"/>
+      <eLiterals name="Repeat" value="1" literal="repeat"/>
+      <eLiterals name="RunOnce" value="2" literal="runOnce"/>
+    </eClassifiers>
+    <eClassifiers xsi:type="ecore:EClass" name="AdvisoryEvent" abstract="true" eSuperTypes="#//event/Event"/>
+  </eSubpackages>
+  <eSubpackages name="service" nsURI="http:///com/tibco/cep/designtime/core/model/service"
+      nsPrefix="service">
+    <eSubpackages name="channel" nsURI="http:///com/tibco/cep/designtime/core/model/service/channel"
+        nsPrefix="channel">
+      <eClassifiers xsi:type="ecore:EClass" name="Channel" eSuperTypes="#//Entity">
+        <eStructuralFeatures xsi:type="ecore:EReference" name="driver" eType="#//service/channel/DriverConfig"
+            containment="true"/>
+        <eStructuralFeatures xsi:type="ecore:EReference" name="driverManager" eType="#//service/channel/DriverManager"
+            transient="true"/>
+      </eClassifiers>
+      <eClassifiers xsi:type="ecore:EClass" name="Destination" eSuperTypes="#//Entity">
+        <eStructuralFeatures xsi:type="ecore:EAttribute" name="eventURI" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+        <eStructuralFeatures xsi:type="ecore:EAttribute" name="serializerDeserializerClass"
+            eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+        <eStructuralFeatures xsi:type="ecore:EReference" name="properties" eType="#//PropertyMap"
+            containment="true"/>
+        <eStructuralFeatures xsi:type="ecore:EReference" name="driverConfig" eType="#//service/channel/DriverConfig"/>
+        <eStructuralFeatures xsi:type="ecore:EAttribute" name="inputEnabled" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+        <eStructuralFeatures xsi:type="ecore:EAttribute" name="outputEnabled" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+      </eClassifiers>
+      <eClassifiers xsi:type="ecore:EClass" name="DriverConfig">
+        <eStructuralFeatures xsi:type="ecore:EAttribute" name="configMethod" eType="#//service/channel/CONFIG_METHOD"/>
+        <eStructuralFeatures xsi:type="ecore:EAttribute" name="reference" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+        <eStructuralFeatures xsi:type="ecore:EAttribute" name="label" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+        <eStructuralFeatures xsi:type="ecore:EReference" name="channel" eType="#//service/channel/Channel"/>
+        <eStructuralFeatures xsi:type="ecore:EReference" name="properties" eType="#//PropertyMap"
+            containment="true"/>
+        <eStructuralFeatures xsi:type="ecore:EReference" name="destinations" upperBound="-1"
+            eType="#//service/channel/Destination" containment="true"/>
+        <eStructuralFeatures xsi:type="ecore:EReference" name="extendedConfiguration"
+            eType="#//service/channel/ExtendedConfiguration" containment="true"/>
+        <eStructuralFeatures xsi:type="ecore:EReference" name="driverType" eType="#//service/channel/DRIVER_TYPE"
+            containment="true"/>
+        <eStructuralFeatures xsi:type="ecore:EReference" name="choice" eType="#//service/channel/Choice"
+            containment="true"/>
+      </eClassifiers>
+      <eClassifiers xsi:type="ecore:EClass" name="DestinationConcept" eSuperTypes="#//element/Concept"/>
+      <eClassifiers xsi:type="ecore:EEnum" name="CONFIG_METHOD">
+        <eLiterals name="PROPERTIES"/>
+        <eLiterals name="REFERENCE" value="1"/>
+      </eClassifiers>
+      <eClassifiers xsi:type="ecore:EClass" name="DriverManager">
+        <eOperations name="registerDrivers">
+          <eParameters name="resourceDriverMap">
+            <eGenericType eClassifier="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EMap">
+              <eTypeArguments eClassifier="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+              <eTypeArguments eClassifier="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EMap">
+                <eTypeArguments eClassifier="#//service/channel/DRIVER_TYPE"/>
+                <eTypeArguments eClassifier="#//service/channel/DriverRegistration"/>
+              </eTypeArguments>
+            </eGenericType>
+          </eParameters>
+        </eOperations>
+        <eOperations name="getChannelDescriptor" eType="#//service/channel/ChannelDescriptor">
+          <eParameters name="driverType" eType="#//service/channel/DRIVER_TYPE"/>
+        </eOperations>
+        <eOperations name="getDriverTypes">
+          <eGenericType eClassifier="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EEList">
+            <eTypeArguments eClassifier="#//service/channel/DRIVER_TYPE"/>
+          </eGenericType>
+        </eOperations>
+        <eOperations name="getDestinationDescriptor" eType="#//service/channel/DestinationDescriptor">
+          <eParameters name="driverType" eType="#//service/channel/DRIVER_TYPE"/>
+        </eOperations>
+        <eOperations name="getVersion" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString">
+          <eParameters name="driverType" eType="#//service/channel/DRIVER_TYPE"/>
+        </eOperations>
+        <eOperations name="getDescription" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString">
+          <eParameters name="driverType" eType="#//service/channel/DRIVER_TYPE"/>
+        </eOperations>
+        <eOperations name="getLabel" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString">
+          <eParameters name="driverType" eType="#//service/channel/DRIVER_TYPE"/>
+        </eOperations>
+        <eOperations name="getAllowedResourceTypes" upperBound="-1" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString">
+          <eParameters name="driverType" eType="#//service/channel/DRIVER_TYPE"/>
+        </eOperations>
+        <eOperations name="getDestinationsSerializerClasses" upperBound="-1" eType="#//service/channel/SerializerInfo">
+          <eParameters name="driverType" eType="#//service/channel/DRIVER_TYPE"/>
+        </eOperations>
+        <eOperations name="getDefaultSerializer" eType="#//service/channel/SerializerInfo">
+          <eParameters name="driverType" eType="#//service/channel/DRIVER_TYPE"/>
+        </eOperations>
+        <eOperations name="getPropertyConfigurations" upperBound="-1" eType="#//service/channel/ChoiceConfiguration">
+          <eParameters name="driverType" eType="#//service/channel/DRIVER_TYPE"/>
+        </eOperations>
+        <eOperations name="getExtendedConfigurations" upperBound="-1" eType="#//service/channel/ChoiceConfiguration">
+          <eParameters name="driverType" eType="#//service/channel/DRIVER_TYPE"/>
+        </eOperations>
+        <eOperations name="getExtendedConfigurationForChoice" upperBound="-1" eType="#//service/channel/Choice">
+          <eParameters name="DRIVER_TYPE" eType="#//service/channel/DRIVER_TYPE"/>
+        </eOperations>
+      </eClassifiers>
+      <eClassifiers xsi:type="ecore:EClass" name="DriverRegistration">
+        <eStructuralFeatures xsi:type="ecore:EAttribute" name="label" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+        <eStructuralFeatures xsi:type="ecore:EAttribute" name="version" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+        <eStructuralFeatures xsi:type="ecore:EAttribute" name="description" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+        <eStructuralFeatures xsi:type="ecore:EReference" name="channelDescriptor"
+            eType="#//service/channel/ChannelDescriptor"/>
+        <eStructuralFeatures xsi:type="ecore:EReference" name="destinationDescriptor"
+            eType="#//service/channel/DestinationDescriptor"/>
+        <eStructuralFeatures xsi:type="ecore:EAttribute" name="resourcesAllowed" upperBound="-1"
+            eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+        <eStructuralFeatures xsi:type="ecore:EReference" name="serializerConfig" eType="#//service/channel/SerializerConfig"/>
+        <eStructuralFeatures xsi:type="ecore:EReference" name="choiceConfigurations"
+            upperBound="-1" eType="#//service/channel/ChoiceConfiguration"/>
+        <eStructuralFeatures xsi:type="ecore:EReference" name="extendedConfigurations"
+            upperBound="-1" eType="#//service/channel/ChoiceConfiguration"/>
+        <eStructuralFeatures xsi:type="ecore:EReference" name="driverType" eType="#//service/channel/DRIVER_TYPE"/>
+        <eStructuralFeatures xsi:type="ecore:EReference" name="choice" upperBound="-1"
+            eType="#//service/channel/Choice" containment="true"/>
+      </eClassifiers>
+      <eClassifiers xsi:type="ecore:EClass" name="SerializerConfig">
+        <eOperations name="getDefaultSerializer" eType="#//service/channel/SerializerInfo"/>
+        <eStructuralFeatures xsi:type="ecore:EAttribute" name="userDefined" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+        <eStructuralFeatures xsi:type="ecore:EReference" name="serializers" upperBound="-1"
+            eType="#//service/channel/SerializerInfo"/>
+      </eClassifiers>
+      <eClassifiers xsi:type="ecore:EClass" name="ChoiceConfiguration">
+        <eStructuralFeatures xsi:type="ecore:EAttribute" name="propertyName" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+        <eStructuralFeatures xsi:type="ecore:EAttribute" name="propertyParent" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+        <eStructuralFeatures xsi:type="ecore:EAttribute" name="configType" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+        <eStructuralFeatures xsi:type="ecore:EReference" name="choices" upperBound="-1"
+            eType="#//service/channel/Choice"/>
+        <eStructuralFeatures xsi:type="ecore:EAttribute" name="defaultValue" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EJavaObject"/>
+        <eStructuralFeatures xsi:type="ecore:EAttribute" name="displayName" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+      </eClassifiers>
+      <eClassifiers xsi:type="ecore:EClass" name="Choice">
+        <eStructuralFeatures xsi:type="ecore:EAttribute" name="displayedValue" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+        <eStructuralFeatures xsi:type="ecore:EAttribute" name="value" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+        <eStructuralFeatures xsi:type="ecore:EReference" name="extendedConfiguration"
+            upperBound="-1" eType="#//service/channel/ExtendedConfiguration" containment="true"/>
+      </eClassifiers>
+      <eClassifiers xsi:type="ecore:EClass" name="SerializerInfo">
+        <eStructuralFeatures xsi:type="ecore:EAttribute" name="serializerType" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+        <eStructuralFeatures xsi:type="ecore:EAttribute" name="serializerClass" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+        <eStructuralFeatures xsi:type="ecore:EAttribute" name="default" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+      </eClassifiers>
+      <eClassifiers xsi:type="ecore:EClass" name="ExtendedConfiguration">
+        <eStructuralFeatures xsi:type="ecore:EReference" name="properties" upperBound="-1"
+            eType="#//SimpleProperty" containment="true"/>
+      </eClassifiers>
+      <eClassifiers xsi:type="ecore:EClass" name="DestinationDescriptor" eSuperTypes="#//service/channel/PropertyDescriptorMap"/>
+      <eClassifiers xsi:type="ecore:EClass" name="ChannelDescriptor" eSuperTypes="#//service/channel/PropertyDescriptorMap">
+        <eStructuralFeatures xsi:type="ecore:EReference" name="destinationDescriptor"
+            eType="#//service/channel/DestinationDescriptor"/>
+      </eClassifiers>
+      <eClassifiers xsi:type="ecore:EClass" name="PropertyDescriptor">
+        <eStructuralFeatures xsi:type="ecore:EAttribute" name="defaultValue" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+        <eStructuralFeatures xsi:type="ecore:EAttribute" name="name" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+        <eStructuralFeatures xsi:type="ecore:EAttribute" name="pattern" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+        <eStructuralFeatures xsi:type="ecore:EAttribute" name="type" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+        <eStructuralFeatures xsi:type="ecore:EAttribute" name="mandatory" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"
+            defaultValueLiteral="false"/>
+        <eStructuralFeatures xsi:type="ecore:EAttribute" name="displayName" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+        <eStructuralFeatures xsi:type="ecore:EAttribute" name="gvToggle" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"
+            defaultValueLiteral="false"/>
+      </eClassifiers>
+      <eClassifiers xsi:type="ecore:EClass" name="PropertyDescriptorMapEntry">
+        <eStructuralFeatures xsi:type="ecore:EAttribute" name="key" lowerBound="1"
+            eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+        <eStructuralFeatures xsi:type="ecore:EReference" name="value" lowerBound="1"
+            eType="#//service/channel/PropertyDescriptor" containment="true"/>
+      </eClassifiers>
+      <eClassifiers xsi:type="ecore:EClass" name="PropertyDescriptorMap">
+        <eStructuralFeatures xsi:type="ecore:EReference" name="descriptors" upperBound="-1"
+            eType="#//service/channel/PropertyDescriptorMapEntry"/>
+      </eClassifiers>
+      <eClassifiers xsi:type="ecore:EClass" name="DRIVER_TYPE" abstract="true" interface="true">
+        <eOperations name="getName" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+        <eOperations name="getSharedResourceExtension" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+        <eOperations name="setName">
+          <eParameters name="driverTypeName" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+        </eOperations>
+        <eOperations name="setSharedResourceExtension">
+          <eParameters name="sharedResourceExtension" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+        </eOperations>
+      </eClassifiers>
+      <eClassifiers xsi:type="ecore:EClass" name="DriverTypeInfo" eSuperTypes="#//service/channel/DRIVER_TYPE">
+        <eStructuralFeatures xsi:type="ecore:EAttribute" name="driverTypeName" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+        <eStructuralFeatures xsi:type="ecore:EAttribute" name="sharedResourceExtension"
+            eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+      </eClassifiers>
+      <eClassifiers xsi:type="ecore:EClass" name="HttpChannelDriverConfig" eSuperTypes="#//service/channel/DriverConfig">
+        <eStructuralFeatures xsi:type="ecore:EReference" name="webApplicationDescriptors"
+            upperBound="-1" eType="#//service/channel/WebApplicationDescriptor" containment="true"/>
+      </eClassifiers>
+      <eClassifiers xsi:type="ecore:EClass" name="WebApplicationDescriptor">
+        <eStructuralFeatures xsi:type="ecore:EAttribute" name="contextURI" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+        <eStructuralFeatures xsi:type="ecore:EAttribute" name="webAppSourcePath" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+      </eClassifiers>
+    </eSubpackages>
+  </eSubpackages>
+  <eSubpackages name="rule" nsURI="http:///com/tibco/cep/designtime/core/model/rule"
+      nsPrefix="rule">
+    <eClassifiers xsi:type="ecore:EClass" name="ScopeContainer" abstract="true" interface="true">
+      <eStructuralFeatures xsi:type="ecore:EReference" name="symbols" eType="#//rule/Symbols"
+          containment="true"/>
+    </eClassifiers>
+    <eClassifiers xsi:type="ecore:EClass" name="Compilable" abstract="true" interface="true"
+        eSuperTypes="#//Entity #//rule/ScopeContainer">
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="compilationStatus" lowerBound="1"
+          eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EInt"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="returnType" lowerBound="1"
+          eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="fullSourceText" lowerBound="1"
+          eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"
+          transient="true"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="actionText" lowerBound="1"
+          eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="conditionText" lowerBound="1"
+          eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="rank" lowerBound="1"
+          eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eClassifiers>
+    <eClassifiers xsi:type="ecore:EClass" name="Rule" eSuperTypes="#//rule/Compilable">
+      <eOperations name="isEmpty" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+      <eOperations name="getRankRuleFunction" eType="#//rule/RuleFunction"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="priority" lowerBound="1"
+          eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EInt"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="maxRules" lowerBound="1"
+          eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EInt"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="testInterval" lowerBound="1"
+          eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//ELong"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="startTime" lowerBound="1"
+          eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//ELong"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="requeue" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="requeueVars" upperBound="-1"
+          eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="backwardChain" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="forwardChain" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="conditionFunction" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="function" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="author" lowerBound="1"
+          eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eClassifiers>
+    <eClassifiers xsi:type="ecore:EClass" name="RuleFunction" eSuperTypes="#//rule/Compilable">
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="validity" eType="#//rule/Validity"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="virtual" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="alias" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eClassifiers>
+    <eClassifiers xsi:type="ecore:EClass" name="RuleSet" eSuperTypes="#//Entity">
+      <eStructuralFeatures xsi:type="ecore:EReference" name="rules" upperBound="-1"
+          eType="#//rule/Rule"/>
+    </eClassifiers>
+    <eClassifiers xsi:type="ecore:EEnum" name="Validity">
+      <eLiterals name="ACTION"/>
+      <eLiterals name="CONDITION" value="1"/>
+      <eLiterals name="QUERY" value="2"/>
+    </eClassifiers>
+    <eClassifiers xsi:type="ecore:EClass" name="Symbol">
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="idName" lowerBound="1"
+          eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="type" lowerBound="1"
+          eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="typeExtension" lowerBound="1"
+          eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+      <eStructuralFeatures xsi:type="ecore:EReference" name="domain" eType="#//domain/Domain"
+          containment="true"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="array" lowerBound="1"
+          eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+    </eClassifiers>
+    <eClassifiers xsi:type="ecore:EClass" name="RuleFunctionSymbol" eSuperTypes="#//rule/Symbol">
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="direction" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"
+          defaultValueLiteral="IN"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="resourceType" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"
+          defaultValueLiteral="NULL"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="domainOverridden" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="graphicalPath" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="primitiveType" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"
+          defaultValueLiteral="NULL"/>
+    </eClassifiers>
+    <eClassifiers xsi:type="ecore:EClass" name="Symbols">
+      <eOperations name="getSymbolMap">
+        <eGenericType eClassifier="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EMap">
+          <eTypeArguments eClassifier="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+          <eTypeArguments eClassifier="#//rule/Symbol"/>
+        </eGenericType>
+      </eOperations>
+      <eStructuralFeatures xsi:type="ecore:EReference" name="symbolList" upperBound="-1"
+          eType="#//rule/Symbol" containment="true"/>
+    </eClassifiers>
+    <eClassifiers xsi:type="ecore:EClass" name="SymbolMapEntry" instanceClassName="java.util.Map$Entry">
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="key" lowerBound="1" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+      <eStructuralFeatures xsi:type="ecore:EReference" name="value" lowerBound="1"
+          eType="#//rule/Symbol" containment="true"/>
+    </eClassifiers>
+    <eClassifiers xsi:type="ecore:EClass" name="RuleTemplateSymbol" eSuperTypes="#//rule/Symbol">
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="expression" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"
+          defaultValueLiteral=""/>
+    </eClassifiers>
+    <eClassifiers xsi:type="ecore:EClass" name="ActionContextSymbol" eSuperTypes="#//rule/Symbol">
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="actionType" eType="#//rule/ActionType"
+          defaultValueLiteral="create"/>
+    </eClassifiers>
+    <eClassifiers xsi:type="ecore:EClass" name="RuleTemplate" eSuperTypes="#//rule/Rule">
+      <eStructuralFeatures xsi:type="ecore:EReference" name="bindings" upperBound="-1"
+          eType="#//rule/Binding" containment="true"/>
+      <eStructuralFeatures xsi:type="ecore:EReference" name="displayProperties" upperBound="-1"
+          eType="#//SimpleProperty" containment="true"/>
+      <eStructuralFeatures xsi:type="ecore:EReference" name="actionContext" lowerBound="1"
+          eType="#//rule/ActionContext" containment="true"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="views" upperBound="-1"
+          eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eClassifiers>
+    <eClassifiers xsi:type="ecore:EClass" name="ActionContext">
+      <eStructuralFeatures xsi:type="ecore:EReference" name="actionContextSymbols"
+          eType="#//rule/Symbols" containment="true"/>
+    </eClassifiers>
+    <eClassifiers xsi:type="ecore:EEnum" name="ActionType">
+      <eLiterals name="CREATE" literal="create"/>
+      <eLiterals name="MODIFY" value="1" literal="modify"/>
+      <eLiterals name="CALL" value="2" literal="call"/>
+    </eClassifiers>
+    <eClassifiers xsi:type="ecore:EClass" name="Binding" eSuperTypes="#//rule/Symbol">
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="expression" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"
+          defaultValueLiteral=""/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="domainModelPath" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"
+          defaultValueLiteral=""/>
+    </eClassifiers>
+    <eClassifiers xsi:type="ecore:EClass" name="RuleTemplateView" eSuperTypes="#//Entity">
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="ruleTemplatePath" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"
+          defaultValueLiteral=""/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="presentationText" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"
+          defaultValueLiteral=""/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="htmlFile" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"
+          defaultValueLiteral=""/>
+    </eClassifiers>
+    <eClassifiers xsi:type="ecore:EClass" name="XsltFunction" eSuperTypes="#//rule/RuleFunction"/>
+  </eSubpackages>
+  <eSubpackages name="states" nsURI="http:///com/tibco/cep/designtime/core/model/states"
+      nsPrefix="states">
+    <eClassifiers xsi:type="ecore:EClass" name="StateEntity" abstract="true" eSuperTypes="#//Entity">
+      <eStructuralFeatures xsi:type="ecore:EReference" name="ownerStateMachine" eType="#//states/StateMachine"
+          transient="true"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="ownerStateMachinePath"
+          eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+      <eStructuralFeatures xsi:type="ecore:EReference" name="parent" eType="#//states/StateEntity"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="timeout" lowerBound="1"
+          eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EInt"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="timeoutUnits" lowerBound="1"
+          eType="#//TIMEOUT_UNITS"/>
+    </eClassifiers>
+    <eClassifiers xsi:type="ecore:EClass" name="StateLink" eSuperTypes="#//states/StateEntity"/>
+    <eClassifiers xsi:type="ecore:EClass" name="StateAnnotationLink" eSuperTypes="#//states/StateLink">
+      <eStructuralFeatures xsi:type="ecore:EReference" name="toStateEntity" eType="#//states/StateEntity"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="fromAnnotation" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eClassifiers>
+    <eClassifiers xsi:type="ecore:EClass" name="StateTransition" eSuperTypes="#//states/StateLink">
+      <eStructuralFeatures xsi:type="ecore:EReference" name="toState" eType="#//states/State"/>
+      <eStructuralFeatures xsi:type="ecore:EReference" name="fromState" eType="#//states/State"/>
+      <eStructuralFeatures xsi:type="ecore:EReference" name="guardRule" eType="#//rule/Rule"
+          containment="true"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="lambda" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="fwdCorrelates" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="label" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eClassifiers>
+    <eClassifiers xsi:type="ecore:EClass" name="InternalStateTransition" eSuperTypes="#//states/StateTransition">
+      <eStructuralFeatures xsi:type="ecore:EReference" name="rule" eType="#//rule/Rule"/>
+      <eStructuralFeatures xsi:type="ecore:EReference" name="ownerState" eType="#//states/State"/>
+    </eClassifiers>
+    <eClassifiers xsi:type="ecore:EClass" name="StateMachine" eSuperTypes="#//states/StateComposite">
+      <eOperations name="getOwnerConcept" eType="#//element/Concept"/>
+      <eStructuralFeatures xsi:type="ecore:EReference" name="stateTransitions" upperBound="-1"
+          eType="#//states/StateTransition" containment="true"/>
+      <eStructuralFeatures xsi:type="ecore:EReference" name="annotationLinks" upperBound="-1"
+          eType="#//states/StateAnnotationLink" containment="true"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="fwdCorrelates" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="main" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="ownerConceptPath" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eClassifiers>
+    <eClassifiers xsi:type="ecore:EClass" name="StateVertex" eSuperTypes="#//states/StateEntity">
+      <eStructuralFeatures xsi:type="ecore:EReference" name="incomingTransitions"
+          upperBound="-1" eType="#//states/StateTransition"/>
+      <eStructuralFeatures xsi:type="ecore:EReference" name="outgoingTransitions"
+          upperBound="-1" eType="#//states/StateTransition"/>
+    </eClassifiers>
+    <eClassifiers xsi:type="ecore:EClass" name="State" eSuperTypes="#//states/StateVertex">
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="internalTransitionEnabled"
+          eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+      <eStructuralFeatures xsi:type="ecore:EReference" name="entryAction" eType="#//rule/Rule"
+          containment="true"/>
+      <eStructuralFeatures xsi:type="ecore:EReference" name="exitAction" eType="#//rule/Rule"
+          containment="true"/>
+      <eStructuralFeatures xsi:type="ecore:EReference" name="timeoutAction" eType="#//rule/Rule"
+          containment="true"/>
+      <eStructuralFeatures xsi:type="ecore:EReference" name="internalTransitionRule"
+          eType="#//rule/Rule" containment="true"/>
+      <eStructuralFeatures xsi:type="ecore:EReference" name="timeoutExpression" eType="#//rule/RuleFunction"
+          containment="true"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="timeoutStateGUID" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="timeoutTransitionGUID"
+          eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="timeoutPolicy" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EInt"/>
+      <eStructuralFeatures xsi:type="ecore:EReference" name="timeoutState" eType="#//states/State"/>
+    </eClassifiers>
+    <eClassifiers xsi:type="ecore:EClass" name="StateComposite" eSuperTypes="#//states/State">
+      <eOperations name="isRegion" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="timeoutComposite" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EInt"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="concurrentState" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+      <eStructuralFeatures xsi:type="ecore:EReference" name="regions" upperBound="-1"
+          eType="#//states/StateComposite" containment="true"/>
+      <eStructuralFeatures xsi:type="ecore:EReference" name="stateEntities" upperBound="-1"
+          eType="#//states/StateEntity" containment="true"/>
+    </eClassifiers>
+    <eClassifiers xsi:type="ecore:EClass" name="StateSubmachine" eSuperTypes="#//states/StateComposite">
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="URI" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="callExplicitly" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="preserveForwardCorrelation"
+          eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+    </eClassifiers>
+    <eClassifiers xsi:type="ecore:EClass" name="StateEnd" eSuperTypes="#//states/State"/>
+    <eClassifiers xsi:type="ecore:EClass" name="StateSimple" eSuperTypes="#//states/State"/>
+    <eClassifiers xsi:type="ecore:EClass" name="StateStart" eSuperTypes="#//states/State"/>
+    <eClassifiers xsi:type="ecore:EEnum" name="STATE_TIMEOUT_POLICY">
+      <eLiterals name="DeterministicStatePolicy" value="2"/>
+      <eLiterals name="NonDeterministicStatePolicy" value="1"/>
+      <eLiterals name="NoActionTimeoutPolicy"/>
+    </eClassifiers>
+  </eSubpackages>
+  <eSubpackages name="archive" nsURI="http:///com/tibco/cep/designtime/core/model/archive"
+      nsPrefix="archive">
+    <eClassifiers xsi:type="ecore:EEnum" name="BE_ARCHIVE_TYPE">
+      <eLiterals name="Inference"/>
+      <eLiterals name="Query" value="1"/>
+    </eClassifiers>
+    <eClassifiers xsi:type="ecore:EEnum" name="CACHE_MODE">
+      <eLiterals name="CacheAndMemory"/>
+      <eLiterals name="CacheOnly" value="1"/>
+      <eLiterals name="MemoryOnly" value="2"/>
+    </eClassifiers>
+    <eClassifiers xsi:type="ecore:EEnum" name="WORKERS">
+      <eLiterals name="SharedQueueAndThreads"/>
+      <eLiterals name="CallersThread" value="1"/>
+      <eLiterals name="one" value="2"/>
+      <eLiterals name="two" value="3"/>
+      <eLiterals name="three" value="4"/>
+      <eLiterals name="four" value="5"/>
+      <eLiterals name="five" value="6"/>
+      <eLiterals name="six" value="7"/>
+      <eLiterals name="seven" value="8"/>
+      <eLiterals name="eight" value="9"/>
+      <eLiterals name="nine" value="10"/>
+    </eClassifiers>
+    <eClassifiers xsi:type="ecore:EClass" name="ArchiveResource" abstract="true">
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="name" lowerBound="1"
+          eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="description" lowerBound="1"
+          eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="author" lowerBound="1"
+          eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eClassifiers>
+    <eClassifiers xsi:type="ecore:EClass" name="EnterpriseArchive" eSuperTypes="#//archive/ArchiveResource">
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="version" lowerBound="1"
+          eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="folder" lowerBound="1"
+          eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="ownerProjectName" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="fileLocation" lowerBound="1"
+          eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="includeGlobalVars" lowerBound="1"
+          eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+      <eStructuralFeatures xsi:type="ecore:EReference" name="businessEventsArchives"
+          upperBound="-1" eType="#//archive/BusinessEventsArchiveResource" containment="true"/>
+      <eStructuralFeatures xsi:type="ecore:EReference" name="sharedArchives" upperBound="-1"
+          eType="#//archive/SharedArchive" containment="true"/>
+      <eStructuralFeatures xsi:type="ecore:EReference" name="processArchives" upperBound="-1"
+          eType="#//archive/SharedArchive" containment="true"/>
+    </eClassifiers>
+    <eClassifiers xsi:type="ecore:EClass" name="BEArchiveResource" eSuperTypes="#//archive/ArchiveResource">
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="compileWithDebug" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="deleteTempFiles" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="compilePath" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="extraClassPath" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eClassifiers>
+    <eClassifiers xsi:type="ecore:EClass" name="BusinessEventsArchiveResource" eSuperTypes="#//archive/BEArchiveResource">
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="archiveType" eType="#//archive/BE_ARCHIVE_TYPE"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="allRuleSets" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="allDestinations" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="includedRuleSets" upperBound="-1"
+          eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="startupActions" upperBound="-1"
+          eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="shutdownActions" upperBound="-1"
+          eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+      <eStructuralFeatures xsi:type="ecore:EReference" name="inputDestinations" upperBound="-1"
+          eType="#//archive/InputDestination" containment="true"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="omCheckPtInterval" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EInt"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="omCacheSize" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EInt"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="omCheckPtOpsLimit" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EInt"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="omDeletePolicy" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="omNoRecovery" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="omDbEnvironmentDir" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="omtgGlobalCache" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="omtgCacheConfigFile"
+          eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+      <eStructuralFeatures xsi:type="ecore:EReference" name="advancedSettings" upperBound="-1"
+          eType="#//archive/AdvancedEntitySetting" containment="true"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="objectMgmtType" lowerBound="1"
+          eType="#//archive/OBJECT_MGMT_TYPE" defaultValueLiteral="InMemory"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="agentGroupName" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="cacheConfigType" eType="#//archive/CACHE_CONFIG_TYPE"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="omtgCustomRecoveryFactory"
+          eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eClassifiers>
+    <eClassifiers xsi:type="ecore:EClass" name="InputDestination">
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="destinationURI" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="preprocessor" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="default" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="enable" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="workers" eType="#//archive/WORKERS"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="queueSize" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EInt"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="threadAffinityRuleFunction"
+          eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eClassifiers>
+    <eClassifiers xsi:type="ecore:EClass" name="AdvancedEntitySetting">
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="entity" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="deployed" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="recoveryFunction" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="cacheMode" eType="#//archive/CACHE_MODE"/>
+    </eClassifiers>
+    <eClassifiers xsi:type="ecore:EClass" name="SharedArchive" eSuperTypes="#//archive/ArchiveResource">
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="sharedResources" upperBound="-1"
+          eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="sharedFiles" upperBound="-1"
+          eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="sharedJarFiles" upperBound="-1"
+          eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eClassifiers>
+    <eClassifiers xsi:type="ecore:EClass" name="ProcessArchive" eSuperTypes="#//archive/ArchiveResource"/>
+    <eClassifiers xsi:type="ecore:EClass" name="AdapterArchive" eSuperTypes="#//archive/ArchiveResource"/>
+    <eClassifiers xsi:type="ecore:EEnum" name="OBJECT_MGMT_TYPE">
+      <eLiterals name="InMemory"/>
+      <eLiterals name="Cache" value="1"/>
+      <eLiterals name="Persistence" value="2"/>
+    </eClassifiers>
+    <eClassifiers xsi:type="ecore:EEnum" name="CACHE_CONFIG_TYPE">
+      <eLiterals name="XMLResource"/>
+      <eLiterals name="File" value="1"/>
+    </eClassifiers>
+    <eSubpackages name="config" nsURI="http:///com/tibco/cep/designtime/core/model/archive/config"
+        nsPrefix="config">
+      <eClassifiers xsi:type="ecore:EClass" name="EngineConfig">
+        <eStructuralFeatures xsi:type="ecore:EReference" name="archives" lowerBound="1"
+            eType="#//archive/config/Archives" containment="true"/>
+        <eStructuralFeatures xsi:type="ecore:EReference" name="entityResources" lowerBound="1"
+            eType="#//archive/config/EntityResources" containment="true"/>
+      </eClassifiers>
+      <eClassifiers xsi:type="ecore:EClass" name="Archives">
+        <eStructuralFeatures xsi:type="ecore:EReference" name="beArchive" lowerBound="1"
+            upperBound="-1" eType="#//archive/BusinessEventsArchiveResource" containment="true"/>
+      </eClassifiers>
+      <eClassifiers xsi:type="ecore:EClass" name="EntityResources">
+        <eStructuralFeatures xsi:type="ecore:EReference" name="entity" upperBound="-1"
+            eType="#//Entity" containment="true"/>
+      </eClassifiers>
+    </eSubpackages>
+  </eSubpackages>
+  <eSubpackages name="domain" nsURI="http:///com/tibco/cep/designtime/core/model/domain"
+      nsPrefix="dm">
+    <eClassifiers xsi:type="ecore:EClass" name="Domain" eSuperTypes="#//Entity">
+      <eOperations name="getInstances" upperBound="-1" eType="#//domain/DomainInstance"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="id" lowerBound="1" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//ELong"/>
+      <eStructuralFeatures xsi:type="ecore:EReference" name="entries" upperBound="-1"
+          eType="#//domain/DomainEntry" containment="true"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="dataType" eType="#//DOMAIN_DATA_TYPES"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="superDomainPath" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+      <eStructuralFeatures xsi:type="ecore:EReference" name="superDomain" eType="#//domain/Domain"
+          transient="true"/>
+    </eClassifiers>
+    <eClassifiers xsi:type="ecore:EClass" name="DomainEntry" eSuperTypes="#//Comparable">
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="id" lowerBound="1" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+      <eStructuralFeatures xsi:type="ecore:EReference" name="parent" eType="#//domain/Domain"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="description" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="value" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eClassifiers>
+    <eClassifiers xsi:type="ecore:EClass" name="DomainInstance" eSuperTypes="#//element/BaseInstance">
+      <eOperations name="getLocalEntries" upperBound="-1" eType="#//domain/DomainEntry"/>
+      <eOperations name="getAllEntries" upperBound="-1" eType="#//domain/DomainEntry"/>
+      <eStructuralFeatures xsi:type="ecore:EReference" name="ownerProperty" eType="#//element/PropertyDefinition"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="GUID" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="ownerProjectName" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eClassifiers>
+    <eClassifiers xsi:type="ecore:EClass" name="Range" eSuperTypes="#//domain/DomainEntry">
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="lower" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="upper" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="lowerInclusive" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="upperInclusive" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+    </eClassifiers>
+    <eClassifiers xsi:type="ecore:EClass" name="Single" eSuperTypes="#//domain/DomainEntry"/>
+  </eSubpackages>
+  <eSubpackages name="validation" nsURI="http:///com/tibco/cep/designtime/core/model/validation"
+      nsPrefix="validation">
+    <eClassifiers xsi:type="ecore:EClass" name="ModelError">
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="message" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="warning" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+      <eStructuralFeatures xsi:type="ecore:EReference" name="source" eType="ecore:EClass http://www.eclipse.org/emf/2002/Ecore#//EObject"/>
+    </eClassifiers>
+  </eSubpackages>
+  <eSubpackages name="designtimelib" nsURI="http:///com/tibco/cep/designtime/core/model/designtimelib"
+      nsPrefix="designtimelib">
+    <eClassifiers xsi:type="ecore:EClass" name="DesignTimeLib">
+      <eStructuralFeatures xsi:type="ecore:EReference" name="designTimeLibEntry" upperBound="-1"
+          eType="#//designtimelib/DesignTimeLibEntry" containment="true"/>
+    </eClassifiers>
+    <eClassifiers xsi:type="ecore:EClass" name="DesignTimeLibEntry">
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="alias" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="location" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eClassifiers>
+  </eSubpackages>
+  <eSubpackages name="java" nsURI="http:///com/tibco/cep/designtime/core/model/java"
+      nsPrefix="java">
+    <eClassifiers xsi:type="ecore:EClass" name="JavaSource" eSuperTypes="#//Entity">
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="packageName" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"
+          defaultValueLiteral="null"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="fullSourceText" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EByteArray"
+          transient="true"/>
+    </eClassifiers>
+    <eClassifiers xsi:type="ecore:EClass" name="JavaResource" eSuperTypes="#//Entity">
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="packageName" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"
+          defaultValueLiteral="null"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="content" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EByteArray"
+          transient="true"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="extension" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eClassifiers>
+  </eSubpackages>
+</ecore:EPackage>

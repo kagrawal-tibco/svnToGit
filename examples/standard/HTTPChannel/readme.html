@@ -1,0 +1,136 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>     HTTPChannel
+
+- TIBCO BusinessEvents&reg; Examples
+</title>
+<meta http-equiv="Content-type" content="text/html; charset=iso-8859-1" />
+<meta http-equiv="Content-Language" content="en-us" />
+<link rel="Shortcut Icon" href="../../_resources/icon.gif" type="image/gif" />
+<style type="text/css" media="all">@import "../../_resources/examples.css";</style>
+<script type="text/javascript" src="../../_resources/examples.js" /></script>
+<script type="text/javascript">
+function buildForms() {
+ var form;
+
+
+ SendEventForm.setServer("http://localhost:8110");
+
+
+ form = SendEventForm.get("postEmployeeDetailsForm");
+ form.setDestinationPath("/Channels/HTTP/PostEmpl");
+ form.setEventPath("/Events/PostEmpl");
+ form.addProperty("EmplID", "14727");
+ form.addProperty("EmployeeName", "Shripad");
+ form.addProperty("CompanyName", "Tibco");
+ form.addProperty("Address", "3303 Hillview Avn");
+ form.addProperty("City", "Palo Alto");
+ form.addProperty("State", "CA");
+ form.addProperty("Zip", "94304");
+ form.build();
+
+
+ form = SendEventForm.get("getEmployeeDetails");
+ form.setDestinationPath("/Channels/HTTP/GetEmplInfo");
+ form.setEventPath("/Events/GetEmplInfo");
+ form.addProperty("EmplID", "14727");
+ form.build();
+
+
+}
+</script>
+</head>
+<body onLoad="buildForms()">
+
+
+<h1>HTTPChannel</h1>
+
+
+<h2>Purpose of This Example</h2>
+
+<p>This example shows you how to use the TIBCO BusinessEvents&reg; HTTP channel. HTTP post data and parameters are sent as event payloads, and HTTP headers are sent as event properties. For every request to the HTTP server, a response event must be sent, even if it is just an empty event.</p>
+
+<p>You will first send a PostEmpl event, with some employee details in the event payload. This event triggers the rule EmplRule. EmplRule creates an Employee concept with the details passed in the PostEmpl Event. You can then send a GetEmplInfo event to display the employee details on the console.</p>
+
+
+<h2>Instructions</h2>
+Before you begin, ensure that the EAR file you want to use is in the <i>BE_HOME</i>/examples/standard/HTTPChannel folder, where this readme is also stored.
+<ol>
+
+
+<li>
+<p>Open a command window and at the command prompt, start the TIBCO BusinessEvents engine using the following command. Substitute your actual value for <i>BE_HOME</i>.</p>
+
+<pre class="commands">
+cd <i>BE_HOME</i>/examples/standard/HTTPChannel
+<i>BE_HOME</i>/bin/be-engine --propFile <i>BE_HOME</i>\bin\be-engine.tra -u default -c HTTPChannel/HTTP.cdd HTTPChannel.ear
+</pre>
+
+<p>Adapt the command as needed, for example, if you have customized the example project, or are running it from a different directory.</p>
+</li>
+
+
+<li>
+<p>Create an Employee Event and give it a EmplID, Employee Name, Company name, Address, City, State, Zip. Enter, for example, 14727 in the Employee ID, "Shripad" in the Employee Name, "Tibco" in the Company Name, "3303 Hillview Avn" in the Address, "Palo Alto" in the City, "CA" in the state and "94304" in the zip. Repeat this step to create post multiple employee details, as desired.</p>
+
+<form id="postEmployeeDetailsForm"></form>
+
+<p>In the command window you see a message like this:
+<span class="logs">#### Employee concept is created for Employee ID 14727.</span></p>
+</li>
+
+
+<li>
+<p>Now get the employee details for particular employee ID. In the EmplId field, enter one of the employee IDs you specified above. Then click Send.</p>
+
+<form id="getEmployeeDetails"></form>
+
+<p>In the command window you see messages like this
+(the actual message depends on the Employee ID specified):</p>
+<td><span class="logs">#### Employee Details for Employee ID: 14727</td>
+<span class="logs">#### Name: Shripad</span>
+<span class="logs">#### Address: 3303 Hillview Avn</span>
+<span class="logs">#### City: Palo Alto</span>
+<span class="logs">#### State: CA</span>
+<span class="logs">#### Zip Code: 94304</span>
+</p>
+</li>
+
+
+<li>
+<p>Rules in the project react to various inputs depending on current facts in the Rete network. You can try the following.</p>
+
+<table>
+<tr>
+<th>Action</th>
+<th>Message</th>
+</tr>
+<tr>
+<td>In the /Events/PostEmpl form, enter the same Employee ID two times.</td>
+<td><pre class="logs">#### Employee Account already exists: </pre></td>
+</tr>
+<tr>
+<td>In the /Events/PostEmpl  form, enter a number 0 or below than 0.</td>
+<td><pre class="logs">#### Employee ID is not valid</pre></td>
+</tr>
+
+</table>
+</li>
+
+<li>
+<p> To reset the data, restart the engine at the command line.</p
+</li>
+
+</ol>
+
+
+
+<div class="footer">
+<p>TIBCO BusinessEvents&reg; 5.6<br />
+Copyright&copy; 2004-2019 TIBCO Software Inc. All rights reserved.</p>
+</div>
+</body>
+</html>

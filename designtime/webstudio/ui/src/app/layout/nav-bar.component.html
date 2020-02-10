@@ -1,0 +1,403 @@
+<div *ngIf='isTCEEnable'>
+		<div class='request-progress'>
+				<progressbar *ngIf='showProgress' [type]='"info"' [value]="requestProgress">
+				</progressbar>
+			</div>
+			<div id="globalNavBar">
+			
+			</div>
+			<div ui-view="" class="tc-global-header-container">
+				<div>
+					<i class="{{ isRtl() ? 'progress-label-rtl animated no-divider' : 'progress-label animated no-divider' }}" [class.fadeOut]='onGoingRequestsCnt <= 0' [class.flash]='onGoingRequestsCnt >= onGoingRequestThreshold*3'
+					 [class.infinite]='onGoingRequestsCnt >= onGoingRequestThreshold*3'>
+						<small>
+							<i class='fa fa-refresh fa-spin'></i>
+							{{onGoingRequestsCnt}}
+						</small>
+					</i>
+					<div *ngIf='isLoggedIn' class="tc-navigation-primary tce-sub-header">
+						<ul class="nav left-align">
+								<li class="nav-item">
+									<a class="nav-link" routerLinkActive='active' [routerLink]="['/workspace']">
+										<ng-container i18n>{{i18n('Workspace')}}</ng-container>
+									</a>
+								</li>
+								<li class="nav-item">
+									<a class="nav-link" routerLinkActive='active' [routerLink]="['/dashboard']">
+										<ng-container i18n>{{i18n('Dashboard')}}</ng-container>
+									</a>
+								</li>
+								<li class="nav-item">
+									<a class='nav-link' routerLinkActive='active' [routerLink]="['/settings']">
+										<ng-container i18n>{{i18n('Settings')}}</ng-container>
+									</a>
+								</li>
+								<li class="nav-item" *ngIf='showManagementLink'>
+									<a class='nav-link' routerLinkActive='active' [routerLink]="['/management']">
+										<ng-container i18n>{{i18n('Management')}}</ng-container>
+									</a>
+								</li>
+								<li class="nav-item">
+									<a class="nav-link webStudioBtn" routerLinkActive='' (click)="navigateToOrchestrator()">
+										<span style="color:white">Back to Home Page</span>
+										<i style="color:white" class="external-nav-link" aria-hidden="true"></i>
+									</a>
+								</li>
+							</ul>
+					</div>
+				</div>
+				<div class="tc-container-background">
+				</div>
+				<div class="tc-panel-background">
+				</div>
+				<div class="tc-panel-container">
+					<div class="tc-panel-body"></div>
+				</div>
+				<div class="alert-display">
+					<alert-display></alert-display>
+				</div>
+				<div class="{{ isRtl () ? 'drawer navbar-drawer-rtl' : 'drawer navbar-drawer' }}" [class.hide]='drawerHidden' [class.show-navbar-menu]='headerDrawerVisible' [class.hide-navbar-menu]='!headerDrawerVisible'>
+					<div id='ws-notifications' class='tsc-panel-container slide-in'>
+							<div>
+								<div id='dropdown-account' class='list-group'>
+									<div class='gnb-list-group-item profile-content'>
+										<div class='list-group'>
+											<div class='gnb-list-group-item list-row'>
+												<ul>
+													<li class='gnb-list-group-item list-row'>
+														<h3 class='ws-help-title'>TIBCO Cloud Events WebStudio Notifications</h3>
+													</li>
+													<li>
+														<notification-center></notification-center>
+													</li>
+												</ul>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					<div id='ws-help' class='tsc-panel-container slide-in'>
+						<div>
+							<div id='dropdown-account' class='list-group'>
+								<div class='gnb-list-group-item profile-content'>
+									<div class='list-group'>
+										<div class='gnb-list-group-item list-row'>
+											<ul>
+												<li class='gnb-list-group-item list-row'>
+													<h3 class='ws-help-title'>TIBCO Cloud Events WebStudio Help</h3>
+												</li>
+												<li>
+													<a href='/docs/index.html' target='_blank' id='help' class='clickable tsc-open-new-tab'>
+														<span class='profile-icon fa fa-question-circle fa-lg'></span> Help
+													</a>
+												</li>
+												<li *ngIf="!isTCEEnable" >
+													<a href='/WebStudio/apidoc' id='apidoc' class='clickable tsc-open-new-tab'>
+														<span class='profile-icon fa fa-info-circle fa-lg'></span> API Documentation
+													</a>
+												</li>
+											</ul>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+</div>
+<div *ngIf='!isTCEEnable'>
+		<div class='request-progress'>
+			<progressbar *ngIf='showProgress' [type]='"info"' [value]="requestProgress">
+			</progressbar>
+		</div>
+		<div ui-view="" class="tc-global-header-container">
+			<div class="tce-global-header tc-global-header">
+				<a class="{{ isRtl() ? 'webstudio-logo-rtl' : 'webstudio-logo' }}" href="" [routerLink]='["/"]'></a>
+				<i class="{{ isRtl() ? 'progress-label-rtl' : 'progress-label' }} animated no-divider" [class.fadeOut]='onGoingRequestsCnt <= 0' [class.flash]='onGoingRequestsCnt >= onGoingRequestThreshold*3'
+					[class.infinite]='onGoingRequestsCnt >= onGoingRequestThreshold*3'>
+					<small>
+						<i class='fa fa-refresh fa-spin'></i>
+						{{onGoingRequestsCnt}}
+					</small>
+				</i>
+				<div class="{{ isRtl() ? 'drawer tc-icon-trayrtl' : 'drawer tc-icon-tray' }}" style="width: 650px;">
+					<ul class="tc-global-header-nav">
+						<li *ngIf='isLoggedIn' (click)='toggleUserMenu($event)' id='user-menu-toggle' class="tc-header-nav-item profile"><span
+							 class="tc-profile-name">{{userName}}</span>
+							 <div *ngIf='this.showUserMenu' class="{{ isRtl() ? 'icon-user-menu-indicator-rtl' : 'icon-user-menu-indicator' }}"></div>
+						</li>
+						<!--li id='notification-toggle' class="tc-header-nav-item" *ngIf='isLoggedIn' (click)='toggleNotificationCenter($event)'
+						 class="tc-header-nav-item notifications">
+						 <div *ngIf='this.showNotificationCenter' class="icon-notification-indicator"></div>	
+						 <span class="label label-as-badge label-corner badge-info badge-pill notification-label" *ngIf='notifications.length > 0'>{{notifications.length}}
+							</span>
+						</li-->
+						<li id="help-menu-toggle" class="tc-header-nav-item help" [style.right]="isRtl() ? '10%' : '0'" (click)='toggleHelpMenu($event)'>
+							<div *ngIf='this.showHelp' class="{{ isRtl() ? 'icon-help-menu-indicator-rtl' : 'icon-help-menu-indicator' }}"></div>
+						</li>
+					</ul>
+				</div>
+				<div *ngIf='isLoggedIn' class="tc-navigation-primary tce-sub-header">
+					<ul class="nav left-align">
+						<li class="nav-item">
+							<a class="nav-link" routerLinkActive='active' [routerLink]="['/workspace']"><ng-container i18n>{{i18n('Workspace')}}</ng-container>
+							</a>
+						</li>
+						<li class="nav-item">
+							<a class="nav-link" routerLinkActive='active' [routerLink]="['/dashboard']"><ng-container i18n>{{i18n('Dashboard')}}</ng-container>
+							</a>
+						</li>
+						<li class="nav-item">
+							<a class='nav-link' routerLinkActive='active' [routerLink]="['/settings']"><ng-container i18n>{{i18n('Settings')}}</ng-container>
+							</a>
+						</li>
+						<li class="nav-item" *ngIf='showManagementLink'>
+							<a class='nav-link' routerLinkActive='active' [routerLink]="['/management']"><ng-container i18n>{{i18n('Management')}}</ng-container>
+							</a>
+						</li>
+					</ul>
+				</div>
+			</div>
+			<div class="tc-container-background">
+			</div>
+			<div class="tc-panel-background">
+			</div>
+			<div class="tc-panel-container">
+				<div class="tc-panel-body"></div>
+			</div>
+			<div class="alert-display">
+				<alert-display></alert-display>
+			</div>
+			<div class="dropdown-background fade-in" *ngIf='showNotificationCenter || showHelp || showUserMenu'></div>
+			<div (outsideClick)=	"this.toggleMenu($event)" class="drawer {{ isRtl() ? 'navbar-drawer-rtl' : 'navbar-drawer' }}" [class.hide]='drawerHidden' [class.show-navbar-menu]='headerDrawerVisible && !isRtl()' [class.hide-navbar-menu]='!headerDrawerVisible && !isRtl()' [class.show-navbar-menu-rtl]='headerDrawerVisible && isRtl()' [class.hide-navbar-menu-rtl]='!headerDrawerVisible && isRtl()'>
+				
+				<!--div *ngIf='isLoggedIn && showNotificationCenter' id='ws-notifications' class='tsc-panel-container slide-in'>
+						<div>
+							<div id='dropdown-account' class='list-group'>
+								<div class='gnb-list-group-item profile-content'>
+									<div class='list-group'>
+										<div class='gnb-list-group-item list-row'>
+											<ul>
+												<li class='gnb-list-group-item list-row'>
+													<h3 class='ws-help-title' i18n>{{i18n('Notifications')}}</h3>
+												</li>
+												<li>
+													<notification-center></notification-center>
+												</li>
+											</ul>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div-->
+				<div *ngIf='showHelp' id='ws-help' class='tsc-panel-container slide-in'>
+					<div>
+						<div id='dropdown-account' class='list-group'>
+							<div class='gnb-list-group-item profile-content'>
+								<div class='list-group'>
+									<div class='gnb-list-group-item list-row'>
+										<ul style="display: grid;">
+											<li class='gnb-list-group-item list-row'>
+												<h3 class='ws-help-title' i18n>{{i18n('Help')}}</h3>
+											</li>
+											<li class="menu-items">
+												<a href='https://docs.tibco.com/products/tibco-businessevents' target='_blank' id='help' class="clickable tsc-open-new-tab {{isRtl() ? 'pull-right' : 'pull-left'}}">
+													<span class='profile-icon fa fa-question-circle fa-lg'></span> <ng-container i18n>{{i18n('Help')}}</ng-container>
+												</a>
+											</li>
+											<li *ngIf="!isTCEEnable" class="menu-items">
+												<a href='/WebStudio/apidoc' id='apidoc' class="clickable tsc-open-new-tab {{isRtl() ? 'pull-right' : 'pull-left'}}">
+													<span class='profile-icon fa fa-info-circle fa-lg'></span> <ng-container i18n>{{i18n(' API Documentation')}}</ng-container>
+												</a>
+											</li>
+										</ul>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div *ngIf='isLoggedIn && showUserMenu' id='ws-user-menu' class='tsc-panel-container slide-in'>
+						<div>
+							<div id='dropdown-account' class='list-group'>
+								<div class='gnb-list-group-item profile-content'>
+									<div class='list-group'>
+										<div class='gnb-list-group-item list-row'>
+											<ul>
+													<li class='gnb-list-group-item list-row'>
+															<h3 class='ws-help-title' i18n>{{i18n('Profile')}}</h3>
+													</li>
+												<li class="menu-items {{isRtl() ? 'pull-right' : 'pull-left'}}">
+													<a id='logout' class='clickable' (click)='toggleUserMenu()' (click)='onLogout()'><i class="fa fa-sign-out fa-lg" aria-hidden="true"></i>
+														<ng-container i18n>{{i18n('Log Out')}}</ng-container>
+													</a>
+												</li>
+											</ul>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+			</div>
+		</div>
+</div>
+<!-- <div>
+    <div class="ams-header">
+      <div class="navbar-header pull-left">
+        <a class='navbar-brand ams-brand' [routerLink]='["/"]'>
+          <img class='ams-header-logo' src="{{productImage}}" alt="{{productName}}">i18n
+        </a>
+      </div>
+      <div *ngIf='showOldUIGotoButton && !isLoggedIn' class="oldUIWrapper">
+        <div class="anchorAsButton" (click)="loadOldUI();">Switch to Classic View</div>
+      </div>
+	      <ul class="nav justify-content-end"
+	        *ngIf="isLoggedIn"
+	      >
+	       <li class="nav-item active">
+	          <a
+	            class='nav-link animated no-divider'
+	            [class.fadeOut]='onGoingRequestsCnt <= 0'
+	            [class.flash]='onGoingRequestsCnt >= onGoingRequestThreshold*3'
+	            [class.infinite]='onGoingRequestsCnt >= onGoingRequestThreshold*3'
+	          >
+	            <small><i class='fa fa-refresh fa-spin'></i> 
+	            	{{lastCnt}}
+	            	{{rest.ongoingRequests | async}}
+	            </small>
+	          </a>
+	        </li>
+	        <li class="nav-item" *ngIf='showOldUIGotoButton'>
+	            <div class="nav-link oldUIWrapper">
+	              <div class="anchorAsButton" (click)="loadOldUI();">Switch to Classic View</div>
+	            </div>
+	        </li>
+	        <li class="nav-item">
+	          <a class='nav-link user-menu-header no-divider' id='user-menu-header'>
+	            {{ userName }}
+	          </a>
+	        </li>
+	       <li class="nav-item">
+	          <a 
+	            class='nav-link clickable' 
+	            [class.active]='showNotificationCenter'
+	            (click)='toggleNotificationCenter($event)'
+	            id='notification-toggle'
+	            >
+	              <i class='fa fa-bell-o fa-2x'></i>
+	          </a>
+              <span
+                class="label label-as-badge label-corner badge-info badge-pill notification-label"
+                *ngIf='notifications.length > 0'
+                >{{notifications.length}}</span>
+	        </li>
+	        <li class="nav-item">
+	          <a
+	            class="nav-link clickable"
+	            [class.active]='showUserMenu'
+	            (click)='toggleUserMenu($event)'
+	            id='user-menu-toggle'
+	            ><i class='fa fa-navicon fa-2x' ></i></a>
+	        </li>
+	      </ul>
+    </div>
+    <div
+      *ngIf='isLoggedIn && showNotificationCenter'
+      (outsideClick)='toggleNotificationCenter()'
+      (click)='$event.stopPropagation()'
+      class='notification-center'
+    >
+      <notification-center ></notification-center>
+    </div>
+    <div
+      *ngIf='isLoggedIn && showUserMenu'
+      (outsideClick)='toggleUserMenu()'
+      class='user-menu'
+    >
+      <div class='user-menu-routes'>
+        <div>
+            <a
+              class='clickable'
+              (click)='toggleUserMenu()'
+              [routerLink]="['/settings']"
+              ><i class="fa fa-cog fa-lg" aria-hidden="true"></i> Settings
+            </a>
+        </div>
+        <div *ngIf='showManagementLink'>
+            <a
+              class='clickable'
+              (click)='toggleUserMenu()'
+              [routerLink]="['/management']"
+              ><i class="fa fa-users" aria-hidden="true"></i> Management
+            </a>
+        </div>
+        <div>
+            <a
+              id='logout'
+              class='clickable'
+              (click)='toggleUserMenu()'
+              (click)='onLogout()' 
+              ><i class="fa fa-sign-out fa-lg" aria-hidden="true"></i> Log Out
+            </a>
+        </div>
+        <div class='divider' role='separator'></div>
+        <div>
+            <a
+              id='help'
+              class='clickable'
+              (click)='toggleUserMenu()'
+              (click)='onHelp()' 
+              ><i class="fa fa-question-circle fa-lg" aria-hidden="true"></i> Help 
+              <i class="fa fa-external-link fa-lg" aria-hidden="true"></i>
+            </a>
+        </div>
+        <div>
+            <a
+              id='apidoc'
+              class='clickable'
+              (click)='toggleUserMenu()'
+              (click)='onAPIDoc()' 
+              ><i class="fa fa-info-circle fa-lg" aria-hidden="true"></i> API Documentation 
+              <i class="fa fa-external-link fa-lg" aria-hidden="true"></i>
+            </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="ams-navbar" *ngIf='isLoggedIn'>
+	      <ul class="nav">
+	        <li class="nav-item">
+	          <a class="nav-link"
+	            routerLinkActive='ams-nav-active'
+	            [routerLink]="['/workspace']">Workspace
+	          </a>
+	        </li>
+	        <li class="nav-item">
+	          <a
+	            class="last-nav nav-link"
+	            routerLinkActive='ams-nav-active'
+	            [routerLink]="['/dashboard']">Dashboard
+	          </a>
+	        </li>
+	      </ul>
+    </div>
+    <div class="alert-display">
+      <alert-display></alert-display>
+    </div>
+    <div class='main-body' [style.max-height.px]='bodyMaxHeight'>
+      <div id="main-body" class='content'>
+        <router-outlet></router-outlet>
+      </div>
+    </div>
+    <div class='ams-footer'>
+      <div class='ams-footer-content'>
+        <img class='ams-footer-logo'src="assets/img/ams-footer-logo.png" alt="TIBCO"> 
+        <span class='copyright'>TIBCO {{productName}} Copyright © {{copyRightYear}} TIBCO Software Inc. All rights reserved. Proprietary and Confidential.</span>
+        <span class='pull-right build-info'> {{buildInfo}} | {{buildTimestamp}}</span>
+      </div>
+    </div>
+  </div> -->

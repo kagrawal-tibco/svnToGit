@@ -1,0 +1,25 @@
+/**
+ * @description 
+ */
+void rulefunction Rule_Functions.Callback {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object asyncContext;
+	}
+	body {
+		Instance.newInstance("/Concepts/CreditCardApplication", null);
+		Instance.createInstance("xslt://{{/Concepts/Applicant}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" version=\"2.0\" exclude-result-prefixes=\"xsl xsd\"><xsl:output method=\"xml\"/><xsl:template name=\"Function\" match=\"/\"><createObject><object><Name><xsl:value-of select=\"&quot;John Doe&quot;\"/></Name><Age><xsl:value-of select=\"25\"/></Age><Income><xsl:value-of select=\"1100\"/></Income><CreditScore><xsl:value-of select=\"650\"/></CreditScore></object></createObject></xsl:template></xsl:stylesheet>");
+		Instance.newInstance("/Concepts/CreditCard", null);
+		
+		ApplicationReceived appReceived = Event.createEvent("xslt://{{/Events/ApplicationReceived}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" version=\"1.0\" exclude-result-prefixes=\"xsl xsd\">\n    <xsl:output method=\"xml\"/>\n    <xsl:template match=\"/\">\n        <createEvent>\n            <event>\n                <xsl:attribute name=\"extId\">\n                    <xsl:value-of select=\"&quot;appReceived&quot;\"/>\n                </xsl:attribute>\n                <ApplicantName>\n                    <xsl:value-of select=\"&quot;John Doe&quot;\"/>\n                </ApplicantName>\n            </event>\n        </createEvent>\n    </xsl:template>\n</xsl:stylesheet>");
+		Event.assertEvent(appReceived);
+		
+		System.debugOut("Application Request successfully Received !!");
+		
+		Object httpResponse = HTTP.Servlet.getServletResponse(asyncContext);
+		HTTP.Servlet.Response.setResponseStatusCode(httpResponse, 200);
+		HTTP.Servlet.Response.setResponseContent(asyncContext, "Application Request successfully Queued !!", true);		
+	}
+}

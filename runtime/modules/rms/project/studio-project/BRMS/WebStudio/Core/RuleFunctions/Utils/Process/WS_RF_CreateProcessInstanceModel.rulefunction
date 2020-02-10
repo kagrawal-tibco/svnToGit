@@ -1,0 +1,36 @@
+/**
+ * @description 
+ */
+Concept rulefunction WebStudio.Core.RuleFunctions.Utils.Process.WS_RF_CreateProcessInstanceModel {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String username;
+		String projectName;
+		String artifactContent;
+		String artifactType; 
+		
+		WebStudio.Core.Concepts.Process.WS_C_ProcessUserArtifact processUserArtifact;
+		String contentType;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.Process.WS_RF_CreateProcessInstanceModel");
+		
+		boolean isXML = String.equals(contentType, System.getGlobalVariableAsString("WebStudio/CONTENT_TYPE/XML", "application/xml"));
+		String updatedArtifactContent = WS.Common.checkAndReplaceKeywords(artifactContent, true, isXML);
+		
+		WS_C_ProcessView processView = null;
+		if (isXML) {
+			processView = Instance.
+					createTransientInstanceFromXML("/WebStudio/Core/Concepts/Process/WS_C_ProcessView", updatedArtifactContent);
+		} else {
+			processView = Instance.
+					createTransientInstanceFromJSON("/WebStudio/Core/Concepts/Process/WS_C_ProcessView", updatedArtifactContent);
+		}
+		WS.Common.setExtId(processView, "PROCESS_" + WS.Common.generateUUID());
+		Log.log(LOGGER, "Debug", "Transient instance of ProcessView [%s] from content [%s]", processView, updatedArtifactContent);
+					
+		return processView;
+	}
+}

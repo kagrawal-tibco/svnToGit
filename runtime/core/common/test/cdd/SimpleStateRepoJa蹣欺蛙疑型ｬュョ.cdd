@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<cdd:cluster xmlns:cdd="http://tibco.com/businessevents/configuration/5.1">
+    <cdd:revision>
+        <cdd:version>3</cdd:version>
+        <cdd:author>Administrator</cdd:author>
+        <cdd:date>2010/04/06 07:45:31</cdd:date>
+        <cdd:comment>蹣欺蛙疑型ｬュョ</cdd:comment>
+    </cdd:revision>
+    <cdd:name>SimpleStateRepoJa蹣欺蛙疑型ｬュョ</cdd:name>
+    <cdd:message-encoding>UTF-8</cdd:message-encoding>
+    <cdd:object-management>
+        <cdd:memory-manager/>
+    </cdd:object-management>
+    <cdd:rulesets>
+        <cdd:rules id="all-rules">
+            <cdd:uri>/</cdd:uri>
+        </cdd:rules>
+    </cdd:rulesets>
+    <cdd:function-groups>
+        <cdd:functions id="all-functions">
+            <cdd:uri>/</cdd:uri>
+        </cdd:functions>
+    </cdd:function-groups>
+    <cdd:destination-groups/>
+    <cdd:log-configs>
+        <cdd:log-config id="logConfig">
+            <cdd:enabled>true</cdd:enabled>
+            <cdd:roles>*:info</cdd:roles>
+            <cdd:files>
+                <cdd:enabled>true</cdd:enabled>
+                <cdd:dir>logs</cdd:dir>
+                <cdd:name/>
+                <cdd:max-number>10</cdd:max-number>
+                <cdd:max-size>5000000</cdd:max-size>
+                <cdd:append>true</cdd:append>
+            </cdd:files>
+            <cdd:terminal>
+                <cdd:enabled/>
+                <cdd:sys-err-redirect/>
+                <cdd:sys-out-redirect/>
+            </cdd:terminal>
+            <cdd:line-layout>
+                <cdd:enabled>false</cdd:enabled>
+                <cdd:class/>
+                <cdd:arg/>
+            </cdd:line-layout>
+        </cdd:log-config>
+    </cdd:log-configs>
+    <cdd:agent-classes>
+        <cdd:inference-agent-class id="inference-class">
+            <cdd:rules>
+                <cdd:ref>all-rules</cdd:ref>
+            </cdd:rules>
+            <cdd:destinations>
+                <cdd:destination id="Orders蹣欺蛙疑型ｬュョ_2477D0BD">
+                    <cdd:pre-processor/>
+                    <cdd:queue-size/>
+                    <cdd:thread-count/>
+                    <cdd:threading-model>shared-queue</cdd:threading-model>
+                    <cdd:uri>/Channels/JMSChan蹣欺蛙疑型ｬュョ/Orders蹣欺蛙疑型ｬュョ</cdd:uri>
+                </cdd:destination>
+            </cdd:destinations>
+            <cdd:startup/>
+            <cdd:shutdown/>
+            <cdd:local-cache>
+                <cdd:eviction>
+                    <cdd:max-size/>
+                    <cdd:max-time/>
+                </cdd:eviction>
+            </cdd:local-cache>
+            <cdd:concurrent-rtc>false</cdd:concurrent-rtc>
+            <cdd:property-group/>
+        </cdd:inference-agent-class>
+    </cdd:agent-classes>
+    <cdd:processing-units>
+        <cdd:processing-unit id="default">
+            <cdd:agents>
+                <cdd:agent>
+                    <cdd:ref>inference-class</cdd:ref>
+                    <cdd:key/>
+                    <cdd:priority/>
+                </cdd:agent>
+            </cdd:agents>
+            <cdd:logs>logConfig</cdd:logs>
+            <cdd:property-group>
+                <cdd:property-group comment="" name="com.sun.management.jmxremote">
+                    <cdd:property name="com.sun.management.jmxremote" type="boolean" value="true"/>
+                    <cdd:property name="com.sun.management.jmxremote.ssl" type="boolean" value="true"/>
+                    <cdd:property name="com.sun.management.jmxremote.port" type="integer" value="5560"/>
+                    <cdd:property name="com.sun.management.jmxremote.authenticate" type="boolean" value="false"/>
+                </cdd:property-group>
+            </cdd:property-group>
+        </cdd:processing-unit>
+    </cdd:processing-units>
+    <cdd:property-group/>
+</cdd:cluster>

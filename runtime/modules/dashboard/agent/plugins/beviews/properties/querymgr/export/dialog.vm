@@ -1,0 +1,81 @@
+#if ($exporttype == "csv")
+	#set ($csvchecked = "checked")
+	#set ($xmlchecked = "")
+#elseif ($exporttype == "csv")
+	#set ($csvchecked = "")
+	#set ($xmlchecked = "checked")
+#else 
+	#set ($csvchecked = "")
+	#set ($xmlchecked = "")
+#end
+#if ($exportincludesystemfields == true)
+	#set ($includesystemfieldschecked = "checked")
+#else 
+	#set ($includesystemfieldschecked = "")	
+#end
+<table border="0" cellspacing="0" cellpadding="0" width="100%" height="100%">
+	<tr height="90px">
+		<td id="contentpanel" align="center" class="exportpnl" colspan="3">
+			<table border="0" cellspacing="0" cellpadding="0" width="90%">
+				<form id="fileinputform" method="get" name="fileinputform" action="$exportURL" onsubmit="return false;">
+				    <input type="hidden" name="mode" value="csv">
+					<tr>
+						<td>
+							<table border="0" cellspacing="0" cellpadding="0" width="100%">
+								<tr>
+									<td colspan="2" align="left" class="inputlabel">Export Results As</td>
+								</tr>
+								<tr><td colspan="2">&nbsp</td></tr>
+								<tr>
+									<td>
+										<input type="radio" name="exporttype" value="csv" $csvchecked onClick="chooseMode('csv')"/>&nbsp<font class="inputlabel">CSV</font></input>
+									</td>
+									<td>
+										<input type="radio" name="exporttype" value="xml" $xmlchecked onClick="chooseMode('xml')"/>&nbsp<font class="inputlabel">XML</font></input>
+									</td>
+								</tr>
+								<tr><td colspan="2">&nbsp</td></tr>
+								<tr>
+									<td align="left" class="inputlabel">Depth</td>
+									<td align="left">
+										<input type="text" id="exportdepth" name="exportdepth" style="width:200px" value="$exportdepth"></input>
+									</td>
+								</tr>
+								<tr>
+									<td align="left" class="inputlabel">Per Type Count</td>
+									<td align="left">
+										<input type="text" id="exporttypecount" name="exporttypecount" style="width:200px" value="$exporttypecount"></input>
+									</td>
+								</tr>
+								<tr>
+									<td align="left" class="inputlabel">Overall Count</td>
+									<td align="left">
+										<input type="text" id="exportallcount" name="exportallcount" style="width:200px" value="$exportallcount"></input>
+									</td>
+								</tr>
+								<tr>
+									<td align="left" class="inputlabel">Include System Field(s)</td>
+									<td align="left">
+										<input type="checkbox" id="exportincludesystemfields" name="exportincludesystemfields" value="true" $includesystemfieldschecked></input>
+									</td>
+								</tr>
+								<tr><td colspan="2">&nbsp</td></tr>								
+							</table>
+						</td>
+					</tr>
+				</form>
+			</table>
+		</td>
+	</tr>
+    <tr id="buttonPanel" class="exportbtnpnl">
+        <td valign="middle">
+            <a class="button" href="#" onclick="this.blur();okClicked();" style="width:100px"><span>Ok</span></a>
+        </td>
+        <td>    
+            <a class="button" href="#" onclick="this.blur();cancelClicked();" style="width:100px"><span>Cancel</span></a>
+        </td>
+        <td width="100%">
+            &nbsp;
+        </td>
+    </tr>    
+</table>

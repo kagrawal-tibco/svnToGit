@@ -1,0 +1,32 @@
+/**
+ * @description 
+ * @author WsdlImport
+ */
+rule MathOpsService.MathOps.Rules.MathOps.Multiply {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		MathOpsService.MathOps.Events.MultiplyRequestMsg	soapeventin;
+		
+	}
+	when {
+		
+	}
+	then {
+		Log.log(Log.getLogger("SOAP"), "info", "Operation: %s", "Multiply");
+		double a = XPath.evalAsDouble("xpath://<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xpath>\n    <expr>$soapeventin/payload/tns3:message/tns1:Envelope/tns1:Body/tns:MathOpsRequest/a</expr>\n    <namespaces>\n        <namespace URI=\"http://schemas.xmlsoap.org/soap/envelope/\" pfx=\"tns1\"/>\n        <namespace URI=\"www.tibco.com/be/ontology/MathOpsService/MathOps/Events/AddRequestMsg\" pfx=\"tns2\"/>\n        <namespace URI=\"www.tibco.com/be/ontology/MathOpsService/MathOps/Events/MultiplyRequestMsg\" pfx=\"tns3\"/>\n        <namespace URI=\"http://www.tibco.com/TNT/webservices/\" pfx=\"tns\"/>\n        <namespace URI=\"http://www.w3.org/2001/XMLSchema\" pfx=\"xsd\"/>\n    </namespaces>\n    <variables>\n        <variable>soapeventin</variable>\n    </variables>\n</xpath>");
+		double b = XPath.evalAsDouble("xpath://<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xpath>\n    <expr>$soapeventin/payload/tns3:message/tns1:Envelope/tns1:Body/tns:MathOpsRequest/b</expr>\n    <namespaces>\n        <namespace URI=\"http://schemas.xmlsoap.org/soap/envelope/\" pfx=\"tns1\"/>\n        <namespace URI=\"www.tibco.com/be/ontology/MathOpsService/MathOps/Events/AddRequestMsg\" pfx=\"tns2\"/>\n        <namespace URI=\"www.tibco.com/be/ontology/MathOpsService/MathOps/Events/MultiplyRequestMsg\" pfx=\"tns3\"/>\n        <namespace URI=\"http://www.tibco.com/TNT/webservices/\" pfx=\"tns\"/>\n        <namespace URI=\"http://www.w3.org/2001/XMLSchema\" pfx=\"xsd\"/>\n    </namespaces>\n    <variables>\n        <variable>soapeventin</variable>\n    </variables>\n</xpath>");		Event reply = Event.createEvent("xslt://{{/MathOpsService/MathOps/Events/AddResponseMsg}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:ns1=\"www.tibco.com/be/ontology/MathOpsService/MathOps/Events/AddResponseMsg\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" xmlns:ns=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" version=\"1.0\" exclude-result-prefixes=\"xsl xsd\"><xsl:output method=\"xml\"/><xsl:param name=\"soapeventin\"/><xsl:template match=\"/\"><createEvent><event><xsl:if test=\"$soapeventin/JMSCorrelationID\"><JMSCorrelationID><xsl:value-of select=\"$soapeventin/JMSCorrelationID\"/></JMSCorrelationID></xsl:if><payload><ns1:message><ns:Envelope><ns:Body><ns:Fault><faultcode><xsl:value-of select=\"\'SOAP-ENV:Server\'\"/></faultcode><faultstring><xsl:value-of select=\"\'Not implemented: Add\'\"/></faultstring></ns:Fault></ns:Body></ns:Envelope></ns1:message></payload></event></createEvent></xsl:template>\n</xsl:stylesheet>");
+		double result = a * b;
+		Log.log(Log.getLogger("SOAP"), "info", "SOAP request payload");
+		Log.log(Log.getLogger("SOAP"), "info", soapeventin@payload);
+		Log.log(Log.getLogger("SOAP"), "info", "Multiply Input: (a = %f) and (b = %f)", a, b);
+		Log.log(Log.getLogger("SOAP"), "info", "Multiply Result: (a * b  = %f)", result);
+		MathOpsService.MathOps.Events.MultiplyResponseMsg soapeventout = Event.createEvent("xslt://{{/MathOpsService/MathOps/Events/MultiplyResponseMsg}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" xmlns:tns=\"www.tibco.com/be/ontology/MathOpsService/MathOps/Events/MultiplyResponseMsg\" xmlns:tns1=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:tns2=\"http://www.tibco.com/TNT/webservices/\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" version=\"2.0\"><xsl:param name=\"result\"/><xsl:template name=\"Function\" match=\"/\"><createEvent><event><payload><tns:message><tns1:Envelope><tns1:Body><tns2:MathOpsResponse><result><xsl:value-of select=\"xsd:float($result)\"/></result></tns2:MathOpsResponse></tns1:Body></tns1:Envelope></tns:message></payload></event></createEvent></xsl:template></xsl:stylesheet>");
+		Log.log(Log.getLogger("SOAP"), "info", "SOAP response payload");
+		Log.log(Log.getLogger("SOAP"), "info", soapeventout@payload);
+		Event.replyEvent(soapeventin, soapeventout);
+		Event.consumeEvent(soapeventin);
+	}
+}

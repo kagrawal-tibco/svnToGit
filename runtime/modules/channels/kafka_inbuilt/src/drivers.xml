@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<drivers>
+	<driver>
+        <type>Kafka</type>
+        <label>Kafka</label>
+        <class>com.tibco.cep.driver.kafka.KafkaDriver</class>
+        <description>Apache Kafka is an open-source message broker project developed by the Apache Software Foundation written in Scala. The project aims to provide a unified, high-throughput, low-latency platform for handling real-time data feeds.</description>
+        <version>1.0.0.0</version>
+        <properties>
+            <property name="kafka.broker.urls" displayName="Kafka Broker URLs" type="String" default="localhost:9092" mandatory="true" gvToggle="true" />
+            <property name="kafka.security.protocol" displayName="Security Protocol" type="String" default="PLAINTEXT" mandatory="true" gvToggle="true" />
+            <property name="kafka.sasl.mechanism" displayName="SASL mechanism" type="String" default="PLAIN" mandatory="false" gvToggle="true" />
+			<property name="kafka.trusted.certs.folder" displayName="Trusted Certificates Folder" type="String" default="" mandatory="false" gvToggle="false" />
+            <property name="kafka.keystore.identity" displayName="KeyStore Identity" type="String" default="" mandatory="false" gvToggle="false" />
+            <property name="kafka.truststore.password" displayName="TrustStore Password" type="String" default="" mandatory="false" gvToggle="false" />
+        </properties>
+        <destinations>
+        	<property name="IncludeEventType" displayName="Include Event Type" type="String" default="ALWAYS" mandatory="true" gvToggle="true" />
+	        <property name="topic.name" displayName="Topic Name" type="String" default="be_kafka_topic" mandatory="true" gvToggle="true" />
+        	<property name="group.id" displayName="Group ID" type="String" default="be_group" gvToggle="true" />
+            <property name="client.id" displayName="Client ID" type="String" default="" gvToggle="true" />
+            <property name="consumer.threads" displayName="Consumer Threads" type="Integer" default="1" gvToggle="true" />
+            <property name="heartbeat.interval.msec" displayName="Heartbeat Interval(msec)" type="Integer" default="3000" gvToggle="true" />
+            <property name="session.timeout.msec" displayName="Session Timeout(msec)" type="Integer" default="30000" gvToggle="true" />
+            <property name="enable.autocommit" displayName="Enable AutoCommit" type="Boolean" default="true"  gvToggle="true" />
+            <property name="autocommit.interval" displayName="AutoCommit Interval(msec)" type="Integer" default="5000" gvToggle="true" />
+            <property name="sync.sender" displayName="Sync Sender" type="Boolean" default="false" gvToggle="true" />
+            <property name="sync.sender.max.wait" displayName="Sync Sender Max wait(msec)" type="Integer" default="30000" gvToggle="true" />
+            <property name="compression.type" displayName="Compression Type" type="String" default="none" gvToggle="true" />
+            <property name="message.key.rf" displayName="Send Message Key (RuleFunction)" type="String" default="" gvToggle="true" />
+        </destinations>
+        <serializers userdefined="true">
+            <serializer type="String" class="com.tibco.cep.driver.kafka.serializer.KafkaMapSerializer"/>
+            <serializer type="String" class="com.tibco.cep.driver.kafka.serializer.KafkaJsonSerializer"/>
+            <serializer type="String" class="com.tibco.cep.driver.kafka.serializer.KafkaXmlSerializer"/>
+        </serializers>
+        
+        <!-- Define combo-boxes etc that are referred to in destination properties. -->
+        <configuration>
+        	<property>
+                <name>IncludeEventType</name>
+                <parent>destination</parent>
+                <type>combo-box</type>
+                <choices default="ALWAYS">
+                    <choice displayed="When Serializing and Deserializing" value="ALWAYS" />
+                    <choice displayed="Only when Serializing" value="ON_SERIALIZE" />
+                    <choice displayed="Only when Deserializing" value="ON_DESERIALIZE" />
+                    <choice displayed="Never" value="NEVER" />
+                </choices>
+            </property>
+        	<property>
+	            <name>compression.type</name>
+	            <parent>destination</parent>
+	            <type>combo-box</type>
+	            <choices >
+	                <choice displayed="none" value="none" />
+	                <choice displayed="gzip" value="gzip" />
+	                <choice displayed="snappy" value="snappy" />
+	                <choice displayed="lz4" value="lz4" />
+	            </choices>
+            </property>
+            <property>
+	            <name>kafka.security.protocol</name>
+	            <parent>destination</parent>
+	            <type>combo-box</type>
+	            <choices >
+	                <choice displayed="PLAINTEXT" value="PLAINTEXT" />
+	                <choice displayed="SASL_PLAINTEXT" value="SASL_PLAINTEXT" />
+	                <choice displayed="SSL" value="SSL" />
+	                <choice displayed="SASL_SSL" value="SASL_SSL" />
+	            </choices>
+            </property>
+            <property>
+	            <name>kafka.sasl.mechanism</name>
+	            <parent>destination</parent>
+	            <type>combo-box</type>
+	            <choices >
+	                <choice displayed="PLAIN" value="PLAIN" />
+	                <choice displayed="GSSAPI" value="GSSAPI" />
+	                <choice displayed="SCRAM-SHA-256" value="SCRAM-SHA-256" />
+	                <choice displayed="SCRAM-SHA-512" value="SCRAM-SHA-512" />
+	            </choices>
+            </property>
+        </configuration>
+    </driver>
+</drivers>

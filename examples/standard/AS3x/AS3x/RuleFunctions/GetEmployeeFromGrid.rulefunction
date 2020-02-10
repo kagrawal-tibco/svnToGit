@@ -1,0 +1,26 @@
+/**
+ * @description 
+ */
+void rulefunction RuleFunctions.GetEmployeeFromGrid {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Events.GetEmployee getEmployee;
+	}
+	body {
+		String asURL = "http://localhost:5055";
+		
+		String containerName = "Employee";
+		
+		Store.open(asURL, containerName);
+
+		Concepts.Employee resultEmp = Store.get(asURL, containerName, CreateEmployeeForGet(getEmployee));
+		
+		System.debugOut("Gettting Employee Concept with EmpId["+ getEmployee.empId + "], Details...\n" + GetEmployeeContent(resultEmp));
+		
+		Store.close(asURL, containerName);
+		
+		Event.replyEvent(getEmployee, getEmployee);
+	}
+}

@@ -1,0 +1,52 @@
+package com.tibco.rta.service.transport.http.tomcat;
+
+import com.tibco.rta.service.rs.SPMRestApplication;
+import com.tibco.rta.service.rs.SPMRestServlet;
+import com.tibco.rta.service.rs.tomcat.SPMRestAsyncServlet;
+import com.tibco.rta.service.transport.rest.RESTServiceEndpoints;
+import org.apache.catalina.core.StandardContext;
+
+import java.util.Properties;
+
+/**
+ * Created by IntelliJ IDEA.
+ * User: aathalye
+ * Date: 19/2/14
+ * Time: 2:44 PM
+ *
+ * REST based implementation of {@link com.tibco.rta.service.transport.TransportService}
+ * to allow REST servlets and properties to be injected.
+ */
+public class RESTTransportService extends DefaultHTTPTransportService {
+
+    @Override
+    public void init(Properties configuration) throws Exception {
+        super.init(configuration);
+    }
+
+    @Override
+    protected void setUpContext(String docBase) {
+        rootContext = (StandardContext) tomcat.addContext("/spm", docBase);
+        rootContext.addApplicationListener("org.jboss.resteasy.plugins.server.servlet.ResteasyBootstrap");
+
+        addWrapper("service", SPMRestServlet.class.getName(), -1, true);
+        addWrapper("push", SPMRestAsyncServlet.class.getName(), -1, true);
+
+        rootContext.addParameter("javax.ws.rs.Application", SPMRestApplication.class.getName());
+        rootContext.addParameter("resteasy.servlet.mapping.prefix", "/");
+    }
+
+    /**
+     * Map each service to be exposed over http to a servlet
+     * {@link javax.servlet.ServletContext}.
+     */
+    protected void addServiceMappings() {
+        for (RESTServiceEndpoints endpoint : RESTServiceEndpoints.values()) {
+            if (endpoint == RESTServiceEndpoints.ASYNC_SERVICE) {
+                rootContext.addServletMapping(endpoint.getServiceURI(), "push");
+            } else {
+                rootContext.addServletMapping(endpoint.getServiceURI(), "service");
+            }
+        }
+    }
+}

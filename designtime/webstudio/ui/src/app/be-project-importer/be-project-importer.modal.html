@@ -1,0 +1,61 @@
+<div class="row">
+    <div class="col-sm-12">
+      <div class="card">
+        <div class="card-header card-header-sm">
+             <button (click)='toggleMaximize()' class="float-right btn-outline-primary">
+              <i
+                   class="fa"
+                   [class.fa-window-restore]="maximized"
+                   [class.fa-expand]="!maximized"
+                   >
+              </i>
+             </button>
+          <strong i18n>{{i18n('Import Project')}}</strong>
+        </div>
+        <div class="card-body">
+          <div class="form-group">
+            <label class='control-label control-label-normal' i18n>{{i18n('Name')}}</label>
+            <input type="text" class='form-control' readonly [(ngModel)]="resourceName" />
+          </div>
+          <div class="form-group">
+            <label class='control-label control-label-normal' i18n>{{i18n('Select File')}}</label>
+            <input #file style='display:none' type="file" ng2FileSelect [uploader]="uploader"  (change)="extractName(file.value)" accept="application/zip"/>
+            <br/>
+            <button type="button" class="btn btn-primary btn-sm" (click)="file.value='';file.click();" i18n>{{i18n('Select')}}</button>
+            <label class='control-label control-label-normal'> {{getFileName(file.value)}} </label>
+          </div>
+          <!--<div class="form-group">
+              <mat-slide-toggle [(ngModel)]="this.createACL" color="primary">
+                  {{i18n('Create ACL')}}
+              </mat-slide-toggle> 
+              <label class='control-label control-label-normal' i18n>{{i18n('Create ACL')}}</label>
+            <br/>
+            <toggle-switch
+              class='control-label control-label-normal'
+              [(value)]='this.createACL'
+              [size]='"mini"'
+              (valueChange)='this.createACL'
+            >
+            </toggle-switch> 
+          </div>
+            -->
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="row left-pad right-pad bottom-pad top-pad">
+    <div class="col-sm-12">
+      <button type="button" class='btn btn-outline-primary btn-sm' (click)='onClose()' i18n>{{i18n('Close')}}</button>
+      <button 
+        type="button" 
+        class='btn btn-primary btn-sm pull-right' 
+        (click)='onConfirm()'
+        [disabled]='!canConfirm()' i18n
+      >{{i18n('Confirm')}}</button>
+      <a *ngIf="apiInProgress" class='animated no-divider pull-right right-pad'
+        [class.infinite]='apiInProgress'>
+            <small><i class='fa fa-refresh fa-spin'></i></small>
+      </a>
+    </div>
+  </div>
+  

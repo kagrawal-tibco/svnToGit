@@ -1,0 +1,76 @@
+/**
+ * @description 
+ * @author apsharma-t420
+ */
+rule WebStudio.Core.Rules.WS_R_UpdateNotificationPreferences {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		WebStudio.Core.Events.WS_E_UpdateNotificationPreferenceEvent updateNotificationPreferenceEvent;
+	}
+	when {
+		updateNotificationPreferenceEvent.username != null &&
+		updateNotificationPreferenceEvent@payload != null;
+	}
+	then {
+		Object LOGGER = Log.getLogger("WebStudio.Core.Rules.WS_R_UpdateNotificationPreferences");
+						
+		WS_C_ResponseData responseData = null;
+		int responseStatus = 0;
+		String errorCode = null;
+		String responseMessage = "Notification Preferences successfully updated";
+		
+		String subscriptionId = WS_RF_GetSubscriptionId(updateNotificationPreferenceEvent.username);
+		String notficationPreferencesExtId = WS_RF_CreateUserArtifactExtId("NOTIFY_PREFERENCES", null, null, null, subscriptionId, null);
+		
+		if (subscriptionId != null) notficationPreferencesExtId += subscriptionId;
+		Log.log(LOGGER, "Debug", "Trying to acquire lock on notification Preference space with ExtId - %s", notficationPreferencesExtId);
+		
+		boolean appPreferencesLock = Cluster.DataGrid.Lock(notficationPreferencesExtId, -1, false);
+		if (appPreferencesLock) {
+			Log.log(LOGGER, "Debug", "Lock acquired for Notification Preference space space.");
+			WS_C_NotificationPreferences notificationPreferences = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(notficationPreferencesExtId, false, "/WebStudio/Core/Concepts/WS_C_NotificationPreferences");
+			
+			if(notificationPreferences != null) {
+				Instance.deleteInstance(notificationPreferences);
+			}
+			
+			notificationPreferences = Instance.newInstance("/WebStudio/Core/Concepts/WS_C_NotificationPreferences",notficationPreferencesExtId);
+			
+			String notificationPreferenceItem = updateNotificationPreferenceEvent@payload;
+			Log.log(LOGGER, "Debug", "Pay load data - %s.", notificationPreferenceItem);
+			
+			if (notificationPreferenceItem != null) {
+				WS_C_NotificationPreferenceRequest notificationPreferencesRequest = Instance.createTransientInstanceFromXML("/WebStudio/Core/Concepts/Request/Usecases/UpdatePreferences/WS_C_NotificationPreferenceRequest", notificationPreferenceItem);
+				WS_C_NotificationPreferenceDataItem notificationPreferencesDataItem = notificationPreferencesRequest.notificationPreferenceItem;
+				
+				for(int count = 0; count < notificationPreferencesDataItem.emailPreference@length; count++) {
+					WS_C_AbstractEmailPreference emailPreference = Instance.newInstance("/WebStudio/Core/Concepts/WS_C_AbstractEmailPreference",null);
+					WS_C_NotificationPreferenceItem notifyPreferenceItem = notificationPreferencesDataItem.emailPreference[count];
+                    
+                    emailPreference.project = notifyPreferenceItem.project;
+                    emailPreference.actions = notifyPreferenceItem.actions;
+                    emailPreference.emailIds = notifyPreferenceItem.emailIds;
+					Instance.PropertyArray.appendContainedConcept(notificationPreferences.emailPreference,emailPreference,1L);
+				}
+				
+				WS_RF_AddAuditTrailEntry(updateNotificationPreferenceEvent.username, null, null, null, "PREFERENCES", "Updated Notification Preferences");
+			}
+			
+			Object asyncContext = Util.HashMap.getObject(updateNotificationPreferenceEvent.mapKey, updateNotificationPreferenceEvent.asyncContextId);
+			//Clear it
+			Util.HashMap.removeObject(updateNotificationPreferenceEvent.mapKey, updateNotificationPreferenceEvent.asyncContextId);
+			Util.HashMap.deleteMap(updateNotificationPreferenceEvent.mapKey);
+			Object servletResponse = HTTP.Servlet.getServletResponse(asyncContext);
+			
+			String responseDSXML = WS_RF_CreateAndSerializeResponseDataSource(responseStatus, 0, errorCode, responseMessage, responseData, updateNotificationPreferenceEvent.contentType);
+			Log.log(LOGGER, "Debug", "Data source response %s", responseDSXML);
+			
+			HTTP.Servlet.Response.setResponseHeader(servletResponse, "Content-type", updateNotificationPreferenceEvent.contentType + ";charset=utf-8");	  										
+			HTTP.Servlet.Response.setResponseContent(asyncContext, responseDSXML, true);	
+		}
+								
+	}
+}

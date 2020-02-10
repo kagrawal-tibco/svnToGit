@@ -1,0 +1,42 @@
+/**
+ * @description 
+ */
+boolean rulefunction WebStudio.Core.RuleFunctions.Utils.WS_RF_CheckIfErrorsExist {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		WebStudio.Core.Concepts.DataSources.WS_C_AnyArtifactDetails[] validationResponse;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.WS_RF_CheckIfErrorsExist");
+		
+		boolean errorsExist = false;
+		
+		if (validationResponse != null) {
+			for (int i = 0; i < validationResponse@length; i++) {
+				WS_C_AnyArtifactDetails validationResponseItem = validationResponse[i];
+				
+				WS_C_Problem[] problemItems = null;
+				if (validationResponseItem instanceof WS_C_TableAnalyzerProblemsResponse) {
+					WS_C_TableAnalyzerProblemsResponse tableAnalyzerProblem = validationResponseItem;
+					problemItems = Instance.PropertyArray.toArrayContainedConcept(tableAnalyzerProblem.problem);
+				} else if (validationResponseItem instanceof WS_C_RTValidationResponse) {
+					WS_C_RTValidationResponse rtValidationResponse = validationResponseItem;
+					problemItems = Instance.PropertyArray.toArrayContainedConcept(rtValidationResponse.problem);
+				}
+				
+				if (problemItems != null) {
+					for (int j=0; j<problemItems@length; j++) {
+						if (!problemItems[j].isWarning) {
+							errorsExist = true;
+							break;
+						}
+					}
+				}
+			}
+		}
+		
+		return errorsExist;
+	}
+}

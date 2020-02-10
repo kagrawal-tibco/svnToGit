@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<project name="pre-uninstall" default="pre-uninstall" basedir=".">
+	<property file="post-install.properties"/>
+	<import file="common-tasks.xml"/>
+	<target name="pre-uninstall" depends="restore-runtime-plugins,restore-designtime-plugins">
+		<!--<delete file="${tibco.home.esc}/be/${beVersionShort}/decisionmanager/eclipse/decisionmanager.ini" />
+		<delete file="${tibco.home.esc}/be/${beVersionShort}/decisionmanager/eclipse/configuration/studio.tra" />-->
+		<echo message="Done pre-uninstallation tasks." />
+	</target>
+		
+	<target name="restore-runtime-plugins">
+		<echo message="Restoring runtime plugins" />
+		<if>
+			<available file="${tibco.home}/be/5.4/backup/5.4.1_pre/lib/eclipse/plugins" type="dir"/>
+			<then>
+				<move todir="${tibco.home}/be/5.4/lib/eclipse/plugins">
+					<fileset dir="${tibco.home}/be/5.4/backup/5.4.1_pre/lib/eclipse/plugins">
+						<include name="com.tibco.cep.decision.table.common_5.4.*.jar*" />
+					</fileset>
+				</move>
+			</then>
+		</if>	
+	</target>
+	
+	<target name="restore-designtime-plugins">
+		<echo message="Restoring designtime plugins" />
+		<move todir="${tibco.home}/be/5.4/studio/eclipse/plugins">
+			<fileset dir="${tibco.home}/be/5.4/backup/5.4.1_pre/studio/eclipse/plugins">
+				<include name="com.tibco.cep.decision.table.core_5.4.*.jar*" />
+				<include name="com.tibco.cep.decision.table.ui_5.4.*.jar*" />
+				<include name="com.tibco.cep.decision.tree.ui_5.4.*.jar*" />
+				<include name="com.tibco.cep.studio.rms.core_5.4.*.jar*" />
+				<include name="com.tibco.cep.studio.rms.ui_5.4.*.jar*" />
+				<include name="com.tibco.cep.decision.table.common_5.4.*.jar*"/>						
+				<include name="com.tibco.cep.decision.table.capabilities_5.4.*.jar*"/>						
+				<include name="com.tibco.cep.decision.tree.common_5.4.*.jar*"/>						
+				<include name="com.tibco.cep.decision.tree.core_5.4.*.jar*"/>	
+			</fileset>
+		</move>
+	</target>	
+	
+	
+</project>	

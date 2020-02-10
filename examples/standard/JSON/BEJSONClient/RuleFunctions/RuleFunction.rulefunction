@@ -1,0 +1,22 @@
+/**
+ * @description 
+ */
+void rulefunction RuleFunctions.RuleFunction {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+
+	}
+	body {
+		System.debugOut("Inside Startup rule Function....");
+		
+		Events.setEmpInfoEvent setempinfoevent = Event.createEvent("xslt://{{/Events/setEmpInfoEvent}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" xmlns:ns=\"www.tibco.com/be/ontology/Concepts/Employee\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" version=\"1.0\" exclude-result-prefixes=\"xsl xsd\">\n    <xsl:output method=\"xml\"/>\n    <xsl:template match=\"/\">\n        <createEvent>\n            <event>\n                <payload>\n                    <ns:Employee>\n                        <Emp_Id>\n                            <xsl:value-of select=\"&quot;EMP_101&quot;\"/>\n                        </Emp_Id>\n                        <Name>\n                            <xsl:value-of select=\"&quot;John&quot;\"/>\n                        </Name>\n                        <Salary>\n                            <xsl:value-of select=\"500\"/>\n                        </Salary>\n                    </ns:Employee>\n                </payload>\n            </event>\n        </createEvent>\n    </xsl:template>\n</xsl:stylesheet>");
+		System.debugOut("Sending request...");
+		
+		Object connectionInfo_1 = HTTP.ConnectionInfo.createHTTPConnectionInfo(false);
+		Events.returnEmpInfoEvent res = HTTP.sendRequest("http://localhost:9090/Channels/HTTPChannel/setInfo", setempinfoevent, "/Events/returnEmpInfoEvent", 60000, connectionInfo_1);
+		   
+		System.debugOut("Payload from Response : " + res@payload);	
+	}
+}

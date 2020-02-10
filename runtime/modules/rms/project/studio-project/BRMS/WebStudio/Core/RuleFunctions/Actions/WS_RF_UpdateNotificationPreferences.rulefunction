@@ -1,0 +1,71 @@
+/**
+ * @description 
+ */
+WebStudio.Core.Concepts.DataSources.WS_C_TemporaryReturnData rulefunction WebStudio.Core.RuleFunctions.Actions.WS_RF_UpdateNotificationPreferences {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object asyncContextObject;
+		WebStudio.Security.Authn.Concepts.WS_C_LoggedInUser loggedInUser;
+		String contentType;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.WS_RF_UpadateNotificationPreferences");
+		
+		Object servletRequest = HTTP.Servlet.getServletRequest(asyncContextObject);
+		
+		WS_C_ResponseData responseData = null;
+		int responseStatus = 0;
+		int recordCount = 0;
+		String errorCode = null;
+		String responseMessage = null;
+		
+		WS_C_TemporaryReturnData tempReturnData = null;
+		
+		if (!WS_RF_CheckHTTPMethod(servletRequest, "PUT")) {
+			responseStatus = -1;
+			recordCount = 0;
+			errorCode = "ERR_5101";
+			responseMessage = "Invalid HTTP Method, expect method is [PUT].";
+			
+			tempReturnData = WS_RF_CreateTemporaryReturnData(responseStatus, recordCount, errorCode, responseMessage, responseData);
+		} else {
+			Object requestDataBytes = HTTP.Servlet.Request.getRequestContent(servletRequest);
+			String requestData = String.convertByteArrayToString(requestDataBytes, "UTF-8");
+			Log.log(LOGGER, "Debug", "Request Post Data Received %s", requestData);
+			
+			//Convert to concept model
+			WS_C_NotificationPreferenceBaseRequest notifyPreferenceBaseRequest = null;
+			if (String.equals(contentType, System.getGlobalVariableAsString("WebStudio/CONTENT_TYPE/XML", "application/xml"))) {
+				notifyPreferenceBaseRequest = Instance.createTransientInstanceFromXML("/WebStudio/Core/Concepts/Request/Usecases/UpdatePreferences/WS_C_NotificationPreferenceBaseRequest", requestData);
+			} else {
+				notifyPreferenceBaseRequest = Instance.createTransientInstanceFromJSON("/WebStudio/Core/Concepts/Request/Usecases/UpdatePreferences/WS_C_NotificationPreferenceBaseRequest", requestData);
+			}
+		
+			Log.log(LOGGER, "Debug", "Request concept deserialized %s", notifyPreferenceBaseRequest);
+			
+			WS_C_NotificationPreferenceRequestData requestContainedData = notifyPreferenceBaseRequest.data;
+			WS_C_NotificationPreferenceDataItem notifyPreferenceDataItem = requestContainedData.notificationPreference.notificationPreferenceItem;
+			
+			String notifyPreferenceItem = Instance.serialize(notifyPreferenceDataItem, false, "","notificationPreferenceItem");
+			Log.log(LOGGER, "Debug", "Serialized data format - %s", notifyPreferenceItem);
+			
+			String asyncContextId = WS.Common.generateUUID();
+			String mapLockKey = "NOTIFY_PREFERENCE_UPDATE_ASYNC_CONTEXT_MAP_" + System.nanoTime();
+			//	Concurrent Rete case. Lock locally
+			boolean mapLocked = Cluster.DataGrid.Lock(mapLockKey, -1, true);
+			if (mapLocked) { 
+				Util.HashMap.createMap(mapLockKey);
+				Util.HashMap.putObject(mapLockKey, asyncContextId, asyncContextObject);
+			}
+		
+			WS_E_UpdateNotificationPreferenceEvent updateNotifyPreferenceEvent =
+				 WebStudio.Core.Events.WS_E_UpdateNotificationPreferenceEvent.WS_E_UpdateNotificationPreferenceEvent(null, notifyPreferenceItem, asyncContextId, mapLockKey, contentType, loggedInUser.username); 
+			
+			Event.assertEvent(updateNotifyPreferenceEvent);
+			
+		} 
+		return tempReturnData;
+	}
+}

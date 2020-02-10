@@ -1,0 +1,43 @@
+/**
+ * @description 
+ * @author 
+ */
+rule Rules.RuleSet.ProcessApplication_Rule {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Events.ProcessApplication	processApplication;
+		Concepts.CreditCardApplication	creditCardApplication;
+		Concepts.Applicant applicant;
+		
+	}
+	when {
+		processApplication.start == true;  // true when the event to process application is received
+		processApplication.SSN == applicant.SSN; // make sure we process the proper applicant 
+		creditCardApplication.Name == applicant.Name; // make sure we process the proper credit card application
+	}
+	then {
+		System.debugOut("*************** Invoking ProcessApplication_VirtualRuleFunction ***************");
+		Event.consumeEvent(processApplication);  //remove event from working memory
+		
+		// first set the credit limit of the applicant
+		Object[] applicantArguments = {applicant, null};
+		VRF.invokeVRFImplByName("/Virtual_RF/Applicant_VirtualRuleFunction", "Applicant_Simple", applicantArguments);
+		
+		// if the applicant is eligible, create a new CreditCard and attach it to the CreditCardApplication Concept
+		if (applicant.CreditLimit == 0) {
+		    System.debugOut("Credit application " + applicant.Status + ". At this time you are only eligible for a debit card.");
+		} else {
+			creditCardApplication.CardIssued = Instance.createInstance("xslt://{{/Concepts/CreditCard}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"2.0\" exclude-result-prefixes=\"xsl xsd\"><xsl:output method=\"xml\"/><xsl:template name=\"Function\" match=\"/\"><createObject><object/></createObject></xsl:template></xsl:stylesheet>");
+			Object[] creditcardArguments = {applicant, creditCardApplication};
+			VRF.invokeVRFImplByName("/Virtual_RF/ProcessApplication_VirtualRuleFunction", "ProcessApplication", creditcardArguments);
+		    System.debugOut("Credit application " + applicant.Status + 
+		    	". You are eligible for a " + creditCardApplication.CardIssued.Id + 
+		    	" card with a credit limit of $" + applicant.CreditLimit );
+		    System.debugOut(creditCardApplication.CreditType + ": Minumum Rate of " + creditCardApplication.CardIssued.DefaultRate + 
+		    	"%, current interest rate of " + creditCardApplication.CardIssued.InterestRate + "%");
+		}
+	}
+}

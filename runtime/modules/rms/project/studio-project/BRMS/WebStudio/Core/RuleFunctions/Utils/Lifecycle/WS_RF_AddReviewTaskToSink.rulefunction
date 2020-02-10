@@ -1,0 +1,49 @@
+/**
+ * @description 
+ */
+void rulefunction WebStudio.Core.RuleFunctions.Utils.Lifecycle.WS_RF_AddReviewTaskToSink {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String reviewTaskExtId;
+		String projectName;
+		String subscriptionId;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.Lifecycle.WS_RF_AddReviewTaskToSink");
+		
+		// add the reviews to the right sink, i.e. common or project or subscription
+		String adminRoleExtId = WS_RF_CreateUserArtifactExtId("ADMIN_ROLES", null, null, null, null, null);
+		WS_C_AdminRoles adminRolesEntity = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(adminRoleExtId, false, "/WebStudio/Core/Concepts/WS_C_AdminRoles");
+		
+		if (adminRolesEntity != null) {
+			WS_C_RoleMap[] roleMap = Instance.PropertyArray.toArrayContainedConcept(adminRolesEntity.entry);
+			
+			String reviewSinkExtId = null;
+			for (int j=0; j < roleMap@length; j++) {
+				Log.log(LOGGER, "Debug", "Admin Role[%s] & Coverage[%s] is being checked", WS.Common.joinStringArray(Instance.PropertyArray.toArrayString(roleMap[j].role), ","), roleMap[j].coverage);
+				
+				// project based admin exists
+				if (projectName != null && String.equals(roleMap[j].coverage, projectName)) {
+					reviewSinkExtId = WS_RF_CreateUserArtifactExtId(null, null, projectName, null, subscriptionId, "REVIEW_SINK");
+				// subscription based admin exists
+				} else if (subscriptionId != null && String.equals(roleMap[j].coverage, subscriptionId)) {
+					reviewSinkExtId = WS_RF_CreateUserArtifactExtId(null, null, null, null, subscriptionId, "REVIEW_SINK");
+				}
+				if (reviewSinkExtId != null) break;
+			}
+			
+			if (reviewSinkExtId == null) {
+				reviewSinkExtId = WS_RF_CreateUserArtifactExtId("COMMON_REVIEW_SINK", null, null, null, null, null);
+			}
+			Log.log(LOGGER, "Debug", "Adding to Review sink [%s]", reviewSinkExtId);
+			WS_C_CommonReviewSink reviewSink = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(reviewSinkExtId, false, "/WebStudio/Core/Concepts/Lifecycle/WS_C_CommonReviewSink");
+			if (reviewSink != null) {
+				Instance.PropertyArray.appendString(reviewSink.reviewTaskExtIds, reviewTaskExtId, 1L);
+			} else {
+				Log.log(LOGGER, "Debug", "Review Sink with ExtId[%s] not found", reviewSinkExtId);
+			}
+		}
+	}
+}

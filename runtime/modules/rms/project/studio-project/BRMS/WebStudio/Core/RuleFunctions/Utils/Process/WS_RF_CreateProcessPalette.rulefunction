@@ -1,0 +1,92 @@
+/**
+ * @description 
+ */
+WebStudio.Core.Concepts.Process.Palette.WS_C_ProcessPalette rulefunction WebStudio.Core.RuleFunctions.Utils.Process.WS_RF_CreateProcessPalette {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String subscriptionId;
+	}
+	body {
+		// Palette properties
+		String PROP_ID = "id";
+		String PROP_TITLE = "title";
+		String PROP_TOOLTIP = "tooltip";
+		String PROP_ICON = "icon";
+		String PROP_VISIBLE = "visible";
+		String PROP_EMFTYPE = "emftype";
+		String PROP_EXTENDEDTYPE = "emfextendedtype";
+		
+		String paletteExtId = WS_RF_CreateUserArtifactExtId("PROCESS_PALETTE", null, null, null, subscriptionId, null);
+		
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.Process.WS_RF_CreateProcessPalette");
+		
+		boolean paletteLock = Cluster.DataGrid.Lock(paletteExtId, 1000, false);
+		if (paletteLock) {
+			Log.log(LOGGER, "Debug", "Lock acquired for Palette.");
+			
+			WS_C_ProcessPalette processPalette = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(paletteExtId, true, "/WebStudio/Core/Concepts/Process/Palette/WS_C_ProcessPalette");
+			Log.log(LOGGER, "Debug", "Fetched ProcessPalette - %s", processPalette);
+			
+			if (processPalette == null) {
+				processPalette = Instance.newInstance("/WebStudio/Core/Concepts/Process/Palette/WS_C_ProcessPalette", paletteExtId);
+				Log.log(LOGGER, "Debug", "Created a new ProcessPalette", processPalette);
+			
+				Object paletteModel = WS.Process.Palette.getPaletteModel();
+				Object[] paletteGroups = WS.Process.Palette.getPaletteGroups(paletteModel);
+				
+				WS_C_PaletteToolSetGroups paletteToolsetGroups = Instance.newInstance("/WebStudio/Core/Concepts/Process/Palette/WS_C_PaletteToolSetGroups", null);
+				Instance.PropertyAtom.setContainedConcept(processPalette.groups, paletteToolsetGroups, 1L);
+				
+				Log.log(LOGGER, "Debug", "Iterating over Palette Groups - %s", paletteGroups@length);
+				for (int i=0; i < paletteGroups@length; i++) {
+					Object group = paletteGroups[i];
+					WS_C_PaletteGroup paletteGroup = Instance.newInstance("/WebStudio/Core/Concepts/Process/Palette/WS_C_PaletteGroup", null);
+					
+					Object groupDetails = WS.Process.Palette.getGroupDetails(group);
+					if (Collections.Map.size(groupDetails) > 0) {
+						paletteGroup.groupId = Collections.Map.get(groupDetails, PROP_ID);
+						paletteGroup.title = Collections.Map.get(groupDetails, PROP_TITLE);
+						paletteGroup.tooltip = Collections.Map.get(groupDetails, PROP_TOOLTIP);
+						paletteGroup.icon = Collections.Map.get(groupDetails, PROP_ICON);
+						paletteGroup.visible = Collections.Map.get(groupDetails, PROP_VISIBLE);
+						
+						Log.log(LOGGER, "Debug", "Group Details : Id - %s, Title - %s, Tool Tip - %s, Icon - %s, Visible - %s", paletteGroup.groupId, paletteGroup.title, paletteGroup.tooltip, paletteGroup.icon, paletteGroup.visible);
+						
+						Instance.PropertyArray.appendContainedConcept(paletteToolsetGroups.groupInfo, paletteGroup, 1L);
+					}
+					
+					WS_C_PaletteGroupItems paletteGroupItems = Instance.newInstance("/WebStudio/Core/Concepts/Process/Palette/WS_C_PaletteGroupItems", null);
+					Instance.PropertyAtom.setContainedConcept(paletteGroup.items, paletteGroupItems, 1L);
+					
+					Object[] paletteItems = WS.Process.Palette.getPaletteItems(group);
+					Log.log(LOGGER, "Debug", "Iterating over Palette Items - %s", paletteItems@length);
+					for (int j=0; j < paletteItems@length; j++) {
+						Object item = paletteItems[j];
+						WS_C_PaletteItem paletteItem = Instance.newInstance("/WebStudio/Core/Concepts/Process/Palette/WS_C_PaletteItem", null);
+						
+						Object itemDetails = WS.Process.Palette.getItemDetails(item);
+						if (Collections.Map.size(itemDetails) > 0) {
+							paletteItem.itemId = Collections.Map.get(itemDetails, PROP_ID);
+							paletteItem.title = Collections.Map.get(itemDetails, PROP_TITLE);
+							paletteItem.tooltip = Collections.Map.get(itemDetails, PROP_TOOLTIP);
+							paletteItem.icon = Collections.Map.get(itemDetails, PROP_ICON);
+							paletteItem.visible = Collections.Map.get(itemDetails, PROP_VISIBLE);
+							paletteItem.emfType = Collections.Map.get(itemDetails, PROP_EMFTYPE);
+							paletteItem.extendedType = Collections.Map.get(itemDetails, PROP_EXTENDEDTYPE);
+							
+							Log.log(LOGGER, "Debug", "Item Details : Id - %s, Title - %s, Tool Tip - %s, Icon - %s, Visible - %s, EmfType - %s", paletteItem.itemId, paletteItem.title, paletteItem.tooltip, paletteItem.icon, paletteItem.visible, paletteItem.emfType);
+							
+							Instance.PropertyArray.appendContainedConcept(paletteGroupItems.item, paletteItem, 1L);
+						}
+					}
+				}
+			}
+			
+			return processPalette;
+		}
+		
+		return null;
+	}
+}

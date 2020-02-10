@@ -1,0 +1,43 @@
+<div class='login-or-signup'>
+  <div class='description divider-bottom'>
+    <p *ngIf='allowSignup' [innerHTML]="getSignUpMessage(true)">
+    </p>
+    <p *ngIf='!allowSignup' [innerHTML]="getSignUpMessage(false)">
+    </p>
+  </div>
+  <div class='text-center'>
+    <div *ngIf='allowSignup; then switch; else onlySignIn'>
+    </div>
+    <ng-template #switch>
+      <div *ngIf='isInSignIn()' class='header'>
+        <span [ngClass]='getNgClass("SIGN_IN")' (click)='setInSignIn()' i18n>{{i18n('Sign In')}}</span>
+        <span class='separator' i18n>or</span>
+        <span [ngClass]='getNgClass("SIGN_UP")' (click)='setInSignUp()' i18n>{{i18n('Sign Up')}}</span>
+      </div>
+      <div *ngIf='isInSignUp()' class='header'>
+        <span [ngClass]='getNgClass("SIGN_UP")' (click)='setInSignUp()' i18n>{{i18n('Sign Up')}}</span>
+        <span class='separator' i18n>or</span>
+        <span [ngClass]='getNgClass("SIGN_IN")' (click)='setInSignIn()' i18n>{{i18n('Sign In')}}</span>
+      </div>
+    </ng-template>
+    <ng-template #onlySignIn>
+      <div class='header'>
+        <span [ngClass]='getNgClass("SIGN_IN")' (click)='setInSignIn()' i18n>{{i18n('Sign In')}}</span>
+      </div>
+    </ng-template>
+  </div>
+  <div *ngIf='isInSignIn()'>
+    <login-form
+      [form]='loginForm'
+      [signinButton]='"Sign In And Connect"'
+      (formSubmit)='onLogin($event)'
+    ></login-form>
+  </div>
+  <div *ngIf='isInSignUp()'>
+    <signup-form 
+      [form]='signupForm'
+      [signupButton]='"Sign Up And Connect"'
+      (formSubmit)='onSignup($event)'
+      ></signup-form>
+  </div>
+</div>

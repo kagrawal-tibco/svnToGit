@@ -1,0 +1,65 @@
+<div class="card panel-sm">
+   <div class="card-header">
+      <ng-container i18n>{{i18n('Test Data Coverage')}}</ng-container>
+      </div>
+   
+   <div class="card-body">
+      <div class='row'>
+         <div class='col-sm-12'>
+            <form #newColumn="ngForm">
+               <div class="form-group">
+                  <label for="argumentSelect" class='control-label control-label-normal' i18n>{{i18n('Select Argument')}}</label>
+                  <select
+                  id='arguments'
+                  class='form-control'
+                  name='arguments'
+                  [(ngModel)]="form.argument"
+                  (change)="onArgumentChange(form.argument)"
+                  #argumentSelect='ngModel'
+                  >
+                  <option 
+                  *ngFor='let ct of argumentsArray'
+                  [value]='ct'
+                  >{{ct}}</option>
+                  </select>
+               </div>
+            </form>
+         </div>
+         
+         <div class='col-sm-12'>
+            <form #newColumn="ngForm">
+               <div class="form-group">
+                  <label for="testdataSelect" class='control-label control-label-normal' i18n>{{i18n('Select TestData')}}</label>
+                  <select
+                  id='testdata'
+                  class='form-control'
+                  name='testdata'
+                  [(ngModel)]="form.testdata"
+                  #testdataSelect='ngModel'
+                  >
+                  <option 
+                  *ngFor='let entry of getEntryArray()'
+                  [value]='entry.artifactPath'
+                  >{{entry.artifactPath}}</option>
+                  </select>
+               </div>
+            </form>
+         </div>
+         
+      </div>
+   </div>
+</div>
+<div class="row left-pad right-pad bottom-pad top-pad">
+   <div class="col-sm-12">
+      <button
+         type="button"
+         class='btn btn-outline-primary btn-sm btn-narrow'
+         (click)='onCancel()'
+         >{{i18n('Cancel')}}</button>
+      <button
+         class='btn btn-primary btn-sm btn-narrow pull-right'
+         (click)='onSubmit()'
+         [disabled]='canSubmit()'
+         i18n>{{i18n('Confirm')}}</button>
+   </div>
+</div>

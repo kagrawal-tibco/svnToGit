@@ -1,0 +1,51 @@
+/**
+ * @description Route checkout calls to fetch project names or to perform actual background ops for checkout.
+ */
+WebStudio.Core.Concepts.DataSources.WS_C_TemporaryReturnData rulefunction WebStudio.Core.RuleFunctions.Actions.WS_RF_ExceuteFetchProjectNew {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object servletRequest;
+		WebStudio.Security.Authn.Concepts.WS_C_LoggedInUser loggedInUser;
+		String contentType;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.WS_RF_ExceuteFetchProjectNew");
+		
+//		Object servletRequest = HTTP.Servlet.getServletRequest(asyncContextObject);
+//		Object servletResponse = HTTP.Servlet.getServletResponse(asyncContextObject);
+		
+		//Validate the request for logged in user
+//		WS_C_LoggedInUser loggedInUser = WS_RF_ValidateLogin(asyncContextObject, true);
+		
+//		if (loggedInUser != null) {
+			//If request is get route it to fetch artifacts.
+			String httpMethod = HTTP.Servlet.Request.getMethod(servletRequest);
+			
+			WS_C_TemporaryReturnData tempReturnData = null;
+			if (String.equals(httpMethod, "GET")) {
+				Log.log(LOGGER, "Info", "Fetching project artifacts");
+				tempReturnData = WS_RF_FetchProjectArtifactNames(servletRequest, loggedInUser, null);
+			} else if (String.equals(httpMethod, "POST")) {
+				Log.log(LOGGER, "Info", "Performing checkout");
+				tempReturnData = WS_RF_PerformProjectCheckout(servletRequest, loggedInUser, contentType);
+			}
+			
+			return tempReturnData;
+//		} 
+//		else {
+//			int responseStatus = -1;
+//			String errorCode = "ERR_1102";
+//			String responseMessage = "Authentication Failed, User is not logged in.";
+//			WS_C_ResponseData responseData = null;
+//			
+//			String responseDSXML = WS_RF_CreateAndSerializeResponseDataSource(responseStatus, 0, errorCode, responseMessage, responseData);
+//
+//			Log.log(LOGGER, "Debug", "Data source response %s", responseDSXML);
+//	
+//			HTTP.Servlet.Response.setResponseHeader(servletResponse, "Content-type", "text/xml;charset=utf-8");
+//			HTTP.Servlet.Response.setResponseContent(asyncContextObject, responseDSXML, true);
+//		}
+	}
+}

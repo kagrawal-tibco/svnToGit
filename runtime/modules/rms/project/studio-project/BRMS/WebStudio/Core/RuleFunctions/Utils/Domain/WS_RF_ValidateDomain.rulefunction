@@ -1,0 +1,51 @@
+/**
+ * @description 
+ */
+String rulefunction WebStudio.Core.RuleFunctions.Utils.Domain.WS_RF_ValidateDomain {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String projectName;
+		String artifactPath;
+		String artifactExtn;
+		WebStudio.Security.Authn.Concepts.WS_C_LoggedInUser loggedInUser;
+		String[] roles;
+		String contentType;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.Domain.WS_RF_ValidateDomain");
+		
+		String responseMessage = null;
+		String errorCode = null;
+		int recordCount = 0;
+		int responseStatus = 0;
+		
+		String userName = loggedInUser.username;
+		
+	    WS_C_DomainValidationResponse validationResponse = WS_RF_CheckDuplicateDomainEntries(projectName, artifactPath, artifactExtn, userName, roles);
+	    
+	    if (validationResponse != null) {
+		    validationResponse.ownerProjectName = projectName;
+			
+			int lastPathIndex = String.lastIndexOfString(artifactPath, 0, "/");
+			if (lastPathIndex == 0) {
+				validationResponse.folder = "";
+				validationResponse.name = String.substringAfter(artifactPath, "/");
+			} else {
+				validationResponse.folder = String.substring(artifactPath, 1, lastPathIndex);
+				validationResponse.name = String.substring(artifactPath, lastPathIndex+1, artifactPath@length);
+			}
+			
+			Log.log(LOGGER, "Debug", "Domain Validation Response, ProjectName[%s], Folder [%s] & Name[%s]", validationResponse.ownerProjectName, validationResponse.folder, validationResponse.name);
+	    }
+		
+		WS_C_AnyArtifactDetails[] validateResponseObjects = {validationResponse};
+		
+		responseMessage = WebStudio.
+								Core.
+									RuleFunctions.
+										Utils.WS_RF_BuildValidateResponse(validateResponseObjects, responseStatus, recordCount, errorCode, responseMessage, contentType);
+		return responseMessage;
+	}
+}

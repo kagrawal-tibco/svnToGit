@@ -1,0 +1,79 @@
+/**
+ * @description Validates Rule Template Instance Builder and reports error if any.
+ */
+WebStudio.Core.Concepts.DataSources.Problems.WS_C_RTValidationResponse rulefunction WebStudio.Core.RuleFunctions.Utils.RT.Builder.WS_RF_ValidateRuleTemplateBuilder {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		WebStudio.Core.Concepts.RuleTemplateInstance.Builder.WS_C_RuleTemplateInstanceBuilder ruleTemplateInstance;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.WS_RF_ValidateRuleTemplate");
+		WebStudio.Core.Concepts.DataSources.Problems.WS_C_RTValidationResponse validationResponse = Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/Problems/WS_C_RTValidationResponse");											
+		
+		WS_C_RuleTemplateInstanceBuilder rtiBuilder = ruleTemplateInstance;
+		WS_C_Conditions conditions = rtiBuilder.conditions;
+		WS_C_AbstractConditionsFilter[] filters = Instance.PropertyArray.toArrayConcept(conditions.filter);
+		
+		//Condition Validation
+		WS_RF_RTICheckFilter(filters,validationResponse);
+		
+		//Action Validation		
+		Object errorMsgBuffer =  String.createBuffer(0);
+		String.clearBuffer(errorMsgBuffer);
+		String.append(errorMsgBuffer,"Following actions are not defined: (");
+		boolean missingAction = false;
+		
+		for (int commandCnt=0; commandCnt < ruleTemplateInstance.commands.commandInfo@length; commandCnt++) {
+			WS_C_CommandInfo command = ruleTemplateInstance.commands.commandInfo[commandCnt];
+			//Check for missing actions
+			if (command.filter != null && command.filter@length > 0) {
+				for(int filterCnt=0; filterCnt<command.filter@length; filterCnt++) {
+					//Validate filter
+					WebStudio.Core.Concepts.DataSources.Problems.WS_C_Problem problem = WS_RF_CheckSingleFilter(command.filter[filterCnt],false);
+					if(problem != null) {
+						Instance.PropertyArray.appendContainedConcept(validationResponse.problem,problem,1L);
+					}
+				}
+			} else {
+				boolean symbolsExist = true;
+				if (String.equals(command.actionType, "call")) {
+					symbolsExist = false;
+					WS_C_AbstractSymbolInfo[] symbols = Instance.PropertyArray.toArrayConcept(command.symbols.symbolInfo);
+					for (int i=0; i<symbols@length; i++) {
+						if (symbols[i].type != null && symbols[i].symbolAlias != null) {
+							symbolsExist = true;
+							break;
+						}
+					}
+				}
+				
+				if (!symbolsExist) continue;
+					
+				missingAction = true;
+				String.append(errorMsgBuffer,command.actionType);
+				String.append(errorMsgBuffer," ");
+				String.append(errorMsgBuffer,command.commandAlias);
+				String.append(errorMsgBuffer,", ");
+			}
+		}
+		
+		if (missingAction) {
+			String err = String.convertBufferToString(errorMsgBuffer);
+			err = String.substring(err,0,String.lastIndexOfString(err, 0, ","));
+			String.clearBuffer(errorMsgBuffer);
+			String.append(errorMsgBuffer, err);
+			String.append(errorMsgBuffer, ").");
+			
+			WebStudio.Core.Concepts.DataSources.Problems.WS_C_Problem problem = Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/Problems/WS_C_Problem");
+			problem.errorMessage = String.convertBufferToString(errorMsgBuffer);
+			problem.problemType = "Semantic";
+			problem.errorCode = "211";
+			problem.location = "";
+			Instance.PropertyArray.appendContainedConcept(validationResponse.problem,problem,1L);
+		}
+		
+		return validationResponse;
+	}
+}

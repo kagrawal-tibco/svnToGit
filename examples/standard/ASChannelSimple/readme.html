@@ -1,0 +1,95 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>     ActiveSpaces Channel
+
+- TIBCO BusinessEvents&reg; Examples
+</title>
+<meta http-equiv="Content-type" content="text/html; charset=iso-8859-1" />
+<meta http-equiv="Content-Language" content="en-us" />
+<link rel="Shortcut Icon" href="../../_resources/icon.gif" type="image/gif" />
+<style type="text/css" media="all">@import "../../_resources/examples.css";</style>
+</head>
+<body onLoad="buildForms()">
+
+
+<h1>ActiveSpaces Channel</h1>
+
+
+<h2>Purpose of This Example</h2>
+
+<p>The ActiveSpaces Channel simple example demonstrates how TIBCO BusinessEvents&reg; uses an ActiveSpaces channel to put, get and take tuples using TIBCO ActiveSpaces&reg;. You can examine the project in TIBCO BusinessEvents Studio to understand the setup, and refer to <i>TIBCO BusinessEvents Developer's Guide</i> for details on channel configuration. </p>
+
+<h2>Instructions</h2>
+
+<h3>Configure the Example</h3>
+<p>Before running the example, do the following. </p>
+
+<ol>
+<li><p> Add <i>AS_HOME</i><code>/lib</code> in the following classpath in <i>BE_HOME</i><code>/bin/be-engine.tra</code> to point to your ActiveSpaces installation:
+<pre>tibco.env.STD_EXT_CP</i></pre>
+</li>
+
+<li><p> Insure that <i>AS_HOME</i><code>/lib</code> is in the environment variable <code>PATH</code> on Windows&reg; platform and <code>LD_LIBRARY_PATH</code> on Unix-like	platform.
+</li>
+</ol>
+
+<h3>Run the Example</h3>
+
+<ol>
+
+<li><p>Open a command window to create and initialize the Metaspace and Spaces of ActiveSpaces using the following command.</p>
+<pre class="commands">
+cd <i>BE_HOME</i>/examples/standard/ASChannelSimple
+java -cp as-channel-demo-utils.jar;<i>AS_HOME</i>\lib\as-common.jar InitializeMetaspace -ms ms1 -dUrl "tibpgm://8023/0.0.0.0;239.8.8.8"
+</pre>
+</li>
+
+<li><p>Open another command window and at the command prompt, start the TIBCO BusinessEvents engine using the following command.</p>
+<pre class="commands">
+cd <i>BE_HOME</i>/examples/standard/ASChannelSimple
+c:<i>BE_HOME</i>/bin/be-engine --propFile <i>BE_HOME</i>/bin/be-engine.tra -u default -c ASChannelSimple/ASChannel.cdd ASChannelSimple.ear
+</pre>
+</li>
+
+<li><p>Make sure the command window showing the TIBCO BusinessEvents engine is visible, and that the text at the bottom is similar to <code>BE Engine <i>host-user</i> started</code>. Then open the third command window to put a tuple into <code>myspace</code> using the following command.</p>
+<pre class="commands">
+java -cp as-channel-demo-utils.jar;<i>AS_HOME</i>\lib\as-common.jar PutTupleIntoMyspace -ms ms1 -dUrl "tibpgm://8023/0.0.0.0;239.8.8.8" -id 501 -value "Hello, BE AS Channel!"
+</pre>
+</li>
+
+<li>
+<p>A message arriving at the <code>MyspaceDest</code> destination within the ActiveSpaces channel (<code>aschannel</code>) is transformed into an <code>MyspaceEvent</code> which is asserted. The rule <code>ListenMyspace</code> executes on assertion of this event. It prints the details of the message to the command window. For example:</p>
+<p>
+<pre class="logs">[ListenMyspace] MyspaceEvent ID: 501
+[ListenMyspace] MyspaceEvent VALUE: Hello, BE AS Channel!
+[ListenMyspace] MyspaceEvent CONSUMPTION MODE: EventListener
+[ListenMyspace] MyspaceEvent EVENT TYPE: PutEvent</pre>
+</p>
+</li>
+
+<li><p>And another message arriving at the destination <code>OutspaceDest</code> within the ActiveSpaces channel (<code>aschannel</code>) is transformed into an <code>OutspaceEvent</code> which is asserted. The rule <code>TakeTupleFromOutspace</code> executes on assertion of this event. It prints the details of the message to the command window. For example:</p>
+<p>
+<pre class="logs">[TakeTupleFromOutspace] OutspaceDefEvent ID: 1001
+[TakeTupleFromOutspace] OutspaceDefEvent VALUE: New text for Outspace: Hello, BE AS Channel!
+[TakeTupleFromOutspace] OutspaceDefEvent DATETIME: java.util.GregorianCalendar[time=1339688126000, ... ]
+[TakeTupleFromOutspace] OutspaceDefEvent CONSUMPTION MODE: EntryBrowser
+[TakeTupleFromOutspace] OutspaceDefEvent BROWSER TYPE: TAKE</pre>
+</p>
+</li>
+
+
+</ol>
+
+
+
+
+
+<div class="footer">
+<p>TIBCO BusinessEvents&trade; 5.6<br />
+Copyright&copy; 2004-2019 TIBCO Software Inc. All rights reserved.</p>
+</div>
+</body>
+</html>

@@ -1,0 +1,85 @@
+/**
+ * @description 
+ */
+void rulefunction Monitoring.RuleFunctions.cqueries.tearDownContinousQueries {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		
+	}
+	body {
+		boolean setupQueries  = System.getGlobalVariableAsBoolean("setupqueries",true);
+		if (setupQueries == false){
+		    return;
+		}
+		Shared.RuleFunctions.log("tearDownContinousQueries","INFO","Shutting down continous queries...");
+		String[] cTypesWithPaths = BEMM.dashboard.getAllSupportedComponentTypes();
+		String alreadyProcessedTypes = "";
+		for (int i = 0 ; i < cTypesWithPaths@length ; i = i + 1) {
+		    String cTypeWithPath = cTypesWithPaths[i];
+		    //get the component definition map id
+		    String configMapId = BEMM.dashboard.getConfigMapID(cTypeWithPath);
+		    if (configMapId == null) {
+		        alreadyProcessedTypes = alreadyProcessedTypes + ":" + cTypesWithPaths[i];
+		        continue;
+		    }
+		    String dataRetrievalType = Util.HashMap.getObject(configMapId,"dataretrievaltype");
+		    if (dataRetrievalType != "query") {
+		        Shared.RuleFunctions.log("tearDownContinousQueries","INFO",cTypeWithPath+" is not query based...");
+		        alreadyProcessedTypes = alreadyProcessedTypes + ":" + cTypesWithPaths[i];
+		        continue;
+		    }
+		    String dataRetrievalTypeConfig = Util.HashMap.getObject(configMapId,"retrievalconfig1");
+		    int j = 10;
+		    while (dataRetrievalTypeConfig == "reference" && j > 0){
+		        cTypeWithPath = Util.HashMap.getObject(configMapId,"retrievalconfig2");
+		        configMapId = BEMM.dashboard.getConfigMapID(cTypeWithPath);
+		        if (configMapId != null){
+		            dataRetrievalType = Util.HashMap.getObject(configMapId,"dataretrievaltype");
+		        }
+		        if (configMapId == null || dataRetrievalType != "query") {
+		            j = 0;
+		            dataRetrievalType = null;
+		            configMapId = null;
+		            cTypeWithPath = cTypesWithPaths[i];
+		            break;
+		        }
+		        dataRetrievalTypeConfig = Util.HashMap.getObject(configMapId,"retrievalconfig1");
+		        j = j - 1;
+		    }
+		    if (String.equals(cTypeWithPath,cTypesWithPaths[i]) == false){
+		        Shared.RuleFunctions.log("setUpContinousQueries","INFO",cTypesWithPaths[i]+"'s has been resolved to "+cTypeWithPath+"...");
+		    }
+		    if (configMapId == null || j == 0) {
+		        Shared.RuleFunctions.log("tearDownContinousQueries","WARNING",cTypesWithPaths[i]+"'s definition could not resolved...");
+		    }
+		    else if (String.indexOfString(alreadyProcessedTypes,0,cTypeWithPath) != -1) {
+		       Shared.RuleFunctions.log("tearDownContinousQueries","INFO",cTypesWithPaths[i]+"'s definition has already been processed...");
+		    }
+		    else if (String.length(String.trim(dataRetrievalTypeConfig)) != 0) {
+		        String queryName = cTypeWithPath + ".query";
+		        if (Query.exists(queryName) == true) {
+		           Shared.RuleFunctions.log("tearDownContinousQueries","INFO","Shutting down "+queryName);
+		            Query.delete(queryName);
+		        }
+		        String additionalQueryParam = Util.HashMap.getObject(configMapId,"retrievalconfig2");
+		        if (additionalQueryParam != null){
+		            //clean up linked lists
+		            String masterListID = Util.HashMap.getObject(configMapId,"ctype");
+		            int size = BEMMUtil.LinkedList.size(masterListID);
+		            for (int k = 0 ; k < size ; k = k + 1){
+		                String dataListID = BEMMUtil.LinkedList.get(masterListID,k);
+		                BEMMUtil.LinkedList.deleteList(dataListID);
+		            }
+		            BEMMUtil.LinkedList.deleteList(masterListID);
+		        }
+		     }
+		     else {
+		         Shared.RuleFunctions.log("tearDownContinousQueries","WARNING","No query specified for "+cTypeWithPath+"...");
+		    }
+		    alreadyProcessedTypes = alreadyProcessedTypes + ":" + cTypesWithPaths[i];
+		}
+		Shared.RuleFunctions.log("tearDownContinousQueries","INFO","Shutting down continous queries is complete...");
+	}
+}

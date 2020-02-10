@@ -1,0 +1,43 @@
+/**
+ * @description Create RULETEMPLATE builder concept from SCS while fetching.
+ */
+WebStudio.Core.Concepts.RuleTemplateInstance.Builder.WS_C_RuleTemplateInstanceBuilder rulefunction WebStudio.Core.RuleFunctions.Utils.RT.Builder.Ops.Fetch.WS_RF_CreateRuleTemplateBuilderConceptFromSCS {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String projectName;
+		String username;
+		String scsIntegrationType;
+		String scsRootURL;
+		String artifactPath;
+		Object ruleTemplateObject;
+		String[] roles;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.RT.Builder.Ops.Fetch.WS_RF_CreateRuleTemplateBuilderConceptFromSCS");
+		
+		//Create a concept now
+        WS_C_RuleTemplateInstanceBuilder ruleTemplateInstanceBuilder = 
+        	Instance.newInstance("/WebStudio/Core/Concepts/RuleTemplateInstance/Builder/WS_C_RuleTemplateInstanceBuilder", "RTI_BUILDER_" + WS.Common.generateUUID());
+        	
+        	int rulePriority = WS.RT.getRuleTemplatePriority(ruleTemplateObject);
+        	ruleTemplateInstanceBuilder.rulePriority = rulePriority;
+		
+		//Do this in 2 phases
+		//1.) Create symbol hierarchy
+		//2.) Create Command hierarchy.
+		//3.) Create Display properties
+		
+		//Create symbols
+		WS_RF_CreateBuilderSymbolHierarchy(scsIntegrationType, scsRootURL, projectName, ruleTemplateObject, ruleTemplateInstanceBuilder, username, roles);
+		
+		//Create action commands'
+		WS_RF_CreateBuilderCommandHierarchy(scsIntegrationType, scsRootURL, projectName, ruleTemplateObject, ruleTemplateInstanceBuilder, username, roles);
+		
+		// Create Display Properties
+		WS_RF_CreateBuilderDisplayProperties(ruleTemplateObject, ruleTemplateInstanceBuilder);
+									
+		return ruleTemplateInstanceBuilder;
+	}
+}

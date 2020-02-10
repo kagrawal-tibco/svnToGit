@@ -1,0 +1,33 @@
+<div class='card panel-sm'>
+  <div class='card-header'>
+   	<button (click)='toggleMaximize()' class="float-right btn-outline-primary">
+    	<i
+	     	class="fa"
+	     	[class.fa-window-restore]="maximized"
+	     	[class.fa-expand]="!maximized"
+	     	>
+    	</i>
+   	</button>
+    <ng-container i18n>{{i18n('Select a Revision of ')}}</ng-container>{{ context.artifactName }}
+  </div>
+  <div class='list-group list-group-scroll'>
+    <a *ngFor='let e of context.history'
+      class='list-group-item clickable'
+      [class.active]='e.version === selectedRevision'
+      (click)='onRevisionSelect(e.version)'
+      >
+      <artifact-history-entry
+        [input]='e'
+      ></artifact-history-entry>
+    </a>
+  </div>
+</div>
+<div class='row left-pad right-pad bottom-pad top-pad'>
+  <div class='col-sm-12'>
+    <button type="button" class='btn btn-outline-primary btn-sm' (click)='onCancel()' i18n>{{i18n('Cancel')}}</button> 
+    <button type="button" class='btn btn-primary btn-sm pull-right' 
+      (click)='onConfirm()'
+      [disabled]='!canConfirm()'
+      i18n>{{i18n('Confirm')}}</button> 
+  </div> 
+</div>

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Application
+	xmlns:mx="http://www.adobe.com/2006/mxml"
+	layout="absolute"
+	implements="com.tibco.be.views.core.IBEVLocalConnectionClient"
+	creationComplete="init()"
+>
+<mx:Script>
+	<![CDATA[
+		import com.tibco.be.views.core.BEVLocalConnectionManager;
+		import com.tibco.be.views.core.events.EventBusEvent;
+		import mx.controls.Alert;
+		
+		private function init():void{
+			BEVLocalConnectionManager.instance.registerClient(this, BEVLocalConnectionManager.INTERNAL_CONNECTION_NAME);
+		}
+		
+		public function receiveMessage(message:String):void{
+			Alert.show("Received Message:\n" + message);
+		}
+		public function receiveEventData(eventData:XML):void{
+			Alert.show("Received EventData:\n" + eventData.toString());
+		}
+		public function receiveEvent(event:Object):void{}{
+			Alert.show("Received Event Bus Event:\n");
+		}
+		public function receiveEventResponse(event:EventBusEvent):void{
+			Alert.show("Received Event Response:\n" + event.type);
+		}
+	]]>
+</mx:Script>
+	
+</mx:Application>

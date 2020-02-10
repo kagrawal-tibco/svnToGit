@@ -1,0 +1,60 @@
+/**
+ * @description Copy the generated class to a certain directory and delete any unwanted classes/directories.
+ */
+void rulefunction Approval.Rules.RuleFunctions.ArtifactRuleFunctions.AMS_RF_RetainGeneratedClass {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String outputRootDir;
+		String classFQName;
+		String artifactType;
+	}
+	body {
+		Object encoding = "UTF-8";
+		String codegenRootDir = System.getSystemPropertyAsString("be.codegen.rootDirectory", null);
+		if (codegenRootDir == null) {
+			throw Exception.newException("PROPERTY_MISSING", "be.codegen.rootDirectory property not specified", null);
+		}
+		//Get source code directory
+		String sourceCodeDir = RMS.ArtifactsManagement.getArtifactCodeSourceDir(artifactType);
+		if (sourceCodeDir == null) {
+			return;
+		}
+		String pathSeparator = "/";
+			
+		Object buffer = String.createBuffer(0);
+		buffer = String.append(buffer, outputRootDir);
+		buffer = String.append(buffer, pathSeparator);
+		buffer = String.append(buffer, sourceCodeDir);
+		
+		String classFilePath = String.replaceAll(classFQName, "\\.", pathSeparator);
+		buffer = String.append(buffer, sourceCodeDir);
+		buffer = String.append(buffer, pathSeparator);
+		buffer = String.append(buffer, classFilePath);
+		buffer = String.append(buffer, ".class");
+		
+		//Copy this file under oot outputdir
+		//e.g : deployment/be/gen/F1/ConceptA.class
+		String packageDir = 
+			String.substring(classFilePath, 0, String.lastIndexOfString(classFilePath, 0, pathSeparator));
+		
+		String contents = File.readFileAsString(String.convertBufferToString(buffer), encoding);
+		String.clearBuffer(buffer);
+		
+		//Create this dir structure 
+		boolean foldersCreated = File.createFolders(outputRootDir, packageDir);
+		
+		buffer = String.append(buffer, outputRootDir);
+		buffer = String.append(buffer, pathSeparator);	
+		buffer = String.append(buffer, classFilePath);
+		buffer = String.append(buffer, ".class");	
+		
+		if (foldersCreated) {
+			String classFileCopied = String.convertBufferToString(buffer);
+			Object fileWriter = File.openFile(classFileCopied, "rw");
+			File.fileWrite(fileWriter, contents);
+			File.fileClose(fileWriter);
+		} 
+	}
+}

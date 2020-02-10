@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<cluster xmlns="http://tibco.com/businessevents/configuration/%%BeVersionShort%%">
+    <revision>
+        <version>1</version>
+        <author>%%UserName%%</author>
+        <date>%%DateTime%%</date>
+        <comment/>
+    </revision>
+    <name>%%ClusterName%%</name>
+    <message-encoding>UTF-8</message-encoding>
+    <object-management>
+        <memory-manager />
+    </object-management>
+    <rulesets>
+        <rules id="all-rules">
+            <uri>/</uri>
+        </rules>
+    </rulesets>
+    <function-groups>
+        <functions id="all-functions">
+            <uri>/</uri>
+        </functions>
+    </function-groups>
+    <destination-groups/>
+    <log-configs>
+        <log-config id="logConfig">
+            <enabled>true</enabled>
+            <roles>*:info</roles>
+            <files>
+                <enabled>true</enabled>
+                <dir>logs</dir>
+                <max-number>10</max-number>
+                <max-size>5000000</max-size>
+                <append>true</append>
+            </files>
+        </log-config>
+    </log-configs>
+    <agent-classes>
+        <inference-agent-class id="inference-class">
+            <rules>
+                <ref>all-rules</ref>
+            </rules>
+            <destinations/>
+            <startup/>
+            <shutdown/>
+        </inference-agent-class>
+    </agent-classes>
+    <processing-units>
+        <processing-unit id="default">
+            <agents>
+                <agent>
+                    <ref>inference-class</ref>
+                </agent>
+            </agents>
+            <logs>logConfig</logs>
+            <property-group>
+            </property-group>
+        </processing-unit>
+    </processing-units>
+    <property-group name="cluster-level properties">
+    	<property-group name="auth">
+		    <property name="be.mm.auth.type" value="file"/>
+		    <property name="be.mm.auth.file.location" value="%%BE_HOME%%/mm/config/users.pwd"/>
+		    <property name="java.security.auth.login.config" value="%%BE_HOME%%/mm/config/jaas-config.config"/>
+	    </property-group>
+	</property-group>
+</cluster>
+

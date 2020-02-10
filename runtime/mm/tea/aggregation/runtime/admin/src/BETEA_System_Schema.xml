@@ -1,0 +1,445 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema name="BETEA" display-name="BETEA systemschema" system-schema="true">
+    <retention-policies>
+        <retention-policy type="SystemAlerts/Alerts" period="2" unit="WEEK" purge-time-of-day="0100"
+                          purge-frequency-period="86400000"/>
+
+    </retention-policies>
+    <attributes>
+        <!-- Dimension Related Attributes -->
+        <attribute datatype="STRING" name="alert_id"/>
+        <attribute datatype="STRING" name="schemaName"/>
+        <attribute datatype="STRING" name="cube"/>
+        <attribute datatype="STRING" name="hierarchy"/>
+        <attribute datatype="STRING" name="dimLevel"/>
+        <attribute datatype="STRING" name="metricNode"/>
+        <attribute datatype="STRING" name="setNode"/>
+        <attribute datatype="STRING" name="clearNode"/>
+        <attribute datatype="STRING" name="ruleName"/>
+        <attribute datatype="STRING" name="setCondition">
+        	<properties>
+                <property name="storage-datatype" value="CLOB"/>
+			</properties>
+        </attribute>
+        <attribute datatype="STRING" name="clearCondition">
+        	<properties>
+                <property name="storage-datatype" value="CLOB"/>
+			</properties>
+        </attribute>
+        <attribute datatype="STRING" name="actionName"/>
+        <attribute datatype="STRING" name="userName"/>
+        <attribute datatype="BOOLEAN" name="isSetAction"/>
+        <attribute datatype="STRING" name="alertLevel"/>
+        <attribute datatype="STRING" name="alertType"/>
+        <attribute datatype="STRING" name="alertText">
+			<properties>
+                <property name="storage-datatype" value="CLOB"/>
+			</properties>
+		</attribute>	
+        <attribute datatype="STRING" name="alertDetails">
+			<properties>
+                <property name="storage-datatype" value="CLOB"/>
+			</properties>
+		</attribute>		
+        <attribute datatype="INTEGER" name="currentCount"/>
+        <attribute datatype="INTEGER" name="totalCount"/>
+        <attribute datatype="LONG" name="timestamp"/>
+        <attribute datatype="BOOLEAN" name="isAlertCleared"/>
+        <attribute datatype="STRING" name="appName"/>
+        <attribute datatype="BOOLEAN" name="isAdmin"/>
+        
+        <attribute datatype="STRING" name="agentName"/>
+        <attribute datatype="STRING" name="status"/>
+        <attribute datatype="DOUBLE" name="usedmemsize"/>
+        <attribute datatype="DOUBLE" name="maxmemsize"/>
+        <attribute datatype="DOUBLE" name="cpuusage"/>
+        <attribute datatype="STRING" name="statRuleName"/>
+        <attribute datatype="LONG"   name="totalTime"/>
+        <attribute datatype="LONG"   name="evalCount"/>
+        <attribute datatype="DOUBLE" name="avgTime"/>
+        <attribute datatype="STRING" name="ruleEntity" />
+		<attribute datatype="STRING" name="ruleApp"    />
+		<attribute datatype="LONG" name="threadcount" />
+		<attribute datatype="LONG" name="deadlockedthreadcount"    />
+		
+    </attributes>
+
+    <dimensions>
+        <dimension name="alert_id" attribute-ref="alert_id"/>
+        <dimension name="schemaName" attribute-ref="schemaName"/>
+        <dimension name="cube" attribute-ref="cube"/>
+        <dimension name="hierarchy" attribute-ref="hierarchy"/>
+        <dimension name="dimLevel" attribute-ref="dimLevel"/>
+        <dimension name="userName" attribute-ref="userName"/>
+        <dimension name="ruleName" attribute-ref="ruleName"/>
+        <dimension name="actionName" attribute-ref="actionName"/>
+        <dimension name="alertLevel" attribute-ref="alertLevel"/>
+        <dimension name="app" attribute-ref="appName"/>
+        <dimension name="alertType" attribute-ref="alertType"/>
+        <dimension name="agent" attribute-ref="agentName"/>
+        <dimension name="rule" attribute-ref="statRuleName"/>
+        <dimension name="ruleEntity"  attribute-ref="ruleEntity" />
+	    <dimension name="ruleApp"  	  attribute-ref="ruleApp" />
+	    
+        <time-dimension name="month" attribute-ref="timestamp" unit="MONTH" frequency="1"/>
+        <time-dimension name="weeks" attribute-ref="timestamp" unit="WEEK" frequency="1"/>
+        <time-dimension name="days" attribute-ref="timestamp" unit="DAY" frequency="1"/>
+        <time-dimension name="hours" attribute-ref="timestamp" unit="HOUR" frequency="1"/>
+        <time-dimension name="minutes" attribute-ref="timestamp" unit="MINUTE" frequency="5"/>					
+    </dimensions>
+
+    <measurements>
+        <measurement name="AlertText" datatype="STRING">
+			<properties>
+                <property name="storage-datatype" value="CLOB"/>
+			</properties>		
+            <metric-function ref="System.SETVAL">
+				<function-params>
+					<function-param name="PARAM1" attribute-ref="alertText"/>
+				</function-params>
+			</metric-function>
+		</measurement>
+		
+        <measurement name="AlertLevel" datatype="STRING">
+			<properties>
+                <property name="storage-datatype" value="STRING"/>
+			</properties>		
+            <metric-function ref="System.SETVAL">
+				<function-params>
+					<function-param name="PARAM1" attribute-ref="alertLevel"/>
+				</function-params>
+			</metric-function>
+		</measurement>
+
+        <measurement name="AlertType" datatype="STRING">
+			<properties>
+                <property name="storage-datatype" value="STRING"/>
+			</properties>
+            <metric-function ref="System.SETVAL">
+				<function-params>
+					<function-param name="PARAM1" attribute-ref="alertType"/>
+				</function-params>
+			</metric-function>
+		</measurement>
+		
+		<measurement name="AlertDetails">
+			<properties>
+                <property name="storage-datatype" value="CLOB"/>
+			</properties>			
+			<metric-function ref="System.SETVAL">
+				<function-params>
+					<function-param name="PARAM1" attribute-ref="alertDetails"/>
+				</function-params>
+			</metric-function>
+		</measurement>
+
+		<measurement name="CurrentCount" datatype="INTEGER">
+			<properties>
+                <property name="storage-datatype" value="INTEGER"/>
+			</properties>		
+			<metric-function ref="System.SETVAL">
+				<function-params>
+					<function-param name="PARAM1" attribute-ref="currentCount"/>
+				</function-params>
+			</metric-function>
+		</measurement>
+
+		<measurement name="TotalCount" datatype="INTEGER">
+			<properties>
+                <property name="storage-datatype" value="INTEGER"/>
+			</properties>		
+			<metric-function ref="System.SETVAL">
+				<function-params>
+					<function-param name="PARAM1" attribute-ref="totalCount"/>
+				</function-params>	
+			</metric-function>
+		</measurement>
+
+		<measurement name="MetricNode" datatype="STRING">
+			<properties>
+                <property name="storage-datatype" value="STRING"/>
+			</properties>		
+			<metric-function ref="System.SETVAL">
+				<function-params>
+					<function-param name="PARAM1" attribute-ref="metricNode"/>
+				</function-params>
+			</metric-function>
+		</measurement>
+
+		<measurement name="SetCondition" datatype="STRING">
+			<properties>
+                <property name="storage-datatype" value="CLOB"/>
+			</properties>		
+			<metric-function ref="System.SETVAL">
+				<function-params>
+					<function-param name="PARAM1" attribute-ref="setCondition"/>
+				</function-params>	
+			</metric-function>
+		</measurement>
+
+		<measurement name="SetNode" datatype="STRING">
+			<properties>
+                <property name="storage-datatype" value="STRING"/>
+			</properties>		
+			<metric-function ref="System.SETVAL">
+				<function-params>
+					<function-param name="PARAM1" attribute-ref="setNode"/>
+				</function-params>	
+			</metric-function>
+		</measurement>
+
+		<measurement name="ClearCondition" datatype="STRING">
+			<properties>
+                <property name="storage-datatype" value="CLOB"/>
+			</properties>		
+			<metric-function ref="System.SETVAL">
+				<function-params>
+					<function-param name="PARAM1" attribute-ref="clearCondition"/>
+				</function-params>	
+			</metric-function>
+		</measurement>
+
+		<measurement name="ClearNode" datatype="STRING">
+			<properties>
+                <property name="storage-datatype" value="STRING"/>
+			</properties>		
+			<metric-function ref="System.SETVAL">
+				<function-params>
+					<function-param name="PARAM1" attribute-ref="clearNode"/>
+				</function-params>	
+			</metric-function>
+		</measurement>
+		
+		<measurement name="IsSetAction" datatype="BOOLEAN">
+			<properties>
+                <property name="storage-datatype" value="BOOLEAN"/>
+			</properties>		
+			<metric-function ref="System.SETVAL">
+				<function-params>
+					<function-param name="PARAM1" attribute-ref="isSetAction"/>
+				</function-params>
+			</metric-function>
+		</measurement>
+		
+		<measurement name="IsAlertCleared" datatype="BOOLEAN">
+			<properties>
+                <property name="storage-datatype" value="BOOLEAN"/>
+			</properties>		
+			<metric-function ref="System.SETVAL">
+				<function-params>
+					<function-param name="PARAM1" attribute-ref="isAlertCleared"/>
+				</function-params>
+			</metric-function>
+		</measurement>
+		
+		<measurement name="IsAdmin" datatype="BOOLEAN">
+			<properties>
+                <property name="storage-datatype" value="BOOLEAN"/>
+			</properties>		
+			<metric-function ref="System.SETVAL">
+				<function-params>
+					<function-param name="PARAM1" attribute-ref="isAdmin"/>
+				</function-params>
+			</metric-function>
+		</measurement>
+		
+		<measurement name="status" datatype="STRING">
+			<properties>
+                <property name="storage-datatype" value="STRING"/>
+			</properties>
+            <metric-function ref="System.SETVAL">
+				<function-params>
+					<function-param name="PARAM1" attribute-ref="status"/>
+				</function-params>
+			</metric-function>
+		</measurement>
+		
+		<!-- AVERAGE  STATS HIERARCHY -->
+		<measurement name="avgmemusage" units="MB">
+			<properties>
+				<property name="storage-datatype" value="DOUBLE" />
+			</properties>		
+			<metric-function ref="System.AVGMEMUSEAGE">				
+				<function-params>
+					<function-param name="PARAM1" attribute-ref="usedmemsize"/>
+					<function-param name="PARAM2" attribute-ref="maxmemsize"/>
+				</function-params>	
+			</metric-function>
+		</measurement>
+		
+		<!-- AVERAGE  STATS HIERARCHY -->
+		<measurement name="avgcpuusage" units="percent">
+			<properties>
+				<property name="storage-datatype" value="DOUBLE" />
+			</properties>		
+			<metric-function ref="System.AVGCPUUSAGEPERCENTMETRIC">				
+				<function-params>
+					<function-param name="PARAM1" attribute-ref="cpuusage"/>
+				</function-params>
+			</metric-function>
+		</measurement>
+		
+		<measurement name="avgTime" units="time">
+			<properties>
+				<property name="storage-datatype" value="DOUBLE" />
+			</properties>		
+			<metric-function ref="System.AVG">
+				<function-params>
+					<function-param name="PARAM1" attribute-ref="avgTime"/>
+				</function-params>
+			</metric-function>
+		</measurement>
+		
+		<measurement name="totalTime" units="time">
+			<properties>
+				<property name="storage-datatype" value="LONG" />
+			</properties>		
+			<metric-function ref="System.SETVAL">				
+				<function-params>
+					<function-param name="PARAM1" attribute-ref="totalTime"/>
+				</function-params>
+			</metric-function>
+		</measurement>
+		
+		<measurement name="evalCount" units="count">
+			<properties>
+				<property name="storage-datatype" value="LONG" />
+			</properties>		
+			<metric-function ref="System.SUM">
+				<function-params>
+					<function-param name="PARAM1" attribute-ref="evalCount"/>
+				</function-params>
+			</metric-function>
+		</measurement>
+		
+		<measurement name="timestamp" units="LONG">
+			<properties>
+				<property name="storage-datatype" value="LONG" />
+				<property name="alert-token" value="timestamp" />
+			</properties>		
+			<metric-function ref="System.SETVAL">				
+				<function-params>
+					<function-param name="PARAM1" attribute-ref="timestamp"/>
+				</function-params>	
+			</metric-function>
+		</measurement>
+		
+		<measurement name="threadcount" units="time">
+			<properties>
+				<property name="storage-datatype" value="LONG" />
+			</properties>		
+			<metric-function ref="System.SETVAL">				
+				<function-params>
+					<function-param name="PARAM1" attribute-ref="threadcount"/>
+				</function-params>
+			</metric-function>
+		</measurement>
+		
+		<measurement name="deadlockedthreadcount" units="time">
+			<properties>
+				<property name="storage-datatype" value="LONG" />
+			</properties>		
+			<metric-function ref="System.SETVAL">				
+				<function-params>
+					<function-param name="PARAM1" attribute-ref="deadlockedthreadcount"/>
+				</function-params>
+			</metric-function>
+		</measurement>
+		
+    </measurements>
+
+    <cubes>
+        <cube name="SystemAlerts">
+            <hierarchies>
+                <hierarchy name="Alerts">
+                    <properties>                        
+                        <property name="asset-hierarchy" value="false"/>
+                        <property name="storage-schema" value="Alerts"/>
+						<property name="alert-hierarchy" value="true"/>
+						<property name="snapshot-rule-eval" value="false"/>
+                    </properties>				
+                    <dimensions>
+                        <dimension ref="alert_id" compute="true"/>
+                        <dimension ref="app" compute="false"/>
+                        <dimension ref="schemaName" compute="false"/>
+                        <dimension ref="cube" compute="false"/>
+                        <dimension ref="hierarchy" compute="false"/>
+                        <dimension ref="dimLevel" compute="false"/>
+                        <dimension ref="userName" compute="false"/>
+                        <dimension ref="ruleName" compute="false"/>
+                        <dimension ref="actionName" compute="false"/>
+                       
+                        <!--  <dimension ref="weeks"/>
+                        <dimension ref="days"/>
+                        <dimension ref="hours"/> -->
+
+                    </dimensions>
+                    <measurement-refs>
+                    	<measurement ref="AlertLevel"/>
+                        <measurement ref="AlertType"/>
+                        <measurement ref="AlertText"/>
+                        <measurement ref="AlertDetails"/>
+                        <measurement ref="CurrentCount"/>
+                        <measurement ref="TotalCount"/>
+                        <measurement ref="MetricNode"/>
+                        <measurement ref="SetCondition"/>
+                        <measurement ref="SetNode"/>
+                        <measurement ref="ClearCondition"/>
+                        <measurement ref="ClearNode"/>
+                        <measurement ref="IsSetAction"/>
+                        <measurement ref="IsAlertCleared"/>
+                        <measurement ref="IsAdmin"/>
+                    </measurement-refs>
+                </hierarchy>
+            </hierarchies>
+        </cube>
+
+	<cube name="SystemStats">
+		<hierarchies>
+			<hierarchy name="systemstatshierarchy">
+				<properties>
+					<property name="storage-schema" value="rawBeteaagent" />
+					<property name="snapshot-rule-eval" value="true"/>
+				</properties>
+				<dimensions>
+					<dimension ref="agent" compute="false" />
+					<dimension ref="hours"  	compute="true"   />
+					<dimension ref="minutes"    compute="true"   />
+				</dimensions>
+				<measurement-refs>
+					<measurement ref="status" />
+					<measurement ref="avgmemusage" />
+					<measurement ref="avgcpuusage" />
+					<measurement ref="threadcount" />
+					<measurement ref="deadlockedthreadcount" />
+					<measurement ref="timestamp"/>
+				</measurement-refs>
+			</hierarchy>
+			
+			
+			<!-- <hierarchy name="systemrulestatshierarchy">
+				<properties>
+					<property name="storage-schema" value="rawBeteaagentrules" />
+					<property name="snapshot-rule-eval" value="false"/>
+				</properties>
+				<dimensions>
+					<dimension ref="agent"              compute="true" />
+					<dimension ref="ruleEntity"  		compute="true" />
+					<dimension ref="ruleApp"  		    compute="true" />
+					<dimension ref="rule"  				compute="true" />
+				</dimensions>
+				<measurement-refs>
+					<measurement ref="avgTime"    />
+					<measurement ref="totalTime"  />
+					<measurement ref="evalCount"  />
+					<measurement ref="timestamp"/>
+				</measurement-refs>
+			</hierarchy> -->
+			
+		</hierarchies>
+	</cube>
+        
+         
+       
+    </cubes>
+</schema>

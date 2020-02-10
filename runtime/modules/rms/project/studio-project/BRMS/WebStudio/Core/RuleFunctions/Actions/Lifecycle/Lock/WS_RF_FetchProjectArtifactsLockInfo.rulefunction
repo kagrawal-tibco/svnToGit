@@ -1,0 +1,53 @@
+/**
+ * @description Fetch artifacts Lock info for the managed project
+ */
+WebStudio.Core.Concepts.DataSources.WS_C_TemporaryReturnData rulefunction WebStudio.Core.RuleFunctions.Actions.Lifecycle.Lock.WS_RF_FetchProjectArtifactsLockInfo {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String projectName;
+		String userName;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.Lifecycle.Lock.WS_RF_FetchProjectArtifactsLockInfo");
+		
+		String responseMessage = null;
+		String errorCode = null;
+		int recordCount = 0;
+		int responseStatus = 0;
+		WS_C_ResponseData responseData = null;
+		
+		Log.log(LOGGER, "Debug", "Project name %s passed as parameter", projectName);
+
+		responseData = Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/WS_C_ResponseData");
+		
+		String subscriptionId = WS_RF_GetSubscriptionId(userName);
+		String projectArtifactLocksExtId = WS_RF_CreateUserArtifactExtId("LOCKS_REGISTRY", null, projectName, null, subscriptionId, null);
+		
+		WS_C_ProjectArtifactLocksRegistry projectLocksRegistry = Instance.getByExtIdByUri(projectArtifactLocksExtId, "/WebStudio/Core/Concepts/Lifecycle/Lock/WS_C_ProjectArtifactLocksRegistry");
+
+		if (projectLocksRegistry != null) {
+			String[] artifactLockIds = Instance.PropertyArray.toArrayString(projectLocksRegistry.artifactLockId);
+			for (int loop = 0; loop < artifactLockIds@length; loop++) {
+				WS_C_MasterArtifactLock artifactLock = Instance.getByExtIdByUri(artifactLockIds[loop], "/WebStudio/Core/Concepts/Lifecycle/WS_C_MasterArtifactLock");
+				if (!WS_RF_IsArtifactLockTimedout(artifactLock)) {
+					WS_C_ProjectArtifactsLockInfoDataSourceRecord artifactLockDSRecord = Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/Records/WS_C_ProjectArtifactsLockInfoDataSourceRecord");
+					artifactLockDSRecord.no = "" + (loop + 1);
+					artifactLockDSRecord.projectName = projectName;		
+					artifactLockDSRecord.artifactPath = artifactLock.artifactPath;
+					artifactLockDSRecord.artifactType = artifactLock.artifactType;
+					artifactLockDSRecord.fileExtension = String.toLowerCase(artifactLock.artifactType);
+					artifactLockDSRecord.lockOwner = artifactLock.lockedBy;
+					artifactLockDSRecord.imageSrc = Util.HashMap.get("ARTIFACT_TYPE_IMAGES", artifactLock.artifactType);
+					artifactLockDSRecord.lockedTime = artifactLock.lockedTime;
+					WS_C_AbstractDataSourceRecord abstractDataSourceRecord = artifactLockDSRecord;
+					Instance.PropertyArray.appendContainedConcept(responseData.record, abstractDataSourceRecord, 1L);										  
+					recordCount++;
+				}	
+			}	 
+		}
+		
+		return WS_RF_CreateTemporaryReturnData(responseStatus, recordCount, errorCode, responseMessage, responseData);
+	}
+}

@@ -1,0 +1,80 @@
+<div class='card panel-sm page-lg' >
+  <div class='card-header'>
+    {{title}}
+  </div>
+  <div class='card-body'>
+    <div class="row">
+      <div class="col-sm-4 page-col divider-right scroll-x">
+        <ul class='nav nav-stacked nav-pills'>
+          <li class='nav-item'
+            [class.active]='params.mode === "CREATE"'
+          >
+            <a
+              (click)='onCreate()'
+              class='clickable nav-link'
+              [class.active]='params.mode === "CREATE"'
+              >
+              <small i18n>{{i18n('New Deployment Descriptor')}}</small>
+            </a>
+          </li>
+        </ul>
+        <div class='divider-bottom bottom-pad top-pad'></div>
+        <div class='text-center top-pad'>
+          <span class='opague'><small>{{selectSectionMsg}}</small></span>
+        </div>
+        <div *ngIf='!params.descriptors'>
+          <span class='fa fa-refresh fa-spin'></span><ng-container i18n>{{i18n(' Loading ')}}</ng-container>
+        </div>
+          <div class='available-discriptors scroll-y'>
+            <ul class='nav nav-stacked nav-pills'>
+              <li class='nav-item'
+                *ngFor='let descriptor of params.descriptors'   
+                [class.active]='isActive(descriptor)'
+              >
+                <a
+                  (click)='onSelect(descriptor)'
+                  class='clickable nav-link'
+                  [class.active]='isActive(descriptor)'
+                  >
+                  <div class='clickable' >
+                    <div>
+                      <small>{{getEntityBrief(descriptor)}}</small>
+                    </div>
+                    <div>
+                      <small 
+                        class='opague'
+                        [class.gray]='!isActive(descriptor)'
+                      >@ {{getTargetBrief(descriptor)}}</small>
+                    </div>
+                  </div>
+                </a>
+              </li>
+            </ul>
+          </div>
+      </div>
+      <div class="col-sm-8 page-col">
+        <div class='row scroll-y'>
+          <div class='col-sm-12'>
+            <descriptor-info
+              *ngIf='showDescriptor | async'
+              [input]='params.descriptor'
+              [unique]='params.mode === "CREATE" ? params.descriptors : null'
+              [artifactId]='params.artifact.id'
+              [revisions]='params.revisions'
+              [edit]='params.mode === "CREATE"'
+              (valid)='onValidChange($event)'
+            ></descriptor-info>
+          </div>
+        </div>
+        <div class='row' *ngIf='showCopy()'>
+          <div class='col-sm-12'>
+            <div class=''>
+              <label for="copy" class='control-label control-label-normal' i18n>{{i18n('Copy this descriptor to create a new one')}}</label>
+              <button type="button" class='btn btn-info btn-sm btn-narrow' (click)='onCopy()'><i class="fa fa-clone" aria-hidden="true"></i><ng-container i18n>{{i18n('Copy')}}</ng-container></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

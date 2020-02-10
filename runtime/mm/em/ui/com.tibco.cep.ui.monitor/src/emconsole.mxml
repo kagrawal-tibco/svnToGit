@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Application xmlns:mx="http://www.adobe.com/2006/mxml" layout="vertical" 
+	applicationComplete="init()" styleName="appStyle">
+	<mx:Style source="assets/styles.css"/>
+	<mx:Script>
+		<![CDATA[
+			import mx.controls.Alert;
+			import mx.managers.CursorManager;
+			import mx.messaging.config.ServerConfig;
+			
+			import com.tibco.cep.ui.monitor.AppConfig;
+			import com.tibco.cep.ui.monitor.BESystemMonitor;
+			import com.tibco.cep.ui.monitor.Header;
+			import com.tibco.cep.ui.monitor.LoginDialogController;
+			import com.tibco.cep.ui.monitor.events.EventTypes;
+			import com.tibco.cep.ui.monitor.events.ServerCrashEvent;
+			import com.tibco.cep.ui.monitor.io.DelegateCallbackImpl;
+			import com.tibco.cep.ui.monitor.io.PSVRClient;			
+			import com.tibco.cep.ui.monitor.util.RandomXMLGenerator;
+			import com.tibco.cep.ui.monitor.util.Util;
+				
+			private var _sysMon:BESystemMonitor;
+			private var _crashed:Boolean;
+			private var _logindialogcontroller:LoginDialogController; 
+			
+			private function init():void{
+				_crashed = false;
+				login();
+			}
+			
+			private function login():void{
+				_logindialogcontroller = new LoginDialogController(this);
+				_logindialogcontroller.addEventListener(Event.COMPLETE, handleLoginComplete);
+				_logindialogcontroller.init();
+			}
+			
+			private function handleLoginComplete(event:Event):void {
+				_logindialogcontroller.removeEventListener(Event.COMPLETE, handleLoginComplete);
+				PSVRClient.instance.getApplicationConfig(new DelegateCallbackImpl(startMonitor, AppConfig.instance));
+			}
+			
+			private function startMonitor():void{
+				_crashed = false;
+				var header:Header = new Header();
+				header.addEventListener(Event.CLOSE,handleSignedOut);
+				this.addChild(header);
+				_sysMon = new BESystemMonitor();
+				_sysMon.addEventListener(EventTypes.SERVER_CRASH, handleServerCrash);
+				this.addChild(_sysMon);
+			}
+			
+			private function handleSignedOut(event:Event):void {
+				_sysMon.removeEventListener(EventTypes.SERVER_CRASH, handleServerCrash);
+				this.removeAllChildren();
+				login();
+				cursorManager.removeBusyCursor();
+			}
+			
+			public function handleServerCrash(event:ServerCrashEvent):void{
+				//possible that pane update and topology update trigger crash independently and
+				//we don't want to call this functionality twice so check _crashed
+				if(_crashed) return;
+				_crashed = true;
+				PSVRClient.instance.crash();
+				Util.errorMessage(
+					"Lost connection to data server. Once the server has come back online, " +
+					"you may login again.",
+					crashAcknowledged
+				);
+			}
+			
+			private function crashAcknowledged(event:Event):void{
+				_sysMon.removeEventListener(EventTypes.SERVER_CRASH, handleServerCrash);
+				this.removeAllChildren();
+				login();
+			}
+		]]>
+	</mx:Script>	
+</mx:Application>

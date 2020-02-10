@@ -1,0 +1,67 @@
+/**
+ * @description 
+ */
+Object rulefunction Monitoring.RuleFunctions.view.searchViews {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Shared.Concepts.MonitorableEntity	monitorableentity;
+		String	compType;
+	}
+	body {
+        String LOG_NAME = "searchViews";
+
+        Shared.RuleFunctions.log(LOG_NAME,"DEBUG","Rulefunction called... ");
+
+		String filterString = "%";
+		if (monitorableentity != null){ 
+		    filterString = getFQName(monitorableentity);
+		}
+		if (compType != null){
+		    filterString = filterString + ":" + compType;
+		}
+
+        Shared.RuleFunctions.log(LOG_NAME,"DEBUG","filterString = " + filterString);
+
+		filterString = filterString + "%";
+		String listID = "searchViewsFor"+filterString;
+
+        Shared.RuleFunctions.log(LOG_NAME,"DEBUG","listID = " + listID);
+
+		BEMMUtil.LinkedList.createList(listID);
+		try {
+		    //search for charts
+		    String cacheName = Cluster.DataGrid.CacheName("/Monitoring/Concepts/ChartView");
+		    Object[] charts = BEMM.dashboard.searchByExtId(cacheName, filterString);
+		    int chartCnt = charts@length;
+		    Shared.RuleFunctions.log("searchViews","DEBUG","Found "+chartCnt+" charts under "+cacheName+" using "+filterString);
+		    //search for tables
+		    cacheName = Cluster.DataGrid.CacheName("/Monitoring/Concepts/TableView");
+		    Object[] tables = BEMM.dashboard.searchByExtId(cacheName, filterString);
+		    int tableCnt = tables@length;
+		    Shared.RuleFunctions.log("searchViews","DEBUG","Found "+tableCnt+" tables under "+cacheName+" using "+filterString);
+		    int idx = 0;
+		    for (int i = 0 ; i < chartCnt ; i = i + 1){
+		        Shared.Concepts.AbstractMonitorView chartView = charts[i];
+		        if (monitorableentity == null || chartView.monitorable == monitorableentity){
+		            BEMMUtil.LinkedList.add(listID,idx,chartView);
+		        }
+		    }
+		    for (int i = 0 ; i < tableCnt ; i = i + 1){
+		        Shared.Concepts.AbstractMonitorView tableView = tables[i];
+		        if (monitorableentity == null || tableView.monitorable == monitorableentity){
+		            BEMMUtil.LinkedList.add(listID,idx,tableView);
+		        }
+		    }
+		    Shared.Concepts.AbstractMonitorView[] mntrViews = Shared.Concepts.AbstractMonitorView[BEMMUtil.LinkedList.size(listID)]{};
+		    for (int i = 0 ; i < mntrViews@length ; i = i + 1){
+		        mntrViews[i] = BEMMUtil.LinkedList.get(listID,i);
+		    }
+		    Object o = mntrViews;
+		    return o;
+		} finally {
+		    BEMMUtil.LinkedList.deleteList(listID);
+		}
+	}
+}

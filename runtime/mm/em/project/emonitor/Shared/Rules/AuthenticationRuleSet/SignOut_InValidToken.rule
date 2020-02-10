@@ -1,0 +1,22 @@
+/**
+ * @description 
+ * @author 
+ */
+rule Shared.Rules.AuthenticationRuleSet.SignOut_InValidToken {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Shared.Events.reqres.authentication.LogOutRequestEvent	logoutrequestevent;
+		
+	}
+	when {
+		logoutrequestevent.token == null || String.length(logoutrequestevent.token) == 0;
+	}
+	then {
+		Shared.Events.reqres.FailureResponseEvent responseevent = Shared.Events.reqres.FailureResponseEvent.FailureResponseEvent(null,null,"003","Invalid or no token specified");
+		Event.replyEvent(logoutrequestevent,responseevent);
+		Event.consumeEvent(logoutrequestevent);
+	}
+}

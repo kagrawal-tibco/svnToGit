@@ -1,0 +1,48 @@
+/**
+ * @description 
+ * @author 
+ */
+rule Monitoring.Rules.EntityMonitoringRuleSet.onAlertResetEvent {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Monitoring.Events.cmetrics.AlertResetEvent	alertresetevent;
+		
+	}
+	when {
+		alertresetevent.alertID != null && String.length(String.trim(alertresetevent.alertID)) != 0 &&
+		alertresetevent.entityId != null && String.length(String.trim(alertresetevent.entityId)) != 0;
+	}
+	then {
+		Shared.RuleFunctions.log("onAlertResetEvent","DEBUG","Received alert reset event[id="+alertresetevent.alertID+",entityid="+alertresetevent.entityId);
+		Shared.Concepts.MonitorableEntity entity = Instance.getByExtId(alertresetevent.entityId);
+		String fqName = getFQName(entity);
+		Monitoring.Concepts.MonitorableEntityAlertHistory alertHistory = Instance.getByExtId(entity@extId+":alerthistory");
+		if (alertHistory.healthLevelTriggeringAlertID == alertresetevent.alertID) {
+		String healthLevel = Shared.RuleFunctions.topology.determinePropertyValue(entity,"healthLevel",null);
+		    if (healthLevel != entity.healthLevel){
+		        Shared.RuleFunctions.log("onAlertResetEvent","DEBUG","Changing health level of "+fqName+" to "+healthLevel);
+		        entity.previousHealthLevel = entity.healthLevel;
+		        entity.healthLevel = healthLevel;
+		        alertHistory.healthLevelTriggeringAlertID = null;
+		//update health status of parents
+		Shared.Concepts.MonitorableEntity parent = entity.parent;
+		while (parent != null){
+		    String parentFQName = getFQName(parent);
+		    Shared.RuleFunctions.log("onAlertResetEvent","DEBUG","Triggering "+parentFQName+" health check...");
+		    String newParentHealthLevel = determinePropertyValue(parent,"healthLevel",null);
+		    if (parent.healthLevel != newParentHealthLevel) {
+		        //store current value of health as previous
+		        parent.previousHealthLevel = parent.healthLevel;
+		        parent.healthLevel = newParentHealthLevel;
+		        Shared.RuleFunctions.log("onAlertResetEvent","DEBUG","Marked "+getFQName(parent)+"'s health level as "+parent.healthLevel);
+		    }
+		    parent = parent.parent;
+		}
+		    }
+		}
+		Event.consumeEvent(alertresetevent);
+	}
+}

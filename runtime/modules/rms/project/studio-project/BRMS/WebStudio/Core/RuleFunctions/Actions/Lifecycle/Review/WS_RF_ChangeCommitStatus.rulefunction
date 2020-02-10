@@ -1,0 +1,78 @@
+/**
+ * @description Change commit status of a checked in artifact.
+ */
+WebStudio.Core.Concepts.DataSources.WS_C_TemporaryReturnData rulefunction WebStudio.Core.RuleFunctions.Actions.Lifecycle.Review.WS_RF_ChangeCommitStatus {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object asyncContextObject;
+		WebStudio.Security.Authn.Concepts.WS_C_LoggedInUser loggedInUser;
+		String contentType;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.Lifecycle.Review.WS_RF_ChangeCommitStatus");
+		
+		Object servletRequest = HTTP.Servlet.getServletRequest(asyncContextObject);
+		
+		String responseMessage = null;
+		String errorCode = null;
+		int recordCount = 0;
+		int responseStatus = 0;
+		
+		WS_C_TemporaryReturnData tempReturnData = null;
+			
+		if (!WS_RF_CheckHTTPMethod(servletRequest, "POST")) {
+			responseStatus = -1;
+			recordCount = 0;
+			errorCode = "ERR_5101";
+			responseMessage = "Invalid HTTP Method, expect method is [POST].";
+			
+			tempReturnData = WS_RF_CreateTemporaryReturnData(responseStatus, recordCount, errorCode, responseMessage, null);
+			
+		} else {
+			String asyncContextId = WS.Common.generateUUID();
+			String mapLockKey = "STATUS_CHANGE_ASYNC_CONTEXT_MAP_" + System.nanoTime();
+			//Concurrent Rete case. Lock locally
+			boolean mapLocked = Cluster.DataGrid.Lock(mapLockKey, -1, true);
+			if (mapLocked) { 
+				Util.HashMap.createMap(mapLockKey);
+				Util.HashMap.putObject(mapLockKey, asyncContextId, asyncContextObject);
+			}
+			String subscriptionId = null;
+			if (loggedInUser.jwtToken != null) subscriptionId = loggedInUser.jwtToken.sbsc;
+			String globalThrashCanExtId = WS_RF_CreateUserArtifactExtId("THRASH_CAN", null, null, null, subscriptionId, null);
+			//Accquire this lock if necessary.
+			boolean thrashCanlock = Cluster.DataGrid.Lock(globalThrashCanExtId, -1, false);
+			
+			String username = loggedInUser.username;
+			Object requestDataBytes = getRequestContent(servletRequest);
+			String requestData = convertByteArrayToString(requestDataBytes, "UTF-8");
+			
+			Log.log(LOGGER, "Debug", "Request data received - %s", requestData);
+			
+			//Get post data
+			WS_C_StatusChangeRequest stateChangeRequest = null;
+			if (String.equals(contentType, System.getGlobalVariableAsString("WebStudio/CONTENT_TYPE/XML", "application/xml"))) {
+				stateChangeRequest = Instance.createTransientInstanceFromXML("/WebStudio/Core/Concepts/Request/Usecases/Lifecycle/Review/WS_C_StatusChangeRequest", requestData);
+			} else {
+				stateChangeRequest = Instance.createTransientInstanceFromJSON("/WebStudio/Core/Concepts/Request/Usecases/Lifecycle/Review/WS_C_StatusChangeRequest", requestData);
+			}
+		
+			Log.log(LOGGER, "Debug", "Request concept deserialized %s", stateChangeRequest);
+			
+			String[] roles = Instance.PropertyArray.toArrayString(loggedInUser.roles);
+			String roleString = WS.Common.joinStringArray(roles, ",");
+			
+			//Create event and assert it
+			WS_E_CommittableStatusChangeRequestEvent statusChangeRequestEvent = 
+				Event.createEvent("xslt://{{/WebStudio/Core/Events/Lifecycle/WS_E_CommittableStatusChangeRequestEvent}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" xmlns:ns=\"www.tibco.com/be/ontology/WebStudio/Core/Concepts/Request/Usecases/Lifecycle/Review/WS_C_StatusChangeRequest\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" version=\"2.0\" exclude-result-prefixes=\"xsl ns xsd\"><xsl:output method=\"xml\"/><xsl:param name=\"asyncContextId\"/><xsl:param name=\"mapLockKey\"/><xsl:param name=\"username\"/><xsl:param name=\"contentType\"/><xsl:param name=\"stateChangeRequest\"/><xsl:param name=\"roleString\"/><xsl:param name=\"subscriptionId\"/><xsl:template name=\"Function\" match=\"/\"><createEvent><event><asyncContextId><xsl:value-of select=\"$asyncContextId\"/></asyncContextId><mapLockKey><xsl:value-of select=\"$mapLockKey\"/></mapLockKey><username><xsl:value-of select=\"$username\"/></username><contentType><xsl:value-of select=\"$contentType\"/></contentType><roleString><xsl:value-of select=\"$roleString\"/></roleString><subscriptionId><xsl:value-of select=\"$subscriptionId\"/></subscriptionId><payload><xsl:for-each select=\"$stateChangeRequest\"><ns:WS_C_StatusChangeRequest><xsl:if test=\"@extId\"><xsl:attribute name=\"extId\"><xsl:value-of select=\"@extId\"/></xsl:attribute></xsl:if><xsl:if test=\"@Id\"><xsl:attribute name=\"Id\"><xsl:value-of select=\"@Id\"/></xsl:attribute></xsl:if><xsl:for-each select=\"data\"><data><xsl:if test=\"@extId\"><xsl:attribute name=\"extId\"><xsl:value-of select=\"@extId\"/></xsl:attribute></xsl:if><xsl:if test=\"@Id\"><xsl:attribute name=\"Id\"><xsl:value-of select=\"@Id\"/></xsl:attribute></xsl:if><xsl:for-each select=\"worklist\"><worklist><xsl:if test=\"@extId\"><xsl:attribute name=\"extId\"><xsl:value-of select=\"@extId\"/></xsl:attribute></xsl:if><xsl:if test=\"@Id\"><xsl:attribute name=\"Id\"><xsl:value-of select=\"@Id\"/></xsl:attribute></xsl:if><xsl:if test=\"revisionId\"><revisionId><xsl:value-of select=\"revisionId\"/></revisionId></xsl:if><xsl:for-each select=\"worklistItem\"><worklistItem><xsl:if test=\"@extId\"><xsl:attribute name=\"extId\"><xsl:value-of select=\"@extId\"/></xsl:attribute></xsl:if><xsl:if test=\"@Id\"><xsl:attribute name=\"Id\"><xsl:value-of select=\"@Id\"/></xsl:attribute></xsl:if><xsl:if test=\"artifactPath\"><artifactPath><xsl:value-of select=\"artifactPath\"/></artifactPath></xsl:if><xsl:if test=\"artifactType\"><artifactType><xsl:value-of select=\"artifactType\"/></artifactType></xsl:if><xsl:if test=\"fileExtension\"><fileExtension><xsl:value-of select=\"fileExtension\"/></fileExtension></xsl:if><xsl:if test=\"managedProjectName\"><managedProjectName><xsl:value-of select=\"managedProjectName\"/></managedProjectName></xsl:if><xsl:if test=\"reviewStatus\"><reviewStatus><xsl:value-of select=\"reviewStatus\"/></reviewStatus></xsl:if><xsl:if test=\"reviewComments\"><reviewComments><xsl:value-of select=\"reviewComments\"/></reviewComments></xsl:if><xsl:if test=\"deployEnvironments\"><deployEnvironments><xsl:value-of select=\"deployEnvironments\"/></deployEnvironments></xsl:if></worklistItem></xsl:for-each></worklist></xsl:for-each></data></xsl:for-each></ns:WS_C_StatusChangeRequest></xsl:for-each></payload></event></createEvent></xsl:template></xsl:stylesheet>");
+			
+			Event.assertEvent(statusChangeRequestEvent);
+			
+			tempReturnData = null;
+		}
+		
+		return tempReturnData;
+	}
+}

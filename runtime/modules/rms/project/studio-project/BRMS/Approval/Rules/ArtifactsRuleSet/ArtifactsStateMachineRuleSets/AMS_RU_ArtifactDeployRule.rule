@@ -1,0 +1,25 @@
+/**
+ * @description Execute deployment of artifact class into cluster.
+ * @author aathalye
+ */
+rule Approval.Rules.ArtifactsRuleSet.ArtifactsStateMachineRuleSets.AMS_RU_ArtifactDeployRule {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Approval.Events.ArtifactEvents.StateMachine.AMS_E_ArtifactDeployEvent ams_e_artifactdeployevent;
+	}
+	when {
+		ams_e_artifactdeployevent.projectName != null &&
+		ams_e_artifactdeployevent.artifactPath != null &&
+		ams_e_artifactdeployevent.artifactExtension != null;
+	}
+	then {
+		String projectName = ams_e_artifactdeployevent.projectName;
+		String artifactPath = ams_e_artifactdeployevent.artifactPath;
+		String artifactExtension = ams_e_artifactdeployevent.artifactExtension;
+		
+		RMS.Approval.deployArtifact(projectName, artifactPath, artifactExtension);
+	}
+}

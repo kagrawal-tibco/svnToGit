@@ -1,0 +1,56 @@
+/**
+ * @description Fetch details about a checkin for review. List out all artifacts in it along with other details.
+ */
+WebStudio.Core.Concepts.DataSources.WS_C_TemporaryReturnData rulefunction WebStudio.Core.RuleFunctions.Actions.Lifecycle.Review.WS_RF_FetchWorkItemDetailItemsForReview {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object servletRequest;
+		WebStudio.Security.Authn.Concepts.WS_C_LoggedInUser loggedInUser;
+		String workListItemId;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.Lifecycle.Review.WS_RF_FetchWorkItemDetailItemsForReview");
+		
+		String responseMessage = null;
+		String errorCode = null;
+		int recordCount = 0;
+		int responseStatus = 0;
+		WS_C_ResponseData responseData = null;
+			
+		if (!WS_RF_CheckHTTPMethod(servletRequest, "GET")) {
+			responseStatus = -1;
+			errorCode = "ERR_5101";
+			responseMessage = "Invalid HTTP Method, expect method is [GET].";
+		} else {
+			responseData = Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/WS_C_ResponseData");
+			
+			Log.log(LOGGER, "Debug", "Checkin revision id requested for details [%s]", workListItemId);
+			
+			String subscriptionId = null;
+			if (loggedInUser.jwtToken != null) subscriptionId = loggedInUser.jwtToken.sbsc;
+			
+			String reviewTaskExtId = WS_RF_CreateUserArtifactExtId(workListItemId, null, null, null, subscriptionId, null);
+			Log.log(LOGGER, "Debug", "ReviewTaskId being checked [%s]", reviewTaskExtId);
+			
+			boolean revisionIdLock = Cluster.DataGrid.Lock(reviewTaskExtId, -1, false);
+			if (revisionIdLock) {
+				//Get associated task from the review sink
+				WS_C_AbstractReviewTask associatedReviewTask = Instance.getByExtIdByUri(reviewTaskExtId, "/WebStudio/Core/Concepts/Lifecycle/WS_C_ReviewTask");
+				if (associatedReviewTask != null) {
+					//Get referenced checkin id
+					Log.log(LOGGER, "Debug", "Referenced Checkin Id [%s]", associatedReviewTask.referencedCheckinId);
+					Concept referencedUserCheckin = Instance.getByExtIdByUri(associatedReviewTask.referencedCheckinId, "/Approval/Concepts/ArtifactsConcepts/AMS_C_Checkin");
+					if (referencedUserCheckin == null) referencedUserCheckin = Instance.getByExtIdByUri(associatedReviewTask.referencedCheckinId, "/WebStudio/Core/Concepts/Lifecycle/WS_C_UserCheckin");
+					//Invoke factory
+					WS_RF_FetchWorkItemDetailsForWSFactory(workListItemId, referencedUserCheckin, responseData, subscriptionId);
+				}
+			}
+			Concept[] records = Instance.PropertyArray.toArrayContainedConcept(responseData.record);
+			recordCount = records@length;
+		}
+		
+		return WS_RF_CreateTemporaryReturnData(responseStatus, recordCount, errorCode, responseMessage, responseData);
+	}
+}

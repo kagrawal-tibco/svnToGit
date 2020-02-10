@@ -1,0 +1,119 @@
+/**
+ * @description Fetch details of WS workitem.
+ */
+void rulefunction WebStudio.Core.RuleFunctions.Actions.Lifecycle.Review.WS_RF_FetchWSWorkitemDetailsForWS {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String requiredUserRevisionId;
+		WebStudio.Core.Concepts.Lifecycle.WS_C_UserCheckin referencedUserCheckin;
+		WebStudio.Core.Concepts.DataSources.WS_C_ResponseData responseData;
+		String subscriptionId;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.Lifecycle.Review.WS_RF_FetchWSWorkitemDetails");
+		int recordCount = 0;
+		
+		if (referencedUserCheckin != null) {
+			//Get internals
+			WS_C_CommittableDeltaEntry[] userCheckinCommittables = Instance.PropertyArray.toArrayConcept(referencedUserCheckin.committables);
+			int numberOfCommittables = userCheckinCommittables@length;
+			recordCount = numberOfCommittables;
+			
+			Log.log(LOGGER, "Debug", "Number of committables found in revision id [%s] are [%s]", requiredUserRevisionId, numberOfCommittables);
+			
+			// fetch the applicable environments
+			String applicableEnviroments = WS_RF_FetchDeployEnvironments(referencedUserCheckin.managedProjectName, subscriptionId);
+			
+			for (int loop = 0; loop < numberOfCommittables; loop++) {
+				//For each committable entry create a DS record.
+				WS_C_AbstractDataSourceRecord abstractDataSourceRecord = 
+					Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/Records/WS_C_ReviewTaskDetailEntryDataSourceRecord");
+				WS_C_ReviewTaskDetailEntryDataSourceRecord taskDetailEntryDataSourceRecord = abstractDataSourceRecord;	
+				taskDetailEntryDataSourceRecord.revisionId = requiredUserRevisionId;
+				
+				WS_C_CommittableDeltaEntry committableDeltaEntry = userCheckinCommittables[loop];
+				WS_C_AbstractOperation operation = Instance.PropertyAtom.getConceptReference(committableDeltaEntry.operation, 1L);
+				taskDetailEntryDataSourceRecord.commitOperation = operation.opName;
+								
+				//Get applicable stages
+				AMS_C_ApplicableStages allApplicableStages = Instance.getByExtIdByUri(committableDeltaEntry.applicableStagesConceptId, "/Approval/Concepts/ArtifactsConcepts/AMS_C_ApplicableStages");
+				Object stagesCumulativeBuffer = String.createBuffer(0);
+				
+				if (allApplicableStages != null) {
+					AMS_C_WorkflowStage[] workflowStages = Instance.PropertyArray.toArrayConcept(allApplicableStages.stages);
+					for (int stageLoop = 0; stageLoop < workflowStages@length; stageLoop++) {
+						AMS_C_WorkflowStage workflowStage = workflowStages[stageLoop];
+						String stageName = workflowStage.name;
+						Log.log(LOGGER, "Debug", "Workflow stage applicable [%s]", stageName);
+						String.append(stagesCumulativeBuffer, stageName);
+						if (stageLoop != workflowStages@length - 1) {
+							String.append(stagesCumulativeBuffer, ",");
+						}
+					}
+				}
+				taskDetailEntryDataSourceRecord.applicableStages = String.convertBufferToString(stagesCumulativeBuffer);
+				String.clearBuffer(stagesCumulativeBuffer);
+				
+				if (applicableEnviroments != null) {
+					taskDetailEntryDataSourceRecord.applicableEnvironments = applicableEnviroments;
+				}
+				
+				// set the deploy environments
+				String currentDeployEnvironments = "";
+				if (committableDeltaEntry.deployEnvironments != null) {
+					String[] deployEnvironments = Instance.PropertyArray.toArrayString(committableDeltaEntry.deployEnvironments);
+					Log.log(LOGGER, "Debug", "Deploy Environment Length - %s", deployEnvironments@length);
+					for (int i=0; i<deployEnvironments@length; i++) {						
+						currentDeployEnvironments += deployEnvironments[i] + ",";
+					}
+					
+					if (!String.equals(currentDeployEnvironments, "")) {
+						currentDeployEnvironments = String.substring(currentDeployEnvironments, 0, String.lastIndexOfString(currentDeployEnvironments, 0, ","));
+					}
+				
+					taskDetailEntryDataSourceRecord.deployEnvironments = currentDeployEnvironments;
+					Log.log(LOGGER, "Debug", "Current Deploy Environments - %s", taskDetailEntryDataSourceRecord.deployEnvironments);
+				}	
+				
+				//Get current commit lifecycle state
+				WS_C_ArtifactBaseState currentCommitLifecycleState = 
+					Instance.PropertyAtom.getConceptReference(committableDeltaEntry.commitLifeCycleState, 1L); 
+				Log.log(LOGGER, "Debug", "###### committableDeltaEntry.Id - [%s] & commitLifeCycleState - [%s]", committableDeltaEntry@id, committableDeltaEntry.commitLifeCycleState);
+				taskDetailEntryDataSourceRecord.reviewStatus = currentCommitLifecycleState.stateName;
+				
+				if (!String.equals(committableDeltaEntry.reviewComments, "")) taskDetailEntryDataSourceRecord.reviewComments = committableDeltaEntry.reviewComments;
+				if (!String.equals(committableDeltaEntry.reviewerName, "")) taskDetailEntryDataSourceRecord.reviewerName = committableDeltaEntry.reviewerName;
+				
+				if (String.equals(currentCommitLifecycleState.stateName, "BuildAndDeploy")) {
+					taskDetailEntryDataSourceRecord.deployComments = committableDeltaEntry.deployComments;
+					taskDetailEntryDataSourceRecord.deployerName = committableDeltaEntry.deployerName;
+					if (committableDeltaEntry.lastDeployTime != null) {
+						taskDetailEntryDataSourceRecord.lastDeployTime = DateTime.getTimeInMillis(committableDeltaEntry.lastDeployTime);
+					}
+				}
+				
+				//Get referenced revision
+				WS_C_UserArtifactRevision referencedRevision = Instance.PropertyAtom.getConceptReference(committableDeltaEntry.userArtifactRevision, 1L);
+				if (referencedRevision != null) {
+					//Get details like artifact path, type, current status etc.
+					Log.log(LOGGER, "Debug", "Parent Artifact Id [%s]", referencedRevision.parentArtifactId);
+					WS_C_UserArtifact parentArtifact = WS_RF_IsUserArtifact(referencedRevision.parentArtifactId, referencedRevision.parentArtifactType);
+					
+					if (parentArtifact != null) {
+						String artifactPath = parentArtifact.artifactPath;
+						String artifactType = parentArtifact.artifactType;
+						String artifactImageSrc = Util.HashMap.get("ARTIFACT_TYPE_IMAGES", artifactType);
+						taskDetailEntryDataSourceRecord.artifactPath = artifactPath;
+						taskDetailEntryDataSourceRecord.artifactType = artifactType;
+						taskDetailEntryDataSourceRecord.artifactImageName = artifactImageSrc;
+						taskDetailEntryDataSourceRecord.artifactFileExtn = parentArtifact.artifactFileExtn;
+						Log.log(LOGGER, "Debug", "Operation and commit lifecycle state are [%s] and [%s] for artifact [%s] ", operation, currentCommitLifecycleState, artifactPath);
+					}
+					Instance.PropertyArray.appendContainedConcept(responseData.record, abstractDataSourceRecord, 1L);
+				}
+			}
+		}
+	}
+}

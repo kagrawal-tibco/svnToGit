@@ -1,0 +1,80 @@
+/**
+ * @description  Validating the link type based on the possible operators supported by Type.
+ */
+boolean rulefunction WebStudio.Core.RuleFunctions.Utils.RT.WS_RF_ValidateOpertorByType {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String linkType;
+		String operator;
+		boolean isConditionFilter;
+	}
+	body {
+		boolean isValidOperatorByType = false;
+		String type = linkType;
+		
+		if (!(String.equals(linkType,"String") || String.equals(linkType,"int") ||  String.equals(linkType,"double") || String.equals(linkType,"long") || String.equals(type,"DateTime") || String.equals(linkType,"boolean"))) {
+			type = null;
+		}
+		
+		if(isConditionFilter) {
+			if (String.equals(type,"int") || String.equals(type,"double") || String.equals(type,"long") ) {
+				if (String.equals(operator,"differs from field") || String.equals(operator,"equals") || String.equals(operator,"not equal") ||
+				   String.equals(operator,"greater than") || String.equals(operator,"matches other field") || String.equals(operator,"greater than field") ||
+				   String.equals(operator,"greater than or equal to") || String.equals(operator,"greater than or equal to field") || String.equals(operator,"less than") ||
+				   String.equals(operator,"less than field") || String.equals(operator,"less than or equal to") || String.equals(operator,"less than or equal to field")) {
+				   		isValidOperatorByType = true;
+				}
+			} else if (String.equals(type,"String")) {
+				if (String.equals(operator,"differs from field") || String.equals(operator,"contains") || String.equals(operator,"equals") ||
+				   String.equals(operator,"ends with") || String.equals(operator,"is null") || String.equals(operator,"is not null") ||
+				   String.equals(operator,"matches other field") || String.equals(operator,"not equal") || String.equals(operator,"starts with")) {
+				   		isValidOperatorByType = true;
+				}
+			} else if (String.equals(type,"DateTime")) {
+				if (String.equals(operator,"matches other field") || String.equals(operator,"differs from field") || String.equals(operator,"is not null") || String.equals(operator,"equals") ||
+				   String.equals(operator,"not equal") || String.equals(operator,"is null") || String.equals(operator,"greater than") || String.equals(operator,"greater than field") ||
+				   String.equals(operator,"greater than or equal to") || String.equals(operator,"greater than or equal to field") || String.equals(operator,"less than") ||
+				   String.equals(operator,"less than field") || String.equals(operator,"less than or equal to") || String.equals(operator,"less than or equal to field")) {
+				   		isValidOperatorByType = true;
+				}
+			}  else if (String.equals(type,"boolean")) {
+				if (String.equals(operator,"matches other field") || String.equals(operator,"differs from field") || String.equals(operator,"is true") ||
+				   String.equals(operator,"is false")) {
+				   		isValidOperatorByType = true;
+				 }
+			} else if (String.equals(type,"null") || type == null) {
+				if (String.equals(operator,"matches other field") || String.equals(operator,"is not null") || String.equals(operator,"equals") ||
+				   String.equals(operator,"not equal") || String.equals(operator,"is null") || String.equals(operator,"differs from field") ) {
+				   	isValidOperatorByType = true;
+				}
+			}
+		} else {
+			if (String.equals(type,"int") || String.equals(type,"double") || String.equals(type,"long") ) {
+				if (String.equals(operator,"set to") || String.equals(operator,"increment by") || String.equals(operator,"increment by field") ||
+				   String.equals(operator,"set to field") || String.equals(operator,"decrement by") || String.equals(operator,"decrement by field")) {
+				   		isValidOperatorByType = true;
+				}
+			} else if (String.equals(type,"String")) {
+				if (String.equals(operator,"set to field") || String.equals(operator,"set to") || String.equals(operator,"set to null")) {
+				   		isValidOperatorByType = true;
+				}
+			} else if (String.equals(type,"DateTime")) {
+				if (String.equals(operator,"set to") || String.equals(operator,"set to field") || String.equals(operator,"set to null") ||
+				   String.equals(operator,"set to date")) {
+				   		isValidOperatorByType = true;
+				}
+			}  else if (String.equals(type,"boolean")) {
+				if (String.equals(operator,"set to true") || String.equals(operator,"set to false") || String.equals(operator,"set to field")) {
+				   		isValidOperatorByType = true;
+				 }
+			} else if (String.equals(type,"null") || type == null) {
+				if (String.equals(operator,"set to field") || String.equals(operator,"set to") || String.equals(operator,"set to null")) {
+				   	isValidOperatorByType = true;
+				}
+			}
+		}
+	    return isValidOperatorByType;
+	}
+}

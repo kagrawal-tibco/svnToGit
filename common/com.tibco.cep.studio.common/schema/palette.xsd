@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<schema xmlns="http://www.w3.org/2001/XMLSchema" xmlns:tns="http://www.tibco.com/cep/studio/common/palette" elementFormDefault="qualified" targetNamespace="http://www.tibco.com/cep/studio/common/palette">
+    <element name="model" type="tns:paletteModel"/>
+
+    <complexType name="paletteModel">
+    	<sequence>
+            <element maxOccurs="unbounded" minOccurs="0" name="paletteToolSet" type="tns:paletteGroup">
+    		</element>
+    	</sequence>
+    	<attribute default="" name="name" type="string"/>
+    </complexType>
+
+    <complexType name="paletteGroup">
+    	<sequence>
+    		<group maxOccurs="1" minOccurs="0" ref="tns:typeInfoGroup"/>
+    	     <element maxOccurs="unbounded" minOccurs="0" name="paletteItem" type="tns:paletteItem"/>
+    	     <element maxOccurs="unbounded" minOccurs="0" name="paletteToolSet" type="tns:paletteGroup"/>
+    	</sequence>
+    	<attribute name="id" type="ID"/>
+    	<attribute default="true" name="visible" type="boolean"/>
+    	<attribute default="false" name="internal" type="boolean"/>
+    	<attribute name="color" type="string"/>
+    </complexType>
+
+    <complexType name="paletteItem">
+    	<sequence>
+    		<group ref="tns:typeGroup"/>
+    		<group ref="tns:typeInfoGroup"/>
+    		<element default="" maxOccurs="1" minOccurs="0" name="attachedResource" type="string"/>
+    		<element maxOccurs="unbounded" minOccurs="0" name="helpContent" type="tns:help"/>
+    	</sequence>
+    	<attribute name="id" type="ID"/>
+    	<attribute default="true" name="visible" type="boolean"/>
+    	<attribute default="false" name="internal" type="boolean"/>
+    	<attribute name="color" type="string"/>
+    </complexType>
+    
+    <complexType name="help">
+       <sequence>
+             <element name="tab" type="tns:Tab"/>
+       </sequence>
+       <attribute default="" name="content" type="string"/>
+    </complexType>
+    
+    <complexType name="emfType">
+    	<sequence>
+    		<element default="" maxOccurs="1" minOccurs="1" name="emfType" type="string"/>
+    		<element default="" maxOccurs="1" minOccurs="0" name="extendedType" type="string"/>
+    	</sequence>
+    </complexType>
+    
+    <complexType name="javaType">
+    	<sequence>
+    		<element default="" maxOccurs="unbounded" minOccurs="1" name="type" type="string"/>
+    	</sequence>
+    </complexType>
+    
+    <complexType name="modelType">
+    	<sequence>
+    		<element default="" maxOccurs="unbounded" minOccurs="1" name="type" type="string"/>
+    	</sequence>
+    </complexType>
+
+    <group name="typeGroup">
+    	<choice>
+    		<element name="emfItemType" type="tns:emfType"/>
+    		<element name="javaItemType" type="tns:javaType"/>
+    		<element name="modelItemType" type="tns:modelType"/>
+    	</choice>
+    </group>
+
+
+    <group name="typeInfo">
+    	<sequence>
+    		<element default="" minOccurs="1" name="title" type="string"/>
+    		<element default="" name="tooltip" type="string"/>
+    		<element default="" name="icon" type="string"/>
+    	</sequence>
+    </group>
+
+    <group name="typeInfoRef">
+    	<sequence>
+    		<element default="" minOccurs="1" name="titleRef" type="string"/>
+    		<element default="" name="tooltipRef" type="string"/>
+    		<element default="" name="iconRef" type="string"/>
+    	</sequence>
+    </group>
+
+    <group name="typeInfoGroup">
+    	<choice>
+    		<group ref="tns:typeInfoRef"/>
+     	 	<group ref="tns:typeInfo"/>
+    </choice>
+    </group>
+    <simpleType name="Tab">
+    	<restriction base="string">
+        	<enumeration value="General"/>
+        	<enumeration value="Loop Characteristics"/>
+        	<enumeration value="Reply Event"/>
+        	<enumeration value="Timeout"/>
+    	</restriction>
+	</simpleType>
+</schema>

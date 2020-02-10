@@ -1,0 +1,23 @@
+/**
+ * @description 
+ */
+void rulefunction RuleFunctions.startTCPChannel {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		
+	}
+	body {
+		//TODO the server nick name should come from project properties 
+		String serverNickName = "dashboard-streaming-channel";
+		//TODO the host name for the tcp server should come from project properties
+		String host = "localhost";
+		//TODO the port numbder for the tcp server should come from project properties
+		int port = 9797;
+		TCP.createLocalServer(serverNickName, host, port);
+		TCP.registerSessionListener(serverNickName, "/RuleFunctions/TCPNewSessionHandlerFunction");
+		TCP.startLocalServer(serverNickName);
+		System.debugOut("Started TCP Server["+serverNickName+"] at "+host+":"+port);
+	}
+}

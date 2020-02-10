@@ -1,0 +1,22 @@
+/**
+ * @description 
+ * @author 
+ */
+rule Shared.Rules.TopologyRuleSet.GetTopology_InvalidToken {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Shared.Events.reqres.topology.TopologyRequestEvent	topologyrequestevent;
+		
+	}
+	when {
+		topologyrequestevent.token == null || String.length(topologyrequestevent.token) == 0;
+	}
+	then {
+		Shared.Events.reqres.FailureResponseEvent event = Shared.Events.reqres.FailureResponseEvent.FailureResponseEvent(null,null,"001","Invalid token");
+		Event.replyEvent(topologyrequestevent, event);
+		Event.consumeEvent(topologyrequestevent);
+	}
+}

@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<cluster xmlns="http://tibco.com/businessevents/configuration/%%BeVersionShort%%">
+
+
+    <!-- ******* Optional revision info ******* -->
+
+    <revision>
+        <version>1</version>
+        <author>%%UserName%%</author>
+        <date>%%DateTime%%</date>
+        <comment/>
+    </revision>
+
+
+    <!-- ******* Cluster settings ******* -->
+
+    <name>%%ClusterName%%</name>
+
+    <message-encoding>UTF-8</message-encoding>
+    
+    <object-management>
+        <berkeley-db-manager>
+            <checkpoint-interval>30</checkpoint-interval>
+            <checkpoint-ops-limit>1000</checkpoint-ops-limit>
+            <db-dir/>
+            <delete-retracted>true</delete-retracted>
+            <property-cache-size>10000</property-cache-size>
+            <skip-recovery>false</skip-recovery>
+        </berkeley-db-manager>
+    </object-management>
+
+
+    <!-- ******* Optional grouping of resources ******* -->
+
+    <rulesets>
+        <rules id="all-rules">
+            <uri>/</uri>
+        </rules>
+    </rulesets>
+
+    <function-groups>
+        <functions id="all-functions">
+            <uri>/</uri>
+        </functions>
+    </function-groups>
+
+    <destination-groups/>
+
+
+    <!-- ******* All log settings ******* -->
+
+    <log-configs>
+        <log-config id="logConfig">
+            <enabled>true</enabled>
+            <roles>*:info</roles>
+            <files>
+                <enabled>true</enabled>
+                <dir>logs</dir>
+                <max-number>10</max-number>
+                <max-size>5000000</max-size>
+                <append>true</append>
+            </files>
+        </log-config>
+    </log-configs>
+
+
+    <!-- ******* Agent classes ******* -->
+
+    <agent-classes>
+
+        <inference-agent-class id="inference-class">
+            <rules>
+                <ref>all-rules</ref>
+            </rules>
+            <destinations/>
+            <startup/>
+            <shutdown/>
+        </inference-agent-class>
+
+    </agent-classes>
+
+
+    <!-- ******* Processing units ******* -->
+
+    <processing-units>
+
+        <processing-unit id="default">
+            <agents>
+                <agent>
+                    <ref>inference-class</ref>
+                </agent>
+            </agents>
+            <logs>logConfig</logs>
+            <property-group>
+            </property-group>
+        </processing-unit>
+
+    </processing-units>
+
+
+    <!-- ******* Optional cluster-level properties ******* -->
+
+    <property-group name="cluster-level properties">
+    	<property-group name="auth">
+		    <property name="be.mm.auth.type" value="file"/>
+		    <property name="be.mm.auth.file.location" value="%%BE_HOME%%/mm/config/users.pwd"/>
+		    <property name="java.security.auth.login.config" value="%%BE_HOME%%/mm/config/jaas-config.config"/>
+	    </property-group>
+	</property-group>
+
+</cluster>
+

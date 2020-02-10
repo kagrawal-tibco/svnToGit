@@ -1,0 +1,27 @@
+/**
+ * @description 
+ * @author TIBCO Software Inc.
+ */
+rule Rules.DeleteRule {
+	
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	
+	declare {
+		Concepts.Equipment equipment;
+		Events.DeleteEvent delete;
+	}
+	
+	when {
+		delete.name == equipment.name;	
+	}
+	
+	then {
+		Instance.deleteInstance(equipment);
+		System.debugOut(" ######  Equipment " + equipment.name + " DELETED");
+		Event.consumeEvent(delete);	
+	}
+	
+}

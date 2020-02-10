@@ -1,0 +1,72 @@
+<project name="ec_client_call_common">
+   <!--non functional file added to prevent eclipse from showing error in ec_client_call_be_5.2.xml-->
+	<target name="setConditions">
+        <condition property="isWindows">
+            <os family="windows" />
+        </condition>
+
+        <condition property="isLinux">
+            <os name="Linux" />
+        </condition>
+
+        <condition property="isMac">
+            <os family="mac"/>
+        </condition>
+    </target>
+
+    <target name="setwin" if="isWindows">
+        <property name="ostype" value="windows"/>
+        <property name="ectool" value="ectool.exe"/>
+        <copy file="${ostype}/ectool.exe" tofile="ectool.exe"/>
+    </target>
+
+    <target name="setlnx" if="isLinux">
+        <property name="ostype" value="linux"/>
+        <property name="ectool" value="ectool"/>
+        <antcall target="copyunixfiles" />
+    </target>
+
+    <target name="setmac" if="isMac">
+        <property name="ostype" value="macosx"/>
+        <property name="ectool" value="ectool"/>
+        <antcall target="copyunixfiles" />
+    </target>
+
+    <target name="copyunixfiles">
+        <!--<copy file="${ostype}/ectool" tofile="ectool"/>-->
+        <chmod file="ectool" perm="755"/>
+    </target>
+
+    <target name="-testClientExistence">
+        <property name="client.dir" location="client/${ostype}/ecclienttools-3.5.0" />
+        <property name="ectool.dir" location="client/${ostype}/ecclienttools-3.5.0/ecclienttools-3.5.0" />
+        <condition property="clientExists">
+            <available file="${ectool.dir}/${ectool}"/>
+        </condition>
+    </target>
+
+
+    <target name="-getClients" unless="clientExists">
+        <mkdir dir="${client.dir}"/>
+        <get src="http://spin.tibco.com/devtools/tool-downloads/${ostype}/ecclienttools-3.5.0-${ostype}.tar.gz"
+            dest="${client.dir}-${ostype}.tar.gz"
+            verbose="true" usetimestamp="true"/>
+        <gunzip src="${client.dir}-${ostype}.tar.gz"/>
+        <untar src="${client.dir}-${ostype}.tar" dest="${client.dir}"/>
+        <chmod file="${ectool.dir}/${ectool}" perm="ugo+x"/>
+        <chmod file="${ectool.dir}/${ecpreflighttool}" perm="ugo+x"/>
+        <delete file="${client.dir}-${ostype}.tar.gz"/>
+        <delete file="${client.dir}-${ostype}.tar"/>
+    </target>
+
+
+    <target name="login">
+        <exec executable="${ectool.dir}/${ectool}">
+            <arg value="--server"/>
+            <arg value="commander.na.tibco.com"/>
+            <arg value="login"/>
+            <arg value="${activedirectory.user}"/>
+            <arg value="${activedirectory.password}"/>
+        </exec>
+    </target>
+</project>

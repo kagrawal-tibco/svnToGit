@@ -1,0 +1,30 @@
+/**
+ * @description Get delta entry matching the passed artifact.
+ */
+WebStudio.Core.Concepts.Lifecycle.WS_C_CommittableDeltaEntry rulefunction WebStudio.Core.RuleFunctions.Actions.Lifecycle.Commit.WS_RF_GetMatchingCommittableDeltaEntry {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		//The artifact item to search for
+		String requiredArtifactPath;
+		WebStudio.Core.Concepts.Lifecycle.WS_C_CommittableDeltaEntry[] committableDeltaEntries;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.Lifecycle.Commit.WS_RF_GetMatchingCommittableDeltaEntry");
+		 
+		for (int entryLoop = 0; entryLoop < committableDeltaEntries@length; entryLoop++) {
+			WS_C_CommittableDeltaEntry artifactRevisionsCommittableEntry = committableDeltaEntries[entryLoop];
+			WS_C_UserArtifactRevision containedRevision = Instance.PropertyAtom.getConceptReference(artifactRevisionsCommittableEntry.userArtifactRevision, 1L);
+			//Get associated artifact
+			Log.log(LOGGER, "Debug", "Parent Artifact Id for revision [%s] is - [%s]", containedRevision, containedRevision.parentArtifactId);
+			WS_C_UserArtifact parentArtifact = WS_RF_IsUserArtifact(containedRevision.parentArtifactId, containedRevision.parentArtifactType);
+			if (parentArtifact != null) {
+				if (String.equals(parentArtifact.artifactPath, requiredArtifactPath)) {
+					return artifactRevisionsCommittableEntry;
+				}
+			} 
+		}
+		return null;
+	}
+}

@@ -1,0 +1,21 @@
+rule Rules.receiveEventRule {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Events.tibsend receivedEvent;
+	}
+	when {
+		
+	}
+	then {
+		System.debugOut("\n==============================start receiveEventRule==============================");
+		
+		System.debugOut("Event Received");
+		System.debugOut("\nString : " + receivedEvent.MyString  + "\n Long:" +receivedEvent.MyLong);
+		Event.consumeEvent(receivedEvent);
+	   
+	   System.debugOut("\n================================end receiveEventRule===============================");
+	}
+}

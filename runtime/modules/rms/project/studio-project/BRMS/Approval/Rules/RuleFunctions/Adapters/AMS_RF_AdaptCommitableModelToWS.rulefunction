@@ -1,0 +1,143 @@
+/**
+ * @description Create committable model in WS for every commiited entry through studio.
+ */
+void rulefunction Approval.Rules.RuleFunctions.Adapters.AMS_RF_AdaptCommitableModelToWS {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String projectName;
+		//Name of user making checkin.
+		String username;
+		Approval.Concepts.ArtifactsConcepts.AMS_C_ArtifactCommited artifactCommitted;
+		String[] roles;
+	}
+	body {
+		Object LOGGER = Log.getLogger("Approval.Rules.RuleFunctions.Adapters.AMS_RF_AdaptCommitableModelToWS");
+		
+		String scsRootURL = WS_RF_GetSCSRootURL(projectName, null);
+		if (scsRootURL == null) {
+			throw Exception.newException(null, "Source control repository location not present. Set ws.scs.rootURL property", null);
+		}
+				
+		String userWorkspaceExtId = WS_RF_CreateUserArtifactExtId("WORKSPACE", null, null, username, null, null);
+		
+		WS_C_UserWorkspace userWorkspace = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(userWorkspaceExtId, true, "/WebStudio/Core/Concepts/WS_C_UserWorkspace");
+		if (userWorkspace == null) {
+			//Create one
+			userWorkspace = 
+			    Instance.newInstance("/WebStudio/Core/Concepts/WS_C_UserWorkspace", userWorkspaceExtId);
+		}
+		Log.log(LOGGER, "Debug", "Existing workspace concept id [%s]", userWorkspace@id);
+		//Get committable delta
+		WS_C_WorkspaceCommittableDelta committableDelta = Instance.PropertyAtom.getContainedConcept(userWorkspace.committableDelta, 1L);
+		if (committableDelta == null) {
+			//Not found create one
+			committableDelta = Instance.newInstance("/WebStudio/Core/Concepts/Lifecycle/WS_C_WorkspaceCommittableDelta", null);
+			Instance.PropertyAtom.setContainedConcept(userWorkspace.committableDelta, committableDelta, 1L);
+		}
+		String artifactPath = artifactCommitted.artifactPath;
+		String artifactType = artifactCommitted.artifactType;
+		String artifactContent = artifactCommitted.artifactContent;
+		
+		Log.log(LOGGER, "Info", "Project Name [%s], artifact path [%s] and artifact type [%s] for committable adaptation", projectName, artifactPath, artifactType);
+		
+		//Other artifact adaptations not supported for WS. Only DTs supported.
+		if (WS_RF_IsManagedArtifactType(artifactType, artifactCommitted.operation)) {
+			//Get right op to use
+			String operation = artifactCommitted.operation;			
+			WS_C_AbstractOperation abstractOperation = WS_RF_ArtifactOperationCreationFactory(operation);
+			
+			Log.log(LOGGER, "Debug", "Operation Type [%s]", abstractOperation.opName);
+			
+			//The actual contents concept.
+			String artifactContentsId = null;
+			//Search for user artifact for this project and artifactpath combo			
+			
+			String userArtifactExtId = WS_RF_CreateUserArtifactExtId(null, artifactPath, projectName, username, null, null);					
+			WS_C_UserArtifact userArtifactConceptInstance = WS_RF_IsUserArtifact(userArtifactExtId, artifactType);
+			
+			if (userArtifactConceptInstance == null) {
+				//Create new
+				userArtifactConceptInstance= WS_RF_UserArtifactCreationFactory(userArtifactExtId, artifactPath, artifactType, artifactType, projectName + "@" + username);
+			}
+
+			WS_C_AnyArtifactDetails artifactDetails = null;
+			if (!(abstractOperation instanceof WS_C_DeleteOperation)) {
+				//This content is encoded with Base64 and compressed.
+				Object deflatedBytes = RMS.Util.decodeBase64(artifactContent);
+				Object inflatedBytes = RMS.Util.decompressBytes(deflatedBytes);
+				artifactContent = String.convertByteArrayToString(inflatedBytes, "UTF-8");
+				Log.log(LOGGER, "Debug", "Decoded and inflated content for artifact [%s] is \n [%s]", artifactPath, artifactContent);
+
+				if (artifactType == "rulefunctionimpl") {
+					Object decisionTableEMFObject = WS.Decision.createDecisionTableEMFObject(artifactContent);
+					artifactDetails = WS_RF_CreateDecisionTableConceptFromSCS(projectName, username, artifactPath, decisionTableEMFObject, roles);
+					// set the base artifact path for DT
+					String baseArtifactName = WS.Decision.getVRFPath(artifactContent);
+					userArtifactConceptInstance.baseArtifactPath = baseArtifactName + ".rulefunction";
+				} else if (artifactType == "domain") {
+					Object domainEMFObject = WS.Domain.createDomainModelEMFObject(artifactContent);
+					artifactDetails = WebStudio.Core.RuleFunctions.Utils.Domain.WS_RF_CreateDomainArtifactConcept(domainEMFObject);
+ 				}
+ 				if (artifactDetails != null) {
+ 					artifactContentsId = artifactDetails@extId;
+ 					
+ 					if (abstractOperation instanceof WS_C_CreateOperation) {
+	 					String userProjectExtId = WS_RF_CreateUserArtifactExtId(null, null, projectName, username, null, null);
+						boolean userProjectLock = Cluster.DataGrid.Lock(userProjectExtId, -1, false);
+						if (userProjectLock) {
+							WS_C_UserProject userProject = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(userProjectExtId, true, "/WebStudio/Core/Concepts/WS_C_UserProject");
+							if (userProject != null) {
+								Instance.PropertyArray.appendContainedConcept(userProject.userArtifacts, userArtifactConceptInstance, -1l);
+								userArtifactConceptInstance.parentProjectId = userProject@extId;
+								Log.log(LOGGER, "Debug", "Added newly created artifact [%s] to project [%s] with ProjectId[%s]", artifactPath, projectName, userArtifactConceptInstance.parentProjectId);
+							}
+						}
+ 					}
+ 				} 				
+			} else {
+				if (artifactType == "rulefunctionimpl" || artifactType == "domain") {
+					artifactDetails = WS_RF_FetchArtifactContentsFactory(scsRootURL, username, projectName, artifactPath, artifactType, userArtifactExtId, roles);
+					artifactContentsId = artifactDetails@extId;
+					userArtifactConceptInstance.softDelete = true;
+				}
+			}	
+			
+			WS_C_UserArtifactRevision latestRevision = null;
+			double currentVersionNumber = userArtifactConceptInstance.currentArtifactVersion + 1;
+		
+			String userArtifactRevisionExtId = artifactPath + "@" + projectName + "@" + username + "@" + currentVersionNumber;
+			latestRevision = Instance.newInstance("/WebStudio/Core/Concepts/WS_C_UserArtifactRevision", userArtifactRevisionExtId);
+			latestRevision.parentArtifactId = userArtifactConceptInstance@extId;
+			latestRevision.parentArtifactType = userArtifactConceptInstance.artifactType;
+			latestRevision.version = currentVersionNumber;
+			latestRevision.creationTime = DateTime.now();
+			WS_C_LifecycleMetadata lifecycleMetadata = Instance.newInstance("/WebStudio/Core/Concepts/Lifecycle/WS_C_LifecycleMetadata", null);
+			Instance.PropertyAtom.setContainedConcept(latestRevision.lifecycleMetadata, lifecycleMetadata, 1L);
+			Instance.PropertyAtom.setConceptReference(lifecycleMetadata.lastOperation, abstractOperation, 1L);
+			Instance.PropertyAtom.setConceptReference(lifecycleMetadata.currentState, WS_RF_ArtifactStateCreationFactory("Committed"), 1L);
+			//Set contents id
+			latestRevision.artifactContentsId = artifactContentsId;
+			
+			WS_RF_SetCheckpointRevisionConceptReference(userArtifactConceptInstance, latestRevision);
+			userArtifactConceptInstance.currentArtifactVersion = currentVersionNumber;
+			Instance.PropertyArray.appendString(userArtifactConceptInstance.artifactRevisionIds, latestRevision@extId, 1L);
+			artifactCommitted.commitVersion = String.valueOfDouble(currentVersionNumber);
+			
+			//Check for existing entry for this artifact 
+			WS_C_CommittableDeltaEntry committableDeltaEntry = WS_RF_QueryCommitableDeltaEntry(committableDelta, latestRevision);
+			if (committableDeltaEntry == null) {
+				committableDeltaEntry = 
+					Instance.newInstance("/WebStudio/Core/Concepts/Lifecycle/WS_C_CommittableDeltaEntry", null);
+				//Append this delta entry to commitable delta for ws
+				Instance.PropertyArray.appendConceptReference(committableDelta.deltaEntry, committableDeltaEntry, 1L);	
+			}
+			//Append this latest revision.
+			Instance.PropertyAtom.setConceptReference(committableDeltaEntry.userArtifactRevision, latestRevision, 1L);
+			//Assert it
+			WS.Common.assertInstance(abstractOperation, false);
+			Instance.PropertyAtom.setConceptReference(committableDeltaEntry.operation, abstractOperation, 1L);
+		}
+	}
+}

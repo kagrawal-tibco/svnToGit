@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:element name="application" type="applicationType"/>
+  <xs:complexType name="componentType">
+    <xs:sequence>
+      <xs:element type="libraryType" name="library" maxOccurs="unbounded" minOccurs="0"/>
+    </xs:sequence>
+    <xs:attribute type="xs:string" name="name"/>
+  </xs:complexType>
+  <xs:complexType name="rootType">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute type="xs:string" name="url" use="optional"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="applicationType">
+    <xs:sequence>
+      <xs:element type="componentType" name="component"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="CLASSESType">
+    <xs:sequence>
+      <xs:element type="rootType" name="root" maxOccurs="unbounded" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="JAVADOCType">
+    <xs:sequence>
+      <xs:element type="rootType" name="root" maxOccurs="unbounded" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="libraryType">
+    <xs:sequence>
+      <xs:element type="CLASSESType" name="CLASSES"/>
+      <xs:element name="JAVADOC">
+        <xs:complexType mixed="true">
+          <xs:sequence>
+            <xs:element type="rootType" name="root" maxOccurs="unbounded" minOccurs="0"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="SOURCES">
+        <xs:complexType mixed="true">
+          <xs:sequence>
+            <xs:element type="rootType" name="root" maxOccurs="unbounded" minOccurs="0"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+    <xs:attribute type="xs:string" name="name" use="optional"/>
+  </xs:complexType>
+  <xs:complexType name="SOURCESType">
+    <xs:sequence>
+      <xs:element type="rootType" name="root" maxOccurs="unbounded" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+</xs:schema>

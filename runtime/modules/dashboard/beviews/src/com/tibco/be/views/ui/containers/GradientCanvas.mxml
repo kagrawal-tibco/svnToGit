@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas
+	xmlns:mx="http://www.adobe.com/2006/mxml"
+>
+	<mx:Metadata>
+		[Style(name="backgroundGradientStart", type="uint", inherit="no")]
+		[Style(name="backgroundGradientEnd", type="uint", inherit="no")]
+	</mx:Metadata>
+	
+	<mx:Script>
+		<![CDATA[
+			private static var classConstructed:Boolean = classConstruct();
+	    
+	        private static function classConstruct():Boolean {
+	            if(!StyleManager.getStyleDeclaration("GradientCanvas")){
+	                var gradientCanvasStyle:CSSStyleDeclaration = new CSSStyleDeclaration();
+	                gradientCanvasStyle.defaultFactory = function():void{
+	                    this.backgroundGradientStart = 0xECECEC;
+	                    this.backgroundGradientEnd = 0xD3D3D3;
+	                }
+	                StyleManager.setStyleDeclaration("GradientCanvas", gradientCanvasStyle, true);
+	            }
+	            return true;
+	        }
+	        
+	        override protected function updateDisplayList(unscaledWidth:Number, unscaledHeight:Number):void{
+				draw(unscaledWidth, unscaledHeight);
+				super.updateDisplayList(unscaledWidth, unscaledHeight);
+			}
+			
+			private function draw(width:int, height:int):void{
+				var startGradientColor:uint = getStyle("backgroundGradientStart");
+				var endGradientColor:uint = getStyle("backgroundGradientEnd");
+				graphics.clear();
+				
+				//draw fill
+				graphics.moveTo(0, 2);
+				var m:Matrix = new Matrix();
+				m.createGradientBox(width, height-2, Math.PI/2);
+				graphics.beginGradientFill(
+					GradientType.LINEAR,
+					[startGradientColor, endGradientColor],
+					[1, 1],
+					[0x00, 0xFF],
+					m
+				);
+				graphics.drawRect(0, 2, width, height-2);
+				graphics.endFill();
+				
+				if(getStyle("borderStyle") == "solid"){
+					//draw border
+					var borderSides:String = getStyle("borderSides");
+					graphics.moveTo(0, height);
+					graphics.lineStyle(1, endGradientColor);
+					
+					borderSides.indexOf("left") > -1 ? graphics.lineTo(0, 0):graphics.moveTo(0, 0);
+					borderSides.indexOf("top") > -1 ? graphics.lineTo(width-1, 0):graphics.moveTo(width, 0);
+					borderSides.indexOf("right") > -1 ? graphics.lineTo(width, height):graphics.moveTo(width, height);
+					borderSides.indexOf("bottom") > -1 ? graphics.lineTo(0, height):graphics.moveTo(0, height);
+				}
+				
+				//draw white secondary border (top)
+				graphics.moveTo(1, 1);
+				graphics.lineStyle(1, 0xFFFFFF);
+				graphics.lineTo(width-1, 1);
+				
+			}
+		]]>
+	</mx:Script>
+</mx:Canvas>

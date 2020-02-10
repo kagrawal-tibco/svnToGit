@@ -1,0 +1,75 @@
+<div class="card panel-sm">
+   <div class="card-header">
+      <ng-container i18n>{{i18n('Select DateTime')}}</ng-container>
+   </div>
+   
+   <div class="card-body">
+
+      <div>
+          <select [(ngModel)]="this.actionToPerform" class='form-control'>  
+              <option *ngFor="let action of actionHeader" [ngValue]='action.name'>{{action.name}} </option>  
+          </select>
+
+          <div *ngIf="this.canDisplayMatches()" class='row'>
+              <div class='col-sm-4' style="padding-top: 20px; padding-left: 20px">
+                <label class="control-label control-label-normal" i18n>{{i18n('Matches')}}</label>
+               </div>
+              <div class='col-sm-8'>
+                 <datetime-editor [edit]='true' [hideTimezone]='true' [(value)]='this.dateTime'></datetime-editor>
+              </div>
+          </div>
+
+          <div *ngIf="this.canDisplayBefore()" class='row'>
+              <div class='col-sm-4' style="padding-top: 20px; padding-left: 20px">
+                <label class="control-label control-label-normal" i18n>{{i18n('Before')}}</label> 
+               </div>
+              <div class='col-sm-8'>
+                 <datetime-editor [edit]='true' [hideTimezone]='true' [(value)]='this.beforeDateTime'></datetime-editor>
+              </div>
+          </div>
+
+          <div *ngIf="this.canDisplayAfter()" class='row'>
+              <div class='col-sm-4' style="padding-top: 20px; padding-left: 20px">
+                <label class="control-label control-label-normal" i18n>{{i18n('After')}}</label>
+               </div>
+              <div class='col-sm-8'>
+                 <datetime-editor [edit]='true' [hideTimezone]='true' [(value)]='this.afterDateTime'></datetime-editor>
+              </div>
+          </div>
+
+          <div *ngIf="this.canDisplayBeginEnd()" class='row'>
+            <div class='col-sm-4' style="padding-top: 20px; padding-left: 20px">
+              <label class="control-label control-label-normal" i18n>{{i18n('Begin')}}</label> 
+             </div>
+            <div class='col-sm-8'>
+               <datetime-editor [edit]='true' [hideTimezone]='true' [(value)]='this.beginDateTime'></datetime-editor>
+            </div>
+        </div>
+
+        <div *ngIf="this.canDisplayBeginEnd()" class='row'>
+            <div class='col-sm-4' style="padding-top: 20px; padding-left: 20px">
+              <label class="control-label control-label-normal" i18n>{{i18n('End')}}</label>
+             </div>
+            <div class='col-sm-8'>
+               <datetime-editor [edit]='true' [hideTimezone]='true' [(value)]='this.endDateTime'></datetime-editor>
+            </div>
+        </div>
+
+      </div>
+
+      </div>
+</div>
+<div class="row left-pad right-pad bottom-pad top-pad">
+   <div class="col-sm-12">
+      <button
+        type="button"
+        class='btn btn-outline-primary btn-sm btn-narrow'
+        (click)='onCancel()' i18n
+        >{{i18n('Cancel')}}</button>
+      <button
+        class='btn btn-primary btn-sm btn-narrow pull-right'
+        (click)='onSubmit()'
+        [disabled]='false' i18n
+        >{{i18n('Confirm')}}</button>
+   </div>
+</div>

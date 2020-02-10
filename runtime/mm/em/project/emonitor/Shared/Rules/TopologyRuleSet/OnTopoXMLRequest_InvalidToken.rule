@@ -1,0 +1,23 @@
+/**
+ * @description 
+ * @author Nick-PC
+ */
+rule Shared.Rules.TopologyRuleSet.OnTopoXMLRequest_InvalidToken {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		
+		Shared.Events.topology.TopologyXmlFileRequestEvent topologyxmlfilerequestevent;
+	}
+	when {
+		topologyxmlfilerequestevent.token == null || String.length(topologyxmlfilerequestevent.token) == 0;
+	}
+	then {
+		Shared.RuleFunctions.log("OnTopoXMLRequest","DEBUG","Invalid token!");
+		Shared.Events.reqres.FailureResponseEvent event = Shared.Events.reqres.FailureResponseEvent.FailureResponseEvent(null,null,"001","Invalid token");
+		Event.replyEvent(topologyxmlfilerequestevent, event);		
+		Event.consumeEvent(topologyxmlfilerequestevent);
+	}
+}

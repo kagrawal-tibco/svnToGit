@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0"
+    xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" name="model"
+    nsURI="http:///com/tibco/cep/decision/tree/model/DecisionTree.ecore" nsPrefix="tree">
+  <eClassifiers xsi:type="ecore:EClass" name="DecisionTree">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="folder" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="ownerProject" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="creationDate" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EDate"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="lastModified" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EDate"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="nodes" upperBound="-1"
+        eType="#//node/NodeElement"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="edges" upperBound="-1"
+        eType="#//edge/Edge"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="startNode" eType="#//node/NodeElement"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="FlowElement">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="id" lowerBound="1" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//ELong"
+        iD="true"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="name" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="description" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="data" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EJavaObject"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="assocEdge" eType="#//edge/Association"/>
+  </eClassifiers>
+  <eSubpackages name="node" nsURI="http:///com/tibco/cep/decision/tree/model/node"
+      nsPrefix="node">
+    <eClassifiers xsi:type="ecore:EClass" name="NodeElement" eSuperTypes="#//FlowElement">
+      <eStructuralFeatures xsi:type="ecore:EReference" name="inEdges" upperBound="-1"
+          eType="#//edge/Edge"/>
+      <eStructuralFeatures xsi:type="ecore:EReference" name="outEdge" eType="#//edge/Edge"/>
+    </eClassifiers>
+    <eClassifiers xsi:type="ecore:EClass" name="Loop" eSuperTypes="#//node/NodeElement">
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="loopType" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EEnumerator"
+          transient="true"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="loopCondition" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+      <eStructuralFeatures xsi:type="ecore:EReference" name="elements" upperBound="-1"
+          eType="#//FlowElement"/>
+      <eStructuralFeatures xsi:type="ecore:EReference" name="startNode" lowerBound="1"
+          eType="#//node/NodeElement"/>
+      <eStructuralFeatures xsi:type="ecore:EReference" name="endNodes" upperBound="-1"
+          eType="#//node/NodeElement"/>
+    </eClassifiers>
+    <eClassifiers xsi:type="ecore:EClass" name="DescriptionElement" eSuperTypes="#//node/NodeElement">
+      <eStructuralFeatures xsi:type="ecore:EReference" name="assocElement" lowerBound="1"
+          eType="#//FlowElement"/>
+    </eClassifiers>
+    <eSubpackages name="condition" nsURI="http:///com/tibco/cep/decision/tree/model/node/condition"
+        nsPrefix="condition">
+      <eClassifiers xsi:type="ecore:EClass" name="Cond" eSuperTypes="#//node/NodeElement"/>
+      <eClassifiers xsi:type="ecore:EClass" name="BoolCond" eSuperTypes="#//node/condition/Cond">
+        <eStructuralFeatures xsi:type="ecore:EReference" name="falseEdge" eType="#//edge/Edge"/>
+      </eClassifiers>
+      <eClassifiers xsi:type="ecore:EClass" name="SwitchCond" eSuperTypes="#//node/condition/Cond">
+        <eStructuralFeatures xsi:type="ecore:EReference" name="cases" upperBound="-1"
+            eType="#//node/condition/Case"/>
+        <eStructuralFeatures xsi:type="ecore:EReference" name="casegroups" upperBound="-1"
+            eType="#//node/condition/CaseGroup"/>
+      </eClassifiers>
+      <eClassifiers xsi:type="ecore:EClass" name="Case" eSuperTypes="#//FlowElement">
+        <eStructuralFeatures xsi:type="ecore:EReference" name="outEdge" eType="#//edge/Edge"/>
+      </eClassifiers>
+      <eClassifiers xsi:type="ecore:EClass" name="CaseGroup" eSuperTypes="#//node/condition/Case">
+        <eStructuralFeatures xsi:type="ecore:EReference" name="cases" upperBound="-1"
+            eType="#//node/condition/Case"/>
+      </eClassifiers>
+    </eSubpackages>
+    <eSubpackages name="action" nsURI="http:///com/tibco/cep/decision/tree/model/node/action"
+        nsPrefix="action">
+      <eClassifiers xsi:type="ecore:EClass" name="Action" eSuperTypes="#//node/NodeElement">
+        <eStructuralFeatures xsi:type="ecore:EAttribute" name="text" lowerBound="1"
+            eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+      </eClassifiers>
+      <eClassifiers xsi:type="ecore:EClass" name="Assignment" eSuperTypes="#//node/action/Action"/>
+      <eClassifiers xsi:type="ecore:EClass" name="CallRF" eSuperTypes="#//node/action/Action"/>
+      <eClassifiers xsi:type="ecore:EClass" name="CallDecisionTreeAction" eSuperTypes="#//node/action/Action">
+        <eStructuralFeatures xsi:type="ecore:EReference" name="callTree" lowerBound="1"
+            eType="#//DecisionTree"/>
+      </eClassifiers>
+      <eClassifiers xsi:type="ecore:EClass" name="CallDecisionTableAction" eSuperTypes="#//node/action/Action"/>
+    </eSubpackages>
+    <eSubpackages name="terminal" nsURI="http:///com/tibco/cep/decision/tree/model/terminal"
+        nsPrefix="terminal">
+      <eClassifiers xsi:type="ecore:EClass" name="Terminal" eSuperTypes="#//node/NodeElement"/>
+      <eClassifiers xsi:type="ecore:EClass" name="Start" eSuperTypes="#//node/terminal/Terminal"/>
+      <eClassifiers xsi:type="ecore:EClass" name="End" eSuperTypes="#//node/terminal/Terminal"/>
+      <eClassifiers xsi:type="ecore:EClass" name="Break" eSuperTypes="#//node/terminal/Terminal"/>
+    </eSubpackages>
+  </eSubpackages>
+  <eSubpackages name="edge" nsURI="http:///com/tibco/cep/decision/tree/model/edge"
+      nsPrefix="edge">
+    <eClassifiers xsi:type="ecore:EClass" name="Edge" eSuperTypes="#//FlowElement">
+      <eStructuralFeatures xsi:type="ecore:EReference" name="src" lowerBound="1" eType="#//node/NodeElement"/>
+      <eStructuralFeatures xsi:type="ecore:EReference" name="tgt" lowerBound="1" eType="#//node/NodeElement"/>
+    </eClassifiers>
+    <eClassifiers xsi:type="ecore:EClass" name="Association" eSuperTypes="#//edge/Edge"/>
+  </eSubpackages>
+</ecore:EPackage>

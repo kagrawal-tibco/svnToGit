@@ -1,0 +1,125 @@
+/**
+ * @description Check preconditions for committing an artifact entry.
+ */
+String[] rulefunction WebStudio.Core.RuleFunctions.Actions.Lifecycle.Commit.WS_RF_ExecutePreconditionsForCommit {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String managedProjectName;
+		WebStudio.Core.Concepts.Lifecycle.WS_C_CommittableDeltaEntry committableDeltaEntry;
+		String loggedInUserName;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.Lifecycle.Commit.WS_RF_ExecutePreconditionsForCommit");
+		
+		String responseMessage = null;
+		String errorCode = null;
+		int responseStatus = 0;
+		
+		String[] returnValue = null;
+		
+		String subscriptionId = WS_RF_GetSubscriptionId(loggedInUserName);
+		
+		//Checks to be performed.
+		//1.) Is this entry locked by different user.
+		//2.) Is this artifact's base revision same as the one on the master if it exists.
+		//(The optimistic locking/edit-merge-commit case partially implemented).
+		
+		//TODO Locking to be handled later
+		WS_C_UserArtifactRevision containedRevision = Instance.PropertyAtom.getConceptReference(committableDeltaEntry.userArtifactRevision, 1L);
+		if (containedRevision != null) {
+			//Get parent artifact
+			WS_C_UserArtifact parentUserArtifact =  WS_RF_IsUserArtifact(containedRevision.parentArtifactId, containedRevision.parentArtifactType);
+			//Get checkpoint revision
+			WS_C_UserArtifactRevision artifactCheckpointedRevision = Instance.PropertyAtom.getConceptReference(parentUserArtifact.checkpointRevision, 1L);
+			Log.log(LOGGER, "Debug", "Artifact checkpoint revision [%s] ",artifactCheckpointedRevision);
+			Log.log(LOGGER, "Debug", "Total Artifact Revisions [%s] ",parentUserArtifact.artifactRevisionIds@length);
+			//Check if master exists
+			String artifactPath = parentUserArtifact.artifactPath;
+			String masterArtifactExtId = WS_RF_CreateUserArtifactExtId(null, artifactPath, managedProjectName, null, subscriptionId, null);
+			//Lock and load this
+			boolean masterArtifactLock = Cluster.DataGrid.Lock(masterArtifactExtId, -1, false);
+			if (masterArtifactLock) {				
+				// First, check whether this artifact is locked by another user
+				WS_C_CheckArtifactLockResponse artifactLockStatus 
+									= WebStudio.Core.RuleFunctions.Actions.Lifecycle.Lock.WS_RF_CheckMasterArtifactLock(managedProjectName, parentUserArtifact.artifactPath, loggedInUserName);
+				if (artifactLockStatus.holdsLock || artifactLockStatus.lockOwner == null) {							
+					WS_C_MasterArtifact masterArtifact = Instance.getByExtIdByUri(masterArtifactExtId, "/WebStudio/Core/Concepts/Lifecycle/WS_C_MasterArtifact");
+					if (masterArtifact != null) {
+						Log.log(LOGGER, "Debug", "Master artifact Instance for artifact [%s] is [%s]", artifactPath, masterArtifact);
+						//Check its current master revision which would have been from a previous approval.
+						WS_C_UserArtifactRevision masterRevision = Instance.PropertyAtom.getConceptReference(masterArtifact.currentMasterRevision, 1L);
+						//This could be null if nothing hs been approved yet.
+						if (masterRevision != null) {
+							if (artifactCheckpointedRevision == masterRevision) {
+								Log.log(LOGGER, "Debug", "Checkpoint and MasterRevision are identical.");
+								//This means user's local base revision is already in sync with latest approved change.
+								//User may have made changes post a checkout/update and wants to now commit this.
+								//This is a valid checkin request.
+								//However there is a possibility of some other user already commiting the same artifact
+								WS_C_UserArtifactRevision preMasterRevision = Instance.PropertyAtom.getConceptReference(masterArtifact.preMasterRevision, 1L);
+								if (preMasterRevision != null) {
+									if (artifactCheckpointedRevision != preMasterRevision) {
+										WS_C_LifecycleMetadata lifecycleMetadata = Instance.PropertyAtom.getContainedConcept(artifactCheckpointedRevision.lifecycleMetadata, 1L);
+										WS_C_ArtifactBaseState artifactBaseState = Instance.PropertyAtom.getConceptReference(lifecycleMetadata.currentState, 1L);
+										Log.log(LOGGER, "Debug", "Artifact [%s] last committed revision state [%s]", artifactPath, artifactBaseState.stateName);							
+										errorCode = "ERR_1140";
+										responseStatus = -1;
+										responseMessage = String.format("A different revision for artifact [%s] in project [%s] is already pending for a Review.", artifactPath, managedProjectName);
+									} else {
+										Log.log(LOGGER, "Debug", "Both PreMaster Revision and checkpoint revision are identical.");
+									}
+								} else {
+									Log.log(LOGGER, "Debug", "PreMaster Revision is null as well !!");
+								}
+							} else {
+								WS_C_LifecycleMetadata lifecycleMetadata = Instance.PropertyAtom.getContainedConcept(artifactCheckpointedRevision.lifecycleMetadata, 1L);
+								WS_C_ArtifactBaseState artifactBaseState = Instance.PropertyAtom.getConceptReference(lifecycleMetadata.currentState, 1L);
+								Log.log(LOGGER, "Debug", "Artifact [%s] last committed revision state [%s]", artifactPath, artifactBaseState.stateName);
+								if (artifactBaseState instanceof WS_C_ArtifactCommittedState) {									
+									errorCode = "ERR_1140";
+									responseStatus = -1;
+									responseMessage = String.format("A different revision for artifact [%s] in project [%s] is already pending for a Review.", artifactPath, managedProjectName);								
+								} else {
+									errorCode = "ERR_1140";
+									responseStatus = -1;
+									responseMessage = String.format("A different revision for artifact [%s] in project [%s] already exists. Please update local copy with this.", artifactPath, managedProjectName);	
+								}																
+							}
+						} else {
+							Log.log(LOGGER, "Debug", "Master Artifact Exists, but has no associated Master Revision yet.");
+							// With the lack of master artifact revision, check for pre-master revision
+							WS_C_UserArtifactRevision preMasterRevision = Instance.PropertyAtom.getConceptReference(masterArtifact.preMasterRevision, 1L);
+							if (preMasterRevision != null) {
+								if (artifactCheckpointedRevision != preMasterRevision) {
+									WS_C_LifecycleMetadata lifecycleMetadata = Instance.PropertyAtom.getContainedConcept(artifactCheckpointedRevision.lifecycleMetadata, 1L);
+									WS_C_ArtifactBaseState artifactBaseState = Instance.PropertyAtom.getConceptReference(lifecycleMetadata.currentState, 1L);
+									Log.log(LOGGER, "Debug", "Artifact [%s] last committed revision state [%s]", artifactPath, artifactBaseState.stateName);							
+									errorCode = "ERR_1140";
+									responseStatus = -1;
+									responseMessage = String.format("A different revision for artifact [%s] in project [%s] is already pending for a Review.", artifactPath, managedProjectName);
+								} else {
+									Log.log(LOGGER, "Debug", "Both PreMaster Revision and checkpoint revision are identical.");
+								}
+							} else {
+								Log.log(LOGGER, "Debug", "PreMaster Revision is null as well !!");
+							}
+						}
+					} else {
+						//First time commit. Allow
+						Log.log(LOGGER, "Debug", "First time commit. Allow");
+					}
+				} else {
+					responseStatus = -1;
+					errorCode = "ERR_1145";
+					responseMessage = String.format("The artifact [%s] in project [%s] is locked by user [%s] and cannot be committed.", artifactPath, managedProjectName, artifactLockStatus.lockOwner);					
+				}		
+			}
+			//Release this lock
+			Cluster.DataGrid.UnLock(masterArtifactExtId, false);
+		}   
+		returnValue = String[]{errorCode, "" + responseStatus, responseMessage};
+		return returnValue;
+	}
+}

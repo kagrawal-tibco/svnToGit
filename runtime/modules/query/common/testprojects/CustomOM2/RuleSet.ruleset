@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<ruleset icon="" name="RuleSet" description="" guid="1192475107384-798322282" bindings="" namespace="" folder="/">
+    <lastModified/>
+    <hiddenProperties/>
+    <rules>
+        <rule icon="" name="StockQuoteCreator" description="" guid="1192475113056-1882053659" bindings="" namespace="" isAFunction="false" isAConditionFunction="false" compilationStatus="-1">
+            <lastModified>2007-10-15T16:14:16.412-07:00</lastModified>
+            <hiddenProperties/>
+            <priority>5</priority>
+            <testInterval>-1</testInterval>
+            <startTime>-1</startTime>
+            <doesRequeue>false</doesRequeue>
+            <maxRules>1</maxRules>
+            <fwdChain>true</fwdChain>
+            <bwdChain>false</bwdChain>
+            <declarations>
+                <declaration identifier="timerloop" entity="/TimerLoop">
+                    <domain>
+                        <entries/>
+                    </domain>
+                </declaration>
+            </declarations>
+            <condition/>
+            <action>double d = Math.random();&#xD;
+d = d * 10;&#xD;
+int i = d;&#xD;
+&#xD;
+String[] symbols = {"TIBX", "YHOO", "GOOG"};&#xD;
+&#xD;
+int symbolPos = i % symbols@length;&#xD;
+double price = (d * 100) % 75 + 9;&#xD;
+&#xD;
+SimpleEvent e = StockQuote.StockQuote("", "", symbols[symbolPos], price, "NASDAQ");&#xD;
+Event.assertEvent(e);&#xD;
+</action>
+            <requeueVars/>
+            <template/>
+            <author/>
+        </rule>
+        <rule icon="" name="StockQuoteListener" description="" guid="1192476566205-2113681745" bindings="" namespace="" isAFunction="false" isAConditionFunction="false" compilationStatus="-1">
+            <lastModified>2007-10-15T12:30:16.81-07:00</lastModified>
+            <hiddenProperties/>
+            <priority>5</priority>
+            <testInterval>-1</testInterval>
+            <startTime>-1</startTime>
+            <doesRequeue>false</doesRequeue>
+            <maxRules>1</maxRules>
+            <fwdChain>true</fwdChain>
+            <bwdChain>false</bwdChain>
+            <declarations>
+                <declaration identifier="stockquote" entity="/StockQuote">
+                    <domain>
+                        <entries/>
+                    </domain>
+                </declaration>
+            </declarations>
+            <condition/>
+            <action>System.debugOut(stockquote.symbol + " " + stockquote.price + " " + stockquote.exchange);</action>
+            <requeueVars/>
+            <template/>
+            <author/>
+        </rule>
+    </rules>
+</ruleset>

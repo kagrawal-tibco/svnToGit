@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="ASCII"?>
+<Table:Table xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:Table="http:///com/tibco/cep/decision/table/model/DecisionTable.ecore" name="BU" folder="/Virtual_RF/" implements="/Virtual_RF/BankUser_VirtualRuleFunction" since="BE 4.0">
+  <md>
+    <prop name="EffectiveDate" type="DateTime" value=""/>
+    <prop name="ExpiryDate" type="DateTime" value=""/>
+    <prop name="SingleRowExecution" type="Boolean" value="false"/>
+  </md>
+  <decisionTable>
+    <rule id="1">
+      <cond id="1_1" colId="1" expr="> 20" displayValue="> 20"/>
+      <act id="1_2" colId="2" expr=""/>
+      <act id="1_3" colId="3" expr="&quot;Sr : &quot; + bankuser.Name" displayValue="&quot;Sr : &quot; + bankuser.Name"/>
+    </rule>
+    <rule id="2">
+      <cond id="2_1" colId="1" expr="&lt; 20" displayValue="&lt; 20"/>
+      <act id="2_3" colId="3" expr="&quot;Jr : &quot; + bankuser.Name" displayValue="&quot;Jr : &quot; + bankuser.Name"/>
+    </rule>
+    <columns>
+      <column id="1" name="bankuser.Age" propertyPath="/Concepts/BankUser/Age" propertyType="1" columnType="CONDITION"/>
+      <column id="3" name="bankuser.Name" propertyPath="/Concepts/BankUser/Name" columnType="ACTION"/>
+    </columns>
+  </decisionTable>
+  <exceptionTable/>
+  <argument direction="BOTH">
+    <property path="/Concepts/BankUser" alias="bankuser" resourceType="CONCEPT"/>
+  </argument>
+</Table:Table>

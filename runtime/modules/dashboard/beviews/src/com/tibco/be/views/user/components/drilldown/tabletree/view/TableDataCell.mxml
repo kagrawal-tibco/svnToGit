@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:HBox
+	xmlns:mx="http://www.adobe.com/2006/mxml"
+	xmlns:shapes="com.tibco.be.views.ui.shapes.*"
+	height="100%"
+	horizontalScrollPolicy="off"
+	verticalScrollPolicy="off"
+	styleName="tableTreeDataCell"
+	creationComplete="handleCreationComplete(event)"
+>
+	<mx:Script>
+		<![CDATA[
+			import mx.events.FlexEvent;
+			import com.tibco.be.views.user.components.drilldown.tabletree.model.TableTreeColumnConfig;
+			import com.tibco.be.views.core.ui.actions.ActionRegistry;
+			import com.tibco.be.views.core.ui.actions.AbstractAction;
+			import com.tibco.be.views.core.ui.CommandTypes;
+			
+			protected static const TEXT_STYLE:String = "tableTreeDataCellText";
+			protected static const LINK_STYLE:String = "tableTreeDataCellLink";
+			protected static const LINK_OVER_STYLE:String = "tableTreeDataCellLinkOver";	
+			protected static const LINK_SELECT_STYLE:String = "tableTreeDataCellLinkDown";
+			
+			[Bindable]
+			protected var _text:String;
+			protected var _linkUrl:String;
+			protected var _viewConfig:TableTreeColumnConfig;
+			
+			public function get textHeight():int{ return contentLabel.textHeight; }
+			public function get viewConfig():TableTreeColumnConfig{ return _viewConfig; }
+			
+			override public function set width(value:Number):void{
+				super.width = value;
+				if(contentLabel != null){ contentLabel.width = value - 5 };
+			}
+			public function set text(value:String):void{ _text = value; }
+			public function set linkUrl(value:String):void{ _linkUrl = value; }
+			public function set viewConfig(value:TableTreeColumnConfig):void{ _viewConfig = value; }
+			
+			public function enableLink():void{
+				if(contentLabel == null){ return; }
+				contentLabel.styleName = LINK_STYLE;
+				contentLabel.buttonMode = true;
+				contentLabel.useHandCursor = true;
+				contentLabel.mouseChildren = false;
+				contentLabel.addEventListener(MouseEvent.CLICK, handleMouseClicked);
+				contentLabel.addEventListener(MouseEvent.MOUSE_DOWN, handleMouseDown);
+				contentLabel.addEventListener(MouseEvent.MOUSE_UP, handleMouseUp);
+				contentLabel.addEventListener(MouseEvent.ROLL_OVER, handleMouseRollOver);
+				contentLabel.addEventListener(MouseEvent.ROLL_OUT, handleMouseRollOut);
+			}
+			
+			public function disableLink():void{
+				if(contentLabel == null){ return; }
+				contentLabel.styleName = TEXT_STYLE;
+				contentLabel.buttonMode = false;
+				contentLabel.useHandCursor = false;
+				contentLabel.mouseChildren = true;
+				contentLabel.removeEventListener(MouseEvent.CLICK, handleMouseClicked);
+				contentLabel.removeEventListener(MouseEvent.MOUSE_DOWN, handleMouseDown);
+				contentLabel.removeEventListener(MouseEvent.MOUSE_UP, handleMouseUp);
+				contentLabel.removeEventListener(MouseEvent.ROLL_OVER, handleMouseRollOver);
+				contentLabel.removeEventListener(MouseEvent.ROLL_OUT, handleMouseRollOut)
+			}
+			
+			private function handleCreationComplete(event:FlexEvent):void{
+				if(_linkUrl != null){ enableLink(); }
+				if(_viewConfig != null){
+					contentLabel.setStyle("textAlign", _viewConfig.align);
+					//set other properties from the config here...
+				}
+			}
+			
+			private function handleMouseClicked(event:MouseEvent):void{
+				if(_linkUrl == null || _linkUrl == ""){ return; }
+				var actionConfig:XML = new XML(
+					"<actionconfig command=\"" + CommandTypes.LAUNCH_EXTERNAL_LINK + "\" >" + 
+						"<param name=\"url\" >" + _linkUrl + "</param>" +
+					"</actionconfig>"
+				);
+				var action:AbstractAction = ActionRegistry.instance.getAction(actionConfig);
+				action.execute(null);
+			}
+			
+			private function handleMouseDown(event:MouseEvent):void{
+				if(_linkUrl == null || _linkUrl == ""){ return; }
+				contentLabel.styleName = LINK_SELECT_STYLE;
+			}
+			
+			private function handleMouseUp(event:MouseEvent):void{
+				if(_linkUrl == null || _linkUrl == ""){ return; }
+				contentLabel.styleName = LINK_STYLE;
+			}
+			
+			private function handleMouseRollOver(event:MouseEvent):void{
+				if(_linkUrl == null || _linkUrl == ""){ return; }
+				contentLabel.styleName = LINK_OVER_STYLE;
+			}
+			
+			private function handleMouseRollOut(event:MouseEvent):void{
+				if(_linkUrl == null || _linkUrl == ""){ return; }
+				contentLabel.styleName = LINK_STYLE;
+			}
+			
+		]]>
+	</mx:Script>
+	<mx:Label id="contentLabel" text="{_text}"/>
+</mx:HBox>

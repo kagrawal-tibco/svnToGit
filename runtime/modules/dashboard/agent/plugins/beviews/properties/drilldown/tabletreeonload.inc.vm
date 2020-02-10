@@ -1,0 +1,119 @@
+<%
+		TableTree tableTree = (TableTree)request.getAttribute(TableTreeConstants.TreeTable_TABLE);
+
+		String bodyOnload = "";
+
+		String commandType = request.getParameter(TableTreeConstants.KEY_CMD);
+		if (commandType == null || commandType.length() == 0)
+		{
+			commandType = TableTreeConstants.CMD_FULL_TABLE;
+		}
+
+		if (TableTreeConstants.CMD_FULL_TABLE.equalsIgnoreCase(commandType))
+		{
+		}
+		else
+		if (TableTreeConstants.CMD_ROW_EXPAND.equalsIgnoreCase(commandType))
+		{
+			bodyOnload = " onload = \"return transferTree("
+							+ "'" + tableTree.getTableTreeName()
+							+ "', '" +  tableTree.getTablePath()
+							+ "', '" +  request.getParameter(TableTreeConstants.KEY_ROW_INDEX)
+							+ "');\"";
+		}
+		else
+		if (TableTreeConstants.CMD_TABLE_EXPAND.equalsIgnoreCase(commandType))
+		{
+			bodyOnload = " onload = \"return transferNestedTable("
+							+ "'" + tableTree.getTableTreeName()
+							+ "', '" +  tableTree.getTablePath()
+							+ "', '" +  request.getParameter(TableTreeConstants.KEY_PARENT_TABLE_PATH)
+							+ "', '" +  request.getParameter(TableTreeConstants.KEY_ROW_PATH)
+							+ "');\"";
+		}
+		else
+		if (TableTreeConstants.CMD_REFRESH.equalsIgnoreCase(commandType))
+		{
+			bodyOnload = " onload = \"return transferTable("
+							+ "'" + tableTree.getTableTreeName()
+							+ "', '" +  tableTree.getTablePath()
+							+ "');\"";
+		}
+		else
+		if (TableTreeConstants.CMD_SORT.equalsIgnoreCase(commandType))
+		{
+			bodyOnload = " onload = \"return transferNestedTable("
+							+ "'" + tableTree.getTableTreeName()
+							+ "', '" +  tableTree.getTablePath()
+							+ "', '" +  request.getParameter(TableTreeConstants.KEY_PARENT_TABLE_PATH)
+							+ "', '" +  request.getParameter(TableTreeConstants.KEY_ROW_PATH)
+							+ "');\"";
+		}
+		else
+		if (TableTreeConstants.CMD_GROUP_BY.equalsIgnoreCase(commandType))
+		{
+			bodyOnload = " onload = \"return transferGroupRows("
+							+ "'" + tableTree.getTableTreeName()
+							+ "', '" +  tableTree.getTablePath()
+							+ "', '" +  request.getParameter(TableTreeConstants.KEY_PARENT_TABLE_PATH)
+							+ "', '" +  request.getParameter(TableTreeConstants.KEY_ROW_PATH)
+							+ "');\"";
+		}
+		else
+		if (TableTreeConstants.CMD_TABLE_NEXT_ROW_SET.equalsIgnoreCase(commandType))
+		{
+			bodyOnload = " onload = \"return transferNextRowSet("
+							+ "'" + tableTree.getTableTreeName()
+							+ "', '" +  tableTree.getTablePath()
+							+ "');\"";
+		}
+		else
+		if (TableTreeConstants.CMD_TABLE_PREV_ROW_SET.equalsIgnoreCase(commandType))
+		{
+			bodyOnload = " onload = \"return transferPrevRowSet("
+							+ "'" + tableTree.getTableTreeName()
+							+ "', '" +  tableTree.getTablePath()
+							+ "');\"";
+		}
+		else
+		if (TableTreeConstants.CMD_TABLE_APPEND_ROW_SET.equalsIgnoreCase(commandType))
+		{
+			bodyOnload = " onload = \"return transferAppendRowSet("
+							+ "'" + tableTree.getTableTreeName()
+							+ "', '" +  tableTree.getTablePath()
+							+ "');\"";
+		}
+		else
+		if (TableTreeConstants.CMD_EXPAND_ALL.equalsIgnoreCase(commandType))
+		{
+			bodyOnload = " onload = \"return transferNestedTableExpanded("
+							+ "'" + tableTree.getTableTreeName()
+							+ "', '" +  tableTree.getTablePath()
+							+ "', '" +  request.getParameter(TableTreeConstants.KEY_PARENT_TABLE_PATH)
+							+ "', '" +  request.getParameter(TableTreeConstants.KEY_ROW_PATH)
+							+ "');\"";
+		}
+%>
+
+<SCRIPT language="javascript">
+	function runCommands()
+	{
+		<%
+		
+			//System.out.println("Transferring commands:: ");
+			List listCommands = (List)request.getAttribute(TableTreeConstants.TableTree_COMMANDS);
+			if (listCommands != null)
+			{
+				Iterator itCommands = listCommands.iterator();
+				while (itCommands.hasNext())
+				{
+					String command = (String)itCommands.next();
+					//System.out.println("command is :: " + command);
+			%>
+					<%=command%>
+			<%
+				}
+			}
+		%>
+	}
+</SCRIPT>

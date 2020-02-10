@@ -1,0 +1,84 @@
+<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:element name="decisionTableSave">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="metadata">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="property" maxOccurs="unbounded" minOccurs="0">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element type="xs:string" name="name"/>
+                    <xs:element type="xs:string" name="type"/>
+                    <xs:element type="xs:string" name="value"/>
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="arguments">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="argument" maxOccurs="unbounded" minOccurs="0">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element type="xs:string" name="direction"/>
+                    <xs:element type="xs:string" name="path"/>
+                    <xs:element type="xs:string" name="argumentAlias"/>
+                    <xs:element type="xs:string" name="resourceType"/>
+                    <xs:element type="xs:string" name="isArray"/>
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="decisionTableColumns">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="column" maxOccurs="unbounded" minOccurs="0">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element type="xs:byte" name="columnId"/>
+                    <xs:element type="xs:string" name="name"/>
+                    <xs:element type="xs:string" name="property"/>
+                    <xs:element type="xs:string" name="columnType"/>
+                    <xs:element type="xs:string" name="columnAlias" minOccurs="0"/>
+                    <xs:element type="xs:string" name="isArrayProperty"/>
+                    <xs:element type="xs:byte" name="propertyType"/>
+                    <xs:element type="xs:string" name="isSubstitution"/>
+                    <xs:element type="xs:string" name="associatedDM"/>
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="decisionTablePage">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element type="xs:byte" name="pageNumber"/>
+              <xs:element name="tableRule" maxOccurs="unbounded" minOccurs="0">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element type="xs:byte" name="ruleId"/>
+                    <xs:element type="xs:string" name="ruleContents"/>
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element type="xs:string" name="exceptionTableColumns"/>
+        <xs:element name="exceptionTablePage">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element type="xs:byte" name="pageNumber"/>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

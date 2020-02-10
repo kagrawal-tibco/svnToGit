@@ -1,0 +1,49 @@
+/**
+ * @description 
+ * @author 
+ */
+rule Monitoring.Rules.RemoteMetricsDataPopulators.onAbstractRemoteMetricEvent {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Monitoring.Events.rmetrics.AbstractRemoteMetricEvent	remotemetricevent;
+		
+	}
+	when {
+		
+	}
+	then {
+		Object[] eventArrayObj = null;
+		if (remotemetricevent.batchId == null){
+		    eventArrayObj = Object[1]{};
+		    eventArrayObj[0] = remotemetricevent;
+		}
+		else {
+		    String batchID = remotemetricevent.batchId;
+		    BEMMUtil.LinkedList.createList(batchID);
+		    BEMMUtil.LinkedList.add(batchID,BEMMUtil.LinkedList.size(batchID),remotemetricevent);
+		    if (remotemetricevent.isBatchEnd == true){
+		        int elementsCollected = BEMMUtil.LinkedList.size(batchID);
+//		        if (elementsCollected != remotemetricevent.batchSize){
+//		            Shared.RuleFunctions.log("onAbstractRemoteMetricEvent","WARNING","Inconsistent batch size information for "+remotemetricevent.type);
+//		            Event.consumeEvent(remotemetricevent);
+//		            return;
+//		        }
+		        //sort the list using the index property
+		        BEMM.util.sortList(BEMMUtil.LinkedList.getList(batchID),String[]{"index,true"});
+		        eventArrayObj = Object[elementsCollected]{};
+		        for (int i = 0 ; i < elementsCollected ; i = i + 1){
+		            eventArrayObj[i] = BEMMUtil.LinkedList.get(batchID,i);
+		        }
+		        BEMMUtil.LinkedList.deleteList(batchID);
+		    }    
+		}
+		if (eventArrayObj != null){
+		    Shared.RuleFunctions.log("onAbstractRemoteMetricEvent","DEBUG","Processing "+eventArrayObj@length+" event(s) batch for "+remotemetricevent.type);
+		    delegateRemoteMetricsViewPopulation(remotemetricevent.type,eventArrayObj);   
+		}
+		Event.consumeEvent(remotemetricevent);
+	}
+}

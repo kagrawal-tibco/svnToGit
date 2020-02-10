@@ -1,0 +1,123 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<title>     BE JSON Example
+
+		- TIBCO BusinessEvents&reg; Examples
+		</title>
+		<meta http-equiv="Content-type" content="text/html; charset=iso-8859-1" />
+		<meta http-equiv="Content-Language" content="en-us" />
+		<link rel="Shortcut Icon" href="../../_resources/icon.gif" type="image/gif" />
+		<style type="text/css" media="all">@import "../../_resources/examples.css";</style>
+		<script type="text/javascript" src="../../_resources/examples.js" /></script>
+		<script type="text/javascript">
+			function sendPostRequest() {
+				var payloadData = '{"Employee" : {"Emp_Id" : "EMP_101","Name" : "John","Salary" : "500"}}';
+
+				var http = new XMLHttpRequest();
+				http.open("POST", "http://localhost:9090/setInfo", true);
+				http.onreadystatechange = function() {
+					if(http.readyState == 4 && http.status == 200) {
+						alert(http.responseText);
+					}
+				}
+				http.send(payloadData);
+			}
+		</script>
+	</head>
+
+	<body>
+		<h1>BE JSON Example</h1>
+
+		<h2>Purpose of This Example</h2>
+
+		<p>This example demonstrates how to use TIBCO BusinessEvents&reg; to send and receive JSON content via BE events. In this example, there are 2 BE projects a client(BEJSONClient) and an server(BEJSONServer).</p>
+		<ul>
+			<li>
+				<p>The job of the client project is to create and send a BE event with JSON payload to the server as part of the startup Rule Function. And once a response is received from the server, print out the JSON payload received.</p>
+			</li>
+			<li>
+				<p>The server project is listening on a configured destinations. Once it receives an event on destination(setInfo), the associated pre-processor(setEmpInfoPreProcessor) is triggered, which prints the JSON payload it receives. Constructs a Response event with the appropriate JSON payload and sends it back to the server. Additionally there is also a Page-flow based destination(setInfoPageFlow), which can be invoked, resulting in the associated rule function(setEmpInfoPageFlowProcessor) being called. The job of this rule function is</p>
+				<ul>
+					<li><p>Fetch the JSON payload, use Instance factory API's to convert the payload into appropriate concept(Employee).</p></li>
+					<li><p>Additionally demostrate the use of JSON parsing API's against the raw JSON payload</p></li>
+					<li><p>Finally create a JSON payload response and send it across to the client</p></li>
+				</ul>
+			</li>
+		</ul>
+		<p>You can examine the projects in TIBCO BusinessEvents Studio to understand the setup.
+
+		<h2>Instructions</h2>
+
+		<p>Before you begin, ensure that the example EAR files are in the <i>BE_HOME</i><code>/examples/standard/JSON</code> folder, where this readme is also stored. </p>
+
+		<ol>
+			<li>
+				Open a command window and navigate to <i>BE_HOME</i>/examples/standard/JSON.
+			</li>
+			<li>
+				At the command prompt, first start the server project using the following command. Substitute your actual value for <i>BE_HOME</i>.
+				<p>Adapt the commands as needed, for example, if you have customized the example project, or are running it from a different directory.</p>
+			</li>
+
+			<pre class="commands">
+cd <i>BE_HOME</i>/examples/standard/JSON
+<i>BE_HOME</i>/bin/be-engine --propFile <i>BE_HOME</i>/bin/be-engine.tra -u default -c BEJSONServer/BEJSONServer.cdd BEJSONServer.ear
+			</pre>
+
+			<li>
+				Now start the client project using the following command. Substitute your actual value for <i>BE_HOME</i>.
+			</li>
+
+			<pre class="commands">
+<i>BE_HOME</i>/bin/be-engine --propFile <i>BE_HOME</i>/bin/be-engine.tra -u default -c BEJSONClient/BEJSONClient.cdd BEJSONClient.ear
+			</pre>
+
+				<p>Below are the client engine console log messages</p>
+			
+<pre class="logs">Sending request...
+Payload from Response : {
+  "response" : {
+    "attributes" : {
+      "status" : "Success",
+      "type" : "www.tibco.com/be/ontology/Events/returnEmpInfoEvent"
+    },
+    "message" : "Employee details set."
+  }
+}
+</pre>
+				<p>Here are the server engine console log messages</p>
+			
+<pre class="logs">Received Request with payload - {
+  "Employee" : {
+    "attributes" : {
+      "type" : "www.tibco.com/be/ontology/Concepts/Employee"
+    },
+    "Emp_Id" : "EMP_101",
+    "Name" : "John",
+    "Salary" : "500"
+  }
+}
+Sending out response !!
+</pre>
+			<li><p>Finally send request to page flow destination with JSON payload</p></li>
+
+        	<form class="sendEventForm" onSubmit="sendPostRequest()"><fieldset><legend>/setInfo</legend><pre></pre><p><button type="submit">Send <span class="sendEventFormDestination">http://localhost:9090/setInfo</span></button></p></fieldset></form>
+
+        	<p>Here are the server engine console log messages</p>
+<pre class="logs">
+Employee Details - Id (EMP_101), Name (John) & Salary (500.0).
+Employee Id - EMP_101
+Employee Name - John
+Employee Salary - 500
+</pre>
+		</ol>
+
+		<div class="footer">
+			<p>TIBCO BusinessEvents&reg; 5.6<br />
+			Copyright&copy; 2004-2019 TIBCO Software Inc. All rights reserved.</p>
+		</div>
+	</body>
+</html>

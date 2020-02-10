@@ -1,0 +1,128 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>     FTL Example
+
+- TIBCO BusinessEvents&reg; Examples
+</title>
+<meta http-equiv="Content-type" content="text/html; charset=iso-8859-1" />
+<meta http-equiv="Content-Language" content="en-us" />
+<link rel="Shortcut Icon" href="../../_resources/icon.gif" type="image/gif" />
+<style type="text/css" media="all">@import "../../_resources/examples.css";</style>
+<script type="text/javascript" src="../../_resources/examples.js" /></script>
+<script type="text/javascript">
+function buildForms() {
+ var form;
+
+
+ SendEventForm.setServer("http://localhost:8090");
+
+
+ form = SendEventForm.get("pingForm");
+ form.setDestinationPath("/Channels/HTTP/Getmsg");
+ form.setEventPath("/Events/FTLRequestEvent");
+ form.addProperty("type", "1");
+ form.addProperty("ts", "1412367983267");
+ form.addProperty("toBaseStation", "StationA");
+ form.addProperty("fromBaseStation", "StationA");
+ form.addProperty("callerId", "Z12349");
+ form.addProperty("_payload_","<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<tns:names xmlns:tns=\"http://www.example.org/InfoSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://www.example.org/InfoSchema InfoSchema.xsd \">\r\n  <tns:name>Bob</tns:name>\r\n  <tns:name>John</tns:name>\r\n</tns:names>");
+ form.addProperty("eventdate","2014-11-13T12:01:02.000Z");
+ form.build();
+
+
+
+}
+</script>
+</head>
+<body onLoad="buildForms()">
+
+
+<h1>FTL Example</h1>
+
+
+<h2>Purpose of This Example</h2>
+
+<p>This example demonstrates the use of FTL Catalog functions API to provide bi-directional communication with FTL server.</p>
+<ul>
+<li>A form input is sent via the HTTP channel event <i>FTLRequestEvent</i> which is then published to the FTL server end point using the FTL Publisher APIs.</li>
+<li>The FTLRequestEvent fields are mapped into the FTL message format as defined in the ftl-example.json file.</li>
+<li>The FTL example project also binds a FTL Subscriber with <i>FTLResponseEvent</i>.</li>
+<li>On receipt of a FTL message, it is transformed to a FTLResponseEvent and asserted accordingly to rule session.</li>
+</ul>
+
+<p>NOTE: Use Google Chrome or Mozilla Firefox browsers to view the Send Button in the readme.html. The Send button can be used to provide test data to the example application.
+</p>
+
+<h2>How to Run the Example</h2>
+<ol>
+
+<li>
+<p>Add the FTL_HOME in the be-engine.tra file.</p>
+</li>
+<li>
+<p>Information regarding starting the FTL Server and uploading the information from the json file </p>
+<pre class="commands">
+<b>Change the directory to  ${TIBCO_HOME}\ftl\${ftl.version}\bin</b>
+
+<b>Start the Realm Server as follows</b>
+tibrealmserver.bat
+
+<b>Upload the Realm definition</b>
+tibrealmadmin.bat -rs http://localhost:8085 -ur ${TIBCO_HOME}\be\${be.version}\examples\standard\FTL\ftl-example.json
+
+<b>Point browser URL to http://localhost:8085 to see FTL administration console</b>
+
+<b>To dump the realm definitions to a json file the following command can be used but not neccessary for start up</b>
+tibrealmadmin.bat -rs http://localhost:8085 -dr ${TIBCO_HOME}\be\${be.version}\examples\standard\FTL\ftl-example.json
+</pre>
+</li>
+<li>
+<p>Open a command window and at the command prompt, start the TIBCO BusinessEvents engine using the following command. </p>
+
+<pre class="commands">
+
+cd <i>BE_HOME</i>/examples/standard/FTL
+<i>BE_HOME</i>/bin/be-engine --propFile <i>BE_HOME</i>/bin/be-engine.tra -u default -c FTL/Deployments/FTL.cdd FTLExample.ear
+
+</pre>
+
+<p>Adapt the command as needed, for example, if you have customized the example project, or are running it from a different directory.</p>
+</li>
+
+
+<li>
+<p>Send form data as a FTLRequestEvent to the FTL Server</p>
+
+<form id="pingForm"></form>
+
+<p>In the command window you see a message like this:
+<span class="logs"><br/>#### PUBLISHER will send the following message ####<br/>Message contents to be published<br/>#### PUBLISHER publishing the message ...</span></p>
+</li>
+
+
+<li>
+<p>The FTL Server notifies the FTL Subscriber to create the FTLResponseEvent.</p>
+
+
+
+<p>In the command window you see messages like this
+<span class="logs"><br/>#### SUBSCRIBER received an event ####<br/>Message contents received<br/>#### SUBSCRIBER done printing the message ...</span></p>
+</li>
+
+<li>
+<p> To reset the data, restart the engine at the command line.</p>
+</li>
+
+</ol>
+
+
+
+<div class="footer">
+<p>TIBCO BusinessEvents&reg; 5.6<br />
+Copyright&copy; 2004-2019 TIBCO Software Inc. All rights reserved.</p>
+</div>
+</body>
+</html>

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema xmlns="http://www.w3.org/2001/XMLSchema" 
+targetNamespace="www.tibco.com/be/rms/ArtifactStatusChangePayload" 
+xmlns:tns="www.tibco.com/be/rms/ArtifactStatusChangePayload" 
+elementFormDefault="qualified" 
+xmlns:Q1="www.tibco.com/be/ontology/rms/Approval/Concepts/ArtifactsConcepts/AMS_C_ArtifactCommited" xmlns:Q2="www.tibco.com/be/ontology/rms/Approval/Concepts/ArtifactsConcepts/AMS_C_ReviewerHistory" >
+
+    <import schemaLocation="Approval/Concepts/ArtifactsConcepts/AMS_C_ArtifactCommited.xsd" namespace="www.tibco.com/be/ontology/rms/Approval/Concepts/ArtifactsConcepts/AMS_C_ArtifactCommited"></import>
+    <import schemaLocation="Approval/Concepts/ArtifactsConcepts/AMS_C_ReviewerHistory.xsd" namespace="www.tibco.com/be/ontology/rms/Approval/Concepts/ArtifactsConcepts/AMS_C_ReviewerHistory"></import>
+    
+    <complexType name="ArtifactReviewSummary">
+    	<sequence>
+    		<element name="artifacts" type="tns:ArtifactDetails"
+    			maxOccurs="unbounded" minOccurs="1" />
+    	</sequence>
+    </complexType>
+    
+    <complexType name="Artifact">
+    	<sequence>
+    		<element name="AMS_C_Artifact" type="Q1:AMS_C_ArtifactCommited"></element>
+    		<element name="reviewerHistory" type="Q2:AMS_C_ReviewerHistory" minOccurs="0" maxOccurs="unbounded"></element>
+    	</sequence>
+    </complexType>
+
+    <complexType name="ArtifactDetails">
+    	<sequence>
+    		<element name="artifact" type="tns:Artifact" maxOccurs="unbounded" minOccurs="1"/>
+    	</sequence>
+    </complexType>
+
+    <element name="ArtifactsReviewSummary" type="tns:ArtifactReviewSummary"/>
+</schema>

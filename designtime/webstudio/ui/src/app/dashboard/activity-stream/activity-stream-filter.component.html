@@ -1,0 +1,49 @@
+<div class="row top-pad">
+  <div class="left-pad right-pad">
+    <datetime-editor (valueChange)='onValueChange()' [allowPastValues]='true' [edit]='true' [forceReset]='forceReset'  [hideTimezone]='true' [(value)]='beginningDate' floatLabel="{{i18n('Beginning Date/time')}}" i18n-floatLabel>
+    </datetime-editor>
+  </div>
+  <div class="left-pad right-pad">
+    <datetime-editor (valueChange)='onValueChange()' [allowPastValues]='true' [edit]='true' [forceReset]='forceReset' [hideTimezone]='true' [(value)]='endingDate' floatLabel="{{i18n('Ending Date/time')}}" i18n-floatLabel>
+    </datetime-editor>
+  </div>
+  <div *ngIf='isAdmin()' class="left-pad right-pad">
+    <mat-form-field>
+      <mat-select [formControl]="users" placeholder="{{i18n('Users')}}" i18n-placeholder multiple>
+        <mat-option *ngFor='let user of userList' [value]='user'>
+          {{user}}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+  </div>
+  <div class="left-pad right-pad">
+    <mat-form-field>
+      <mat-select [formControl]="projects" placeholder="{{i18n('Projects')}}" i18n-placeholder multiple>
+        <mat-option *ngFor='let proj of projectList' [value]='proj'>
+          {{proj}}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+  </div>
+  <div class="left-pad right-pad">
+    <mat-form-field>
+      <input type="text" name="artifactPath" matInput placeholder="{{i18n('Artifacts')}}" autocomplete="false"
+        [(ngModel)]="artifactPaths">
+      <mat-hint><ng-container i18n>{{i18n('A comma separated list of artifact paths')}}</ng-container></mat-hint>
+    </mat-form-field>
+  </div>
+  <div class="left-pad right-pad">
+    <mat-form-field>
+      <mat-select [formControl]="actions" placeholder="{{i18n('Action Types')}}" i18n-placeholder multiple>
+        <mat-option *ngFor='let at of getActionTypes()' [value]='at'>
+          {{at.name}}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+  </div>
+
+  <div class="left-pad right-pad" style="margin-top: 0.3em;">
+    <button style="margin-right: 8px" mat-raised-button color="primary" (click)='performApply()' i18n>{{i18n(' Apply ')}}</button>
+    <button mat-raised-button color="primary" (click)='performClear()' i18n>{{i18n(' Clear ')}}</button>
+  </div>
+</div>

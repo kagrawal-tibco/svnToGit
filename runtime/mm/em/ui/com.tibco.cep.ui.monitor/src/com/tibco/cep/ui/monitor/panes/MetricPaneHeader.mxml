@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" width="100%" 
+	height="30" paddingLeft="3" paddingRight="5" styleName="metricPaneHeaderStyle">
+<mx:Script>
+	<![CDATA[
+		import mx.events.FlexMouseEvent;
+		import com.tibco.cep.ui.monitor.events.EventTypes;
+		
+		[Bindable]
+		private var _promoteBtnCls:Class;
+		
+		[Bindable]
+		private var _expandBtnCls:Class;
+		
+		[Bindable]
+		private var _removeBtnCls:Class;		
+					
+		[Bindable]
+		private var _headerTitle:String;
+		
+		[Bindable]
+		private var _headerTip:String;
+		
+		[Bindable]
+		private var _clusterHealthBtnCls:Class;
+		
+		[Embed(source='assets/images/maximizeIcon.png')]
+		private var _maxIconCls:Class;
+		
+		[Embed(source='assets/images/minimizeIcon.png')]
+		private var _minIconCls:Class;
+		
+		[Embed(source='assets/images/promoteBtn.PNG')]
+		private var _promoteIconCls:Class;
+		
+		[Embed(source='assets/images/demoteBtn.PNG')]
+		private var _demoteIconCls:Class;
+		
+		[Embed(source='assets/images/removeMetricIcon.png')]
+		private var _removeMetricIconCls:Class;
+		
+		private var _metricPane:MetricPane;
+		
+		public function init(coupledPane:MetricPane, title:String):void{
+			_metricPane = coupledPane;
+			_headerTitle = title;
+			expandBtnIcon = _maxIconCls;
+			promoteBtnIcon = _promoteIconCls;
+			removeBtnIcon = _removeMetricIconCls;
+			
+			//drag out
+			addEventListener(MouseEvent.MOUSE_DOWN, _metricPane.handleMouseDown);
+			addEventListener(MouseEvent.MOUSE_UP, _metricPane.handleMouseUp);
+			addEventListener(MouseEvent.MOUSE_MOVE, _metricPane.handleItemDragOut);
+			addEventListener(EventTypes.PANE_EXPANDED, _metricPane.handleExpanderClick);
+			addEventListener(EventTypes.PANE_PROMOTED, _metricPane.handlePanePromotion);
+			addEventListener(EventTypes.PANE_CLOSED, _metricPane.handlePaneRemove);
+			addEventListener(FlexMouseEvent.MOUSE_DOWN_OUTSIDE, _metricPane.handleMouseDownOutside);
+		}
+		
+		private function handleMouseDown(eventObj:MouseEvent):void{
+			var eObj:MouseEvent = MouseEvent(eventObj.clone());
+			dispatchEvent(eObj);			
+		}
+		
+		private function handleMouseUp(eventObj:MouseEvent):void{
+			var eObj:MouseEvent = MouseEvent(eventObj.clone());
+			dispatchEvent(eObj);			
+		}		
+		
+		private function handleMouseDownOutside(eventObj:FlexMouseEvent):void{
+			var eObj:FlexMouseEvent = FlexMouseEvent(eventObj.clone());
+			dispatchEvent(eObj);				
+		}
+		
+		private function handleItemDragOut(eventObj:MouseEvent):void{
+			var eObj:MouseEvent = MouseEvent(eventObj.clone());
+			dispatchEvent(eObj);
+		}
+		
+		private function handleExpanderClick():void{
+			dispatchEvent(new Event(EventTypes.PANE_EXPANDED));
+		}
+		
+		private function handlePromoteClick():void{
+			dispatchEvent(new Event(EventTypes.PANE_PROMOTED));
+		}
+		
+		private function handleCloseClick():void{
+			dispatchEvent(new Event(EventTypes.PANE_CLOSED));
+		}		
+		
+		public function get headerTitle():String{
+			return _headerTitle;
+		}
+		
+		public function set metricPane(pane:MetricPane):void{
+			_metricPane = pane;
+		}
+		
+		public function set headerTitle(val:String):void{
+			var titleMaxLen:int = MetricPane.CONTAINER_WIDTH/10; //change to 11 with pane health indicator
+			if(val.length > titleMaxLen){
+				_headerTitle = val.substr(0,titleMaxLen) + "...";
+				_headerTip = val;
+			}
+			else{
+				_headerTitle = val;
+				_headerTip = "";
+			}
+		}
+		
+		public function set promoteBtnIcon(val:Class):void{
+			_promoteBtnCls = val;
+		}
+		
+		public function set expandBtnIcon(val:Class):void{
+			_expandBtnCls = val;
+		}
+				
+		public function set removeBtnIcon(val:Class):void{
+			_removeBtnCls = val;
+		}		
+		
+		public function set clusterHealthBtnIcon(val:Class):void{
+			_clusterHealthBtnCls = val;
+		}
+		
+		/**
+		 * Sets the displayMode for the metric pane. based on this value, the metric pane's 
+		 * dimensions and few event listeners will change  
+		 * @param val
+		 */		
+		public function set displayMode(val:String):void{
+			if(val == MetricPane.EXPANDED_DISPLAY){
+				if(btnHolder.contains(btn_PromotePane)) 
+					btnHolder.removeChild(btn_PromotePane);
+				
+				if(btnHolder.contains(btn_RemovePane)) 
+					btnHolder.removeChild(btn_RemovePane);
+					
+				_expandBtnCls = _minIconCls;
+				btn_ExpandPane.toolTip = "Close";				
+			}
+			else if(val == MetricPane.PROMOTED_DISPLAY){
+				if(btnHolder.contains(btn_RemovePane)) 
+					btnHolder.removeChild(btn_RemovePane);
+					
+				btn_PromotePane.toolTip = "Remove";
+				promoteBtnIcon = _demoteIconCls;
+				headerTitle += " - " + String(_metricPane.monitoredNode.@name);
+				removeEventListener(MouseEvent.MOUSE_DOWN, handleMouseDown);
+				removeEventListener(MouseEvent.MOUSE_MOVE, handleItemDragOut);
+			}
+			else if(val == MetricPane.STATIC_DISPLAY){
+				if(btnHolder.contains(btn_PromotePane)) 
+					btnHolder.removeChild(btn_PromotePane);
+					
+				if(btnHolder.contains(btn_RemovePane)) 
+					btnHolder.removeChild(btn_RemovePane);
+					
+				removeEventListener(MouseEvent.MOUSE_DOWN, handleMouseDown);
+				removeEventListener(MouseEvent.MOUSE_MOVE, handleItemDragOut);
+			}
+		}		
+	]]>
+</mx:Script>
+	<mx:HBox id="hbox_Header" width="100%" height="100%" paddingLeft="3" paddingRight="5" verticalAlign="middle">
+		<mx:HBox width="100%" horizontalGap="2" verticalAlign="middle" styleName="metricPaneTitleStyle">
+			<!-- mx:Image id="img_PaneStatus" source="@Embed('assets/images/cluster_health_normal.png')" visible="true" /-->
+			<mx:Label id="lbl_HeaderTitle" text="{_headerTitle}" paddingRight="0" width="100%"
+				mouseDown="handleMouseDown(event)" mouseMove="handleItemDragOut(event)" toolTip="{_headerTip}"
+				mouseUp="handleMouseUp(event)" mouseDownOutside="handleMouseDownOutside(event)"/>
+		</mx:HBox>
+		<!--mx:Button width="25" height="19" fillAlphas="[1.0, 1.0]" fillColors="[#E3DCF2, #E3DCF2]" icon="{_clusterHealthBtnCls}"
+			alpha="1.0" borderColor="#E3DCF2" highlightAlphas="[0, 0]"  
+			toolTip="" visible="false" id="btn_clusterHealth">
+		</mx:Button-->
+		<mx:HBox id="btnHolder" height="20" cornerRadius="4" backgroundColor="#E3DCF2" borderStyle="solid" borderColor="#C1C2D7" paddingLeft="2" paddingRight="2" horizontalGap="2">
+			<mx:Button width="18" height="18" icon="{_promoteBtnCls}"  click="handlePromoteClick()"
+				toolTip="Add to Overview" id="btn_PromotePane" styleName="metricPaneHeaderBtnStyle">
+			</mx:Button>
+			<mx:Button width="18" height="18" icon="{_expandBtnCls}" click="handleExpanderClick()"
+				toolTip="Expand Pane" id="btn_ExpandPane" styleName="metricPaneHeaderBtnStyle">
+			</mx:Button>	
+			<mx:Button width="18" height="18" icon="{_removeBtnCls}" click="handleCloseClick()"
+				toolTip="Remove Pane" id="btn_RemovePane" styleName="metricPaneHeaderBtnStyle">
+			</mx:Button>			
+		</mx:HBox>
+	</mx:HBox>
+</mx:Canvas>

@@ -1,0 +1,30 @@
+/**
+ * @description
+ * @author anpatil-dt
+ */
+rule Rules.onMonthCalculationTrigger {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Events.CalculationTrigger e;
+	}
+	when {
+		e.period == "month";
+	}
+	then {
+		int duration = 31;
+		System.debugOut("Computing tickers for "+e.Ticker+" for "+duration+" "+e.period+"(s)");
+		//get current time
+		DateTime now = DateTime.now();
+		//go back a month
+		DateTime.addDay(now,-duration);
+		long timeMsecs = DateTime.getTimeInMillis(now);
+		//calculate price for the last whole month @ day resolution
+		for (int i = 0 ; i < duration ; i++){
+			Dashboards.Metrics.DailyTickerMetric.compute(DateTime.parseLong(timeMsecs), e.Ticker, Math.random()*100, Math.random() * 10000);
+			timeMsecs = timeMsecs + 24*60*60*1000;
+		}
+	}
+}

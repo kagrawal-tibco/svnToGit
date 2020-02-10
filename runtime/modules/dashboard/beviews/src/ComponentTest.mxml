@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Application 
+	xmlns:mx="http://www.adobe.com/2006/mxml"
+	layout="absolute"
+	fontSize="10"
+	width="100%"
+	height="100%"
+	backgroundGradientAlphas="[1.0, 1.0]"
+	backgroundGradientColors="[#666666, #666666]"
+	paddingLeft="0"
+	paddingRight="0"
+	creationComplete="init();"
+>
+	<mx:Style source="assets/styles/CoreStyles.css"/>
+	<mx:Script>
+		<![CDATA[
+
+            private var _controller:ComponentTestController;
+            
+            private function init():void{
+            	_controller = new ComponentTestController(this);
+            	_controller.init();
+            }
+			
+		]]>
+	</mx:Script>
+	<mx:VDividedBox x="0" y="0" width="100%" height="100%" id="verticalDiv" horizontalAlign="center" paddingTop="5" paddingBottom="5">
+		<mx:Canvas width="100%" height="53%"  backgroundColor="#5D798C">
+			<mx:TabNavigator id="tn_XMLDisplays" x="0" y="0" width="100%" height="100%" creationPolicy="all" color="#000000">
+				<mx:VBox id="configXMLTab" width="100%" height="100%" label="Config XML" enabled="true">
+					<mx:TextArea id="configXMLTxtArea" width="100%" height="100%" fontFamily="Arial"/>
+				</mx:VBox>
+				<mx:VBox id="dataXMLTab" width="100%" height="100%" label="Data XML" enabled="true">
+					<mx:TextArea id="dataXMLTxtArea" width="100%" height="100%" />						
+				</mx:VBox>	
+				<!--mx:VBox id="completeXMLTab" width="100%" height="100%" label="Complete XML" enabled="true">
+					<mx:TextArea id="completeXMLTxtArea" width="100%" height="100%" />
+				</mx:VBox-->
+			</mx:TabNavigator>
+		</mx:Canvas>
+		<mx:HBox width="100%" height="36%" backgroundColor="#5D798C">
+			<mx:Panel id="componentHolder" width="70%" height="100%" title="Component View"  verticalScrollPolicy="auto" horizontalScrollPolicy="auto" clipContent="true" />
+			<mx:Panel id="componentButtons" width="30%" height="100%" title="Component Controls" layout="absolute">
+				<mx:Button id="btn_RefreshConfig" x="10" y="10" label="Refresh Config" />
+				<!--mx:Button id="btn_SetData" x="128" y="10"  label="Set Data"  width="65" paddingLeft="2" paddingRight="2"/-->
+				<mx:Button id="btn_UpdateData" x="201" y="10"  label="Update Data"  width="96" paddingLeft="2" paddingRight="2"/>
+				<mx:Label id="lbl_ComponentWidth" text="Component Width:"  x="10" y="42"/>
+				<mx:HSlider id="hs_ComponentWidth" x="136" y="42" minimum="1" maximum="3" value="2" snapInterval=".1" enabled="true" liveDragging="true" />
+				<mx:Label id="lbl_ComponentHeight" x="10" y="68" text="Component Height:" />
+				<mx:HSlider id="hs_ComponentHeight" x="136" y="68" minimum="1" maximum="3" value="2" snapInterval=".1" enabled="true" liveDragging="true" />
+			</mx:Panel>
+		</mx:HBox>
+	</mx:VDividedBox>
+	
+</mx:Application>

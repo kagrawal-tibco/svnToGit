@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<channel:Channel xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:channel="http:///com/tibco/cep/designtime/core/model/service/channel" xmlns:designtime="http:///com/tibco/cep/designtime/core/model/designtime_ontology.ecore" namespace="/Channels/" folder="/Channels/" name="KafkaChannel" description="" GUID="EF7D02FA-DD41-0558-2119-7A966782C653" ownerProjectName="KafkaChannel">
+  <driver label="KAFKA" channel="/">
+    <properties>
+      <properties xsi:type="designtime:SimpleProperty" name="kafka.broker.urls" value="%%kafka.channel/broker.url%%" mandatory="true"/>
+      <properties xsi:type="designtime:SimpleProperty" name="kafka.security.protocol" value="PLAINTEXT" mandatory="true"/>
+      <properties xsi:type="designtime:SimpleProperty" name="kafka.sasl.mechanism" value="PLAIN"/>
+      <properties xsi:type="designtime:SimpleProperty" name="kafka.trusted.certs.folder" value=""/>
+      <properties xsi:type="designtime:SimpleProperty" name="kafka.keystore.identity" value=""/>
+      <properties xsi:type="designtime:SimpleProperty" name="kafka.truststore.password" value=""/>
+    </properties>
+    <destinations folder="/Channels/KafkaChannel/" name="orderDest" description="" GUID="CC7A85B7-A54C-6081-45D8-49D245A2D475" ownerProjectName="KafkaChannel" eventURI="/Events/OrderEvent" serializerDeserializerClass="com.tibco.cep.driver.kafka.serializer.KafkaMapSerializer" driverConfig="//@driver">
+      <properties>
+        <properties xsi:type="designtime:SimpleProperty" name="IncludeEventType" value="ALWAYS" mandatory="true"/>
+        <properties xsi:type="designtime:SimpleProperty" name="topic.name" value="%%kafka.destination/topic.name%%" mandatory="true"/>
+        <properties xsi:type="designtime:SimpleProperty" name="group.id" value="%%kafka.destination/group.id%%"/>
+        <properties xsi:type="designtime:SimpleProperty" name="client.id" value=""/>
+        <properties xsi:type="designtime:SimpleProperty" name="consumer.threads" value="%%kafka.destination/consumer.threads%%"/>
+        <properties xsi:type="designtime:SimpleProperty" name="heartbeat.interval.msec" value="%%kafka.destination/client.heartbeat.interval%%"/>
+        <properties xsi:type="designtime:SimpleProperty" name="session.timeout.msec" value="%%kafka.destination/client.session.timeout%%"/>
+        <properties xsi:type="designtime:SimpleProperty" name="enable.autocommit" value="%%kafka.destination/autocommit.enabled%%"/>
+        <properties xsi:type="designtime:SimpleProperty" name="autocommit.interval" value="%%kafka.destination/autocommit.interval%%"/>
+        <properties xsi:type="designtime:SimpleProperty" name="sync.sender" value="%%kafka.destination/synchronous.sender%%"/>
+        <properties xsi:type="designtime:SimpleProperty" name="sync.sender.max.wait" value="%%kafka.destination/synchronous.sender.wait%%"/>
+        <properties xsi:type="designtime:SimpleProperty" name="compression.type" value="%%kafka.destination/compression.type%%"/>
+        <properties xsi:type="designtime:SimpleProperty" name="message.key.rf" value="%%kafka.destination/order.key.rf%%"/>
+      </properties>
+    </destinations>
+    <destinations name="customerSignup" description="" GUID="ED98F0CD-9B92-BA77-5F91-BB13B13458E7" ownerProjectName="KafkaChannel" eventURI="/Events/CustomerSignup" serializerDeserializerClass="com.tibco.cep.driver.kafka.serializer.KafkaJsonSerializer" driverConfig="//@driver">
+      <properties>
+        <properties xsi:type="designtime:SimpleProperty" name="IncludeEventType" value="ALWAYS" mandatory="true"/>
+        <properties xsi:type="designtime:SimpleProperty" name="topic.name" value="%%kafka.destination/topic.name.customer%%" mandatory="true"/>
+        <properties xsi:type="designtime:SimpleProperty" name="group.id" value="%%kafka.destination/group.id%%"/>
+        <properties xsi:type="designtime:SimpleProperty" name="client.id" value=""/>
+        <properties xsi:type="designtime:SimpleProperty" name="consumer.threads" value="%%kafka.destination/consumer.threads%%"/>
+        <properties xsi:type="designtime:SimpleProperty" name="heartbeat.interval.msec" value="%%kafka.destination/client.heartbeat.interval%%"/>
+        <properties xsi:type="designtime:SimpleProperty" name="session.timeout.msec" value="%%kafka.destination/client.session.timeout%%"/>
+        <properties xsi:type="designtime:SimpleProperty" name="enable.autocommit" value="%%kafka.destination/autocommit.enabled%%"/>
+        <properties xsi:type="designtime:SimpleProperty" name="autocommit.interval" value="%%kafka.destination/autocommit.interval%%"/>
+        <properties xsi:type="designtime:SimpleProperty" name="sync.sender" value="%%kafka.destination/synchronous.sender.false%%"/>
+        <properties xsi:type="designtime:SimpleProperty" name="sync.sender.max.wait" value="%%kafka.destination/synchronous.sender.wait%%"/>
+        <properties xsi:type="designtime:SimpleProperty" name="compression.type" value="%%kafka.destination/compression.type%%"/>
+        <properties xsi:type="designtime:SimpleProperty" name="message.key.rf" value=""/>
+      </properties>
+    </destinations>
+    <driverType xsi:type="channel:DriverTypeInfo" driverTypeName="Kafka"/>
+  </driver>
+</channel:Channel>

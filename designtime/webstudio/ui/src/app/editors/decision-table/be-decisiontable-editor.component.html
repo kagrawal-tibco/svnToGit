@@ -1,0 +1,271 @@
+<div
+  *ngIf='isReady'
+  class='editor-container'
+> 
+<!--   <div class="legend-well" *ngIf="this.showLegend">
+    <div class="pull-right-legends">
+      <span class="ws-diff-legend ws-diff-background-add"></span><span class="ws-diff-legend-descrip"> Added </span>
+      <span class="ws-diff-legend ws-diff-background-delete"></span><span class="ws-diff-legend-descrip"> Deleted </span>
+      <span class="ws-diff-legend ws-diff-background-modify"></span><span class="ws-diff-legend-descrip"> Modified </span>
+    </div>
+  </div>
+ -->  <!--  Property Editor -->
+  <div class='property-area' >
+    <div class="row">
+      <div [ngClass]="{'form-group': true, 'col-sm-3': true }" >
+        <ng-template #effectiveTimeOldValue>{{propertyDecorationText('EffectiveDate')}}</ng-template>
+      <!--   <label
+          for="dt-effective-time"
+          [ngClass]="labelClasses('EffectiveDate')"
+          [class.clickable]='isPropertyLabelClickable("EffectiveDate")'
+          (click)='onPropertyLabelClick("EffectiveDate")'
+          [tooltip]="showTooltip('EffectiveDate') ? effectiveTimeOldValue: null"
+          container='body'
+          ><span class="property-label">Effective Date/Time</span></label> -->
+        <datetime-editor
+          [hint]="showTooltip('EffectiveDate') ? propertyDecorationText('EffectiveDate'): null"
+          floatLabel="{{i18n('Effective Date/Time')}}"
+          i18n-floatLabel
+          [edit]='editable'
+          [hideTimezone]='true'
+          [(value)]='effectiveDatetime'
+        ></datetime-editor>
+      </div>
+      <div [ngClass]="{'form-group': true, 'col-sm-3': true }">
+        <ng-template #expiryTimeOldValue>{{propertyDecorationText('ExpiryDate')}}</ng-template>
+       <!--  <label
+          for="dt-expiry-time"
+          [ngClass]="labelClasses('ExpiryDate')"
+          [class.clickable]='isPropertyLabelClickable("ExpiryDate")'
+          (click)='onPropertyLabelClick("ExpiryDate")'
+          [tooltip]="showTooltip('ExpiryDate') ? expiryTimeOldValue: null"
+          container='body'
+          ><span class="property-label">Expiration Date/Time</span></label> -->
+        <datetime-editor
+          [edit]='editable'
+          [hint]="showTooltip('ExpiryDate') ? propertyDecorationText('ExpiryDate'): null"
+          floatLabel="{{i18n('Expiration Date/Time')}}"
+          i18n-floatLabel
+          [hideTimezone]='true'
+          [(value)]='expirationDatetime'
+        ></datetime-editor>
+      </div>
+      <div class="form-group col-sm-2">
+        <ng-template #priorityOldValue>{{propertyDecorationText('Priority')}}</ng-template>
+        <!-- <label
+          for="dt-priority"
+          [ngClass]="labelClasses('Priority')"
+          [class.clickable]='isPropertyLabelClickable("Priority")'
+          (click)='onPropertyLabelClick("Priority")'
+          [tooltip]="showTooltip('Priority') ? priorityOldValue : null"
+          container='body'
+          ><span class="property-label">Priority</span></label>
+        <select
+          [disabled]="!editable"
+          class="form-control form-control-sm form-control-short"
+          id="dt-priority"
+          placeholder="Priority"
+          [(ngModel)]="priority"
+          name='priority"'
+          >
+          <option
+            *ngFor="let i of be_priorityOptions"
+            [selected]="i==priority"
+            >
+            {{i}}
+          </option>
+        </select> -->
+        <mat-form-field style="width: inherit">
+	        <mat-select
+	          [disabled]="!editable"
+	          id="dt-priority"
+            placeholder="{{i18n('Priority')}}"
+            i18n-placeholder
+	          [(ngModel)]="priority"
+	          name='priority'
+	          >
+	          <mat-option
+	            *ngFor="let i of priorityOptions"
+	            [value]='i.toString()'>
+	            {{i}}
+	          </mat-option>
+	        </mat-select>
+        </mat-form-field>
+      </div>
+      <div class="form-group col-sm-4">
+        <ng-template #singleRowExecOldValue>{{propertyDecorationText('SingleRowExecution')}}</ng-template>
+        <mat-slide-toggle
+          [color]="'primary'"
+          [disabled]='!editable'
+          [(ngModel)]='singleExec'
+          id='dt-single-row-execution'>
+          <ng-container i18n>{{i18n('Single Row Execution')}}</ng-container>
+        </mat-slide-toggle>
+<!--         <label
+          for="dt-single-row-execution"
+          [ngClass]="labelClasses('SingleRowExecution')"
+          [class.clickable]='isPropertyLabelClickable("SingleRowExecution")'
+          (click)='onPropertyLabelClick("SingleRowExecution")'
+          [tooltip]="showTooltip('SingleRowExecution') ? singleRowExecOldValue: null"
+          container='body'
+          ><span class="property-label">Single Row Execution</span></label>
+        <br>
+        <toggle-switch
+          [size]='"mini"'
+          [readonly]='!editable'
+          [(value)]='singleExec'
+          id='dt-single-row-execution'
+        ></toggle-switch> -->
+      </div>
+      <div class="form-group" *ngIf="this.showLegend">
+        <div class="pull-right-legends">
+          <span class="ws-diff-legend-descrip"><span class="ws-diff-legend ws-diff-background-add"></span><ng-container i18n>{{i18n(' Added ')}}</ng-container></span>
+          <span class="ws-diff-legend-descrip"><span class="ws-diff-legend ws-diff-background-delete"></span><ng-container i18n>{{i18n(' Deleted ')}}</ng-container></span>
+          <span class="ws-diff-legend-descrip"><span class="ws-diff-legend ws-diff-background-modify"></span><ng-container i18n>{{i18n(' Modified ')}}</ng-container> </span>
+        </div>
+      </div>
+  
+
+      <!--<div class="form-group col-sm-2">
+        <ng-template #timestampAsUTCOldValue>{{propertyDecorationText('TimestampAsUTC')}}</ng-template>
+        <label
+          for="dt-timestamp-as-utc"
+          [ngClass]="labelClasses('TimestampAsUTC')"
+          [class.clickable]='isPropertyLabelClickable("TimestampAsUTC")'
+          (click)='onPropertyLabelClick("TimestampAsUTC")'
+          [tooltip]="showTooltip('TimestampAsUTC') ? timestampAsUTCOldValue: null"
+          container='body'
+          ><span class="property-label">Timestamp As UTC</span></label>
+        <br>
+        <toggle-switch
+          [size]='"mini"'
+          [readonly]='!editable'
+          [(value)]='timestampAsUTC'
+          id='dt-timestamp-as-utc'
+        ></toggle-switch>
+      </div>-->
+    </div>
+  </div>
+
+
+  <div class="table-area">
+  
+  <accordion>
+    <accordion-group  class="DTAccordion" heading="{{i18n('Decision Table')}}" i18n-heading isOpen='true'>
+    <div *ngIf='editable' class="table-edit-control">
+      <div class='row'>
+        <div class='buttonDiv col-sm-12'>
+          <button
+            type="button"
+            class="customButton btn btn-outline-primary btn-sm btn-wide"
+            (click)='onAddBEColumn()' [style.width]="getLocale() ? '8em' : '13em'"
+            ><i class='fa fa-sm fa-plus'></i> <ng-container i18n>{{i18n(' Add Column')}}</ng-container></button>
+          <button
+            type="button"
+            class="customButton btn btn-outline-primary btn-sm btn-wide"
+            (click)='onAddRule()' [style.width]="getLocale() ? '8em' : '13em'"
+            ><i class='fa fa-sm fa-plus'></i> <ng-container i18n>{{i18n(' Add Row')}}</ng-container></button>
+        </div>
+      </div>
+    </div>
+    <div class='ag-grid-table'>
+      <ag-grid-angular #agGrid style="width: 100%; height: 100%" class="ag-theme-balham"
+          [gridOptions]="gridOptions"
+          enableRtl="{{isRtl() ? 'true' : 'false'}}"
+          [columnDefs]="columnDefs"
+          [sideBar]="true"
+          [rowData]="rowData"
+          [stopEditingWhenGridLosesFocus]='true'
+          [singleClickEdit]='true'
+          (gridReady)="onGridReady($event)"
+          rowHeight="22"
+          rowSelection="multiple"
+          (cellClicked)='onCellClicked($event,false)'
+      >
+      </ag-grid-angular>
+    </div>
+    <div *ngIf='!isSinglePage()' class="paginationDiv">
+      <label style="font-weight: 400;" [innerHTML]="getMessage()"></label>
+      <button
+        type="button"
+        title="First"
+        class="paginationElement"
+        (click)='updateGridWithNewPage("F")'
+        [disabled]='isSinglePage()'
+      ><i class="fa fa-angle-double-left" aria-hidden="true"></i></button>
+      <button
+        type="button"
+        title="Previous"
+        class="paginationElement"
+        (click)='updateGridWithNewPage("P")'
+        [disabled]='isSinglePage()'
+      ><i class="fa fa-angle-left" aria-hidden="true"></i></button>
+      <button
+        type="button"
+        title="Next"
+        class="paginationElement"
+        (click)='updateGridWithNewPage("N")'
+        [disabled]='isSinglePage()'
+      ><i class="fa fa-angle-right" aria-hidden="true"></i></button>
+      <button
+        type="button"
+        title="Last"
+        class="paginationElement"
+        (click)='updateGridWithNewPage("L")'
+        [disabled]='isSinglePage()'
+      ><i class="fa fa-angle-double-right" aria-hidden="true"></i></button>
+      <button
+        type="button"
+        class="btn btn-outline-primary btn-sm btn-narrow" style="width:7em;"
+        (click)='updateGridWithNewPage("SA")' i18n
+      >{{i18n(' Show All')}}</button>
+      <label style="font-weight: 400;" i18n>{{i18n('Go to:')}}</label><input #gotoPage style="width: 50px; height:22px; border-radius: 5px;" type="text" (keyup.enter)='updateGridWithNewPage("GP", gotoPage.value)'>
+    </div>
+    <div *ngIf='isShowPages()' class="paginationDiv">
+     <button
+        type="button"
+        class="btn btn-outline-primary btn-sm btn-wide"
+        (click)='updateGridWithNewPage("SP")' i18n
+     >{{i18n(' Show Pages')}}</button>
+    </div>
+    </accordion-group>
+    <accordion-group  class="ETAccordion" heading="{{i18n('Exception Table')}}" i18n-heading>
+    <div *ngIf='editable' class="table-edit-control">
+      <div class='row'>
+        <div class='buttonDiv col-sm-12'>
+          <button
+            type="button"
+            class="customButton btn btn-outline-primary btn-sm btn-wide"
+            (click)='onAddBEETColumn()' [style.width]="getLocale() ? '8em' : '13em'"
+            ><i class='fa fa-sm fa-plus'></i><ng-container i18n>{{i18n(' Add Column')}}</ng-container></button>
+          <button
+            type="button"
+            class="customButton btn btn-outline-primary btn-sm btn-wide"
+            (click)='onAddETRule()' [style.width]="getLocale() ? '8em' : '13em'"
+            ><i class='fa fa-sm fa-plus'></i><ng-container i18n>{{i18n(' Add Row')}}</ng-container></button>
+        </div>
+      </div>
+    </div>
+    <div class='ag-grid-table'>
+      <ag-grid-angular #agGrid style="width: 100%; height: 100%" class="ag-theme-balham"
+          [gridOptions]="gridOptionsNew"
+          enableRtl="{{isRtl() ? 'true' : 'false'}}"
+          [columnDefs]="etColumnDefs"
+          [sideBar]="true"
+          [rowData]="gridOptionsNew.rowData"
+          [stopEditingWhenGridLosesFocus]='true'
+          [singleClickEdit]='true'
+          (gridReady)="onGridReady($event)"
+          rowHeight="22"
+          rowSelection="multiple"
+          (cellClicked)='onCellClicked($event,true)'
+      >
+      </ag-grid-angular>
+    </div>
+    </accordion-group>
+    <accordion-group  *ngIf='this.showProperties' class="ETAccordion" heading="{{i18n('Properties')}}" i18n-heading>
+      <div><review-properties [artifact]='this.initializationObject'></review-properties></div>
+    </accordion-group>
+    </accordion>
+  </div>
+</div>

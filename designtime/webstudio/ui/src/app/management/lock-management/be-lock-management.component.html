@@ -1,0 +1,209 @@
+<div class="slide-content">
+  <mat-grid-list class="custom-mat-grid-list" cols="3" gutterSize='12.5px' rowHeight="2:1">
+    <mat-grid-tile>
+      <div class='full-top'>
+        <h6 mat-subheader>
+          <ng-container i18n>{{i18n('Projects')}}</ng-container>
+        </h6>
+        <mat-divider></mat-divider>
+        <mat-nav-list role='navigation'>
+          <mat-list-item *ngFor="let project of this.projectList" (click)="this.onProjectSelection(project)" [class.active]="project == this.selectedProject">
+            <i *ngIf='project === this.selectedProject' class="material-icons custom-left">folder_open</i>
+            <i *ngIf='project !== this.selectedProject' class="material-icons custom-left" i18n>folder</i>
+            <a mat-list-item class="clickable">
+              {{project.projectName}}
+            </a>
+          </mat-list-item>
+        </mat-nav-list>
+      </div>
+    </mat-grid-tile>
+    <mat-grid-tile>
+        <div class='full-top'>
+          <h6 mat-subheader>
+          <span>
+            <ng-container i18n>{{i18n('List of Locked Artifacts')}}</ng-container>
+          </span>
+        </h6>
+        <mat-divider></mat-divider>
+        <mat-nav-list *ngIf="this.artifactList.length > 0" role='navigation'>
+          <mat-list-item *ngFor="let artifact of this.artifactList" (click)="this.onArtifactSelection(artifact)" [class.active]="artifact == this.selectedArtifact">
+            <i *ngIf='artifact.locked' class="material-icons custom-left">lock_outline</i>
+            <i *ngIf='!artifact.locked' class="material-icons custom-left">lock_open</i>
+            <a mat-list-item class="clickable">
+              {{artifact.name}}
+            </a>
+          </mat-list-item>
+          <mat-grid-tile-footer>
+              <mat-checkbox 
+              class="unlock-all"
+              labelPosition='after'
+              (change)='this.onSelectAll($event)'
+              [(ngModel)]='this.unlockAll' i18n
+          >{{i18n(' Unlock All')}}</mat-checkbox>
+          </mat-grid-tile-footer>
+         </mat-nav-list>
+         <mat-nav-list *ngIf="this.artifactList.length === 0">
+           <mat-list-item>
+             <i class="material-icons custom-warning">warning</i>
+             <small>
+               <ng-container i18n>{{i18n('No artifacts are locked for the selected project.')}}</ng-container>
+              </small>
+            </mat-list-item>
+          </mat-nav-list>
+        </div>
+    </mat-grid-tile>
+    <mat-grid-tile>
+      <div class='full-top'>
+        <h6 mat-subheader>
+          <ng-container i18n>{{i18n('Artifact Details')}}</ng-container>
+        </h6>
+        <mat-divider></mat-divider>
+        <mat-nav-list *ngIf="this.artifactList.length > 0"  role='navigation'>
+         <mat-list-item>
+          <span>
+            <label for="artifactPath" i18n>{{i18n('Path: ')}}</label> {{this.selectedArtifact.path}}
+          </span>
+         </mat-list-item>
+         <mat-list-item>
+          <span>
+            <label for="artifactFileType" i18n>{{i18n(' File Type: ')}}</label> {{this.selectedArtifact.fileType}}
+          </span>
+         </mat-list-item>
+         <mat-list-item *ngIf='!this.isTCEUI()'>
+          <span>
+            <label for="artifactlockOwner" i18n>{{i18n(' Lock Owner: ')}}</label> {{this.selectedArtifact.lockOwner}}
+          </span>
+         </mat-list-item>
+         <mat-list-item *ngIf='this.isTCEUI()'>
+          <span>
+            <label for="artifactlockOwner" i18n>{{i18n(' Lock Owner: ')}}</label> {{this.selectedArtifact.lockOwnerDisplayName}}
+          </span>
+         </mat-list-item>
+         <mat-list-item>
+          <span>
+            <label for="artifactlockTime" i18n>{{i18n(' Lock Time: ')}}</label> {{this.selectedArtifact.lockTime}}
+          </span>
+         </mat-list-item>
+         <mat-list-item>
+          <span>
+            <label for="artifactlockStatus" i18n>Lock: </label>
+            <mat-checkbox 
+                [(ngModel)]='this.selectedArtifact.locked'
+                labelPosition='after'
+                (change)='this.onToggleLock($event)'
+              ></mat-checkbox>
+          </span>
+         </mat-list-item>
+        </mat-nav-list>
+        <mat-nav-list *ngIf="this.artifactList.length === 0">
+          <mat-list-item>
+            <i class="material-icons custom-warning" i18n> warning </i>
+            <small>
+              <ng-container i18n>{{i18n('No artifacts are locked for the selected project.')}}</ng-container>
+            </small>
+          </mat-list-item>
+        </mat-nav-list>
+      </div>
+    </mat-grid-tile>
+  </mat-grid-list>
+  <mat-divider></mat-divider>
+  <div class="save-button">
+      <button mat-raised-button  
+              [ngClass]= "{'custom-save-button': !this.disableApply}"
+              [disabled]="this.disableApply"
+              (click)="this.updateLocks()" i18n
+      >{{i18n(' Apply ')}}</button>
+  </div>
+</div>
+
+<!-- <div class="be-lock-management-container">
+  <div class="panel penel-default">
+    <div class="card-header">
+      Lock Management
+    </div>
+    <div class="card-body">
+      <div class="row">
+        <div class="col-sm-4">
+          <div class="card role-list">
+            <div class="card-header">
+              <span>
+                Projects
+              </span>
+            </div>
+            <div class="list-group">
+              <a *ngFor="let project of this.projectList" class="list-group-item clickable" [class.active]="project == this.selectedProject" (click)="this.onProjectSelection(project)">
+                {{project.projectName}}
+              </a>
+            </div>
+          </div>
+        </div>
+        <div class="col-sm-4">
+          <div class="card role-list">
+            <div class="card-header">
+              <span>
+                List of Locked Artifacts
+              </span>
+            </div>
+            <div class="list-group" *ngIf='this.artifactList.length != 0'>
+              <div class="list-group-item" *ngIf="this.artifactList.length > 0">
+                  Unlock All:
+                  <toggle-switch
+                    class="toggle-switch"
+                    [size]='"mini"'
+                    (valueChange)='this.onSelectAll($event)'
+                  ></toggle-switch>
+              </div>
+              <a *ngFor="let artifact of this.artifactList" class="list-group-item clickable" [class.active]="artifact == this.selectedArtifact" (click)="this.onArtifactSelection(artifact)">
+                <div *ngIf='artifact.locked' class="fa fa-lock"></div>
+                <div *ngIf='!artifact.locked' class="fa fa-unlock"></div>
+                {{artifact.name}}
+              </a>
+            </div>
+            <div class='card-body empty-msg' *ngIf='this.artifactList.length === 0'>
+              <small>No artifacts are locked for the selected project.</small>
+            </div>
+          </div>
+        </div>
+        <div class="col-sm-4">
+          <div class="card role-list">
+            <div class="card-header">
+              <span>
+                Artifact Details
+              </span>
+            </div>
+            <div class="list-group" *ngIf='this.artifactList.length != 0'>
+                <span class="list-group-item">
+                  <label for="artifactPath">Path: </label> {{this.selectedArtifact.path}}
+                </span>
+                <span class="list-group-item">
+                  <label for="artifactFileType">  File Type: </label> {{this.selectedArtifact.fileType}}
+                </span>
+                <span class="list-group-item">
+                  <label for="artifactlockOwner"> Lock Owner: </label> {{this.selectedArtifact.lockOwner}}
+                </span>
+                <span class="list-group-item">
+                  <label for="artifactlockTime">  Lock Time: </label> {{this.selectedArtifact.lockTime}}
+                </span>
+                <span class="list-group-item">
+                  <label for="artifactlockStatus">Lock: </label>
+                  <toggle-switch
+                    class="toggle-switch"
+                    [size]='"mini"'
+                    [(value)]='this.selectedArtifact.locked'
+                  ></toggle-switch>
+                </span>
+            </div>
+            <div class='card-body empty-msg' *ngIf='this.artifactList.length === 0'>
+              <small>No artifacts are locked for the selected project.</small>
+            </div>
+          </div>
+        </div>
+      </div>
+        <button
+          class="ws-lockmanagement-apply-button btn btn-primary btn-sm btn-narrow"
+          [disabled]="this.disableApply"
+          (click)="this.updateLocks()"
+        >Apply</button>
+    </div>
+  </div>
+</div> -->

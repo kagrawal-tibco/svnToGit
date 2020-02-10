@@ -1,0 +1,76 @@
+/**
+ * @description 
+ */
+WebStudio.Core.Concepts.DataSources.WS_C_TemporaryReturnData rulefunction WebStudio.Core.RuleFunctions.Actions.Lifecycle.History.WS_RF_FetchArtifactVersionDiff {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object servletRequest;
+		WebStudio.Security.Authn.Concepts.WS_C_LoggedInUser loggedInUser;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.Lifecycle.Review.WS_RF_FetchCommittableEntryContents");
+
+		String responseMessage = null;
+		String errorCode = null;
+		int recordCount = 1;
+		int responseStatus = 0;
+		
+		WS_C_TemporaryReturnData tempReturnData = null;
+		
+		WS_C_ResponseData responseData = 
+			Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/WS_C_ResponseData");
+		
+		if (!WS_RF_CheckHTTPMethod(servletRequest, "GET")) {
+			responseStatus = -1;
+			recordCount = 0;
+			errorCode = "ERR_5101";
+			responseMessage = "Invalid HTTP Method, expect method is [GET].";
+		} else {
+			String username = loggedInUser.username;
+			Log.log(LOGGER, "Debug", "Logged in user [%s]", username);
+			
+			//Get revisionid and artifact details
+			//When revisionId is not passed treat it as a request to show difference between baseCopy and working copy of the artifact.
+			String revisionIdParam = HTTP.Servlet.Request.getRequestParameter(servletRequest, "revisionId");
+			String artifactPath = HTTP.Servlet.Request.getRequestParameter(servletRequest, "artifactPath");
+			String artifactExtn = HTTP.Servlet.Request.getRequestParameter(servletRequest, "artifactExtension");
+			String projectName = HTTP.Servlet.Request.getRequestParameter(servletRequest, "projectName");
+			String diffMode = HTTP.Servlet.Request.getRequestParameter(servletRequest, "diffMode");//1 - Diff in synchronize dialog between the latest approved copy and its previous approved copy.
+			
+			Log.log(LOGGER, "Info", "Revision Id requested [%s] and artifact path [%s] and extension [%s]", revisionIdParam, artifactPath, artifactExtn);
+			
+			if (artifactPath == null) {
+				responseStatus = -1;
+				errorCode = "ERR_1170";
+				responseMessage = String.format("Mandatory parameter artifactPath is missing.");
+				
+				tempReturnData = WS_RF_CreateTemporaryReturnData(responseStatus, recordCount, errorCode, responseMessage, responseData);
+			} else {
+				WS_C_ArtifactVersionDiffContentDataSourceRecord artifactVersionDiffContentDSR = Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/Records/WS_C_ArtifactVersionDiffContentDataSourceRecord");
+				if (String.equals(diffMode, "1")) {
+					artifactVersionDiffContentDSR = WebStudio.Core.RuleFunctions.Actions.Lifecycle.History.WS_RF_GetMergeDiff(artifactPath, artifactExtn, projectName, loggedInUser.username, Instance.PropertyArray.toArrayString(loggedInUser.roles));
+				}
+				else if (revisionIdParam != null) {
+					artifactVersionDiffContentDSR = WebStudio.Core.RuleFunctions.Actions.Lifecycle.History.WS_RF_GetPreviousApprovedDiff(artifactPath, artifactExtn, projectName, loggedInUser.username, revisionIdParam);
+				}
+				else {
+					artifactVersionDiffContentDSR = WebStudio.Core.RuleFunctions.Actions.Lifecycle.History.WS_RF_GetUserArtifactDiff(artifactPath, artifactExtn, projectName, loggedInUser.username, false);
+				}
+				if (artifactVersionDiffContentDSR == null) {
+					errorCode = "ERR_1180";
+					responseStatus = -1;
+					responseMessage = String.format("No changes to compare.");
+				} else {
+					WS_C_AbstractDataSourceRecord abstractDataSourceRecord = artifactVersionDiffContentDSR;
+					Instance.PropertyArray.appendContainedConcept(responseData.record, abstractDataSourceRecord, 1L);
+				}
+			}
+			
+			tempReturnData = WS_RF_CreateTemporaryReturnData(responseStatus, recordCount, errorCode, responseMessage, responseData);
+		}
+		
+		return tempReturnData;
+	}
+}

@@ -1,0 +1,67 @@
+/**
+ * @description 
+ * @author Nick-PC
+ */
+rule Shared.Rules.TopologyRuleSet.OnSetGlobalVariables_ValidToken {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		
+		Shared.Events.topology.SetGlobalVariables setgvevent;
+		Shared.Events.topology.SetGlobalVariablesWithXMLPayload setgvxmlp;
+	}
+	when {
+		setgvevent.token != null && String.length(setgvevent.token) != 0;
+	}
+	then {
+		String family = "OnSetGlobalVariablesEvent";
+		String methodFQName ="";
+		String entityType="";
+		String monitoredEntityName ="";
+
+		try {
+			Shared.Concepts.LoggedInUser user = Instance.getByExtId(setgvevent.token);
+			if (user == null) {
+			    Shared.Events.reqres.FailureResponseEvent event = Shared.Events.reqres.FailureResponseEvent.FailureResponseEvent(null,null,"001","Invalid token");
+			    Event.replyEvent(setgvevent, event);
+			    return;
+			}
+			Shared.RuleFunctions.log(family,"DEBUG","Rule " + family + " fired");
+			
+			String m_extid = setgvevent.monitorableid;
+			Shared.Concepts.MonitorableEntity machine = Instance.getByExtId(m_extid);
+			if (machine == null) {
+			    Shared.RuleFunctions.log(family,"DEBUG","machine=NULL");
+			    Shared.Events.reqres.FailureResponseEvent event = Shared.Events.reqres.FailureResponseEvent.FailureResponseEvent(null,null,"001","machine not found");
+			    Event.replyEvent(setgvevent, event);
+			    return;
+			}
+			else {
+				entityType = machine.type;
+				methodFQName = "/"+entityType + "/setglobalvariables";
+				monitoredEntityName = getFQName(machine);
+				Shared.RuleFunctions.log(family,"DEBUG","MonitorableEntity ID: " + m_extid);
+				if(machine.predefined == false){
+				    Shared.Events.reqres.FailureResponseEvent event = Shared.Events.reqres.FailureResponseEvent.FailureResponseEvent(null,null,"001","can only edit GV for predefined machine");
+				    Event.replyEvent(setgvevent, event);
+				    Shared.RuleFunctions.log(family,"DEBUG","Cannot edit GV and deploy for a non-predefined machine!");
+				    return;
+				}
+				String machine_name = machine.topologyProps[1];
+				Shared.RuleFunctions.log(family,"DEBUG","machine_name: " + machine_name + ". About to call setDeploymentGV");
+				String result = BEMM.topology.setDeploymentGV(machine_name, setgvevent.newgvxml);
+				Shared.RuleFunctions.log(family,"DEBUG", "successXML = " + result); 
+		    	Shared.Events.reqres.SuccessXMLResponseEvent event = Shared.Events.reqres.SuccessXMLResponseEvent.SuccessXMLResponseEvent(null,result);
+		    	Event.replyEvent(setgvxmlp, event);
+				Event.consumeEvent(setgvxmlp);
+				Event.consumeEvent(setgvevent);
+			}
+		} catch (Exception e) {
+		    Management.RuleFunctions.Exceptions.printAndSendException(e /*Except Object */,
+									family/*family String */,methodFQName/*methodFQName String */,
+									monitoredEntityName /*monitoredEntityName String */,setgvevent/*requestevent Event */);
+		}
+	}
+}

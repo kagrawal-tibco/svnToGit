@@ -1,0 +1,26 @@
+/**
+ * @description Check for session timeout.
+ */
+boolean rulefunction AAA.Rules.AuthenRules.RuleFunctions.AMS_RF_IsSessionTimedout {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		int sessionTimeout;
+		DateTime accessTimestamp; 
+	}
+	body {
+		Object LOGGER = Log.getLogger("AAA.Rules.AuthenRules.RuleFunctions.AMS_RF_IsSessionTimedout");
+		
+		Log.log(LOGGER, "Debug", "Session timeout value is %s (mins) ", sessionTimeout);
+		
+		long inactivePeriod = DateTime.getTimeInMillis(DateTime.now()) - DateTime.getTimeInMillis(accessTimestamp);
+		Log.log(LOGGER, "Debug", "User in-active period is %s (millis) ", inactivePeriod);
+		
+		if (sessionTimeout > 0) {
+			long sessionTimeoutInMillis = sessionTimeout * 60 * 1000;
+			return (inactivePeriod > sessionTimeoutInMillis);
+		}
+		return false;		
+	}
+}

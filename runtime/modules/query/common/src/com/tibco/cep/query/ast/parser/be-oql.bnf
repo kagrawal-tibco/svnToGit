@@ -1,0 +1,202 @@
+<query> ::= <selectExpr> ";"
+
+<selectExpr> ::= "select" <projectionAttributes> 
+                 <fromClause> 
+                 [<whereClause>] 
+                 [<groupClause>] 
+                 [<orderClause>]
+                 
+
+<projectionAttributes> ::= <projectionList>
+                           | "*"
+
+<projectionList> ::= <projection>  { "," <projection> }
+
+<projection> ::= <expr> [ [ ["as"] <labelIdentifier> ] | "." "*" ]
+
+<fromClause> ::= "from" <iteratorDef>  { "," <iteratorDef> }
+
+<iteratorDef> ::= <labelIdentifier> "in" <expr> => NOT SUPPORTED
+                  | ["/"] <expr> ["as"] <LabelIdentifier>
+                  
+<whereClause> ::= "where" <expr>
+
+<groupClause> ::= "group" "by" <groupColumn> { "," <groupColumn> }
+
+<orderClause> ::= "order" "by" <sortCriterion> { "," <sortCriterion> }
+
+<groupColumn> ::= <fieldlist>
+
+<sortCriterion> ::= <expr> [ ( "asc" | "desc" ) ]
+
+<expr> ::= <castExpr>
+
+<castExpr> ::= <orExpr>
+             | "(" type ")" <orExpr>
+             
+<orExpr> ::= <andExpr> { "or" <andExpr> }
+
+<andExpr> ::= <quantifierExpr> { "and" <quantifierExpr> }
+
+<quantifierExpr> ::= <equalityExpr>
+				   | "for" "all" <inClause> ":" <equalityExpr>
+				   | "exists" <inClause> ":" <equalityExpr>
+
+				   
+<inClause> ::= <labelIdentifier> "in" <expr>				   
+
+<equalityExpr> ::= <relationalExpr> 
+					{ ( "=" | "!=" | "<>")
+						 <relationalExpr> }
+					| <relationalExpr> { "like" <relationalExpr> }	
+					
+<relationalExpr> ::= <additiveExpr>
+                            {( "<" | "<=" | ">" | ">=" ) 
+                                    <additiveExpr> }
+                     | <additiveExpr> "between" 
+                                    <additiveExpr> "and" <additiveExpr>
+                                    
+
+                                    
+<additiveExpr> ::=  <multiplicativeExpr>  { "+"  <multiplicativeExpr> }
+                   	| <multiplicativeExpr> { "-"  <multiplicativeExpr> }
+                    | <multiplicativeExpr> { "union" <multiplicativeExpr> }
+                    | <multiplicativeExpr> { "except" <multiplicativeExpr> }
+                    | <multiplicativeExpr> { "||" <multiplicativeExpr> }                                   					
+					
+<multiplicativeExpr>  ::= <inExpr> { "*"  <inExpr> }
+                            | <inExpr> { "/" <inExpr> }
+                            | <inExpr> { "mod" <inExpr> }
+			
+					
+<inExpr> ::= <unaryExpr> { "in" <unaryExpr>}
+
+<unaryExpr> ::= "+" <unaryExpr>
+                | "-" <unaryExpr>
+                | "abs" <unaryExpr>
+                | "not" <unaryExpr>
+                | <postfixExpr>
+                
+
+<postfixExpr> ::= <primaryExpr> {"[" <index> "]" }
+                  | <primaryExpr> {( "." | "@" )<identifier> [ <arglist> ] }                
+
+<index>  ::= <expr> { "," <expr> }
+             | <expr> ":" <expr>
+             
+<primaryExpr> ::= <conversionExpr>
+					| <collectionExpr>				=> NOT SUPPORTED
+	                | <aggregateExpr>
+	                | <befunctionExpr>
+	                | <undefinedExpr>				=> NOT SUPPORTED
+	                | <identifier> "[" <arglist> "]"
+	                | <queryParam>
+	                | <literal>
+	                | "(" <query> ")" 
+	                
+<conversionExpr> ::= "element"  "(" <query> ")"
+                    | "distinct" "(" <query> ")"
+                    | "flatten"  "(" <query> ")"
+                    
+<collectionExpr> ::= "first" "(" <query> ")"
+                    | "last" "(" <query> ")"
+                    | "unique" "(" <query> ")"
+                    | "exists" "(" <query> ")"
+
+<aggregateExpr>  ::= "sum" "(" <query> ")"
+                	| "min" "(" <query> ")"
+                    | "max" "(" <query> ")"
+                    | "avg" "(" <query> ")"
+                    | "count" "(" ( <query> | "*" ) ")"
+
+<undefinedExpr>  ::= "is_undefined" "(" <query> ")"
+                    | "is_defined" "(" <query> ")"
+                    
+
+<argList> ::= ( "[" <valueList> "]" )				   
+
+<fieldlist> ::= <field> , { "," <field> }
+
+<field> ::=  <labelIdentifier> ":" <expr>
+
+<valueList> ::= <expr> { "," <expr> } 
+
+<listRange> ::= <expr> ".." <expr>             
+
+<labelIdentifier> ::= <Identifier>         
+
+<type>	::= ["unsigned"] "short" 		=> NOT SUPPORTED
+            | ["unsigned"] "long" 		=> NOT SUPPORTED
+            | "long" "long" 		=> NOT SUPPORTED
+            | "long"		 		=> NOT SUPPORTED
+            | "float"
+            | "double"
+            | "char"
+            | "String"
+            | "boolean"
+            | "octet"	 		=> NOT SUPPORTED
+            | "enum" [<typeIdentifier> "." ] labelIdentifier  		=> NOT SUPPORTED
+            | "date"				 		=> NOT SUPPORTED
+            | "Datetime"
+            | "time"				 		=> NOT SUPPORTED
+            | "interval"  					=> NOT SUPPORTED
+            | "timestamp" 					=> NOT SUPPORTED
+            | "set" <type>		 			=> NOT SUPPORTED
+            | "bag" <type>			 		=> NOT SUPPORTED
+            | "list" <type>			 		=> NOT SUPPORTED
+            | "array" <type>		 		=> NOT SUPPORTED
+            | "dictionary" "<" <type> "," <type> ">"	 		=> NOT SUPPORTED
+            | <typeIdentifier>			 	=> NOT SUPPORTED
+
+
+<NameFirstCharacter> ::= ( 'A'..'Z' | 'a'..'z' | '_' )
+
+<NameCharacter> ::= ( <NameFirstCharacter> | '0'..'9' )
+
+<identifier> ::= <NameFirstCharacter> { <NameCharacter> }
+
+<literal> ::= <objectLiteral>
+			| <booleanLiteral>
+            | <longLiteral>
+            | <doubleLiteral>
+            | <charLiteral>
+            | <stringLiteral>
+            | <dateLiteral>
+            | <timeLiteral>
+            | <timestampLiteral>
+            | "undefined"
+            
+<objectLiteral> ::= "null"            
+
+<booleanLiteral> ::= "true" | "false"
+
+<longLiteral>    ::= <digit> {<digit>}
+
+<doubleLiteral>  ::= <digit> { <digit> } "." <digit> { <digit> }
+                            [("E" | "e" )["+" | "-" ] <digit> { <digit> } ]
+
+<charLiteral> ::= "\'" <character> "\'"
+
+<stringLiteral> ::= "\"" {<character>} "\""
+
+<dateLiteral> ::= "date"  "\'" <longLiteral> "-" <longLiteral> "-" <longLiteral> "\'"
+				  | "date" <stringLiteral>
+
+<timeLiteral> ::= "time" "\'" <longLiteral> ":" <longLiteral> ":" <floatLiteral> "\'"
+				  | "time" <stringLiteral>
+
+<timestampLiteral>  ::= "timestamp" 
+                        "\'" <longLiteral> "-" <longLiteral> "-" <longLiteral>
+                        <longLiteral> ":" <longLiteral> ":" floatLiteral "\'"
+
+<floatLiteral> ::= <digit>{<digit>}"."<digit>{<digit>}
+
+<character> ::= <letter>
+                | <digit>
+                | <special-character>
+
+<letter>                  ::= ('A'..'Z','a'..'z')
+
+<digit>                   ::= ('0'..'9')
+
+<special-character>       ::= ('?'|'_'|'*'|'%'|'\\')                  

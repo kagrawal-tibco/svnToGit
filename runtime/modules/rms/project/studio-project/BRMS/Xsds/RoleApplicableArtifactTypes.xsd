@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema xmlns="http://www.w3.org/2001/XMLSchema"
+targetNamespace="www.tibco.com/be/rms/RoleApplicableArtifactTypes" 
+xmlns:tns="www.tibco.com/be/rms/RoleApplicableArtifactTypes" elementFormDefault="qualified">
+
+    <complexType name="Roles-Type">
+    	<sequence>
+    		<element name="Role" type="tns:Role-Type" maxOccurs="unbounded" minOccurs="0"/>
+    	</sequence>
+    </complexType>
+    
+    <complexType name="Role-Type">
+    	<sequence>
+    		<element name="AllowableArtifactTypes" type="tns:Allowable-Artifacts-Type"/>
+    	</sequence>
+    	<attribute name="name" type="string" form="qualified" use="required"/>
+    </complexType>
+    
+    <complexType name="Allowable-Artifacts-Type">
+    	<sequence>
+    		<element name="ArtifactType" type="tns:Artifact-Type" maxOccurs="unbounded" minOccurs="1"/>
+    	</sequence>
+    </complexType>
+
+    <simpleType name="Artifact-Type" >
+		<restriction base="string">
+			<enumeration value="CONCEPT"/>
+			<enumeration value="SIMPLEEVENT"/>
+			<enumeration value="TIMEEVENT"/>
+            <enumeration value="RULE"/>
+            <enumeration value="RULEFUNCTION"/>
+            <enumeration value="DECISIONTABLE"/>
+            <enumeration value="DOMAIN"/>
+            <enumeration value="SCORECARD"/>
+            <enumeration value="CHANNEL"/>
+            <enumeration value="METRIC"/>
+            <enumeration value="CDD"/>
+            <!-- Indicating all -->
+            <enumeration value="*"/>
+		</restriction>
+	</simpleType>
+
+    <element name="Roles" type="tns:Roles-Type"/>
+    
+</schema>

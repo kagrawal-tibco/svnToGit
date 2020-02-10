@@ -1,0 +1,51 @@
+/**
+ * @description 
+ */
+WebStudio.Core.Concepts.Decision.WS_C_RuleFunctionArtifact rulefunction WebStudio.Core.RuleFunctions.Utils.DT.WS_RF_FetchRuleFunctionContents {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String scsRootURL;
+		String userName;
+		String projectName;
+		String artifactPath;
+		String artifactExtn;
+		String userArtifactExtId;
+	}
+	body {
+		
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.DT.WS_RF_FetchRuleFunctionContents");
+		
+		Log.log(LOGGER, "Info", "Contents need to be loaded for artifact %s from SCS", artifactPath);
+		String scsIntegrationType = System.getSystemPropertyAsString("ws.scs.impl.type", null);						
+		String artifactContents = WS_RF_FetchContentFromSCS(scsRootURL, projectName, artifactPath, artifactExtn, userName);
+		Log.log(LOGGER, "Debug", "Contents of Rule Function loaded from SCS %s", artifactContents);
+		
+		String subscriptionId = WS_RF_GetSubscriptionId(userName);
+
+		Object rulefunctionObject = WS.Decision.createRuleFunctionEMFObject(projectName, artifactContents, artifactExtn, scsIntegrationType, scsRootURL, WS_RF_GetEarPath(projectName, subscriptionId));
+		
+		WS_C_RuleFunctionArtifact rulefunctionArtifact = Instance.newInstance("/WebStudio/Core/Concepts/Decision/WS_C_RuleFunctionArtifact", null);					
+		rulefunctionArtifact.name = WS.Decision.getRuleFunctionName(rulefunctionObject);
+		rulefunctionArtifact.folder = WS.Decision.getRuleFunctionFolder(rulefunctionObject);
+		rulefunctionArtifact.isVirtual = WS.Decision.isVirtualRuleFunction(rulefunctionObject);
+		rulefunctionArtifact.projectName = WS.Decision.getRuleFunctionProject(rulefunctionObject);
+		rulefunctionArtifact.returnType = WS.Decision.getRuleFunctionReturnType(rulefunctionObject);
+		
+		Object[] symbols = WS.Decision.getRuleFunctionSymbols(rulefunctionObject);
+		
+		WS_C_DecisionTableArgument symbol = null;
+		for (int index = 0; index < symbols@length; index++) {
+			symbol = Instance.newInstance("/WebStudio/Core/Concepts/Decision/Pagination/WS_C_DecisionTableArgument", null);
+			symbol.path = WS.Decision.getRuleFunctionSymbolPath(symbols[index]);
+			symbol.argumentAlias = WS.Decision.getRuleFunctionSymbolAlias(symbols[index]);
+			symbol.resourceType = WS.Decision.getRuleFunctionSymbolType(symbols[index]);
+			symbol.isArray = WS.Decision.isRuleFunctionSymbolArray(symbols[index]);
+			
+			Instance.PropertyArray.appendConceptReference(rulefunctionArtifact.symbol, symbol, 1L);
+		}	
+									
+		return rulefunctionArtifact;
+	}
+}

@@ -1,0 +1,130 @@
+/**
+ * @description Validating all the DT's and rule template instances of a project.
+ */
+String rulefunction WebStudio.Core.RuleFunctions.Actions.WS_RF_ValidateProject {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String projectName;
+		WebStudio.Security.Authn.Concepts.WS_C_LoggedInUser loggedInUser;
+		String archivePath;
+		String scsRootURL;
+		String[] roles;
+		String contentType;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.WS_RF_ValidateProject");
+		
+		String responseMessage = null;
+		String errorCode = null;
+		int recordCount = 0;
+		int responseStatus = 0;
+				
+		String stackID = "validationsStack_" + System.nanoTime();
+		Object validationsStack = WS.Common.Stack.create(stackID);
+		WS.Common.Stack.clear(validationsStack);
+
+		String userProjectExtId = WS_RF_CreateUserArtifactExtId(null, null, projectName, loggedInUser.username, null, null);
+		WS_C_UserProject userProject =	Cluster.DataGrid.CacheLoadConceptByExtIdByUri(userProjectExtId, true, "/WebStudio/Core/Concepts/WS_C_UserProject");
+		
+		if (userProject != null && !userProject.softDelete) {
+			//User already checkedout this project and artifacts available as part of user workspace
+			String workspaceQueryString = WS_RF_BuildWorkspaceQueryString();
+			String queryArgsKey = "Query_Args_" + System.nanoTime();
+			Util.HashMap.createMap(queryArgsKey);
+			Util.HashMap.putObject(queryArgsKey, "parentProjectId", userProject@extId);
+			Util.HashMap.putObject(queryArgsKey, "searchPath", "/");
+			Object[] workspaceResults = WS_RF_QueryWorkspaceForMatches(workspaceQueryString, queryArgsKey);
+			
+			String artifactPath = "", artifactExtn = "";
+			String username = loggedInUser.username;
+			
+			for (int resultLoop = 0, length = workspaceResults@length; resultLoop < length; resultLoop++) {
+				Object workspaceResult = workspaceResults[resultLoop];
+				if (workspaceResult instanceof WS_C_UserArtifact) {
+					WS_C_UserArtifact userArtifact = workspaceResult;
+					artifactPath = userArtifact.artifactPath;
+					artifactExtn = userArtifact.artifactType;	
+					
+					if (String.equals(userArtifact.artifactType,"rulefunctionimpl") || String.equals(userArtifact.artifactType, "ruletemplateinstance")) {
+						
+						Log.log(LOGGER,"debug","Artifact path [%s] , Artifact Ext [%s] ",artifactPath,	artifactExtn);
+						
+						//Get contents																	
+						WS_C_ResponseTransferObjectData fetchedResponseData = WebStudio.Core.RuleFunctions.Utils.WS_RF_GetArtifactContentsFromStore(username, roles, projectName, artifactPath, artifactExtn);
+						
+						if (fetchedResponseData.errorCode != null) {
+								responseStatus = -1;
+								errorCode = fetchedResponseData.errorCode;
+								responseMessage = fetchedResponseData.errorMessage;
+						} else {
+							if (String.equals(userArtifact.artifactType,"rulefunctionimpl")) {
+								WS_C_DecisionTable dtContents = fetchedResponseData.artifactContents;
+								Instance.PropertyAtom.setConceptReference(fetchedResponseData.artifactContents, null, 1L);
+								WebStudio.Core.Concepts.DataSources.Problems.WS_C_TableAnalyzerProblemsResponse validationProblemsResponse = WebStudio.Core.RuleFunctions.Utils.DT.Analyzer.WS_RF_ValidateDecisionTableUtil(artifactPath, artifactExtn, projectName, username, scsRootURL, archivePath, dtContents);
+								WS.Common.Stack.push(validationsStack, validationProblemsResponse);
+								recordCount++;
+								
+							} else if (String.equals(userArtifact.artifactType, "ruletemplateinstance")) {
+								WS_C_AnyArtifactDetails ruleTemplateInstance = null;
+								if (fetchedResponseData.artifactContents == null) {
+									String userArtifactExtId = 
+										WebStudio.Core.RuleFunctions.Utils.WS_RF_CreateUserArtifactExtId(null, artifactPath, projectName, username, null, null);
+									ruleTemplateInstance = WebStudio.Core.RuleFunctions.Utils.WS_RF_FetchArtifactContentsFactory(scsRootURL, username, projectName, artifactPath, artifactExtn, userArtifactExtId, roles);
+								} else {
+									ruleTemplateInstance = fetchedResponseData.artifactContents;
+								}
+									
+								WebStudio.Core.Concepts.DataSources.Problems.WS_C_RTValidationResponse validationResponse = null;
+								if (ruleTemplateInstance instanceof WS_C_RuleTemplateInstanceBuilder) {
+									validationResponse = WS_RF_ValidateRuleTemplateBuilder(ruleTemplateInstance);
+								} else if (ruleTemplateInstance instanceof WS_C_RuleTemplateInstanceView) {
+									validationResponse = WS_RF_ValidateRuleTemplateView(ruleTemplateInstance);
+								}
+								
+								if (validationResponse != null && validationResponse.problem@length > 0) {
+									validationResponse.artifactPath = artifactPath;
+									validationResponse.projectName = projectName;
+									validationResponse.artifactType = userArtifact.artifactType;
+									WS.Common.Stack.push(validationsStack, validationResponse);
+									recordCount++;
+								}
+							}
+						}
+					} else if (String.equals(userArtifact.artifactType, "domain")) {
+						WS_C_DomainValidationResponse validationDomainResponse = WS_RF_CheckDuplicateDomainEntries(projectName, artifactPath, artifactExtn, username, roles);
+						if (validationDomainResponse != null && validationDomainResponse.problem@length > 0) {
+							validationDomainResponse.ownerProjectName = projectName;
+
+							int lastPathIndex = String.lastIndexOfString(artifactPath, 0, "/");
+							if (lastPathIndex == 0) {
+								validationDomainResponse.folder = "";
+								validationDomainResponse.name = String.substringAfter(artifactPath, "/");
+							} else {
+								validationDomainResponse.folder = String.substring(artifactPath, 1, lastPathIndex);
+								validationDomainResponse.name = String.substring(artifactPath, lastPathIndex+1, artifactPath@length);
+							}
+							
+							WS.Common.Stack.push(validationsStack, validationDomainResponse);
+							recordCount++;
+						}
+					}					
+				}
+			}
+			// clear and delete the map
+			Util.HashMap.clear(queryArgsKey);
+			Util.HashMap.deleteMap(queryArgsKey);
+		}
+		WS_C_AnyArtifactDetails[] validationResponse = WS.Common.Stack.toArray(validationsStack, "be.gen.WebStudio.Core.Concepts.DataSources.WS_C_AnyArtifactDetails", "com.tibco.cep.runtime.service.loader.BEClassLoader");
+		responseMessage = WebStudio.
+						Core.
+							RuleFunctions.
+								Utils.WS_RF_BuildValidateResponse(validationResponse, responseStatus, recordCount, errorCode, responseMessage, contentType);
+		
+		// delete the stack
+		WS.Common.Stack.delete(stackID);
+		
+		return responseMessage;
+	}
+}

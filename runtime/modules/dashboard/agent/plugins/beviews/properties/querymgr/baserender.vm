@@ -1,0 +1,48 @@
+<tr align="left" valign="middle" height="24px">
+    <td class="paglettitleleft" valign="middle" nowrap align="left" height="24px">&nbsp;</td>
+    <td class="paglettitle" valign="middle" width="100%" nowrap align="left" height="24px">Query Manager</td>
+    <td class="paglettitleright" valign="middle" nowrap align="left" height="24px">&nbsp;</td>    
+</tr>
+<tr align="center" valign="middle" height="98%">
+    <td class="pageletbody" valign="top" height="100%" colspan="3">
+		<table align="center" valign="top" border="0" cellspacing="0" cellpadding="0" width="100%" height="100%">
+			<tr>
+				<td align="center" valign="top">
+					<table align="center" valign="top" border="0" cellspacing="0" cellpadding="0" width="100%" height="100%">
+						<tr class="inputtypepanel"">
+							<form name="typeselectorform" action="" method="post" target="hiddenframe">
+								<td height="30px" align="center" valign="middle" colspan="2">
+									<select name="typeid" id="cmbTypeId" size="1" class="inputtype" style="width:90%" onChange="return typeIdChanged();">
+										<option value="">Select One...</option>
+										#foreach ($entity in $entities)
+											#if ($entity.id == $selectedEntityId)
+												<option value="$entity.id" selected>$entity.name</option>
+											#else
+												<option value="$entity.id">$entity.name</option>
+											#end	
+										#end
+									</select>
+									<input type="hidden" name="ssid" value="$sessionid">
+								</td>
+							</form>
+						</tr>
+						<tr>
+							<td valign="top" align="left" colspan="2">
+								<div id="fieldssection" name="fieldssection" class="fieldssection">
+								</div>
+							</td>
+						</tr>
+						<tr class="querymgrbuttonpanel">
+							<td>
+                                <a class="button" href="#" onclick="this.blur();showQueryExportDialog();" style="width:100px"><span>Export Results</span></a>
+                            </td>
+                            <td>
+                                <a class="button" href="#" onclick="this.blur();submitQueryForExecution();" style="width:100px"><span>Submit Query</span></a>
+							</td>
+						</tr>
+					</table>
+				</td>
+			</tr>
+		</table>		
+    </td>
+</tr>

@@ -1,0 +1,99 @@
+/**
+ * @description Validate the authentication token in the HTTP request 
+ */
+WebStudio.Security.Authn.Concepts.WS_C_LoggedInUser rulefunction WebStudio.Security.Authn.RuleFunctions.WS_RF_ValidateLogin {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String contextPath;
+		boolean updateAccessTime;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Security.Authn.RuleFunctions.WS_RF_ValidateLogin");
+		
+		WS_C_LoggedInUser loggedInUser = null;
+						
+		WS_E_UpdateLoginUserSessionEvent validateLoginUserSessionEvent =
+			Event.createEvent("xslt://{{/WebStudio/Security/Authn/Events/WS_E_UpdateLoginUserSessionEvent}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"1.0\" exclude-result-prefixes=\"xsl xsd\">\n    <xsl:output method=\"xml\"/>\n    <xsl:template match=\"/\">\n        <createEvent>\n            <event/>\n        </createEvent>\n    </xsl:template>\n</xsl:stylesheet>");
+		
+		//Get session time out value from Global Variable
+		int sessionTimeout = System.getGlobalVariableAsInt("Webstudio/sessionTimeOut", 30);
+										
+		String apiKey = WS_RF_GetAPIToken(contextPath);
+		if (apiKey != null && !String.equals(apiKey, "")) {
+			// TODO* Do we separate this based on subscriptionId
+			boolean loggedInUsersLock = Cluster.DataGrid.Lock("LOGGEDIN_USERS", -1, false);
+			if (loggedInUsersLock) {
+				AMS_C_LoggedInUsers loggedInUserList = Instance.getByExtIdByUri("LOGGEDIN_USERS", "/Approval/Scorecards/AMS_C_LoggedInUsers");
+				if (loggedInUserList != null && loggedInUserList.loggedInUsers@length > 0) {
+					AMS_C_LoggedInUserEntry loggedInUserEntry = WS_RF_CheckIfUserLoggedIn(Instance.PropertyArray.toArrayContainedConcept(loggedInUserList.loggedInUsers), null, apiKey);
+					if (loggedInUserEntry != null) {
+						//Set username in event
+						String username = String.substringAfter(loggedInUserEntry.userExtId, "webstudio@");						
+						validateLoginUserSessionEvent.username = username;
+				
+						String qUsername = loggedInUserEntry.userExtId;
+						//Obtain Cluster-wide lock for username
+						boolean locked = Cluster.DataGrid.Lock(qUsername, -1, false);
+						if (locked) {
+							loggedInUser = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(qUsername, false, "/WebStudio/Security/Authn/Concepts/WS_C_LoggedInUser");
+							if (loggedInUser != null) {
+								Log.log(LOGGER, "Debug", "Loaded the LoggedInUser concept for user %s from Cache", username);
+					
+								boolean isSessionTimedout = AMS_RF_IsSessionTimedout(sessionTimeout, loggedInUser.accessTimeStamp);
+	
+								if (isSessionTimedout) {
+									validateLoginUserSessionEvent.operationType = "SESSION_TIMEDOUT";
+									Log.log(LOGGER, "Info", "SESSION_TIMEDOUT : Login session has timed out..Deleting the User Session");
+								} else {
+									validateLoginUserSessionEvent.operationType = "VALIDATE_SUCCESS";
+									validateLoginUserSessionEvent.loginToken = loggedInUser.loginToken;
+									Log.log(LOGGER, "Debug", "VALIDATE_SUCCESS : Validate Login session was successful for user %s", loggedInUser.username);
+								}									
+							} else {
+								validateLoginUserSessionEvent.operationType = "VALIDATE_FAILED";
+								Log.log(LOGGER, "Debug", "VALIDATE_FAILED : Login User Concept not found for user %s", username);
+							}
+										
+							if (String.equals("VALIDATE_SUCCESS", validateLoginUserSessionEvent.operationType)) {
+								boolean updateAccessTime2 = updateAccessTime;
+								//Check if its Logout action
+								//For logout no need to update last access timestamp, so dont assert the event
+								String contextPath2 = String.substringAfter(contextPath, apiKey + "/");
+								contextPath2 = WS_RF_GetNextStringToken(contextPath2, "/");
+								if (String.equals(contextPath2, System.getGlobalVariableAsString("Webstudio/ApiContext/Logout", "logout"))) {
+									updateAccessTime2 = false;
+								}							
+								if (updateAccessTime2) {
+									//Assert the Event
+									Event.assertEvent(validateLoginUserSessionEvent);
+									Log.log(LOGGER, "Debug", "Asserting validateLoginUserSessionEvent Event for user %s", username);																	
+								}								
+							} else {	
+								//Assert the Event
+								Event.assertEvent(validateLoginUserSessionEvent);
+								Log.log(LOGGER, "Debug", "Asserting validateLoginUserSessionEvent Event for user %s", username);							
+							}
+						}
+					} else {
+						Log.log(LOGGER, "Error", "Invalid API Key [%s].", apiKey);
+						validateLoginUserSessionEvent.operationType = "VALIDATE_FAILED";
+						Event.assertEvent(validateLoginUserSessionEvent);
+					}
+				}
+			}
+		} else {
+			Log.log(LOGGER, "Error", "API key not found in the HTTP request.");
+			validateLoginUserSessionEvent.operationType = "VALIDATE_FAILED";
+			Event.assertEvent(validateLoginUserSessionEvent);
+		}
+
+		if (!String.equals("VALIDATE_SUCCESS", validateLoginUserSessionEvent.operationType)) {
+			//Cleanup session
+			loggedInUser = null;
+		}																				
+										
+		return loggedInUser;
+	}
+}

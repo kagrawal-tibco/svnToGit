@@ -1,0 +1,719 @@
+<div ng-controller='IndexCtrl'
+	class="appManagementPage tea-theme wrapper row-offcanvas row-offcanvas-left">
+	<div ng-include src="'partials/templates/header.html'"></div>
+	<div class="beTeaAgentView">
+		<aside class="left-side sidebar-offcanvas" ng-class="">
+			<div ng-include src="'partials/templates/leftNav.html'"></div>
+		</aside>
+		<div ng-controller='instanceController'>
+			<div ng-show="notification.show">
+				<div
+					ng-include="'partials/templates/directive/showNotification.html'"></div>
+			</div>
+			<div class="adminView">
+				<div id="loaderdiv" style="display: none;">
+					<img src="images/icons/loader.gif" class="ajax-loader" />
+				</div>
+				<div class="instanceViewPanel1">
+					<div class="row" ng-show="breadCrumbs.length > 1">
+						<div class="pull-left be_breadCrumbs_div">
+							<ul>
+								<li class="be_breadCrumbs pull-left">
+									<div title="{{instanceInfo['status']}}"
+										ng-show="instanceInfo['status']=='Stopped' || instanceInfo['status']=='Running'"
+										ng-class="{'instanceStateIndicator_stopped' : instanceInfo['status']=='Stopped','instanceStateIndicator_ok':instanceInfo['status']=='Running' && instance.config.healthStatus == 'ok','instanceStateIndicator_warning':instanceInfo['status']=='Running' && instance.config.healthStatus == 'warning','instanceStateIndicator_critical':instanceInfo['status']=='Running' && instance.config.healthStatus == 'critical'}"></div>
+									<span
+									ng-show="instanceInfo['status']=='Starting' || instanceInfo['status']=='Stopping'">
+										<i title="{{instanceInfo['status']}}"
+										class="be_startingSpinner fa fa-spinner fa-spin fa-2x"></i>
+								</span>
+								</li>
+								<li class="be_breadCrumbs pull-left"
+									ng-repeat="b in breadCrumbs.slice(0,breadCrumbs.length-1)"><a
+									ng-click="breadCrumbsRouting(b)">{{b.name}}</a> ></li>
+								<li class="pull-left">{{breadCrumbs[breadCrumbs.length
+									-1].name}}</li>
+								
+							</ul>
+						</div>
+					</div>
+					<div ng-include="'partials/templates/aboutBETeaView.html'"></div>
+					<div ng-include="'partials/templates/createInstance.html'"></div>
+					<div class="row">
+						<ul class="appBox clearfix">
+							<!--	<li class="firstButton pull-left" ng-if="hasPermission(8)">
+								<div
+									ng-class="instanceInfo['status']=='Starting' || instanceInfo['status']=='Running' || instanceInfo['status']=='Stopping' || !instanceInfo['deployed'] ? 'disableOperation' :'operation'"
+									ng-click="instanceInfo['status']=='Starting' || instanceInfo['status']=='Running' || instanceInfo['status']=='Stopping' || !instanceInfo['deployed']? null :startInstance()">
+									<i class="fa fa-play"></i> <span>Start</span>
+								</div>
+							</li>-->
+							<!--		<li class="button pull-left" ng-if="hasPermission(9)">
+								<div
+									ng-class="instanceInfo['status']=='Starting' || instanceInfo['status']=='Stopped' || instanceInfo['status']=='Stopping' || !instanceInfo['deployed']  ? 'disableOperation' :'operation'"
+									ng-click="instanceInfo['status']=='Starting' || instanceInfo['status']=='Stopped' || instanceInfo['status']=='Stopping' || !instanceInfo['deployed']? null :stopInstance()">
+									<i class="fa fa-stop"></i> <span>Stop</span>
+								</div>
+							</li>
+							<li class="button pull-left" ng-if="hasPermission(10)">
+								<div
+									ng-class="instanceInfo['status']=='Stopped' || !instanceInfo['deployed'] ? 'disableOperation' :'operation'"
+									ng-click="instanceInfo['status']=='Stopped' || !instanceInfo['deployed']? null :killInstance()">
+									<i class="fa fa-times"></i> <span>Kill</span>
+								</div>
+							</li>
+							<li class="button pull-left" ng-if="hasPermission(11)">
+								<div
+									ng-class="instanceInfo['status']=='Starting' || instanceInfo['status']=='Stopping' || instanceInfo['deploymentStatus'] == 'Deployed' ? 'disableOperation' :'operation'"
+									ng-click="instanceInfo['status']=='Starting' || instanceInfo['status']=='Stopping' || instanceInfo['deploymentStatus'] == 'Deployed' ? null :deployInstance()">
+									<i class="fa fa-upload"></i> <span>Deploy</span>
+								</div>
+							</li>
+							<li ng-show="instanceInfo.deployed" class="button pull-left"
+								ng-if="hasPermission(12)">
+								<div
+									ng-class="instanceInfo['status']=='Starting'|| instanceInfo['status']=='Stopping' || !instanceInfo['deployed'] || instanceInfo['status']=='Running'? 'disableOperation' :'operation'"
+									ng-click="instanceInfo['status']=='Starting' || instanceInfo['status']=='Stopping' || !instanceInfo['deployed'] || instanceInfo['status']=='Running' ? null :undeployInstance()">
+									<i class="fa fa-download"></i> <span>Un-deploy</span>
+								</div>
+							</li>
+							<li class="button pull-left" ng-if="hasPermission(16)">
+							 <div ng-include="'partials/templates/copyInstance.html'"></div>
+								<div class="operation" ng-click="showCopyInstanceModal()">
+									<i class="fa fa-clipboard"></i> <span>Copy</span>
+								</div>
+							</li>
+							<li class="button pull-left"
+								ng-if="hasPermission(3) || hasPermission(25) || hasPermission(27)">
+								<div ng-include="'partials/templates/hotDeployInstance.html'"></div>
+								<div
+									ng-include="'partials/templates/hotDeployClassesAndRT.html'"></div>
+								<span class="dropdown pull-right" dropdown
+								on-toggle="toggled(open)"> <a href
+									class="dropdown-toggle" data-toggle="dropdown"
+									aria-haspopup="true" aria-expanded="false">
+										<div class="operation">
+											<i class="fa fa-ellipsis-v"></i> <span>Hot Deploy
+												Operations</span>
+										</div>
+								</a>
+									<ul class="dropdown-menu">
+										<li ng-class="{'disabled' :!selectedApp.config.hotDeployable}">
+											<a
+											ng-click="selectedApp.config.hotDeployable?showHotDeployModal():null"
+											ng-if="hasPermission(3)">EAR</a>
+										</li>
+										<li ng-class="{'disabled':!instanceInfo['deployClasses']}">
+											<a
+											ng-click="instanceInfo['deployClasses'] ? showHotDeployClassesModal():null"
+											ng-if="hasPermission(25)">Decision Tables Classes</a>
+										</li>
+										<li
+											ng-class="{'disabled':!instanceInfo['ruleTemplateDeploy']}">
+											<a
+											ng-click="instanceInfo['ruleTemplateDeploy'] ? showHotDeployRTModal():null"
+											ng-if="hasPermission(27)">Rule Templates</a>
+										</li>
+									</ul>
+							</span>
+							</li>
+							<li class="button pull-left"> 
+            			<div ng-class="instanceInfo['deployed']?'operation':'disableOperation'" ng-click="instanceInfo['deployed']?downloadLogs():null" >                     	
+      	  		  			<i class="fa fa-arrow-circle-down"></i>
+				  			<span>Download Log</span> 
+				  		</div>
+            		</li> -->
+							<li class="button pull-left">
+								<div ng-include="'partials/templates/threadDumpPanel.html'"></div>
+								<div
+									ng-class="instanceInfo['status']=='Running' ?'operation':'disableOperation'"
+									ng-click="instanceInfo['status']=='Running' ? showThreadDump() : null">
+									<i class="fa fa-arrow-circle-down"></i> <span>ThreadDump</span>
+								</div>
+							</li>
+							<!--	<li class="button pull-left">
+								<div ng-include="'partials/templates/tailLogPanel.html'"></div>
+								<div
+									ng-class="instanceInfo['status']=='Running' ?'operation':'disableOperation'"
+									ng-click="instanceInfo['status']=='Running' ? showLogDetailsPanel(false) : null">
+									<i class="fa fa-arrow-circle-down"></i> <span>BE Log</span>
+								</div>
+							</li>
+							<li class="button pull-left">
+								<div
+									ng-class="instanceInfo['status']=='Running' ?'operation':'disableOperation'"
+									ng-click="instanceInfo['status']=='Running' ? showLogDetailsPanel(true) : null">
+									<i class="fa fa-arrow-circle-down"></i> <span>AS Log</span>
+								</div>
+							</li> -->
+							<li class="button pull-right">
+								<div class="operation" ng-click="reloadPage()">
+									<i class="fa fa-refresh"></i> <span>Refresh</span>
+								</div>
+							</li>
+						</ul>
+					</div>
+				</div>
+				<div class="instanceViewPanel2">
+					<div style="margin-top: 10px; margin-bottom: 0; margin-left: 42px;">
+						<div class="row">
+							<div class="pull-left staticInfoDiv">
+								<div class="pull-left" style="width: 25%;">Host Name</div>
+								<div class="pull-left"
+									style="margin-left: 10px; margin-right: 10px;">:</div>
+								<div class="operation"
+									ng-click="showInstanceHost(instanceInfo.host.hostName)">
+									<a>{{instanceInfo.host.hostName}}</a>
+								</div>
+							</div>
+							<div class="pull-left staticInfoDiv">
+								<div class="pull-left" style="width: 25%;">Processing Unit</div>
+								<div class="pull-left"
+									style="margin-left: 10px; margin-right: 10px;">:</div>
+								<div class="operation"
+									ng-click="showInstanceProcessingUnit(instanceInfo.puId)">
+									<a>{{instanceInfo.puId}}</a>
+								</div>
+							</div>
+						</div>
+						<div class="row">
+							<div class="pull-left staticInfoDiv">
+								<div class="pull-left" style="width: 25%;">Deployment
+									Status</div>
+								<div class="pull-left"
+									style="margin-left: 10px; margin-right: 10px;">:</div>
+								<div>
+									{{instanceInfo.deploymentStatus}} <span
+										ng-show="instanceInfo.deploymentStatus == 'Needs Deployment' || instanceInfo.deploymentStatus =='Needs Re-deployment'">({{instanceInfo.deploymentDescription}})</span>
+								</div>
+							</div>
+							<!-- <div class="pull-left staticInfoDiv">
+								<div class="pull-left" style="width: 25%;">Deployment Path</div>
+								<div class="pull-left"
+									style="margin-left: 10px; margin-right: 10px;">:</div>
+								<div>{{instanceInfo.deploymentPath}}</div>
+							</div> -->
+							<div class="pull-left staticInfoDiv">
+								<div class="pull-left" style="width: 25%;">Process Id</div>
+								<div class="pull-left"
+									style="margin-left: 10px; margin-right: 10px;">:</div>
+								<div>{{instanceInfo.processId}}</div>
+							</div>
+						</div>
+						<div class="row">
+
+
+							<div class="pull-left staticInfoDiv">
+								<div class="pull-left" style="width: 25%;">JMX Port</div>
+								<div class="pull-left"
+									style="margin-left: 10px; margin-right: 10px;">:</div>
+								<div>{{instanceInfo.jmxPort}}</div>
+							</div>
+							<div class="pull-left staticInfoDiv">
+								<div class="pull-left" style="width: 25%;">Uptime</div>
+								<div class="pull-left"
+									style="margin-left: 10px; margin-right: 10px;">:</div>
+								<div>{{instanceInfo.upTime}}</div>
+							</div>
+						</div>
+
+						<div class="row">
+							<div class="pull-left staticInfoDiv">
+								<div class="pull-left" style="width: 25%;">Used Memory</div>
+								<div class="pull-left"
+									style="margin-left: 10px; margin-right: 10px;">:</div>
+								<div ng-if="instanceInfo['status']=='Running'">{{getFormattedCPUAndMemoryUsage(instanceInfo.memoryUsage.percentUsed)}}%</div>
+							</div>
+							<div class="pull-left staticInfoDiv">
+								<div class="pull-left" style="width: 25%;">CPU Usage</div>
+								<div class="pull-left"
+									style="margin-left: 10px; margin-right: 10px;">:</div>
+								<div ng-if="instanceInfo['status']=='Running'">{{getFormattedCPUAndMemoryUsage(instanceInfo.cpuUsage.cpuUsageInPercent)}}%</div>
+							</div>
+						</div>
+						<!--   <div class="row">
+                 	<div class="pull-left staticInfoDiv">
+                		<div class="pull-left" style="width: 25%;">Profiles</div>
+                    	<div class="pull-left" style=" margin-left: 10px;margin-right: 10px;">:</div>
+                   		<div> <select ng-change="setInstanceDefaultProfile()" data-ng-options="profile for profile in instanceInfo.host.application.profiles" data-ng-model="instanceInfo.defaultProfile">
+                   			
+                   		</select></div> 
+                	</div>
+                	
+                </div> -->
+					</div>
+				</div>
+				<div>
+					<div class="container">
+						<section>
+							<ul class="navTable">
+								<li ng-show="instanceInfo['status']=='Running'"
+									ng-click="setViewType('monitoring')"
+									ng-class="{active:isSet('monitoring')}"><a>Monitoring</a></li>
+								<li ng-show="instanceInfo['status']=='Running'"
+									ng-click="setViewType('operations')"
+									ng-class="{active:isSet('operations')}"><a>Operations</a></li>
+								<li ng-click="setViewType('configuration')"
+									ng-class="{active:isSet('configuration')}"><a>Configuration</a></li>
+								<li ng-click="setViewType('agents')"
+									ng-class="{active:isSet('agents')}"><a>Agents</a></li>
+								<!-- <li ng-click="setViewType('audit')" ng-class="{active:isSet('audit')}"><a>Audit</a></li>   -->
+							</ul>
+							<div ng-if="isSet('agents')">
+								<div class="be_configurationDiv">
+									<table tea-table class="tea-table">
+										<thead>
+											<tr>
+												<th>Name</th>
+												<th>Type</th>
+												<th>Status</th>
+												<th>AgentId</th>
+											</tr>
+										</thead>
+										<tbody>
+											<tr ng-repeat="instanceAgent in instanceAgents">
+												<td><a ng-click="selectInstanceAgent(instanceAgent)">{{instanceAgent.config.agentName}}</a>
+												</td>
+												<td>{{instanceAgent.config.agentType}}
+												<td>
+													<div class="status"
+														ng-class="{'tea-status-error' : instanceAgent.config.status=='Stopped','tea-status-ok':instanceAgent.config.status=='Running','tea-status-warning' : instanceAgent.config.status=='Starting' || instanceAgent.config.status=='Stopping'}">{{instanceAgent.config.status}}</div>
+												</td>
+												<td>{{instanceAgent.config.agentId}}</td>
+											</tr>
+										</tbody>
+										<tfoot>
+											<tr>
+												<td colspan="7">- END OF DATA -</td>
+											</tr>
+										</tfoot>
+									</table>
+								</div>
+							</div>
+							<div ng-if="isSet('configuration')">
+								<div class="">
+									<ul class="configNavTable">
+										<li ng-class="{active:isSetCofigType('global')}"
+											ng-click="setConfigurationType('global')"><a
+											ng-class="{active:isSetCofigType('global')}"> <i
+												class="fa fa-globe"></i> <span>Global Variables</span>
+										</a></li>
+										<li ng-class="{active:isSetCofigType('system')}"
+											ng-click="setConfigurationType('system')"><a
+											ng-class="{active:isSetCofigType('system')}"> <i
+												class="fa fa-laptop"></i> <span>System Properties</span>
+										</a></li>
+										<li ng-class="{active:isSetCofigType('beprops')}"
+											ng-click="setConfigurationType('beprops')"><a
+											ng-class="{active:isSetCofigType('beprops')}"> <i
+												class="fa fa-laptop"></i> <span>BusinessEvents
+													Properties</span>
+										</a></li>
+										<li ng-class="{active:isSetCofigType('log')}"
+											ng-click="setConfigurationType('log')"><a
+											ng-class="{active:isSetCofigType('log')}"> <i
+												class="fa fa-laptop"></i> <span>Log Level</span>
+										</a></li>
+										<li ng-class="{active:isSetCofigType('jvm')}"
+											ng-click="setConfigurationType('jvm')"><a
+											ng-class="{active:isSetCofigType('jvm')}"> <i
+												class="fa fa-laptop"></i> <span> JVM Properties </span>
+										</a></li>
+
+									</ul>
+									<div>
+										<div class="be_configurationDiv">
+											<div ng-show="isSetCofigType('global')">
+												<div class="panel-heading">
+													<h4 class="panel-title">Global Variables</h4>
+												</div>
+												<div>
+													<div
+														ng-show="globalVariables.nameValuePairs.nameValuePair!= null && globalVariables.nameValuePairs.nameValuePair.length!==0"
+														class="globalVariablesPanel">
+														<table class="be-table">
+															<thead>
+																<tr>
+																	<th>Name</th>
+																	<th>Value</th>
+																</tr>
+															</thead>
+															<tbody>
+																<tr
+																	ng-repeat="gv in globalVariables.nameValuePairs.nameValuePair"
+																	ng-show="(gv.hasDefaultValue || (!gv.hasDefaultValue && !gv.isDeleted)) ">
+																	<td title="{{gv.name}}"><div
+																			style="overflow: hidden;">{{gv.name}}</div></td>
+																	<td ng-if="'Password'!==gv.type"><div
+																			style="overflow: hidden;">{{gv.value}}</div></td>
+																	<td ng-if="'Password'===gv.type"><div
+																			style="overflow: hidden;">*****</div></td>
+																</tr>
+															</tbody>
+														</table>
+													</div>
+													<div
+														ng-show="globalVariables.nameValuePairs.nameValuePair == null || globalVariables.nameValuePairs.nameValuePair.length==0"
+														class="globalVariablesPanel">
+														<span class="globalVariableNoRecords"> No Records
+															Found </span>
+													</div>
+													<div class="row variablePanelFooter">
+														<div
+															ng-class="configurationChangesFlags.isGlobalVariableChanged ? 'operation': ''"
+															ng-click="configurationChangesFlags.isGlobalVariableChanged? saveGlobalVariables() : null"
+															class="pull-right" ng-if="hasPermission(13)">
+															<i class="fa fa-floppy-o"></i> <span>Save</span>
+														</div>
+													</div>
+												</div>
+											</div>
+											<!-- System Properties  -->
+											<div ng-show="isSetCofigType('system')">
+												<div class="panel-heading">
+													<h4 class="panel-title">System Properties</h4>
+												</div>
+												<div
+													ng-show="systemVariables.nameValuePairs.nameValuePair!= null && systemVariables.nameValuePairs.nameValuePair.length!==0"
+													class="systemVariablesPanel">
+													<table class="be-table">
+														<thead>
+															<tr>
+																<th>Name</th>
+																<th>Value</th>
+															</tr>
+														</thead>
+														<tbody>
+															<tr
+																ng-repeat="sv in systemVariables.nameValuePairs.nameValuePair">
+																<td title="{{sv.name}}">
+																	<div style="overflow: hidden;">{{sv.name}}</div>
+																</td>
+																<td title="{{sv.defaultValue}}">
+																	<div style="overflow: hidden;">{{sv.value}}</div>
+																</td>
+
+															</tr>
+														</tbody>
+													</table>
+												</div>
+												<div
+													ng-show="systemVariables.nameValuePairs.nameValuePair== null || systemVariables.nameValuePairs.nameValuePair.length==0"
+													class="globalVariablesPanel">
+													<span class="globalVariableNoRecords"> No Records
+														Found </span>
+												</div>
+
+											</div>
+
+											<!-- BusinessEvents Properties  -->
+											<div ng-show="isSetCofigType('beprops')">
+												<div class="panel-heading">
+													<h4 class="panel-title">BusinessEvents Properties</h4>
+												</div>
+												<div
+													ng-show="beprops.nameValuePairs.nameValuePair!= null && beprops.nameValuePairs.nameValuePair.length!==0"
+													class="systemVariablesPanel">
+													<table class="be-table">
+														<thead>
+															<tr>
+																<th>Name</th>
+																<th>Value</th>
+															</tr>
+														</thead>
+														<tbody>
+															<tr
+																ng-repeat="sv in beprops.nameValuePairs.nameValuePair">
+																<td title="{{sv.name}}">
+																	<div style="overflow: hidden;">{{sv.name}}</div>
+																</td>
+																<td title="{{sv.defaultValue}}">
+																	<div style="overflow: hidden;">{{sv.value}}</div>
+																</td>
+
+															</tr>
+														</tbody>
+													</table>
+												</div>
+												<div
+													ng-show="beprops.nameValuePairs.nameValuePair== null || beprops.nameValuePairs.nameValuePair.length==0"
+													class="globalVariablesPanel">
+													<span class="globalVariableNoRecords"> No Records
+														Found </span>
+												</div>
+
+											</div>
+											<div ng-show="isSetCofigType('log')">
+												<div class="panel-heading">
+													<h4 class="panel-title">Log Level</h4>
+												</div>
+												<div class="be_loglevelPanel">
+													<div class="be_loglevelInnerPanel">
+														<strong>Runtime</strong>
+														<div class="be_loglevelRuntimePatternTable">
+															<table class="be-table">
+																<thead>
+																	<tr>
+																		<th>Pattern</th>
+																		<th>Runtime Log Level</th>
+																		<th></th>
+																	</tr>
+																</thead>
+																<tbody>
+																	<tr>
+                			  	 							<td><input  ng-disabled="!hasPermission(17)" class="inputStyle" name="Name" type="text" placeholder="pattern" ng-model="runtimePattern.pattern" ng-change="configurationChangesFlags.isRuntimeLogLevelChanged=true"></td> 
+																		<td>
+                			  	 								<select style="margin-top: 9px;width: 100% !important;" ng-model="runtimePattern.logLevel" ng-change="configurationChangesFlags.isRuntimeLogLevelChanged=true"  ng-disabled="!hasPermission(17)">
+               													 	<option ng-repeat="(key,value) in allLogLevels" value="{{value}}" >{{value}}</option>
+           														</select> 
+                			  	 							</td>
+                			  	 							<td>
+                			  	 								<div ng-click="configurationChangesFlags.isRuntimeLogLevelChanged?applyRuntimeLogLevelPattern():null" ng-class="{'operation':configurationChangesFlags.isRuntimeLogLevelChanged}" class="pull-right" ng-if="hasPermission(17)">    
+        		 				 									<i class="fa fa-check-circle"></i>
+				 				 									<span>Apply</span>             
+																			</div>
+																		</td>
+																	</tr>
+																</tbody>
+															</table>
+														</div>
+													</div>													
+												</div>
+											</div>
+										<div ng-show="isSetCofigType('jvm')">
+											<div class="panel-heading">
+												<h4 class="panel-title">JVM Properties</h4>
+											</div>
+											<div
+												ng-show="jvmProperties.nameValuePairs.nameValuePair!= null && jvmProperties.nameValuePairs.nameValuePair.length!=0"
+												class="globalVariablesPanel">
+												<table class="be-table">
+													<thead>
+														<tr>
+															<th>Name</th>
+															<th>Value</th>
+														</tr>
+													</thead>
+													<tbody>
+														<tr
+															ng-repeat="jvm in jvmProperties.nameValuePairs.nameValuePair">
+															<td title="{{jvm.description}}"><div
+																	style="overflow: hidden;">{{jvm.description}}</div></td>
+															<td title="{{jvm.deployedValue}}"><div
+																	style="overflow: hidden;">{{jvm.value}}</div></td>
+
+														</tr>
+													</tbody>
+												</table>
+											</div>
+											<div
+												ng-show="jvmProperties.nameValuePairs.nameValuePair== null || jvmProperties.nameValuePairs.nameValuePair.length==0"
+												class="globalVariablesPanel">
+												<span class="globalVariableNoRecords"> No Records
+													Found </span>
+											</div>
+
+										</div>
+									</div>
+								</div>
+							</div>
+					</div>
+					<div
+						ng-if="isSet('monitoring') && instanceInfo['status']=='Running'">
+						<chart-nav-block chart-sections="chartSections"
+							instance-agents-with-info="instanceAgentsWithInfo"
+							entity="instance" is-refreshed="isChartRefreshed"
+							gc-details="gcDetails" memeory-pools-list="memeoryPoolsList"
+							is-self="false"></chart-nav-block>
+					</div>
+					<div
+						ng-if="isSet('operations') && instanceInfo['status']=='Running'">
+						<div class="be_operationsPanel">
+							<div class="be_operations_methods_col">
+								<div class="be_operations_title" style="padding-left: 4px;">
+									Methods</div>
+								<ul class="be_operations_method_list">
+									<li
+										ng-repeat="methodGroup in processingUnitMethods.methodgroup">
+										<div class="be_operationsTree"
+											ng-click="showChildren=!showChildren">
+											<i
+												ng-class="showChildren?'fa fa-chevron-down':'fa fa-chevron-right'"></i>
+											<span class="groupName">{{methodGroup.group}}</span>
+										</div>
+										<ul>
+											<li ng-show="showChildren"
+												ng-click="getOperationInfo(method,methodGroup.group)"
+												style="padding-left: 20px; padding-bottom: 5px"
+												ng-repeat="method in methodGroup.method"><i
+												class="fa fa-cog"></i> {{method.name}}</li>
+										</ul>
+									</li>
+								</ul>
+							</div>
+							<div class="be_operations_results_col">
+								<div class="be_operations_title" style="padding-left: 4px;">
+									Name : {{operation.name}}</div>
+								<div style="padding-left: 15px">
+									<div class="form-horizontal"
+										ng-hide="operation.name==undefined||operation.name==''||operation.name==null">
+										<div class="control-group">
+											<table>
+												<tr style="vertical-align: top">
+													<td style="white-space: nowrap;"><strong>Description
+															:</strong></td>
+													<td style="padding-left: 3px;">{{operation.annotation}}</td>
+												</tr>
+											</table>
+											<br />
+											<div class="be_horizontal_seperator"></div>
+											<br />
+											<form name="paramForm" novalidate>
+												<div style="padding-top: 10px;"
+													ng-repeat="param in parameters" title="{{param.desc}}"
+													data-toggle="tooltip" data-placement="top" be-tooltip>
+													<div
+														ng-if="!$parent.isOnAgentView && param.name !=null && param.type!='boolean' &&  ('Session'==param.name || 'sessionName'==param.name)"
+														class="be_method_form_element" colspan=1>
+														{{param.name}}&nbsp;
+														<div ng-if="param.required" style="color: red">*</div>
+														:
+													</div>
+
+													<div
+														ng-if="!$parent.isOnAgentView && param.name !=null && param.type!='boolean' &&  ('Session'==param.name || 'sessionName'==param.name)"
+														colspan=6 ng-click="rebuild()">
+														<select id="instanceAgentsDropDown" style="margin: 5px;"
+															ng-model="$parent.selectedInstanceAgents"
+															multiple="multiple"
+															ng-change="addSelectedInstanceAgents()">
+															<option ng-repeat="instanceAgent in instanceAgents"
+																value="{{instanceAgent.name}}">{{instanceAgent.name}}</option>
+														</select>
+														<div style="display: none"
+															ng-init="instanceAgentsDropDownLoad();"></div>
+													</div>
+
+
+													<!-- If parameter name is other than session -->
+													<div
+														ng-if="param.name !=null && param.type!='boolean'  &&  'Session'!=param.name && 'sessionName'!=param.name"
+														class="be_method_form_element" colspan=1>
+														{{param.name}}&nbsp;
+														<div ng-if="param.required" style="color: red">*</div>
+														:
+													</div>
+													<div
+														ng-if="param.name !=null && param.type!='boolean' && 'Session'!=param.name && 'sessionName'!=param.name"
+														colspan=6>
+														<input type="text" ng-model="param.defaultvalue"
+															style="width: 275px;" ng-required="param.required">
+													</div>
+
+													<!-- -Only if value is boolean -->
+
+													<div ng-if="param.name !=null && param.type=='boolean'"
+														class="be_method_form_element" colspan=1>
+														{{param.name}}&nbsp;
+														<div ng-if="param.required" style="color: red">*</div>
+														:
+													</div>
+													<div ng-if="param.name !=null && param.type=='boolean'"
+														colspan=6>
+														<input class="controls" type="checkbox"
+															ng-model="param.defaultvalue"
+															style="margin-left: 0px; margin-top: -8px;">
+													</div>
+												</div>
+												<div style="padding-top: 10px;">
+													<div colspan=1 class="be_method_form_element">
+														<button ng-click="invokeOperation(operation)"
+															ng-disabled="paramForm.$invalid"
+															class="tbt-btn primary-btn"
+															ng-class="{'button_disabled':paramForm.$invalid}">Invoke</button>
+													</div>
+												</div>
+											</form>
+										</div>
+									</div>
+									<div
+										ng-show="operation.name==undefined||operation.name==''||operation.name==null">
+										<strong>Select a method from the left tree to perform
+											operation.</strong>
+									</div>
+								</div>
+								<div ng-show="showResultPanel"
+									class="be_operations_result_panel">
+									<h3 class="invokePanelTitles">Result</h3>
+									<div ng-show="result == undefined">
+										{{failResult.message}}</div>
+									<div ng-show="result.rows.row.length == 0" class="">
+										<span
+											style="position: relative; left: 38%; font-weight: bold; color: gray;">
+											No Records Found </span>
+									</div>
+									<div class="resultTable"
+										ng-show="result != undefined && result.rows !=undefined && result.rows.row.length != 0">
+										<table tea-table class="tea-table">
+											<thead>
+												<tr>
+													<th ng-show='result.headers!=undefined'
+														ng-repeat="header in result.headers.header">
+														{{header.value}}</th>
+												</tr>
+											</thead>
+											<tbody>
+												<tr ng-show="result.rows != undefined"
+													ng-repeat="rows in result.rows.row">
+													<td ng-repeat="column in rows.columns.column">
+														{{column.value}}</td>
+												</tr>
+											</tbody>
+											<tfoot>
+												<tr>
+													<td colspan="7">- END OF DATA -</td>
+												</tr>
+											</tfoot>
+										</table>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div ng-show="isSet('audit')">
+						<div class="be_configurationDiv">
+							<table ng-table="tableParams" tea-table
+								class="tea-table table table-condensed">
+								<thead>
+									<tr>
+										<th>Action</th>
+										<th>Description</th>
+										<th>Entity</th>
+										<th>Performed By</th>
+										<th>Performed On</th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr ng-repeat="audit in $data">
+										<td>{{audit.action}}</td>
+										<td>{{audit.description}}</td>
+										<td>{{audit.entity}}</td>
+										<td>{{audit.peformedBy}}</td>
+										<td>{{audit.performedOn}}</td>
+									</tr>
+								</tbody>
+								<tfoot>
+									<tr>
+										<td colspan="7">- END OF DATA -</td>
+									</tr>
+								</tfoot>
+							</table>
+						</div>
+					</div>
+
+					</section>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>

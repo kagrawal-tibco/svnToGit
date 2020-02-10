@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cdd:cluster xmlns:cdd="http://tibco.com/businessevents/configuration/5.1">
+    <cdd:revision>
+        <!-- <cdd:name>22-import</cdd:name> -->
+        <cdd:version>1</cdd:version>
+        <cdd:author>nleong</cdd:author>
+        <cdd:date>2010-02-19 14:49:05</cdd:date>
+        <cdd:comment>Automatic import of version 22 at 2010-02-19 14:49:05. EAR file location was set to: C:\temp\bcbe.ear</cdd:comment>
+    </cdd:revision>
+    <cdd:name>bcbe</cdd:name>
+    <!-- <cdd:multi-engine>false</cdd:multi-engine> -->
+    <cdd:object-management>
+        <cdd:memory-manager/>
+    </cdd:object-management>
+    <cdd:rulesets/>
+    <cdd:function-groups/>
+    <cdd:destination-groups/>
+    <cdd:log-configs>
+        <cdd:log-config id="logConfig">
+            <cdd:enabled>true</cdd:enabled>
+            <cdd:roles>*:info</cdd:roles>
+            <cdd:files>
+                <cdd:enabled>true</cdd:enabled>
+                <cdd:dir>logs</cdd:dir>
+                <cdd:max-number>10</cdd:max-number>
+                <cdd:max-size>10000000</cdd:max-size>
+                <cdd:append>true</cdd:append>
+            </cdd:files>
+        </cdd:log-config>
+    </cdd:log-configs>
+    <cdd:agent-classes>
+        <cdd:inference-agent-class id="BusinessEvents_Archive">
+            <cdd:rules>
+                <cdd:uri>/</cdd:uri>
+            </cdd:rules>
+            <cdd:destinations>
+                <cdd:destination id="Destination-N1245188">
+                    <cdd:uri>/Channels/Channel/Destination</cdd:uri>
+                    <cdd:pre-processor/>
+                    <cdd:threading-model>shared-queue</cdd:threading-model>
+                </cdd:destination>
+                <cdd:destination id="Destination_Test-N1245192">
+                    <cdd:uri>/Channels/Channel/Destination_Test</cdd:uri>
+                    <cdd:threading-model>shared-queue</cdd:threading-model>
+                </cdd:destination>
+            </cdd:destinations>
+            <cdd:startup/>
+            <cdd:shutdown/>
+            <cdd:concurrent-rtc>false</cdd:concurrent-rtc>
+        </cdd:inference-agent-class>
+    </cdd:agent-classes>
+    <cdd:processing-units>
+        <cdd:processing-unit id="default">
+            <cdd:agents>
+                <cdd:agent>
+                    <cdd:ref>BusinessEvents_Archive</cdd:ref>
+                </cdd:agent>
+            </cdd:agents>
+            <cdd:logs>logConfig</cdd:logs>
+        </cdd:processing-unit>
+    </cdd:processing-units>
+    <cdd:property-group name="misc"/>
+</cdd:cluster>

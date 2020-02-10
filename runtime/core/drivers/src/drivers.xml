@@ -1,0 +1,275 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<drivers>
+    <driver>
+        <type>RendezVous</type>
+        <label>TIBCO Rendezvous</label>
+        <class>com.tibco.cep.driver.tibrv.TibRvDriver</class>
+        <description>TIBCO's messaging solutions provide powerful choices for integrating your business.</description>
+        <version>2.0.0.1</version>
+         <properties>
+            <property name="Service" type="String" default=""/>
+            <property name="Network" type="String" default=""/>
+            <property name="Daemon" type="String" default=""/>
+        </properties>
+		<!--extendedConfiguration>
+			<properties>
+				<property name="be.channel.deactivate" displayName="De-Activate" type="String" default="false" />
+			</properties>
+		</extendedConfiguration-->
+        <destinations>
+            <property name="IncludeEventType" displayName="Include Event Type" type="String" default="ALWAYS"/>
+            <property name="Subject" type="String" default="" pattern=".+"  mandatory="true"/>
+            <property name="RVCM Pre Registration" type="String" default=""/>
+            <property name="LimitPolicy" type="String" default="DISCARD_NONE"/>
+            <property name="MaxEvents" type="Integer" default="0"/>
+            <property name="DiscardAmount" type="Integer" default="0"/>
+        </destinations>
+        <references>
+            <type>ae.shared.RVTransportResource</type>
+        </references>
+        <serializers userdefined="true">
+            <serializer type="TibrvMsgXML" class="com.tibco.cep.driver.tibrv.serializer.TibRvMsgSerializerWithXMLPayload" />
+            <serializer type="TibrvMsg" class="com.tibco.cep.driver.tibrv.serializer.TibRvMsgSerializer" />
+        </serializers>
+        <configuration>
+            <property>
+                <name>IncludeEventType</name>
+                <parent>destination</parent>
+                <type>combo-box</type>
+                <choices default="ALWAYS">
+                    <choice displayed="When Serializing and Deserializing" value="ALWAYS" />
+                    <choice displayed="Only when Serializing" value="ON_SERIALIZE" />
+                    <choice displayed="Only when Deserializing" value="ON_DESERIALIZE" />
+                    <choice displayed="Never" value="NEVER" />
+                </choices>
+            </property>
+            <property>
+            <name>LimitPolicy</name>
+            <parent>destination</parent>
+            <type>combo-box</type>
+            <choices default="DISCARD_NONE">
+                <choice displayed="DISCARD_NONE" value="DISCARD_NONE" />
+                <choice displayed="DISCARD_FIRST" value="DISCARD_FIRST" />
+                <choice displayed="DISCARD_LAST" value="DISCARD_LAST" />
+                <choice displayed="DISCARD_NEW" value="DISCARD_NEW" />
+            </choices>
+            </property>
+        </configuration>
+    </driver>
+
+    <driver>
+        <type>JMS</type>
+        <label>JMS</label>
+        <class>com.tibco.cep.driver.jms.JMSDriver</class>
+        <description>The Java Message Service (JMS) API is a messaging standard that allows application components based on the Java 2 Platform, Enterprise Edition (J2EE) to create, send, receive, and read messages.</description>
+        <version>4.0.1.5</version>
+         <properties>
+            <property name="ProviderURL" type="String" default="tcp://localhost:7222" pattern=".+"/>
+            <property name="UserName" type="String" default=""/>
+            <property name="Password" type="String" default=""  mask="true" />
+            <property name="IsTransacted" type="String" default=""/>
+            <property name="ClientID" type="String" default=""/>
+        </properties>
+		<!--extendedConfiguration>
+			<properties>
+				<property name="be.channel.deactivate" displayName="De-Activate" type="String" default="false" />
+			</properties>
+		</extendedConfiguration-->
+        <destinations>
+            <property name="IsJSONPayload" displayName="Is JSON Payload" type="Boolean" default="false" />
+            <property name="IncludeEventType" displayName="Include Event Type" type="String" default="ALWAYS" />
+            <property name="Queue" type="Boolean" default="true" />
+            <property name="Name" type="String" default="" pattern=".+" />
+            <property name="Selector" type="String" default="" />
+            <property name="DeliveryMode" type="String" default="2" />
+            <property name="AckMode" type="String" default="23" />
+            <property name="Priority" type="String" default="4"/>
+            <property name="TTL" type="Integer" default="0" />
+            <property name="DurableSuscriberName" type="String" default="%%Deployment%%:%%EngineName%%:%%SessionName%%:%%ChannelURI%%:%%DestinationName%%" gvToggle="true" />
+            <property name="SharedSubscriptionName" type="String" default="" gvToggle="true"/>
+        </destinations>
+        <references>
+            <type>ae.shared.JMSConnectionKey</type>
+        </references>
+        <serializers userdefined="true">
+
+            <serializer type="MapMessage" class="com.tibco.cep.driver.jms.serializer.MapMessageSerializer"/>
+            <serializer type="ByteMessage" class="com.tibco.cep.driver.jms.serializer.BytesMessageSerializer" default="true"/>
+			<serializer type="UtfBytesMessage" class="com.tibco.cep.driver.jms.serializer.UtfBytesMessageSerializer" default="true"/>
+            <serializer type="TextMessage" class="com.tibco.cep.driver.jms.serializer.TextMessageSerializer" default="false"/>
+            <serializer type="MessageWithNoBody" class="com.tibco.cep.driver.jms.serializer.BasicMessageSerializer" default="false"/>
+            <serializer type="SOAP" class="com.tibco.cep.driver.jms.serializer.SoapMessageSerializer" default="true"/>
+<!--             <serializer type="ObjectMessage" class="com.tibco.cep.driver.jms.serializer.ObjectMessageSerializer"/>  -->
+        </serializers>
+        <configuration>
+            <property>
+                <name>IncludeEventType</name>
+                <parent>destination</parent>
+                <type>combo-box</type>
+                <choices default="ALWAYS">
+                    <choice displayed="When Serializing and Deserializing" value="ALWAYS" />
+                    <choice displayed="Only when Serializing" value="ON_SERIALIZE" />
+                    <choice displayed="Only when Deserializing" value="ON_DESERIALIZE" />
+                    <choice displayed="Never" value="NEVER" />
+                </choices>
+            </property>
+
+            <property>
+            <name>DeliveryMode</name>
+            <parent>destination</parent>
+            <type>combo-box</type>
+            <choices default="0">
+                <choice displayed="PERSISTENT" value="2" />
+                <choice displayed="NON-PERSISTENT" value="1" />
+                <choice displayed="RELIABLE(TIBCO Proprietary)" value="22" />
+            </choices>
+            </property>
+
+            <property>
+            <name>AckMode</name>
+            <parent>destination</parent>
+            <type>combo-box</type>
+            <choices >
+                <choice displayed="AUTO_ACKNOWLEDGE" value="1" />
+                <choice displayed="CLIENT_ACKNOWLEDGE" value="2" />
+                <choice displayed="DUPS_OK_ACKNOWLEDGE" value="3" />
+                <choice displayed="EXPLICIT_CLIENT_ACKNOWLEDGE(TIBCO Proprietary)" value="23" />
+                <choice displayed="EXPLICIT_CLIENT_DUPS_OK_ACKNOWLEDGE(TIBCO Proprietary)" value="24" />
+                <choice displayed="NO_ACKNOWLEDGE(TIBCO Proprietary)" value="22" />
+            </choices>
+            </property>
+
+            <property>
+            <name>Priority</name>
+            <parent>destination</parent>
+            <type>combo-box</type>
+            <choices >
+                <choice displayed="0 (Lowest)" value="0" />
+                <choice displayed="1" value="1" />
+                <choice displayed="2" value="2" />
+                <choice displayed="3" value="3" />
+                <choice displayed="4" value="4" />
+                <choice displayed="5" value="5" />
+                <choice displayed="6" value="6" />
+                <choice displayed="7" value="7" />
+                <choice displayed="8" value="8" />
+                <choice displayed="9 (Highest)" value="9" />
+            </choices>
+            </property>
+
+        </configuration>
+    </driver>
+
+    <driver>
+        <type>Local</type>
+        <class>com.tibco.cep.driver.local.LocalChannelDriver</class>
+        <description>In memory event channel</description>
+        <version>1.0.0.4</version>
+        <properties/>
+        <destinations>
+            <property name="Size" type="Integer" default="0"/>
+            <property name="TimeOut" type="Integer" default="-1"/>
+        </destinations>
+        <references>
+        </references>
+    </driver>
+
+    <driver>
+        <type>HTTP</type>
+        <label>HTTP</label>
+        <class>com.tibco.cep.driver.http.HttpDriver</class>
+        <description>Http Event Channel</description>
+        <version>1.0.0.0</version>
+        <serverType><!-- Select HTTP Server Type --></serverType>
+        <properties> </properties>
+        <extendedConfiguration>
+			<properties>
+				<property name="serverType" displayName="Server Type">
+					<parent>channel</parent>
+					<type>combo-box</type>
+					<choices default="TOMCAT">
+						<choice displayed="TOMCAT" value="TOMCAT">
+							<extendedConfiguration>
+                                <properties>
+                                	<property type="String"  name="be.http.connectorType" 					 displayName="Connector Type"				   default="NIO"/>
+                                	<property type="Integer" name="be.http.connectorInstances"				 displayName="No. of Connector Instances"	   default="1"/>
+                                    <property type="Boolean" name="be.http.debug"                            displayName="Debug Request Info"              default="false"/>
+                                    <property type="String"  name="be.http.debugFolder"                      displayName="Debug Log Folder"/>
+                                    <property type="String"  name="be.http.debugLogPattern"                  displayName="Debug Log Pattern"			   default="%{yyyy MMM dd HH:mm:ss.SSS 'GMT'X}t %A %I [%m] '%U' [%s] %bbytes %Dms"/>
+                                    <property type="Integer" name="be.http.connectionTimeout"                displayName="Connection Timeout (msec)"       default="60000" />
+                                    <property type="Integer" name="be.http.acceptCount"                      displayName="Accept Count"                    default="-1"/>
+                                    <property type="Integer" name="be.http.socketBufferSize"                 displayName="Socket Output Buffer Size"       default="9000"/>
+                                    <property type="Integer" name="be.http.maxProcessors"                    displayName="Max Processors"                  default="-1"/>
+                                    <property type="Integer" name="be.http.connectionLinger"                 displayName="Connection Linger"               default="-1"/>
+                                    <property type="Boolean" name="be.http.enableDNSLookups"                 displayName="Enable DNS Lookups"              default="false"/>
+                                    <property type="Boolean" name="be.http.tcpNoDelay"                       displayName="TCP No Delay"                    default="true"/>
+                                    <property type="String"  name="be.http.compression"                      displayName="Compression"                     default="off"/>
+                                    <property type="Boolean" name="be.http.useBodyEncodingForURI"            displayName="Use Body Encoding for URI"   	   default="false"/>
+                                    <property type="String"  name="be.http.URIEncoding"			             displayName="URI Encoding"/>
+                                    <property type="Integer" name="be.http.maxKeepAliveRequests"             displayName="Max KeepAlive Requests"          default="-1"/>
+                                    <property type="Integer" name="be.http.maxHttpHeaderSize"                displayName="Max HTTP Header Size" 		   default="4096"/>
+                                    <property type="Integer" name="be.http.maxPostSize"                      displayName="Max HTTP Post Size" 			   default="2097152"/>
+                                    <property type="Integer" name="be.http.maxSavePostSize"                  displayName="Max HTTP Save Post Size" 		   default="4096"/>
+                                    <property type="String"  name="be.http.scheme"                           displayName="Scheme"/>
+                                    <property type="Integer" name="be.http.sessionTimeout"                   displayName="Session Timeout Interval (sec)"  default="1800"/>
+                                    <property type="Integer" name="be.http.maxSpareThreads"                  displayName="Max Spare Threads" 			   default="50"/>
+                                    <property type="Integer" name="be.http.minSpareThreads"                  displayName="Min Spare Threads" 			   default="4"/>
+                                    <property type="String"  name="be.http.compressableMimeType"             displayName="Compressible Mime Types" 		   default="text/html,text/xml,text/plain"/>
+                                    <property type="String"  name="be.http.restrictedUserAgents"             displayName="Restricted User Agents"/>
+                                    <property type="String"  name="be.http.docRoot"                          displayName="Document Root"/>
+                                    <property type="String"  name="be.http.docPage"                          displayName="Document Page"/>
+                                    <property type="String"  name="be.http.ssl_server_keymanageralgorithm"   displayName="SSL Server: Key Manager Algorithm"/>
+                                    <property type="String"  name="be.http.ssl_server_trustmanageralgorithm" displayName="SSL Server: Trust Manager Algorithm"/>
+                                    <property type="String"  name="be.http.ssl_server_enabledprotocols"      displayName="SSL Server: Protocols"		   default="TLSv1.1,TLSv1.2,TLSv1.3"/>
+                                    <property type="String"  name="be.http.ssl_server_ciphers"               displayName="SSL Server: Ciphers"			   default="TLS_AES_128_GCM_SHA256,TLS_AES_256_GCM_SHA384,TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,TLS_DHE_RSA_WITH_AES_128_GCM_SHA256,TLS_DHE_RSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256,TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256,TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384,TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384,TLS_RSA_WITH_AES_256_CBC_SHA256,TLS_RSA_WITH_AES_128_CBC_SHA256,TLS_RSA_WITH_AES_256_GCM_SHA384,TLS_RSA_WITH_AES_128_GCM_SHA256,TLS_DHE_RSA_WITH_AES_256_CBC_SHA256,TLS_DHE_RSA_WITH_AES_128_CBC_SHA256,TLS_DHE_DSS_WITH_AES_128_CBC_SHA,TLS_DHE_DSS_WITH_AES_128_CBC_SHA256,TLS_DHE_DSS_WITH_AES_128_GCM_SHA256,TLS_DHE_DSS_WITH_AES_256_CBC_SHA,TLS_DHE_DSS_WITH_AES_256_CBC_SHA256,TLS_DHE_DSS_WITH_AES_256_GCM_SHA384"/>
+                                    <property type="Boolean" name="be.http.ssl_server_useServerCipherOrder"  displayName="SSL Server: Use Cipher Order"	   default="false"/>
+                                    <property type="String"  name="be.http.serverHeader"               		 displayName="Server Header"				   default="Apache-Coyote/1.1"/>
+							    </properties>
+						    </extendedConfiguration>
+						</choice>
+					</choices>
+				</property>
+			</properties>
+		</extendedConfiguration>
+        <destinations>
+        	<property name="be.http.jsonPayload" displayName="Is JSON Payload" type="Boolean" default="false" />
+            <property name="be.http.IncludeEventType" displayName="Include Event Type" type="String" default="ALWAYS"/>
+            <!--property name="be.http.PageFlow" displayName="Is Page Flow" type="Boolean" default="false" /-->
+            <property name="be.http.type" displayName="Type" type="String" default="DEFAULT" />
+			<property name="be.http.contextPath" displayName="Context Path" type="String" default="" />
+			<property name="be.http.pageFlowFunction" displayName="Action RuleFunction" type="String" default="" />
+        </destinations>
+        <references>
+            <type>httppalette.shared</type>
+            <type>ae.shared.proxyConnection</type>
+        </references>
+        <serializers userdefined="true">
+            <serializer type="RestMessage" class="com.tibco.cep.driver.http.serializer.RESTMessageSerializer" default="false"/>
+            <serializer type="SoapMessage" class="com.tibco.cep.driver.http.serializer.SOAPMessageSerializer" default="false"/>
+            <serializer type="WebSocketMessage" class="com.tibco.cep.driver.http.serializer.WebSocketMessageSerializer" default="false"/>
+        </serializers>
+        <configuration>
+            <property>
+                <name>be.http.IncludeEventType</name>
+                <parent>destination</parent>
+                <type>combo-box</type>
+                <choices default="ALWAYS">
+                    <choice displayed="When Serializing and Deserializing" value="ALWAYS" />
+                    <choice displayed="Only when Serializing" value="ON_SERIALIZE" />
+                    <choice displayed="Only when Deserializing" value="ON_DESERIALIZE" />
+                    <choice displayed="Never" value="NEVER" />
+                </choices>
+            </property>
+            <property>
+                <name>be.http.type</name>
+                <parent>destination</parent>
+                <type>combo-box</type>
+                <choices default="DEFAULT">
+                    <choice displayed="Default" value="DEFAULT" />
+                    <choice displayed="PageFlow" value="PAGEFLOW" />
+                    <choice displayed="WebSocket" value="WEBSOCKET" />
+                </choices>
+            </property>
+        </configuration>
+    </driver>
+ </drivers>

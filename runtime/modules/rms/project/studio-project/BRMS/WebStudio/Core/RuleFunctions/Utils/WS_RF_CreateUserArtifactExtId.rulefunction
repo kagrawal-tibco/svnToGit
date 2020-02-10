@@ -1,0 +1,52 @@
+/**
+ * @description A utility function to get an extid out of supplied params for WS_C_UserArtifact.
+ */
+String rulefunction WebStudio.Core.RuleFunctions.Utils.WS_RF_CreateUserArtifactExtId {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String prefix;
+		String artifactPath;
+		String projectName;
+		String username;
+		String subscriptionId;
+		String suffix;
+	}
+	body {
+		Object extIdBuffer = String.createBuffer(0);
+		
+		if (prefix != null) {
+			String.append(extIdBuffer, prefix);
+		}
+		if (artifactPath != null) {
+			if (String.length(String.convertBufferToString(extIdBuffer)) > 0) String.append(extIdBuffer, "@");
+			String.append(extIdBuffer, artifactPath);
+		}
+		
+		if (projectName != null) {
+			if (String.length(String.convertBufferToString(extIdBuffer)) > 0) String.append(extIdBuffer, "@");
+			String.append(extIdBuffer, projectName);
+		}
+		if (username != null) {
+			if (String.length(String.convertBufferToString(extIdBuffer)) > 0) String.append(extIdBuffer, "@");
+			String.append(extIdBuffer, username);
+		}
+		if (subscriptionId != null) {
+			if (String.length(String.convertBufferToString(extIdBuffer)) > 0) String.append(extIdBuffer, "@");
+			String.append(extIdBuffer, subscriptionId);
+		}
+		
+		if (suffix != null) {
+			if (String.length(String.convertBufferToString(extIdBuffer)) > 0) String.append(extIdBuffer, "@");
+			String.append(extIdBuffer, suffix);
+		}
+		
+		String artifactExtId = String.convertBufferToString(extIdBuffer);
+		
+		//Clear it
+		String.clearBuffer(extIdBuffer);
+		
+		return artifactExtId;
+	}
+}

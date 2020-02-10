@@ -1,0 +1,55 @@
+/**
+ * @description Build Domain Values response
+ */
+WebStudio.Core.Concepts.DataSources.WS_C_ResponseData rulefunction WebStudio.Core.RuleFunctions.Utils.DT.WS_RF_BuildDomainModelResponseDSXML {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String projectName;
+		String artifactPath;
+		String artifactExtn;
+		WebStudio.Core.Concepts.DataSources.WS_C_AnyArtifactDetails artifactContents; 
+		int responseStatus;
+		int recordCount;
+		String errorCode;
+		String responseMessage;				
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.DT.WS_RF_BuildDomainModelResponseDSXML");
+
+		WS_C_ResponseData responseData = 
+			Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/WS_C_ResponseData");
+
+//		String responseDSXML = null;	
+		if (errorCode == null) {
+			WS_C_DomainArtifactDetails domainDetails = Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/WS_C_DomainArtifactDetails");
+	
+			domainDetails.artifactPath = artifactPath;
+			domainDetails.artifactType = artifactExtn;
+			Instance.PropertyAtom.setConceptReference(domainDetails.artifactContent, artifactContents, 1L);
+	
+			WS_C_AbstractDataSourceRecord abstractDataSourceRecord = 
+				Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/Records/WS_C_ArtifactContentsDataSourceRecord");
+	
+			WS_C_AnyArtifactDetails anyDetails = domainDetails;
+			
+			WS_C_ArtifactContentsDataSourceRecord artifactContentsDataSourceRecord = abstractDataSourceRecord;	
+			Instance.PropertyAtom.setContainedConcept(artifactContentsDataSourceRecord.artifactDetails, anyDetails, 1L);
+			Instance.PropertyArray.appendContainedConcept(responseData.record, abstractDataSourceRecord, 1L);
+
+//			responseDSXML = WS_RF_CreateAndSerializeResponseDataSource(responseStatus, recordCount, errorCode, responseMessage, responseData);
+//
+//			if (domainDetails != null) {
+//				//Dereference it so that it can be referenced for next request if needed.
+//				Instance.PropertyAtom.setConceptReference(domainDetails.artifactContent, null, 1L);
+//			}
+
+		} 
+//		else {
+//			responseDSXML = WS_RF_CreateAndSerializeResponseDataSource(responseStatus, recordCount, errorCode, responseMessage, responseData);			
+//		}			
+		
+		return responseData;				
+	}
+}

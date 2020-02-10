@@ -1,0 +1,67 @@
+/**
+ * @description Create revisions and desiderata from SCS for Base RT if contents are not loaded in to WS. This will be used to open RTI when RT itself is not yet loaded.
+ */
+void rulefunction WebStudio.Core.RuleFunctions.Utils.RT.WS_RF_CreateOrGetRequisiteRuleTemplateConceptDesiderata {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String RTIType;
+		String scsIntegrationType;
+		String scsRootURL;
+		String username;
+		String projectName;
+		String baseRTPath;
+		Object baseRuleTemplateEObject;
+		WebStudio.Core.Concepts.RuleTemplateInstance.WS_C_RuleTemplateInstanceUserArtifact baseRuleTemplateUserArtifact;
+		String[] roles;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.RT.WS_RF_CreateOrGetRequisiteRuleTemplateConceptDesiderata");
+		WS_C_AbstractRuleTemplate abstractbaseRuleTemplate = null;
+				
+		if (String.equals(RTIType, "View")) {
+			WS_C_RuleTemplateInstanceView baseRuleTemplateView = 
+				WebStudio.
+				Core.
+					RuleFunctions.
+						Utils.RT.View.Ops.Fetch.
+							WS_RF_CreateRuleTemplateViewConceptFromSCS(projectName, username, scsIntegrationType, scsRootURL, baseRTPath, baseRuleTemplateEObject, roles);
+			abstractbaseRuleTemplate = baseRuleTemplateView;									
+		} else {
+			//Get concept for this
+			WS_C_RuleTemplateInstanceBuilder baseRuleTemplateBuilder = 
+				WebStudio.Core.
+					RuleFunctions.
+						Utils.RT.Builder.Ops.Fetch.
+							WS_RF_CreateRuleTemplateBuilderConceptFromSCS(projectName, username, scsIntegrationType, scsRootURL, baseRTPath, baseRuleTemplateEObject, roles);
+			abstractbaseRuleTemplate = baseRuleTemplateBuilder;									
+		}
+		
+			
+		WS_C_UserArtifact userArtifact = baseRuleTemplateUserArtifact;
+		
+		double currentVersionNumber = userArtifact.currentArtifactVersion;
+		currentVersionNumber = currentVersionNumber + 1;
+		//Create a new revision instance.
+		String userArtifactRevisionExtId = baseRuleTemplateUserArtifact@extId + "@" + currentVersionNumber;
+	
+		WS_C_UserArtifactRevision userArtifactRevision = 
+			Instance.newInstance("/WebStudio/Core/Concepts/WS_C_UserArtifactRevision", userArtifactRevisionExtId);
+			 
+		userArtifactRevision.artifactContentsId = abstractbaseRuleTemplate@extId;
+		userArtifactRevision.version = currentVersionNumber;
+		userArtifactRevision.creationTime = DateTime.now();
+		Instance.PropertyArray.appendString(userArtifact.artifactRevisionIds, userArtifactRevision@extId, 1L);
+		Log.log(LOGGER, "Info", "Created new user artifact revision with extid [%s] for user artifact with id [%s] and extId [%s]", userArtifactRevision, userArtifact@id, userArtifact@extId);
+		userArtifact.currentArtifactVersion = currentVersionNumber;
+		//Set parent artifact reference
+		userArtifactRevision.parentArtifactId = userArtifact@extId;
+		userArtifactRevision.parentArtifactType = userArtifact.artifactType;
+		
+		//Move the append to rule.
+		WS_E_CreateRevisionsForExistingArtifactEvent createRevisionsEvent = 
+			Event.createEvent("xslt://{{/WebStudio/Core/Events/WS_E_CreateRevisionsForExistingArtifactEvent}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"2.0\" exclude-result-prefixes=\"xsl xsd\"><xsl:output method=\"xml\"/><xsl:param name=\"baseRuleTemplateUserArtifact\"/><xsl:param name=\"userArtifactRevision\"/><xsl:template name=\"Function\" match=\"/\"><createEvent><event><xsl:if test=\"$baseRuleTemplateUserArtifact/@extId\"><baseUserArtifactExtId><xsl:value-of select=\"$baseRuleTemplateUserArtifact/@extId\"/></baseUserArtifactExtId></xsl:if><xsl:if test=\"$userArtifactRevision/@extId\"><userArtifactRevisionId><xsl:value-of select=\"$userArtifactRevision/@extId\"/></userArtifactRevisionId></xsl:if><artifactType><xsl:value-of select=\"&quot;ruletemplate&quot;\"/></artifactType></event></createEvent></xsl:template></xsl:stylesheet>");
+		Event.assertEvent(createRevisionsEvent);			
+	}
+}

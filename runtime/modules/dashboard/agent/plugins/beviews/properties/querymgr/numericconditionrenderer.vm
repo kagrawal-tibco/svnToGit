@@ -1,0 +1,60 @@
+<table border="0" cellspacing="0" cellpadding="0" width="100%" height="100%">
+    <tr height="150px">
+        <td id="contentpanel" align="center" class="conditionpnl" colspan="3">
+            <table border="0" cellspacing="0" cellpadding="0" width="90%">
+                <tr width="100%">
+                    <form name="actualinputform" action="" onsubmit="return false;">
+                        <td>
+                            <select name="operators" size="1" class="inputtype" onchange="return operatorChanged();">
+                            #foreach ($operator in $supportedoperators)
+                                #if ($operator == $operatortoselect)
+                                    <option value="$operator" selected>$operator</option>
+                                #else
+                                    <option value="$operator">$operator</option>
+                                #end
+                            #end
+                            </select>
+                        </td>
+                        <td>&nbsp;&nbsp;</td>
+                        <td width="100%" align="left">
+                            #set ($singleconditiondivdisplayattr = "")
+                            #set ($dualconditiondivdisplayattr = "none")
+                            #if ($operatortoselect == "Is In The Range")
+                                #set ($singleconditiondivdisplayattr = "none")
+                                #set ($dualconditiondivdisplayattr = "")
+                            #end
+                            #if ($values.size() != 0)
+                                #set ($enteredvalue0 = $values.get(0).value)
+                                #if ($values.size() > 1)
+                                    #set ($enteredvalue1 = $values.get(1).value)
+                                #else
+                                    #set ($enteredvalue1 = "")
+                                #end
+                            #else 
+                                #set ($enteredvalue0 = "")
+                                #set ($enteredvalue1 = "")
+                            #end
+                            <div id="singleconditiondiv" style="display:$singleconditiondivdisplayattr">
+                                <input type="text" class="inputtype" id="conditionvalue0fld" name="conditionvalue0fld" style="width:200px" value="$enteredvalue0"></input>
+                            </div>
+                            <div id="dualconditiondiv" style="display:$dualconditiondivdisplayattr">
+                                <input type="text" class="inputtype" id="conditionvalue1fld" name="conditionvalue1fld" style="width:88px" value="$enteredvalue0"></input>&nbsp;<font class="inputlabel">to</font>&nbsp;<input type="text" class="inputtype" id="conditionvalue2fld" name="conditionvalue2fld" style="width:88px" value="$enteredvalue1"></input>
+                            </div>                            
+                        </td>
+                    </form>
+                </tr>    
+            </table>
+        </td>
+    </tr>
+    <tr id="buttonPanel" class="conditionbtnpnl">
+        <td valign="middle">
+            <a class="button" href="#" onclick="this.blur();okClicked();" style="width:100px"><span>Ok</span></a>
+        </td>
+        <td>    
+            <a class="button" href="#" onclick="this.blur();cancelClicked();" style="width:100px"><span>Cancel</span></a>
+        </td>
+        <td width="100%">
+            &nbsp;
+        </td>
+    </tr>
+</table>

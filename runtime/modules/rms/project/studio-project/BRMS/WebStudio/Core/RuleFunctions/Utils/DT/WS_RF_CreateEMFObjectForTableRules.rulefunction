@@ -1,0 +1,71 @@
+/**
+ * @description 
+ */
+Object rulefunction WebStudio.Core.RuleFunctions.Utils.DT.WS_RF_CreateEMFObjectForTableRules {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		WebStudio.Core.Concepts.Decision.Pagination.WS_C_TableRule[] tableRules;
+	}
+	body {
+
+		Object tableRulesList = Collections.List.createArrayList();
+ 
+		for (int j = 0; j < tableRules@length; j++) {
+			WebStudio.Core.Concepts.Decision.Pagination.WS_C_TableRule tableRule = tableRules[j];
+			String ruleIdStr = String.valueOfLong(tableRule.ruleId);	
+			Object tableRuleObj = WS.Decision.TableModel.createTableRule(ruleIdStr);
+			
+			Object ruleMetedataObj = WS.Decision.TableModel.createMetadata();
+			WS_C_TableRuleMetadata ruleMetadata = Instance.PropertyAtom.getPropertyValue(tableRule.metadata);
+			if (ruleMetadata != null) {	
+				WS_C_MetadataProperty[] ruleProperties = Instance.PropertyArray.toArrayConcept(ruleMetadata.property);
+				for (int k = 0; k < ruleProperties@length; k++) {
+					WS_C_MetadataProperty property = ruleProperties[k];
+					Object propertyObj = WS.Decision.TableModel.createMetadataProperty(property.name, property.type, property.value);
+					WS.Decision.TableModel.addMetadataProperty(ruleMetedataObj, propertyObj); 					
+				}
+			}
+			WS.Decision.TableModel.addTableRuleMetadata(tableRuleObj, ruleMetedataObj);
+			
+			WS_C_TableRuleCondition[] conditions = Instance.PropertyArray.toArrayConcept(tableRule.condition); 
+			for (int k = 0; k < conditions@length; k++) {
+				String  ruleId = String.valueOfLong(conditions[k].ruleId);
+				String  varId = conditions[k].varId;
+				String  columnId = conditions[k].columnId;				
+
+				String  expression = conditions[k].expression;
+				if (expression == null) {
+					expression = "";	 
+				}
+				String  displayVal = conditions[k].displayValue;
+				String  comment = conditions[k].comment;
+				boolean isEnabled = conditions[k].isEnabled;					
+				Object conditionObj = WS.Decision.TableModel.createTableRulevariable(ruleId, varId, columnId, expression, displayVal, comment, isEnabled);
+				WS.Decision.TableModel.addCondition(tableRuleObj, conditionObj);
+			}		
+
+			WS_C_TableRuleAction[] actions = Instance.PropertyArray.toArrayConcept(tableRule.action); 
+			for (int k = 0; k < actions@length; k++) {
+				String  ruleId = String.valueOfLong(actions[k].ruleId);
+				String  varId = actions[k].varId;
+				String  columnId = actions[k].columnId;
+
+				String  expression = actions[k].expression;
+				if (expression == null) {
+					expression = "";	 
+				}
+				String  displayVal = actions[k].displayValue;
+				String  comment = actions[k].comment;
+				boolean isEnabled = actions[k].isEnabled;					
+				Object actionObj = WS.Decision.TableModel.createTableRulevariable(ruleId, varId, columnId, expression, displayVal, comment, isEnabled);
+				WS.Decision.TableModel.addAction(tableRuleObj, actionObj);
+			}
+						
+			Collections.add(tableRulesList, tableRuleObj);					
+		}
+		
+		return tableRulesList;		
+	}
+}

@@ -1,0 +1,119 @@
+/**
+ * @description 
+ */
+WebStudio.Core.Concepts.DataSources.WS_C_TemporaryReturnData rulefunction WebStudio.Core.RuleFunctions.Actions.Lifecycle.Validate.WS_RF_Validate {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object servletRequest;
+		WebStudio.Security.Authn.Concepts.WS_C_LoggedInUser loggedInUser;
+		String contentType;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.Validate.WS_RF_Validate");
+
+		String responseMessage = null;
+		String errorCode = null;
+		int recordCount = 0;
+		int responseStatus = 0;
+		
+		WS_C_TemporaryReturnData tempReturnData = null;
+		String responseDSXML = null;
+		
+		if (!WS_RF_CheckHTTPMethod(servletRequest, "GET")) {
+			responseStatus = -1;
+			recordCount = 0;
+			errorCode = "ERR_5101";
+			responseMessage = "Invalid HTTP Method, expect method is [GET].";
+			
+			tempReturnData = WS_RF_CreateTemporaryReturnData(responseStatus, recordCount, errorCode, responseMessage, null);
+		} else {
+			String projectName = HTTP.Servlet.Request.getRequestParameter(servletRequest, "projectName");
+			Log.log(LOGGER, "Debug", "Project Name %s", projectName);
+			
+			String artifactPath = HTTP.Servlet.Request.getRequestParameter(servletRequest, "artifactPath");
+			String artifactExtn = HTTP.Servlet.Request.getRequestParameter(servletRequest, "artifactExtension");
+			Log.log(LOGGER, "Debug", "ArtifactPath - %s & Artifact Extension - %s", artifactPath, artifactExtn);
+			
+			String subscriptionId = null;
+			if (loggedInUser.jwtToken != null) subscriptionId = loggedInUser.jwtToken.sbsc;
+			
+			String scsRootURL = WS_RF_GetSCSRootURL(projectName, subscriptionId);
+			if (scsRootURL == null) {
+				throw Exception.newException(null, "Source control repository location not present. Set ws.scs.rootURL property", null);
+			}
+			
+			String[] roles = Instance.PropertyArray.toArrayString(loggedInUser.roles);
+			
+			String archivePath = null;
+			boolean useEAR = System.getSystemPropertyAsBoolean("ws.validateDT.useEAR", true);
+			
+			String deployStateExtId = WS_RF_CreateUserArtifactExtId("Deploy", null, projectName, null, subscriptionId, null);
+			AMS_C_DeployableState deployableState = Instance.getByExtIdByUri(deployStateExtId, "/Approval/Concepts/ArtifactsConcepts/AMS_C_DeployableState");
+			
+			Object reusableBuffer = String.createBuffer(0);
+			String pathSeparator = "/";					
+			if (useEAR && String.equals(artifactExtn, "rulefunctionimpl")) {		
+				String sharedLocation = System.getSystemPropertyAsString("ws.artifact.deploy.location", null);					
+				String.append(reusableBuffer, sharedLocation);
+				String.append(reusableBuffer, pathSeparator);
+				if (subscriptionId != null && !String.equals(subscriptionId, "")) {
+					String.append(reusableBuffer, subscriptionId);
+					String.append(reusableBuffer, pathSeparator);
+				}
+				String.append(reusableBuffer, projectName);
+				String.append(reusableBuffer, pathSeparator);
+				String.append(reusableBuffer, projectName);
+				String.append(reusableBuffer, ".ear");						
+				archivePath = String.convertBufferToString(reusableBuffer);
+				String.clearBuffer(reusableBuffer);
+				
+				boolean ignoreDeployableStatus = System.getSystemPropertyAsBoolean("ws.validateDT.ignoreDeployableStatus", false);
+				
+				if (!File.fileExists(archivePath)) {
+					responseMessage = String.format("Ear for project %s not present at deploy location, generate ear.", projectName);
+					Log.log(LOGGER, "Error", responseMessage);
+					errorCode = "ERR_1152";
+					recordCount = 0;
+					responseStatus = -1;
+																									
+				} else if ((deployableState == null || deployableState.dirty) && !ignoreDeployableStatus) {
+					Log.log(LOGGER, "Debug", "DeployableState is null or dirty");
+					responseMessage = String.format("Ear for project %s not in sync, regenerate ear.", projectName);
+					errorCode = "ERR_1152";
+					recordCount = 0;
+					responseStatus = -1;										
+				}		
+			}
+			
+			if (responseStatus == 0) {
+				if (artifactPath == null && artifactExtn == null) {
+					// case for project validation
+					responseDSXML = WS_RF_ValidateProject(projectName, loggedInUser, archivePath, scsRootURL, roles, contentType);
+					WS_RF_UpdateProjectSummary(projectName, loggedInUser.username, "VALIDATE");
+					WS_RF_AddAuditTrailEntry(loggedInUser.username, projectName, null, null, "VALIDATE", null);
+				} else {
+					// case for artifact validation
+					if (String.equals(artifactExtn, "rulefunctionimpl")) {
+						responseDSXML = WS_RF_ValidateDecisionTable(projectName, artifactPath, artifactExtn, loggedInUser, archivePath, scsRootURL, roles, contentType);
+					} else if (String.equals(artifactExtn, "ruletemplateinstance")) {
+						responseDSXML = WS_RF_ValidateRuleTemplateInstance(projectName, artifactPath, artifactExtn, loggedInUser, archivePath, scsRootURL, roles, contentType);
+					} else if (String.equals(artifactExtn, "beprocess")) {
+						// TODO - Need to move from client to server
+					} else if (String.equals(artifactExtn, "domain")) {
+						responseDSXML = WS_RF_ValidateDomain(projectName, artifactPath, artifactExtn, loggedInUser, roles, contentType);
+					}
+					WS_RF_AddAuditTrailEntry(loggedInUser.username, projectName, artifactPath, artifactExtn, "VALIDATE", null);
+				}
+			}
+			
+			tempReturnData = WS_RF_CreateTemporaryReturnData(responseStatus, recordCount, errorCode, responseMessage, null);
+			if (responseDSXML != null) {
+				tempReturnData.serializedData = responseDSXML;
+			}
+		}
+
+		return tempReturnData;
+	}
+}

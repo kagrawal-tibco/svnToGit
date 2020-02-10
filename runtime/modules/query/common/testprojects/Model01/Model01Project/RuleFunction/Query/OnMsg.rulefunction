@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<ruleFunction icon="" name="OnMsg" description="" guid="1210891362766-1235650281" bindings="" namespace="" folder="/RuleFunction/Query/" virtual="false">
+    <lastModified>2008-05-15T15:44:28.797-07:00</lastModified>
+    <extendedProperties/>
+    <hiddenProperties/>
+    <validity>ACTION</validity>
+    <arguments>
+        <argument identifier="msg" entity="/Events/Msg" entityType="event">
+            <domain>
+                <entries/>
+            </domain>
+        </argument>
+    </arguments>
+    <body>//
+// Important lines are marked with: /*==&gt;*/
+//
+System.debugOut("Query request received: " + msg.query);
+try {
+    String queryName = msg.queryName;
+    String statementName = "s_" + queryName;
+    String resultsetName = "r_" + statementName;
+    String listenerName = "l_" + statementName;
+    String queryText = msg.query;
+    String closure = msg.closure;
+    boolean isContinuous = msg.isContinuous;
+    boolean useCallback = msg.useCallback;
+    String callbackUri = msg.callbackUri;
+
+    if (Query.exists(queryName)) {
+        System.debugOut("Query '"  + queryName + "' existed.");
+    } else {
+/*==&gt;*/ Query.create(queryName, queryText);
+        System.debugOut("Query '"  + queryName + "' created.");
+    }
+
+    if (Query.Statement.isOpen(statementName)) {
+        String statementOwnerName = Query.Statement.getQueryName(statementName);
+        if (statementOwnerName == queryName) {
+            System.debugOut("Statement '"  + statementName + "' existed.");
+        } else {
+            System.debugOut("Error: Statement '"  + statementName + "' is already registered against a different query: '" + statementOwnerName + "'");
+            return;
+        }
+    } else {
+/*==&gt;*/ Query.Statement.open(queryName, statementName);
+        System.debugOut("Statement '"  + statementName + "' created.");
+    }
+
+    if (useCallback) {        
+        if (Query.Callback.exists(listenerName)) {
+            System.debugOut("Error: Listener '"  + listenerName + "' already exists.");
+            return;
+        }
+        System.debugOut("Executing '"  + statementName + "', getting the listener '" + listenerName + "'");
+/*==&gt;*/ Query.Statement.executeWithCallback(statementName, listenerName, callbackUri, isContinuous, closure);
+        System.debugOut("Listener '"  + listenerName + "' created, the callback may be called.");
+    } else {
+        if (Query.ResultSet.isOpen(resultsetName)) {
+            System.debugOut("Error: Result set '"  + resultsetName + "' is already open.");
+            return;
+        }
+        System.debugOut("Executing '"  + statementName + "', getting a result set.");
+/*==&gt;*/ Query.Statement.execute(statementName, resultsetName);
+        if (!Query.ResultSet.isOpen(resultsetName)) {
+            System.debugOut("Error: Result set '" + resultsetName + " not successfully open!");
+        } else {
+            System.debugOut("Result set '" + resultsetName + " now open.");
+/*==&gt;*/     while (Query.ResultSet.next(resultsetName)) {
+                //System.debugOut("Got a row.");
+/*==&gt;*/         Object columnValue = Query.ResultSet.get(resultsetName, 0);
+                System.debugOut("Row, first column = " + columnValue);    
+            }
+            System.debugOut("No more row, closing the result set '" + resultsetName + "'.");
+/*==&gt;*/     Query.ResultSet.close(resultsetName);
+        }
+        System.debugOut("Closing the statement '"  + statementName + "'.");
+/*==&gt;*/ Query.Statement.close(statementName);
+    }
+
+} catch (Exception e) {
+    System.debugOut("Failed: " + e);
+}
+
+System.debugOut("Consuming the event.");
+/*==&gt;*/ Event.consumeEvent(msg);
+System.debugOut("Done.");
+</body>
+</ruleFunction>

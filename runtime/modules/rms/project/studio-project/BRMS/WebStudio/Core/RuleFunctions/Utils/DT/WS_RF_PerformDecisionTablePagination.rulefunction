@@ -1,0 +1,76 @@
+/**
+ * @description 
+ */
+WebStudio.Core.Concepts.Decision.Pagination.WS_C_TableRuleSet rulefunction WebStudio.Core.RuleFunctions.Utils.DT.WS_RF_PerformDecisionTablePagination {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String projectName;
+		String userName;
+		String artifactPath;
+		String tableType;
+		Object[] argumentObjects;
+		Object[] tableColumnObjects;
+		Object[] tableRules;
+		String[] roles;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.DT.WS_RF_PerformDecisionTablePagination");
+		
+		String subscriptionId = WS_RF_GetSubscriptionId(userName);
+
+		String scsRootURL = WS_RF_GetSCSRootURL(projectName, subscriptionId);
+		if (scsRootURL == null) {
+			throw Exception.newException(null, "Source control repository location not present. Set ws.scs.rootURL property", null);
+		}
+		String scsIntegrationType = System.getSystemPropertyAsString("ws.scs.impl.type", null);
+			
+		WebStudio.Core.Concepts.Decision.Pagination.WS_C_TableRuleSet tableRuleSet = Instance.newInstance("/WebStudio/Core/Concepts/Decision/Pagination/WS_C_TableRuleSet", "TABLE_RULESET_" + System.nanoTime());		
+
+		WS_C_TableColumns tableColumns = WS_RF_GetDecisionTableColumns(projectName, userName, scsRootURL, scsIntegrationType, argumentObjects, tableColumnObjects, roles, false);
+		Instance.PropertyAtom.setContainedConcept(tableRuleSet.columns, tableColumns, 1L);
+
+		WebStudio.Core.Concepts.Decision.Pagination.WS_C_TablePage tablePage = null;
+		long lastRuleId = 0;
+		int totalPages = 0;
+		if (tableRules@length > 0) {
+			int pageSize = WS_RF_GetDecisionTablePageSize(userName, tableType, tableRules@length);
+			totalPages = tableRules@length / pageSize;  
+			if ((tableRules@length % pageSize) > 0) { 
+				totalPages = totalPages + 1;			
+			}
+			
+			for (int ruleCount = 0; ruleCount < tableRules@length; ruleCount++) {
+				long ruleId = WS.Decision.TableModel.Rules.getID(tableRules[ruleCount]);
+				lastRuleId = Math.maxLong(lastRuleId, ruleId);
+			}
+
+			int pageNum = 0;
+			for (int ruleCount = 0; ruleCount < tableRules@length; ruleCount++) {
+			    	if ((ruleCount % pageSize) == 0) {
+						pageNum = pageNum + 1;
+						tablePage = Instance.newInstance("/WebStudio/Core/Concepts/Decision/Pagination/WS_C_TablePage", "TABLE_PAGE_" + System.nanoTime());
+						Instance.PropertyAtom.setInt(tablePage.pageNumber, pageNum, 1L);
+						Instance.PropertyArray.appendContainedConcept(tableRuleSet.tablePage, tablePage, 1L);
+						Instance.PropertyArray.appendString(tableRuleSet.tablePageIds, tablePage@extId, 1L);
+			    	}
+				WebStudio.Core.Concepts.Decision.Pagination.WS_C_TableRule tableRule = WebStudio.Core.RuleFunctions.Utils.DT.WS_RF_CreateTableRuleInstanceFromEMFObject(tableRules[ruleCount], false);
+				lastRuleId = Math.maxLong(lastRuleId, tableRule.ruleId);		    	
+			    	Instance.PropertyArray.appendContainedConcept(tablePage.tableRule, tableRule, 1L);		    			
+			}
+		} 
+		else {
+			tablePage = Instance.newInstance("/WebStudio/Core/Concepts/Decision/Pagination/WS_C_TablePage", "TABLE_PAGE_" + System.nanoTime());
+			Instance.PropertyAtom.setInt(tablePage.pageNumber, 1, 1L);
+			Instance.PropertyArray.appendContainedConcept(tableRuleSet.tablePage, tablePage, 1L);
+			Instance.PropertyArray.appendString(tableRuleSet.tablePageIds, tablePage@extId, 1L);
+			totalPages = 1;												
+		}	
+		
+		Instance.PropertyAtom.setInt(tableRuleSet.totalPages, totalPages, 1L);
+		Instance.PropertyAtom.setLong(tableRuleSet.lastRuleId, lastRuleId, 1L);
+							  
+		return tableRuleSet;
+	}
+}

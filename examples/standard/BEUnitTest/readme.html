@@ -1,0 +1,94 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>     BEUnitTest Example
+
+- TIBCO BusinessEvents&reg; Examples
+</title>
+<meta http-equiv="Content-type" content="text/html; charset=iso-8859-1" />
+<meta http-equiv="Content-Language" content="en-us" />
+<link rel="Shortcut Icon" href="../../_resources/icon.gif" type="image/gif" />
+<style type="text/css" media="all">@import "../../_resources/examples.css";</style>
+<script type="text/javascript" src="../../_resources/examples.js" /></script>
+
+</head>
+<body>
+
+<h1>BEUnitTest</h1>
+
+
+<h2>Purpose of This Example</h2>
+
+<p>This example contains a simple set of rules to illustrate how the integrated BEUnit test framework can be used to test the business logic of a TIBCO BusinessEvents&reg; application.  The expected
+ flow of the application is as follows:</p>
+<ul>
+<li>A promotional event (PromotionalEvent) is sent out for a particular inventory item.  This event is processed by the PromotionalRule.</li>
+<li>The PromotionalRule creates and asserts a PriceAdjustmentEvent. This event is then processed by the PriceAdjustmentRule.</li>
+<li>The PriceAdjustmentRule modifies the price of the associated inventory item by the discount amount specified in the original PromotionalEvent.</li>
+</ul>
+
+<p>This example is used in the <i>TIBCO BusinessEvents&reg; Getting Started</i> guide. If you are new to TIBCO BusinessEvents&reg;, follow the tutorials in this guide to learn the basics by building up this example from scratch.
+</p>
+
+<h2>How to Run the Example</h2>
+<ol>
+
+<p>There are multiple ways to run the unit tests associated with the project. TIBCO BusinessEvents&reg; Studio provides an option to run JUnit/BEUnit tests.  The BEUnitTest project also contains a build.xml file to show 
+how the unit tests can be run from a command line (NOTE: You must have ant installed in order to run the unit tests from a command line)</p>
+<li><h3>From a command line</h3>
+Open a command prompt/terminal window and navigate to the BEUnitTest project directory:
+
+<pre class="commands">
+cd <i>BE_HOME</i>/examples/standard/BEUnitTest/BEUnitTest
+</pre>
+
+<p>Adapt the command as needed, for example, if you have customized the example project, or are running it from a different directory. To run the tests, run the test target in build.xml by running ant:</p>
+
+<pre class="commands">
+ant test
+</pre>
+
+NOTE: The 'test' target is the default target, so it is sufficient to run 'ant' with no arguments.
+</li>
+
+<p>In the command window you see a message like this (among other output):
+<span class="logs">
+test:
+    [junit] Running com.tibco.test.BEUnitTestSuite
+    [junit] Testsuite: com.tibco.test.BEUnitTestSuite
+    [junit] Tests run: 5, Failures: 0, Errors: 0, Time elapsed: 30.586 sec
+    [junit] Tests run: 5, Failures: 0, Errors: 0, Time elapsed: 30.586 sec
+</span></p>
+</li>
+
+<li>
+<h3>From TIBCO BusinessEvents&reg; Studio</h3>
+<p>Open TIBCO BusinessEvents&reg; Studio and import the BEUnitTest example project from BE_HOME/examples/standard/BEUnitTest/BEUnitTest directory.  By default, the build.xml script assumes that the location of the project
+is in that directory, so do not copy the project into the workspace while importing.<br>
+There are two ways to run BEUnit test suites from TIBCO BusinessEvents&reg; Studio.
+<h4>Running an ant build</h4>
+Expand the BEUnitTest project in Studio Explorer, and right click on the build.xml file.  Select the Run As->Ant Build option, and this will run the default target for the build file.  <br><br>
+<img src="images/RunAsBuild.png" width=600 height=80/><br><br>
+The output will be printed to the Console view, and will look similar to the output from the command line above.
+<h4>Running as a JUnit Test</h4>
+TIBCO BusinessEvents&reg; Studio also includes support for running a JUnit test directly from the test suite.  To do so, right click the BEUnitTestSuite.java file in Studio Explorer and select Run As->JUnit Test.<br><br>
+<img src="images/RunAsJUnit.png" width=600 height=80/><br><br>
+The output will be printed to the Console view.  The result of the unit tests will be displayed in the JUnit view.<br><br>
+<img src="images/JUnit.png" width=850 height=230/><br><br>
+This view shows the result of the tests, including which tests passed, which tests failed, and it will display any errors that occur.  To show a failure, open the BEUnitTestSuite.java file and navigate to 
+the testEventSent method.  Uncomment the line
+<pre class="commands">
+//expecter.expectEventSent("/Events/PriceAdjustmentEvent");
+</pre>
+and run the test again.  The test project never sends the PriceAdjustmentEvent, and so this expectation will fail.  The result of this test will show an error in the JUnit view:<br><br>
+<img src="images/JUnitFail.png" width=850 height=230/><br><br>
+</ol>
+
+<div class="footer">
+<p>TIBCO BusinessEvents&reg; 5.6<br />
+Copyright&copy; 2004-2019 TIBCO Software Inc. All rights reserved.</p>
+</div>
+</body>
+</html>

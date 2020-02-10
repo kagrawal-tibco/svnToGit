@@ -1,0 +1,73 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<project>
+  <actions/>
+  <description>This job would trigger the jenkins automation for 5.2 nightly builds if some code is checked in to the branch in last 24 hours.</description>
+  <keepDependencies>false</keepDependencies>
+  <properties/>
+  <scm class="hudson.scm.NullSCM"/>
+  <canRoam>true</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers class="vector"/>
+  <concurrentBuild>false</concurrentBuild>
+  <builders>
+    <hudson.tasks.Shell>
+      <command>export buildersemailaddr=&quot;sbagi@tibco.com,mgujrath@tibco.com,abhave@tibco.com,bgokhale@tibco.com,vasharma@tibco.com,vshelar@tibco.com&quot;
+mail ${buildersemailaddr} -s &quot;BE 5.2 branch regression started..Verifying SVN checkins.....&quot;
+
+DT1=`date --date=&quot;yesterday&quot; +%Y-%m-%d`
+DT2=`date +%Y-%m-%d`
+
+echo &quot;Number of runtime checkins done between $DT1 and $DT2 : &quot;
+num1=`svn log http://svn.tibco.com/be/branches/5.2/runtime --non-interactive --username=qlbuild --password=T!bco123 -qv -r &quot;{$DT1}:{$DT2}&quot; | grep ^r | wc -l`
+echo $num1
+
+echo &quot;Number of designtime checkins done between $DT1 and $DT2 : &quot;
+num2=`svn log http://svn.tibco.com/be/branches/5.2/designtime --non-interactive --username=qlbuild --password=T!bco123 -qv -r &quot;{$DT1}:{$DT2}&quot; | grep ^r | wc -l`
+echo $num2
+
+echo &quot;Number of common checkins done between $DT1 and $DT2 : &quot;
+num3=`svn log http://svn.tibco.com/be/branches/5.2/common --non-interactive --username=qlbuild --password=T!bco123 -qv -r &quot;{$DT1}:{$DT2}&quot; | grep ^r | wc -l`
+echo $num3
+
+echo &quot;Number of common bin done between $DT1 and $DT2 : &quot;
+num4=`svn log http://svn.tibco.com/be/branches/5.2/bin --non-interactive --username=qlbuild --password=T!bco123 -qv -r &quot;{$DT1}:{$DT2}&quot; | grep ^r | wc -l`
+echo $num4
+
+echo &quot;Number of common examples done between $DT1 and $DT2 : &quot;
+num5=`svn log http://svn.tibco.com/be/branches/5.2/examples --non-interactive --username=qlbuild --password=T!bco123 -qv -r &quot;{$DT1}:{$DT2}&quot; | grep ^r | wc -l`
+echo $num5
+
+echo &quot;Number of common examples done between $DT1 and $DT2 : &quot;
+num6=`svn log http://svn.tibco.com/be/branches/5.2/examples --non-interactive --username=qlbuild --password=T!bco123 -qv -r &quot;{$DT1}:{$DT2}&quot; | grep ^r | wc -l`
+echo $num6
+
+if [ &quot;$num1&quot; -gt 0 -o &quot;$num2&quot; -gt 0 -o &quot;$num3&quot; -gt 0 -o &quot;$num4&quot; -gt 0 -o &quot;$num5&quot; -gt 0 -o &quot;$num6&quot; -gt 0 ];
+then
+echo &quot;Triggering the 5.2.1 build since change detected ...&quot;
+export buildersemailaddr=&quot;mgujrath@tibco.com,abhave@tibco.com,vasharma@tibco.com&quot;
+mail ${buildersemailaddr} -s &quot;Checkins detected..Triggering 521 full build.&quot;
+
+else
+echo &quot;No new checkins found, not triggering the 521 full build.&quot;
+export buildersemailaddr=&quot;mgujrath@tibco.com,abhave@tibco.com,vasharma@tibco.com&quot;
+mail ${buildersemailaddr} -s &quot;No new checkins found, not triggering the 521 full build.&quot;
+exit 1
+fi
+
+</command>
+    </hudson.tasks.Shell>
+  </builders>
+  <publishers>
+    <hudson.tasks.BuildTrigger>
+      <childProjects>BE521</childProjects>
+      <threshold>
+        <name>SUCCESS</name>
+        <ordinal>0</ordinal>
+        <color>BLUE</color>
+      </threshold>
+    </hudson.tasks.BuildTrigger>
+  </publishers>
+  <buildWrappers/>
+</project>

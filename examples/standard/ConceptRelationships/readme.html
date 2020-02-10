@@ -1,0 +1,95 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>     Concept Relationships Example
+
+- TIBCO BusinessEvents&reg; Examples
+</title>
+<meta http-equiv="Content-type" content="text/html; charset=iso-8859-1" />
+<meta http-equiv="Content-Language" content="en-us" />
+<link rel="Shortcut Icon" href="../../_resources/icon.gif" type="image/gif" />
+<style type="text/css" media="all">@import "../../_resources/examples.css";</style>
+<script type="text/javascript" src="../../_resources/examples.js" /></script>
+<script type="text/javascript">
+function buildForms() {
+ var form;
+
+
+ SendEventForm.setServer("http://localhost:8105");
+
+
+ form = SendEventForm.get("postEventForm");
+ form.setDestinationPath("/Channels/HTTPChannel/inputDest");
+ form.setEventPath("/Events/Payment");
+ form.addProperty("CheckingAccountId", "Checking1");
+ form.addProperty("CreditCardAccountId", "Credit1");
+ form.addProperty("Amount", "100.00");
+ form.build();
+
+
+}
+</script>
+</head>
+<body onLoad="buildForms()">
+
+
+<h1>Concept Relationships Example</h1>
+
+
+<h2>Purpose of This Example</h2>
+
+<p>This TIBCO BusinessEvents&reg; example builds on the OneExternalEventAndTwoConcepts example. It demonstrates concept relationships: inheritance, containment, and reference.
+As you can see in the diagram below, the concepts <code>CheckingAccount</code> and <code>CreditCardAccount</code> are inherited from the parent concept <code>Account</code>, which references the concept <code>Customer</code>. The <code>Customer</code> concept contains one or more <code>Address</code> concepts (using an array property).</p>
+
+<p>A rule matches the checking account and credit account from the working memory to those provided in the payment event, and checks whether the checking account and credit card account belong to the same customer. If they do then the rule applies debits to the checking account and credits to the credit account, simulating a credit card bill payment, as in the OneExternalEventAndTwoConcepts example. In the current example, however, there is the additional restriction that the credit card payment must be from the same customer's checking account.
+<p>
+<image src="images/relationship.png"/>
+</p>
+</p>
+
+<h2>How to Run the Example</h2>
+<ol>
+
+
+<li>
+<p>Open a command window and at the command prompt, start the TIBCO BusinessEvents engine using the following command.</p>
+
+<pre class="commands">
+cd <i>BE_HOME</i>/examples/standard/ConceptRelationships
+<i>BE_HOME</i>/bin/be-engine --propFile <i>BE_HOME</i>/bin/be-engine.tra -u default -c ConceptRelationships/default.cdd ConceptRelationships.ear -n ConceptRelationships
+</pre>
+
+<p>Adapt the command as needed, for example, if you have customized the example project, or are running it from a different directory.</p>
+</li>
+
+
+<li>
+<p>Create a Bill Payment Event using the form below. Use the values "Checking1" and "Credit1" for the checking and credit accounts respectively.</p>
+
+<form id="postEventForm"></form>
+
+<p>In the command window you see a message like this:
+<span class="logs">2010 May 24 17:03:45:784 GMT -7 ConceptRelationships Info [main] - [user] [ConceptRelationships] ##### Created customer id cust1 with checking account id <Checking1> and credit account id <Credit1>
+2010 May 24 17:03:45:815 GMT -7 ConceptRelationships Info [main] - [user] [ConceptRelationships] ##### CHECKING account balance 25000.0
+2010 May 24 17:03:45:815 GMT -7 ConceptRelationships Info [main] - [user] [ConceptRelationships] ##### CREDIT account balance 1000.0
+2010 May 24 17:03:45:893 GMT -7 ConceptRelationships Info [main] - [studio.core] Hot Deployment disabled
+2010 May 24 17:03:45:893 GMT -7 ConceptRelationships Info [main] - [runtime.session] BE Engine ConceptRelationships started
+2010 May 24 17:04:10:003 GMT -7 ConceptRelationships Info [I/O_dispatcher_1] - [user] [ConceptRelationships] ##### Processing transfer request for customer John Doe
+2010 May 24 17:04:10:003 GMT -7 ConceptRelationships Info [I/O_dispatcher_1] - [user] [ConceptRelationships] ##### Bill payment amount: 100.0
+2010 May 24 17:04:10:019 GMT -7 ConceptRelationships Info [I/O_dispatcher_1] - [user] [ConceptRelationships] ##### CURRENT BALANCES Credit Card Account <Credit1>:$1000.0 Checking Account <Checking1>:$25000.0
+2010 May 24 17:04:10:019 GMT -7 ConceptRelationships Info [I/O_dispatcher_1] - [user] [ConceptRelationships] ##### NEW BALANCES Credit Card Account <Credit1>:$900.0 Checking Account <Checking1>:$24900.0
+</span></p>
+</li>
+
+
+</ol>
+
+
+<div class="footer">
+<p>TIBCO BusinessEvents&reg; 5.6<br />
+Copyright&copy; 2004-2019 TIBCO Software Inc. All rights reserved.</p>
+</div>
+</body>
+</html>

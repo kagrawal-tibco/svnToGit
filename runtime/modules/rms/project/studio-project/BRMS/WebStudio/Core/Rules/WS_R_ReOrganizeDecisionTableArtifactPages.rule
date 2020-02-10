@@ -1,0 +1,55 @@
+/**
+ * @description 
+ * @author vdhumal-t420
+ */
+rule WebStudio.Core.Rules.WS_R_ReOrganizeDecisionTableArtifactPages {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		WebStudio.Core.Events.WS_E_ReOrgDecisionTableArtifactPagesEvent reOrgDecisionTablePagesEvent;
+	}
+	when {
+		
+	}
+	then {
+		Object LOGGER = Log.getLogger("WebStudio.Core.Rules.WS_R_ReOrganizeDecisionTablePages");
+		
+		long decsionTableContentId = reOrgDecisionTablePagesEvent.artifactContentId;
+		String projectName = reOrgDecisionTablePagesEvent.projectName;
+		String artifactPath = reOrgDecisionTablePagesEvent.artifactPath;
+		String artifactExtn = reOrgDecisionTablePagesEvent.artifactExtn;
+		boolean singlePageView = reOrgDecisionTablePagesEvent.singlePageView;
+		String username = reOrgDecisionTablePagesEvent.userName;
+				
+		WS_C_DecisionTable decisionTableArtifact = Cluster.DataGrid.CacheLoadConceptById(decsionTableContentId, false);	
+		WebStudio.Core.Concepts.Decision.Pagination.WS_C_TableRuleSet decisionTableRS = Instance.PropertyAtom.getContainedConcept(decisionTableArtifact.decisionTable, 1L);		
+		//Re-Organize DecisionTable Pages
+		WS_RF_ReOrganizeDecisionTableArtifactPages(username, "DECISION_TABLE", decisionTableRS, singlePageView);
+		
+		if (String.equals(artifactExtn, "rulefunctionimpl")) {
+			String userArtifactExtId = WS_RF_CreateUserArtifactExtId(null, artifactPath, projectName, username, null, null);	
+			WS_C_UserDTableArtifact userArtifact = Instance.getByExtIdByUri(userArtifactExtId, "/WebStudio/Core/Concepts/Decision/WS_C_UserDTableArtifact");
+			Instance.PropertyAtom.setBoolean(userArtifact.singlePageView, singlePageView, 1L);
+		}
+		
+		Object asyncContext = Util.HashMap.getObject(reOrgDecisionTablePagesEvent.mapLockKey, reOrgDecisionTablePagesEvent.asyncContextId);
+		//Clear it
+		Util.HashMap.removeObject(reOrgDecisionTablePagesEvent.mapLockKey, reOrgDecisionTablePagesEvent.asyncContextId);
+		Util.HashMap.deleteMap(reOrgDecisionTablePagesEvent.mapLockKey);
+		
+		//Get the first page	
+		String responseMessage = null;
+		WS_C_ResponseData responseData = WS_RF_BuildDecisionTableResponse(projectName, artifactPath, artifactExtn, decisionTableArtifact, null, username, 1);
+    		responseMessage = WS_RF_CreateAndSerializeResponseDataSource(0, 1, null, responseMessage, responseData, reOrgDecisionTablePagesEvent.contentType);
+							    										
+		Log.log(LOGGER, "Debug", "Data source response %s", responseMessage);
+
+        Object servletResponse = HTTP.Servlet.getServletResponse(asyncContext);        
+        HTTP.Servlet.Response.setResponseStatusCode(servletResponse, 200);
+        HTTP.Servlet.Response.setResponseHeader(servletResponse, "Content-type", "application/xml;charset=utf-8");	    										
+		HTTP.Servlet.Response.setResponseContent(asyncContext, responseMessage, true);
+						
+	}
+}

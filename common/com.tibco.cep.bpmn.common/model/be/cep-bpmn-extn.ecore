@@ -1,0 +1,502 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0"
+    xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" name="extension"
+    nsURI="http:///com/tibco/cep/bpmn/core/extension" nsPrefix="extn">
+  <eSubpackages name="semantic" nsURI="http:///com/tibco/cep/bpmn/core/extension/semantic"
+      nsPrefix="extn.semantic">
+    <eSubpackages name="process" nsURI="http:///com/tibco/cep/bpmn/core/extension/semantic/process"
+        nsPrefix="extn.process">
+      <eClassifiers xsi:type="ecore:EClass" name="ExtnProcessData" eSuperTypes="#//semantic/core/common/ExtnFlowElementsContainerData #//semantic/core/common/ExtnCallableElementData #//semantic/core/common/ExtnScopeContainerData">
+        <eStructuralFeatures xsi:type="ecore:EAttribute" name="jobDataConcept" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+        <eStructuralFeatures xsi:type="ecore:EAttribute" name="author" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"
+            defaultValueLiteral=""/>
+        <eStructuralFeatures xsi:type="ecore:EAttribute" name="version" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EInt"
+            defaultValueLiteral="1"/>
+        <eStructuralFeatures xsi:type="ecore:EAttribute" name="lastAuthor" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+        <eStructuralFeatures xsi:type="ecore:EAttribute" name="lastDeployed" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EDate"/>
+        <eStructuralFeatures xsi:type="ecore:EAttribute" name="zoomLevel" lowerBound="1"
+            eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EDoubleObject"/>
+        <eStructuralFeatures xsi:type="ecore:EAttribute" name="isVersionChanged" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"
+            transient="true" defaultValueLiteral="false"/>
+      </eClassifiers>
+      <eClassifiers xsi:type="ecore:EClass" name="ExtnLaneData" eSuperTypes="#//semantic/core/foundation/ExtnBaseElementData"/>
+      <eSubpackages name="activities" nsURI="http:///com/tibco/cep/bpmn/core/extension/semantic/process/activities"
+          nsPrefix="extn.activities">
+        <eClassifiers xsi:type="ecore:EClass" name="ExtnActivityData" abstract="true"
+            eSuperTypes="#//semantic/core/common/ExtnFlowNodeData">
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="inline" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="checkPoint" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="async" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+          <eStructuralFeatures xsi:type="ecore:EReference" name="timerData" eType="#//semantic/process/activities/ExtnTimerTaskData"
+              containment="true"/>
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="timerEnabled" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"
+              defaultValueLiteral="false"/>
+        </eClassifiers>
+        <eClassifiers xsi:type="ecore:EClass" name="ExtnTaskData" abstract="true"
+            eSuperTypes="#//semantic/process/activities/ExtnActivityData"/>
+        <eClassifiers xsi:type="ecore:EClass" name="ExtnServiceTaskData" eSuperTypes="#//semantic/process/activities/ExtnTaskData">
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="service" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"
+              defaultValueLiteral=""/>
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="port" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"
+              defaultValueLiteral=""/>
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="soapAction" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"
+              defaultValueLiteral=""/>
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="endPointUrl" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"
+              defaultValueLiteral=""/>
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="timeout" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//ELong"
+              defaultValueLiteral="0"/>
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="inputPayloadSchema"
+              eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"
+              defaultValueLiteral=""/>
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="outputPayloadSchema"
+              eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"
+              defaultValueLiteral="&quot;&quot;"/>
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="bindingType" lowerBound="1"
+              eType="#//semantic/process/activities/WS_BINDING" defaultValueLiteral=""/>
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="wsdl" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"
+              defaultValueLiteral=""/>
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="operation" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"
+              defaultValueLiteral=""/>
+          <eStructuralFeatures xsi:type="ecore:EReference" name="jmsConfig" eType="#//semantic/process/activities/ExtnJmsConfigData"
+              containment="true"/>
+          <eStructuralFeatures xsi:type="ecore:EReference" name="httpSslConfig" eType="#//semantic/process/activities/ExtnHttpSslConfig"
+              containment="true"/>
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="useHttpSsl" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"
+              defaultValueLiteral="false"/>
+        </eClassifiers>
+        <eClassifiers xsi:type="ecore:EClass" name="ExtnRuleFunctionTaskData" eSuperTypes="#//semantic/process/activities/ExtnTaskData">
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="rulefunction" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+        </eClassifiers>
+        <eClassifiers xsi:type="ecore:EClass" name="ExtnBusinessRuleTaskData" eSuperTypes="#//semantic/process/activities/ExtnTaskData">
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="decisiontable" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="virtualrulefunction"
+              eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+          <eStructuralFeatures xsi:type="ecore:EReference" name="implementations"
+              upperBound="-1" eType="#//semantic/process/activities/ExtnVRFImplData"
+              containment="true" eKeys="#//semantic/process/activities/ExtnVRFImplData/uri"/>
+        </eClassifiers>
+        <eClassifiers xsi:type="ecore:EClass" name="ExtnInferenceTaskData" eSuperTypes="#//semantic/process/activities/ExtnTaskData">
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="rules" upperBound="-1"
+              eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+        </eClassifiers>
+        <eClassifiers xsi:type="ecore:EClass" name="ExtnCallActivityData" eSuperTypes="#//semantic/process/activities/ExtnActivityData"/>
+        <eClassifiers xsi:type="ecore:EClass" name="ExtnSubProcessData" eSuperTypes="#//semantic/process/activities/ExtnCallActivityData #//semantic/core/common/ExtnFlowElementsContainerData">
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="length" lowerBound="1"
+              eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EDoubleObject"
+              defaultValueLiteral="200"/>
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="breadth" lowerBound="1"
+              eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EDoubleObject"
+              defaultValueLiteral="100"/>
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="expanded" lowerBound="1"
+              eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBooleanObject"
+              defaultValueLiteral="true"/>
+        </eClassifiers>
+        <eClassifiers xsi:type="ecore:EClass" name="ExtnSendTaskData" eSuperTypes="#//semantic/process/activities/ExtnTaskData #//semantic/core/common/ExtnEventReplyData">
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="event" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"
+              defaultValueLiteral=""/>
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="destination" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"
+              defaultValueLiteral=""/>
+          <eStructuralFeatures xsi:type="ecore:EReference" name="destinationConfig"
+              eType="#//semantic/core/common/ExtnDestinationConfigData" containment="true"/>
+        </eClassifiers>
+        <eClassifiers xsi:type="ecore:EClass" name="ExtnReceiveTaskData" eSuperTypes="#//semantic/process/activities/ExtnTaskData">
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="event" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"
+              defaultValueLiteral=""/>
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="destination" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"
+              defaultValueLiteral=""/>
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="jobKey" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"
+              defaultValueLiteral=""/>
+        </eClassifiers>
+        <eClassifiers xsi:type="ecore:EClass" name="ExtnVRFImplData">
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="uri" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"
+              iD="true"/>
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="expression" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"
+              defaultValueLiteral="&quot;&quot;"/>
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="deployed" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+        </eClassifiers>
+        <eClassifiers xsi:type="ecore:EClass" name="ExtnManualTaskData" eSuperTypes="#//semantic/process/activities/ExtnTaskData"/>
+        <eClassifiers xsi:type="ecore:EEnum" name="WS_BINDING">
+          <eLiterals name="HTTP"/>
+          <eLiterals name="JMS" value="1"/>
+        </eClassifiers>
+        <eClassifiers xsi:type="ecore:EClass" name="ExtnJmsConfigData">
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="jndiProviderURL"
+              eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"
+              defaultValueLiteral="tibjmsnaming://localhost:7222" iD="true"/>
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="destinationName"
+              eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"
+              defaultValueLiteral=""/>
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="jndiConnectionFactoryName"
+              eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"
+              defaultValueLiteral="QueueConnectionFactory"/>
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="jndiProviderContextFactory"
+              eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"
+              defaultValueLiteral="com.tibco.tibjms.naming.TibjmsInitialContextFactory"/>
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="jndiUserName" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"
+              iD="true"/>
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="jndiPassword" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"
+              defaultValueLiteral=""/>
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="connectionUserName"
+              eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="connectionPassword"
+              eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="replyDestinationName"
+              eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="targetService" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="requestUri" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"
+              iD="true"/>
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="contentType" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"
+              defaultValueLiteral="&quot;&quot;"/>
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="contentEncoding"
+              eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="messageFormat" eType="#//semantic/process/activities/MESSAGE_FORMAT"/>
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="timeToLive" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//ELong"
+              defaultValueLiteral="0"/>
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="deliveryMode" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EInt"
+              defaultValueLiteral="2"/>
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="ackMode" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EInt"
+              defaultValueLiteral="1"/>
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="priority" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EInt"
+              defaultValueLiteral="4"/>
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="expiration" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//ELong"
+              defaultValueLiteral="0"/>
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="sslPassword" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+          <eStructuralFeatures xsi:type="ecore:EReference" name="jndiProps" upperBound="-1"
+              eType="#//semantic/process/activities/ExtnJmsContextParameter" containment="true"/>
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="isW3cStandard" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"
+              defaultValueLiteral="1"/>
+          <eStructuralFeatures xsi:type="ecore:EReference" name="jmsSslConfig" eType="#//semantic/process/activities/ExtnJmsConfigData"
+              containment="true"/>
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="useJmsSsl" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"
+              defaultValueLiteral="false"/>
+        </eClassifiers>
+        <eClassifiers xsi:type="ecore:EEnum" name="MESSAGE_FORMAT">
+          <eLiterals name="BYTES"/>
+          <eLiterals name="TEXT" value="1"/>
+        </eClassifiers>
+        <eClassifiers xsi:type="ecore:EClass" name="ExtnJmsContextParameter">
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="name" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"
+              defaultValueLiteral="" iD="true"/>
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="value" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"
+              defaultValueLiteral=""/>
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="type" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"
+              defaultValueLiteral="java.lang.String"/>
+        </eClassifiers>
+        <eClassifiers xsi:type="ecore:EClass" name="ExtnTimerTaskData">
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="event" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"
+              iD="true"/>
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="expression" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"
+              defaultValueLiteral=""/>
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="unit" eType="#//semantic/core/common/TIME_UNITS"/>
+        </eClassifiers>
+        <eClassifiers xsi:type="ecore:EClass" name="ExtnHttpSslConfig">
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="identity" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"
+              defaultValueLiteral="" iD="true"/>
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="certificateFolder"
+              eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"
+              defaultValueLiteral=""/>
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="strongCipherSuiteOnly"
+              eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"
+              defaultValueLiteral="1"/>
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="verifyHostName" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"
+              defaultValueLiteral="0"/>
+        </eClassifiers>
+        <eClassifiers xsi:type="ecore:EClass" name="ExtnJmsSslConfig" eSuperTypes="#//semantic/process/activities/ExtnJmsConfigData">
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="identity" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"
+              defaultValueLiteral="" iD="true"/>
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="certificateFolder"
+              eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"
+              defaultValueLiteral=""/>
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="strongCipherSuiteOnly"
+              eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"
+              defaultValueLiteral="1"/>
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="verifyHostName" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"
+              defaultValueLiteral="1"/>
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="trace" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"
+              defaultValueLiteral="1"/>
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="debugTrace" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"
+              defaultValueLiteral="1"/>
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="expectedHostname"
+              eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"
+              defaultValueLiteral=""/>
+        </eClassifiers>
+        <eClassifiers xsi:type="ecore:EClass" name="ExtnJavaTaskData" eSuperTypes="#//semantic/process/activities/ExtnTaskData">
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="javaFilePath" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="javaPackage" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+          <eStructuralFeatures xsi:type="ecore:EReference" name="methodArguments"
+              upperBound="-1" eType="#//semantic/core/common/ExtnSymbol" containment="true"/>
+          <eStructuralFeatures xsi:type="ecore:EReference" name="methodReturnType"
+              lowerBound="1" eType="#//semantic/core/common/ExtnSymbol" containment="true"/>
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="methodName" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+        </eClassifiers>
+      </eSubpackages>
+      <eSubpackages name="data" nsURI="http:///com/tibco/cep/bpmn/core/extension/semantic/process/data"
+          nsPrefix="extn.data">
+        <eClassifiers xsi:type="ecore:EClass" name="ExtnPropertyData">
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="propType" eType="#//semantic/core/common/PROPERTY_TYPES"/>
+        </eClassifiers>
+      </eSubpackages>
+    </eSubpackages>
+    <eSubpackages name="core" nsURI="http:///com/tibco/cep/bpmn/core/extension/semantic/core"
+        nsPrefix="extn.core">
+      <eSubpackages name="service" nsURI="http:///com/tibco/cep/bpmn/core/extension/semantic/core/service"
+          nsPrefix="extn.service">
+        <eClassifiers xsi:type="ecore:EClass" name="ExtnEndPointData" eSuperTypes="#//semantic/core/foundation/ExtnRootElementData"/>
+        <eClassifiers xsi:type="ecore:EClass" name="ExtnOperationData" eSuperTypes="#//semantic/core/foundation/ExtnRootElementData"/>
+        <eClassifiers xsi:type="ecore:EClass" name="ExtnInterfaceData" eSuperTypes="#//semantic/core/foundation/ExtnRootElementData"/>
+      </eSubpackages>
+      <eSubpackages name="common" nsURI="http:///com/tibco/cep/bpmn/core/extension/semantic/core/common"
+          nsPrefix="extn.common">
+        <eClassifiers xsi:type="ecore:EClass" name="ExtnFlowElementData" eSuperTypes="#//semantic/core/foundation/ExtnBaseElementData #//semantic/core/common/ExtnScopeContainerData">
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="toolId" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+        </eClassifiers>
+        <eClassifiers xsi:type="ecore:EClass" name="ExtnFlowNodeData" abstract="true"
+            eSuperTypes="#//semantic/core/common/ExtnFlowElementData">
+          <eStructuralFeatures xsi:type="ecore:EReference" name="nodePoint" eType="#//semantic/core/common/ExtnPoint"
+              containment="true"/>
+          <eStructuralFeatures xsi:type="ecore:EReference" name="labelPoint" eType="#//semantic/core/common/ExtnPoint"
+              containment="true"/>
+        </eClassifiers>
+        <eClassifiers xsi:type="ecore:EClass" name="ExtnFlowElementsContainerData"
+            abstract="true" eSuperTypes="#//semantic/core/foundation/ExtnBaseElementData">
+          <eStructuralFeatures xsi:type="ecore:EReference" name="properties" upperBound="-1"
+              eType="#//semantic/core/common/ExtnPropertyDefinitionData" containment="true"/>
+        </eClassifiers>
+        <eClassifiers xsi:type="ecore:EClass" name="ExtnSequenceFlowData" eSuperTypes="#//semantic/core/common/ExtnFlowElementData">
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="inline" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"
+              defaultValueLiteral="true"/>
+          <eStructuralFeatures xsi:type="ecore:EReference" name="bendPoints" upperBound="-1"
+              eType="#//semantic/core/common/ExtnPoint" containment="true"/>
+          <eStructuralFeatures xsi:type="ecore:EReference" name="startPoint" eType="#//semantic/core/common/ExtnPoint"
+              containment="true"/>
+          <eStructuralFeatures xsi:type="ecore:EReference" name="endPoint" eType="#//semantic/core/common/ExtnPoint"
+              containment="true"/>
+        </eClassifiers>
+        <eClassifiers xsi:type="ecore:EClass" name="ExtnCallableElementData" abstract="true"
+            eSuperTypes="#//semantic/core/foundation/ExtnRootElementData"/>
+        <eClassifiers xsi:type="ecore:EClass" name="ExtnScopeContainerData" abstract="true">
+          <eStructuralFeatures xsi:type="ecore:EReference" name="variables" upperBound="-1"
+              eType="#//semantic/core/common/ExtnVariable" containment="true"/>
+        </eClassifiers>
+        <eClassifiers xsi:type="ecore:EClass" name="ExtnSymbol">
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="idName" lowerBound="1"
+              eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="type" lowerBound="1"
+              eType="#//semantic/core/common/PROPERTY_TYPES"/>
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="entityPath" lowerBound="1"
+              eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="isArray" lowerBound="1"
+              eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"
+              defaultValueLiteral="false"/>
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="isPrimitive" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+        </eClassifiers>
+        <eClassifiers xsi:type="ecore:EClass" name="ExtnPropertyDefinitionData" eSuperTypes="#//semantic/core/foundation/ExtnBaseElementData">
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="name" lowerBound="1"
+              eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"
+              iD="true"/>
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="type" lowerBound="1"
+              eType="#//semantic/core/common/PROPERTY_TYPES"/>
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="conceptTypePath"
+              eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="array" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+        </eClassifiers>
+        <eClassifiers xsi:type="ecore:EEnum" name="PROPERTY_TYPES">
+          <eLiterals name="String"/>
+          <eLiterals name="Integer" value="1"/>
+          <eLiterals name="Long" value="2"/>
+          <eLiterals name="Double" value="3"/>
+          <eLiterals name="Boolean" value="4"/>
+          <eLiterals name="DateTime" value="5"/>
+          <eLiterals name="Concept" value="6"/>
+          <eLiterals name="ConceptReference" value="7"/>
+          <eLiterals name="Event" value="8"/>
+          <eLiterals name="Process" value="9" literal="Process"/>
+          <eLiterals name="Void" value="10" literal="Void"/>
+        </eClassifiers>
+        <eClassifiers xsi:type="ecore:EEnum" name="TIME_UNITS">
+          <eLiterals name="Milliseconds"/>
+          <eLiterals name="Seconds" value="1"/>
+          <eLiterals name="Minutes" value="2"/>
+          <eLiterals name="Hours" value="3"/>
+          <eLiterals name="Days" value="4"/>
+          <eLiterals name="WeekDays" value="5"/>
+          <eLiterals name="Weeks" value="6"/>
+          <eLiterals name="Months" value="7"/>
+          <eLiterals name="Years" value="8"/>
+        </eClassifiers>
+        <eClassifiers xsi:type="ecore:EEnum" name="VARIABLE_SCOPE">
+          <eLiterals name="NODE"/>
+          <eLiterals name="CONTAINER"/>
+        </eClassifiers>
+        <eClassifiers xsi:type="ecore:EClass" name="ExtnVariable" eSuperTypes="#//semantic/core/common/ExtnSymbol">
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="scope" lowerBound="1"
+              eType="#//semantic/core/common/VARIABLE_SCOPE" defaultValueLiteral=""/>
+        </eClassifiers>
+        <eClassifiers xsi:type="ecore:EClass" name="ExtnPoint">
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="x" lowerBound="1"
+              eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EDoubleObject"/>
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="y" lowerBound="1"
+              eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EDoubleObject"/>
+        </eClassifiers>
+        <eClassifiers xsi:type="ecore:EClass" name="ExtnEventReplyData">
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="replyEvent" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="consumeEvent" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="catchNodeId" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="triggerEvents" upperBound="-1"
+              eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="receiveTasks" upperBound="-1"
+              eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="anyEvent" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="anyReceiveTask" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+          <eStructuralFeatures xsi:type="ecore:EReference" name="messageStarters"
+              upperBound="-1" eType="#//semantic/core/common/ExtnMessageStarterData"
+              containment="true"/>
+        </eClassifiers>
+        <eClassifiers xsi:type="ecore:EClass" name="ExtnDestinationConfigData">
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="destinationName"
+              eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"
+              iD="true"/>
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="subject" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"
+              defaultValueLiteral=""/>
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="jmscorrelationid"
+              eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="queue" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBooleanObject"/>
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="jmsexpiration" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//ELongObject"
+              iD="true"/>
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="jmsdeliverymode"
+              eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EIntegerObject"
+              defaultValueLiteral="&quot;&quot;"/>
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="jmspriority" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EIntegerObject"/>
+        </eClassifiers>
+        <eClassifiers xsi:type="ecore:EClass" name="ExtnMessageStarterData">
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="messageStarter" lowerBound="1"
+              eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="replyTo" lowerBound="1"
+              eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"
+              defaultValueLiteral=""/>
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="consume" lowerBound="1"
+              eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"
+              defaultValueLiteral=""/>
+        </eClassifiers>
+        <eSubpackages name="events" nsURI="http:///com/tibco/cep/bpmn/core/extension/semantic/core/common/events"
+            nsPrefix="extn.events">
+          <eClassifiers xsi:type="ecore:EClass" name="ExtnEventData" abstract="true"
+              eSuperTypes="#//semantic/core/common/ExtnFlowElementData #//semantic/core/common/ExtnFlowNodeData">
+            <eStructuralFeatures xsi:type="ecore:EAttribute" name="event" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"
+                defaultValueLiteral=""/>
+            <eStructuralFeatures xsi:type="ecore:EAttribute" name="destination" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"
+                defaultValueLiteral=""/>
+            <eStructuralFeatures xsi:type="ecore:EReference" name="destinationConfig"
+                eType="#//semantic/core/common/ExtnDestinationConfigData" containment="true"/>
+          </eClassifiers>
+          <eClassifiers xsi:type="ecore:EClass" name="ExtnCatchEventData" eSuperTypes="#//semantic/core/common/events/ExtnEventData"/>
+          <eClassifiers xsi:type="ecore:EClass" name="ExtnThrowEventData" eSuperTypes="#//semantic/core/common/events/ExtnEventData"/>
+          <eClassifiers xsi:type="ecore:EClass" name="ExtnStartEventData" eSuperTypes="#//semantic/core/common/events/ExtnCatchEventData">
+            <eStructuralFeatures xsi:type="ecore:EAttribute" name="priority" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EInt"
+                defaultValueLiteral="5"/>
+          </eClassifiers>
+          <eClassifiers xsi:type="ecore:EClass" name="ExtnEndEventData" eSuperTypes="#//semantic/core/common/events/ExtnThrowEventData #//semantic/core/common/ExtnEventReplyData"/>
+          <eClassifiers xsi:type="ecore:EClass" name="ExtnBoundaryEventData" eSuperTypes="#//semantic/core/common/events/ExtnCatchEventData"/>
+        </eSubpackages>
+        <eSubpackages name="gateways" nsURI="http:///com/tibco/cep/bpmn/core/extension/semantic/core/common/gateways"
+            nsPrefix="extn.gateways">
+          <eClassifiers xsi:type="ecore:EClass" name="ExtnGatewayData" abstract="true"
+              eSuperTypes="#//semantic/core/common/ExtnFlowNodeData">
+            <eStructuralFeatures xsi:type="ecore:EAttribute" name="forkMappingOption"
+                eType="#//semantic/core/common/gateways/MAPPING_OPTION" defaultValueLiteral=""/>
+            <eStructuralFeatures xsi:type="ecore:EAttribute" name="joinMappingOption"
+                eType="#//semantic/core/common/gateways/MAPPING_OPTION" defaultValueLiteral=""/>
+          </eClassifiers>
+          <eClassifiers xsi:type="ecore:EClass" name="ExtnInclusiveGatewayData" eSuperTypes="#//semantic/core/common/gateways/ExtnGatewayData">
+            <eStructuralFeatures xsi:type="ecore:EAttribute" name="forkRulefunction"
+                eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"
+                defaultValueLiteral=""/>
+            <eStructuralFeatures xsi:type="ecore:EAttribute" name="joinRulefunction"
+                eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"
+                defaultValueLiteral=""/>
+            <eStructuralFeatures xsi:type="ecore:EAttribute" name="mergeExpression"
+                eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"
+                defaultValueLiteral=""/>
+          </eClassifiers>
+          <eClassifiers xsi:type="ecore:EClass" name="ExtnExclusiveGatewayData" eSuperTypes="#//semantic/core/common/gateways/ExtnGatewayData">
+            <eStructuralFeatures xsi:type="ecore:EReference" name="forkExpressions"
+                upperBound="-1" eType="#//semantic/core/common/gateways/ExtnGatewayExpressionData"
+                containment="true"/>
+            <eStructuralFeatures xsi:type="ecore:EReference" name="joinExpressions"
+                upperBound="-1" eType="#//semantic/core/common/gateways/ExtnGatewayExpressionData"
+                containment="true"/>
+          </eClassifiers>
+          <eClassifiers xsi:type="ecore:EClass" name="ExtnParallelGatewayData" eSuperTypes="#//semantic/core/common/gateways/ExtnGatewayData">
+            <eStructuralFeatures xsi:type="ecore:EReference" name="joinExpression"
+                eType="#//semantic/core/common/gateways/ExtnExpressionData" containment="true"/>
+            <eStructuralFeatures xsi:type="ecore:EReference" name="forkExpressions"
+                upperBound="-1" eType="#//semantic/core/common/gateways/ExtnGatewayExpressionData"
+                containment="true"/>
+            <eStructuralFeatures xsi:type="ecore:EAttribute" name="forkRulefunction"
+                eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"
+                defaultValueLiteral=""/>
+            <eStructuralFeatures xsi:type="ecore:EAttribute" name="joinRulefunction"
+                eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"
+                defaultValueLiteral=""/>
+            <eStructuralFeatures xsi:type="ecore:EAttribute" name="mergeExpression"
+                eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"
+                defaultValueLiteral=""/>
+          </eClassifiers>
+          <eClassifiers xsi:type="ecore:EClass" name="ExtnComplexGatewayData" eSuperTypes="#//semantic/core/common/gateways/ExtnGatewayData"/>
+          <eClassifiers xsi:type="ecore:EClass" name="ExtnEventBasedGatewayData" eSuperTypes="#//semantic/core/common/gateways/ExtnGatewayData"/>
+          <eClassifiers xsi:type="ecore:EClass" name="ExtnExpressionData">
+            <eStructuralFeatures xsi:type="ecore:EAttribute" name="transformation"
+                eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+          </eClassifiers>
+          <eClassifiers xsi:type="ecore:EClass" name="ExtnGatewayExpressionData" eSuperTypes="#//semantic/core/common/gateways/ExtnExpressionData">
+            <eStructuralFeatures xsi:type="ecore:EAttribute" name="sequenceFlowId"
+                eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+          </eClassifiers>
+          <eClassifiers xsi:type="ecore:EEnum" name="MAPPING_OPTION">
+            <eLiterals name="MAPPER"/>
+            <eLiterals name="COPY"/>
+          </eClassifiers>
+        </eSubpackages>
+        <eSubpackages name="artifacts" nsURI="http:///com/tibco/cep/bpmn/core/extension/semantic/core/common/artifacts"
+            nsPrefix="extn.artifacts">
+          <eClassifiers xsi:type="ecore:EClass" name="ExtnArtifactData" eSuperTypes="#//semantic/core/foundation/ExtnBaseElementData">
+            <eStructuralFeatures xsi:type="ecore:EReference" name="labelPoint" eType="#//semantic/core/common/ExtnPoint"
+                containment="true"/>
+          </eClassifiers>
+          <eClassifiers xsi:type="ecore:EClass" name="ExtnAssociationData" eSuperTypes="#//semantic/core/common/artifacts/ExtnArtifactData">
+            <eStructuralFeatures xsi:type="ecore:EReference" name="bendPoints" upperBound="-1"
+                eType="#//semantic/core/common/ExtnPoint" containment="true"/>
+            <eStructuralFeatures xsi:type="ecore:EReference" name="startPoint" eType="#//semantic/core/common/ExtnPoint"
+                containment="true"/>
+            <eStructuralFeatures xsi:type="ecore:EReference" name="endPoint" eType="#//semantic/core/common/ExtnPoint"
+                containment="true"/>
+          </eClassifiers>
+          <eClassifiers xsi:type="ecore:EClass" name="ExtnTextAnnotationData" eSuperTypes="#//semantic/core/common/artifacts/ExtnArtifactData">
+            <eStructuralFeatures xsi:type="ecore:EReference" name="nodePoint" eType="#//semantic/core/common/ExtnPoint"
+                containment="true"/>
+            <eStructuralFeatures xsi:type="ecore:EAttribute" name="length" lowerBound="1"
+                eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EDoubleObject"
+                defaultValueLiteral="60"/>
+            <eStructuralFeatures xsi:type="ecore:EAttribute" name="breadth" lowerBound="1"
+                eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EDoubleObject"
+                defaultValueLiteral="25"/>
+          </eClassifiers>
+        </eSubpackages>
+      </eSubpackages>
+      <eSubpackages name="foundation" nsURI="http:///com/tibco/cep/bpmn/core/extension/semantic/core/foundation"
+          nsPrefix="extn.foundation">
+        <eClassifiers xsi:type="ecore:EClass" name="ExtnBaseElementData" abstract="true">
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="label" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"
+              defaultValueLiteral=""/>
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="inputMapXslt" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"
+              defaultValueLiteral=""/>
+          <eStructuralFeatures xsi:type="ecore:EAttribute" name="outputMapXslt" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"
+              defaultValueLiteral=""/>
+        </eClassifiers>
+        <eClassifiers xsi:type="ecore:EClass" name="ExtnRootElementData" abstract="true"
+            eSuperTypes="#//semantic/core/foundation/ExtnBaseElementData"/>
+      </eSubpackages>
+    </eSubpackages>
+  </eSubpackages>
+</ecore:EPackage>

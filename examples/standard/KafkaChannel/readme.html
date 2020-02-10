@@ -1,0 +1,106 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>     Kafka Channel
+
+- TIBCO BusinessEvents&reg; Examples
+</title>
+<meta http-equiv="Content-type" content="text/html; charset=iso-8859-1" />
+<meta http-equiv="Content-Language" content="en-us" />
+<link rel="Shortcut Icon" href="../../_resources/icon.gif" type="image/gif" />
+<style type="text/css" media="all">@import "../../_resources/examples.css";</style>
+</head>
+<body onLoad="buildForms()">
+
+
+<h2>Purpose of This Example</h2>
+
+<p>The KafkaChannel example demonstrates how TIBCO BusinessEvents&reg; uses the Kafka channel to send and receive events using Apache Kafka a distributed publish-subscribe messaging system&#0174. You can examine the project in TIBCO BusinessEvents Studio to understand the setup, and refer to <i>TIBCO BusinessEvents Developer's Guide</i> for details on channel configuration. </p>
+
+<h2>About the project</h2>
+
+<p>The project has 2 agent classes - an Order producer inference class and an Order processor(consumer) inference class.</p>
+
+<p>The producer agent creates Order Events and sends it to a Kafka destination and hence to a Kafka topic every 5 seconds. While sending these Events it uses customerId as the key for Kafka message by configuring a RuleFunction for 'Send Message Key' configuration under destination config.</p>
+
+<p>The consumer agent declares the Kafka destination as input destination in agent config, it subscribes to the Kafka topic and receives Order Events. As part of processing orders it simply prints the Order and Order Items details.</p>
+
+<p>The 'customerSignup' destination uses 'KafkaJsonSerializer'. To view the JSON representation, change log level to debug in cdd file.</p>
+
+<h3>Running the project</h3>
+
+<ol>
+
+<li><p>Make sure that Kafka Server is running locally with broker url <code>localhost:9092</code>.</p>
+</li>
+
+<li><p>Open a command window. Start a consumer agent instance.</p>
+<pre class="commands">
+cd BE_HOME/examples/standard/KafkaChannel
+BE_HOME/bin/be-engine --propFile BE_HOME\bin\be-engine.tra -u consumer -c KafkaChannel/kafka.cdd KafkaChannel.ear
+</pre>
+
+<p>Note: Optionally you may start another consumer agent instance using above command and witness how Kafka ensures messages with same key are delivered to the same partition. In this case customer id is used as message key hence Order Events for a customer would always reach same agent. Incase there were previous uncommitted messages on any partition of the topic, the first consumer that starts will try to process all these messages since it would be the sole consumer at that point.</p>
+
+</li>
+
+
+<li><p>Open another command window and start a producer agent instance.</p>
+<pre class="commands">
+cd BE_HOME/examples/standard/KafkaChannel
+BE_HOME/bin/be-engine --propFile BE_HOME\bin\be-engine.tra -u producer -c KafkaChannel/kafka.cdd KafkaChannel.ear
+</pre>
+</li>
+
+</ol>
+
+<h3>Output</h3>
+
+<p>Once the engines are up and running the producer agent starts sending Order Events periodically and consumer agent processes these Events.</p>
+
+<h4>Sample output from the producer agent</h4>
+<pre class="commands">
+...
+2017 Dec 12 12:10:03:569 GMT +5 P Info [main] - [user] [inference-class_producer] #### Customer signup - Bob
+...
+2017 Dec 12 12:10:03:742 GMT +5 P Info [inference-class_producer.HiResTimer] - [user] [inference-class_producer] #### Order created: ORD1513060803574 Amount: $67.0 Customer:CUST_1
+2017 Dec 12 12:10:08:578 GMT +5 P Info [inference-class_producer.HiResTimer] - [user] [inference-class_producer] #### Order created: ORD1513060808574 Amount: $67.0 Customer:CUST_8
+2017 Dec 12 12:10:13:583 GMT +5 P Info [inference-class_producer.HiResTimer] - [user] [inference-class_producer] #### Order created: ORD1513060813575 Amount: $67.0 Customer:CUST_6
+2017 Dec 12 12:10:18:578 GMT +5 P Info [inference-class_producer.HiResTimer] - [user] [inference-class_producer] #### Order created: ORD1513060818574 Amount: $67.0 Customer:CUST_0
+...
+</pre>
+
+<h4>Sample output from consumer agent</h4>
+<pre class="commands">
+...
+2017 Dec 12 12:10:03:655 GMT +5 C Info [$default.be.mt$.Thread.1] - [user] [inference-class_consumer] #### Customer Signup-
+2017 Dec 12 12:10:03:656 GMT +5 C Info [$default.be.mt$.Thread.1] - [user] [inference-class_consumer] #### RefCode:REF_102
+2017 Dec 12 12:10:03:656 GMT +5 C Info [$default.be.mt$.Thread.1] - [user] [inference-class_consumer] #### Name:Bob
+2017 Dec 12 12:10:03:656 GMT +5 C Info [$default.be.mt$.Thread.1] - [user] [inference-class_consumer] #### Address:East Street, Chicago
+2017 Dec 12 12:10:03:784 GMT +5 C Info [$default.be.mt$.Thread.2] - [user] [inference-class_consumer] #### Order processed: ORD1513060803574 Amount: $67.0 Customer:CUST_1
+2017 Dec 12 12:10:03:784 GMT +5 C Info [$default.be.mt$.Thread.2] - [user] [inference-class_consumer] #### Pencil - $1.25 (X 20)
+2017 Dec 12 12:10:03:784 GMT +5 C Info [$default.be.mt$.Thread.2] - [user] [inference-class_consumer] #### NoteBook - $3.5 (X 12)
+2017 Dec 12 12:10:03:785 GMT +5 C Info [$default.be.mt$.Thread.2] - [user] [inference-class_consumer] 
+2017 Dec 12 12:10:08:580 GMT +5 C Info [$default.be.mt$.Thread.3] - [user] [inference-class_consumer] #### Order processed: ORD1513060808574 Amount: $67.0 Customer:CUST_8
+2017 Dec 12 12:10:08:580 GMT +5 C Info [$default.be.mt$.Thread.3] - [user] [inference-class_consumer] #### Pencil - $1.25 (X 20)
+2017 Dec 12 12:10:08:580 GMT +5 C Info [$default.be.mt$.Thread.3] - [user] [inference-class_consumer] #### NoteBook - $3.5 (X 12)
+2017 Dec 12 12:10:08:580 GMT +5 C Info [$default.be.mt$.Thread.3] - [user] [inference-class_consumer] 
+2017 Dec 12 12:10:13:586 GMT +5 C Info [$default.be.mt$.Thread.4] - [user] [inference-class_consumer] #### Order processed: ORD1513060813575 Amount: $67.0 Customer:CUST_6
+2017 Dec 12 12:10:13:587 GMT +5 C Info [$default.be.mt$.Thread.4] - [user] [inference-class_consumer] #### Pencil - $1.25 (X 20)
+2017 Dec 12 12:10:13:587 GMT +5 C Info [$default.be.mt$.Thread.4] - [user] [inference-class_consumer] #### NoteBook - $3.5 (X 12)
+2017 Dec 12 12:10:13:587 GMT +5 C Info [$default.be.mt$.Thread.4] - [user] [inference-class_consumer] 
+2017 Dec 12 12:10:18:580 GMT +5 C Info [$default.be.mt$.Thread.5] - [user] [inference-class_consumer] #### Order processed: ORD1513060818574 Amount: $67.0 Customer:CUST_0
+2017 Dec 12 12:10:18:580 GMT +5 C Info [$default.be.mt$.Thread.5] - [user] [inference-class_consumer] #### Pencil - $1.25 (X 20)
+2017 Dec 12 12:10:18:580 GMT +5 C Info [$default.be.mt$.Thread.5] - [user] [inference-class_consumer] #### NoteBook - $3.5 (X 12)
+2017 Dec 12 12:10:18:580 GMT +5 C Info [$default.be.mt$.Thread.5] - [user] [inference-class_consumer] 
+...
+</pre>
+
+<div class="footer">
+<p>TIBCO BusinessEvents&reg; 5.6<br />
+Copyright&copy; 2004-2019 TIBCO Software Inc. All rights reserved.</p>
+</div>
+</body>
+</html>

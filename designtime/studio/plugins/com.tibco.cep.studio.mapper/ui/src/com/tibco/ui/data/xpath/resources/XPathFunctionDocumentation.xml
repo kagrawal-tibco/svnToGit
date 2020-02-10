@@ -1,0 +1,1304 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<functions>
+
+   <!-- The version tag allows:
+     '1.0' for an XPath 1.0 function,
+     '2.0' for an XPath 2.0 function,
+     'tib' for a tibco extended function
+     'see' contains references to other entries.  The format is either 'category/entry' or 'entry' (if entry is in same category).
+     Note that this file differs from the 1.X and 2.X versions, which were entirely XML.  For localization, had to split out
+     portions into hideous properties file, sigh.
+   -->
+   <category key="general">
+
+      <entry key="paths">
+         <example>
+            <input>$Customer/Address/City</input>
+         </example>
+         <version>1.0</version>
+      </entry>
+      <entry key="variables">
+         <example>
+            <input>$myVariable</input>
+         </example>
+         <version>1.0</version>
+      </entry>
+      <entry key="evaluationcontext">
+         <example>
+            <input>.</input>
+         </example>
+         <version>1.0</version>
+      </entry>
+
+      <entry key="parent">
+         <example>
+            <input>../Doc</input>
+         </example>
+         <version>1.0</version>
+      </entry>
+
+      <entry key="parentheses">
+         <example>
+            <input>(a and b) and (c or d)</input>
+         </example>
+         <version>1.0</version>
+      </entry>
+
+       <entry key="trace">
+          <example>
+              <input>trace($v, 'the value of $v is:'))</input>
+              <returns>$v</returns>
+          </example>
+          <version>2.0</version>
+       </entry>
+
+       <entry key="root">
+          <example>
+              <input>root(node)</input>
+              <returns>root of the tree to which the node parameter belongs</returns>
+          </example>
+          <version>2.0</version>
+       </entry>
+
+       <entry key="generate-id">
+          <example>
+              <input>generate-id(node-set)</input>
+              <returns>a unique identifier for the node set</returns>
+          </example>
+          <version>2.0</version>
+       </entry>
+
+       <entry key="key">
+          <example>
+              <input>key("ns1:keyname", ".")</input>
+              <returns>nodes with the given key</returns>
+          </example>
+          <version>2.0</version>
+       </entry>
+
+      <entry key="all">
+         <example>
+            <input>$Order/*</input>
+         </example>
+         <version>1.0</version>
+      </entry>
+
+      <entry key="attributes">
+         <example>
+            <input>$Order/@Items</input>
+         </example>
+         <version>1.0</version>
+      </entry>
+
+      <entry key="otheraxes">
+         <version>1.0</version>
+      </entry>
+
+   </category>
+
+   <category key="string">
+      <example>
+         <input>"A constant string."</input>
+      </example>
+      <entry key="constant">
+         <example>
+            <input>'A constant string using single quotes.'</input>
+         </example>
+         <example>
+            <input>"A constant string using double quotes."</input>
+         </example>
+         <version>1.0</version>
+      </entry>
+
+      <entry name="concat">
+         <example>
+            <input>concat($Cust/firstName, ' ', $Cust/lastName)</input>
+            <returns>John Smith</returns>
+         </example>
+         <version>1.0</version>
+      </entry>
+
+      <entry name="concat-sequence">
+         <example>
+            <input>concat-sequence($Album/artists/firstName)</input>
+            <returns>JohnPaulGeorgeRingo</returns>
+         </example>
+         <example>
+            <input>concat-sequence($Album/artists/lastName)</input>
+            <returns>LennonMcCartneyHarrisonStarr</returns>
+         </example>
+         <version>tib</version>
+      </entry>
+
+      <entry name="concat-sequence-format">
+         <example>
+            <input>concat-sequence-format($Album/artists/lastName,', ')</input>
+            <returns>Lennon, McCartney, Harrison, Starr</returns>
+         </example>
+         <example>
+            <input>concat-sequence-format($Album/artists/optionalMiddleInitial,', ', true())</input>
+            <returns>C, J</returns>
+         </example>
+         <example>
+            <input>concat-sequence-format($Album/artists,', ')</input>
+            <returns>JohnLennon, PaulMcCartney, GeorgeCHarrison, RingoJStarr</returns>
+         </example>
+         <example>
+            <input>concat-sequence-format($Album/artists/*,', ')</input>
+            <returns>John, Lennon, Paul, McCartney, George, C, Harrison, Ringo, J, Starr</returns>
+         </example>
+         <version>tib</version>
+      </entry>
+
+      <entry name="contains">
+         <example>
+            <input>contains($Order/Date,"1999")</input>
+            <returns>true if the node Date contains the string 1999, otherwise returns false.</returns>
+         </example>
+         <version>1.0</version>
+      </entry>
+
+      <entry name="index-of">
+         <example>
+            <input>index-of("alpha alpha","lpha")</input>
+            <returns>2</returns>
+         </example>
+         <example>
+            <input>index-of("alpha alpha","beta")</input>
+            <returns>-1</returns>
+         </example>
+
+         <version>tib</version>
+      </entry>
+
+      <entry name="last-index-of">
+         <example>
+            <input>last-index-of("alpha alpha","lpha")</input>
+            <returns>8</returns>
+         </example>
+         <example>
+            <input>last-index-of("alpha alpha","beta")</input>
+            <returns>-1</returns>
+         </example>
+
+         <version>tib</version>
+      </entry>
+
+      <entry name="left">
+         <example>
+            <input>left("12345",3)</input>
+            <returns>123</returns>
+         </example>
+         <version>tib</version>
+         <see>substring</see>
+      </entry>
+
+      <entry name="lower-case">
+         <example>
+            <input>lower-case("aBc123")</input>
+            <returns>abc123</returns>
+         </example>
+         <version>2.0</version>
+      </entry>
+
+      <entry name="pad">
+         <example>
+            <input>pad('Hello','7','X')</input>
+            <returns>HelloXX</returns>
+         </example>
+         <example>
+            <input>pad('Hello','3')</input>
+            <returns>Hello</returns>
+         </example>
+         <version>tib</version>
+      </entry>
+
+      <entry name="pad-and-limit">
+         <example>
+            <input>pad-and-limit('Hello','7','X')</input>
+            <returns>HelloXX</returns>
+         </example>
+         <example>
+            <input>pad-and-limit('Hello','3')</input>
+            <returns>(An error)</returns>
+         </example>
+         <version>tib</version>
+      </entry>
+
+      <entry name="pad-front">
+         <example>
+            <input>pad-front('Hello','7','Z')</input>
+            <returns>ZZHello</returns>
+         </example>
+         <example>
+            <input>pad-front('Hello','3')</input>
+            <returns>Hello</returns>
+         </example>
+         <version>tib</version>
+      </entry>
+
+      <entry name="render-xml">
+         <version>tib</version>
+      </entry>
+
+      <entry name="right">
+         <example>
+            <input>right("12345",3)</input>
+            <returns>345</returns>
+         </example>
+         <version>tib</version>
+         <see>substring</see>
+      </entry>
+
+      <entry name="starts-with">
+         <example>
+            <input>starts-with($Cust/FirstName,"Chris")</input>
+            <returns>true if the value of the node FirstName starts with the string "Chris",
+                    otherwise, returns false.</returns>
+         </example>
+         <version>1.0</version>
+      </entry>
+
+      <entry name="substring">
+         <example>
+            <input>substring("12345",2,3)</input>
+            <returns>234</returns>
+         </example>
+         <version>1.0</version>
+      </entry>
+
+      <entry name="substring-before">
+         <example>
+            <input>substring-before("1999/04/01","/")</input>
+            <returns>1999</returns>
+         </example>
+         <version>1.0</version>
+      </entry>
+
+      <entry name="substring-before-last">
+         <example>
+            <input>substring-before-last("1999/04/01","/")</input>
+            <returns>1999/04</returns>
+         </example>
+         <version>tib</version>
+      </entry>
+
+      <entry name="substring-after">
+         <example>
+            <input>substring-after("199/04/01","/")</input>
+            <returns>04/01</returns>
+         </example>
+         <version>1.0</version>
+      </entry>
+
+      <entry name="substring-after-last">
+         <example>
+            <input>substring-after-last("199/04/01","/")</input>
+            <returns>01</returns>
+         </example>
+         <version>tib</version>
+      </entry>
+
+      <entry name="string">
+         <example>
+            <input>string(1234)</input>
+            <returns>"1234"</returns>
+         </example>
+         <version>1.0</version>
+      </entry>
+
+      <entry name="string-length">
+         <example>
+            <input>string-length("Ohio")</input>
+            <returns>4</returns>
+         </example>
+         <version>1.0</version>
+      </entry>
+
+      <entry name="normalize-space">
+         <example>
+            <input>normalize-space("   Name    Address  ")</input>
+            <returns>Name Address</returns>
+         </example>
+         <version>1.0</version>
+      </entry>
+
+      <entry name="trim">
+         <example>
+            <input>trim("   Name   Address  ")</input>
+            <returns>Name   Address</returns>
+         </example>
+         <version>tib</version>
+      </entry>
+
+      <entry name="tokenize">
+         <example>
+            <input>count(tokenize("alpha beta gamma"))</input>
+            <returns>3</returns>
+         </example>
+         <example>
+            <input>concat("xyz",tokenize("alpha, beta, gamma",",")[2],"eol")</input>
+            <returns>xyz betaeol</returns>
+         </example>
+         <example>
+            <input>count("alpha,,,gamma",",")</input>
+            <returns>2</returns>
+         </example>
+         <version>tib</version>
+      </entry>
+
+      <entry name="tokenize-allow-empty">
+         <example>
+            <input>count(tokenize-allow-empty("alpha,,beta"))</input>
+            <returns>3</returns>
+         </example>
+         <version>tib</version>
+      </entry>
+
+      <entry name="translate">
+         <example>
+            <input>translate("bar", "abc", "ABC")</input>
+            <returns>BAr</returns>
+         </example>
+         <version>1.0</version>
+      </entry>
+
+      <entry name="upper-case">
+         <example>
+            <input>upper-case("aBc123")</input>
+            <returns>ABC123</returns>
+         </example>
+         <version>2.0</version>
+      </entry>
+
+   </category>
+
+    <category key="qname">
+        fn:expanded-QName($paramURI as xs:string?, $paramLocal as xs:string?) as xs:QName?
+
+        <entry name="expanded-QName">
+           <example>
+              <input>expanded-QName("http://www.example.com/example", "person"))</input>
+              <returns>QName with namespace URI = "http://www.example.com/example" and local name = "person"</returns>
+           </example>
+           <version>1.0</version>
+           <see>QName</see>
+        </entry>
+        <entry name="local-name-from-QName">
+           <example>
+              <input>local-name-from-QName(fn:QName("http://www.example.com/example", "person"))</input>
+              <returns>"person"</returns>
+           </example>
+           <version>2.0</version>
+        </entry>
+        <entry name="namespace-uri-from-QName">
+           <example>
+              <input>namespace-uri-from-QName(fn:QName("http://www.example.com/example", "person"))</input>
+              <returns>"http://www.example.com/example"</returns>
+           </example>
+           <version>2.0</version>
+        </entry>
+        <entry name="QName">
+           <example>
+              <input>QName("http://www.example.com/example", "ht:person")</input>
+              <returns>QName with namespace URI = "http://www.example.com/example", local name = "person" and prefix = "ht"</returns>
+           </example>
+           <version>2.0</version>
+        </entry>
+        <entry name="resolve-QName">
+           <example>
+              <input>resolve-QName("ns1:hello", $element)</input>
+              <returns>QName with local name "hello" that is in the namespace referenced by the "ns1" prefix, if $element has that namespace in scope</returns>
+           </example>
+           <version>2.0</version>
+        </entry>
+    </category>
+
+   <category key="logical">
+
+      <entry name="boolean">
+         <example>
+            <input>boolean("A string")</input>
+            <returns>true</returns>
+         </example>
+         <example>
+            <input>boolean($Order/Amt)</input>
+            <returns>true if the node Amt is not zero.</returns>
+         </example>
+         <example>
+            <input>boolean($Order/ItemLst)</input>
+            <returns>true if the node set ItemLst is not empty.</returns>
+         </example>
+         <version>1.0</version>
+      </entry>
+
+      <entry name="not">
+         <example>
+            <input>not($Order/Amt > 50)</input>
+            <returns>false if $Order/Amt is greater than 50, true if the order is less than 50.</returns>
+         </example>
+         <version>1.0</version>
+      </entry>
+
+      <entry name="xor">
+         <example>
+            <input>xor(true(), true())</input>
+            <returns>false</returns>
+         </example>
+         <example>
+            <input>xor(true(), false())</input>
+            <returns>true</returns>
+         </example>
+         <version>tib</version>
+      </entry>
+
+      <entry key="or">
+         <example>
+            <input>($Order/Qty > 3) or ($Order/Total > 500)</input>
+            <returns>
+               <code>true</code> if either the quantity is greater than
+                    3 or the order total is greater than 500.
+            </returns>
+         </example>
+         <version>1.0</version>
+      </entry>
+
+      <entry key="and">
+         <example>
+            <input>($Cust/Priority = "VIP") and ($Order/Total > 500)</input>
+            <returns>
+               <code>true</code> if both the customer's priority is
+                    equal to "VIP" and the order total is greater than 500.
+            </returns>
+         </example>
+         <version>1.0</version>
+      </entry>
+
+      <entry name="true">
+         <example>
+            <input>true()</input>
+            <returns>true</returns>
+         </example>
+         <version>1.0</version>
+      </entry>
+
+      <entry name="false">
+         <example>
+            <input>false()</input>
+            <returns>false</returns>
+         </example>
+         <version>1.0</version>
+      </entry>
+
+      <entry name="lang">
+         <example>
+            <input>lang("en")</input>
+            <returns>true if en is specified for xml:lang in the evaluation context.</returns>
+         </example>
+         <version>1.0</version>
+      </entry>
+
+   </category>
+
+   <category key="filter">
+      <entry key="byindex">
+         <example>
+            <input>$Order/Items[5]</input>
+            <returns>The fifth element in the
+               <code>$Order/Items</code> list.
+            </returns>
+         </example>
+         <version>1.0</version>
+      </entry>
+
+      <entry key="byboolean">
+         <example>
+            <input>$Order/Items[Amt > 10]</input>
+            <returns>All items in the
+               <code>$Order/Items</code> list whose
+               <code>Amt</code> is greater than 10.
+            </returns>
+         </example>
+         <version>1.0</version>
+      </entry>
+
+   </category>
+
+   <category key="set">
+      <entry name="count">
+         <example>
+            <input>count($Order/Items)</input>
+            <returns>5</returns>
+         </example>
+         <version>1.0</version>
+      </entry>
+
+      <entry name="current">
+         <example>
+            <input>current()</input>
+         </example>
+         <example>
+            <input>node[current()/key=akey]</input>
+         </example>
+         <version>1.0</version>
+      </entry>
+
+      <entry name="empty">
+         <example>
+            <input>empty($Item/middleName)</input>
+            <returns>true</returns>
+         </example>
+
+         <version>2.0</version>
+      </entry>
+
+      <entry name="exists">
+         <example>
+            <input>exists($Item/middleName)</input>
+            <returns>false</returns>
+         </example>
+         <version>2.0</version>
+         <see>conditionsiteration/if</see>
+      </entry>
+
+      <entry name="if-absent">
+         <example>
+            <input>if-absent("$Item/middleName,'Rufus')</input>
+            <returns>
+               <code>Rufus</code> if there is no middle name, otherwise the middle name
+            </returns>
+         </example>
+         <version>tib</version>
+         <see>conditionsiteration/if</see>
+      </entry>
+
+      <entry name="position">
+         <example>
+            <input>$Items[position]</input>
+            <returns> The position of the current element in the $Items repeating element. </returns>
+         </example>
+
+         <example>
+            <input>$Items[position()>1]</input>
+            <returns>All elements of $Items after the first element.</returns>
+         </example>
+         <version>1.0</version>
+      </entry>
+
+      <entry name="last">
+         <example>
+            <input>$Items[last()]</input>
+            <returns>The last element of $Items.</returns>
+         </example>
+         <example>
+            <input>$Order/Items[last()-1]</input>
+            <returns>The second to last item in the
+               <code>$Order/Items</code> repeating element.
+            </returns>
+         </example>
+         <version>1.0</version>
+      </entry>
+
+      <entry key="union">
+         <example>
+            <input>$Orders | $Shipments </input>
+         </example>
+         <version>1.0</version>
+      </entry>
+
+      <entry name="local-name">
+         <example>
+            <input>local-name(myValue)="Auto"</input>
+         </example>
+         <version>1.0</version>
+      </entry>
+
+      <entry name="namespace-uri">
+         <example>
+            <input>starts-with(namespace-uri(myValue),"http://www.w3.org")</input>
+         </example>
+         <version>1.0</version>
+      </entry>
+
+      <entry name="name">
+         <example>
+            <input>local-name(myValue)="xyz:Auto"</input>
+         </example>
+         <version>1.0</version>
+      </entry>
+
+      <entry name="id">
+         <example>
+            <input>id($Order/Items/Amt)</input>
+         </example>
+         <version>1.0</version>
+      </entry>
+
+   </category>
+
+   <category key="comparison">
+      <entry key="compare">
+          <example>
+             <input>compare('abc', 'abc')</input>
+              <returns>0</returns>
+          </example>
+          <version>2.0</version>
+      </entry>
+      <entry key="equals">
+         <example>
+            <input>$Cust/Priority="VIP"</input>
+         </example>
+         <version>1.0</version>
+      </entry>
+
+      <entry key="notequals">
+         <example>
+            <input>$Order/Qty != 0</input>
+         </example>
+         <version>1.0</version>
+      </entry>
+
+      <entry key="greaterthan">
+         <example>
+            <input>$Order/Total &amp;gt; 500</input>
+         </example>
+         <version>1.0</version>
+      </entry>
+
+      <entry key="lessthan">
+         <example>
+            <input>$Order/Total &amp;lt; 10000</input>
+         </example>
+         <version>1.0</version>
+      </entry>
+
+      <entry key="greaterthanequals">
+         <example>
+            <input>$Order/Total &amp;gt;= 500</input>
+         </example>
+         <version>1.0</version>
+      </entry>
+
+      <entry key="lessthanequals">
+         <example>
+            <input>$Order/Total &amp;lt;= 10000</input>
+         </example>
+         <version>1.0</version>
+      </entry>
+
+   </category>
+
+   <category key="number">
+      <example>
+         <input>3.14159</input>
+      </example>
+
+      <entry key="constant">
+         <example>
+            <input>1234.567</input>
+         </example>
+         <version>1.0</version>
+      </entry>
+
+      <entry key="addition">
+         <example>
+            <input>5 + 2</input>
+            <returns>7</returns>
+         </example>
+         <version>1.0</version>
+      </entry>
+
+      <entry key="subtraction">
+         <example>
+            <input>$Item/Quantity - 5</input>
+            <returns>The result of subtracting 5 from the data stored in the node
+               <code>$Item/Quantity</code>
+            </returns>
+         </example>
+         <version>1.0</version>
+      </entry>
+
+      <entry key="multiplication">
+         <example>
+            <input>5 * 2</input>
+            <returns>10</returns>
+         </example>
+         <version>1.0</version>
+      </entry>
+
+      <entry key="division">
+         <example>
+            <input>5 div 2</input>
+            <returns>2.5</returns>
+         </example>
+         <version>1.0</version>
+      </entry>
+
+      <entry key="modulardivision">
+         <example>
+            <input>5 mod 2</input>
+            <returns>1</returns>
+         </example>
+         <version>1.0</version>
+      </entry>
+
+      <entry key="abs">
+         <example>
+            <input>abs(-10.5)</input>
+            <returns>10.5</returns>
+         </example>
+         <version>2.0</version>
+      </entry>
+
+       <entry key="negative">
+          <example>
+             <input>- $Order/Quantity</input>
+             <returns>The negative of the value of the
+                <code>$Order/Quantity</code> data item.
+             </returns>
+          </example>
+          <version>1.0</version>
+       </entry>
+      <entry name="avg">
+         <example>
+            <input>avg($Order/Items/Amt)</input>
+            <returns>The average the values for the
+               <code>Amt</code> node in the repeating element
+               <code>Items</code>.
+            </returns>
+         </example>
+         <version>2.0</version>
+      </entry>
+
+      <entry name="number">
+         <example>
+            <input>number(substring-before($Customer/Street,' '))</input>
+            <returns>The street address number stored in the
+               <code>$Customer/Street</code> node.
+            </returns>
+         </example>
+         <version>1.0</version>
+      </entry>
+
+      <entry name="min">
+         <example>
+            <input>min($Order/Items/Amt)</input>
+            <returns>The minimum of the values for the
+               <code>Amt</code> node in the repeating element
+               <code>Items</code>.
+            </returns>
+         </example>
+         <version>2.0</version>
+      </entry>
+
+      <entry name="max">
+         <example>
+            <input>max($Order/Items/Amt)</input>
+            <returns>The maximum of the values for the
+               <code>Amt</code> node in the repeating element
+               <code>Items</code>.
+            </returns>
+         </example>
+         <version>2.0</version>
+      </entry>
+
+      <entry name="sum">
+         <example>
+            <input>sum($Order/Items/Amt)</input>
+            <returns>The sum of the values for the
+               <code>Amt</code> node in the repeating element
+               <code>Items</code>.
+            </returns>
+         </example>
+         <version>1.0</version>
+
+         <see>conditionsiteration/for</see>
+      </entry>
+
+      <entry name="floor">
+         <example>
+            <input>floor(5.876)</input>
+            <returns>5</returns>
+         </example>
+         <version>1.0</version>
+      </entry>
+
+      <entry name="ceiling">
+         <example>
+            <input>ceiling(5.876)</input>
+            <returns>6</returns>
+         </example>
+         <version>1.0</version>
+      </entry>
+
+      <entry name="round">
+         <example>
+            <input>round(5.5)</input>
+            <returns>6</returns>
+         </example>
+         <version>1.0</version>
+      </entry>
+
+      <entry name="round-fraction">
+         <example>
+            <input>round-fraction(5.53001,2)</input>
+            <returns>5.53</returns>
+         </example>
+         <example>
+            <input>round-fraction(5.555,2)</input>
+            <returns>5.56</returns>
+         </example>
+         <example>
+            <input>round-fraction(-1.505E3,1)</input>
+            <returns>-1.5</returns>
+         </example>
+         <version>tib</version>
+      </entry>
+
+      <entry name="string-round-fraction">
+         <example>
+            <input>string-round-fraction(5.53001,2)</input>
+            <returns>5.53</returns>
+         </example>
+         <example>
+            <input>string-round-fraction(5,2)</input>
+            <returns>5.00</returns>
+         </example>
+
+         <version>tib</version>
+      </entry>
+
+   </category>
+
+   <category key="binary">
+      <example>
+         <input>'010203'</input>
+         <returns>A hex binary representation of three bytes: 1,2,3</returns>
+      </example>
+
+      <entry key="constant">
+         <example>
+            <input>'010203'</input>
+            <returns>A hex binary representation of three bytes: 1,2,3</returns>
+         </example>
+         <version>1.0</version>
+      </entry>
+
+      <entry name="base64-to-string">
+         <example>
+            <input>base64-to-string('SGVsbG8gV29ybGQ=')</input>
+            <returns>Hello World</returns>
+         </example>
+         <version>tib</version>
+      </entry>
+
+      <entry name="base64-to-hex">
+         <example>
+            <input>base64-to-hex('SGVsbG8gV29ybGQ=')</input>
+            <returns>48656C6C6F20576F726C64</returns>
+         </example>
+         <version>tib</version>
+      </entry>
+
+      <entry name="base-length">
+         <example>
+            <input>base64-length('SGVsbG8gV29ybGQ=')</input>
+            <returns>11</returns>
+         </example>
+         <version>tib</version>
+      </entry>
+
+      <entry name="hex-to-base64">
+         <example>
+            <input>hex-to-base64('48656C6C6F20576F726C64')</input>
+            <returns>SGVsbG8gV29ybGQ=</returns>
+         </example>
+         <version>tib</version>
+      </entry>
+
+      <entry name="hex-to-string">
+         <example>
+            <input>hex-to-string('48656C6C6F20576F726C64')</input>
+            <returns>Hello World</returns>
+         </example>
+         <version>tib</version>
+      </entry>
+
+      <entry name="hex-length">
+         <example>
+            <input>hex-length('48656C6C6F20576F726C64')</input>
+            <returns>11</returns>
+         </example>
+         <version>tib</version>
+      </entry>
+
+      <entry name="string-to-base64">
+         <example>
+            <input>string-to-base64('Hello World')</input>
+            <returns>SGVsbG8gV29ybGQ=</returns>
+         </example>
+         <version>tib</version>
+      </entry>
+
+      <entry name="string-to-hex">
+         <example>
+            <input>string-to-base64('Hello World')</input>
+            <returns>48656C6C6F20576F726C64</returns>
+         </example>
+         <version>tib</version>
+      </entry>
+
+   </category>
+
+   <category key="datetime">
+      <entry name="add-to-date">
+         <example>
+            <input>add-to-date('1999-05-31',0,0,4)</input>
+            <returns>1999-06-04</returns>
+         </example>
+         <example>
+            <input>add-to-date(parse-date('MMM dd yyyyy','Jul 05 1997'),1,0,-5)</input>
+            <returns>1998-06-30</returns>
+         </example>
+         <version>tib</version>
+      </entry>
+
+      <entry name="add-to-time">
+         <example>
+            <input>add-to-time('08:24:55',1,2,3)</input>
+            <returns>09:26:58</returns>
+         </example>
+         <example>
+            <input>add-to-time('08:24:55',-1,-2,-3)</input>
+            <returns>07:22:52</returns>
+         </example>
+         <version>tib</version>
+      </entry>
+
+      <entry name="add-to-dateTime">
+         <example>
+            <input>add-to-dateTime('1980-08-05T08:24:55',-1,-2,-3,1,2,3)</input>
+            <returns>1979-06-02T09:26:58</returns>
+         </example>
+         <version>tib</version>
+      </entry>
+
+      <entry name="compare-date">
+         <example>
+            <input>compare-date('1980-08-05', '1980-09-04')</input>
+            <returns>-1</returns>
+         </example>
+         <version>tib</version>
+      </entry>
+
+      <entry name="compare-dateTime">
+         <example>
+            <input>compare-dateTime('1980-08-05T08:24:55', '1980-09-04T08:24:55')</input>
+            <returns>-1</returns>
+         </example>
+         <version>tib</version>
+      </entry>
+
+      <entry name="compare-time">
+         <example>
+            <input>compare-time('08:24:55', '07:24:55')</input>
+            <returns>1</returns>
+         </example>
+         <version>tib</version>
+      </entry>
+
+      <entry name="create-dateTime">
+         <example>
+            <input>create-dateTime(2002, 12, 16, 16, 20, 10)</input>
+            <returns>2002-12-16T16:20:10</returns>
+         </example>
+         <version>tib</version>
+      </entry>
+
+      <entry name="create-dateTime-timezone">
+         <example>
+            <input>create-dateTime-timezone(2002, 12, 16, 16, 20, 10, 8, 30)</input>
+            <returns>2002-12-16T16:20:10+08:30</returns>
+         </example>
+         <version>tib</version>
+      </entry>
+
+      <entry name="create-date">
+         <example>
+            <input>create-dateTime(2002, 12, 16)</input>
+            <returns>2002-12-16</returns>
+         </example>
+         <version>tib</version>
+      </entry>
+
+      <entry name="create-time">
+         <example>
+            <input>create-time(16, 20, 10)</input>
+            <returns>16:20:10</returns>
+         </example>
+         <version>tib</version>
+      </entry>
+
+      <entry name="current-dateTime">
+         <example>
+            <input>current-dateTime()</input>
+            <returns>2002-12-16T16:20:10+04:00</returns>
+         </example>
+         <version>20</version>
+      </entry>
+
+      <entry name="current-dateTime-timezone">
+         <example>
+            <input>current-dateTime-timezone(8, 30)</input>
+            <returns>2002-12-16T16:20:10+08:30</returns>
+         </example>
+         <version>tib</version>
+      </entry>
+
+      <entry name="current-date">
+         <example>
+            <input>current-date()</input>
+            <returns>2002-12-16+04:00</returns>
+         </example>
+         <version>20</version>
+      </entry>
+
+      <entry name="format-dateTime">
+         <example>
+            <input>format-dateTime('EEE MMM dd HH:mm:ss zzz yyyy', '1970-09-12T04:10:33-08:00')</input>
+            <returns>Sat Sep 12 04:10:33 GMT-08:00 1970</returns>
+         </example>
+         <version>tib</version>
+      </entry>
+
+      <entry name="format-date">
+         <example>
+            <input>format-date('EEE MMM dd zzz yyyy', '1970-09-12-08:00')</input>
+            <returns>Sat Sep 12 GMT-08:00 1970</returns>
+         </example>
+         <version>tib</version>
+      </entry>
+
+      <entry name="format-time">
+         <example>
+            <input>format-time('HH mm ss', '04:10:33')</input>
+            <returns>04 10 33</returns>
+         </example>
+         <version>tib</version>
+      </entry>
+
+      <entry name="get-century-from-dateTime">
+         <example>
+            <input>get-century-from-dateTime('1999-05-31T13:20:00-05:00')</input>
+            <returns>19</returns>
+         </example>
+         <version>tib</version>
+      </entry>
+
+      <entry name="get-century-from-date">
+         <example>
+            <input>get-century-from-date('1999-05-31')</input>
+            <returns>19</returns>
+         </example>
+         <version>tib</version>
+      </entry>
+
+      <entry name="get-year-from-dateTime">
+         <example>
+            <input>get-year-from-dateTime('1999-05-31T13:20:00-05:00')</input>
+            <returns>1999</returns>
+         </example>
+         <version>tib</version>
+      </entry>
+
+      <entry name="get-year-from-date">
+         <example>
+            <input>get-year-from-date('1999-05-31')</input>
+            <returns>1999</returns>
+         </example>
+         <version>tib</version>
+      </entry>
+
+      <entry name="get-month-from-dateTime">
+         <example>
+            <input>get-month-from-dateTime('1999-05-31T13:20:00-05:00')</input>
+            <returns>5</returns>
+         </example>
+         <version>tib</version>
+      </entry>
+
+      <entry name="get-month-from-date">
+         <example>
+            <input>get-month-from-date('1999-05-31')</input>
+            <returns>5</returns>
+         </example>
+         <version>tib</version>
+      </entry>
+
+      <entry name="get-day-from-dateTime">
+         <example>
+            <input>get-day-from-dateTime('1999-05-31T13:20:00-05:00')</input>
+            <returns>31</returns>
+         </example>
+         <version>tib</version>
+      </entry>
+
+      <entry name="get-day-from-date">
+         <example>
+            <input>get-day-from-date('1999-05-31')</input>
+            <returns>31</returns>
+         </example>
+         <version>tib</version>
+      </entry>
+
+      <entry name="get-hours-from-dateTime">
+         <example>
+            <input>get-hours-from-dateTime('1999-05-31T13:20:00-05:00')</input>
+            <returns>13</returns>
+         </example>
+         <version>tib</version>
+      </entry>
+
+      <entry name="get-hours-from-time">
+         <example>
+            <input>get-hours-from-time('13:20:00-05:00')</input>
+            <returns>13</returns>
+         </example>
+         <version>tib</version>
+      </entry>
+
+      <entry name="get-minutes-from-dateTime">
+         <example>
+            <input>get-minutes-from-dateTime('1999-05-31T13:20:00-05:00')</input>
+            <returns>20</returns>
+         </example>
+         <version>tib</version>
+      </entry>
+
+      <entry name="get-minutes-from-time">
+         <example>
+            <input>get-minutes-from-time('13:20:00-05:00')</input>
+            <returns>20</returns>
+         </example>
+         <version>tib</version>
+      </entry>
+
+      <entry name="get-seconds-from-dateTime">
+         <example>
+            <input>get-seconds-from-dateTime('1999-05-31T13:20:05-05:00')</input>
+            <returns>5</returns>
+         </example>
+         <version>tib</version>
+      </entry>
+
+      <entry name="get-seconds-from-time">
+         <example>
+            <input>get-seconds-from-time('13:20:05-05:00')</input>
+            <returns>5</returns>
+         </example>
+         <version>tib</version>
+      </entry>
+
+      <entry name="get-timezone-from-dateTime">
+         <example>
+            <input>get-timezone-from-dateTime('1999-05-31T13:20:05-05:00')</input>
+            <returns>-05:00</returns>
+         </example>
+         <version>tib</version>
+      </entry>
+
+      <entry name="get-timezone-from-date">
+         <example>
+            <input>get-timezone-from-date('1999-05-31-05:00')</input>
+            <returns>-05:00</returns>
+         </example>
+         <version>tib</version>
+      </entry>
+
+      <entry name="get-timezone-from-time">
+         <example>
+            <input>get-timezone-from-time('13:20:05-05:00')</input>
+            <returns>-05:00</returns>
+         </example>
+         <version>tib</version>
+      </entry>
+
+      <entry name="parse-dateTime">
+         <example>
+            <input>parse-dateTime('EEE MMM dd HH:mm:ss yyyy', 'Sat Sep 12 04:10:33 1970')</input>
+            <returns>1970-09-12T04:10:33</returns>
+         </example>
+         <version>tib</version>
+      </entry>
+
+      <entry name="parse-date">
+         <example>
+            <input>parse-date('EEE MMM dd HH:mm:ss yyyy', 'Sat Sep 12 04:10:33 1970')</input>
+            <returns>1970-09-12</returns>
+         </example>
+         <version>tib</version>
+      </entry>
+
+      <entry name="parse-time">
+         <example>
+            <input>parse-time('EEE MMM dd HH:mm:ss yyyy', 'Sat Sep 12 04:10:33 1970')</input>
+            <returns>04:10:33</returns>
+         </example>
+         <version>tib</version>
+      </entry>
+
+      <entry name="translate-timezone">
+         <example>
+            <input>translate-timezone('2004-04-05T12:00:00Z', '-08:00')</input>
+            <returns>2004-04-05T05:00:00-07:00</returns>
+         </example>
+         <example>
+            <input>translate-timezone('2003-04-04T12:00:00Z', 'PST')</input>
+            <returns>2003-04-04T04:00:00-08:00</returns>
+         </example>
+         <version>tib</version>
+      </entry>
+
+      <entry name="timestamp">
+         <version>tib</version>
+      </entry>
+
+      <entry name="validate-dateTime">
+         <version>tib</version>
+         <example>
+            <input>validate-dateTime('EEE MMM dd HH:mm:ss yyyy', 'Sat Sep 12 04:10:33 1970')</input>
+            <returns>true</returns>
+         </example>
+      </entry>
+
+   </category>
+
+   <category key="conditionsiteration">
+      <entry key="if">
+         <example>
+            <input>if (time>500) then 'too long' else 'ok'</input>
+            <returns>too long  -- when time > 500</returns>
+         </example>
+
+         <version>2.0</version>
+         <see>set/if-absent</see>
+      </entry>
+
+      <entry key="for">
+         <example>
+            <input>sum(for $order in order-list return ($order/unit-price * $order/quantity))</input>
+            <returns>The sum of the product of unit-price and quantity for all orders</returns>
+         </example>
+         <example>
+            <input>sum(for $order in order-list[category='toy'] return ($order/unit-price * $order/quantity))</input>
+            <returns>The sum of the product of unit-price and quantity for all orders
+                    where the category is 'toy'.
+            </returns>
+         </example>
+         <version>2.0</version>
+      </entry>
+
+   </category>
+
+</functions>

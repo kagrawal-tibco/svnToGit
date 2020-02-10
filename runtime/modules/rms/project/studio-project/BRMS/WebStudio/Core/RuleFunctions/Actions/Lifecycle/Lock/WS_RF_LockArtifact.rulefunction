@@ -1,0 +1,77 @@
+/**
+ * @description Action (/ws/lockArtifact) RuleFunction to Lock artifact
+ */
+WebStudio.Core.Concepts.DataSources.WS_C_TemporaryReturnData rulefunction WebStudio.Core.RuleFunctions.Actions.Lifecycle.Lock.WS_RF_LockArtifact {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object servletRequest;
+		WebStudio.Security.Authn.Concepts.WS_C_LoggedInUser loggedInUser;
+		String contentType;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.Lifecycle.Lock.WS_RF_LockArtifact");
+		
+		String responseMessage = null;
+		String errorCode = null;
+		int recordCount = 1;
+		int responseStatus = 0;
+
+		WS_C_ResponseData responseData = Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/WS_C_ResponseData");
+						
+		if (!WS_RF_CheckHTTPMethod(servletRequest, "POST")) {
+			responseStatus = -1;
+			recordCount = 0;
+			errorCode = "ERR_5101";
+			responseMessage = "Invalid HTTP Method, expect method is [POST].";
+		} else {
+			String username = loggedInUser.username;
+			Log.log(LOGGER, "Debug", "Logged in user - %s", username);
+		
+			Object requestDataBytes = HTTP.Servlet.Request.getRequestContent(servletRequest);
+			//Check for content
+			String requestData = String.convertByteArrayToString(requestDataBytes, "UTF-8");
+			Log.log(LOGGER, "Debug", "Raw request data - %s", requestData);
+			//Convert to concept model
+			WS_C_LockRequest artifactLockRequest = null;
+			if (String.equals(contentType, System.getGlobalVariableAsString("WebStudio/CONTENT_TYPE/XML", "application/xml"))) {
+				artifactLockRequest = Instance.createTransientInstanceFromXML("/WebStudio/Core/Concepts/Request/Usecases/Lifecycle/Lock/WS_C_LockRequest", requestData);
+			} else {
+				artifactLockRequest = Instance.createTransientInstanceFromJSON("/WebStudio/Core/Concepts/Request/Usecases/Lifecycle/Lock/WS_C_LockRequest", requestData);
+			}
+			WS_C_LockRequestData artifactLockRequestData = Instance.PropertyAtom.getPropertyValue(artifactLockRequest.data);	
+			WS_C_ArtifactLockRequestProject lockProject = Instance.PropertyAtom.getPropertyValue(artifactLockRequestData.project);	
+
+			WS_C_ArtifactLockRequestDataItem[] artifactLockRequestItems = Instance.PropertyArray.toArrayContainedConcept(lockProject.artifactItem);
+			
+			String projectName = lockProject.name;
+			Log.log(LOGGER, "Debug", "Project Name %s", projectName);
+			
+			for (int loop = 0; loop < artifactLockRequestItems@length; loop++) {
+				String artifactPath = artifactLockRequestItems[loop].artifactPath;
+				String artifactExtn = artifactLockRequestItems[loop].fileExtension;
+				String artifactType = artifactLockRequestItems[loop].artifactType;
+				Log.log(LOGGER, "Debug", "Artifact Path  - [%s], Artifact Extn %s", artifactPath, artifactExtn);
+				if (WS_RF_IsManagedArtifactType(artifactExtn, null)) {
+					WS_C_ArtifactLockResponse artifactLockResponse 
+							= WebStudio.Core.RuleFunctions.Actions.Lifecycle.Lock.WS_RF_GetMasterArtifactLock(projectName, artifactPath, artifactType, artifactExtn, username);
+	
+					WS_C_AbstractDataSourceRecord artifactLockDSRecord = 
+						Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/Records/WS_C_ArtifactLockDataSourceRecord");
+					WS_C_ArtifactLockDataSourceRecord artifactLockDataSourceRecord = artifactLockDSRecord;
+					Instance.PropertyAtom.setContainedConcept(artifactLockDataSourceRecord.artifactLockResponse, artifactLockResponse, 1L);
+	
+					Instance.PropertyArray.appendContainedConcept(responseData.record, artifactLockDSRecord, 1L);
+					
+					if (artifactLockResponse.lockingEnabled && artifactLockResponse instanceof WS_C_AcquireArtifactLockResponse) {
+						WS_C_AcquireArtifactLockResponse acqArtifactLockResponse = artifactLockResponse;
+						if (acqArtifactLockResponse.lockAcquired) WS_RF_AddAuditTrailEntry(username, projectName, artifactPath, artifactType, "LOCK", null);
+					}
+				}	
+			}										
+		}
+
+		return WS_RF_CreateTemporaryReturnData(responseStatus, recordCount, errorCode, responseMessage, responseData);
+	}
+}

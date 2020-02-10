@@ -1,0 +1,57 @@
+/**
+ * @description Parsing value by type 
+ */
+boolean rulefunction WebStudio.Core.RuleFunctions.Utils.RT.WS_RF_ValidateValueByType {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String type;
+		String value;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.RT.WS_RF_ValidateValueByType");
+		Log.log(LOGGER,"debug","Type : [%s] Value : [%s]",type,value);
+		boolean validValue = false;
+		try {
+			if (value != null) {
+					if (String.equals("int",type)) {
+					Number.intValue(value,10);
+					validValue = true;
+				} else if (String.equals("long",type)) {
+					long l = Number.longValue(value,10);
+					validValue = true;
+				} else if (String.equals("double",type)) {
+					Number.doubleValue(value);
+					validValue = true;
+				} else if (String.equals("boolean",type)) {
+					if (String.equals(value,"true") || String.equals(value,"false")) {
+						validValue = true;
+					} else {
+						validValue = false;
+					}
+				} else if (String.equals("String",type)) {
+					if (String.equals("null",value) || String.equals("!null",value) || value != null) {
+						validValue = true;
+					}
+				} else if (String.equals("DateTime",type)) {
+					if (String.equals("null",value) || String.equals("!null",value)) {
+						validValue = true;
+					} else {
+						DateTime.parseString(value,"yyyy-MM-dd'T'HH:mm:ss.SSSZ");
+						validValue = true;
+					}
+				} else if ((String.indexOfString(type,0,"concept") != -1 || String.indexOfString(type,0,"event") != -1 || String.indexOfString(type,0,"/") != -1) && (String.equals("null",value) || String.equals("!null",value))) {
+					validValue = true;
+				}
+			} else {
+				// no data entered nothing to validate
+				// this case will be covered under bindings not defined
+				validValue = true;
+			}
+		} catch(Exception e) {
+			validValue = false;
+		}
+		return validValue;
+	}
+}

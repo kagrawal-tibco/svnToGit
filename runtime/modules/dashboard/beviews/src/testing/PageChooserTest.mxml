@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Application
+	xmlns:mx="http://www.adobe.com/2006/mxml"
+	xmlns:controls="com.tibco.be.views.core.ui.controls.*"
+	layout="vertical"
+	backgroundColor="white"
+	creationComplete="updatePageChooser()"
+>
+	<mx:Script>
+		<![CDATA[
+			private function updatePageChooser():void{
+				pageChooser.itemDescriptor = descriptorInput.text;
+				pageChooser.itemsPerPage = parseInt(itemsPerPage.text);
+				pageChooser.totalItemCount = parseInt(totalItemCount.text);
+				if(minimalState.selected){ pageChooser.currentState = PageChooser.MINIMAL_CONTROLS; }
+				else{ pageChooser.currentState = ""; }
+			}
+		]]>
+	</mx:Script>
+	<controls:PageChooser id="pageChooser" />
+	<mx:Spacer height="200" />
+	<mx:HBox verticalAlign="middle">
+		<mx:Label text="descriptor" /><mx:TextInput id="descriptorInput" width="50" height="20" text="rows" />
+		<mx:Label text="itemsPerPage" /><mx:TextInput id="itemsPerPage" width="30" height="20" text="5"  />
+		<mx:Label text="totalItemCount" /><mx:TextInput id="totalItemCount" width="30" height="20" text="22" />
+		<mx:CheckBox id="minimalState" label="Minimize" />
+		<mx:Button label="Set" click="updatePageChooser()" />
+	</mx:HBox>
+</mx:Application>

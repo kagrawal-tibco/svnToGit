@@ -1,0 +1,31 @@
+/**
+ * @description 
+ * @author bmane-lt
+ */
+rule Rules.CreateItem {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		
+		Events.CreateItems createitems;
+	}
+	when {
+		
+	}
+	then {
+		Database.setCurrentConnection("/SharedResources/DBConceptsConnection");
+		Database.beginTransaction();
+		System.debugOut("Items created and Inserted");
+		for(int i=0;i<createitems.number;i++)
+		{
+			DatabaseConcepts.customer_order.ITEMS items=Instance.createInstance("xslt://{{/DatabaseConcepts/customer_order/ITEMS}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"2.0\" exclude-result-prefixes=\"xsl xsd\"><xsl:output method=\"xml\"/><xsl:param name=\"i\"/><xsl:template name=\"Function\" match=\"/\"><createObject><object><ITEM_ID><xsl:value-of select=\"concat(&quot;ITEM&quot;,xsd:string($i))\"/></ITEM_ID><ITEM_PRICE><xsl:value-of select=\"100+$i\"/></ITEM_PRICE></object></createObject></xsl:template></xsl:stylesheet>");
+		
+			System.debugOut("  "+items.ITEM_ID+"  "+items.ITEM_PRICE);
+			Database.insert(items);
+		}
+		Database.commit();
+		Database.unsetConnection();
+	}
+}

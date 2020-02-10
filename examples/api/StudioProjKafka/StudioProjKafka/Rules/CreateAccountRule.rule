@@ -1,0 +1,18 @@
+rule Rules.CreateAccountRule {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Events.CreateAccount createAccount;
+	}
+	when {
+		
+	}
+	then {
+		System.debugOut("########### Received a CreateAccount Event #########");
+		System.debugOut("Event Payload : " + createAccount@payload);
+		System.debugOut("Account Type :" + createAccount.accountType);
+		Event.consumeEvent(createAccount);
+	}
+}

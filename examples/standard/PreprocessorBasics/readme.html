@@ -1,0 +1,142 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>     Preprocessor: Basics
+
+- TIBCO BusinessEvents&reg; Examples
+</title>
+<meta http-equiv="Content-type" content="text/html; charset=iso-8859-1" />
+<meta http-equiv="Content-Language" content="en-us" />
+<link rel="Shortcut Icon" href="../../_resources/icon.gif" type="image/gif" />
+<style type="text/css" media="all">@import "../../_resources/examples.css";</style>
+<script type="text/javascript" src="../../_resources/examples.js" /></script>
+<script type="text/javascript">
+function buildForms() {
+ var form;
+
+
+ SendEventForm.setServer("http://localhost:8114");
+
+ form = SendEventForm.get("f1");
+ form.setDestinationPath("/Channels/Http/D1");
+ form.setEventPath("/Events/TextEvent");
+ form.addProperty("Text", "text1");
+ form.build();
+
+ form = SendEventForm.get("f2");
+ form.setDestinationPath("/Channels/Http/D2");
+ form.setEventPath("/Events/TextEvent");
+ form.addProperty("Text", "text2");
+ form.build();
+
+ form = SendEventForm.get("f3");
+ form.setDestinationPath("/Channels/Http/D3");
+ form.setEventPath("/Events/TextEvent");
+ form.addProperty("Text", "text3");
+ form.build();
+
+ form = SendEventForm.get("f4");
+ form.setDestinationPath("/Channels/Http/D4");
+ form.setEventPath("/Events/TextEvent");
+ form.addProperty("Text", "text4");
+ form.build();
+
+}
+</script>
+</head>
+<body onLoad="buildForms()">
+
+
+<h1>Preprocessor: Basics</h1>
+
+
+<h2>Purpose of This Example</h2>
+
+<p>The <em>Preprocessor: Basics</em> example demonstrates some simple
+configurations using <em>preprocessor functions</em>.</p>
+
+<h2>How it Works</h2>
+
+<p>Four HTTP destinations, <code>Channels.http.D1</code> to <code>Channels.http.D4</code>,
+receive HTTP requests and transform them into events.</p>
+
+<p>In the CDD, each destination is assigned a different preprocessor setting:</p>
+<ul>
+<li><code>D1</code>: no preprocessor.</li>
+<li><code>D2</code>: <code>RuleFunctions.Preprocessor_A</code>.</li>
+<li><code>D3</code>: <code>RuleFunctions.Preprocessor_B</code>.</li>
+<li><code>D4</code>: <code>RuleFunctions.Preprocessor_B</code>.</li>
+</ul>
+
+<p>The function <code>RuleFunctions.Preprocessor_A</code> displays a message.</p>
+
+<p>The function <code>RuleFunctions.Preprocessor_B</code> displays a message and consumes the event.</p>
+
+<p>When a <code>Events.TextEvent</code> event appears on a destination,
+it first goes through the destination's preprocessor, if any.</p>
+
+<p>Then, if there was no preprocessor on the destination,
+or if the destination's preprocessor did not consume the event,
+the event starts an RTC and triggers the rule <code>Rules.PrintRule</code>. This rule displays a message and consumes the event.</p>
+
+<h2>How to Run the Example</h2>
+<ol>
+
+<li>
+<p>Open a command window and at the command prompt,
+start the TIBCO BusinessEvents&reg; engine using the following command.
+</p>
+
+<pre class="commands">
+cd <i>BE_HOME</i>/examples/standard/PreprocessorBasics
+<i>BE_HOME</i>/bin/be-engine --propFile <i>BE_HOME</i>/bin/be-engine.tra -u default -c PreprocessorBasics/default.cdd PreprocessorBasics.ear
+</pre>
+
+<p>Adapt the command as needed,
+for example if you have customized the example project,
+or are running it from a different directory.</p>
+</li>
+
+
+<li>
+<p>Send an <code>Events.TextEvent</code> event to D1:</p>
+<p><form id="f1"></form>
+In the command window you see a message like this:</p>
+<pre class="logs">PrintRule received TextEvent: text1
+</pre>
+</li>
+
+<li>
+<p>Send an <code>Events.TextEvent</code> event to D2:</p>
+<p><form id="f2"></form>
+In the command window you see a message like this:</p>
+<pre class="logs">Preprocessor_A received TextEvent: text2
+PrintRule received TextEvent: text2
+</pre>
+
+<li>
+<p>Send an <code>Events.TextEvent</code> event to D3:</p>
+<p><form id="f3"></form>
+In the command window you see a message like this:</p>
+<pre class="logs">Preprocessor_B received TextEvent: text3
+</pre>
+
+<li>
+<p>Send an <code>Events.TextEvent</code> event to D4:</p>
+<p><form id="f4"></form>
+In the command window you see a message like this:</p>
+<pre class="logs">Preprocessor_B received TextEvent: text4
+</pre>
+</li>
+
+</ol>
+
+
+<div class="footer">
+<p>TIBCO BusinessEvents&reg; 5.6<br />
+Copyright&copy; 2004-2019 TIBCO Software Inc. All rights reserved.</p>
+</div>
+</body>
+</html>

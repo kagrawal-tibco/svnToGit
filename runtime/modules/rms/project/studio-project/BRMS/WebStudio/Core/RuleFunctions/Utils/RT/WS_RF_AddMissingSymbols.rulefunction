@@ -1,0 +1,50 @@
+/**
+ * @description 
+ */
+void rulefunction WebStudio.Core.RuleFunctions.Utils.RT.WS_RF_AddMissingSymbols {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String artifactPath;
+		String artifactType;
+		String projectName;
+		String[] roles;
+		String userName;	
+		String scsRootURL;
+		String scsIntegrationType;
+		WebStudio.Core.Concepts.RuleTemplateInstance.Builder.WS_C_ComplexSymbolInfo symbolInfo;
+	}
+	body {		
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.RT.WS_RF_AddMissingSymbols");
+		
+		boolean addSymbol = false;
+		String entityName = null, entityType = null;
+		
+		WS_C_AbstractSymbolInfo[] childSymbols = Instance.PropertyArray.toArrayConcept(symbolInfo.symbolInfo);
+		
+		Log.log(LOGGER, "Debug", "Total Symbols to check [%s]", childSymbols@length);
+		if (childSymbols != null && childSymbols@length > 0) {
+			Object entityPropertiesObj = WS_RF_FetchDTArgumentProperties(projectName, artifactPath, artifactType, artifactType, userName, roles, false);
+			Object[] entityProperties = Collections.toArray(entityPropertiesObj);
+			for (int index = 0; index < entityProperties@length; index++) {
+				entityName = WS.Decision.TableModel.Arguments.getPropertyName(entityProperties[index]);
+				entityType = WS.Decision.TableModel.Arguments.getPropertyType(entityProperties[index]);
+				
+				addSymbol = true;
+				for (int index2 = 0; index2<childSymbols@length; index2++) {
+					if (String.equals(childSymbols[index2].symbolAlias, entityName)) {											
+						addSymbol = false;
+						break;
+					}
+				}
+				
+				if (addSymbol) {
+					Log.log(LOGGER, "Debug", "Symbol[%s] of type[%s] not found, need to add.", entityName, entityType);
+					WS_C_AbstractSymbolInfo symbolToAdd = WS_RF_CreateBuilderSymbolToUpdate(entityName, entityType, projectName, entityPropertiesObj, userName, roles, scsRootURL, scsIntegrationType);
+					Instance.PropertyArray.appendConceptReference(symbolInfo.symbolInfo, symbolToAdd, 1L);
+				}
+			}
+		}
+	}
+}

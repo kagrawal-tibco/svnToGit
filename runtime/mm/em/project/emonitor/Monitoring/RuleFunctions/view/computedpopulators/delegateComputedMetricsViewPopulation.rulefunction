@@ -1,0 +1,20 @@
+/**
+ * @description 
+ */
+void rulefunction Monitoring.RuleFunctions.view.computedpopulators.delegateComputedMetricsViewPopulation {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String	viewName;
+		Monitoring.Events.cmetrics.ComputedMetricEvent	computedmetricevent;
+	}
+	body {
+		if (String.indexOfString(viewName,0,"cstats") != -1) {
+		    cStatsViewPopulator(viewName,computedmetricevent);
+		}
+		else if (String.indexOfString(viewName,0,"sysalerts") != -1) {
+		    sysAlertsViewPopulator(viewName,computedmetricevent);
+		}
+	}
+}

@@ -1,0 +1,106 @@
+/**
+ * @description 
+ * @author vpatil-t420
+ */
+rule WebStudio.Core.Rules.WS_R_AddDashboardArtifact {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		WebStudio.Core.Events.WS_E_AddDashboardArtifactEvent ws_e_AddDashboardArtifactEvent;
+	}
+	when {
+		ws_e_AddDashboardArtifactEvent.projectName != null &&
+		ws_e_AddDashboardArtifactEvent.artifactPath != null &&
+		ws_e_AddDashboardArtifactEvent.dashboardArtifactType != null &&
+		ws_e_AddDashboardArtifactEvent.userName != null;
+	}
+	then {
+		Object LOGGER = Log.getLogger("WebStudio.Core.Rules.WS_R_AddDashboardArtifact");
+		
+		Log.log(LOGGER, "Debug", "Project Name - %s, ArtifactPath - %s & DashboardArtifactType - %s", ws_e_AddDashboardArtifactEvent.projectName, ws_e_AddDashboardArtifactEvent.artifactPath, ws_e_AddDashboardArtifactEvent.dashboardArtifactType);
+		String artifactPath = String.substring(ws_e_AddDashboardArtifactEvent.artifactPath, 0, String.indexOfString(ws_e_AddDashboardArtifactEvent.artifactPath,0,"."));
+
+		String userDashboardExtId = WS_RF_CreateUserArtifactExtId("DASHBOARD", null, null, ws_e_AddDashboardArtifactEvent.userName, null, null);
+		WS_C_UserDashboard userDashboard = Instance.getByExtIdByUri(userDashboardExtId, "/WebStudio/Core/Concepts/Dashboard/WS_C_UserDashboard");
+		
+		String userPreferencesExtId = WS_RF_CreateUserArtifactExtId("PREFERENCES", null, null, ws_e_AddDashboardArtifactEvent.userName, null, null);
+		WS_C_UserPreferences userPreferences = Instance.getByExtIdByUri(userPreferencesExtId, "/WebStudio/Core/Concepts/WS_C_UserPreferences");
+		
+		if (userDashboard != null) {
+			Log.log(LOGGER, "Debug", "User Dashboard instance id %s", userDashboard@id);
+			
+			String artifactType = "";
+			if (String.indexOfString(ws_e_AddDashboardArtifactEvent.artifactPath, 0, ".") != -1) {
+				artifactType = String.substringAfter(ws_e_AddDashboardArtifactEvent.artifactPath, ".");
+				Log.log(LOGGER, "Debug", "Artifact Type - %s", artifactType);
+			}
+			WS_C_UserArtifact userArtifact = WS_RF_IsUserArtifact(WS_RF_CreateUserArtifactExtId(null, artifactPath, ws_e_AddDashboardArtifactEvent.projectName, ws_e_AddDashboardArtifactEvent.userName, null, null), artifactType);
+			
+			if (userArtifact != null) {
+				if (String.equals(ws_e_AddDashboardArtifactEvent.dashboardArtifactType, "FAVORITES")) {
+					String favoritesArtifactExtId = userDashboardExtId + "@" + WS_RF_CreateUserArtifactExtId("FAVORITES", ws_e_AddDashboardArtifactEvent.artifactPath, ws_e_AddDashboardArtifactEvent.projectName, null, null, null);
+					boolean favoritesArtifactLock = Cluster.DataGrid.Lock(favoritesArtifactExtId, 1000, false);
+					Log.log(LOGGER, "Debug", "Acquiring lock for Favorite Artifact with extId - [%s] is %s", favoritesArtifactExtId, favoritesArtifactLock);
+					
+					if (favoritesArtifactLock) {
+						WS_C_FavoriteArtifacts favortieArtifact = Instance.newInstance("/WebStudio/Core/Concepts/Dashboard/WS_C_FavoriteArtifacts", favoritesArtifactExtId);
+						favortieArtifact.artifactId = userArtifact@extId;
+						favortieArtifact.artifactType = userArtifact.artifactType;
+						Log.log(LOGGER, "Debug", "New Favorite Artifact Id - %s", favortieArtifact@extId);
+						
+						// Lock on userDashboard already acquired in calling RF
+						Instance.PropertyArray.appendContainedConcept(userDashboard.favoriteArtifacts, favortieArtifact, 1L);
+						Log.log(LOGGER, "Debug", "Current Artifact Cnt - %s and Preference Cnt - %s", userDashboard.favoriteArtifacts@length, userPreferences.favoriteArtifactLimit);
+						
+						// clear artifacts more than the preferences
+						if (userDashboard.favoriteArtifacts@length > userPreferences.favoriteArtifactLimit) {
+							int removalCnt = userDashboard.favoriteArtifacts@length - userPreferences.favoriteArtifactLimit;
+							
+							WS_C_FavoriteArtifacts[] favoriteArtifacts = Instance.PropertyArray.toArrayContainedConcept(userDashboard.favoriteArtifacts);
+							for (int i = 0; i < removalCnt; i++) {
+								Instance.PropertyArray.removeContainedConcept(userDashboard.favoriteArtifacts, favoriteArtifacts[i]);
+								Instance.deleteInstance(favoriteArtifacts[i]);
+							}
+						} 
+					}
+					Log.log(LOGGER, "Debug", "Total Favorite Artifacts - [%s] ", userDashboard.favoriteArtifacts@length);
+					
+				} else {
+					String recentlyOpenedArtifactExtId = userDashboardExtId + "@" + WS_RF_CreateUserArtifactExtId("RECENTLYOPENED", ws_e_AddDashboardArtifactEvent.artifactPath, ws_e_AddDashboardArtifactEvent.projectName, null, null, null);
+					boolean recentlyOpenedArtifactLock = Cluster.DataGrid.Lock(recentlyOpenedArtifactExtId, 1000, false);
+					Log.log(LOGGER, "Debug", "Acquiring lock for Recently Opened Artifact with extId - " + recentlyOpenedArtifactExtId);
+					
+					if (recentlyOpenedArtifactLock) {
+						WS_C_RecentlyOpenedArtifacts recentlyOpenedArtifact = Instance.newInstance("/WebStudio/Core/Concepts/Dashboard/WS_C_RecentlyOpenedArtifacts", recentlyOpenedArtifactExtId);
+						recentlyOpenedArtifact.artifactId = userArtifact@extId;
+						recentlyOpenedArtifact.artifactType = userArtifact.artifactType;
+						Log.log(LOGGER, "Debug", "New Recently Opened Artifact Id - %s", recentlyOpenedArtifact@id);
+						
+						// Lock on userDashboard already acquired in calling RF
+						Instance.PropertyArray.appendContainedConcept(userDashboard.recentlyOpenedArtifacts, recentlyOpenedArtifact, 1L);
+						Log.log(LOGGER, "Debug", "Current Artifact Cnt - %s and Preference Cnt - %s", userDashboard.recentlyOpenedArtifacts@length, userPreferences.recentlyOpenedArtifactLimit);
+						
+						// clear artifacts more than the preferences
+						if (userDashboard.recentlyOpenedArtifacts@length > userPreferences.recentlyOpenedArtifactLimit) {
+							int removalCnt = userDashboard.recentlyOpenedArtifacts@length - userPreferences.recentlyOpenedArtifactLimit;
+							
+							WS_C_RecentlyOpenedArtifacts[] recentlyOpenedArtifacts = Instance.PropertyArray.toArrayContainedConcept(userDashboard.recentlyOpenedArtifacts);
+							for (int i = 0; i < removalCnt; i++) {
+								Instance.PropertyArray.removeContainedConcept(userDashboard.recentlyOpenedArtifacts, recentlyOpenedArtifacts[i]);
+								Instance.deleteInstance(recentlyOpenedArtifacts[i]);
+							}
+						} 
+					}
+					
+					Log.log(LOGGER, "Debug", "Total Recently Opened Artifacts - [%s] ", userDashboard.recentlyOpenedArtifacts@length);
+				}
+				
+				Log.log(LOGGER, "Info", "Dashboard Artifact Addition complete");
+			} else {
+				Log.log(LOGGER, "Warn", "User Artifact associated to the Dashboard entry not found");
+			}
+		}
+	}
+}

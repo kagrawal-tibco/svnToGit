@@ -1,0 +1,33 @@
+/**
+ * @description Preprocessor for checkin history request.
+ */
+void rulefunction Approval.Rules.RuleFunctions.Preprocessors.AMS_RFP_ArtifactCheckinHistoryPP {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Approval.Events.ArtifactEvents.History.AMS_E_ArtifactCheckinLogRequestEvent ams_e_artifactcheckinlogrequestevent;
+	}
+	body {
+		boolean isUserLoggedIn = 
+			Approval.CommonServices.AMS_RF_ValidateUsername(ams_e_artifactcheckinlogrequestevent) != null;
+		
+		if (!isUserLoggedIn) {
+			AMS_E_ErrorEvent errorEvent = 
+				Approval.CommonServices.AMS_RF_CreateErrorEvent("HISTORY_FETCH_ERROR", "The user " + ams_e_artifactcheckinlogrequestevent.loggedInUserName + " is not logged in", null);
+			Event.replyEvent(ams_e_artifactcheckinlogrequestevent, errorEvent);
+			//Consume the event so that RTC is not triggered
+			Event.consumeEvent(ams_e_artifactcheckinlogrequestevent);
+			throw Exception.newException("HISTORY_FETCH_ERROR", 
+										 "The user " + ams_e_artifactcheckinlogrequestevent.loggedInUserName + " is not logged in", null);	
+		}
+		
+		String projectName = ams_e_artifactcheckinlogrequestevent.projectname;
+		String artifactPath = ams_e_artifactcheckinlogrequestevent.artifactPath;
+		
+		//Look for a lockable artifact
+		String extId = String.concat(projectName, String.concat("@", artifactPath));
+		//Lock this extId
+		Cluster.DataGrid.Lock(extId, -1, false);
+	}
+}

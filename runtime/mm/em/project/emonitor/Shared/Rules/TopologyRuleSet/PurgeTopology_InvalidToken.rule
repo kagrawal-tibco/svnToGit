@@ -1,0 +1,22 @@
+/**
+ * @description 
+ * @author 
+ */
+rule Shared.Rules.TopologyRuleSet.PurgeTopology_InvalidToken {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Shared.Events.reqres.topology.PurgeTopologyRequestEvent	purgetopologyrequestevent;
+		
+	}
+	when {
+		purgetopologyrequestevent.token == null || String.length(purgetopologyrequestevent.token) == 0;
+	}
+	then {
+		Shared.Events.reqres.FailureResponseEvent event = Shared.Events.reqres.FailureResponseEvent.FailureResponseEvent(null,null,"001","Invalid token");
+		Event.replyEvent(purgetopologyrequestevent, event);
+		Event.consumeEvent(purgetopologyrequestevent);
+	}
+}

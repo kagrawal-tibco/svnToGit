@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+
+<xsd:schema
+        targetNamespace="http://tibco.com/be/shared/jndi400"
+        xmlns:bt="http://tibco.com/be/shared/basetypes"
+        xmlns:tns="http://tibco.com/be/shared/jndi400"
+        xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+    <xsd:import schemaLocation="basetypes.xsd"
+                namespace="http://tibco.com/be/shared/basetypes"/>
+
+    <xsd:element name="Configuration" type="tns:Configuration-type"/>
+	<xsd:element name="ContextFactory" type="xsd:string"/>
+    <xsd:element name="Description" type="xsd:string"/>
+    <xsd:element name="General" type="tns:General-type"/>
+    <xsd:element name="Jndi" type="tns:Jndi-type"/>
+    <xsd:element name="Name" type="xsd:string"/>
+	<xsd:element name="ProviderUrl" type="xsd:string"/>
+	<xsd:element name="ResourceType" type="xsd:string"/>
+	<xsd:element name="SecurityCredentials" type="xsd:string"/>
+	<xsd:element name="SecurityPrincipal" type="xsd:string"/>
+	<xsd:element name="ValidateJndiSecurityContext" type="bt:booleanOrGVs"/>
+
+    <xsd:complexType name="Jndi-type">
+        <xsd:sequence>
+            <xsd:element ref="tns:General"/>
+            <xsd:element ref="tns:Configuration"/>
+        </xsd:sequence>
+    </xsd:complexType>
+
+    <xsd:complexType name="General-type">
+        <xsd:sequence>
+            <xsd:element ref="tns:Name"/>
+            <xsd:element ref="tns:Description"/>
+            <xsd:element ref="tns:ResourceType"/>
+        </xsd:sequence>
+    </xsd:complexType>
+    
+	<xsd:complexType name="Configuration-type">
+        <xsd:sequence>
+            <xsd:element ref="tns:ValidateJndiSecurityContext"/>
+            <xsd:element ref="tns:ContextFactory"/>
+            <xsd:element ref="tns:ProviderUrl"/>
+            <xsd:element ref="tns:SecurityPrincipal"/>
+            <xsd:element ref="tns:SecurityCredentials"/>
+			<xsd:element minOccurs="1" maxOccurs="1"
+				name="OptionalJNDIProperties" type="tns:OptionalJNDIProperties-Type">
+			</xsd:element>
+		</xsd:sequence>			        
+    </xsd:complexType>
+
+	<xsd:complexType name="JNDIProperties-Type">
+		<xsd:sequence minOccurs="0" maxOccurs="unbounded">
+			<xsd:element name="row" maxOccurs="unbounded" minOccurs="0"
+				type="tns:JNDIPropertiesRow-Type">
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+
+	<xsd:complexType name="JNDIPropertiesRow-Type">
+		<xsd:sequence>
+			<xsd:element minOccurs="1" maxOccurs="1" name="Name"
+				type="xsd:string">
+			</xsd:element>
+			<xsd:element minOccurs="1" maxOccurs="1" name="Type"
+				type="xsd:string">
+			</xsd:element>
+			<xsd:element minOccurs="1" maxOccurs="1" name="Value"
+				type="xsd:string">
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+
+	<xsd:complexType name="OptionalJNDIProperties-Type">
+		<xsd:sequence>
+			<xsd:element minOccurs="0" maxOccurs="unbounded" name="row">
+				<xsd:complexType>
+					<xsd:sequence>
+						<xsd:element minOccurs="1" maxOccurs="1" name="JNDIPropNameCol"
+							type="xsd:string">
+						</xsd:element>
+						<xsd:element minOccurs="1" maxOccurs="1"
+							name="JNDIPropTypeCol" type="bt:typeNameOrGVs">
+						</xsd:element>
+						<xsd:element minOccurs="1" maxOccurs="1"
+							name="JNDIPropValueCol" type="xsd:string">
+						</xsd:element>
+					</xsd:sequence>
+				</xsd:complexType>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+</xsd:schema>
+

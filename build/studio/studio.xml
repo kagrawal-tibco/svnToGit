@@ -1,0 +1,2519 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<project name="studiobuild" default="build-studio-cleanbuild">
+	<!--CLEANUP TASK: REMOVE linux_s390x targets-->
+	<property environment="env" />
+	<property file="build.properties" />
+
+	<target name="build-studio-cleanbuild" depends="clean-studio-all,build-studio-all" />
+
+	<target name="update-studio-version">
+		<echo message="0=${BE_VERSION}.${env.BE_BUILD}" file="${sourceDirectory}/plugins/com.tibco.cep.studio.application/about.mappings" />
+	</target>
+
+	<target name="build-studio-all" depends="build-studio-init,
+                                      build-studio-product,
+                                      build-studio-rcpapp,
+									  update-bundle-version,
+									  init-studio-site,
+									  build-studio-misc,
+                                      import-bnd-bundles,
+									  publish-features-bundles" />
+
+	<target name="build-studio-init" depends="copy-studio-src">
+		<replace file="${buildDirectory}/plugins/com.tibco.cep.diagramming/META-INF/MANIFEST.MF" token="tsallperspectives${_TOMSAWYER_PERSPECTIVES_VERSION}dev.jar" value="tsallperspectives${_TOMSAWYER_PERSPECTIVES_VERSION}dep.jar" />
+		<replace file="${buildDirectory}/plugins/com.tibco.cep.diagramming/META-INF/MANIFEST.MF" token="tsgwtperspectives${_TOMSAWYER_PERSPECTIVES_VERSION}dev.jar" value="tsgwtperspectives${_TOMSAWYER_PERSPECTIVES_VERSION}dep.jar" />
+		<replace file="${buildDirectory}/plugins/com.tibco.cep.studio.application/src/com/tibco/cep/studio/application/utils/messages.properties" token="BE_LICENSE=" value="BE_LICENSE=${env.BE_LICENSE}" />
+	</target>
+
+	<target name="copy-studio-src">
+		<mkdir dir="${buildDirectory}" />
+		<copy todir="${buildDirectory}/plugins">
+			<fileset dir="${sourceDirectory}/plugins/">
+				<include name="com.tibco.cep.*/**" />
+				<exclude name="com.tibco.cep.toolkit.adapter.linux/**" />
+				<exclude name="**/bin/**" />
+			</fileset>
+			<fileset dir="${studiort.src}/../">
+				<include name="com.tibco.cep.*/**" />
+				<exclude name="**/bin/**" />
+			</fileset>
+		</copy>
+		<!-- 
+		<if>
+			<contains string="${env.PORT}" substring="linux" />
+			<then>
+				<copy todir="${buildDirectory}/plugins/com.tibco.cep.toolkit.adapter.linux">
+					<fileset dir="${sourceDirectory}/plugins/com.tibco.cep.toolkit.adapter.linux" />
+				</copy>
+			</then>
+			<else>
+				<replace dir="${buildDirectory}/plugins/com.tibco.cep.studio.application" value="">
+					<include name="studioProduct.product" />
+					<replacetoken>&lt;plugin id=&quot;com.tibco.cep.toolkit.adapter.linux&quot; fragment=&quot;true&quot;/&gt;</replacetoken>
+				</replace>
+			</else>
+		</if>
+		-->
+
+		<copy todir="${buildDirectory}/features">
+			<fileset dir="${sourceDirectory}/features">
+				<include name="com.tibco.cep.*/**" />
+			</fileset>
+			<fileset dir="${env.ECLIPSE_HOME}/features">
+				<include name="org.eclipse.equinox.*/**" />
+			</fileset>
+			<fileset dir="${baseLocation}/features">
+				<include name="org.eclipse.rcp*/**" />
+			</fileset>
+		</copy>
+	</target>
+
+	<target name="copy-feature-src">
+		<mkdir dir="${buildDirectory}" />
+		<mkdir dir="${buildDirectory}/plugins" />
+		<mkdir dir="${buildDirectory}/features" />
+
+		<copy todir="${buildDirectory}/features">
+			<fileset dir="${sourceDirectory}/features">
+				<include name="${featureId}/**" />
+				<exclude name="**/bin/**" />
+			</fileset>
+		</copy>
+
+		<subant target="copy-feature-src" inheritall="true">
+			<property file="studio/build.properties" />
+			<property file="${be.basedir}/version.properties" />
+			<property name="featureId" value="${featureId}" />
+			<fileset dir="${buildDirectory}/features/${featureId}" includes="copy.xml" />
+		</subant>
+
+	</target>
+
+	<target name="copy-external-jars" depends="copy-external-jars-standard, copy-external-jars-addon">
+	</target>
+
+	<target name="copy-external-jars-standard">
+		<echo message="Referencing BE runtime libraries from BE Libraries Export Area [${be.exp}/lib]" />
+		<echo message="Referencing JDK libraries from JDK_LIB [${JDK_LIB}]" />
+		<echo message="Referencing TPCL libraries from TPCL_LIB [${TPCL_LIB}]" />
+		<echo message="Referencing TRA libraries from TRA_LIB [${TRA_LIB}]" />
+		<echo message="Referencing TXML libraries from TXML_LIB [${TXML_LIB}]" />
+		<echo message="Referee location [${external.jars.dest}]" />
+
+		<copy todir="${external.jars.dest}/com.tibco.cep.rt/lib" overwrite="true" verbose="true">
+			<fileset dir="${be.exp}/lib/">
+				<include name="be-functions.jar" />
+				<include name="be-studiofunctions.jar" />
+				<include name="cep-as-channel.jar" />
+				<include name="cep-sb-channel.jar" />
+				<include name="cep-base.jar" />
+				<include name="cep-common.jar" />
+				<include name="cep-container.jar" />
+				<include name="cep-backingstore.jar" />
+				<include name="cep-datagrid-oracle.jar" />
+				<include name="cep-datagrid-tibco.jar" />
+				<include name="cep-drivers.jar" />
+           		<include name="cep-interpreter.jar" />
+				<include name="cep-hawk-channel.jar" />
+				<include name="cep-kernel.jar" />
+				<include name="cep-loadbalancer.jar" />
+				<include name="cep-security.jar" />
+				<include name="cep-ftl.jar" />
+				<include name="cep-analytics.jar" />
+				<include name="cep-channel-api.jar" />
+				<include name="cep-kafka.jar" />
+				<include name="cep-kafka-streams.jar" />
+				<include name="cep-as3-channel.jar" />
+				<include name="cep-kinesis-channel.jar"/>
+				<include name="cep-mqtt-channel.jar" />
+				<include name="cep-liveview.jar" />
+				<include name="cep-docker.jar" />
+				<include name="cep-maven.jar" />
+				<include name="cep-store.jar" />
+			</fileset>
+		</copy>
+		<copy todir="${external.jars.dest}/com.tibco.cep.tra/lib" overwrite="true" verbose="true">
+			<fileset dir="${TRA_LIB}">
+				<include name="Deployment.jar" />
+				<include name="TIBCOrt.jar" />
+				<include name="TIBCrypt.jar" />
+			</fileset>
+			<!--<fileset dir="${TXML_LIB}">
+				<include name="TIBCOxml.jar" />
+			</fileset> -->
+			
+		
+			<fileset dir="${AS_LIB}">
+				<include name="as-admin.jar" />
+				<include name="as-agent.jar" />
+				<include name="as-common.jar" />
+			</fileset>
+			<fileset dir="${HAWK_LIB}">
+				<include name="ami.jar" />
+				<include name="console.jar" />
+				<include name="console_agent_shared.jar"/>
+				<include name="talon.jar" />
+				<!-- <include name="utilities.jar" /> -->
+				<!--<include name="mail.jar" /> -->
+				<include name="util.jar"/>
+				<include name="publisher.jar" />
+				<!-- <include name="perltools.jar" /> -->
+			</fileset>
+			<fileset dir="${TPCL_LIB}">
+				<include name="mail.jar" />
+				<include name="PerlTools.jar"/>
+			</fileset>
+			<fileset dir="${BW_LIB}">
+				<include name="org.genxdm.api_*.jar" />
+				<include name="org.genxdm.processor.xpath.v20_*.jar" />
+				<include name="org.genxdm.xpath.v20_*.jar" />
+				<include name="com.tibco.tibcoxml.io.eclipse_5.60.100.001.jar" />
+				<include name="com.tibco.tibcoxml.net.eclipse_5.60.100.001.jar" />
+				<include name="com.tibco.tibcoxml.util.eclipse_5.60.100.001.jar" />
+				<include name="com.tibco.tibcoxml.xml.ae2xsd.eclipse_5.60.100.001.jar" />
+				<include name="com.tibco.tibcoxml.xml.sdk.eclipse_5.60.100.002.jar" />
+				<include name="com.tibco.tibcoxml.xml.soap.eclipse_5.60.100.001.jar" />
+				<include name="com.tibco.tibcoxml.xml.transform.eclipse_5.60.100.001.jar" />
+				<include name="com.tibco.tibcoxml.xml.ws.wsdl.eclipse_5.60.100.001.jar" />
+				<include name="com.tibco.tibcoxml.xml.xdata.eclipse_5.60.100.001.jar" />
+				<include name="com.tibco.tibcoxml.lex.yap.eclipse_5.60.100.001.jar" />
+			</fileset>
+			<fileset dir="${SB_LIB}">
+				<include name="sbclient.jar" />
+			</fileset>
+		</copy>
+
+	    <copy todir="${external.jars.dest}/com.tibco.cep.tpcl/lib" overwrite="true" verbose="true">
+			<fileset dir="${be.exp}/lib/ext/tpcl">
+				<include name="antlr-${env.ANTLR_VERSION}.jar" />
+				<include name="apache/**/commons-httpclient-*.jar" />
+				<include name="apache/**/commons-lang3-*.jar" />
+				<include name="apache/**/jakarta-regexp-*.jar" />
+				<include name="apache/**/log4j-*.jar" />
+				<include name="apache/**/poi-${env.POI_VERSION}*.jar" />
+				<include name="apache/**/tomcat-embed-core.jar" />
+				<include name="apache/**/annotations-api.jar" />
+				<exclude name="apache/**/ecj-*.*.*.jar" />
+				<exclude name="apache/*.xml" />
+				<exclude name="apache/servlet.jar" />
+				<include name="javassist.jar" />
+				<include name="jackson-core-${env.JACKSON_VERSION}.jar" />
+				<include name="jackson-annotations-${env.JACKSON_VERSION}.jar" />
+				<include name="jackson-databind-${env.JACKSON_VERSION}.jar" />
+			</fileset>
+	     	<fileset dir="${JAXB_LIB}">
+				<include name="jaxb-api-2.3.1.jar" />
+			</fileset>
+			<fileset dir="${JAXB_IMPL_LIB}">
+	   			<include name="jaxb-impl.jar" />
+   			</fileset>
+   			<fileset dir="${JAXB_CORE_LIB}">
+	   			<include name="jaxb-core.jar" />
+   			</fileset>
+	    </copy>
+
+        <copy todir="${external.jars.dest}/com.tibco.cep.tpcl/lib/apache" overwrite="true" verbose="true">
+            <fileset dir="${env.TOMCAT_HOME}/embedded">
+                <include name="tomcat-embed-core.jar" />
+            </fileset>
+        </copy>
+	</target>
+
+	<target name="copy-external-jars-addon">
+		<copy todir="${external.jars.dest}/com.tibco.cep.diagramming/lib" overwrite="true" verbose="true">
+			<fileset dir="${be.exp}/lib/ext/tpcl">
+				<include name="tomsawyer/**" />
+			</fileset>
+		</copy>
+		<copy todir="${external.jars.dest}/com.tibco.cep.rt/lib" overwrite="true" verbose="true">
+			<fileset dir="${be.exp}/lib">
+				<include name="palettes/be-bw.jar" />
+			</fileset>
+			<fileset dir="${be.exp}/lib">
+				<include name="be-q.jar" />
+			</fileset>
+		</copy>
+		<copy todir="${external.jars.dest}/com.tibco.cep.bpmn.rt/lib" overwrite="true" verbose="true">
+			<fileset dir="${be.exp}/lib/">
+				<include name="cep-bpmn.jar" />
+			</fileset>
+		</copy>
+		<copy todir="${external.jars.dest}/com.tibco.cep.datamodeling/lib" overwrite="true" verbose="true">
+			<fileset dir="${be.exp}/lib/">
+				<include name="cep-modules.jar" />
+			</fileset>
+		</copy>
+		<copy todir="${external.jars.dest}/com.tibco.cep.eventstreamprocessing/lib" overwrite="true" verbose="true">
+			<fileset dir="${be.exp}/lib/">
+				<include name="cep-pattern.jar" />
+				<include name="cep-query.jar" />
+			</fileset>
+		</copy>
+		<copy todir="${external.jars.dest}/com.tibco.cep.studio.dashboard.rt/lib" overwrite="true" verbose="true">
+			<fileset dir="${be.exp}/views/lib/">
+				<include name="cep-metric.jar" />
+				<include name="be-dashboardagent.jar" />
+				<include name="**/castor*.jar" />
+			</fileset>
+		</copy>
+		<copy todir="${external.jars.dest}/com.tibco.cep.liveview/lib" overwrite="true" verbose="true">
+			<fileset dir="${SB_LIB}/">
+				<include name="sbclient.jar" />
+			</fileset>
+		</copy>
+	</target>
+
+	<target name="build-bnd-bundles" depends="build-cep-rt-bundle,
+                                             build-cep-tpcl-bundle,
+                                             build-cep-tra-bundle,
+											 build-cep-bpmn-bundle,
+                                             build-cep-datamod-bundle,
+											 build-cep-diagramming-bundle,
+                                             build-cep-esp-bundle,
+                                             build-be-views-bundle">
+	</target>
+
+	<target name="build-cep-rt-bundle" depends="build-cep-tpcl-bundle, build-cep-tra-bundle">
+		<copy file="${be.basedir}/studio/cep-rt.bnd" tofile="${be.exp}/cep-rt.bnd" overwrite="true" />
+		<replace file="${be.exp}/cep-rt.bnd" value="${UI_PLUGINS_VERSION}">
+			<replacetoken>${UI_PLUGINS_VERSION}</replacetoken>
+		</replace>
+		<bnd eclipse="false" failok="false" output="${lib.exp}/cep-rt.temp.jar" exceptions="true" files="${be.exp}/cep-rt.bnd" />
+		<zip destfile="${lib.exp}/com.tibco.cep.rt_${UI_PLUGINS_VERSION}.jar">
+			<zipfileset src="${lib.exp}/cep-rt.temp.jar" casesensitive="false">
+				<include name="META-INF/MANIFEST.MF" />
+			</zipfileset>
+		</zip>
+		<delete file="${lib.exp}/cep-rt.temp.jar" />
+		<delete file="${be.exp}/cep-rt.bnd" />
+		<delete file="${be.exp}/cep.bnd" />
+	</target>
+
+	<target name="build-cep-tpcl-bundle">
+
+		<copy file="${be.basedir}/studio/cep-tpcl.bnd" tofile="${be.exp}/cep-tpcl.bnd" overwrite="true" />
+		<replace file="${be.exp}/cep-tpcl.bnd" value="${env.LOG4J_VERSION}">
+			<replacetoken>${env.LOG4J_VERSION}</replacetoken>
+		</replace>
+		<replace file="${be.exp}/cep-tpcl.bnd" value="${BE_VERSION}">
+			<replacetoken>${BE_VERSION}</replacetoken>
+		</replace>
+		<replace file="${be.exp}/cep-tpcl.bnd" value="${UI_PLUGINS_VERSION}">
+			<replacetoken>${UI_PLUGINS_VERSION}</replacetoken>
+		</replace>
+		<replace file="${be.exp}/cep-tpcl.bnd" value="${env.ANTLR_VERSION}">
+			<replacetoken>${env.ANTLR_VERSION}</replacetoken>
+		</replace>
+		<replace file="${be.exp}/cep-tpcl.bnd" value="${env.JACKSON_VERSION}">
+			<replacetoken>${env.JACKSON_VERSION}</replacetoken>
+		</replace>
+		<replace file="${be.exp}/cep-tpcl.bnd" value="${POI_VERSION_DATE}">
+			<replacetoken>${POI_VERSION_DATE}</replacetoken>
+		</replace>
+		<bnd eclipse="false" failok="false" output="${lib.exp}/cep-tpcl.temp.jar" exceptions="true" files="${be.exp}/cep-tpcl.bnd" />
+		<zip destfile="${lib.exp}/com.tibco.cep.tpcl_${UI_PLUGINS_VERSION}.jar">
+			<zipfileset src="${lib.exp}/cep-tpcl.temp.jar" casesensitive="false">
+				<include name="META-INF/MANIFEST.MF" />
+			</zipfileset>
+		</zip>
+
+		<unjar src="${lib.exp}/com.tibco.cep.tpcl_${UI_PLUGINS_VERSION}.jar" dest="${lib.exp}/cep.tpcl" />
+		<replace file="${lib.exp}/cep.tpcl/META-INF/MANIFEST.MF" value="Export-Package: .,">
+			<replacetoken>Export-Package: </replacetoken>
+		</replace>
+		<jar destfile="${lib.exp}/com.tibco.cep.tpcl_${UI_PLUGINS_VERSION}.jar" basedir="${lib.exp}/cep.tpcl" manifest="${lib.exp}/cep.tpcl/META-INF/MANIFEST.MF" />
+		<delete dir="${lib.exp}/cep.tpcl" />
+
+		<delete file="${lib.exp}/cep-tpcl.temp.jar" />
+		<delete file="${be.exp}/cep-tpcl.bnd" />
+		<delete file="${be.exp}/cep.bnd" />
+	</target>
+
+	<target name="build-cep-tra-bundle">
+		<copy file="${be.basedir}/studio/cep-tra.bnd" tofile="${be.exp}/cep-tra.bnd" overwrite="true" />
+		<replace file="${be.exp}/cep-tra.bnd" value="${UI_PLUGINS_VERSION}">
+			<replacetoken>${UI_PLUGINS_VERSION}</replacetoken>
+		</replace>
+		<bnd eclipse="false" failok="false" output="${lib.exp}/cep-tra.temp.jar" exceptions="true" files="${be.exp}/cep-tra.bnd" />
+		<zip destfile="${lib.exp}/com.tibco.cep.tra_${UI_PLUGINS_VERSION}.jar">
+			<zipfileset src="${lib.exp}/cep-tra.temp.jar" casesensitive="false">
+				<include name="META-INF/MANIFEST.MF" />
+			</zipfileset>
+		</zip>
+		<delete file="${lib.exp}/cep-tra.temp.jar" />
+		<delete file="${be.exp}/cep-tra.bnd" />
+		<delete file="${be.exp}/cep.bnd" />
+	</target>
+
+	<target name="build-cep-bpmn-bundle" depends="build-cep-rt-bundle">
+		<copy file="${be.basedir}/studio/cep-bpmn.bnd" tofile="${be.exp}/cep-bpmn.bnd" overwrite="true" />
+		<replace file="${be.exp}/cep-bpmn.bnd" value="${BPMN_PLUGINS_VERSION}">
+			<replacetoken>${BPMN_PLUGINS_VERSION}</replacetoken>
+		</replace>
+		<bnd eclipse="false" failok="false" output="${lib.exp}/cep-bpmn.temp.jar" exceptions="true" files="${be.exp}/cep-bpmn.bnd" />
+		<zip destfile="${lib.exp}/com.tibco.cep.bpmn.rt_${BPMN_PLUGINS_VERSION}.jar">
+			<zipfileset src="${lib.exp}/cep-bpmn.temp.jar" casesensitive="false">
+				<include name="META-INF/MANIFEST.MF" />
+			</zipfileset>
+		</zip>
+		<delete file="${lib.exp}/cep-bpmn.temp.jar" />
+		<delete file="${be.exp}/cep-bpmn.bnd" />
+		<delete file="${be.exp}/cep.bnd" />
+	</target>
+	
+	<target name="build-cep-datamod-bundle" depends="build-cep-rt-bundle">
+		<copy file="${be.basedir}/studio/cep-datamod.bnd" tofile="${be.exp}/cep-datamod.bnd" overwrite="true" />
+		<replace file="${be.exp}/cep-datamod.bnd" value="${UI_PLUGINS_VERSION}">
+			<replacetoken>${UI_PLUGINS_VERSION}</replacetoken>
+		</replace>
+		<bnd eclipse="false" failok="false" output="${lib.exp}/cep-datamod.temp.jar" exceptions="true" files="${be.exp}/cep-datamod.bnd" />
+		<zip destfile="${lib.exp}/com.tibco.cep.datamodeling_${UI_PLUGINS_VERSION}.jar">
+			<zipfileset src="${lib.exp}/cep-datamod.temp.jar" casesensitive="false">
+				<include name="META-INF/MANIFEST.MF" />
+			</zipfileset>
+		</zip>
+		<delete file="${lib.exp}/cep-datamod.temp.jar" />
+		<delete file="${be.exp}/cep-datamod.bnd" />
+		<delete file="${be.exp}/cep.bnd" />
+	</target>
+
+	
+	<target name="build-cep-diagramming-bundle" depends="build-cep-rt-bundle">
+		<copy file="${be.basedir}/studio/cep-diagramming.bnd" tofile="${be.exp}/cep-diagramming.bnd" overwrite="true" />
+		<replace file="${be.exp}/cep-diagramming.bnd" value="${UI_PLUGINS_VERSION}">
+			<replacetoken>${UI_PLUGINS_VERSION}</replacetoken>
+		</replace>
+		<replace file="${be.exp}/cep-diagramming.bnd" value="${_TOMSAWYER_PERSPECTIVES_VERSION}">
+			<replacetoken>${_TOMSAWYER_PERSPECTIVES_VERSION}</replacetoken>
+		</replace>
+		<bnd eclipse="false" failok="false" output="${lib.exp}/cep-diagramming.temp.jar" exceptions="true" files="${be.exp}/cep-diagramming.bnd" />
+		<zip destfile="${lib.exp}/com.tibco.cep.diagramming_${UI_PLUGINS_VERSION}.jar">
+			<zipfileset src="${lib.exp}/cep-diagramming.temp.jar" casesensitive="false">
+				<include name="META-INF/MANIFEST.MF" />
+			</zipfileset>
+		</zip>
+		<delete file="${lib.exp}/cep-diagramming.temp.jar" />
+		<delete file="${be.exp}/cep-diagramming.bnd" />
+		<delete file="${be.exp}/cep.bnd" />
+	</target>
+
+	<target name="build-cep-esp-bundle" depends="build-cep-rt-bundle">
+		<copy file="${be.basedir}/studio/cep-esp.bnd" tofile="${be.exp}/cep-esp.bnd" overwrite="true" />
+		<replace file="${be.exp}/cep-esp.bnd" value="${UI_PLUGINS_VERSION}">
+			<replacetoken>${UI_PLUGINS_VERSION}</replacetoken>
+		</replace>
+		<bnd eclipse="false" failok="false" output="${lib.exp}/cep-esp.temp.jar" exceptions="true" files="${be.exp}/cep-esp.bnd" />
+		<zip destfile="${lib.exp}/com.tibco.cep.eventstreamprocessing_${UI_PLUGINS_VERSION}.jar">
+			<zipfileset src="${lib.exp}/cep-esp.temp.jar" casesensitive="false">
+				<include name="META-INF/MANIFEST.MF" />
+			</zipfileset>
+		</zip>
+		<delete file="${lib.exp}/cep-esp.temp.jar" />
+		<delete file="${be.exp}/cep-esp.bnd" />
+		<delete file="${be.exp}/cep.bnd" />
+	</target>
+
+	<target name="build-be-views-bundle" depends="build-cep-rt-bundle">
+		<copy file="${be.basedir}/studio/be-views.bnd" tofile="${be.exp}/be-views.bnd" overwrite="true" />
+		<replace file="${be.exp}/be-views.bnd" value="${UI_PLUGINS_VERSION}">
+			<replacetoken>${UI_PLUGINS_VERSION}</replacetoken>
+		</replace>
+		<replace file="${be.exp}/be-views.bnd" value="${env.CASTOR_VERSION}">
+			<replacetoken>${env.CASTOR_VERSION}</replacetoken>
+		</replace>
+		<bnd eclipse="false" failok="false" output="${lib.exp}/be-views.temp.jar" exceptions="true" files="${be.exp}/be-views.bnd" />
+		<zip destfile="${lib.exp}/com.tibco.cep.studio.dashboard.rt_${UI_PLUGINS_VERSION}.jar">
+			<zipfileset src="${lib.exp}/be-views.temp.jar" casesensitive="false">
+				<include name="META-INF/MANIFEST.MF" />
+			</zipfileset>
+		</zip>
+		<delete file="${lib.exp}/be-views.temp.jar" />
+		<delete file="${be.exp}/be-views.bnd" />
+		<delete file="${be.exp}/cep.bnd" />
+	</target>
+
+	<target name="update-manifest-version">
+		<foreach target="update-manifest-version-by-name" param="bundle-path">
+			<path id="studio.plugins.path">
+				<dirset dir="${buildDirectory}/plugins">
+					<include name="*" />
+				</dirset>
+			</path>
+		</foreach>
+	</target>
+
+	<target name="update-manifest-version-by-name">
+		<echo message="Processing bundle-path ${bundle-path}" />
+		<replace dir="${bundle-path}" value="Bundle-Version: ${UI_PLUGINS_VERSION}.${env.BE_BUILD}">
+			<include name="META-INF/MANIFEST.MF" />
+			<include name="MANIFEST.MF.template" />
+			<replacetoken>Bundle-Version: 0.0.0</replacetoken>
+		</replace>
+	</target>
+
+	<target name="update-bundle-version">
+		<foreach target="update-bundle-version-for-studio" param="bundle-path">
+			<path>
+				<fileset dir="${exportDirectory}/${buildId}/plugins" casesensitive="no">
+					<include name="com.tibco.cep.*.jar" />
+					<exclude name="com.tibco.cep.rt_*.jar" />
+					<exclude name="com.tibco.cep.tpcl_*.jar" />
+					<exclude name="com.tibco.cep.tra_*.jar" />
+					<exclude name="com.tibco.cep.datamodeling_*.jar" />
+					<exclude name="com.tibco.cep.diagramming_*.jar" />
+					<exclude name="com.tibco.cep.eventstreamprocessing_*.jar" />
+					<exclude name="com.tibco.cep.studio.dashboard.rt_*.jar" />
+					<exclude name="com.tibco.cep.bpmn.rt_*.jar" />
+				</fileset>
+			</path>
+		</foreach>
+	</target>
+
+	<target name="update-bundle-version-for-studio">
+		<antcall target="update-bundle-version-by-name">
+			<param name="source-location" value="studio" />
+			<param name="bundle-path" value="${bundle-path}" />
+		</antcall>
+	</target>
+
+	<target name="update-bundle-version-for-studio-site">
+		<antcall target="update-bundle-version-by-name">
+			<param name="source-location" value="studio-site" />
+			<param name="bundle-path" value="${bundle-path}" />
+		</antcall>
+	</target>
+
+	<target name="update-bundle-version-by-name">
+		<basename file="${bundle-path}" property="bundle-name-temp" />
+		<propertyregex property="bundle-name" input="${bundle-name-temp}" regexp="(.+?)(?:_0\.0\.0\.jar)?" replace="\1" global="true" />
+		<echo message="Processing bundle-path ${bundle-path}; bundle-name is ${bundle-name}" />
+		<mkdir dir="${exportDirectory}/lib/${bundle-name}" />
+		<unjar dest="${exportDirectory}/lib/${bundle-name}">
+			<fileset dir="${exportDirectory}/${source-location}/plugins/">
+				<include name="${bundle-name}_0.0.0.jar" />
+			</fileset>
+		</unjar>
+		<if>
+			<contains string="${bundle-name}" substring="com.tibco.cep.bpmn"/>
+			<then>
+				<replace dir="${exportDirectory}/lib/${bundle-name}" value="Bundle-Version: ${BPMN_PLUGINS_VERSION}.${env.BE_BUILD}">
+					<include name="META-INF/MANIFEST.MF" />
+					<include name="MANIFEST.MF.template" />
+					<replacetoken>Bundle-Version: 0.0.0</replacetoken>
+				</replace>
+				<jar destfile="${exportDirectory}/${source-location}/plugins/${bundle-name}_${BPMN_PLUGINS_VERSION}.jar" basedir="${exportDirectory}/lib/${bundle-name}" manifest="${exportDirectory}/lib/${bundle-name}/META-INF/MANIFEST.MF" />
+				<delete dir="${exportDirectory}/lib/${bundle-name}" />
+				<delete file="${exportDirectory}/${source-location}/plugins/${bundle-name}_0.0.0.jar" />
+			</then>
+			<else>
+				<replace dir="${exportDirectory}/lib/${bundle-name}" value="Bundle-Version: ${UI_PLUGINS_VERSION}.${env.BE_BUILD}">
+					<include name="META-INF/MANIFEST.MF" />
+					<include name="MANIFEST.MF.template" />
+					<replacetoken>Bundle-Version: 0.0.0</replacetoken>
+				</replace>
+				<jar destfile="${exportDirectory}/${source-location}/plugins/${bundle-name}_${UI_PLUGINS_VERSION}.jar" basedir="${exportDirectory}/lib/${bundle-name}" manifest="${exportDirectory}/lib/${bundle-name}/META-INF/MANIFEST.MF" />
+				<delete dir="${exportDirectory}/lib/${bundle-name}" />
+				<delete file="${exportDirectory}/${source-location}/plugins/${bundle-name}_0.0.0.jar" />
+			</else>
+		</if>
+	</target>
+
+	<target name="import-bnd-bundles" depends="build-bnd-bundles">
+		<antcall target="import-bnd-bundle-by-name">
+			<param name="bnd-bundle-name" value="com.tibco.cep.rt" />
+		</antcall>
+
+		<antcall target="import-bnd-bundle-by-name">
+			<param name="bnd-bundle-name" value="com.tibco.cep.tpcl" />
+		</antcall>
+
+		<antcall target="import-bnd-bundle-by-name">
+			<param name="bnd-bundle-name" value="com.tibco.cep.tra" />
+		</antcall>
+
+		<antcall target="import-bnd-bundle-by-name">
+			<param name="bnd-bundle-name" value="com.tibco.cep.datamodeling" />
+		</antcall>
+
+		<antcall target="import-bnd-bundle-by-name">
+			<param name="bnd-bundle-name" value="com.tibco.cep.diagramming" />
+		</antcall>
+
+		<antcall target="import-bnd-bundle-by-name">
+			<param name="bnd-bundle-name" value="com.tibco.cep.eventstreamprocessing" />
+		</antcall>
+
+		<antcall target="import-bnd-bundle-by-name">
+			<param name="bnd-bundle-name" value="com.tibco.cep.studio.dashboard.rt" />
+		</antcall>
+		
+		<antcall target="import-bnd-bundle-by-name">
+			<param name="bnd-bundle-name" value="com.tibco.cep.bpmn.rt" />
+		</antcall>
+
+	</target>
+
+	<target name="import-bnd-bundle-by-name">
+		<if>
+			<contains string="${bnd-bundle-name}" substring="com.tibco.cep.bpmn"/>
+			<then>
+				<var name="UI_BUNDLE_VERSION" value="${BPMN_PLUGINS_VERSION}"/>
+			</then>
+			<else>
+				<var name="UI_BUNDLE_VERSION" value="${UI_PLUGINS_VERSION}"/>
+			</else>
+		</if>
+						
+		<mkdir dir="${lib.exp}/${bnd-bundle-name}" />
+		<unjar dest="${lib.exp}/${bnd-bundle-name}">
+			<fileset dir="${exportDirectory}/${buildId}/eclipse/plugins/">
+				<include name="${bnd-bundle-name}_0.0.0.jar" />
+			</fileset>
+			<fileset dir="${lib.exp}">
+				<include name="${bnd-bundle-name}_${UI_BUNDLE_VERSION}.jar" />
+			</fileset>
+		</unjar>
+		<delete dir="${lib.exp}/${bnd-bundle-name}/lib" />
+		<jar destfile="${exportDirectory}/${buildId}/eclipse/plugins/${bnd-bundle-name}_${UI_BUNDLE_VERSION}.jar" basedir="${lib.exp}/${bnd-bundle-name}" manifest="${lib.exp}/${bnd-bundle-name}/META-INF/MANIFEST.MF" />
+		<delete dir="${lib.exp}/${bnd-bundle-name}" />
+		<delete file="${exportDirectory}/${buildId}/eclipse/plugins/${bnd-bundle-name}_0.0.0.jar" />
+	</target>
+
+	<target name="set-studio-configs">
+		<property file="build.properties" />
+
+		<if>
+			<contains string="${env.PORT}" substring="win" />
+			<then>
+				<if>
+					<contains string="${env.PORT}" substring="x86_64" />
+					<then>
+						<property name="configs" value="win32, win32, x86_64" />
+						<property name="baseos" value="win32" />
+						<property name="basews" value="win32" />
+						<property name="basearch" value="x86_64" />
+						<echo message="PORT=${env.PORT}. Setting Windows-64 Config." />
+					</then>
+					<else>
+						<property name="configs" value="win32, win32, x86" />
+						<property name="baseos" value="win32" />
+						<property name="basews" value="win32" />
+						<property name="basearch" value="x86" />
+						<echo message="PORT=${env.PORT}. Setting Windows-32 Config." />
+					</else>
+				</if>
+			</then>
+			<else>
+				<if>
+					<contains string="${env.PORT}" substring="linux" />
+					<then>
+						<if>
+							<contains string="${env.PORT}" substring="x86_64" />
+							<then>
+								<property name="configs" value="linux, gtk, x86_64" />
+								<property name="baseos" value="linux" />
+								<property name="basews" value="gtk" />
+								<property name="basearch" value="x86_64" />
+								<echo message="PORT=${env.PORT}. Setting Linux-64 Config." />
+							</then>
+							<else>
+								<property name="configs" value="linux, gtk, x86" />
+								<property name="baseos" value="linux" />
+								<property name="basews" value="gtk" />
+								<property name="basearch" value="x86" />
+								<echo message="PORT=${env.PORT}. Setting Linux-32 Config." />
+							</else>
+						</if>
+					</then>
+					<else>
+						<if>
+							<contains string="${env.PORT}" substring="macosx" />
+							<then>
+								<property name="configs" value="macosx, cocoa, x86_64" />
+								<property name="baseos" value="macosx" />
+								<property name="basews" value="cocoa" />
+								<property name="basearch" value="x86_64" />
+								<echo message="PORT=${env.PORT}. Setting Mac OS X 64-bit Config." />
+							</then>
+							<else>
+								<property name="configs" value="macosx, carbon, ppc" />
+								<property name="baseos" value="macosx" />
+								<property name="basews" value="carbon" />
+								<property name="basearch" value="ppc" />
+								<echo message="PORT=${env.PORT}. Setting Mac OS X carbon PPC Config." />
+							</else>
+						</if>
+					</else>
+				</if>
+			</else>
+		</if>
+	</target>
+
+	<target name="build-studio-diagramming-feature">
+		<antcall target="build-studio-plugin">
+			<param name="featureId" value="com.tibco.cep.studio.diagramming.feature" />
+			<param name="pluginId" value="com.tibco.cep.diagramming" />
+		</antcall>
+	</target>
+
+	<target name="build-studio-plugin" depends="set-studio-configs">
+		<antcall target="copy-feature-src">
+			<param name="featureId" value="${featureId}" />
+		</antcall>
+		<java classname="org.eclipse.equinox.launcher.Main" fork="true" failonerror="true">
+			<arg value="-application" />
+			<arg value="org.eclipse.ant.core.antRunner" />
+			<!-- <arg value="-verbose" /> -->
+			<arg value="-buildfile" />
+			<arg value="${eclipseLocation}/plugins/org.eclipse.pde.build_${pdeBuildPluginVersion}/scripts/build.xml" />
+			<arg value="-Dbuilder=${be.basedir}/studio" />
+			<arg value="-DfeatureId=${featureId}" />
+			<arg value="-DbuildDirectory=${buildDirectory}" />
+			<arg value="-DeclipseLocation=${eclipseLocation}" />
+			<arg value="-Dproduct=${product}" />
+			<arg value="-DrunPackager=${runPackager}" />
+			<arg value="-DarchivePrefix=${archivePrefix}" />
+			<arg value="-DcollectingFolder=${collectingFolder}" />
+			<arg value="-DbuildType=${buildType}" />
+			<arg value="-DbuildId=${buildId}" />
+			<arg value="-DbuildLabel=${buildLabel}" />
+			<arg value="-Dtimestamp=${timestamp}" />
+			<arg value="-DbaseLocation=${baseLocation}" />
+			<arg value="-Dbaseos=${baseos}" />
+			<arg value="-Dbasews=${basews}" />
+			<arg value="-Dbasearch=${basearch}" />
+			<arg value="-DfilteredDependencyCheck=${filteredDependencyCheck}" />
+			<arg value="-DpluginPath=${pluginPath}" />
+			<arg value="-DskipBase=${skipBase}" />
+			<arg value="-DeclipseURL=${eclipseURL}" />
+			<arg value="-DeclipseBuildId=${eclipseBuildId}" />
+			<arg value="-DeclipseBaseURL=${eclipseBaseURL}" />
+			<arg value="-DskipMaps=${skipMaps}" />
+			<arg value="-DmapsRepo=${mapsRepo}" />
+			<arg value="-DmapsRoot=${mapsRoot}" />
+			<arg value="-DmapsCheckoutTag=${mapsCheckoutTag}" />
+			<arg value="-DmapsTagTag=${mapsTagTag}" />
+			<arg value="-DskipFetch=${skipFetch}" />
+			<arg value="-DlogExtension=${logExtension}" />
+			<arg value="-DjavacDebugInfo=${javacDebugInfo}" />
+			<arg value="-DjavacFailOnError=${javacFailOnError}" />
+			<arg value="-DjavacVerbose=${javacVerbose}" />
+			<arg value="-DjavacSource=${javacSource}" />
+			<arg value="-DjavacTarget=${javacTarget}" />
+			<classpath>
+				<pathelement location="${eclipseLocation}/plugins/*.jar" />
+				<pathelement location="${eclipseLocation}/plugins/org.eclipse.equinox.launcher_${equinoxLauncherPluginVersion}.jar" />
+			</classpath>
+		</java>
+
+		<mkdir dir="${buildDirectory}/I.${buildId}/${featureId}" />
+		<mkdir dir="${exportDirectory}/studio/eclipse/plugins" />
+		<unzip src="${buildDirectory}/I.${buildId}/${featureId}-${buildId}.zip" dest="${buildDirectory}/I.${buildId}/${featureId}" />
+		<copy file="${buildDirectory}/I.${buildId}/${featureId}/${buildId}/plugins/${pluginId}_0.0.0.jar" tofile="${exportDirectory}/studio/eclipse/plugins/${pluginId}_0.0.0.jar" />
+	</target>
+
+	<target name="build-studio-product" depends="set-studio-configs">
+		<echo message="buildDirectory:${buildDirectory}"/>
+		<echo message="PLUGINPATH:${eclipseLocation}"/>
+		<echo message="PLUGINPATH:${env.ECLIPSE_EMF_HOME}"/>
+		<echo message="PLUGINPATH:${env.ECLIPSE_EMF_OCL_HOME}"/>
+		<echo message="PLUGINPATH:${env.ECLIPSE_MDT_HOME}"/>
+		<echo message="PLUGINPATH:${env.ECLIPSE_DELTA_PACK_HOME}"/>
+		<echo message="PLUGINPATH:${env.ECLIPSE_EPF_HOME}"/>
+		<echo message="PLUGINPATH:${env.GLAZEDLISTS_HOME}"/>
+		<echo message="PLUGINPATH:${env.ECLIPSE_NATTABLE_HOME}"/>
+		<echo message="PLUGINPATH:${env.BW_MAPPER_BASE}"/>
+		
+		<java classname="org.eclipse.equinox.launcher.Main" fork="true" failonerror="true">
+			<arg value="-application" />
+			<arg value="org.eclipse.ant.core.antRunner" />
+			<!--
+			<arg value="-verbose" />
+			<arg value="-clean"/>
+			-->
+
+			<arg value="-noupdate"/>
+			<arg value="-data" />
+			<arg value="${buildDirectory}/workspace" />
+			<arg value="-buildfile" />
+			<arg value="${eclipseLocation}/plugins/org.eclipse.pde.build_${pdeBuildPluginVersion}/scripts/productBuild/productBuild.xml" />
+			<arg value="-DbuildDirectory=${buildDirectory}" />
+			<arg value="-DeclipseLocation=${eclipseLocation}" />
+			<arg value="-Dproduct=${product}" />
+			<arg value="-DrunPackager=${runPackager}" />
+			<arg value="-DarchivePrefix=${archivePrefix}" />
+			<arg value="-DcollectingFolder=${collectingFolder}" />
+			<arg value="-Dconfigs=${configs}" />
+			<!--    <arg value="-Dzipargs=${zipargs}" />     -->
+			<!--    <arg value="-Dtarargs=${tarargs}" />     -->
+			<arg value="-DbuildType=${buildType}" />
+			<arg value="-DbuildId=${buildId}" />
+			<arg value="-DbuildLabel=${buildLabel}" />
+			<arg value="-DallowBinaryCycles=true" />
+			<arg value="-Dtimestamp=${timestamp}" />
+			<arg value="-DbaseLocation=${baseLocation}" />
+			<arg value="-Dbaseos=${baseos}" />
+			<arg value="-Dbasews=${basews}" />
+			<arg value="-Dbasearch=${basearch}" />
+			<arg value="-DfilteredDependencyCheck=${filteredDependencyCheck}" />
+			<arg value="-DpluginPath=${pluginPath}" />
+			<arg value="-DskipBase=${skipBase}" />
+			<arg value="-DeclipseURL=${eclipseURL}" />
+			<arg value="-DeclipseBuildId=${eclipseBuildId}" />
+			<arg value="-DeclipseBaseURL=${eclipseBaseURL}" />
+			<arg value="-DskipMaps=${skipMaps}" />
+			<arg value="-DmapsRepo=${mapsRepo}" />
+			<arg value="-DmapsRoot=${mapsRoot}" />
+			<arg value="-DmapsCheckoutTag=${mapsCheckoutTag}" />
+			<arg value="-DmapsTagTag=${mapsTagTag}" />
+			<arg value="-DskipFetch=${skipFetch}" />
+			<arg value="-DlogExtension=${logExtension}" />
+			<arg value="-DjavacDebugInfo=${javacDebugInfo}" />
+			<arg value="-DjavacFailOnError=${javacFailOnError}" />
+			<arg value="-DjavacVerbose=${javacVerbose}" />
+			<arg value="-DjavacSource=${javacSource}" />
+			<arg value="-DjavacTarget=${javacTarget}" />
+			<arg value="-Ddir_bootclasspath=${java.home}/lib" />
+			<classpath>
+				<pathelement location="${eclipseLocation}/plugins/*.jar" />
+				<pathelement location="${eclipseLocation}/plugins/org.eclipse.equinox.launcher_${equinoxLauncherPluginVersion}.jar" />
+			</classpath>
+		</java>
+	</target>
+
+	<target name="build-studio-rcpapp" depends="set-studio-configs">
+		<delete dir="${exportDirectory}/${buildId}" />
+		<unzip src="${buildDirectory}/I.${buildId}/${buildId}-${baseos}.${basews}.${basearch}.zip" dest="${exportDirectory}" />
+	</target>
+
+	<target name="init-studio-site">
+		<mkdir dir="${exportDirectory}/studio-site/features" />
+		<mkdir dir="${exportDirectory}/studio-site/plugins" />
+		<copy todir="${exportDirectory}/studio-site">
+			<fileset dir="${exportDirectory}/studio">
+				<include name="**/com.tibco.cep.rt_*.jar" />
+				<include name="**/com.tibco.cep.tpcl_*.jar" />
+				<include name="**/com.tibco.cep.tra_*.jar" />
+			</fileset>
+		</copy>
+		<copy todir="${exportDirectory}/studio-site/features">
+			<fileset dir="${sourceDirectory}/features">
+				<include name="**/feature.xml" />
+				<exclude name="*diagramming*/**" />
+			</fileset>
+		</copy>
+	</target>
+
+	<target name="build-studio-site-common">
+		<copy todir="${exportDirectory}/studio-site/plugins" overwrite="true">
+			<fileset dir="${be.exp}/Final/${env.PORT}/be_backingstore">
+				<include name="studio/eclipse/plugins/*.jar" />
+			</fileset>
+			<fileset dir="${be.exp}/Final/be_dbconcepts">
+				<include name="studio/eclipse/plugins/*.jar" />
+			</fileset>
+			<fileset dir="${be.exp}/Final/${env.PORT}/be_decisionmanager">
+				<include name="studio/eclipse/plugins/*.jar" />
+			</fileset>
+			<fileset dir="${be.exp}/Final/be_query">
+				<include name="studio/eclipse/plugins/*.jar" />
+			</fileset>
+			<fileset dir="${be.exp}/Final/${env.PORT}/be_studio">
+				<include name="studio/eclipse/plugins/*.jar" />
+				<exclude name="**/com.tibco.cep.rt_*.jar" />
+				<exclude name="**/com.tibco.cep.tpcl_*.jar" />
+				<exclude name="**/com.tibco.cep.tra_*.jar" />
+			</fileset>
+			<fileset dir="${be.exp}/Final/${env.PORT}/be_statemodeler">
+				<include name="studio/eclipse/plugins/*.jar" />
+			</fileset>
+			<fileset dir="${be.exp}/Final/${env.PORT}/be_views_modeler">
+				<include name="studio/eclipse/plugins/*.jar" />
+			</fileset>
+		</copy>
+	</target>
+
+	<target name="build-studio-site-dev" depends="build-studio-site-common">
+		<move todir="${exportDirectory}/studio-site/plugins">
+			<fileset dir="${exportDirectory}/studio-site/plugins/studio/eclipse/plugins">
+				<include name="*/**" />
+			</fileset>
+		</move>
+		<!--
+		<foreach target="update-bundle-version-for-studio-site" param="bundle-path">
+			<path>
+				<fileset dir="${exportDirectory}/studio-site/plugins" casesensitive="no">
+					<include name="com.tibco.cep.rt_*.jar" />
+					<include name="com.tibco.cep.tpcl_*.jar" />
+					<include name="com.tibco.cep.tra_*.jar" />
+				</fileset>
+			</path>
+		</foreach>
+		-->
+		<delete dir="${exportDirectory}/studio-site/plugins/studio" />
+		<zip destfile="${exportDirectory}/TIB_businessevents-studio-sdk_dev_${UI_PLUGINS_VERSION}.zip" basedir="${exportDirectory}/studio-site" />
+	</target>
+
+	<target name="build-studio-site" depends="build-studio-site-common">
+		<copy todir="${exportDirectory}/studio-site/plugins" overwrite="true">
+			<fileset dir="${be.exp}/Final/${env.PORT}/be_studio">
+				<include name="**/com.tibco.cep.rt_*.jar" />
+				<include name="**/com.tibco.cep.tpcl_*.jar" />
+				<include name="**/com.tibco.cep.tra_*.jar" />
+			</fileset>
+		</copy>
+		<move todir="${exportDirectory}/studio-site/plugins">
+			<fileset dir="${exportDirectory}/studio-site/plugins/studio/eclipse/plugins">
+				<include name="*/**" />
+			</fileset>
+		</move>
+		<delete dir="${exportDirectory}/studio-site/plugins/studio" />
+		<zip destfile="${exportDirectory}/TIB_businessevents-studio-sdk_${UI_PLUGINS_VERSION}.zip" basedir="${exportDirectory}/studio-site" />
+	</target>
+
+	<target name="build-studio-misc">
+		<copy todir="${exportDirectory}/${buildId}/configuration">
+			<fileset dir="${sourceDirectory}/config">
+				<include name="studio.tra" />
+			</fileset>
+		</copy>
+
+		<!-- Organize the Eclipse platform plugins -->
+		<mkdir dir="${exportDirectory}/eclipse/plugins" />
+		<move todir="${exportDirectory}/eclipse/plugins">
+			<fileset dir="${exportDirectory}/${buildId}/plugins">
+				<include name="*/**" />
+				<exclude name="com.tibco.cep.*/**" />
+			</fileset>
+		</move>
+
+		<!-- Organize the Studio plugins -->
+		<move todir="${exportDirectory}/${buildId}/eclipse">
+			<fileset dir="${exportDirectory}/${buildId}">
+				<include name="*/**" />
+			</fileset>
+		</move>
+		<copy todir="${exportDirectory}/${buildId}/bin">
+			<fileset dir="${sourceDirectory}/packaging/bin">
+				<include name="*/**" />
+				<exclude name="be-dmtools.tra" />
+				<exclude name="*.bat" />
+			</fileset>
+		</copy>
+
+		<replace file="${exportDirectory}/${buildId}/bin/studio-tools.tra" token="%UI_PLUGINS_VERSION%" value="${UI_PLUGINS_VERSION}" />
+		<replace file="${exportDirectory}/${buildId}/bin/studio-tools.tra" token="%EQUINOX_LAUNCHER_VERSION%" value="${env.EQUINOX_LAUNCHER_VERSION}" />
+		<replace file="${exportDirectory}/${buildId}/bin/studio-tools.tra" token="%APACHE_XERCES_VERSION%" value="${env.APACHE_XERCES_VERSION}" />
+
+		<delete dir="${exportDirectory}/${buildId}/eclipse/configuration/org.eclipse.equinox.simpleconfigurator" />
+
+		<copy file="${sourceDirectory}/packaging/ini/${env.PORT}/studio_config.ini" tofile="${exportDirectory}/${buildId}/eclipse/configuration/config.ini" overwrite="true" />
+		
+		
+		<mkdir dir="${exportDirectory}/${buildId}/eclipse/dropins" />
+		<copy todir="${exportDirectory}/${buildId}/eclipse/dropins">
+			<fileset dir="${sourceDirectory}/packaging/dropins">
+				<include name="*/**" />
+			</fileset>
+		</copy>
+		<copy todir="${exportDirectory}/${buildId}/eclipse">
+			<fileset dir="${sourceDirectory}/packaging/options">
+				<include name=".options" />
+			</fileset>
+		</copy>
+
+		<!--  MacOSX -->
+		<if>
+			<contains string="${env.PORT}" substring="macosx" />
+			<then>
+				<replace file="${exportDirectory}/${buildId}/eclipse/studio.app/Contents/MacOS/studio.ini" token="%LINUX_JAVA_EXT_DIRS%" value="" />
+				<replace file="${exportDirectory}/${buildId}/eclipse/studio.app/Contents/MacOS/studio.ini" token="%EQUINOX_LAUNCHER_VERSION%" value="${env.EQUINOX_LAUNCHER_VERSION}" />
+				<replace file="${exportDirectory}/${buildId}/eclipse/studio.app/Contents/MacOS/studio.ini" token="%EQUINOX_LAUNCHER_COCOA_MACOSX_VERSION%" value="${env.EQUINOX_LAUNCHER_COCOA_MACOSX_VERSION}" />
+			</then>
+
+			<else>
+				<!--  Linux -->
+				<if>
+					<contains string="${env.PORT}" substring="linux" />
+					<then>
+						<replace file="${exportDirectory}/${buildId}/eclipse/studio.ini" token="%LINUX_JAVA_EXT_DIRS%" value="-Djava.ext.dirs=%TIBCO_BE_HOME_ESC%/studio/lib:%TIBCO_JAVA_HOME_ESC%/lib/ext" />
+						<replace file="${exportDirectory}/${buildId}/eclipse/studio.ini" token="%EQUINOX_LAUNCHER_VERSION%" value="${env.EQUINOX_LAUNCHER_VERSION}" />
+						<replace file="${exportDirectory}/${buildId}/eclipse/studio.ini" token="%EQUINOX_LAUNCHER_GTK_LINUX_VERSION%" value="${env.EQUINOX_LAUNCHER_GTK_LINUX_VERSION}" />
+						<mkdir dir="${exportDirectory}/${buildId}/lib" />
+						<!--
+				<move file="${exportDirectory}/${buildId}/eclipse/plugins/com.tibco.cep.toolkit.adapter.linux_${UI_PLUGINS_VERSION}.jar" tofile="${exportDirectory}/${buildId}/lib/com.tibco.cep.toolkit.adapter.linux_${UI_PLUGINS_VERSION}.jar" />
+				-->
+						<copy todir="${exportDirectory}/${buildId}/lib">
+							<fileset dir="${env.ECLIPSE_HOME}/plugins">
+								<include name="org.eclipse.swt.gtk.linux.x86_*.jar" />
+							</fileset>
+						</copy>
+					</then>
+					<else>
+						<replace file="${exportDirectory}/${buildId}/eclipse/studio.ini" token="%LINUX_JAVA_EXT_DIRS%" value="" />
+						<replace file="${exportDirectory}/${buildId}/eclipse/studio.ini" token="%EQUINOX_LAUNCHER_VERSION%" value="${env.EQUINOX_LAUNCHER_VERSION}" />
+						<replace file="${exportDirectory}/${buildId}/eclipse/studio.ini" token="%EQUINOX_LAUNCHER_WIN32_WIN32_VERSION%" value="${env.EQUINOX_LAUNCHER_WIN32_WIN32_VERSION}" />
+					</else>
+				</if>
+			</else>
+
+		</if>
+
+		<!-- Decision Manager -->
+		<mkdir dir="${exportDirectory}/decisionmanager/eclipse/configuration" />
+		<copy file="${exportDirectory}/${buildId}/eclipse/configuration/studio.tra" todir="${exportDirectory}/decisionmanager/eclipse/configuration" overwrite="true" />
+		<copy file="${exportDirectory}/${buildId}/eclipse/.eclipseproduct" tofile="${exportDirectory}/decisionmanager/eclipse/.eclipseproduct" overwrite="true" />
+		<mkdir dir="${exportDirectory}/decisionmanager/eclipse/dropins" />
+		<copy todir="${exportDirectory}/decisionmanager/eclipse/dropins">
+			<fileset dir="${sourceDirectory}/packaging/dropins">
+				<include name="*/**" />
+			</fileset>
+		</copy>
+		
+		<if>
+			<contains string="${env.PORT}" substring="macosx" />
+			<then>
+				<copy file="${exportDirectory}/${buildId}/eclipse/studio.app/Contents/MacOS/studio.ini" tofile="${exportDirectory}/decisionmanager/eclipse/decisionmanager.ini" overwrite="true" />
+			</then>
+			<else>
+				<copy file="${exportDirectory}/${buildId}/eclipse/studio.ini" tofile="${exportDirectory}/decisionmanager/eclipse/decisionmanager.ini" overwrite="true" />
+			</else>
+		</if>
+
+		<replace file="${exportDirectory}/decisionmanager/eclipse/decisionmanager.ini" token="ACTIVATE_BUSINESS_USER=false" value="ACTIVATE_BUSINESS_USER=true" />
+
+		<if>
+			<contains string="${env.PORT}" substring="win/x86" />
+			<!-- includes Win32 & Win64 -->
+			<then>
+				<copy file="${exportDirectory}/${buildId}/eclipse/${buildId}.exe" tofile="${exportDirectory}/decisionmanager/eclipse/decisionmanager.exe" overwrite="true" />
+			</then>
+			<else>
+
+				<if>
+					<contains string="${env.PORT}" substring="macosx" />
+					<then>
+						<echo message="MAC OSX:Creating DecisionManager folder structure"/>
+						<mkdir dir="${exportDirectory}/decisionmanager/eclipse/decisionmanager.app"/>
+						 <copy todir="${exportDirectory}/decisionmanager/eclipse/decisionmanager.app" >
+						 	<fileset dir="${exportDirectory}/${buildId}/eclipse/studio.app">
+						 		<include name="*/**" />
+						 		<exclude name="*/**/studio.ini" />
+						 	</fileset>
+						 </copy>
+						 <rename src="${exportDirectory}/decisionmanager/eclipse/decisionmanager.app/Contents/MacOS/studio" dest="${exportDirectory}/decisionmanager/eclipse/decisionmanager.app/Contents/MacOS/decisionmanager"/>						
+						 <move file="${exportDirectory}/decisionmanager/eclipse/decisionmanager.ini" todir="${exportDirectory}/decisionmanager/eclipse/decisionmanager.app/Contents/MacOS"/>
+						 <copy todir="${exportDirectory}/decisionmanager/eclipse/decisionmanager.app/Contents">
+							<fileset dir="${exportDirectory}/studio/eclipse">
+								<include name="Info.plist"/>
+							</fileset>
+						 </copy>
+						 <replace file="${exportDirectory}/decisionmanager/eclipse/decisionmanager.app/Contents/Info.plist" 
+											token="studio" 
+											value="decisionmanager" />
+					</then>
+					<else>
+							<copy file="${exportDirectory}/${buildId}/eclipse/${buildId}" tofile="${exportDirectory}/decisionmanager/eclipse/decisionmanager" overwrite="true" />
+					</else>
+				</if>
+
+			</else>
+		</if>
+
+		<chmod dir="${exportDirectory}/studio" perm="755" includes="**/*" />
+		<chmod dir="${exportDirectory}/decisionmanager" perm="755" includes="**/*" />
+	</target>
+
+	<target name="setup-studio-external-jars-standard">
+		<antcall target="copy-external-jars-standard">
+			<param name="external.jars.dest" value="${buildDirectory}/plugins" />
+		</antcall>
+	</target>
+
+	<target name="setup-studio-external-jars">
+		<antcall target="copy-external-jars">
+			<param name="external.jars.dest" value="${buildDirectory}/plugins" />
+		</antcall>
+	</target>
+
+	<target name="setup-studio-dev">
+		<antcall target="copy-external-jars">
+			<param name="external.jars.dest" value="${studio.src}/plugins" />
+		</antcall>
+	</target>
+
+	<target name="clean-studio-all" depends="clean-studio-plugins, clean-studio-rcpapp, clean-studio-repo" />
+
+	<target name="clean-studio-plugins">
+		<delete dir="${buildDirectory}" />
+	</target>
+
+	<target name="clean-studio-rcpapp">
+		<delete dir="${exportDirectory}/${buildId}" />
+	</target>
+	
+	<target name="clean-studio-repo">
+		<delete dir="${exportDirectory}/studio-repo" />
+	</target>	
+
+	<!-- RMS related build targets -->
+
+	<target name="build-rms-all">
+		<copy todir="${exportDirectory}/rms/bin" overwrite="true">
+			<fileset dir="${rms.src}/../bin/">
+				<include name="*/**" />
+				<exclude name="*/*.bat" />
+				<exclude name="*.jar" />
+			</fileset>
+		</copy>
+		<copy todir="${exportDirectory}/rms/config" overwrite="true">
+			<fileset dir="${rms.src}/../config/" includes="*.xml" />
+		</copy>
+		<copy todir="${exportDirectory}/rms/config/security" overwrite="true">
+			<fileset dir="${rms.src}/../config/security" />
+		</copy>
+		<copy todir="${exportDirectory}/rms/config/notify" overwrite="true">
+			<fileset dir="${rms.src}/../config/notify" />
+		</copy>		
+		<copy todir="${exportDirectory}/rms/project/BRMS" overwrite="true">
+			<fileset dir="${rms.src}/../project/studio-project/BRMS">
+				<include name="*/**" />
+				<exclude name="**/.svn/**" />
+			</fileset>
+		</copy>
+		<copy file="${rms.src}/../project/studio-project/BRMS/Deployment/RMS.cdd" tofile="${exportDirectory}/rms/bin/RMS.cdd" overwrite="true" />
+		<!--copy todir="${exportDirectory}/rms/examples">
+			<fileset dir="${rms.src}/../packaging/examples">
+				<include name="*/**" />
+				<exclude name="**/ATTProject/**" />
+			</fileset>
+		</copy-->
+	</target>
+
+	<target name="build-studio-rms-common" depends="build-studio-rt-common">
+		<property name="studio.rms.common.obj" value="${studiorms.bld}" />
+		<property name="studio.rms.utils.src" value="${studiort.src}/../com.tibco.cep.studio.util" />
+		<property name="studio.rms.decisioncommon.src" value="${studiort.src}/../com.tibco.cep.decision.table.common" />
+		<property name="studio.rms.core.src" value="${studiort.src}/../../designtime/studio/plugins/com.tibco.cep.studio.rms.core" />
+		<property name="studio.rms.common.version.src" value="${studiort.src}/../src" />
+		<mkdir dir="${studio.rms.common.obj}" />
+		<mkdir dir="${rms.exp}/lib" />
+		<javac destdir="${studio.rms.common.obj}" debug="on" source="${javacSource}" target="${javacTarget}" encoding="iso-8859-1">
+			<!-- <compilerarg value="-proc:none"/> -->
+			<compilerarg line="${env.COMPILER_LINE_ARG}" />
+			<src path="${studiort.src}" />
+			<src path="${studio.rms.utils.src}/src" />
+			<src path="${studio.rms.decisioncommon.src}/src" />
+			<src path="${studio.rms.core.src}/src" />
+			<src path="${studio.rms.common.version.src}" />
+			<exclude name="com/tibco/be/viewsrt/cep_viewsrtVersion*" />
+			<exclude name="com/tibco/be/uirt/cep_uirtVersion*" />
+			<classpath>
+				<fileset dir="${lib.exp}">
+					<include name="**/*.jar" />
+				</fileset>
+				<fileset dir="${buildDirectory}/plugins/com.tibco.cep.tpcl/lib">
+					<include name="**/*.jar" />
+				</fileset>
+				<fileset dir="${buildDirectory}/plugins/com.tibco.cep.tra/lib">
+					<include name="**/*.jar" />
+				</fileset>
+				<fileset dir="${exportDirectory}/studio/eclipse/plugins">
+					<include name="**/*.jar" />
+					<exclude name="com.tibco.cep.bpmn.ui_*.jar"/>
+				</fileset>
+				<fileset dir="${env.ECLIPSE_HOME}/plugins">
+					<include name="**/*.jar" />
+				</fileset>
+				<fileset dir="${env.ECLIPSE_EMF_HOME}/plugins">
+					<include name="**/*.jar" />
+				</fileset>
+				<fileset dir="${env.ECLIPSE_MDT_HOME}/plugins">
+					<include name="**/*.jar" />
+				</fileset>
+			</classpath>
+		</javac>
+
+		<jar destfile="${rms.exp}/lib/cep-ui-rms-common.jar" basedir="${studio.rms.common.obj}">
+			<manifest>
+				<attribute name="Main-Class" value="com.tibco.be.uirms.cep_uirmsVersion" />
+			</manifest>
+		</jar>
+	</target>
+
+	<target name="clean-rms-package-all">
+		<delete dir="${exportDirectory}/rms" />
+	</target>
+
+	<target name="clean-studio-rms-common-all">
+		<delete verbose="${verbose}" file="${studiorms.jar}" />
+		<delete verbose="${verbose}" dir="${studiorms.bld}" />
+	</target>
+
+	<target name="clean-studio-rt-common">
+		<delete verbose="${verbose}" file="${studiort.jar}" />
+		<delete verbose="${verbose}" dir="${studiort.bld}" />
+	</target>
+
+	<target name="build-studio-rt-common" depends="setup-studio-external-jars-standard">
+		<property name="studio.rt.common.obj" value="${studiort.bld}" />
+		<property name="studio.rt.common.src" value="${studiort.src}/../com.tibco.cep.studio.common" />
+		<property name="studio.rt.common.version.src" value="${studiort.src}/../src" />
+		<mkdir dir="${studio.rt.common.obj}" />
+		<javac destdir="${studio.rt.common.obj}" debug="on" source="${javacSource}" target="${javacTarget}" encoding="iso-8859-1">
+			<compilerarg line="${env.COMPILER_LINE_ARG}" />
+			<src path="${studio.rt.common.src}/src" />
+			<src path="${studio.rt.common.version.src}" />
+			<exclude name="com/tibco/be/uirms/cep_uirmsVersion*" />
+			<exclude name="com/tibco/be/viewsrt/cep_viewsrtVersion*" />
+			<classpath>
+				<fileset dir="${lib.exp}">
+					<include name="**/*.jar" />
+				</fileset>
+				<fileset dir="${buildDirectory}/plugins/com.tibco.cep.tpcl/lib">
+					<include name="**/*.jar" />
+				</fileset>
+				<fileset dir="${buildDirectory}/plugins/com.tibco.cep.tra/lib">
+					<include name="**/*.jar" />
+				</fileset>
+				<!--
+                <fileset dir="${exportDirectory}/studio/eclipse/plugins">
+                    <include name="**/*.jar"/>
+                </fileset>
+                -->
+				<fileset dir="${env.ECLIPSE_HOME}/plugins">
+					<include name="**/*.jar" />
+				</fileset>
+				<fileset dir="${env.ECLIPSE_EMF_HOME}/plugins">
+					<include name="**/*.jar" />
+				</fileset>
+				<fileset dir="${env.ECLIPSE_MDT_HOME}/plugins">
+					<include name="**/*.jar" />
+				</fileset>
+			</classpath>
+			<include name="**/*.java"/>
+		</javac>
+
+		<copy todir="${studio.rt.common.obj}">
+			<fileset dir="${studio.rt.common.src}/src">
+				<include name="**/*.properties" />
+				<include name="**/*.template" />
+				<include name="**/*.xml" />
+				<exclude name="**/*.java" />
+				<exclude name="**/*.tag" />
+			</fileset>
+			<fileset dir="${studio.rt.common.src}">
+				<include name="model/**" />
+				<include name="schema/**" />
+			</fileset>
+		</copy>
+
+		<jar destfile="${lib.exp}/cep-ui-rt-common.jar" basedir="${studio.rt.common.obj}">
+			<manifest>
+				<attribute name="Main-Class" value="com.tibco.be.uirt.cep_uirtVersion" />
+			</manifest>
+		</jar>
+	</target>
+
+
+	<target name="build-studio-bpmn-common" depends="setup-studio-external-jars-standard">
+		<property name="studio.bpmn.common.obj" value="${studiort.bld}/../studiobpmncommon" />
+		<property name="studio.bpmn.common.src" value="${studiort.src}/../com.tibco.cep.bpmn.common" />
+		<mkdir dir="${studio.bpmn.common.obj}" />
+		<javac srcdir="${studio.bpmn.common.src}/src" destdir="${studio.bpmn.common.obj}" debug="on" source="${javacSource}" target="${javacTarget}" encoding="iso-8859-1">
+			<compilerarg line="${env.COMPILER_LINE_ARG}" />
+			<classpath>
+				<fileset dir="${lib.exp}">
+					<include name="**/*.jar" />
+				</fileset>
+				<fileset dir="${buildDirectory}/plugins/com.tibco.cep.tpcl/lib">
+					<include name="**/*.jar" />
+				</fileset>
+				<fileset dir="${buildDirectory}/plugins/com.tibco.cep.tra/lib">
+					<include name="**/*.jar" />
+				</fileset>
+				<!--
+                <fileset dir="${exportDirectory}/studio/eclipse/plugins">
+                    <include name="**/*.jar"/>
+                </fileset>
+                -->
+				<fileset dir="${env.ECLIPSE_HOME}/plugins">
+					<include name="**/*.jar" />
+				</fileset>
+				<fileset dir="${env.ECLIPSE_EMF_HOME}/plugins">
+					<include name="**/*.jar" />
+				</fileset>
+				<fileset dir="${env.ECLIPSE_MDT_HOME}/plugins">
+					<include name="**/*.jar" />
+				</fileset>
+			</classpath>
+			<include name="**/*.java"/>
+		</javac>
+
+		<copy todir="${studio.bpmn.common.obj}">
+			<fileset dir="${studio.bpmn.common.src}">
+				<include name="**/*.properties" />
+				<include name="**/*.ecore" />
+				<include name="**/*.exsd" />
+				<include name="**/*.genmodel" />
+				<include name="**/*.template" />
+				<include name="**/*.xml" />
+				<include name="**/*.xsd" />
+				<include name="**/*.xsd2ecore" />
+				<include name="*.xml" />
+				<exclude name="**/*.java" />
+				<exclude name="**/*.tag" />
+			</fileset>
+			<fileset dir="${studio.bpmn.common.src}">
+				<include name="model/**" />
+				<include name="schema/**" />
+			</fileset>
+		</copy>
+
+		<jar destfile="${lib.exp}/cep-bpmn-common.jar" basedir="${studio.bpmn.common.obj}">
+			<manifest>
+				<attribute name="Main-Class" value="com.tibco.cep.bpmn.cep_bpmnVersion" />
+			</manifest>
+		</jar>
+	</target>
+
+	<!-- Packaging -->
+
+	<target name="setup-eclipse-platform">
+		<mkdir dir="${be.exp}/Final/${port}/be_eclipse/eclipse-platform/eclipse" />
+		<if>
+			<or>
+				<contains string="${port}" substring="s390x" />
+				<contains string="${port}" substring="aix61" />
+				<contains string="${port}" substring="hpux112" />
+				<contains string="${port}" substring="sol" />
+			</or>	
+			<then>
+				<copy todir="${be.exp}/Final/${port}/be_eclipse/eclipse-platform/eclipse">
+					<fileset dir="${env.ECLIPSE_HOME}/../../linux26gl25/x86_64">
+						<exclude name="plugins/*.source_*.jar" />
+						<exclude name="plugins/org.eclipse.equinox.launcher.gtk.*/**" />
+					<!--	<exclude name="plugins/org.eclipse.swt.gtk.*.jar" /> -->
+						<!--exclude name="plugins/org.apache.jasper.glassfish*.jar" /-->						
+					</fileset>
+				</copy>
+			</then>
+			<else>
+				<copy todir="${be.exp}/Final/${port}/be_eclipse/eclipse-platform/eclipse">
+					<fileset dir="${env.ECLIPSE_HOME}/../../${port}">
+						<exclude name="plugins/*.source_*.jar" />
+						<exclude name="plugins/org.eclipse.equinox.launcher.gtk.*/**" />
+					<!-- <exclude name="plugins/org.eclipse.swt.gtk.*.jar" /> -->
+						<!--exclude name="plugins/org.apache.jasper.glassfish*.jar" /-->
+					</fileset>
+				</copy>
+			</else>
+		</if>
+
+		<if>
+			<equals arg1="${port}" arg2="macosx/x86_64"/>
+			<then>
+				<copy todir="${be.exp}/Final/${port}/be_eclipse/eclipse-platform/eclipse/Eclipse.app/Contents/Eclipse/dropins/eclipse/plugins">
+					<!--
+						<fileset dir="${env.ECLIPSE_EMF_HOME}/plugins">
+							<exclude name="*.source_*.jar" />
+							</fileset>
+								<fileset dir="${env.ECLIPSE_EMF_HOME}/plugins">
+									<include name="org.eclipse.xsd.edit*.jar" />
+									<include name="org.eclipse.xsd_*.jar" />
+									<exclude name="*.source_*.jar"/>
+								</fileset>
+								-->
+					<!-- Added to copy the OSGI 3.10.100 jar into dropins/eclipse/plugin directory -->
+					<fileset dir="${env.ECLIPSE_HOME}/plugins">
+						<include name="org.eclipse.osgi_3.10.101.v20150820-1432.jar" />
+					</fileset>
+					<fileset dir="${env.ECLIPSE_EPF_HOME}/../../../${env.PORT}/eclipse/plugins">
+						<include name="org.eclipse.epf.common*.jar" />
+						<include name="org.eclipse.epf.common*/**" />
+						<include name="org.eclipse.epf.richtext*.jar" />
+						<include name="org.eclipse.epf.richtext*/**" />
+						<exclude name="*.source_*.jar" />
+					</fileset>
+					<fileset dir="${env.ECLIPSE_MDT_HOME}/plugins">
+						<exclude name="*.source_*.jar" />
+					</fileset>
+					<!--
+								<fileset dir="${env.ECLIPSE_WTP_HOME}/plugins">
+									<include name="javax.xml_*.jar" />
+									<include name="javax.wsdl_*.jar" />
+									<include name="org.apache.xalan_${env.APACHE_XALAN_VERSION}.jar" />
+									<include name="org.apache.xerces_${env.APACHE_XERCES_VERSION}.jar" />
+									<include name="org.apache.xml.resolver_1.2.0.*.jar" />
+									<include name="org.apache.xml.serializer_2.7.1.*.jar" />
+									<include name="org.eclipse.jem.util*.jar" />
+									<include name="org.eclipse.wst.common.core*.jar" />
+									<include name="org.eclipse.wst.common.environment*.jar" />
+									<include name="org.eclipse.wst.common.frameworks*.jar" />
+									<include name="org.eclipse.wst.common.project.facet.core*.jar" />
+									<include name="org.eclipse.wst.common.ui*.jar" />
+									<include name="org.eclipse.wst.common.uriresolver*.jar" />
+									<include name="org.eclipse.wst.css.core*.jar" />
+									<include name="org.eclipse.wst.css.ui*.jar" />
+									<include name="org.eclipse.wst.html.core*.jar" />
+									<include name="org.eclipse.wst.html.ui*.jar" />
+									<include name="org.eclipse.wst.jsdt.core*.jar" />
+									<include name="org.eclipse.wst.jsdt.manipulation*.jar" />
+									<include name="org.eclipse.wst.jsdt.ui*.jar" />
+									<include name="org.eclipse.wst.sse.core*.jar" />
+									<include name="org.eclipse.wst.sse.ui*.jar" />
+									<include name="org.eclipse.wst.validation*.jar" />
+									<include name="org.eclipse.wst.wsdl_*.jar" />
+									<include name="org.eclipse.wst.xml.core*.jar" />
+									<include name="org.eclipse.wst.xml.ui*.jar" />
+									<include name="org.eclipse.wst.xsd.core*.jar" />
+									<include name="org.eclipse.wst.xsd.ui*.jar" />
+									<exclude name="*.source_*.jar"/>
+								</fileset>
+								-->
+					<fileset dir="${env.ECLIPSE_NATTABLE_HOME}/plugins">
+						<include name="org.eclipse.nebula.widgets.nattable.*.jar" />
+						<exclude name="*.source_*.jar" />
+					</fileset>
+					<fileset dir="${env.GLAZEDLISTS_HOME}/plugins">
+						<!--<include name="glazedlists-*_java15.jar" /> -->
+						<include name="glazedlists_java15-1.9.1.jar" />
+					</fileset>
+					<fileset dir="${BW_LIB}">
+						<include name="*.jar" />
+						<exclude name="*.source_*.jar" />
+					</fileset>
+				</copy>
+			</then>
+			<else>
+				<copy todir="${be.exp}/Final/${port}/be_eclipse/eclipse-platform/eclipse/dropins/eclipse/plugins">
+					<!--
+				<fileset dir="${env.ECLIPSE_EMF_HOME}/plugins">
+					<exclude name="*.source_*.jar" />
+				</fileset>
+				<fileset dir="${env.ECLIPSE_EMF_HOME}/plugins">
+					<include name="org.eclipse.xsd.edit*.jar" />
+					<include name="org.eclipse.xsd_*.jar" />
+					<exclude name="*.source_*.jar"/>
+				</fileset>
+				-->
+					<!-- Added to copy the OSGI 3.10.100 jar into dropins/eclipse/plugin directory -->
+					<fileset dir="${env.ECLIPSE_HOME}/plugins">
+						<include name="org.eclipse.osgi_3.10.101.v20150820-1432.jar" />
+					</fileset>
+					<fileset dir="${env.ECLIPSE_EPF_HOME}/../../../${env.PORT}/eclipse/plugins">
+						<include name="org.eclipse.epf.common*.jar" />
+						<include name="org.eclipse.epf.common*/**" />
+						<include name="org.eclipse.epf.richtext*.jar" />
+						<include name="org.eclipse.epf.richtext*/**" />
+						<exclude name="*.source_*.jar"/>
+					</fileset>
+					<fileset dir="${env.ECLIPSE_MDT_HOME}/plugins">
+						<exclude name="*.source_*.jar" />
+					</fileset>
+					<fileset dir="${env.ECLIPSE_NATTABLE_HOME}/plugins">
+						<include name="org.eclipse.nebula.widgets.nattable.*.jar" />
+						<exclude name="*.source_*.jar"/>
+					</fileset>
+					<fileset dir="${env.GLAZEDLISTS_HOME}/plugins">
+						<!--<include name="glazedlists-*_java15.jar" /> -->
+						<include name="glazedlists_java15-1.9.1.jar" />
+					</fileset>
+					<fileset dir="${BW_LIB}">
+						<include name="*.jar" />
+						<exclude name="*.source_*.jar"/>
+					</fileset>
+				</copy>
+			</else>
+		</if>
+
+		<!--
+		<concat destfile="${be.exp}/Final/${port}/be_eclipse/eclipse-platform/eclipse/configuration/org.eclipse.equinox.simpleconfigurator/bundles.info" append="false">
+	        <fileset file="${be.basedir}/studio/bundles.txt"/>
+	    </concat>
+	    -->
+
+		<!-- Pick the respective bundles.info from the eclipse/configuration/org.eclipse.equinox.simpleconfigurator directory -->
+	<!--	<if>
+			<or>
+				<contains string="${port}" substring="s390x" />
+				<contains string="${port}" substring="aix61" />
+				<contains string="${port}" substring="hpux112" />
+				<contains string="${port}" substring="sol" />
+			</or>	
+			<then>
+				<copy todir="${be.exp}/Final/linux26gl25/x86_64/be_eclipse/eclipse-platform/eclipse/configuration/org.eclipse.equinox.simpleconfigurator">
+					<fileset dir="${be.exp}/Final/linux26gl25/x86_64/be_eclipse/eclipse-platform/eclipse/configuration/org.eclipse.equinox.simpleconfigurator">
+						<include name="*/**" />
+					</fileset>
+				</copy>
+			</then>
+			<else>	
+				<copy todir="${be.exp}/Final/${port}/be_eclipse/eclipse-platform/eclipse/configuration/org.eclipse.equinox.simpleconfigurator">
+					<fileset dir="${be.exp}/Final/${port}/be_eclipse/eclipse-platform/eclipse/configuration/org.eclipse.equinox.simpleconfigurator">
+						<include name="*/**" />
+					</fileset>
+				</copy>
+			</else>
+		</if> -->
+		<!-- Logic to remove the unwanted bundles and use the correct osgi plugin version -->
+
+		<if>
+			<equals arg1="${port}" arg2="macosx/x86_64"/>
+			<then>
+				<copy tofile="${be.exp}/Final/${port}/be_eclipse/eclipse-platform/eclipse/Eclipse.app/Contents/Eclipse/configuration/org.eclipse.equinox.simpleconfigurator/bundles.info.edit" file="${be.exp}/Final/${port}/be_eclipse/eclipse-platform/eclipse/Eclipse.app/Contents/Eclipse/configuration/org.eclipse.equinox.simpleconfigurator/bundles.info">
+
+				</copy>
+			</then>
+			<else>
+				<copy tofile="${be.exp}/Final/${port}/be_eclipse/eclipse-platform/eclipse/configuration/org.eclipse.equinox.simpleconfigurator/bundles.info.edit" file="${be.exp}/Final/${port}/be_eclipse/eclipse-platform/eclipse/configuration/org.eclipse.equinox.simpleconfigurator/bundles.info">
+
+				</copy>
+			</else>
+		</if>
+
+
+
+
+
+
+
+
+		<!--	<filterchain> -->
+		<!--linecontains negate="true">
+					<contains value="org.eclipse.equinox.jsp.jasper,1.0.400.v20130327-1442,plugins/org.eclipse.equinox.jsp.jasper_1.0.400.v20130327-1442.jar,4,false"/>
+				</linecontains-->
+		<!--linecontains negate="true">
+					<contains value="org.apache.jasper.glassfish,2.2.2.v201205150955,plugins/org.apache.jasper.glassfish_2.2.2.v201205150955.jar,4,false"/>
+				</linecontains-->
+		<!--linecontains negate="true">
+					<contains value="org.eclipse.equinox.jsp.jasper.registry,1.0.300.v20130327-1442,plugins/org.eclipse.equinox.jsp.jasper.registry_1.0.300.v20130327-1442.jar,4,false"/>
+				</linecontains-->
+		<!--linecontains negate="true">
+					<contains value="org.eclipse.help.webapp,3.6.300.v20140407-1855,plugins/org.eclipse.help.webapp_3.6.300.v20140407-1855.jar,4,false"/>
+				</linecontains-->
+		<!-- <linecontains negate="true">
+					<contains value="org.eclipse.jpt.dbws.eclipselink.ui,1.1.100.v201308271450,plugins/org.eclipse.jpt.dbws.eclipselink.ui_1.1.100.v201308271450.jar,4,false"/>
+				</linecontains>
+				<linecontains negate="true">
+					<contains value="org.eclipse.jst.ws.axis.consumption.ui,1.0.750.v201311011546,plugins/org.eclipse.jst.ws.axis.consumption.ui_1.0.750.v201311011546.jar,4,false"/>
+				</linecontains>
+				<linecontains negate="true">
+					<contains value="org.eclipse.jst.ws.axis.creation.ui,1.0.800.v201309242123,plugins/org.eclipse.jst.ws.axis.creation.ui_1.0.800.v201309242123.jar,4,false"/>
+				</linecontains>
+				<linecontains negate="true">
+					<contains value="org.eclipse.jst.ws.axis2.consumption.core,1.0.200.v201309242118,plugins/org.eclipse.jst.ws.axis2.consumption.core_1.0.200.v201309242118.jar,4,false"/>
+				</linecontains>
+				<linecontains negate="true">
+					<contains value="org.eclipse.jst.ws.axis2.consumption.ui,1.0.200.v201309242118,plugins/org.eclipse.jst.ws.axis2.consumption.ui_1.0.200.v201309242118.jar,4,false"/>
+				</linecontains>
+				<linecontains negate="true">
+					<contains value="org.eclipse.jst.ws.axis2.creation.core,1.0.200.v201309242118,plugins/org.eclipse.jst.ws.axis2.creation.core_1.0.200.v201309242118.jar,4,false"/>
+				</linecontains>
+				<linecontains negate="true">
+					<contains value="org.eclipse.jst.ws.axis2.creation.ui,1.0.200.v201309242118,plugins/org.eclipse.jst.ws.axis2.creation.ui_1.0.200.v201309242118.jar,4,false"/>
+				</linecontains>
+				<linecontains negate="true">
+					<contains value="org.eclipse.jst.ws.axis2.ui,1.0.400.v201309242118,plugins/org.eclipse.jst.ws.axis2.ui_1.0.400.v201309242118.jar,4,false"/>
+				</linecontains>
+				<linecontains negate="true">
+					<contains value="org.eclipse.jst.ws.consumption.ui,1.1.750.v201401132311,plugins/org.eclipse.jst.ws.consumption.ui_1.1.750.v201401132311.jar,4,false"/>
+				</linecontains>
+				<linecontains negate="true">
+					<contains value="org.eclipse.jst.ws.creation.ui,1.0.850.v201310310244,plugins/org.eclipse.jst.ws.creation.ui_1.0.850.v201310310244.jar,4,false"/>
+				</linecontains>
+				<linecontains negate="true">
+					<contains value="org.eclipse.jst.ws.cxf.consumption.ui,1.0.300.v201309232152,plugins/org.eclipse.jst.ws.cxf.consumption.ui_1.0.300.v201309232152.jar,4,false"/>
+				</linecontains>
+				<linecontains negate="true">
+					<contains value="org.eclipse.jst.ws.cxf.creation.ui,1.0.300.v201403242125,plugins/org.eclipse.jst.ws.cxf.creation.ui_1.0.300.v201403242125.jar,4,false"/>
+				</linecontains>
+				<linecontains negate="true">
+					<contains value="org.eclipse.jst.ws.uddiregistry,1.0.550.v201309242123,plugins/org.eclipse.jst.ws.uddiregistry_1.0.550.v201309242123.jar,4,false"/>
+				</linecontains>
+				<linecontains negate="true">
+					<contains value="org.eclipse.jst.ws.ui,1.0.450.v201309242123,plugins/org.eclipse.jst.ws.ui_1.0.450.v201309242123.jar,4,false"/>
+				</linecontains>
+				<linecontains negate="true">
+					<contains value="org.eclipse.wst.ws.explorer,1.0.750.v201401291755,plugins/org.eclipse.wst.ws.explorer_1.0.750.v201401291755.jar,4,false"/>
+				</linecontains> 
+			</filterchain>-->
+
+
+
+
+
+
+		<!--	<replaceregexp file="${be.exp}/Final/${port}/be_eclipse/eclipse-platform/eclipse/configuration/org.eclipse.equinox.simpleconfigurator/bundles.info.edit"
+							  match="org.eclipse.osgi,3.10.1.v20140909-1633,plugins/org.eclipse.osgi_3.10.1.v20140909-1633.jar,-1,true"
+							  replace="org.eclipse.osgi,3.10.2.v20141020-1740,plugins/org.eclipse.osgi_3.10.2.v20141020-1740.jar,-1,true"
+		                      byline="true"
+		/> -->
+		<if>
+			<equals arg1="${port}" arg2="linux26gl25/x86_64"/>
+			<then>
+				<replaceregexp file="${be.exp}/Final/${port}/be_eclipse/eclipse-platform/eclipse/configuration/org.eclipse.equinox.simpleconfigurator/bundles.info.edit"
+									  match="org.eclipse.core.filesystem.linux.x86,1.4.200.v20140124-1940,plugins/org.eclipse.core.filesystem.linux.x86_1.4.200.v20140124-1940.jar,4,false"
+				                      replace="org.eclipse.core.filesystem.linux.x86_64,1.2.200.v20140124-1940,plugins/org.eclipse.core.filesystem.linux.x86_64_1.2.200.v20140124-1940.jar,4,false"
+									  byline="true"
+				/>
+				<replaceregexp file="${be.exp}/Final/${port}/be_eclipse/eclipse-platform/eclipse/configuration/org.eclipse.equinox.simpleconfigurator/bundles.info.edit"
+									  match="org.eclipse.core.net.linux.x86,1.2.0.v20160323-1650,plugins/org.eclipse.core.net.linux.x86_1.2.0.v20160323-1650.jar,4,false"
+				                      replace="org.eclipse.core.net.linux.x86_64,1.2.0.v20160323-1650,plugins/org.eclipse.core.net.linux.x86_64_1.2.0.v20160323-1650.jar,4,false"
+									  byline="true"
+				/>
+				<replaceregexp file="${be.exp}/Final/${port}/be_eclipse/eclipse-platform/eclipse/configuration/org.eclipse.equinox.simpleconfigurator/bundles.info.edit"
+									  match="org.eclipse.equinox.launcher.gtk.linux.x86,1.1.401.v20161122-1740,plugins/org.eclipse.equinox.launcher.gtk.linux.x86_1.1.401.v20161122-1740/,4,false"
+				                      replace="org.eclipse.equinox.launcher.gtk.linux.x86_64,1.1.401.v20161122-1740,plugins/org.eclipse.equinox.launcher.gtk.linux.x86_64_1.1.401.v20161122-1740/,4,false"
+									  byline="true"
+				/>
+				<replaceregexp file="${be.exp}/Final/${port}/be_eclipse/eclipse-platform/eclipse/configuration/org.eclipse.equinox.simpleconfigurator/bundles.info.edit"
+									  match="org.eclipse.swt.gtk.linux.x86,3.105.3.v20170228-0512,plugins/org.eclipse.swt.gtk.linux.x86_3.105.3.v20170228-0512.jar,4,false"
+				                      replace="org.eclipse.swt.gtk.linux.x86_64,3.105.3.v20170228-0512,plugins/org.eclipse.swt.gtk.linux.x86_64_3.105.3.v20170228-0512.jar,4,false"
+									  byline="true"
+				/>
+			</then>
+		</if>
+
+		<if>
+			<equals arg1="${port}" arg2="macosx/x86_64"/>
+			<then>
+				<rename src="${be.exp}/Final/${port}/be_eclipse/eclipse-platform/eclipse/Eclipse.app/Contents/Eclipse/configuration/org.eclipse.equinox.simpleconfigurator/bundles.info.edit"
+							          dest="${be.exp}/Final/${port}/be_eclipse/eclipse-platform/eclipse/Eclipse.app/Contents/Eclipse/configuration/org.eclipse.equinox.simpleconfigurator/bundles.info"/>
+			</then>
+			<else>
+				<rename src="${be.exp}/Final/${port}/be_eclipse/eclipse-platform/eclipse/configuration/org.eclipse.equinox.simpleconfigurator/bundles.info.edit"
+							          dest="${be.exp}/Final/${port}/be_eclipse/eclipse-platform/eclipse/configuration/org.eclipse.equinox.simpleconfigurator/bundles.info"/>
+			</else>
+		</if>
+
+
+
+		<!-- <replaceregexp file="${be.exp}/Final/linux26gl25/x86_64/be_eclipse/eclipse-platform/eclipse/configuration/org.eclipse.equinox.simpleconfigurator/bundles.info.edit"
+								   match="org.eclipse.osgi,3.10.1.v20140909-1633,plugins/org.eclipse.osgi_3.10.1.v20140909-1633.jar,-1,true"
+					               replace="org.eclipse.osgi,3.10.2.v20141020-1740,plugins/org.eclipse.osgi_3.10.2.v20141020-1740.jar,-1,true"
+					               byline="true"
+		/>
+		
+		<if>
+			<available file="${be.exp}/Final/win/x86_64/be_eclipse/eclipse-platform/eclipse/configuration/org.eclipse.equinox.simpleconfigurator/bundles.info.edit"/>
+			<then>
+				<replaceregexp file="${be.exp}/Final/win/x86_64/be_eclipse/eclipse-platform/eclipse/configuration/org.eclipse.equinox.simpleconfigurator/bundles.info.edit"
+										   match="org.eclipse.osgi,3.10.1.v20140909-1633,plugins/org.eclipse.osgi_3.10.1.v20140909-1633.jar,-1,true"
+							               replace="org.eclipse.osgi,3.10.2.v20141020-1740,plugins/org.eclipse.osgi_3.10.2.v20141020-1740.jar,-1,true"
+							               byline="true"
+				/>
+			</then>
+		</if>
+		
+		<copy tofile="${be.exp}/Final/${port}/be_eclipse/eclipse-platform/eclipse/configuration/org.eclipse.equinox.simpleconfigurator/bundles.info" file="${be.exp}/Final/${port}/be_eclipse/eclipse-platform/eclipse/configuration/org.eclipse.equinox.simpleconfigurator/bundles.info.edit">
+		</copy>
+		-->
+
+		<if>
+			<equals arg1="${port}" arg2="macosx/x86_64"/>
+			<then>
+				<copy file="${studio.src}/packaging/ini/${port}/eclipse_config.ini" tofile="${be.exp}/Final/${port}/be_eclipse/eclipse-platform/eclipse/Eclipse.app/Contents/Eclipse/configuration/config.ini" overwrite="true" />
+				<copy file="${studio.src}/packaging/ini/${port}/eclipse.ini" todir="${be.exp}/Final/${port}/be_eclipse/eclipse-platform/eclipse/Eclipse.app/Contents/Eclipse" overwrite="true" />
+				<mkdir dir="${be.exp}/Final/${port}/be_eclipse/eclipse-platform/eclipse/Eclipse.app/Contents/Eclipse/dropins" />
+				<copy todir="${be.exp}/Final/${port}/be_eclipse/eclipse-platform/eclipse/Eclipse.app/Contents/Eclipse/dropins">
+					<fileset dir="${studio.src}/packaging/dropins">
+						<include name="*/**" />
+						<exclude name="**/*EclipsePlatform*.link" />
+					</fileset>
+				</copy>
+			</then>
+			<else>
+				<copy file="${studio.src}/packaging/ini/${port}/eclipse_config.ini" tofile="${be.exp}/Final/${port}/be_eclipse/eclipse-platform/eclipse/configuration/config.ini" overwrite="true" />
+				<copy file="${studio.src}/packaging/ini/${port}/eclipse.ini" todir="${be.exp}/Final/${port}/be_eclipse/eclipse-platform/eclipse" overwrite="true" />
+				<mkdir dir="${be.exp}/Final/${port}/be_eclipse/eclipse-platform/eclipse/dropins" />
+				<copy todir="${be.exp}/Final/${port}/be_eclipse/eclipse-platform/eclipse/dropins">
+					<fileset dir="${studio.src}/packaging/dropins">
+						<include name="*/**" />
+						<exclude name="**/*EclipsePlatform*.link" />
+					</fileset>
+				</copy>
+			</else>
+		</if>
+
+		<if>
+			<equals arg1="${port}" arg2="linux26gl25/x86"/>
+			<then>
+				<mkdir dir="${be.exp}/Final/linux26gl25/x86_64" />
+				<copy todir="${be.exp}/Final/linux26gl25/x86_64">
+					<fileset dir="${be.exp}/Final/linux26gl25/x86/">
+						<include name="**/*" />
+					</fileset>
+				</copy>
+			</then>
+		</if>
+	</target>
+	
+	<target name="setup-eclipse-platform-base">
+		<antcall target="setup-eclipse-platform">
+			<param name="port" value="${env.PORT}" />
+		</antcall>
+	</target>
+
+	<target name="build-assemblies-studio-PORT">
+		<copy todir="${be.exp}/Final/${port}/be_decisionmanager">
+			<fileset dir="${be.exp}/Final/${basePort}/be_decisionmanager">
+				<include name="*/**" />
+			</fileset>
+		</copy>
+		<copy todir="${be.exp}/Final/${port}/be_liveview">
+			<fileset dir="${be.exp}/Final/${basePort}/be_liveview">
+				<include name="*/**" />
+			</fileset>
+		</copy>
+		<copy todir="${be.exp}/Final/${port}/be_process_editor">
+			<fileset dir="${be.exp}/Final/${basePort}/be_process_editor">
+				<include name="*/**" />
+			</fileset>
+		</copy>
+		<copy todir="${be.exp}/Final/${port}/be_statemodeler">
+			<fileset dir="${be.exp}/Final/${basePort}/be_statemodeler">
+				<include name="*/**" />
+			</fileset>
+		</copy>
+		<copy todir="${be.exp}/Final/${port}/be_studio">
+			<fileset dir="${be.exp}/Final/${basePort}/be_studio">
+				<include name="*/**" />
+			</fileset>
+		</copy>
+		<copy todir="${be.exp}/Final/${port}/be_eclipse">
+			<fileset dir="${be.exp}/Final/${basePort}/be_eclipse">
+				<include name="uninstaller_scripts/**" />
+			</fileset>
+		</copy>
+		<if>
+			<not>
+				<or>
+				<equals arg1="${port}" arg2="linux26gl25/x86_64" />
+				<equals arg1="${port}" arg2="linux26gl25/x86" />
+				</or>
+			</not>
+			<then>
+				<delete file="${be.exp}/Final/${port}/be_studio/studio/eclipse/about.html" failonerror="true"/>
+				<delete file="${be.exp}/Final/${port}/be_studio/studio/eclipse/icon.xpm" failonerror="true"/>
+			</then>
+		</if>
+		<copy todir="${be.exp}/Final/${port}/be_views_modeler">
+			<fileset dir="${be.exp}/Final/${basePort}/be_views_modeler">
+				<include name="*/**" />
+			</fileset>
+		</copy>
+		<antcall target="setup-eclipse-platform">
+		</antcall>
+	</target>
+	
+	<!--This will port studio plugins for UNIX platforms to be used by studio tools only-->
+	<target name="build-assemblies-studiotools-PORT">
+		<copy todir="${be.exp}/Final/${port}/be_decisionmanager">
+			<fileset dir="${be.exp}/Final/${basePort}/be_decisionmanager">
+				<include name="*/**" />
+				<exclude name="studio/repo/**"/>
+			</fileset>
+		</copy>
+		<copy todir="${be.exp}/Final/${port}/be_process_editor">
+			<fileset dir="${be.exp}/Final/${basePort}/be_process_editor">
+				<include name="*/**" />
+				<exclude name="studio/repo/**"/>
+			</fileset>
+		</copy>
+		<copy todir="${be.exp}/Final/${port}/be_statemodeler">
+			<fileset dir="${be.exp}/Final/${basePort}/be_statemodeler">
+				<include name="*/**" />
+				<exclude name="studio/repo/**"/>
+			</fileset>
+		</copy>
+
+		<copy todir="${be.exp}/Final/${port}/be_studio">
+			<fileset dir="${be.exp}/Final/${basePort}/be_studio">
+				<include name="*/**" />
+				<exclude name="studio/lib/**"/>
+				<exclude name="studio/repo/**"/>
+				<!-- <exclude name="studio/eclipse/libcairo-swt.so"/> -->
+				<exclude name="studio/eclipse/studio"/>
+				<exclude name="studio/eclipse/studio.ini"/>
+				<exclude name="studio/eclipse/about.html"/>
+				<exclude name="studio/eclipse/about_files/**"/>
+			</fileset>
+		</copy>
+		<copy todir="${be.exp}/Final/${port}/be_views_modeler">
+			<fileset dir="${be.exp}/Final/${basePort}/be_views_modeler">
+				<include name="*/**" />
+				<exclude name="studio/repo/**"/>
+			</fileset>
+		</copy>
+		<antcall target="setup-eclipse-platform-studiotools">
+		</antcall>
+	</target>
+	
+	<target name="build-assemblies-studio-win64">
+		<if>
+			<and>
+				<contains string="${env.PORT}" substring="win" />
+				<equals arg1="${env.WINDOWS_64BIT_PACKAGING_ENABLE}" arg2="true" />
+			</and>
+			<then>
+				<property name="WIN32_PORT" value="win/x86" />
+				<property name="WIN64_PORT" value="win/x86_64" />
+
+				<antcall target="build-assemblies-studio-PORT">
+					<param name="basePort" value="${WIN32_PORT}" />
+					<param name="port" value="${WIN64_PORT}" />
+				</antcall>
+
+				<copy file="${studio.src}/packaging/exe/${WIN64_PORT}/studio.exe" 
+					tofile="${be.exp}/Final/${WIN64_PORT}/be_decisionmanager/decisionmanager/eclipse/decisionmanager.exe" overwrite="true" />
+				<replace file="${be.exp}/Final/${WIN64_PORT}/be_decisionmanager/decisionmanager/eclipse/decisionmanager.ini" 
+					token="org.eclipse.equinox.launcher.win32.win32.x86_${env.EQUINOX_LAUNCHER_WIN32_WIN32_VERSION}" 
+					value="org.eclipse.equinox.launcher.win32.win32.x86_64_${env.EQUINOX_LAUNCHER_WIN32_WIN32_VERSION}" />
+
+				<copy file="${studio.src}/packaging/exe/${WIN64_PORT}/studio.exe" 
+					tofile="${be.exp}/Final/${WIN64_PORT}/be_studio/studio/eclipse/studio.exe" overwrite="true" />
+				<replace file="${be.exp}/Final/${WIN64_PORT}/be_studio/studio/eclipse/studio.ini" 
+					token="org.eclipse.equinox.launcher.win32.win32.x86_${env.EQUINOX_LAUNCHER_WIN32_WIN32_VERSION}" 
+					value="org.eclipse.equinox.launcher.win32.win32.x86_64_${env.EQUINOX_LAUNCHER_WIN32_WIN32_VERSION}" />
+			</then>
+		</if>
+		<!-- Change to create win/x86_64 assembly on linux -->
+		<if>
+			<and>
+				<contains string="${env.PORT}" substring="linux" />
+				<equals arg1="${env.UNIX_ALL_PACKAGING_ENABLE}" arg2="true" />
+			</and>
+			<then>
+				<property name="LIN32_PORT" value="linux26gl25/x86" />
+				<property name="LIN64_PORT" value="linux26gl25/x86_64" />
+				<property name="WIN64_PORT" value="win/x86_64" />
+
+				<antcall target="build-assemblies-studio-PORT">
+					<param name="basePort" value="${LIN64_PORT}" />
+					<param name="port" value="${WIN64_PORT}" />
+				</antcall>
+
+				<copy file="${studio.src}/packaging/exe/${WIN64_PORT}/studio.exe" 
+					tofile="${be.exp}/Final/${WIN64_PORT}/be_decisionmanager/decisionmanager/eclipse/decisionmanager.exe" overwrite="true" />
+				<replace file="${be.exp}/Final/${WIN64_PORT}/be_decisionmanager/decisionmanager/eclipse/decisionmanager.ini" 
+					token="org.eclipse.equinox.launcher.win32.win32.x86_${env.EQUINOX_LAUNCHER_WIN32_WIN32_VERSION}" 
+					value="org.eclipse.equinox.launcher.win32.win32.x86_64_${env.EQUINOX_LAUNCHER_WIN32_WIN32_VERSION}" />
+				<replace file="${be.exp}/Final/${WIN64_PORT}/be_decisionmanager/decisionmanager/eclipse/decisionmanager.ini" 
+					token="org.eclipse.equinox.launcher.gtk.linux.x86_${env.EQUINOX_LAUNCHER_GTK_LINUX_VERSION}" 
+					value="org.eclipse.equinox.launcher.win32.win32.x86_64_${env.EQUINOX_LAUNCHER_WIN32_WIN32_VERSION}" />
+				<replace file="${be.exp}/Final/${WIN64_PORT}/be_decisionmanager/decisionmanager/eclipse/decisionmanager.ini" 
+					token="-Djava.ext.dirs=%TIBCO_BE_HOME_ESC%/studio/lib:%TIBCO_JAVA_HOME_ESC%/lib/ext" 
+					value="" />
+				<replace file="${be.exp}/Final/${WIN64_PORT}/be_decisionmanager/decisionmanager/eclipse/decisionmanager.ini" 
+					token="-Dorg.eclipse.swt.internal.gtk.disablePrinting" 
+					value="" />
+				<replace file="${be.exp}/Final/${WIN64_PORT}/be_decisionmanager/decisionmanager/eclipse/decisionmanager.ini" 
+					token="-Dswing.systemlaf=javax.swing.plaf.metal.MetalLookAndFeel" 
+					value="" />
+
+				
+				<copy file="${studio.src}/packaging/exe/${WIN64_PORT}/studio.exe" 
+					tofile="${be.exp}/Final/${WIN64_PORT}/be_studio/studio/eclipse/studio.exe" overwrite="true" />
+				<replace file="${be.exp}/Final/${WIN64_PORT}/be_studio/studio/eclipse/studio.ini" 
+					token="org.eclipse.equinox.launcher.win32.win32.x86_${env.EQUINOX_LAUNCHER_WIN32_WIN32_VERSION}" 
+					value="org.eclipse.equinox.launcher.win32.win32.x86_64_${env.EQUINOX_LAUNCHER_WIN32_WIN32_VERSION}" />
+				<replace file="${be.exp}/Final/${WIN64_PORT}/be_studio/studio/eclipse/studio.ini" 
+					token="org.eclipse.equinox.launcher.gtk.linux.x86_${env.EQUINOX_LAUNCHER_GTK_LINUX_VERSION}" 
+					value="org.eclipse.equinox.launcher.win32.win32.x86_64_${env.EQUINOX_LAUNCHER_WIN32_WIN32_VERSION}" />
+				<replace file="${be.exp}/Final/${WIN64_PORT}/be_studio/studio/eclipse/studio.ini" 
+					token="-Djava.ext.dirs=%TIBCO_BE_HOME_ESC%/studio/lib:%TIBCO_JAVA_HOME_ESC%/lib/ext" 
+					value="" />
+				<replace file="${be.exp}/Final/${WIN64_PORT}/be_studio/studio/eclipse/studio.ini" 
+					token="-Dorg.eclipse.swt.internal.gtk.disablePrinting" 
+					value="" />
+				<replace file="${be.exp}/Final/${WIN64_PORT}/be_studio/studio/eclipse/studio.ini" 
+					token="-Dswing.systemlaf=javax.swing.plaf.metal.MetalLookAndFeel" 
+					value="" />
+
+			</then>
+		</if>
+	</target>
+
+	<target name="build-assemblies-studio-linux64">
+		<if>
+			<and>
+				<contains string="${env.PORT}" substring="linux" />
+				<equals arg1="${env.UNIX_ALL_PACKAGING_ENABLE}" arg2="true" />
+			</and>
+			<then>
+				<property name="LIN32_PORT" value="linux26gl25/x86" />
+				<property name="LIN64_PORT" value="linux26gl25/x86_64" />
+
+				<antcall target="build-assemblies-studio-PORT">
+					<param name="basePort" value="${LIN64_PORT}" />
+					<param name="port" value="${LIN64_PORT}" />
+				</antcall>
+
+				<copy file="${env.ECLIPSE_HOME}/../x86_64/eclipse" 
+					tofile="${be.exp}/Final/${LIN64_PORT}/be_decisionmanager/decisionmanager/eclipse/decisionmanager" overwrite="true" />
+
+				<replace file="${be.exp}/Final/${LIN64_PORT}/be_decisionmanager/decisionmanager/eclipse/decisionmanager.ini" 
+					token="org.eclipse.equinox.launcher.gtk.linux.x86_${env.EQUINOX_LAUNCHER_GTK_LINUX_VERSION}" 
+					value="org.eclipse.equinox.launcher.gtk.linux.x86_64_${env.EQUINOX_LAUNCHER_GTK_LINUX_VERSION}" />
+
+				<!--<copy file="${env.ECLIPSE_HOME}/../x86_64/libcairo-swt.so" 
+					todir="${be.exp}/Final/${LIN64_PORT}/be_studio/studio/eclipse" overwrite="true" />
+				-->
+				<copy file="${env.ECLIPSE_HOME}/../x86_64/eclipse" 
+					tofile="${be.exp}/Final/${LIN64_PORT}/be_studio/studio/eclipse/studio" overwrite="true" />
+				<replace file="${be.exp}/Final/${LIN64_PORT}/be_studio/studio/eclipse/studio.ini" 
+					token="org.eclipse.equinox.launcher.gtk.linux.x86_${env.EQUINOX_LAUNCHER_GTK_LINUX_VERSION}" 
+					value="org.eclipse.equinox.launcher.gtk.linux.x86_64_${env.EQUINOX_LAUNCHER_GTK_LINUX_VERSION}" />
+
+			</then>
+		</if>
+	</target>
+	
+	<target name="build-assemblies-studio-aix_power_64">
+		<if>
+			<and>
+				<contains string="${env.PORT}" substring="linux" />
+				<equals arg1="${env.UNIX_ALL_PACKAGING_ENABLE}" arg2="true" />
+			</and>
+			<then>
+				<property name="AIX_POWER_64_PORT" value="aix61/power_64" />
+				<property name="LIN64_PORT" value="linux26gl25/x86_64" />
+				
+				<antcall target="build-assemblies-studio-PORT">
+					<param name="basePort" value="${LIN64_PORT}" />
+					<param name="port" value="${AIX_POWER_64_PORT}" />
+				</antcall>
+
+				<copy file="${env.ECLIPSE_HOME}/../../linux26gl25/x86_64/eclipse" 
+					tofile="${be.exp}/Final/${AIX_POWER_64_PORT}/be_decisionmanager/decisionmanager/eclipse/decisionmanager" overwrite="true" />
+
+				<replace file="${be.exp}/Final/${AIX_POWER_64_PORT}/be_decisionmanager/decisionmanager/eclipse/decisionmanager.ini" 
+					token="org.eclipse.equinox.launcher.gtk.linux.x86_${env.EQUINOX_LAUNCHER_GTK_LINUX_VERSION}" 
+					value="org.eclipse.equinox.launcher.gtk.linux.x86_64_${env.EQUINOX_LAUNCHER_GTK_LINUX_VERSION}" />
+
+				<copy file="${env.ECLIPSE_HOME}/../../linux26gl25/x86_64/eclipse" 
+					tofile="${be.exp}/Final/${AIX_POWER_64_PORT}/be_studio/studio/eclipse/studio" overwrite="true" />
+				<replace file="${be.exp}/Final/${AIX_POWER_64_PORT}/be_studio/studio/eclipse/studio.ini" 
+					token="org.eclipse.equinox.launcher.gtk.linux.x86_${env.EQUINOX_LAUNCHER_GTK_LINUX_VERSION}" 
+					value="org.eclipse.equinox.launcher.gtk.linux.x86_64_${env.EQUINOX_LAUNCHER_GTK_LINUX_VERSION}" />
+				<!--<delete file="${be.exp}/Final/${AIX_POWER_64_PORT}/be_studio/studio/eclipse/libcairo-swt.so" failonerror="false"/>
+				-->
+			</then>
+		</if>
+	</target>
+	
+	<target name="build-assemblies-studio-sol_x86_64">
+		<if>
+			<and>
+				<contains string="${env.PORT}" substring="linux" />
+				<equals arg1="${env.UNIX_ALL_PACKAGING_ENABLE}" arg2="true" />
+			</and>
+			<then>
+				<property name="SOLARIS_x64_PORT" value="sol/x86_64" />
+				
+				<antcall target="build-assemblies-studio-PORT">
+					<param name="basePort" value="linux26gl25/x86_64" />
+					<param name="port" value="${SOLARIS_x64_PORT}" />
+				</antcall>
+
+				<copy file="${env.ECLIPSE_HOME}/../../linux26gl25/x86_64/eclipse" 
+					tofile="${be.exp}/Final/${SOLARIS_x64_PORT}/be_decisionmanager/decisionmanager/eclipse/decisionmanager" overwrite="true" />
+
+				<replace file="${be.exp}/Final/${SOLARIS_x64_PORT}/be_decisionmanager/decisionmanager/eclipse/decisionmanager.ini" 
+					token="org.eclipse.equinox.launcher.gtk.linux.x86_${env.EQUINOX_LAUNCHER_GTK_LINUX_VERSION}" 
+					value="org.eclipse.equinox.launcher.gtk.linux.x86_64_${env.EQUINOX_LAUNCHER_GTK_LINUX_VERSION}" />
+
+				<copy file="${env.ECLIPSE_HOME}/../../linux26gl25/x86_64/eclipse" 
+					tofile="${be.exp}/Final/${SOLARIS_x64_PORT}/be_studio/studio/eclipse/studio" overwrite="true" />
+				<replace file="${be.exp}/Final/${SOLARIS_x64_PORT}/be_studio/studio/eclipse/studio.ini" 
+					token="org.eclipse.equinox.launcher.gtk.linux.x86_${env.EQUINOX_LAUNCHER_GTK_LINUX_VERSION}" 
+					value="org.eclipse.equinox.launcher.gtk.linux.x86_64_${env.EQUINOX_LAUNCHER_GTK_LINUX_VERSION}" />
+				<!-- <delete file="${be.exp}/Final/${SOLARIS_x64_PORT}/be_studio/studio/eclipse/libcairo-swt.so" failonerror="false"/>
+			-->
+			</then>
+		</if>
+	</target>
+
+	<target name="build-assemblies-studio-sol_sparc">
+		<if>
+			<and>
+				<contains string="${env.PORT}" substring="linux" />
+				<equals arg1="${env.UNIX_ALL_PACKAGING_ENABLE}" arg2="true" />
+			</and>
+			<then>
+				<property name="SOLARIS_SPARC_PORT" value="sol/sparc" />
+				
+				<antcall target="build-assemblies-studio-PORT">
+					<param name="basePort" value="linux26gl25/x86" />
+					<param name="port" value="${SOLARIS_SPARC_PORT}" />
+				</antcall>
+
+				<copy file="${env.ECLIPSE_HOME}/../../linux26gl25/x86_64/eclipse" 
+					tofile="${be.exp}/Final/${SOLARIS_SPARC_PORT}/be_decisionmanager/decisionmanager/eclipse/decisionmanager" overwrite="true" />
+
+				<replace file="${be.exp}/Final/${SOLARIS_SPARC_PORT}/be_decisionmanager/decisionmanager/eclipse/decisionmanager.ini" 
+					token="org.eclipse.equinox.launcher.gtk.linux.x86_${env.EQUINOX_LAUNCHER_GTK_LINUX_VERSION}" 
+					value="org.eclipse.equinox.launcher.gtk.linux.x86_64_${env.EQUINOX_LAUNCHER_GTK_LINUX_VERSION}" />
+
+				<copy file="${env.ECLIPSE_HOME}/../../linux26gl25/x86_64/eclipse" 
+					tofile="${be.exp}/Final/${SOLARIS_SPARC_PORT}/be_studio/studio/eclipse/studio" overwrite="true" />
+				<replace file="${be.exp}/Final/${SOLARIS_SPARC_PORT}/be_studio/studio/eclipse/studio.ini" 
+					token="org.eclipse.equinox.launcher.gtk.linux.x86_${env.EQUINOX_LAUNCHER_GTK_LINUX_VERSION}" 
+					value="org.eclipse.equinox.launcher.gtk.linux.x86_64_${env.EQUINOX_LAUNCHER_GTK_LINUX_VERSION}" />
+				<!-- <delete file="${be.exp}/Final/${SOLARIS_SPARC_PORT}/be_studio/studio/eclipse/libcairo-swt.so" failonerror="false"/>
+			-->
+			</then>
+		</if>
+	</target>
+
+	<target name="build-assemblies-studio-sol_sparc64">
+		<if>
+			<and>
+				<contains string="${env.PORT}" substring="linux" />
+				<equals arg1="${env.UNIX_ALL_PACKAGING_ENABLE}" arg2="true" />
+			</and>
+			<then>
+				<property name="SOLARIS_SPARC64_PORT" value="sol/sparc_64" />
+
+				<antcall target="build-assemblies-studio-PORT">
+					<param name="basePort" value="linux26gl25/x86_64" />
+					<param name="port" value="${SOLARIS_SPARC64_PORT}" />
+				</antcall>
+
+				<copy file="${env.ECLIPSE_HOME}/../../linux26gl25/x86_64/eclipse" 
+					tofile="${be.exp}/Final/${SOLARIS_SPARC64_PORT}/be_decisionmanager/decisionmanager/eclipse/decisionmanager" overwrite="true" />
+
+				<replace file="${be.exp}/Final/${SOLARIS_SPARC64_PORT}/be_decisionmanager/decisionmanager/eclipse/decisionmanager.ini" 
+					token="org.eclipse.equinox.launcher.gtk.linux.x86_${env.EQUINOX_LAUNCHER_GTK_LINUX_VERSION}" 
+					value="org.eclipse.equinox.launcher.gtk.linux.x86_64_${env.EQUINOX_LAUNCHER_GTK_LINUX_VERSION}" />
+
+				<copy file="${env.ECLIPSE_HOME}/../../linux26gl25/x86_64/eclipse" 
+					tofile="${be.exp}/Final/${SOLARIS_SPARC64_PORT}/be_studio/studio/eclipse/studio" overwrite="true" />
+				<replace file="${be.exp}/Final/${SOLARIS_SPARC64_PORT}/be_studio/studio/eclipse/studio.ini" 
+					token="org.eclipse.equinox.launcher.gtk.linux.x86_${env.EQUINOX_LAUNCHER_GTK_LINUX_VERSION}" 
+					value="org.eclipse.equinox.launcher.gtk.linux.x86_64_${env.EQUINOX_LAUNCHER_GTK_LINUX_VERSION}" />
+				<!-- <delete file="${be.exp}/Final/${SOLARIS_SPARC64_PORT}/be_studio/studio/eclipse/libcairo-swt.so" failonerror="false"/>
+			-->
+			</then>
+		</if>
+	</target>
+
+	<target name="build-assemblies-studio-hpux_ia64">
+		<if>
+			<and>
+				<contains string="${env.PORT}" substring="linux" />
+				<equals arg1="${env.UNIX_ALL_PACKAGING_ENABLE}" arg2="true" />
+			</and>
+			<then>
+				<property name="HPUX_IA64_PORT" value="hpux112/ia64" />
+
+				<antcall target="build-assemblies-studio-PORT">
+					<param name="basePort" value="linux26gl25/x86_64" />
+					<param name="port" value="${HPUX_IA64_PORT}" />
+				</antcall>
+
+				<copy file="${env.ECLIPSE_HOME}/../../linux26gl25/x86_64/eclipse" 
+					tofile="${be.exp}/Final/${HPUX_IA64_PORT}/be_decisionmanager/decisionmanager/eclipse/decisionmanager" overwrite="true" />
+
+				<replace file="${be.exp}/Final/${HPUX_IA64_PORT}/be_decisionmanager/decisionmanager/eclipse/decisionmanager.ini" 
+					token="org.eclipse.equinox.launcher.gtk.linux.x86_${env.EQUINOX_LAUNCHER_GTK_LINUX_VERSION}" 
+					value="org.eclipse.equinox.launcher.gtk.linux.x86_64_${env.EQUINOX_LAUNCHER_GTK_LINUX_VERSION}" />
+
+				<copy file="${env.ECLIPSE_HOME}/../../linux26gl25/x86_64/eclipse" 
+					tofile="${be.exp}/Final/${HPUX_IA64_PORT}/be_studio/studio/eclipse/studio" overwrite="true" />
+				<replace file="${be.exp}/Final/${HPUX_IA64_PORT}/be_studio/studio/eclipse/studio.ini" 
+					token="org.eclipse.equinox.launcher.gtk.linux.x86_${env.EQUINOX_LAUNCHER_GTK_LINUX_VERSION}" 
+					value="org.eclipse.equinox.launcher.gtk.linux.x86_64_${env.EQUINOX_LAUNCHER_GTK_LINUX_VERSION}" />
+				<!-- <delete file="${be.exp}/Final/${HPUX_IA64_PORT}/be_studio/studio/eclipse/libcairo-swt.so" failonerror="false"/>
+			-->
+			</then>
+		</if>
+	</target>
+
+	<target name="build-assemblies-studio-linux_s390x">
+		<if>
+			<and>
+				<contains string="${env.PORT}" substring="linux" />
+				<equals arg1="${env.UNIX_ALL_PACKAGING_ENABLE}" arg2="true" />
+			</and>
+			<then>
+				<property name="LIN32_PORT" value="linux26gl25/x86_64" />
+				<property name="LIN64_PORT" value="linux26gl24/s390x" />
+
+				<antcall target="build-assemblies-studio-PORT">
+					<param name="basePort" value="${LIN32_PORT}" />
+					<param name="port" value="${LIN64_PORT}" />
+				</antcall>
+
+				<copy file="${env.ECLIPSE_HOME}/../../linux26gl25/x86_64/eclipse" 
+						tofile="${be.exp}/Final/${LIN64_PORT}/be_decisionmanager/decisionmanager/eclipse/decisionmanager" overwrite="true" />
+
+				<replace file="${be.exp}/Final/${LIN64_PORT}/be_decisionmanager/decisionmanager/eclipse/decisionmanager.ini" 
+						token="org.eclipse.equinox.launcher.gtk.linux.x86_${env.EQUINOX_LAUNCHER_GTK_LINUX_VERSION}" 
+						value="org.eclipse.equinox.launcher.gtk.linux.s390x_${env.EQUINOX_LAUNCHER_GTK_LINUX_VERSION}" />
+
+				<!-- <delete file="${be.exp}/Final/${LIN64_PORT}/be_studio/studio/eclipse/libcairo-swt.so" failonerror="false" />
+				-->
+				<copy file="${env.ECLIPSE_HOME}/../../linux26gl25/x86_64/eclipse" 
+						tofile="${be.exp}/Final/${LIN64_PORT}/be_studio/studio/eclipse/studio" overwrite="true" />
+				<replace file="${be.exp}/Final/${LIN64_PORT}/be_studio/studio/eclipse/studio.ini" 
+						token="org.eclipse.equinox.launcher.gtk.linux.x86_${env.EQUINOX_LAUNCHER_GTK_LINUX_VERSION}" 
+						value="org.eclipse.equinox.launcher.gtk.linux.s390x_${env.EQUINOX_LAUNCHER_GTK_LINUX_VERSION}" />
+				<!--
+				<delete file="${be.exp}/Final/${LIN64_PORT}/be_studio/studio/eclipse/libcairo-swt.so" failonerror="false"/>
+			-->
+			</then>
+		</if>
+	</target>
+
+	<target name="build-assemblies-studio-macosx_x86_64">
+		<if>
+			<and>
+				<contains string="${env.PORT}" substring="linux" />
+				<equals arg1="${env.UNIX_ALL_PACKAGING_ENABLE}" arg2="true" />
+			</and>
+			<then>
+				<property name="MACOSX64_PORT" value="macosx/x86_64" />
+
+				<antcall target="build-assemblies-studio-PORT">
+					<param name="basePort" value="linux26gl25/x86_64" />
+					<param name="port" value="${MACOSX64_PORT}" />
+				</antcall>
+
+				<copy todir="${be.exp}/Final/${MACOSX64_PORT}/be_decisionmanager/decisionmanager/eclipse/decisionmanager.app" overwrite="true">
+					<fileset dir="${studio.src}/packaging/exe/${MACOSX64_PORT}/decisionmanager.app">
+						<include name="**/*"/>
+					</fileset>
+				</copy>
+
+				<copy todir="${be.exp}/Final/${MACOSX64_PORT}/be_studio/studio/eclipse/studio.app" overwrite="true">
+					<fileset dir="${studio.src}/packaging/exe/${MACOSX64_PORT}/studio.app">
+						<include name="**/*"/>
+					</fileset>
+				</copy>
+				<delete file="${be.exp}/Final/${MACOSX64_PORT}/be_studio/studio/eclipse/studio.ini" failonerror="false"/>
+				<delete file="${be.exp}/Final/${MACOSX64_PORT}/be_studio/studio/eclipse/studio" failonerror="false"/>
+
+			</then>
+		</if>
+	</target>
+
+	<target name="build-assemblies-hotfix-studio-win64">
+		<if>
+			<and>
+				<contains string="${env.PORT}" substring="win" />
+				<equals arg1="${env.WINDOWS_64BIT_PACKAGING_ENABLE}" arg2="true" />
+			</and>
+			<then>
+				<property name="WIN32_PORT" value="win/x86" />
+				<property name="WIN64_PORT" value="win/x86_64" />
+
+				<antcall target="build-assemblies-studio-PORT">
+					<param name="basePort" value="${WIN32_PORT}" />
+					<param name="port" value="${WIN64_PORT}" />
+				</antcall>
+			</then>
+		</if>
+
+		<!-- Change to create the win assemblies on linux (single platform based builds) -->
+		<if>
+			<and>
+				<contains string="${env.PORT}" substring="linux" />
+				<equals arg1="${env.UNIX_ALL_PACKAGING_ENABLE}" arg2="true" />
+			</and>
+			<then>
+				<property name="LIN32_PORT" value="linux26gl25/x86" />
+				<property name="WIN64_PORT" value="win/x86_64" />
+				<property name="WIN32_PORT" value="win/x86" />
+
+				<antcall target="build-assemblies-studio-PORT">
+					<param name="basePort" value="${LIN32_PORT}" />
+					<param name="port" value="${WIN64_PORT}" />
+				</antcall>
+
+				<antcall target="build-assemblies-studio-PORT">
+					<param name="basePort" value="${LIN32_PORT}" />
+					<param name="port" value="${WIN32_PORT}" />
+				</antcall>
+			</then>
+		</if>
+
+	</target>
+
+	<target name="build-assemblies-hotfix-studio-linux64">
+		<if>
+			<and>
+				<contains string="${env.PORT}" substring="linux" />
+				<equals arg1="${env.UNIX_ALL_PACKAGING_ENABLE}" arg2="true" />
+			</and>
+			<then>
+				<property name="LIN32_PORT" value="linux26gl25/x86" />
+				<property name="LIN64_PORT" value="linux26gl25/x86_64" />
+
+				<antcall target="build-assemblies-studio-PORT">
+					<param name="basePort" value="${LIN32_PORT}" />
+					<param name="port" value="${LIN64_PORT}" />
+				</antcall>
+			</then>
+		</if>
+	</target>
+
+	<target name="build-assemblies-hotfix-studio-macosx64">
+		<if>
+			<and>
+				<contains string="${env.PORT}" substring="linux" />
+				<equals arg1="${env.UNIX_ALL_PACKAGING_ENABLE}" arg2="true" />
+			</and>
+			<then>
+				<property name="LIN32_PORT" value="linux26gl25/x86" />
+				<property name="MAC64_PORT" value="macosx/x86_64" />
+
+				<antcall target="build-assemblies-studio-PORT">
+					<param name="basePort" value="${LIN32_PORT}" />
+					<param name="port" value="${MAC64_PORT}" />
+				</antcall>
+			</then>
+		</if>
+	</target>
+
+	<!-- This creates copies from base ports assuming that the only changes that are there are for. If there are port specific configuratuins that need to be added to assembly then conditions should be added here -->
+	<target name="build-assemblies-hotfix-studio-PORT">
+		<copy todir="${be.exp}/Final/${port}/be_decisionmanager">
+			<fileset dir="${be.exp}/Final/${basePort}/be_decisionmanager">
+				<include name="*/**" />
+			</fileset>
+		</copy>
+		<copy todir="${be.exp}/Final/${port}/be_process_editor">
+			<fileset dir="${be.exp}/Final/${basePort}/be_process_editor">
+				<include name="*/**" />
+			</fileset>
+		</copy>
+		<copy todir="${be.exp}/Final/${port}/be_statemodeler">
+			<fileset dir="${be.exp}/Final/${basePort}/be_statemodeler">
+				<include name="*/**" />
+			</fileset>
+		</copy>
+		<copy todir="${be.exp}/Final/${port}/be_studio">
+			<fileset dir="${be.exp}/Final/${basePort}/be_studio">
+				<include name="*/**" />
+			</fileset>
+		</copy>
+		<copy todir="${be.exp}/Final/${port}/be_views_modeler">
+			<fileset dir="${be.exp}/Final/${basePort}/be_views_modeler">
+				<include name="*/**" />
+			</fileset>
+		</copy>
+	</target>
+
+	<target name="build-assemblies-hotfix-studio-uinx-PORTS">
+		<if>
+			<and>
+				<contains string="${env.PORT}" substring="linux" />
+				<equals arg1="${env.UNIX_ALL_PACKAGING_ENABLE}" arg2="true" />
+			</and>
+			<then>
+
+				<for list="linux26gl24/s390x,sol/sparc_64" param="param-port" delimiter=",">
+					<sequential>
+						<antcall target="build-assemblies-hotfix-studio-PORT">
+							<param name="basePort" value="${env.PORT}" />
+							<param name="port" value="@{param-port}" />
+						</antcall>
+					</sequential>
+				</for>
+			</then>
+		</if>
+	</target>
+
+	<target name="build-assemblies-servicepack-studio-win64">
+		<if>
+			<and>
+				<contains string="${env.PORT}" substring="win" />
+				<equals arg1="${env.WINDOWS_64BIT_PACKAGING_ENABLE}" arg2="true" />
+			</and>
+			<then>
+				<property name="WIN32_PORT" value="win/x86" />
+				<property name="WIN64_PORT" value="win/x86_64" />
+
+				<antcall target="build-assemblies-studio-PORT">
+					<param name="basePort" value="${WIN32_PORT}" />
+					<param name="port" value="${WIN64_PORT}" />
+				</antcall>
+			</then>
+		</if>
+
+		<!-- Change to create win/x86_64 assembly on linux -->
+				<if>
+					<and>
+						<contains string="${env.PORT}" substring="linux" />
+						<equals arg1="${env.UNIX_ALL_PACKAGING_ENABLE}" arg2="true" />
+					</and>
+					<then>
+						<property name="LIN32_PORT" value="linux26gl25/x86" />
+						<property name="WIN64_PORT" value="win/x86_64" />
+						<property name="WIN32_PORT" value="win/x86" />
+
+						<antcall target="build-assemblies-studio-PORT">
+							<param name="basePort" value="${LIN32_PORT}" />
+							<param name="port" value="${WIN64_PORT}" />
+						</antcall>
+						
+						<antcall target="build-assemblies-studio-PORT">
+							<param name="basePort" value="${LIN32_PORT}" />
+							<param name="port" value="${WIN32_PORT}" />
+						</antcall>
+						<!--
+						<copy file="${studio.src}/packaging/exe/${WIN64_PORT}/studio.exe" 
+							tofile="${be.exp}/Final/${WIN64_PORT}/be_decisionmanager/decisionmanager/eclipse/decisionmanager.exe" overwrite="true" />
+						<replace file="${be.exp}/Final/${WIN64_PORT}/be_decisionmanager/decisionmanager/eclipse/decisionmanager.ini" 
+							token="org.eclipse.equinox.launcher.win32.win32.x86_${env.EQUINOX_LAUNCHER_WIN32_WIN32_VERSION}" 
+							value="org.eclipse.equinox.launcher.win32.win32.x86_64_${env.EQUINOX_LAUNCHER_WIN32_WIN32_VERSION}" />
+						<replace file="${be.exp}/Final/${WIN64_PORT}/be_decisionmanager/decisionmanager/eclipse/decisionmanager.ini" 
+							token="org.eclipse.equinox.launcher.gtk.linux.x86_${env.EQUINOX_LAUNCHER_GTK_LINUX_VERSION}" 
+							value="org.eclipse.equinox.launcher.win32.win32.x86_64_${env.EQUINOX_LAUNCHER_WIN32_WIN32_VERSION}" />
+						<replace file="${be.exp}/Final/${WIN32_PORT}/be_decisionmanager/decisionmanager/eclipse/decisionmanager.ini" 
+							token="org.eclipse.equinox.launcher.gtk.linux.x86_${env.EQUINOX_LAUNCHER_GTK_LINUX_VERSION}" 
+							value="org.eclipse.equinox.launcher.win32.win32.x86_${env.EQUINOX_LAUNCHER_WIN32_WIN32_VERSION}" />
+
+						
+
+						<copy file="${studio.src}/packaging/exe/${WIN64_PORT}/studio.exe" 
+							tofile="${be.exp}/Final/${WIN64_PORT}/be_studio/studio/eclipse/studio.exe" overwrite="true" />
+						<replace file="${be.exp}/Final/${WIN64_PORT}/be_studio/studio/eclipse/studio.ini" 
+							token="org.eclipse.equinox.launcher.win32.win32.x86_${env.EQUINOX_LAUNCHER_WIN32_WIN32_VERSION}" 
+							value="org.eclipse.equinox.launcher.win32.win32.x86_64_${env.EQUINOX_LAUNCHER_WIN32_WIN32_VERSION}" />
+						<replace file="${be.exp}/Final/${WIN64_PORT}/be_studio/studio/eclipse/studio.ini" 
+							token="org.eclipse.equinox.launcher.gtk.linux.x86_${env.EQUINOX_LAUNCHER_GTK_LINUX_VERSION}" 
+							value="org.eclipse.equinox.launcher.win32.win32.x86_64_${env.EQUINOX_LAUNCHER_WIN32_WIN32_VERSION}" />
+						<replace file="${be.exp}/Final/${WIN32_PORT}/be_studio/studio/eclipse/studio.ini" 
+							token="org.eclipse.equinox.launcher.gtk.linux.x86_${env.EQUINOX_LAUNCHER_GTK_LINUX_VERSION}" 
+							value="org.eclipse.equinox.launcher.win32.win32.x86_${env.EQUINOX_LAUNCHER_WIN32_WIN32_VERSION}" />
+						<replace file="${be.exp}/Final/${WIN64_PORT}/be_studio/studio/eclipse/studio.ini" 
+							token="-Djava.ext.dirs=%TIBCO_BE_HOME_ESC%/studio/lib:%TIBCO_JAVA_HOME_ESC%/lib/ext" 
+							value="" />
+						<replace file="${be.exp}/Final/${WIN64_PORT}/be_studio/studio/eclipse/studio.ini" 
+							token="-Dorg.eclipse.swt.internal.gtk.disablePrinting" 
+							value="" />
+						<replace file="${be.exp}/Final/${WIN64_PORT}/be_studio/studio/eclipse/studio.ini" 
+							token="-Dswing.systemlaf=javax.swing.plaf.metal.MetalLookAndFeel" 
+							value="" />
+						-->
+			</then>
+		</if>
+	</target>
+
+	<target name="build-assemblies-servicepack-studio-linux64">
+		<if>
+			<and>
+				<contains string="${env.PORT}" substring="linux" />
+				<equals arg1="${env.UNIX_ALL_PACKAGING_ENABLE}" arg2="true" />
+			</and>
+			<then>
+				<property name="LIN32_PORT" value="linux26gl25/x86" />
+				<property name="LIN64_PORT" value="linux26gl25/x86_64" />
+
+				<antcall target="build-assemblies-studio-PORT">
+					<param name="basePort" value="${LIN32_PORT}" />
+					<param name="port" value="${LIN64_PORT}" />
+				</antcall>
+
+				<copy todir="${be.exp}/Final/${LIN64_PORT}/be_studio" overwrite="true">
+					<fileset dir="${ga.dir}/${LIN64_PORT}/be_studio">
+						<include name="studio/eclipse/studio.ini"/>
+					</fileset>
+				</copy>
+
+				<copy todir="${be.exp}/Final/${LIN64_PORT}/be_decisionmanager" overwrite="true">
+					<fileset dir="${ga.dir}/${LIN64_PORT}/be_decisionmanager">
+						<include name="decisionmanager/eclipse/decisionmanager.ini"/>
+					</fileset>
+				</copy>
+			</then>
+		</if>
+	</target>
+
+	<!--This creates copies from base ports assuming that the only changes that are there are for. If there are port specific configuratuins that need to be added to assembly then conditions should be added here-->
+	<target name="build-assemblies-servicepack-studio-uinx-PORTS">
+		<if>
+			<and>
+				<contains string="${env.PORT}" substring="linux" />
+				<equals arg1="${env.UNIX_ALL_PACKAGING_ENABLE}" arg2="true" />
+			</and>
+			<then>
+
+				<for list="linux26gl24/s390x,sol/sparc_64,macosx/x86_64" param="param-port" delimiter=",">
+					<sequential>
+						<antcall target="build-assemblies-servicepack-studio-PORT">
+							<param name="basePort" value="${env.PORT}" />
+							<param name="port" value="@{param-port}" />
+						</antcall>
+					</sequential>
+				</for>
+			</then>
+		</if>
+	</target>
+
+	<target name="build-assemblies-servicepack-studio-macosx64">
+	        <if>
+	            <and>
+	                <contains string="${env.PORT}" substring="linux" />
+	                <equals arg1="${env.UNIX_ALL_PACKAGING_ENABLE}" arg2="true" />
+	            </and>
+	            <then>
+	                <property name="LIN32_PORT" value="linux26gl25/x86" />
+	                <property name="MAC64_PORT" value="macosx/x86_64" />
+	    
+	                <antcall target="build-assemblies-studio-PORT">
+	                    <param name="basePort" value="${LIN32_PORT}" />
+	                    <param name="port" value="${MAC64_PORT}" />
+	                </antcall>
+	                
+	                <!--No ini file changes as there are none since 5.1.1 and base for mac is 5.1.1-->
+	                 <copy todir="${be.exp}/Final/macosx/x86_64/be_decisionmanager/decisionmanager/eclipse/decisionmanager.app" >
+	                    <fileset dir="${studio.src}/packaging/exe/macosx/x86_64/studio.app">
+	                        <include name="**/tibco.icns" />
+	                    </fileset>
+	                 </copy>
+	                
+	                 <copy todir="${be.exp}/Final/macosx/x86_64/be_studio/studio/eclipse/studio.app" >
+	                    <fileset dir="${studio.src}/packaging/exe/macosx/x86_64/studio.app">
+	                        <include name="**/tibco.icns" />
+	                    </fileset>
+	                 </copy>
+	                
+	                
+	            </then>
+	        </if>
+	    </target>
+	
+	<target name="build-assemblies-servicepack-studio-PORT">
+		<copy todir="${be.exp}/Final/${port}/be_decisionmanager">
+			<fileset dir="${ga.dir}/${basePort}/be_decisionmanager">
+				<include name="*/**" />
+				<exclude name="uninstaller_scripts/**" />
+			</fileset>
+			<fileset dir="${be.exp}/Final/${basePort}/be_decisionmanager">
+				<include name="uninstaller_scripts/**" />
+			</fileset>
+		</copy>
+		<copy todir="${be.exp}/Final/${port}/be_process_editor">
+			<fileset dir="${ga.dir}/${basePort}/be_process_editor">
+				<include name="*/**" />
+				<exclude name="uninstaller_scripts/**" />
+			</fileset>
+			<fileset dir="${be.exp}/Final/${basePort}/be_process_editor">
+				<include name="uninstaller_scripts/**" />
+			</fileset>
+		</copy>
+		<copy todir="${be.exp}/Final/${port}/be_statemodeler">
+			<fileset dir="${ga.dir}/${basePort}/be_statemodeler">
+				<include name="*/**" />
+				<exclude name="uninstaller_scripts/**" />
+			</fileset>
+			<fileset dir="${be.exp}/Final/${basePort}/be_statemodeler">
+				<include name="uninstaller_scripts/**" />
+			</fileset>
+		</copy>
+
+		<copy todir="${be.exp}/Final/${port}/be_studio">
+			<fileset dir="${ga.dir}/${basePort}/be_studio">
+				<include name="*/**" />
+				<exclude name="uninstaller_scripts/**" />
+			</fileset>
+			<fileset dir="${be.exp}/Final/${basePort}/be_studio">
+				<include name="uninstaller_scripts/**" />
+			</fileset>
+		</copy>
+		<copy todir="${be.exp}/Final/${port}/be_views_modeler">
+			<fileset dir="${ga.dir}/${basePort}/be_views_modeler">
+				<include name="*/**" />
+				<exclude name="uninstaller_scripts/**" />
+			</fileset>
+			<fileset dir="${be.exp}/Final/${basePort}/be_views_modeler">
+				<include name="uninstaller_scripts/**" />
+			</fileset>
+		</copy>
+		<copy todir="${be.exp}/Final/${port}/be_eclipse">
+			<fileset dir="${ga.dir}/${basePort}/be_eclipse">
+				<include name="*/**" />
+				<exclude name="uninstaller_scripts/**" />
+			</fileset>
+		</copy>
+	</target>
+
+	<target name="publish-features-bundles" depends="set-studio-configs">
+
+		<foreach target="update-bundle-version-for-studio-site" param="bundle-path">
+			<path>
+				<fileset dir="${exportDirectory}/studio-site/plugins" casesensitive="no">
+					<include name="com.tibco.cep.rt_*.jar" />
+					<include name="com.tibco.cep.tpcl_*.jar" />
+					<include name="com.tibco.cep.tra_*.jar" />
+				</fileset>
+			</path>
+		</foreach>
+
+		<echo message="${eclipseLocation}/plugins/org.eclipse.equinox.launcher_${equinoxLauncherPluginVersion}.jar"/>
+		<java classname="org.eclipse.equinox.launcher.Main" fork="true" failonerror="true">
+			<arg value="-application" />
+			<arg value="org.eclipse.ant.core.antRunner" />
+			<!-- <arg value="-verbose" /> -->
+			<arg value="-data" />
+			<arg value="${buildDirectory}/workspace" />
+			<arg value="-buildfile" />
+			<arg value="${be.basedir}/studio/publish/build.xml" />
+			<arg value="-Dbuilder=${be.basedir}/studio" />
+			<arg value="-DbuildDirectory=${buildDirectory}" />
+			<arg value="-DeclipseLocation=${eclipseLocation}" />
+			<arg value="-Dconfigs=${configs}" />
+			<arg value="-DlogExtension=${logExtension}" />
+			<arg value="-DjavacDebugInfo=${javacDebugInfo}" />
+			<arg value="-DjavacFailOnError=${javacFailOnError}" />
+			<arg value="-DjavacVerbose=${javacVerbose}" />
+			<arg value="-DjavacSource=${javacSource}" />
+			<arg value="-DjavacTarget=${javacTarget}" />
+			<arg value="-DexportDirectory=${exportDirectory}"/>
+			<arg value="-DbuildId=${buildId}"/>
+			<classpath>
+				<pathelement location="${eclipseLocation}/plugins/*.jar" />
+				<pathelement location="${eclipseLocation}/plugins/org.eclipse.equinox.launcher_${equinoxLauncherPluginVersion}.jar" />
+			</classpath>
+		</java>
+		
+	</target>
+	
+	<target name="build-p2repo" depends="set-studio-configs">
+		<echo message="${eclipseLocation}/plugins/org.eclipse.equinox.launcher_${equinoxLauncherPluginVersion}.jar"/>
+				<java classname="org.eclipse.equinox.launcher.Main" fork="true" failonerror="true">
+					<arg value="-application" />
+					<arg value="org.eclipse.ant.core.antRunner" />
+					<!-- <arg value="-verbose" /> -->
+					<arg value="-data" />
+					<arg value="${buildDirectory}/workspace" />
+					<arg value="-buildfile" />
+					<arg value="${be.basedir}/studio/publish/buildrepo.xml" />
+					<arg value="-Dbuilder=${be.basedir}/studio" />
+					<arg value="-DbuildDirectory=${buildDirectory}" />
+					<arg value="-DeclipseLocation=${eclipseLocation}" />
+					<arg value="-DbwLocation=${bwLocation}" />
+					<arg value="-DbwRepoHome=${bwRepoHome}" />
+					<arg value="-DepfLocation=${epfLocation}" />
+					<arg value="-DepfRepoHome=${epfRepoHome}" />
+					<arg value="-Dconfigs=${configs}" />
+					<arg value="-DlogExtension=${logExtension}" />
+					<arg value="-DjavacDebugInfo=${javacDebugInfo}" />
+					<arg value="-DjavacFailOnError=${javacFailOnError}" />
+					<arg value="-DjavacVerbose=${javacVerbose}" />
+					<arg value="-DjavacSource=${javacSource}" />
+					<arg value="-DjavacTarget=${javacTarget}" />
+					<arg value="-DexportDirectory=${exportDirectory}"/>
+					<arg value="-DbuildId=${buildId}"/>
+					<classpath>
+						<pathelement location="${eclipseLocation}/plugins/*.jar" />
+						<pathelement location="${eclipseLocation}/plugins/org.eclipse.equinox.launcher_${equinoxLauncherPluginVersion}.jar" />
+					</classpath>
+				</java>
+	</target> 
+</project>
+

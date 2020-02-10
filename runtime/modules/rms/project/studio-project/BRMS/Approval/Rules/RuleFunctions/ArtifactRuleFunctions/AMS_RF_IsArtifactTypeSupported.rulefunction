@@ -1,0 +1,25 @@
+/**
+ * @description Check whether artifact type is supported by checking against this fixed list.
+ */
+boolean rulefunction Approval.Rules.RuleFunctions.ArtifactRuleFunctions.AMS_RF_IsArtifactTypeSupported {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String EXTENSION;
+	}
+	body {
+		//Loaded through PP into WM.
+		AMS_C_SupportedArtifactTypesConfig supportedArtifactsConfig = Instance.getByExtIdByUri("RMS_SUPP_ARTIFACTS_CFG", "/Approval/Scorecards/AMS_C_SupportedArtifactTypesConfig");
+		String[] artifactTypesSupported = 
+			Instance.PropertyArray.toArrayString(supportedArtifactsConfig.artifactTypes);
+		
+		for (int loop = 0, length = artifactTypesSupported@length; loop < length; loop++) {
+			String artifactTypeSupported = artifactTypesSupported[loop];
+			if (String.equals(EXTENSION, artifactTypeSupported)) {
+				return true;
+			}
+		}	
+		return false;
+	}
+}

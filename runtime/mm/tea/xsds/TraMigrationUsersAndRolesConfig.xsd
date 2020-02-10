@@ -1,0 +1,36 @@
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" 
+		   xmlns:jxb="http://java.sun.com/xml/ns/jaxb" 
+		   jxb:version="2.0" 		   
+		   elementFormDefault="qualified">
+
+	 <xsd:element name="UserManagement">
+       <xsd:complexType>	
+         <xsd:sequence>
+		   <xsd:element   name="role" type="Role" minOccurs="0" maxOccurs="unbounded"/>
+		   <xsd:element   name="user" type="User" minOccurs="0" maxOccurs="unbounded"/>
+         </xsd:sequence>
+       </xsd:complexType>
+     </xsd:element>
+	 
+	 <xsd:complexType name="Role">
+		<xsd:sequence>
+        	<xsd:element name="accessControlList" type="AccessControlList" minOccurs="0" maxOccurs="unbounded"/>
+        </xsd:sequence>
+        <xsd:attribute   name="name" type="xsd:string" use="required"/>
+     </xsd:complexType>
+	
+	 <xsd:complexType name="AccessControlList">
+		<xsd:sequence>
+        	<xsd:element name="user" type="xsd:string" />	
+        </xsd:sequence>
+        <xsd:attribute   name="op" type="xsd:string" use="required"/>
+     </xsd:complexType>
+     
+      <xsd:complexType name="User">
+		<xsd:sequence>
+        	<xsd:element name="password" type="xsd:string" />	
+        </xsd:sequence>
+        <xsd:attribute   name="name" type="xsd:string" use="required"/>
+     </xsd:complexType>
+     
+</xsd:schema>

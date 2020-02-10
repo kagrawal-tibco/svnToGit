@@ -1,0 +1,61 @@
+/**
+ * @description 
+ */
+WebStudio.Core.Concepts.DataSources.Problems.WS_C_DomainValidationResponse rulefunction WebStudio.Core.RuleFunctions.Utils.Domain.WS_RF_CheckDuplicateDomainEntries {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String projectName;
+		String artifactPath;
+		String artifactExtn;
+		String userName;
+		String[] roles;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.Domain.WS_RF_CheckDuplicateDomainEntries");
+		
+		WebStudio.Core.Concepts.DataSources.Problems.WS_C_DomainValidationResponse validationResponse = Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/Problems/WS_C_DomainValidationResponse");
+		
+		WS_C_Domain domainModel = WebStudio.Core.RuleFunctions.Utils.Domain.WS_RF_FetchDomainEntries(userName, roles, projectName, artifactPath, artifactExtn, true);
+		
+		Object valueList = Collections.List.createArrayList();
+			
+		String duplicateValues = "";
+		// checking single entries
+		WS_C_DomainEntry[] domainEntries = Instance.PropertyArray.toArrayContainedConcept(domainModel.singleEntry);
+		for (int i=0; i<domainEntries@length; i++) {
+			if (Collections.contains(valueList, domainEntries[i].value)) {
+				duplicateValues += domainEntries[i].value + ",";
+			}
+			Collections.add(valueList, domainEntries[i].value);
+		}
+		
+		Collections.clear(valueList);
+		
+		// checking range entries
+		WS_C_RangeEntry[] rangeEntries = Instance.PropertyArray.toArrayContainedConcept(domainModel.rangeEntry);
+		for (int i=0; i<rangeEntries@length; i++) {
+			if (Collections.contains(valueList, rangeEntries[i].value)) {
+				duplicateValues += rangeEntries[i].value + ",";
+			}
+			Collections.add(valueList, rangeEntries[i].value);
+		}
+		Collections.clear(valueList);
+		
+		Log.log(LOGGER, "Debug", "Duplicate Values - %s", duplicateValues);
+		if (duplicateValues != null && !String.equals(duplicateValues, "")) {
+			duplicateValues = String.substring(duplicateValues, 0, String.length(duplicateValues) - 1);
+			
+			WebStudio.Core.Concepts.DataSources.Problems.WS_C_Problem problem = Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/Problems/WS_C_Problem");
+			problem.errorMessage = "Duplicate Values (" + duplicateValues + ")";
+			problem.problemType = "Semantic";
+			problem.location = "";
+			problem.errorCode = "411";
+			
+			Instance.PropertyArray.appendConceptReference(validationResponse.problem,problem,1L);
+		}
+		
+		return validationResponse;
+	}
+}

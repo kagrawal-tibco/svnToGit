@@ -1,0 +1,50 @@
+/**
+ * @description 
+ */
+void rulefunction Monitoring.RuleFunctions.view.populators.cpustatsViewPopulator {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object	eventArrayObj;
+	}
+	body {
+		if (eventArrayObj == null){
+		    return;
+		}
+		Object[] eventArray = eventArrayObj;
+		if (eventArray@length == 0){
+		    return;
+		}
+		String LOG_NAME = "cpustatsViewPopulator";
+
+		CPUUsageMetricEvent metricevent = eventArray[0];
+		
+		Shared.RuleFunctions.log(LOG_NAME,"DEBUG","Attempting to retrieve view for entity_name = " + metricevent.name);
+		
+		Shared.Concepts.AbstractMonitorView view = Instance.getByExtId(metricevent.name);
+		
+		if (view == null) {
+		   throw Exception.newException("Warning","No View found matching "+metricevent.name,null);
+		}
+		
+		String componentConfigMapId = getComponentConfigMapId(view.monitorable,view.type);
+		String[] seriesNames = Util.HashMap.getObject(componentConfigMapId,"seriesnames");
+		String seriesName = seriesNames[0];
+		String timeInMillis = String.valueOfLong(DateTime.getTimeInMillis(metricevent.snapshottime));
+		Shared.Concepts.SeriesData series = Instance.getByExtId(metricevent.name+":"+seriesName);
+		if (series == null) {
+		    throw Exception.newException("Warning","No series found matching "+metricevent.name+":"+seriesName,null);
+		}
+		series.categories[series.categories@length] = timeInMillis;
+		if (seriesName == "CPU Stats") {
+		    series.values[series.values@length] = String.valueOfDouble(metricevent.usage);    
+		    series.rawValues[series.rawValues@length] = String.valueOfDouble(metricevent.usage);    
+		}
+		else {
+		    Shared.RuleFunctions.log("threadViewsPopulator","WARNING","Unknown series ["+seriesName+"]");
+		    series.values[series.values@length] = "0";
+		    series.rawValues[series.rawValues@length] = "0";
+		}
+	}
+}

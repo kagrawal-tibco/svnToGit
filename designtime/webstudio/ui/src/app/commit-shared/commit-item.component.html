@@ -1,0 +1,104 @@
+<div class="container-fluid">
+  <div class="item-heading">
+    <div class="">
+      <div class="">
+        <span (click)="toggleExpand()"><a class='expander' ><i class="fa fa-sm fa-chevron-{{expanded ? 'down' : 'right'}}"></i></a> {{title}}</span>
+      </div>
+    </div>
+  </div>
+  <div
+    class="item-content"
+    *ngIf="expanded" 
+    >
+    <div
+      class="animation-container animated"
+      >
+      <div class="commit-msg">
+        <div class="row">
+          <div class="col-sm-12">
+            <strong>{{commit.committer.userName}}  </strong><ng-container i18n>{{i18n('Committed with comment')}}</ng-container> :
+            <div class="card" style="white-space: pre-wrap;"> {{commit.message}} </div>
+          </div>
+        </div>
+        <div class="row" *ngIf="!isCommitPending()">
+          <div class="col-sm-12">
+            <strong>{{commitStatus()}} by <a>{{commit.resolver.userName}}</a><span *ngIf="commit.resolutionComment">with comment: </span></strong>
+            <div class="card" *ngIf="commit.resolutionComment" style="white-space: pre-wrap;">{{commit.resolutionComment}}</div>
+          </div>
+        </div>
+      </div>
+      <div class="commit-changelist">
+        <div class="row">
+          <div class="col-sm-12">
+            <change-list
+              [input]='commit.changeList'
+              [mode]='changeListMode'
+            ></change-list>
+          </div>
+        </div>
+      </div>
+      <div
+        class="approval-btn"
+        *ngIf='can.approve'
+        >
+        <div class="row"
+          *ngIf='!isNotStale()'
+        >
+          <div class="col-sm-12">
+            <span class='opague'><i><small i18n>{{i18n('The commit is stale and cannot be approved until the author synchronize with the repository and commit again. You can still reject it.')}}</small></i></span>
+          </div>
+        </div>
+        <div class="approval-comment">
+          <textarea
+          placeholder="{{i18n('Add review comments...')}}"
+          i18n-placeholder
+            class="form-control form-control-sm"
+            [(ngModel)]="comment"></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="item-footer">
+   <div class="row" *ngIf="isCommitPending() || !isNotStale()">
+      <div class="col-sm-12">
+          <button
+          *ngIf='can.approve && isCommitPending()'
+          type="button"
+          class='btn btn-success btn-sm btn-narrow right-margin'
+          (click)="approve(comment)" i18n
+        >{{i18n('Approve')}}</button>
+        <button
+          *ngIf='can.reject'
+          type="button"
+          class='btn btn-danger btn-sm btn-narrow right-margin'
+          (click)="reject(comment)" i18n
+          >{{i18n('Reject')}}</button>
+        <button
+          type="button"
+          *ngIf='can.withdraw'
+          class='btn btn-warning btn-sm btn-narrow right-margin'
+          (click)='cancel()' i18n
+          >{{i18n('Withdraw')}}</button>
+        <button
+          type="button"
+          *ngIf='!enableTCEUI() && can.delegate && isCommitPending()'
+          class='btn btn-primary btn-sm btn-narrow right-margin'
+          (click)='delegate()' i18n
+          >{{i18n('Delegate')}}</button>
+        <button
+          type="button"
+          *ngIf='can.delete'
+          class='btn btn-sm btn-narrow deleteIcon'
+          title='Delete'
+          (click)='delete()' i18n
+          >{{i18n('Delete')}}</button>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-sm-12">
+        <em><small><b>{{commit.committer.userName}}</b><ng-container i18n>{{i18n(' Committed ')}}</ng-container>{{timeMessage | async}}.</small></em>
+        <em *ngIf='commit.resolveTime'><small><b>{{commit.resolver.userName}}</b><ng-container i18n>{{i18n(' resolved this item ')}}</ng-container>{{resolvedTimeMessage | async}}.</small></em>
+      </div>
+    </div>
+  </div>
+</div>

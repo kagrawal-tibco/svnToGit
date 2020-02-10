@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<xsd:schema xmlns:tns="http://tibco.com/be/shared/jdbc"
+	xmlns:xsd="http://www.w3.org/2001/XMLSchema" targetNamespace="http://tibco.com/be/shared/jdbc"
+	elementFormDefault="qualified"
+	xmlns:bt="http://tibco.com/be/shared/basetypes">
+
+    <xsd:import schemaLocation="basetypes.xsd" namespace="http://tibco.com/be/shared/basetypes"></xsd:import>
+    
+    <xsd:element name="BWSharedResource" type="tns:BWSharedResourceType" />
+
+	<xsd:complexType name="BWSharedResourceType">
+		<xsd:sequence>
+			<xsd:element name="name" type="xsd:string" minOccurs="1"
+				maxOccurs="1">
+			</xsd:element>
+			<xsd:element name="resourceType" minOccurs="1" maxOccurs="1">
+				<xsd:simpleType>
+					<xsd:restriction base="xsd:string">
+						<xsd:enumeration value="ae.shared.JDBCSharedResource"></xsd:enumeration>
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:element>
+			<xsd:element name="description" type="xsd:string"
+				minOccurs="0" maxOccurs="1">
+			</xsd:element>
+
+			<xsd:element name="config" maxOccurs="1" minOccurs="1"
+				type="tns:configType">
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+
+	<xsd:complexType name="configType">
+		<xsd:sequence>
+			<xsd:element minOccurs="1" maxOccurs="1" name="driver"
+				type="xsd:string">
+			</xsd:element>
+			<xsd:element minOccurs="1" maxOccurs="1"
+				name="maxConnections" type="bt:intOrGVs">
+			</xsd:element>
+			<xsd:element minOccurs="1" maxOccurs="1" name="loginTimeout"
+				type="bt:intOrGVs">
+			</xsd:element>
+			<xsd:element minOccurs="1" maxOccurs="1"
+				name="connectionType" type="xsd:string">
+			</xsd:element>
+			<xsd:element minOccurs="1" maxOccurs="1"
+				name="UseSharedJndiConfig" type="bt:booleanOrGVs">
+			</xsd:element>
+			<xsd:element minOccurs="1" maxOccurs="1" name="location"
+				type="xsd:string">
+			</xsd:element>
+			<xsd:element name="user" type="xsd:string" maxOccurs="1"
+				minOccurs="1">
+			</xsd:element>
+			<xsd:element name="password" type="xsd:string" maxOccurs="1"
+				minOccurs="1">
+			</xsd:element>
+			<xsd:choice>
+				<xsd:group ref="tns:advancedJndiGroup"></xsd:group>
+				<xsd:group ref="tns:sharedJndiGroup"></xsd:group>
+				<xsd:sequence></xsd:sequence>
+			</xsd:choice>
+		</xsd:sequence>
+	</xsd:complexType>
+
+	<xsd:group name="advancedJndiGroup">
+		<xsd:sequence>
+			<xsd:element name="ContextFactory" type="xsd:string"
+				maxOccurs="1" minOccurs="1"></xsd:element>
+			<xsd:element name="ProviderUrl" type="xsd:string"
+				maxOccurs="1" minOccurs="1"></xsd:element>
+			<xsd:element name="UserName" type="xsd:string" maxOccurs="1"
+				minOccurs="1"></xsd:element>
+			<xsd:element name="UserPassword" type="xsd:string"
+				maxOccurs="1" minOccurs="1"></xsd:element>
+			<xsd:element name="jndiDataSourceName" type="xsd:string"
+				maxOccurs="1" minOccurs="1"></xsd:element>
+			<xsd:element name="xaDsClass" type="xsd:string"
+				maxOccurs="1" minOccurs="0"></xsd:element>
+		</xsd:sequence>
+	</xsd:group>
+
+	<xsd:group name="sharedJndiGroup">
+		<xsd:sequence>
+			<xsd:element name="JndiSharedConfiguration" type="xsd:string"
+				maxOccurs="1" minOccurs="1"></xsd:element>
+			<xsd:element name="jndiDataSourceName" type="xsd:string"
+				maxOccurs="1" minOccurs="1"></xsd:element>
+		</xsd:sequence>
+	</xsd:group>
+
+</xsd:schema>
+

@@ -1,0 +1,16 @@
+/**
+ * @description 
+ */
+void rulefunction Shared.RuleFunctions.scheduleSweepEvent {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		
+	}
+	body {
+		long delay = System.getGlobalVariableAsLong("SweepFreq",300000); //default is 5 mins
+		Shared.RuleFunctions.log("scheduleSweepEvent","DEBUG","Scheduling sweep event after "+delay+" ms...");
+		Shared.Events.SweepEvent.scheduleSweepEvent(delay,"",0);
+	}
+}

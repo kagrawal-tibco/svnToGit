@@ -1,0 +1,70 @@
+/**
+ * @description 
+ */
+void rulefunction WebStudio.Core.RuleFunctions.Startup.WS_RF_LoadDeploymentConfigs {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Startup.WS_RF_LoadDeploymentConfigs");
+		
+		Object outputMap = WS_RF_GetProjectListPayload(null, null);
+		
+		String deployConfigContainerExtId = WS_RF_CreateUserArtifactExtId("DEPLOYMENT_CONFIG_CONTAINER", null, null, null, null, null);
+		WS_C_DeploymentConfigContainer wsDeployConfigContainer = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(deployConfigContainerExtId, false, "/WebStudio/Core/Concepts/Lifecycle/WS_C_DeploymentConfigContainer");
+		if (wsDeployConfigContainer == null) {
+			wsDeployConfigContainer = Instance.createInstance("xslt://{{/WebStudio/Core/Concepts/Lifecycle/WS_C_DeploymentConfigContainer}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"2.0\"><xsl:param name=\"deployConfigContainerExtId\"/><xsl:template name=\"Function\" match=\"/\"><createObject><object><xsl:attribute name=\"extId\"><xsl:value-of select=\"$deployConfigContainerExtId\"/></xsl:attribute></object></createObject></xsl:template></xsl:stylesheet>");
+		}
+
+		Object iterator = Collections.iterator(Collections.Map.entrySet(outputMap));
+		while (Collections.Iterator.hasNext(iterator)) {
+			Object entry = Collections.Iterator.next(iterator);
+			String output = Collections.Map.Entry.getValue(entry);
+			
+			String pathsXpath = "count($var//entry[@kind='dir'])";
+			double numberOfProjects = Number.doubleValue(XPath.execute(pathsXpath, output, ""));
+			Log.log(LOGGER, "Debug", "Number of managed projects - %s", numberOfProjects);
+			
+			for (int i=0; i < numberOfProjects; i++) {
+				String project = XPath.execute("$var//entry[@kind='dir'][" + (i+1) + "]/path/text()", output, "");
+								
+				String deployEnvironments = System.getSystemPropertyAsString(project + ".ws.applicableEnvironments", null);
+				if (deployEnvironments != null) {
+					String[] envs = String.split(deployEnvironments, ",");
+					if (envs != null && envs@length > 0) {
+						for (int j=0; j < envs@length; j++) {
+							String selectedEnvironment = envs[j];
+							String deployConfigExtId = WS_RF_CreateUserArtifactExtId("DEPLOYMENT_CONFIG", null, project, null, null, selectedEnvironment);
+							
+							WS_C_DeploymentConfig wsDeployConfig = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(deployConfigExtId, false, "/WebStudio/Core/Concepts/Lifecycle/WS_C_DeploymentConfig");
+							if (wsDeployConfig == null) {
+								boolean deployConfigLock = Cluster.DataGrid.Lock(deployConfigExtId, -1, false);
+			    					if (deployConfigLock) {
+									String jmxHost = System.getSystemPropertyAsString(project + "." + selectedEnvironment + ".ws.jmx.host", null);
+									int jmxPort = System.getSystemPropertyAsInt(project + "." + selectedEnvironment + ".ws.jmx.port", 0);
+									
+									if (jmxHost != null && jmxPort > 0) {
+										String jmxUser = System.getSystemPropertyAsString(project + "." + selectedEnvironment + ".ws.jmx.user", null);
+										String jmxPassword = System.getSystemPropertyAsString(project + "." + selectedEnvironment + ".ws.jmx.password", null);
+										boolean jmxHotDeployEnabled = System.getSystemPropertyAsBoolean(project + "." + selectedEnvironment + ".ws.jmx.hotDeploy.enable", true);
+										boolean jmxIMProject = System.getSystemPropertyAsBoolean(project + "." + selectedEnvironment + ".ws.jmx.inMemory", false);
+										String agentName = System.getSystemPropertyAsString(project + "." + selectedEnvironment + ".ws.jmx.agentName", null);
+										String clusterName = System.getSystemPropertyAsString(project + "." + selectedEnvironment + ".ws.jmx.clusterName", null);
+										
+										Log.log(LOGGER, "Debug", "Adding Deployment Environment[%s] for project[%s]", selectedEnvironment, project);
+										wsDeployConfig = Instance.createInstance("xslt://{{/WebStudio/Core/Concepts/Lifecycle/WS_C_DeploymentConfig}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"2.0\"><xsl:param name=\"project\"/><xsl:param name=\"selectedEnvironment\"/><xsl:param name=\"deployConfigExtId\"/><xsl:param name=\"jmxHost\"/><xsl:param name=\"jmxPort\"/><xsl:param name=\"jmxUser\"/><xsl:param name=\"jmxPassword\"/><xsl:param name=\"jmxIMProject\"/><xsl:param name=\"agentName\"/><xsl:param name=\"clusterName\"/><xsl:param name=\"jmxHotDeployEnabled\"/><xsl:template name=\"Function\" match=\"/\"><createObject><object><xsl:attribute name=\"extId\"><xsl:value-of select=\"$deployConfigExtId\"/></xsl:attribute><name><xsl:value-of select=\"$selectedEnvironment\"/></name><host><xsl:value-of select=\"$jmxHost\"/></host><port><xsl:value-of select=\"$jmxPort\"/></port><userName><xsl:value-of select=\"$jmxUser\"/></userName><password><xsl:value-of select=\"$jmxPassword\"/></password><clusterName><xsl:value-of select=\"$clusterName\"/></clusterName><agentName><xsl:value-of select=\"$agentName\"/></agentName><inMemory><xsl:value-of select=\"$jmxIMProject\"/></inMemory><projectName><xsl:value-of select=\"$project\"/></projectName><enabled><xsl:value-of select=\"$jmxHotDeployEnabled\"/></enabled></object></createObject></xsl:template></xsl:stylesheet>");
+										
+										Instance.PropertyArray.appendContainedConcept(wsDeployConfigContainer.deploymentConfigs, wsDeployConfig, 1L);
+									}
+			    					}
+							}					
+						}
+					}
+				}
+			}
+		}
+	}
+}

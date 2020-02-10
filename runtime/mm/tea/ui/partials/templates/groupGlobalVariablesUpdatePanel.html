@@ -1,0 +1,80 @@
+ <div class="modal fade box-sizing" id="groupVariables">
+       <div class="modal-header box-sizing">
+       	 	<button type="button" class="close" data-dismiss="modal" aria-hidden="true">x</button>
+			<span class="lead"><h4>{{$parent.groupType}}</h4></span>
+	   </div>
+	   
+	   <div class="modal-body box-sizing">
+			<div class="be_VariablesContainer">
+				<section>
+       				<ul class="navTable">
+            			<li ng-click="$parent.showEqualInstances()" ng-class="{active:$parent.isSetVariablesValueType('equals')}"><a>{{$parent.equalTabTitle}}</a></li>
+           				<li  ng-click="$parent.showDifferentInstances()" ng-class="{active:$parent.isSetVariablesValueType('different')}"><a>{{$parent.differentTabTitle}}</a></li>          		
+        			</ul>
+        		</section>				
+				<div ng-show="$parent.isSetVariablesValueType('equals')" class="be_groupVariablesPanel">
+					<table ng-show="$parent.equalVariables!=null && $parent.equalVariables.length > 0" class="be-table">
+                		<thead>
+   		 					<tr>
+      							<th>Name</th>
+      							<th>Effective/Deployed Value</th>
+      							<th>Value</th>
+    						</tr>
+  						</thead>
+  						<tbody>
+    						<tr ng-repeat = "gv in $parent.equalVariables">
+      							<td title="{{gv.name}}">{{gv.name}}</td>
+      							<td title="{{gv.effectiveValue}}" ng-if="'Password'!==gv.type">{{gv.effectiveValue}}</td>
+      							<td ng-if="'Password'===gv.type">*****</td>
+        					    <td>
+                               		<div class="row" ng-if="gv.name != 'Deployment' && gv.name != 'Domain'">
+        					        	<input type="radio" ng-model="gv.deleted" name="gvGlobal{{$index}}" ng-value="true" ng-change="$parent.configurationChangesFlags.isGlobalVariableChanged =true"/>Delete
+										<input style="margin-left:10px;" type="radio" ng-model="gv.deleted" name="gvGlobal{{$index}}" ng-value="false" ng-change="$parent.configurationChangesFlags.isGlobalVariableChanged =true"/>Override
+										<input name="newValue" type="text" placeholder="value"
+                               				ng-model="gv.value" ng-disabled="gv.deleted" ng-change="$parent.configurationChangesFlags.isGlobalVariableChanged = true" ng-if="'Password'!==gv.type">
+        					    		<input name="newValue" type="password" placeholder="value"
+                               				ng-model="gv.value" ng-disabled="gv.deleted" ng-change="$parent.configurationChangesFlags.isGlobalVariableChanged = true" ng-if="'Password'===gv.type">
+        					        </div>
+								</td>
+    						</tr>
+  					   </tbody>
+        		    </table>					
+				</div>
+				<div ng-show="$parent.isSetVariablesValueType('different')" class="be_groupVariablesPanel">
+					<table ng-show="$parent.diffVariables!=null && $parent.diffVariables.length > 0" class="be-table">
+                		<thead>
+   		 					<tr>
+      							<th>Name</th>
+      							<th>Value</th>
+      							<th>Change Value</th>
+    						</tr>
+  						</thead>
+  						<tbody>
+    						<tr ng-repeat = "gv in $parent.diffVariables">
+      							<td ng-show="!isJVM" title="{{gv.name}}">{{gv.name}}</td>
+        					    <td>
+                               	   <div ng-if="gv.hasEqualValue && gv.name != 'Deployment' && gv.name != 'Domain'" class="row">
+        					        	<input type="radio" ng-model="gv.deleted" name="gvGlobal1{{$index}}" ng-value="true" ng-change="$parent.configurationChangesFlags.isGlobalVariableChanged = true"/ >Delete
+										<input style="margin-left:10px;" type="radio" ng-model="gv.deleted" name="gvGlobal1{{$index}}" ng-value="false" ng-change="$parent.configurationChangesFlags.isGlobalVariableChanged = true"/>Override
+										<input name="newValue" type="text" placeholder="value"
+                               				ng-model="gv.value" ng-disabled="gv.deleted" ng-change="$parent.configurationChangesFlags.isGlobalVariableChanged = true"  ng-if="'Password'!==gv.type">
+        					   <input name="newValue" type="text" placeholder="value"
+                               				ng-model="gv.value" ng-disabled="gv.deleted" ng-change="$parent.configurationChangesFlags.isGlobalVariableChanged = true"  ng-if="'Password'===gv.type">
+        					   
+        					       </div>		
+								</td>
+								<td><input type="checkbox" ng-model="gv.hasEqualValue" ng-change="$parent.configurationChangesFlags.isGlobalVariableChanged =true"></td>   
+    						</tr>
+  					   </tbody>
+        		    </table>					
+				</div>
+			</div>
+	  	</div>	
+	  	<div class="modal-footer box-sizing">
+	    	<button type="button" ng-click="$parent.configurationChangesFlags.isGlobalVariableChanged?$parent.saveGroupGlobalVariables():null"               
+                ng-class="{'tbt-btn':true, 'primary-btn':true , 'button_disabled':!$parent.configurationChangesFlags.isGlobalVariableChanged}"  ng-if="$parent.hasPermission(13) && $parent.groupType == 'Global Variables'">Save</button>
+	    	<button type="button" data-dismiss="modal" aria-hidden="true" class="btn tbt-btn secondary-btn" ng-click="close()">
+		   		 Cancel
+	    	</button>
+    	</div>
+ </div>

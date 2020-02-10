@@ -1,0 +1,83 @@
+/**
+ * @description Fetch domain entries for a domain (and optionally for its parent hierarchy) from the users workspace/SCS.
+ */
+WebStudio.Core.Concepts.Domain.WS_C_Domain rulefunction WebStudio.Core.RuleFunctions.Utils.Domain.WS_RF_FetchDomainEntries {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String username;
+		String[] userRoles;
+		String projectName;
+		String artifactPath;
+		String artifactExtn;
+		boolean fetchParent;	
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.Domain.WS_RF_FetchDomainEntries");
+		
+		String subscriptionId = WS_RF_GetSubscriptionId(username);
+		String scsRootURL = WS_RF_GetSCSRootURL(projectName, subscriptionId);
+		
+		Log.log(LOGGER, "Debug", "Fetching Domain entries for Base Domain %s", artifactPath);
+		WS_C_ResponseTransferObjectData responseTransferObject = WS_RF_GetArtifactContentsFromStore(username, userRoles, projectName, artifactPath, artifactExtn);
+		WS_C_Domain baseDomain = responseTransferObject.artifactContents;
+		
+		// case for if domain isnt checkedout, check if it exists in project libraries
+		if (String.equals(responseTransferObject.errorCode, "ERR_1010")) {
+			baseDomain = WS_RF_FetchDomainContentsFromSCS(scsRootURL, username, projectName, artifactPath, artifactExtn, true);
+			responseTransferObject.errorCode = null;
+		}
+		
+		WebStudio.Core.Concepts.Domain.WS_C_Domain completeDomain = Instance.newTransientInstance("/WebStudio/Core/Concepts/Domain/WS_C_Domain");
+		// check if this processed successfully w/o any errors
+		if (responseTransferObject.errorCode == null && baseDomain != null) {					
+			completeDomain.name = baseDomain.name;
+			completeDomain.namespace = baseDomain.namespace;
+			completeDomain.folder = baseDomain.folder;
+			completeDomain.description = baseDomain.description;
+			completeDomain.ownerProjectName = baseDomain.ownerProjectName;
+			completeDomain.dataType = baseDomain.dataType;
+			WS.Common.setExtId(completeDomain, "DOMAIN_" + WS.Common.generateUUID());
+	
+			WS_C_Domain superDomain = baseDomain;
+			while (superDomain != null) {			 
+				WebStudio.Core.Concepts.Domain.WS_C_DomainEntry[] singleEntries = Instance.PropertyArray.toArrayContainedConcept(superDomain.singleEntry);
+				for (int i = 0; i < singleEntries@length; i++) {
+					WebStudio.Core.Concepts.Domain.WS_C_DomainEntry singleEntry = Instance.newTransientInstance("/WebStudio/Core/Concepts/Domain/WS_C_DomainEntry");
+					singleEntry.value = singleEntries[i].value;
+					singleEntry.description = singleEntries[i].description;										
+					Instance.PropertyArray.appendContainedConcept(completeDomain.singleEntry, singleEntry, 1L);						
+				}
+
+				WebStudio.Core.Concepts.Domain.WS_C_RangeEntry[] rangeEntries = Instance.PropertyArray.toArrayContainedConcept(superDomain.rangeEntry);
+				for (int i = 0; i < rangeEntries@length; i++) {
+					WebStudio.Core.Concepts.Domain.WS_C_RangeEntry rangeEntry = Instance.newTransientInstance("/WebStudio/Core/Concepts/Domain/WS_C_RangeEntry");
+					rangeEntry.lower = rangeEntries[i].lower;						
+					rangeEntry.upper = rangeEntries[i].upper;
+					rangeEntry.lowerInclusive = rangeEntries[i].lowerInclusive;
+					rangeEntry.upperInclusive = rangeEntries[i].upperInclusive;
+					rangeEntry.value = WS.Domain.getFormattedRangeEntryValue(rangeEntry.lowerInclusive, rangeEntry.upperInclusive, rangeEntry.lower, rangeEntry.upper);					
+					rangeEntry.description = rangeEntries[i].description;										
+					Instance.PropertyArray.appendContainedConcept(completeDomain.rangeEntry, rangeEntry, 1L);						
+				}
+
+				String superDomainPath = superDomain.superDomainPath;
+				if (fetchParent && superDomainPath != null && !String.equals(superDomainPath, "")) {			
+					Log.log(LOGGER, "Debug", "Fetching Domain entries for super Domain %s", superDomainPath);
+					responseTransferObject = WS_RF_GetArtifactContentsFromStore(username, userRoles, projectName, superDomainPath, artifactExtn);
+					superDomain = responseTransferObject.artifactContents;
+					// case for if domain isnt checkedout, check if it exists in project libraries
+					if (String.equals(responseTransferObject.errorCode, "ERR_1010")) {
+						superDomain = WS_RF_FetchDomainContentsFromSCS(scsRootURL, username, projectName, superDomainPath, artifactExtn, true);
+						responseTransferObject.errorCode = null;
+					}		 		
+				} else {
+					superDomain = null;
+				}	
+			}				 	
+		}	
+		
+		return completeDomain;				
+	}
+}

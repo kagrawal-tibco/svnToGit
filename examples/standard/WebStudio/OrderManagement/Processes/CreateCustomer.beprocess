@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<process:Process xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:activities="http:///com/tibco/cep/bpmn/core/model/semantic/process/activities/cep-bpmn.ecore" xmlns:common="http:///com/tibco/cep/bpmn/core/model/semantic/core/common/cep-bpmn.ecore" xmlns:events="http:///com/tibco/cep/bpmn/core/model/semantic/core/common/events/cep-bpmn.ecore" xmlns:extn.activities="http:///com/tibco/cep/bpmn/core/extension/semantic/process/activities" xmlns:extn.common="http:///com/tibco/cep/bpmn/core/extension/semantic/core/common" xmlns:extn.data="http:///com/tibco/cep/bpmn/core/extension/semantic/process/data" xmlns:extn.events="http:///com/tibco/cep/bpmn/core/extension/semantic/core/common/events" xmlns:extn.process="http:///com/tibco/cep/bpmn/core/extension/semantic/process" xmlns:process="http:///com/tibco/cep/bpmn/core/model/semantic/process/cep-bpmn.ecore" xsi:schemaLocation="http:///com/tibco/cep/bpmn/core/model/semantic/process/activities/cep-bpmn.ecore platform:/plugin/com.tibco.cep.bpmn.common/model/be/cep-bpmn.ecore#//semantic/process/activities http:///com/tibco/cep/bpmn/core/model/semantic/core/common/cep-bpmn.ecore platform:/plugin/com.tibco.cep.bpmn.common/model/be/cep-bpmn.ecore#//semantic/core/common http:///com/tibco/cep/bpmn/core/model/semantic/core/common/events/cep-bpmn.ecore platform:/plugin/com.tibco.cep.bpmn.common/model/be/cep-bpmn.ecore#//semantic/core/common/events http:///com/tibco/cep/bpmn/core/extension/semantic/process/activities platform:/plugin/com.tibco.cep.bpmn.common/model/be/cep-bpmn-extn.ecore#//semantic/process/activities http:///com/tibco/cep/bpmn/core/extension/semantic/core/common platform:/plugin/com.tibco.cep.bpmn.common/model/be/cep-bpmn-extn.ecore#//semantic/core/common http:///com/tibco/cep/bpmn/core/extension/semantic/process/data platform:/plugin/com.tibco.cep.bpmn.common/model/be/cep-bpmn-extn.ecore#//semantic/process/data http:///com/tibco/cep/bpmn/core/extension/semantic/core/common/events platform:/plugin/com.tibco.cep.bpmn.common/model/be/cep-bpmn-extn.ecore#//semantic/core/common/events http:///com/tibco/cep/bpmn/core/extension/semantic/process platform:/plugin/com.tibco.cep.bpmn.common/model/be/cep-bpmn-extn.ecore#//semantic/process http:///com/tibco/cep/bpmn/core/model/semantic/process/cep-bpmn.ecore platform:/plugin/com.tibco.cep.bpmn.common/model/be/cep-bpmn.ecore#//semantic/process" id="CreateCustomer" name="CreateCustomer" folder="/Processes" ownerProject="OrderManagement" lastModified="2014-10-29T09:50:14.970+0530" creationDate="2014-02-07T11:40:00.827+0530" processType="PUBLIC">
+  <extensionDefinitions href="bdx:OrderManagement#{http:///com/tibco/cep/bpmn/core/model/semantic/process/cep-bpmn.ecore}Process"/>
+  <extensionValues>
+    <value xsi:type="extn.process:ExtnProcessData" label="CreateCustomer" author="TIBCO" version="93" zoomLevel="2.5546875"/>
+    <extensionAttributeDefinition href="bdx:OrderManagement#//@extensions[name='84b95aac']/@definition/@extensionAttributeDefinitions[name='data']"/>
+  </extensionValues>
+  <documentation id="CreateCustomer.Documentation_0" text="This process creates the customer."/>
+  <flowElements xsi:type="activities:RuleFunctionTask" id="CreateCustomer.Script_0" uniqueId="3" name="Create Customer" lanes="CreateCustomer.Lane_0" outgoing="CreateCustomer.SequenceFlow_1" incoming="CreateCustomer.SequenceFlow_3" startQuantity="1" completionQuantity="1">
+    <extensionDefinitions href="bdx:OrderManagement#{http:///com/tibco/cep/bpmn/core/model/semantic/process/activities/cep-bpmn.ecore}RuleFunctionTask"/>
+    <extensionValues>
+      <value xsi:type="extn.activities:ExtnRuleFunctionTaskData" toolId="activity.ruleFunction" rulefunction="/RuleFunctions/CreateCustomer">
+        <nodePoint x="-15.819658696663595" y="22.23853193678687"/>
+        <labelPoint x="-15.819658696663566" y="-11.728134729879802"/>
+      </value>
+      <extensionAttributeDefinition href="bdx:OrderManagement#//@extensions[name='f5be13c6']/@definition/@extensionAttributeDefinitions[name='data']"/>
+    </extensionValues>
+    <ioSpecification>
+      <dataInputs id="arguments" name="arguments"/>
+    </ioSpecification>
+    <dataInputAssociations targetRef="arguments">
+      <transformation body="xslt://{{/RuleFunctions/CreateCustomer}}&lt;?xml version=\&quot;1.0\&quot; encoding=\&quot;UTF-8\&quot;?>\n&lt;xsl:stylesheet xmlns:xsl=\&quot;http://www.w3.org/1999/XSL/Transform\&quot; xmlns:ns=\&quot;www.tibco.com/be/ontology/RuleFunctions/CreateCustomer\&quot; xmlns:xsd=\&quot;http://www.w3.org/2001/XMLSchema\&quot; version=\&quot;1.0\&quot; exclude-result-prefixes=\&quot;xsl ns xsd\&quot;>\n    &lt;xsl:output method=\&quot;xml\&quot;/>\n    &lt;xsl:param name=\&quot;job\&quot;/>\n    &lt;xsl:template match=\&quot;/\&quot;>\n        &lt;ns:CreateCustomer>\n            &lt;args>\n                &lt;ns:customerName>\n                    &lt;xsl:value-of select=\&quot;$job/custmerName\&quot;/>\n                &lt;/ns:customerName>\n                &lt;ns:customerBalance>\n                    &lt;xsl:value-of select=\&quot;$job/customerBalance\&quot;/>\n                &lt;/ns:customerBalance>\n                &lt;ns:customerType>\n                    &lt;xsl:value-of select=\&quot;$job/customerType\&quot;/>\n                &lt;/ns:customerType>\n            &lt;/args>\n        &lt;/ns:CreateCustomer>\n    &lt;/xsl:template>\n&lt;/xsl:stylesheet>"/>
+    </dataInputAssociations>
+    <dataOutputAssociations>
+      <transformation body="xslt://{{/Processes/CreateCustomer}}&lt;?xml version=\&quot;1.0\&quot; encoding=\&quot;UTF-8\&quot;?>\n&lt;xsl:stylesheet xmlns:xsl=\&quot;http://www.w3.org/1999/XSL/Transform\&quot; xmlns:ns=\&quot;www.tibco.com/be/ontology/Processes/CreateCustomer\&quot; xmlns:xsd=\&quot;http://www.w3.org/2001/XMLSchema\&quot; version=\&quot;1.0\&quot; exclude-result-prefixes=\&quot;xsl ns xsd\&quot;>\n    &lt;xsl:output method=\&quot;xml\&quot;/>\n    &lt;xsl:param name=\&quot;return\&quot;/>\n    &lt;xsl:template match=\&quot;/\&quot;>\n        &lt;job>\n            &lt;ns:customer>\n                &lt;xsl:if test=\&quot;$return/@Id\&quot;>\n                    &lt;xsl:attribute name=\&quot;ref\&quot;>\n                        &lt;xsl:value-of select=\&quot;$return/@Id\&quot;/>\n                    &lt;/xsl:attribute>\n                &lt;/xsl:if>\n            &lt;/ns:customer>\n        &lt;/job>\n    &lt;/xsl:template>\n&lt;/xsl:stylesheet>"/>
+    </dataOutputAssociations>
+  </flowElements>
+  <flowElements xsi:type="common:SequenceFlow" id="CreateCustomer.SequenceFlow_1" uniqueId="5" name="SequenceFlow_1" lanes="CreateCustomer.Lane_0" isImmediate="true" targetRef="CreateCustomer.Script_1" sourceRef="CreateCustomer.Script_0">
+    <extensionDefinitions href="bdx:OrderManagement#{http:///com/tibco/cep/bpmn/core/model/semantic/core/common/cep-bpmn.ecore}SequenceFlow"/>
+    <extensionValues>
+      <value xsi:type="extn.common:ExtnSequenceFlowData">
+        <startPoint x="19.180341303336405" y="22.23853193678687"/>
+        <endPoint x="47.180341303336405" y="22.23853193678687"/>
+      </value>
+      <extensionAttributeDefinition href="bdx:OrderManagement#//@extensions[name='fb9f535e']/@definition/@extensionAttributeDefinitions[name='data']"/>
+    </extensionValues>
+  </flowElements>
+  <flowElements xsi:type="activities:RuleFunctionTask" id="CreateCustomer.Script_1" uniqueId="6" name="Add Deposit" lanes="CreateCustomer.Lane_0" outgoing="CreateCustomer.SequenceFlow_2" incoming="CreateCustomer.SequenceFlow_1" startQuantity="1" completionQuantity="1">
+    <extensionDefinitions href="bdx:OrderManagement#{http:///com/tibco/cep/bpmn/core/model/semantic/process/activities/cep-bpmn.ecore}RuleFunctionTask"/>
+    <extensionValues>
+      <value xsi:type="extn.activities:ExtnRuleFunctionTaskData" toolId="activity.ruleFunction" rulefunction="/RuleFunctions/AddDeposit">
+        <nodePoint x="82.1803413033364" y="22.23835550169929"/>
+        <labelPoint x="82.18034130333652" y="-11.766644498300707"/>
+      </value>
+      <extensionAttributeDefinition href="bdx:OrderManagement#//@extensions[name='f5be13c6']/@definition/@extensionAttributeDefinitions[name='data']"/>
+    </extensionValues>
+    <ioSpecification>
+      <dataInputs id="arguments" name="arguments"/>
+    </ioSpecification>
+    <dataInputAssociations targetRef="arguments">
+      <transformation body="xslt://{{/RuleFunctions/AddDeposit}}&lt;?xml version=\&quot;1.0\&quot; encoding=\&quot;UTF-8\&quot;?>\n&lt;xsl:stylesheet xmlns:xsd=\&quot;http://www.w3.org/2001/XMLSchema\&quot; xmlns:xsl=\&quot;http://www.w3.org/1999/XSL/Transform\&quot; xmlns:ns=\&quot;www.tibco.com/be/ontology/RuleFunctions/AddDeposit\&quot; version=\&quot;1.0\&quot; exclude-result-prefixes=\&quot;xsl ns xsd\&quot;>\n    &lt;xsl:output method=\&quot;xml\&quot;/>\n    &lt;xsl:param name=\&quot;job\&quot;/>\n    &lt;xsl:template match=\&quot;/\&quot;>\n        &lt;ns:AddDeposit>\n            &lt;args>\n                &lt;ns:customer>\n                    &lt;xsl:value-of select=\&quot;$job/customer/@ref\&quot;/>\n                &lt;/ns:customer>\n            &lt;/args>\n        &lt;/ns:AddDeposit>\n    &lt;/xsl:template>\n&lt;/xsl:stylesheet>"/>
+    </dataInputAssociations>
+    <dataOutputAssociations>
+      <transformation body="xslt://{{/Processes/CreateCustomer}}&lt;?xml version=\&quot;1.0\&quot; encoding=\&quot;UTF-8\&quot;?>\n&lt;xsl:stylesheet xmlns:xsl=\&quot;http://www.w3.org/1999/XSL/Transform\&quot; xmlns:ns=\&quot;www.tibco.com/be/ontology/Processes/CreateCustomer\&quot; xmlns:xsd=\&quot;http://www.w3.org/2001/XMLSchema\&quot; version=\&quot;1.0\&quot; exclude-result-prefixes=\&quot;xsl ns xsd\&quot;>\n    &lt;xsl:output method=\&quot;xml\&quot;/>\n    &lt;xsl:param name=\&quot;return\&quot;/>\n    &lt;xsl:template match=\&quot;/\&quot;>\n        &lt;job>\n            &lt;ns:message>\n                &lt;xsl:value-of select=\&quot;$return/return\&quot;/>\n            &lt;/ns:message>\n        &lt;/job>\n    &lt;/xsl:template>\n&lt;/xsl:stylesheet>"/>
+    </dataOutputAssociations>
+  </flowElements>
+  <flowElements xsi:type="common:SequenceFlow" id="CreateCustomer.SequenceFlow_2" uniqueId="7" name="SequenceFlow_2" lanes="CreateCustomer.Lane_0" isImmediate="true" targetRef="CreateCustomer.Message_End_0" sourceRef="CreateCustomer.Script_1">
+    <extensionDefinitions href="bdx:OrderManagement#{http:///com/tibco/cep/bpmn/core/model/semantic/core/common/cep-bpmn.ecore}SequenceFlow"/>
+    <extensionValues>
+      <value xsi:type="extn.common:ExtnSequenceFlowData">
+        <startPoint x="117.1803413033364" y="22.243355501699277"/>
+        <endPoint x="145.18034130367352" y="22.243355501699277"/>
+      </value>
+      <extensionAttributeDefinition href="bdx:OrderManagement#//@extensions[name='fb9f535e']/@definition/@extensionAttributeDefinitions[name='data']"/>
+    </extensionValues>
+  </flowElements>
+  <flowElements xsi:type="events:StartEvent" id="CreateCustomer.Message_Start_0" uniqueId="1" name="Create Customer Start Event" lanes="CreateCustomer.Lane_0" outgoing="CreateCustomer.SequenceFlow_3">
+    <extensionDefinitions href="bdx:OrderManagement#{http:///com/tibco/cep/bpmn/core/model/semantic/core/common/events/cep-bpmn.ecore}StartEvent"/>
+    <extensionValues>
+      <value xsi:type="extn.events:ExtnStartEventData" toolId="event.start.message" event="/Events/CreateCustomer">
+        <nodePoint x="-108.8196586966636" y="13.255198603453522"/>
+        <labelPoint x="-88.81965869666357" y="-31.7281347298798"/>
+      </value>
+      <extensionAttributeDefinition href="bdx:OrderManagement#//@extensions[name='36f82a05']/@definition/@extensionAttributeDefinitions[name='data']"/>
+    </extensionValues>
+    <dataOutputAssociation sourceRef="CreateCustomer">
+      <transformation body="xslt://{{/Processes/CreateCustomer}}&lt;?xml version=\&quot;1.0\&quot; encoding=\&quot;UTF-8\&quot;?>\n&lt;xsl:stylesheet xmlns:xsl=\&quot;http://www.w3.org/1999/XSL/Transform\&quot; xmlns:ns=\&quot;www.tibco.com/be/ontology/Processes/CreateCustomer\&quot; xmlns:xsd=\&quot;http://www.w3.org/2001/XMLSchema\&quot; version=\&quot;1.0\&quot; exclude-result-prefixes=\&quot;xsl ns xsd\&quot;>\n    &lt;xsl:output method=\&quot;xml\&quot;/>\n    &lt;xsl:param name=\&quot;CreateCustomer\&quot;/>\n    &lt;xsl:template match=\&quot;/\&quot;>\n        &lt;job>\n            &lt;xsl:if test=\&quot;$CreateCustomer/name\&quot;>\n                &lt;ns:custmerName>\n                    &lt;xsl:value-of select=\&quot;$CreateCustomer/name\&quot;/>\n                &lt;/ns:custmerName>\n            &lt;/xsl:if>\n            &lt;xsl:if test=\&quot;$CreateCustomer/balance\&quot;>\n                &lt;ns:customerBalance>\n                    &lt;xsl:value-of select=\&quot;$CreateCustomer/balance\&quot;/>\n                &lt;/ns:customerBalance>\n            &lt;/xsl:if>\n            &lt;xsl:if test=\&quot;$CreateCustomer/type\&quot;>\n                &lt;ns:customerType>\n                    &lt;xsl:value-of select=\&quot;$CreateCustomer/type\&quot;/>\n                &lt;/ns:customerType>\n            &lt;/xsl:if>\n        &lt;/job>\n    &lt;/xsl:template>\n&lt;/xsl:stylesheet>"/>
+    </dataOutputAssociation>
+    <dataOutput id="CreateCustomer" name="CreateCustomer">
+      <itemSubjectRef href="bdx:OrderManagement#{www.tibco.com/be/ontology/Events/CreateCustomer}CreateCustomer"/>
+    </dataOutput>
+    <eventDefinitions xsi:type="events:MessageEventDefinition" id="CreateCustomer.MessageEventDefinition_0">
+      <messageRef id="CreateCustomer" name="CreateCustomer">
+        <structureRef href="bdx:OrderManagement#{www.tibco.com/be/ontology/Events/CreateCustomer}CreateCustomer"/>
+      </messageRef>
+    </eventDefinitions>
+  </flowElements>
+  <flowElements xsi:type="common:SequenceFlow" id="CreateCustomer.SequenceFlow_3" uniqueId="4" name="SequenceFlow_3" lanes="CreateCustomer.Lane_0" isImmediate="true" targetRef="CreateCustomer.Script_0" sourceRef="CreateCustomer.Message_Start_0">
+    <extensionDefinitions href="bdx:OrderManagement#{http:///com/tibco/cep/bpmn/core/model/semantic/core/common/cep-bpmn.ecore}SequenceFlow"/>
+    <extensionValues>
+      <value xsi:type="extn.common:ExtnSequenceFlowData">
+        <startPoint x="-80.19624656214997" y="22.238531936786856"/>
+        <endPoint x="-50.819658696663595" y="22.238531936786856"/>
+      </value>
+      <extensionAttributeDefinition href="bdx:OrderManagement#//@extensions[name='fb9f535e']/@definition/@extensionAttributeDefinitions[name='data']"/>
+    </extensionValues>
+  </flowElements>
+  <flowElements xsi:type="events:EndEvent" id="CreateCustomer.Message_End_0" uniqueId="8" name="Create Customer End" lanes="CreateCustomer.Lane_0" incoming="CreateCustomer.SequenceFlow_2">
+    <extensionDefinitions href="bdx:OrderManagement#{http:///com/tibco/cep/bpmn/core/model/semantic/core/common/events/cep-bpmn.ecore}EndEvent"/>
+    <extensionValues>
+      <value xsi:type="extn.events:ExtnEndEventData" toolId="event.end.message" event="/Events/AddApplicantEnd">
+        <nodePoint x="175.1803413033364" y="22.2432132794778"/>
+        <labelPoint x="167.17034130333641" y="-13.756928942743663"/>
+        <messageStarters messageStarter="CreateCustomer.Message_Start_0" replyTo="true" consume="false"/>
+      </value>
+      <extensionAttributeDefinition href="bdx:OrderManagement#//@extensions[name='ed70106c']/@definition/@extensionAttributeDefinitions[name='data']"/>
+    </extensionValues>
+    <dataInputAssociation targetRef="AddApplicantEnd">
+      <transformation body="xslt://{{/Events/AddApplicantEnd}}&lt;?xml version=\&quot;1.0\&quot; encoding=\&quot;UTF-8\&quot;?>\n&lt;xsl:stylesheet xmlns:xsl=\&quot;http://www.w3.org/1999/XSL/Transform\&quot; xmlns:ns=\&quot;www.tibco.com/be/ontology/Events/AddApplicantEnd\&quot; xmlns:xsd=\&quot;http://www.w3.org/2001/XMLSchema\&quot; version=\&quot;1.0\&quot; exclude-result-prefixes=\&quot;xsl xsd\&quot;>\n    &lt;xsl:output method=\&quot;xml\&quot;/>\n    &lt;xsl:param name=\&quot;job\&quot;/>\n    &lt;xsl:template match=\&quot;/\&quot;>\n        &lt;ns:AddApplicantEnd>\n            &lt;xsl:if test=\&quot;$job/message\&quot;>\n                &lt;message>\n                    &lt;xsl:value-of select=\&quot;$job/message\&quot;/>\n                &lt;/message>\n            &lt;/xsl:if>\n        &lt;/ns:AddApplicantEnd>\n    &lt;/xsl:template>\n&lt;/xsl:stylesheet>"/>
+    </dataInputAssociation>
+    <dataInput id="AddApplicantEnd" name="AddApplicantEnd">
+      <itemSubjectRef href="bdx:OrderManagement#{www.tibco.com/be/ontology/Events/AddApplicantEnd}AddApplicantEnd"/>
+    </dataInput>
+    <eventDefinitions xsi:type="events:MessageEventDefinition" id="CreateCustomer.MessageEventDefinition_1">
+      <messageRef id="AddApplicantEnd" name="AddApplicantEnd">
+        <structureRef href="bdx:OrderManagement#{www.tibco.com/be/ontology/Events/AddApplicantEnd}AddApplicantEnd"/>
+      </messageRef>
+    </eventDefinitions>
+  </flowElements>
+  <properties name="customer">
+    <extensionDefinitions href="bdx:OrderManagement#{http:///com/tibco/cep/bpmn/core/model/semantic/process/data/cep-bpmn.ecore}Property"/>
+    <extensionValues>
+      <value xsi:type="extn.data:ExtnPropertyData" propType="ConceptReference"/>
+      <extensionAttributeDefinition href="bdx:OrderManagement#//@extensions[name='3811313f']/@definition/@extensionAttributeDefinitions[name='data']"/>
+    </extensionValues>
+    <itemSubjectRef href="bdx:OrderManagement#{www.tibco.com/be/ontology/Concepts/Customer}Customer"/>
+  </properties>
+  <properties name="custmerName">
+    <extensionDefinitions href="bdx:OrderManagement#{http:///com/tibco/cep/bpmn/core/model/semantic/process/data/cep-bpmn.ecore}Property"/>
+    <extensionValues>
+      <value xsi:type="extn.data:ExtnPropertyData"/>
+      <extensionAttributeDefinition href="bdx:OrderManagement#//@extensions[name='3811313f']/@definition/@extensionAttributeDefinitions[name='data']"/>
+    </extensionValues>
+    <itemSubjectRef href="bdx:OrderManagement#{http://www.w3.org/2001/XMLSchema}string"/>
+  </properties>
+  <properties name="customerBalance">
+    <extensionDefinitions href="bdx:OrderManagement#{http:///com/tibco/cep/bpmn/core/model/semantic/process/data/cep-bpmn.ecore}Property"/>
+    <extensionValues>
+      <value xsi:type="extn.data:ExtnPropertyData"/>
+      <extensionAttributeDefinition href="bdx:OrderManagement#//@extensions[name='3811313f']/@definition/@extensionAttributeDefinitions[name='data']"/>
+    </extensionValues>
+    <itemSubjectRef href="bdx:OrderManagement#{http://www.w3.org/2001/XMLSchema}string"/>
+  </properties>
+  <properties name="customerType">
+    <extensionDefinitions href="bdx:OrderManagement#{http:///com/tibco/cep/bpmn/core/model/semantic/process/data/cep-bpmn.ecore}Property"/>
+    <extensionValues>
+      <value xsi:type="extn.data:ExtnPropertyData"/>
+      <extensionAttributeDefinition href="bdx:OrderManagement#//@extensions[name='3811313f']/@definition/@extensionAttributeDefinitions[name='data']"/>
+    </extensionValues>
+    <itemSubjectRef href="bdx:OrderManagement#{http://www.w3.org/2001/XMLSchema}string"/>
+  </properties>
+  <properties name="message">
+    <extensionDefinitions href="bdx:OrderManagement#{http:///com/tibco/cep/bpmn/core/model/semantic/process/data/cep-bpmn.ecore}Property"/>
+    <extensionValues>
+      <value xsi:type="extn.data:ExtnPropertyData"/>
+      <extensionAttributeDefinition href="bdx:OrderManagement#//@extensions[name='3811313f']/@definition/@extensionAttributeDefinitions[name='data']"/>
+    </extensionValues>
+    <itemSubjectRef href="bdx:OrderManagement#{http://www.w3.org/2001/XMLSchema}string"/>
+  </properties>
+  <laneSets id="CreateCustomer.LaneSet_0">
+    <lanes id="CreateCustomer.Lane_0" name="CreateCustomer" flowElementRefs="CreateCustomer.Script_0 CreateCustomer.SequenceFlow_1 CreateCustomer.Script_1 CreateCustomer.SequenceFlow_2 CreateCustomer.Message_Start_0 CreateCustomer.SequenceFlow_3 CreateCustomer.Message_End_0">
+      <extensionDefinitions href="bdx:OrderManagement#{http:///com/tibco/cep/bpmn/core/model/semantic/process/cep-bpmn.ecore}Lane"/>
+      <extensionValues>
+        <value xsi:type="extn.process:ExtnLaneData"/>
+        <extensionAttributeDefinition href="bdx:OrderManagement#//@extensions[name='ea6906cf']/@definition/@extensionAttributeDefinitions[name='data']"/>
+      </extensionValues>
+      <childLaneSet id="CreateCustomer.LaneSet_1"/>
+    </lanes>
+  </laneSets>
+</process:Process>

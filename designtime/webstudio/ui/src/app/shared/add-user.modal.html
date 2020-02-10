@@ -1,0 +1,74 @@
+<form (ngSubmit)='onSubmit(addUserForm.value)' #addUserForm='ngForm'>
+  <div class="card panel-sm">
+    <div class="card-header" i18n>{{i18n('
+      Add new user
+      ')}}</div>
+    <div class="card-body">
+      <div class='row'>
+        <div class='col-sm-12'>
+          <div class='row justify-content-center'>
+            <div class="form-group col-sm-6">
+              <input 
+                type="text" 
+                class="form-control" 
+                placeholder="{{i18n('Username')}}" 
+                i18n-placeholder
+                autocomplete="off" 
+                [ngModel]="addUserForm.userName"
+                name='userName' 
+                validateUsername="userName"
+                required
+                #userName='ngModel'
+                >
+                <small [hidden]="userName.valid || (userName.pristine && !addUserForm.submitted)" class="text-danger">
+                  <ng-container i18n>{{i18n('Unique username is required')}}</ng-container>
+                </small>
+            </div>
+          </div>
+          <div class='row justify-content-center'>
+            <div class="form-group col-sm-6">
+              <input 
+               type="password"
+               class="form-control" 
+               name="password" 
+               [ngModel]="addUserForm.password" 
+               validateEqual="passwordRepeat"
+               reverse="true" 
+               required 
+               placeholder="{{i18n('Password')}}"
+               i18n-placeholder 
+               #password="ngModel"
+               >
+              <small [hidden]="password.valid || (password.pristine && !addUserForm.submitted)" class="text-danger">
+                <ng-container i18n>{{i18n('Password is required')}}</ng-container>
+              </small>
+            </div>
+          </div>
+          <div class='row justify-content-center'>
+            <div class="form-group col-sm-6">
+              <input type="password"
+                class="form-control"
+                name="passwordRepeat"
+                [ngModel]="addUserForm.passwordRepeat"
+                required
+                validateEqual="password"
+                #passwordRepeat="ngModel"
+                placeholder="{{i18n('Confirm password')}}"
+                i18n-placeholder
+              >
+                  <small [hidden]="passwordRepeat.valid || (passwordRepeat.pristine && !addUserForm.submitted)" class="text-danger">
+                    <ng-container i18n>{{i18n('Passwords must match')}}</ng-container>
+                  </small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="row left-pad right-pad bottom-pad top-pad">
+    <div class="col-sm-12">
+      <button type="button" class='btn btn-outline-primary btn-sm btn-narrow' (click)='onCancel()' i18n>{{i18n('Cancel')}}</button>
+      <button type="submit" class='btn btn-primary btn-sm btn-narrow pull-right' [disabled]='!addUserForm.valid || addUserForm.submitted || addUserForm.pristine' i18n>{{i18n('Add user')}}</button>
+    </div>
+  </div>
+</form>

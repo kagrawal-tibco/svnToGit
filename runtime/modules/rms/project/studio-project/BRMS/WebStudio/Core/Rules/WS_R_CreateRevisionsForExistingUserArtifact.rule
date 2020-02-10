@@ -1,0 +1,31 @@
+/**
+ * @description Create new revision for existing user artifact.
+ * @author aathalye-T410
+ */
+rule WebStudio.Core.Rules.WS_R_CreateRevisionsForExistingUserArtifact {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		WebStudio.Core.Events.WS_E_CreateRevisionsForExistingArtifactEvent ws_e_createrevisionsforexistingartifactevent;
+	}
+	when {
+		
+	}
+	then {
+		String baseUserArtifactExtId = ws_e_createrevisionsforexistingartifactevent.baseUserArtifactExtId;
+		String baseArtifactType = ws_e_createrevisionsforexistingartifactevent.artifactType;
+		WS_C_UserArtifact baseUserArtifact = null;
+		
+		if (baseArtifactType == "ruletemplate") {
+			baseUserArtifact = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(baseUserArtifactExtId, false, "/WebStudio/Core/Concepts/RuleTemplateInstance/WS_C_RuleTemplateInstanceUserArtifact");
+		} 
+		String userRevisionId = ws_e_createrevisionsforexistingartifactevent.userArtifactRevisionId;
+		
+		//Append it. A hack. Twice execution since it is concept modification.
+		if (baseUserArtifact != null) {
+			Instance.PropertyArray.appendString(baseUserArtifact.artifactRevisionIds, userRevisionId, 1L);
+		}
+	}
+}

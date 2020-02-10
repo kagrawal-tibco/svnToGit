@@ -1,0 +1,46 @@
+/**
+ * @description 
+ */
+String rulefunction WebStudio.Core.RuleFunctions.Actions.Lifecycle.Fetch.WS_RF_FetchProcessArtifactContentsFromStore {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		WebStudio.Core.Concepts.DataSources.WS_C_AnyArtifactDetails artifactContents;
+		WebStudio.Core.Concepts.WS_C_UserArtifact userArtifact;
+		String contentType;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.Lifecycle.Fetch.WS_RF_FetchProcessArtifactContentsFromStore");
+		WS_C_ProcessArtifactDetails processDetails = Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/WS_C_ProcessArtifactDetails");
+
+		//Manipulate using java references.
+		processDetails.artifactPath = userArtifact.artifactPath;
+		processDetails.artifactType = userArtifact.artifactFileExtn;
+		Instance.PropertyAtom.setConceptReference(processDetails.artifactContent, artifactContents, 1L);
+		
+		WS_C_ResponseData responseData = Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/WS_C_ResponseData");
+		WS_C_AbstractDataSourceRecord abstractDataSourceRecord = Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/Records/WS_C_ArtifactContentsDataSourceRecord");
+		
+		WS_C_AnyArtifactDetails anyDetails = processDetails;
+		
+		WS_C_ArtifactContentsDataSourceRecord artifactContentsDataSourceRecord = abstractDataSourceRecord;	
+		Instance.PropertyAtom.setContainedConcept(artifactContentsDataSourceRecord.artifactDetails, anyDetails, 1L);
+		Instance.PropertyArray.appendContainedConcept(responseData.record, abstractDataSourceRecord, 1L);
+				
+		String responseDSXML = WS_RF_CreateAndSerializeResponseDataSource(0, 1, null, null, responseData, contentType);
+		
+		// parse and convert reserved keywords if any
+		boolean isXML = String.equals(contentType, System.getGlobalVariableAsString("WebStudio/CONTENT_TYPE/XML", "application/xml"));
+		responseDSXML = WS.Common.checkAndReplaceKeywords(responseDSXML, false, isXML);
+		
+		Log.log(LOGGER, "Info", "Artifact being processed -  %s and its UUID - %s", userArtifact.artifactPath, userArtifact.UUID);
+//		if (anyDetails instanceof WS_C_ProcessDetails) {
+//			//Dereference it so that it can be referenced for next request if needed.
+//			Instance.PropertyAtom.setConceptReference(processDetails.artifactContent, null, 1L);
+//		}
+		Log.log(LOGGER, "Debug", "3. All done.");
+		
+		return responseDSXML;										
+	}
+}

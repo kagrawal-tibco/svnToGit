@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.0"?>
+
+<!--
+ <copyright>
+ </copyright>
+
+ $Id$
+-->
+
+<plugin>
+   <extension-point id="bpmnIndexRefreshSync" name="Synchronize Process to sync the extension defs" schema="schema/bpmnIndexRefreshSync.exsd"/>
+   <extension
+         point="com.tibco.cep.studio.core.buildParticipant">
+      <buildParticipant
+            Participant="com.tibco.cep.bpmn.core.builder.BpmnBuildParticipant">
+      </buildParticipant>
+   </extension>
+<!--
+   <extension
+         point="com.tibco.cep.studio.core.sharedArchiveResourceProvider">
+      <sharedArchiveResource
+            provider="com.tibco.cep.bpmn.core.codegen.BpmnSharedArchiveResourcesProvider">
+      </sharedArchiveResource>
+   </extension>
+  -->
+   <extension
+         point="org.eclipse.core.runtime.preferences">
+      <initializer
+            class="com.tibco.cep.bpmn.core.preferences.BpmnCorePreferenceInitializer">
+      </initializer>
+   </extension>
+   <extension
+         point="com.tibco.cep.studio.core.refactoringParticipant">
+      <refactoringParticipant
+            participant="com.tibco.cep.bpmn.core.refactoring.BpmnProcessRefactoringParticipant">
+      </refactoringParticipant>
+   </extension>
+   <extension
+         point="com.tibco.cep.studio.core.searchParticipant">
+      <searchParticipant
+            participant="com.tibco.cep.bpmn.core.search.BpmnProcessSearchParticipant">
+      </searchParticipant>
+   </extension>
+   <extension
+         id="bpmnProcessOwnerProjectProblem"
+         name="BPMN process owner project problem"
+         point="org.eclipse.core.resources.markers">
+      <persistent
+            value="true">
+      </persistent>
+      <super
+            type="com.tibco.cep.studio.core.validationProblem">
+      </super>
+   </extension>
+   <extension
+         id="indexFormatProblem"
+         name="Old index format int hashCode to hex HashCode"
+         point="org.eclipse.core.resources.markers">
+      <persistent
+            value="true">
+      </persistent>
+      <super
+            type="com.tibco.cep.studio.core.validationProblem">
+      </super>
+   </extension>
+   <extension
+         id="missingExtDefProblem"
+         name="Missing extension definitions"
+         point="org.eclipse.core.resources.markers">
+      <persistent
+            value="true">
+      </persistent>
+      <super
+            type="com.tibco.cep.studio.core.validationProblem">
+      </super>
+   </extension>
+   <extension
+         id="missingResourceProblem"
+         name="Resource Validation Problem"
+         point="org.eclipse.core.resources.markers">
+      <persistent
+            value="true">
+      </persistent>
+      <super
+            type="com.tibco.cep.studio.core.validationProblem">
+      </super>
+   </extension>
+   <extension
+         id="processFolderProblem"
+         name="Wrong folder Problem"
+         point="org.eclipse.core.resources.markers">
+      <persistent
+            value="true">
+      </persistent>
+      <super
+            type="com.tibco.cep.studio.core.validationProblem">
+      </super>
+   </extension>
+   <extension
+         id="incorrectProcessProblem"
+         name="Incorrect process Problem"
+         point="org.eclipse.core.resources.markers">
+      <persistent
+            value="true">
+      </persistent>
+      <super
+            type="com.tibco.cep.studio.core.validationProblem">
+      </super>
+   </extension>
+    <extension
+          id="bpmnProcessuniqueIdNotGenerated"
+          name="Process Validation Problem"
+          point="org.eclipse.core.resources.markers">
+       <persistent
+             value="true">
+       </persistent>
+       <super
+             type="com.tibco.cep.studio.core.validationProblem">
+       </super>
+    </extension>
+   	<extension
+         point="com.tibco.cep.rt.addonContributor">
+       <addon
+             class="com.tibco.cep.bpmn.core.ProcessAddOnLoader">
+       </addon>
+   </extension>
+    <extension
+          point="com.tibco.cep.studio.core.documentationGenerator">
+       <docGenerator
+             class="com.tibco.cep.bpmn.core.doc.concept.ConceptDocumentationGenerator">
+       </docGenerator>
+       <docGenerator
+             class="com.tibco.cep.bpmn.core.doc.ProcessDocumentationGenerator">
+       </docGenerator>
+    </extension>
+    <extension
+          point="com.tibco.cep.studio.core.elementResolutionProvider">
+       <elementResolutionProvider
+             elementResolutionProvider="com.tibco.cep.bpmn.core.index.BPMNElementResolutionProvider">
+       </elementResolutionProvider>
+    </extension>
+    <extension
+          id="ProcessBreakpointMarker"
+          name="ProcessBreakpoint Marker"
+          point="org.eclipse.core.resources.markers">
+       <super
+             type="com.tibco.cep.studio.debug.core.RuleBreakpointMarker">
+       </super>
+       <attribute
+             name="com.tibco.cep.bpmn.core.nodeId">
+       </attribute>
+       <attribute
+             name="com.tibco.cep.bpmn.core.nodeLocation">
+       </attribute>
+       <persistent
+             value="true">
+       </persistent>
+    </extension>
+    <extension
+          point="org.eclipse.debug.core.breakpoints">
+       <breakpoint
+             class="com.tibco.cep.studio.debug.core.process.ProcessBreakpoint"
+             id="com.tibco.cep.bpmn.core.debug.ProcessBreakpoint"
+             markerType="com.tibco.cep.bpmn.core.ProcessBreakpointMarker"
+             name="Process Node Breakpoint">
+       </breakpoint>
+    </extension>
+    <extension
+          point="com.tibco.cep.studio.debug.core.debugSessionHandler">
+       <breakpointHandler
+             class="com.tibco.cep.bpmn.core.debug.ProcessBreakpointHandler">
+       </breakpointHandler>
+       <stepHandler
+             class="com.tibco.cep.bpmn.core.debug.ProcessStepHandler">
+       </stepHandler>
+    </extension>
+    <extension
+          point="com.tibco.cep.studio.debug.core.mappedSourceInfoProvider">
+       <provider
+             class="com.tibco.cep.bpmn.core.debug.ProcessSourceInfoProvider">
+       </provider>
+    </extension>
+    <extension
+          point="com.tibco.cep.studio.debug.core.debugVariableProvider">
+       <provider
+             class="com.tibco.cep.bpmn.core.debug.ProcessContextVariableProvider">
+       </provider>
+    </extension>
+    <extension
+          point="com.tibco.cep.studio.debug.core.debugVariableProvider">
+       <provider
+             class="com.tibco.cep.bpmn.core.debug.ProcessPropertiesVariableProvider">
+       </provider>
+    </extension>
+    <extension
+          point="org.eclipse.core.contenttype.contentTypes">
+       <content-type
+             default-charset="UTF-8"
+             file-extensions="beprocess, beprocesspalette"
+             id="com.tibco.cep.bpmn.core.be.content-type"
+             name="BusinessEvents process resource"
+             priority="high">
+       </content-type>
+    </extension>
+    <extension
+          point="com.tibco.cep.studio.core.bpmnProcessExtension">
+       <process
+             accessType="Public"
+             processor="com.tibco.cep.bpmn.core.refactoring.BPMNProcessor">
+       </process>
+    </extension>
+    <extension
+          point="com.tibco.cep.studio.core.studioProjectMigrator">
+       <studioProjectMigrator
+             studioProjectMigrator="com.tibco.cep.bpmn.core.utils.BpmnProjectMigrator">
+       </studioProjectMigrator>
+    </extension>
+    <extension
+          point="org.eclipse.ltk.core.refactoring.moveParticipants">
+       <moveParticipant
+             class="com.tibco.cep.bpmn.core.refactoring.BpmnProcessmoveParticipant"
+             id="com.tibco.cep.bpmn.core.refactoring.BpmnProcessmoveParticipant"
+             name="Bpmn Process move Participant">
+          <enablement></enablement>
+       </moveParticipant>
+    </extension>    
+   
+</plugin>

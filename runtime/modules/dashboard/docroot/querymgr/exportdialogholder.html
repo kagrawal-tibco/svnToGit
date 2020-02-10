@@ -1,0 +1,88 @@
+<!doctype html public "-//w3c//dtd html 3.2 final//en">
+<html>
+    <head>
+        <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE8" />
+        <title>Query Export Options</title>
+        <link rel="stylesheet" type="text/css" href="/querymgr/css/querymgr.css"/>
+        <link rel="stylesheet" type="text/css" href="/drilldown/css/page.css"/>
+        <script language="javascript" src="/scripts/servercomm.js"></script>
+        <script language="javascript" src="/scripts/validationlibrary.js"></script>
+        <script language="javascript" src="/querymgr/scripts/conditionutils.js"></script>
+        <script language="javascript">
+            var actionURL;
+            var token;
+            var sessionid;
+            var params;
+
+            function renderDialog() {
+                var dialogArgs = window.dialogArguments;
+                params = new Array();
+                for (var i = 0 ; i < dialogArgs.length ; i++){
+                    var pname = dialogArgs[i][0];
+                    var pvalue = dialogArgs[i][1];
+                    if (pname == "actionURL"){
+                        actionURL = pvalue;
+                    }
+                    else if (pname == "token"){
+                        token = pvalue;
+                    }
+                    else if (pname == "session"){
+                        session = pvalue;
+                    }
+                    else {
+                        params.push(new Array(pname,pvalue));
+                    }
+                }
+                var callbackfn = function(responseText){
+                    document.body.innerHTML = responseText;
+                };
+                try {
+                    sendRequest(actionURL, token, sessionid, "viewqueryexportoptions", params, callbackfn);
+                } catch (err) {
+                    //do nothing;
+                }
+            }
+            
+            function chooseMode(mode){
+                window.document.fileinputform.mode.value = mode;
+            }
+
+            function okClicked(){
+                var form = document.getElementById("fileinputform");
+                //validate export depth
+                if (isNumeric(window.document.fileinputform.exportdepth.value) == false){
+                    alert("Please enter a valid numeric depth...");
+                    window.document.fileinputform.exportdepth.focus();
+                    return false;
+                }
+                //validate export type count
+                if (isNumeric(window.document.fileinputform.exporttypecount.value) == false){
+                    alert("Please enter a valid numeric per type count...");
+                    window.document.fileinputform.exporttypecount.focus();
+                    return false;
+                }
+                //validate Overall Count
+                if (isNumeric(window.document.fileinputform.exportallcount.value) == false){
+                    alert("Please enter a valid numeric overall count...");
+                    window.document.fileinputform.exportallcount.focus();
+                    return false;
+                }
+                var retval = form.action + "&exporttype=" + window.document.fileinputform.mode.value;
+                var includesystemfields = window.document.fileinputform.exportincludesystemfields.checked;
+                var queryParams = "&exportdepth=" + window.document.fileinputform.exportdepth.value +
+                              "&exporttypecount=" + window.document.fileinputform.exporttypecount.value +
+                              "&exportallcount=" + window.document.fileinputform.exportallcount.value +
+                              "&exportincludesystemfields=" + includesystemfields;
+
+                transfervalue(retval + queryParams);
+            }
+
+            function cancelClicked(){
+                transfervalue('');
+            }
+
+        </script>
+    </head>
+    <body leftmargin="" topmargin="" onload="return renderDialog();">
+    </body>
+</html>

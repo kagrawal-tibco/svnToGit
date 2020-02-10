@@ -1,0 +1,28 @@
+/**
+ * 
+ */
+package com.tibco.cep.webstudio.client.request.model.impl.requestdata;
+
+import com.google.gwt.xml.client.Document;
+import com.google.gwt.xml.client.Element;
+import com.google.gwt.xml.client.Node;
+import com.tibco.cep.webstudio.client.request.model.IRequestDataItem;
+import com.tibco.cep.webstudio.client.request.model.XMLRequestBuilderConstants;
+import com.tibco.cep.webstudio.client.request.model.impl.DefaultRequestProject;
+
+/**
+ * @author Yogendra Rajput
+ */
+public class UserPermissionsData<D extends IRequestDataItem> extends DefaultRequestProject<D> {
+	
+	public void serialize(Document rootDocument, Node rootNode) {
+		//Create <userPermissions> element
+		Element userPermissionsElement = rootDocument.createElement("userPermissions");
+		rootNode.appendChild(userPermissionsElement);
+
+		for (D dataItem : children) {
+			dataItem.serialize(rootDocument, userPermissionsElement);
+		}
+	}
+
+}

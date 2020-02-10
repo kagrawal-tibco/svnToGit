@@ -1,0 +1,80 @@
+metaspace:{
+	name:string,
+	discoveryUrl:string,
+	listenUrl:string,
+	spaces:{
+		spaceName:space,
+		...
+	}
+	members:{
+		memberId:member,
+		...
+	}
+}
+
+space:{
+	name:string,
+	definition:{
+		state:string,
+		distributionPolicy:string,
+		replicationCount:number,
+		replicationPolicy:string,
+		capacity:number,
+		evictionPolicy:string,
+		minSeeders:number,
+		persistencePolicy:string,
+		persistenceType:string,
+		updateTransport:string,
+		entryTtl:number,
+		lockScope:string,
+		lockWait:number,
+		lockTtl:number
+	},
+	schema:{
+		fieldName:value,
+		...
+	},
+	members:{
+		memberId:{
+			name:string,
+			role:string,
+			puts:number,
+			takes:number,
+			gets:number,
+			expires:number,
+			replicas:number,
+			originals:number
+		}
+		...
+	}
+	indicies:[
+		{name:string, type:string, fields:[string]},
+		...
+	]
+}
+
+member:{
+	id:string,
+	name:string,
+	ipAddress:string,	//parsed from memberId (*see MemberAdminPageModel constructor in ASMM)
+	joinDate:date,		//parsed from memberId (*see MemberAdminPageModel constructor in ASMM)
+	totalPuts:number,
+	totalTakes:number,
+	totalGets:number,
+	totalExpires:number,
+	totalReplicas:number,
+	totalOriginals:number,
+	joinedSpaces:{
+		spaceName:{
+			role:string,
+			puts:number,
+			takes:number,
+			gets:number,
+			expires:number,
+			replicas:number,
+			originals:number
+		},
+		...
+	}
+}
+

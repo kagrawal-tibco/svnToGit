@@ -1,0 +1,69 @@
+/**
+ * @description 
+ */
+WebStudio.Core.Concepts.DataSources.WS_C_TemporaryReturnData rulefunction WebStudio.Core.RuleFunctions.Actions.Lifecycle.Revert.WS_RF_RevertWorkspaceArtifacts {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object servletRequest;
+		WebStudio.Security.Authn.Concepts.WS_C_LoggedInUser loggedInUser;
+		String contentType;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.Lifecycle.Revert.WS_RF_RevertWorkspaceArtifacts");
+		
+		String responseMessage = null;
+		String errorCode = null;
+		int recordCount = 1;
+		int responseStatus = 0;
+		
+		if (!WS_RF_CheckHTTPMethod(servletRequest, "POST")) {
+			responseStatus = -1;
+			recordCount = 0;
+			errorCode = "ERR_5101";
+			responseMessage = "Invalid HTTP Method, expect method is [POST].";
+		} else {
+			String username = loggedInUser.username;
+			Log.log(LOGGER, "Debug", "Logged in user [%s]", username);
+			
+			Object requestDataBytes = HTTP.Servlet.Request.getRequestContent(servletRequest);
+			String requestData = String.convertByteArrayToString(requestDataBytes, "UTF-8");
+			Log.log(LOGGER, "Debug", "Raw Request data - %s", requestData);
+			
+			//Convert to concept model
+			WS_C_CheckoutRequest revertArtifactRequest = null;
+			if (String.equals(contentType, System.getGlobalVariableAsString("WebStudio/CONTENT_TYPE/XML", "application/xml"))) {
+				revertArtifactRequest = Instance.createTransientInstanceFromXML("/WebStudio/Core/Concepts/Request/Usecases/Checkout/WS_C_CheckoutRequest", requestData);
+			} else {
+				revertArtifactRequest = Instance.createTransientInstanceFromJSON("/WebStudio/Core/Concepts/Request/Usecases/Checkout/WS_C_CheckoutRequest", requestData);
+			}
+			
+			WS_C_CheckoutRequestData requestContainedData = revertArtifactRequest.data;
+			WS_C_CheckoutRequestProject project = Instance.PropertyArray.toArrayContainedConcept(requestContainedData.project)[0];
+			String projectName = project.name;
+
+			WS_C_ArtifactCheckoutDataItem[] artifactItems = Instance.PropertyArray.toArrayContainedConcept(project.artifactItem);
+			
+			String selectedArtifactExtIds = "";
+			for (int loop = 0; loop < artifactItems@length; loop++) {
+				WS_C_ArtifactCheckoutDataItem artifactDataItem = artifactItems[loop];
+				Log.log(LOGGER, "Debug", "Selected artifact to revert, Path [%s], Type [%s] & Change Type [%s]", artifactDataItem.artifactPath, artifactDataItem.artifactType, artifactDataItem.changeType);
+				
+				WS_C_UserArtifact userArtifact = WS_RF_IsUserArtifact(WS_RF_CreateUserArtifactExtId(null, artifactDataItem.artifactPath, projectName, username, null, null), artifactDataItem.artifactType);
+				if (userArtifact != null) {
+					selectedArtifactExtIds += userArtifact@extId + ";";
+				}
+				WS_RF_AddAuditTrailEntry(username, projectName, artifactDataItem.artifactPath, artifactDataItem.artifactType, "REVERT", null);
+			}
+			
+			Log.log(LOGGER, "Debug", "Artifact ExtIds - %s", selectedArtifactExtIds);
+			WS_E_RevertArtifactsEvent revertArtifactEvent = Event.createEvent("xslt://{{/WebStudio/Core/Events/Lifecycle/WS_E_RevertArtifactsEvent}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"1.0\" exclude-result-prefixes=\"xsl xsd\">\n    <xsl:output method=\"xml\"/>\n    <xsl:param name=\"selectedArtifactExtIds\"/>\n    <xsl:param name=\"projectName\"/>\n    <xsl:param name=\"username\"/>\n    <xsl:template match=\"/\">\n        <createEvent>\n            <event>\n                <artifactExtIds>\n                    <xsl:value-of select=\"$selectedArtifactExtIds\"/>\n                </artifactExtIds>\n                <projectName>\n                    <xsl:value-of select=\"$projectName\"/>\n                </projectName>\n                <userName>\n                    <xsl:value-of select=\"$username\"/>\n                </userName>\n            </event>\n        </createEvent>\n    </xsl:template>\n</xsl:stylesheet>");
+			Event.assertEvent(revertArtifactEvent);
+			
+			responseMessage = "Selected artifacts reverted successfully.";
+		}
+		
+		return WS_RF_CreateTemporaryReturnData(responseStatus, 0, errorCode, responseMessage, null);
+	}
+}

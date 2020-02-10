@@ -1,0 +1,45 @@
+<div class='full'>
+  <div class="row">
+    <div class="col-sm-12">
+      <tabset>
+        <tab [active]='inPending()' (selectTab)='setInPending()' *ngIf= "!this.showTCEUI">
+          <ng-template tabHeading>
+            <span i18n>{{i18n('In Progress')}}</span>
+          </ng-template>
+        </tab>
+        <tab [active]='inResolved()' (selectTab)='setInResolved()'>
+          <ng-template tabHeading>
+            <span i18n></span>
+          </ng-template>
+        </tab>
+      </tabset>
+    </div>
+  </div>
+  <div *ngIf='inPending()'>
+    <div *ngIf= "!this.showTCEUI" class="row">
+      <div class="col-sm-12">
+        <commit-item-list [input]='combinedCommits' title="{{i18n('Work List')}}" i18n-title></commit-item-list>
+      </div>
+    </div>
+    <div class="row" *ngIf='!showBEUI()'>
+      <div class="col-sm-12">
+        <commit-item-list [input]='staleCommits' title="{{i18n('Stale Commits')}}" i18n-title emptyMsg="{{i18n('No stale commits.')}}" i18n-emptyMsg [mode]='"FOR_CANCEL"'>
+        </commit-item-list>
+      </div>
+    </div>
+  </div>
+  <div *ngIf='inResolved()'>
+    <div class="row">
+      <div class="col-sm-12">
+        <commit-item-list [input]='rejectedCommits' title="{{i18n('Rejected Commits')}}" i18n-title emptyMsg="{{i18n('No rejected commits.')}}" i18n-emptyMsg
+          [mode]='"NORMAL"'></commit-item-list>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-sm-12">
+        <commit-item-list [input]='approvedCommits' title="{{i18n('Approved Commits')}}" i18n-title emptyMsg="{{i18n('No approved commits.')}}" i18n-emptyMsg
+          [mode]='"NORMAL"'></commit-item-list>
+      </div>
+    </div>
+  </div>
+  </div>

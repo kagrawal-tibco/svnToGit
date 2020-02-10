@@ -1,0 +1,83 @@
+<div class="ams-welcome round-background">
+  <div class="container-fluid">
+    <h2><ng-container i18n>{{i18n('Welcome to the TIBCO ')}}</ng-container>{{productName}}</h2>
+    <div [ngSwitch]='status | async'>
+      <div class="app-empty-space" *ngSwitchCase='"NEED_IMPORT"'>
+        <div class="col-md-12">
+          <i class="welcome-app-create"></i>
+          <br>
+          <div class="app-empty-label" i18n>{{i18n('You don’t have any apps yet')}}</div>
+          <p class="app-empty-message"><ng-container i18n>{{i18n('Get started by creating or uploading your apps.')}}</ng-container>
+            <br><ng-container i18n>{{i18n('We will keep them here for you.')}}</ng-container>
+          </p>
+          <label id="uploadResponse" style="color: #0184c0;">{{ responseMsg }}</label>
+          <div class="tropos-create-buttons">
+            <div>
+              <button name="upload" id="tropos-push-app-empty" class="tc-buttons tc-buttons-primary-call tropos-btn-cloud" (click)='onImportProject()'>
+                <i class="welcome-push-cloud"></i>
+              </button>
+            </div>
+            <input type="file">
+          </div>
+        </div>
+      </div>
+      <div class="app-empty-space" *ngSwitchCase='"NEED_CHECKOUT"'>
+        <div class="col-md-12">
+          <i class="image-icon welcome-app-create"></i>
+          <br>
+          <div class="app-empty-label" style="margin-top:0px" i18n>{{i18n('You have not checked out any artifacts')}}</div>
+          <p class="app-empty-message" style="margin-top:0px"><ng-container i18n>{{i18n('Get started by checking out some artifacts into your workspace')}}</ng-container>
+          </p>
+          <label id="uploadResponse" style="color: #0184c0;">{{ responseMsg }}</label>
+          <div class="tropos-create-buttons">
+            <div *ngIf='user.isAdmin'>
+              <button *ngIf='enableTCEUI' name="upload" id="trops-push-app-empty" class="tc-buttons ams-button-primary-call" mat-button (click)='onCheckoutArtifacts()'>
+                <i class="fa fa-plus welcome" style="color: white;"></i>
+              </button>
+              <button *ngIf='!enableTCEUI' name="upload" id="trops-push-app-empty" class="tc-buttons ams-button-primary-call" mat-button [matMenuTriggerFor]="menu">
+                <i class="image-icon welcome-push-cloud"></i>
+              </button>
+              <mat-menu #menu="matMenu">
+                <button mat-menu-item (click)='onCheckoutArtifacts()'>
+                  <mat-icon>cloud_download</mat-icon>
+                  <ng-container i18n>{{i18n('Checkout Project')}}</ng-container>
+                </button>
+                <button mat-menu-item (click)='onImportBEProject()'>
+                  <mat-icon>cloud_upload</mat-icon>
+                  <ng-container i18n>{{i18n('Import Project')}}</ng-container>
+                </button>
+              </mat-menu>
+            </div>
+            <div *ngIf='!user.isAdmin'>
+              <button name="upload" id="tropos-push-app-empty" class="tc-buttons ams-button-primary-call" (click)='onCheckoutArtifacts()'>
+                  <i class="fa fa-plus"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div *ngSwitchCase='"NEED_BOTH"'>
+        <i class="image-icon welcome-app-create"></i>
+        <br>
+        <div class="app-empty-label">
+            <ng-container i18n>{{i18n('There are no projects to which you have access.')}}</ng-container>
+          <br/>
+        </div>
+        <p class="app-empty-message">
+            <ng-container i18n>{{i18n('Please contact your administrator for permissions to view existing projects or create new ones.')}}</ng-container>
+          <br/><ng-container i18n>{{i18n(' After that, you can check out those projects to start browsing and editing.')}}</ng-container>
+        </p>
+        <label id="uploadResponse" style="color: #0184c0;">{{ responseMsg }}</label>
+        <div class="tropos-create-buttons">
+          <div>
+            <button name="upload" id="tropos-push-app-empty" class="tc-buttons ams-button-primary-call" (click)='onImportProject()'>
+              <i class="image-icon welcome-push-cloud"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+      <div *ngSwitchDefault i18n>{{i18n('
+        Error: something is wrong
+        ')}}</div>
+    </div>
+  </div>

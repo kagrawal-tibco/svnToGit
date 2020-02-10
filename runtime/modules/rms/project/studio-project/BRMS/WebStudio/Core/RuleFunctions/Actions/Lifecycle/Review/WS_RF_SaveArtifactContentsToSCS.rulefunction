@@ -1,0 +1,75 @@
+/**
+ * @description Save contents to SCS post approval.
+ */
+void rulefunction WebStudio.Core.RuleFunctions.Actions.Lifecycle.Review.WS_RF_SaveArtifactContentsToSCS {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String scsIntegrationType;
+		String scsRootURL;
+		String projectName;
+		WebStudio.Core.Concepts.Lifecycle.WS_C_CommittableDeltaEntry committableDeltaEntry;
+		String userName;	
+	}
+	body {
+		Object LOGGER= Log.getLogger("WebStudio.Core.RuleFunctions.Actions.Lifecycle.Review.WS_RF_SaveArtifactContentsToSCS");
+		
+		WS_C_ArtifactBaseState currentCommitLifeCycleState = 
+			Instance.PropertyAtom.getConceptReference(committableDeltaEntry.commitLifeCycleState, 1L);
+		WS_C_UserArtifactRevision referencedRevision = Instance.PropertyAtom.getConceptReference(committableDeltaEntry.userArtifactRevision, 1L);
+		
+		if (currentCommitLifeCycleState instanceof WS_C_ArtifactApprovedState) { 
+			//Get parent artifact
+			WS_C_LifecycleMetadata lifecycleMetadata = Instance.PropertyAtom.getContainedConcept(referencedRevision.lifecycleMetadata, 1L);
+			WS_C_AbstractOperation lastOperationPerformed = Instance.PropertyAtom.getConceptReference(lifecycleMetadata.lastOperation, 1L);
+			WS_C_UserArtifact parentUserArtifact = WS_RF_IsUserArtifact(referencedRevision.parentArtifactId, referencedRevision.parentArtifactType);
+				
+			String artifactPath = parentUserArtifact.artifactPath;
+			String artifactExtn = parentUserArtifact.artifactFileExtn;
+			
+			Log.log(LOGGER, "Info", "Last operation performed before commit on the artifact [%s] is [%s]", artifactPath, lastOperationPerformed.opName);
+			
+			Log.log(LOGGER, "Debug", "CheckIn Object Id - %s", committableDeltaEntry.parentCheckinId);
+			WS_C_UserCheckin userCheckin = Instance.getByExtIdByUri(committableDeltaEntry.parentCheckinId, "/WebStudio/Core/Concepts/Lifecycle/WS_C_UserCheckin");
+			String commitComments = null;
+			if (userCheckin != null) {
+				commitComments = userCheckin.checkinComments;
+				Log.log(LOGGER, "Debug", "Check-in comments for artifact [%s] is [%s]", artifactPath, commitComments);
+			}
+
+			if (!(lastOperationPerformed instanceof WS_C_DeleteOperation)) {
+				Concept artifactContentsConcept = WS_RF_GetArtifactContentInstance(referencedRevision.artifactContentsId, referencedRevision.parentArtifactType);
+				//Can be DT|RTBuilder|RTView
+				
+				Object artifactEModel = WS_RF_CreateEMFObjectForArtifact(artifactContentsConcept, parentUserArtifact, userName);
+				
+				try {
+				WebStudio.Core.RuleFunctions.Utils.
+					WS_RF_SaveArtifactContentsToSCS(scsIntegrationType, 
+						                            scsRootURL,
+						                            projectName,
+						                            artifactPath,
+						                            artifactExtn,
+						                            artifactEModel,
+						                            commitComments,
+						                            userCheckin.revisionId);                           
+				} catch (Exception bex) {
+					String errorMessage = String.format("Could not create/update artifact [%s]", artifactPath);
+					Log.logException(LOGGER, "Error", errorMessage, bex);
+					throw bex;
+				}
+			} else {
+				Log.log(LOGGER, "Info", "Need to delete artifact [%s] from SCS", artifactPath);
+				try {
+					WS.SCS.deleteFile(scsIntegrationType, scsRootURL, projectName, artifactPath, artifactExtn, commitComments, userCheckin.revisionId);
+					Log.log(LOGGER, "Info", "File delete status for artifact [%s] from SCS [%s]", artifactPath, true);
+				} catch (Exception bex) {
+					String errorMessage = String.format("Could not delete artifact [%s]", artifactPath);
+					Log.logException(LOGGER, "Error", errorMessage, bex);
+					throw bex;
+				}
+			}
+		} 
+	}
+}

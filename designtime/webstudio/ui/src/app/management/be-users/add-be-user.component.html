@@ -1,0 +1,110 @@
+<h1 mat-dialog-title i18n>{{i18n(' Add User ')}}</h1>
+<div mat-dialog-content>
+    <form>
+        <div class='row justify-content-center'>
+            <div class="col-sm-10">
+                <mat-form-field class="full-width">
+                    <input 
+                        matInput 
+                        #usernameInput 
+                        type="text" 
+                        placeholder="{{i18n('Username')}}"
+                        i18n-placeholder  
+                        [(ngModel)]="this.data.newUser.userName"
+                        [formControl]="userNameFormControl"
+                        [errorStateMatcher]="this.errorStateMatcher"
+                    >
+                    <mat-error *ngIf="userNameFormControl.hasError('minlength')">
+                        <ng-container i18n>{{i18n('Minimum length: 4')}}</ng-container>
+                    </mat-error>
+                    <mat-error *ngIf="userNameFormControl.hasError('required')" [innerHTML]="getMessage('required')">
+                        
+                    </mat-error>
+                    <mat-error *ngIf="userNameFormControl.hasError('forbiddenName')" [innerHTML]="getMessage('forbiddenName')">
+                       
+                    </mat-error>
+                    <mat-error *ngIf="userNameFormControl.hasError('forbiddenSpaces') && !userNameFormControl.hasError('minlength')" [innerHTML]="getMessage('forbiddenName')">
+                        
+                    </mat-error>
+                </mat-form-field>
+            </div>
+        </div>
+        <div class='row justify-content-center'>
+            <div class="col-sm-10">
+                <mat-form-field class="full-width">
+                    <input 
+                        matInput
+                        #passwordInput  
+                        type="password" 
+                        placeholder="{{i18n('Password')}}"
+                        i18n-placeholder  
+                        [(ngModel)]="this.data.newUser.userPassword"
+                        [formControl]="passwordFormControl"
+                        [errorStateMatcher]="this.errorStateMatcher"    
+                    >
+                    <mat-error *ngIf="passwordFormControl.hasError('minlength')">
+                        <ng-container i18n>{{i18n('Minimum length: 4')}}</ng-container> 
+                    </mat-error>
+                    <mat-error *ngIf="passwordFormControl.hasError('required')" [innerHTML]="getMessage('PassReq')">
+                        
+                    </mat-error>
+                    <mat-error *ngIf="passwordFormControl.hasError('forbiddenSpaces') && !passwordFormControl.hasError('minlength')" [innerHTML]="getMessage('PassforbiddenSpaces')">
+ 
+                    </mat-error>
+                </mat-form-field>
+            </div>
+        </div>
+        <div class='row justify-content-center'>
+            <div class="col-sm-10">
+                <mat-form-field class="full-width">
+                    <input 
+                        matInput
+                        #passwordInput
+                        name="confirmPassword"  
+                        type="password" 
+                        placeholder="{{i18n('Confirm Password')}}"
+                        i18n-placeholder  
+                        [(ngModel)]="this.confirmPassword"
+                        [formControl]="confirmPasswordFormControl"
+                        [errorStateMatcher]="this.errorStateMatcher"    
+                    >
+                    <mat-error *ngIf="confirmPasswordFormControl.hasError('notMatchingPassword')">
+                        <ng-container i18n>{{i18n('Passwords are not same')}}</ng-container>.
+                    </mat-error>
+                </mat-form-field>
+                <small class="mat-error" *ngIf="this.passwordFormControl.errors === null 
+                && this.confirmPasswordFormControl.errors === null 
+                && this.data.newUser.userPassword !== this.confirmPassword">
+                <ng-container i18n>{{i18n('Passwords are not same.')}}</ng-container>
+                </small>
+            </div>
+        </div>
+        <div class='row justify-content-center'>
+            <div class="col-sm-10">
+                <mat-form-field class="full-width">
+                    <mat-select 
+                        placeholder="{{i18n('Assign Role to User')}}"
+                        i18n-placeholder 
+                        multiple 
+                        [(value)]='this.data.newUser.roleName'
+                        [formControl]="rolesFormControl" >
+                        <mat-option *ngFor="let role of this.data.availableRoles" [value]='role'>
+                            {{role}}
+                        </mat-option>
+                    </mat-select>
+                    <mat-error *ngIf="rolesFormControl.hasError('required')" [innerHTML]="getMessage('RoleReq')">
+                        
+                    </mat-error>
+                </mat-form-field>
+            </div>
+        </div>
+    </form>
+</div>
+<div mat-dialog-actions>
+    <button class="mat-icon-button custom-button"  mat-dialog-close>
+        <i class="material-icons custom-clear" matTooltip="{{i18n('Cancel')}}" aria-label="clear" i18n-matTooltip>clear</i>
+    </button>
+    <button class="mat-icon-button custom-button" [disabled]='!canConfirm()' [mat-dialog-close]="this.data">
+        <i class="material-icons" [ngClass]="{'custom-check': canConfirm()}" matTooltip="{{i18n('Confirm')}}" aria-label="check" i18n-matTooltip>check</i>
+    </button>
+</div>

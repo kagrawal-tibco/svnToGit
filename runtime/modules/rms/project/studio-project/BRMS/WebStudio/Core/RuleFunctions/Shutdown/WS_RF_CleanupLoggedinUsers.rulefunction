@@ -1,0 +1,42 @@
+/**
+ * @description Cleanup any logged in users.
+ */
+void rulefunction WebStudio.Core.RuleFunctions.Shutdown.WS_RF_CleanupLoggedinUsers {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Shutdown.WS_RF_CleanupLoggedinUsers");
+
+		boolean loggedInUsersLock = Cluster.DataGrid.Lock("LOGGEDIN_USERS", -1, false);
+		AMS_C_LoggedInUsers loggedInUsersList = null;
+		if (loggedInUsersLock) {
+			Log.log(LOGGER, "Info", "Loading the LOGGEDIN_USERS Concept from Cache");
+			loggedInUsersList = Cluster.DataGrid.CacheLoadConceptByExtIdByUri("LOGGEDIN_USERS", false, "/Approval/Scorecards/AMS_C_LoggedInUsers");
+			if (loggedInUsersList != null) {
+				String[] loggedInUsers = 
+					Instance.PropertyArray.toArrayString(loggedInUsersList.loggedInUsers);
+				
+				Log.log(LOGGER, "Info", "Cleaning up logged in users");
+				for (int loop = 0, length = loggedInUsers@length; loop < length; loop++) {
+					WS_C_LoggedInUser loggedInUser = Instance.getByExtIdByUri(loggedInUsers[loop], "/WebStudio/Security/Authn/Concepts/WS_C_LoggedInUser");
+					//Delete the loggedin user Concept 
+					if (loggedInUser != null) {
+						Log.log(LOGGER, "Info", "Cleaning up logged in users");
+						Instance.deleteInstance(loggedInUser);
+					} else {
+						Log.log(LOGGER, "Error", "Loggedin User Concept not found for user %s", loggedInUsers[loop]);
+					}	
+				}
+				Log.log(LOGGER, "Info", "Cleaning up LOGGEDIN_USERS Concept");
+				Instance.deleteInstance(loggedInUsersList);	
+			}
+			else {
+				Log.log(LOGGER, "Error", "LOGGEDIN_USERS Concept not found.");
+			}	
+		}
+	}
+}

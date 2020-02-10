@@ -1,0 +1,116 @@
+<div class='slide-content'>
+  <mat-grid-list cols="4" gutterSize='12.5px' rowHeight="2:1">
+    <mat-grid-tile>
+      <div class="full-top">
+        <h6 mat-subheader>
+          <ng-container i18n>{{i18n('Projects')}}</ng-container>
+        </h6>
+        <mat-divider></mat-divider>
+        <mat-nav-list role='navigation'>
+          <mat-list-item *ngFor="let project of this.projectList" (click)="this.onProjectSelection(project)" [class.active]="project == this.selectedProject">
+            <i *ngIf='project === this.selectedProject' class="material-icons custom-left">folder_open</i>
+            <i *ngIf='project !== this.selectedProject' class="material-icons custom-left">folder</i>
+            <a mat-list-item class="clickable">
+              {{project.projectName}}
+            </a>
+          </mat-list-item>
+        </mat-nav-list>
+      </div>
+    </mat-grid-tile>
+    <mat-grid-tile>
+      <div class="full-top">
+        <h6 mat-subheader>
+          <ng-container i18n>{{i18n('Roles')}}</ng-container>
+          <i class="{{isRtl() ? 'material-icons add-rtl clickable' : 'material-icons add clickable' }}" (click)="this.onAddRole()" matTooltip="{{i18n('Add role to the project.')}}" i18n-matTooltip>add_circle_outline</i>
+        </h6>
+        <mat-divider></mat-divider>
+        <mat-nav-list role='navigation'>
+          <!-- <mat-list-item > -->
+          <mat-accordion>
+            <mat-expansion-panel *ngFor="let role of this.rolesList" [class.active]="role == this.selectedRole" (click)="this.onRoleSelection(role)"
+              (dblclick)="this.onEditRole()" hideToggle='true'>
+              <mat-expansion-panel-header>
+                <mat-panel-title>
+                  <a>
+                    <div *ngIf="!this.editRole">
+                      {{role}}
+                    </div>
+                    <div *ngIf='this.editRole && role !== this.selectedRole'>
+                      {{role}}
+                    </div>
+                    <a *ngIf='this.editRole && role === this.selectedRole'>
+                      <input-with-confirm [required]='true' [value]='this.selectedRole' (result)='this.confirmEditRole($event)' (cancel)='this.cancelEditRole()'></input-with-confirm>
+                    </a>
+                  </a>
+                  <span *ngIf='(role === this.selectedRole) && (!this.editRole) && this.rolesList.length > 1' class="{{ isRtl() ? 'material-icons custom-roles-removalrtl' : 'material-icons custom-roles-removal' }}" (click)="this.onDeleteRole()"
+                    matTooltip="{{i18n('Remove role from the project.')}}" i18n-matTooltip>remove_circle_outline</span>
+                  <span class="{{isRtl() ? 'material-icons custom-roles-rtl' : 'material-icons custom-roles' }}" i18n>{{i18n('people')}}</span>
+                  <span *ngIf="!this.editRole" class="{{ isRtl() ? 'number-grey-rtl' : 'number-grey' }}">{{this.roleUserMap.get(role).length}}</span>
+                </mat-panel-title>
+              </mat-expansion-panel-header>
+              <mat-nav-list role='navigation'>
+                <mat-list-item *ngFor="let user of this.selectedUserList" [class.active]="user == this.selectedUser" (click)="this.onUserSelection(user)">
+                  <a>
+                    {{user.userName}}
+                  </a>
+                  <i class="{{isRtl() ? 'material-icons custom-rtl' : 'material-icons custom' }}" i18n>person</i>
+                </mat-list-item>
+                <a *ngIf='this.enableAddUser'>
+                  <select-with-confirm [placeholder]='"Click to select users..."' i18n-placeholder [candidates]="this.candidateUserList" (result)='this.confirmAddUser($event)'
+                    (cancel)='this.cancelAddUser()'></select-with-confirm>
+                </a>
+              </mat-nav-list>
+            </mat-expansion-panel>
+          </mat-accordion>
+          <!-- </mat-list-item> -->
+          <a *ngIf='this.enableAddRole'>
+            <input-with-confirm [required]='true' placeholder="{{i18n('Enter role for the project...')}}" i18n-placeholder (result)='this.confirmAddRole($event)'
+              (cancel)='this.cancelAddRole()'></input-with-confirm>
+          </a>
+        </mat-nav-list>
+      </div>
+    </mat-grid-tile>
+    <mat-grid-tile>
+      <div class="full-top">
+        <h6 mat-subheader>
+          <ng-container i18n>{{i18n('Resources')}}</ng-container>
+        </h6>
+        <mat-divider></mat-divider>
+        <mat-nav-list role='navigation'>
+          <mat-list-item *ngFor="let resource of this.resourceList" [class.active]="resource == this.selectedResource" (click)="this.onResourceSelection(resource)">
+            <i class="{{ isRtl() ? 'material-icons custom-rtl' : 'material-icons custom' }}">bookmark</i>
+            <a>
+              {{resource.text}}
+            </a>
+          </mat-list-item>
+        </mat-nav-list>
+      </div>
+    </mat-grid-tile>
+    <mat-grid-tile>
+      <div class="full-top">
+        <h6 mat-subheader>
+          <ng-container i18n>{{i18n('Actions')}}</ng-container>
+        </h6>
+        <mat-divider></mat-divider>
+        <mat-nav-list role='navigation'>
+          <mat-list-item *ngFor="let action of this.actionList">
+            
+              <!-- <toggle-switch class="toggle-switch" [size]='"mini"' [(value)]='action.allow'></toggle-switch> -->
+              <mat-checkbox [(ngModel)]='action.allow' labelPosition='before' style="width: 98%">
+                {{action.text}}
+              </mat-checkbox>
+            
+          </mat-list-item>
+        </mat-nav-list>
+      </div>
+    </mat-grid-tile>
+  </mat-grid-list>
+  <mat-divider></mat-divider>
+  <div class="save-button">
+      <button mat-raised-button  
+              [ngClass]= "{'custom-save-button': !this.disableApply}"
+              [disabled]="this.disableApply" 
+              (click)="this.updateRoles()" i18n
+      >{{i18n(' Apply ')}}</button>
+    </div>
+</div>

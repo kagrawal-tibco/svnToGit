@@ -1,0 +1,68 @@
+/**
+ * @description Perform activities post status change of a committable entry.
+ */
+void rulefunction WebStudio.Core.RuleFunctions.Actions.Lifecycle.Review.WS_RF_PerformPostStatusChangeActivities {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String loggedInUsername;
+		WebStudio.Core.Concepts.WS_C_UserProject userProject;
+		WebStudio.Core.Concepts.Lifecycle.WS_C_CommittableDeltaEntry matchingDeltaEntry;
+		String deployEnvironments;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.Lifecycle.Review.WS_RF_PerformPostStatusChangeActivities");
+		//TODO Get the real managed project name.
+		String managedProjectName = userProject.name;
+		
+		WS_C_ArtifactBaseState commitLifeCycleState = 
+			Instance.PropertyAtom.getConceptReference(matchingDeltaEntry.commitLifeCycleState, 1L);
+		Log.log(LOGGER, "Debug", "Commit life cycle state [%s]", commitLifeCycleState.stateName);
+		
+		String subscriptionId = WS_RF_GetSubscriptionId(loggedInUsername);
+		
+		//1.) Set master artifact's revision to this.
+		//2.) Set next state to appropriate states
+		//3.) Save file contents to SCS
+		WS_RF_SetCheckpointRevisionForArtifact(managedProjectName, matchingDeltaEntry, subscriptionId);
+		
+		WS_C_ArtifactDeployStatus deployStatus = WS_RF_DeployAnArtifact(loggedInUsername, managedProjectName, matchingDeltaEntry, deployEnvironments);
+		// For committed to approve/reject and successful approve to build and deploy case this will always be 0
+		if (deployStatus == null || deployStatus.statusCode == 0) {
+			WS_RF_SetApplicableStagesForCommittable(matchingDeltaEntry, deployStatus);
+			
+			String scsIntegrationType = System.getSystemPropertyAsString("ws.scs.impl.type", null);
+			String scsRootURL = WS_RF_GetSCSRootURL(managedProjectName, subscriptionId);	
+			
+			try {
+				//Save it to SCS.
+				WebStudio.
+					Core.
+						RuleFunctions.
+							Actions.
+								Lifecycle.Review.
+									WS_RF_SaveArtifactContentsToSCS(scsIntegrationType, scsRootURL, managedProjectName, matchingDeltaEntry, loggedInUsername);
+			} catch (Exception bex) {
+				// revert back the status change i.e. Approve to Committed
+				WS_RF_ChangeCommittableStatus(matchingDeltaEntry, "Committed");
+				WS_RF_SetApplicableStagesForCommittable(matchingDeltaEntry, deployStatus);
+				matchingDeltaEntry.reviewComments = null;
+				matchingDeltaEntry.reviewerName = null;
+				
+				throw bex;
+			}
+			//Release Lock acquired by the user who committed this change which has been approved
+			WS_RF_ReleaseArtifactLockOnReview(managedProjectName, matchingDeltaEntry);
+			
+			//Flush deleted artifacts if any.
+			WS_RF_DumpDeletedArtifactToThrashCan(userProject, matchingDeltaEntry, subscriptionId);
+		// case - Approve to Build&Deploy failure	
+		} else {
+			// Need to revert the status change
+			WS_RF_ChangeCommittableStatus(matchingDeltaEntry, "Approve");
+			Instance.PropertyArray.clear(matchingDeltaEntry.deployEnvironments);
+			throw Exception.newException("BUILD_DEPLOY_STATE_CHANGE_FAILURE", deployStatus.statusMessage, null);
+		}
+	}
+}

@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema xmlns="http://www.w3.org/2001/XMLSchema"
+targetNamespace="http://www.example.org/OLAPModelSchema"
+xmlns:tns="http://www.example.org/OLAPModelSchema" elementFormDefault="qualified">
+
+    <complexType name="Schema">
+    	<sequence>
+    		<element name="cube" type="tns:Cube" maxOccurs="unbounded" minOccurs="0"/>
+    	</sequence>
+    </complexType>
+
+    <complexType name="Cube">
+    	<sequence>
+    		<element name="hierarchy" type="tns:DimensionHierarchy" maxOccurs="unbounded" minOccurs="0" />
+    		<element name="measurement" type="tns:Measurement" maxOccurs="1" minOccurs="1"/>
+    	</sequence>
+    </complexType>
+
+    <complexType name="DimensionHierarchy">
+    	<sequence>
+    		<element name="dimension" type="tns:Dimension" maxOccurs="unbounded" minOccurs="0"/>
+    	</sequence>
+    </complexType>
+
+    <complexType name="Dimension">
+    	<attribute name="parent" type="string">
+    		<annotation>
+    			<documentation>
+    				Points to the dimension name in the same hierarchy
+    				which is parent of this.
+    			</documentation>
+    		</annotation>
+    	</attribute>
+    	<attribute name="name" type="string"></attribute>
+    </complexType>
+
+    <complexType name="Measurement">
+    	<sequence>
+    		<element name="NewElement" type="string"></element>
+    	</sequence>
+    </complexType>
+
+    <complexType name="Fact">
+    	<sequence>
+    		<element name="dimensions" type="tns:DimensionDetail" maxOccurs="unbounded" />
+    		<element name="context" type="tns:FactContext" maxOccurs="unbounded" minOccurs="0"/>
+    	</sequence>
+    	<attribute name="value" type="string"/>
+    </complexType>
+
+    <complexType name="FactContext">
+		<sequence>
+		<!-- Keep string value to begin with -->
+			<element name="value" type="string" maxOccurs="1"/>
+		</sequence>
+    </complexType>
+
+    <complexType name="DimensionDetail">
+    	<sequence>
+    		<element name="dimension" type="tns:Dimension"/>
+    		<element name="value" type="string"/>
+    	</sequence>
+    </complexType>
+
+</schema>

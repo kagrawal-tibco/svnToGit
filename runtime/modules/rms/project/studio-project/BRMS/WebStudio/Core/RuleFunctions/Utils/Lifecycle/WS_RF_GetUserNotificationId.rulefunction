@@ -1,0 +1,32 @@
+/**
+ * @description Retrieve the notification Id of the user
+ */
+String rulefunction WebStudio.Core.RuleFunctions.Utils.Lifecycle.WS_RF_GetUserNotificationId {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String username;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.Lifecycle.WS_RF_GetUserNotificationId");
+		
+		String userNotifyId = null; 
+		try {
+			userNotifyId = WS.Common.Notify.getUserNotifyId(username);
+		} catch(Exception ex) {
+			Log.log(LOGGER, "Warn", "Error fetching notification Id for user [%s] from data provider - %s", username, ex@message);			 			
+		}
+		if (userNotifyId == null) {
+			//Receiver Domain address
+			String domainAddress = System.getSystemPropertyAsString("ws.notify.mail.domain", null);
+			if (domainAddress != null) {
+				userNotifyId = username + "@" + domainAddress;
+			} else {
+				Log.log(LOGGER, "Error", "Mail Domain property [ws.notify.mail.domain] not defined");
+			}		
+		}
+		
+		return userNotifyId;	
+	}
+}

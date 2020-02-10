@@ -1,0 +1,21 @@
+/**
+ * @description 
+ */
+void rulefunction RuleFunctions.setEmpInfoPreProcessor {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Events.setEmpInfoEvent setEmpInfo;
+	}
+	body {
+		String empInfoPayload = setEmpInfo@payload;
+		System.debugOut("Received Request with payload - " + empInfoPayload);
+		
+		System.debugOut("Sending out response !!");
+		
+		// create response event
+		Events.returnEmpInfoEvent responseSetInfoEvent = Event.createEvent("xslt://{{/Events/returnEmpInfoEvent}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" xmlns:tns=\"www.tibco.com/be/ontology/Events/returnEmpInfoEvent\" version=\"2.0\"><xsl:template name=\"Function\" match=\"/\"><createEvent><event><payload><tns:response><xsl:attribute name=\"status\"><xsl:value-of select=\"&quot;Success&quot;\"/></xsl:attribute><message><xsl:value-of select=\"&quot;Employee details set.&quot;\"/></message></tns:response></payload></event></createEvent></xsl:template></xsl:stylesheet>");
+		Event.replyEvent(setEmpInfo, responseSetInfoEvent);
+	}
+}

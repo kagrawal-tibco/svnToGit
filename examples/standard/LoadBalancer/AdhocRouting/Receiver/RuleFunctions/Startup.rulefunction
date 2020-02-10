@@ -1,0 +1,19 @@
+/**
+ * @description 
+ */
+void rulefunction Receiver.RuleFunctions.Startup {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		
+	}
+	body {
+        System.debugOut("Creating a load balanced receiver for: adhoc1");
+        Object receiver = LoadBalancer.Receiver.createTcpReceiverFor("adhoc1");        
+        System.debugOut("Created a load balanced receiver for: adhoc1");
+        
+        Util.HashMap.createMap("AllReceivers");
+		Util.HashMap.putObject("AllReceivers", "demoReceiver", receiver);
+	}
+}

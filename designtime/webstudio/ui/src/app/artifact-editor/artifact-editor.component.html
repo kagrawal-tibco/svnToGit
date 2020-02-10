@@ -1,0 +1,114 @@
+<div class="artifact-editor card editor-pad">
+  <div class="card-header editor-header">
+    <div class="artifact-details row">
+  		<div class="col-8">
+			<span *ngIf='input.isCheckedOutArtifact' class="fa fa-3x fa-stack right-pad {{ isRtl() ? 'float-right' : 'float-left' }}">
+			   <i class="{{statusIcon()}} fa-stack-2x overlayIconBase"></i>
+			   <i *ngIf='input && input.locked' class="fa fa-lock fa-stack-1x fa-inverse overlayIcon bottomLeft overlayLock"></i>
+         <i *ngIf='input && input.needSync' class="fa fa-arrow-down fa-stack-1x overlayIcon bottomRight overlay-warning"></i>
+         <i *ngIf='this.isBEUI && this.requiresSync' class="fa fa-arrow-down fa-stack-1x overlayIcon bottomRight overlay-warning"></i>
+			</span>
+	  		<i *ngIf='!input.isCheckedOutArtifact' class="fa fa-info-circle fa-3x float-left right-pad"></i>
+		    <p style="display: flex;" class="card-title text-muted path">{{breadcrumbs()}}</p>
+		    <p style="font-weight: bold" class="card-subtitle mb-2 h4 {{ isRtl() ? 'pull-right' : ''}}">{{input.name}}</p>
+  		</div>
+  		<div *ngIf="!nonEditableSummary()" class="col-4 card-subtitle">
+        <div *ngIf='!this.isBEUI'>
+          <i class="fa fa-info-circle"></i><span class="{{ isRtl() ? 'editor-detail-rtl' : 'editor-detail' }}"><ng-container i18n>{{i18n('You are editing version ')}}</ng-container>{{input.checkedOutFromRevision}}</span><br>
+        </div>
+        <div *ngIf='this.isBEUI'>
+            <div *ngIf='this.requiresSync'>
+              <i class="fa fa-exclamation-triangle overlay-warning"></i><span class="{{ isRtl() ? 'editor-detail-rtl' : 'editor-detail' }}" i18n>{{i18n('This artifact has remote changes')}}</span><br>
+            </div>
+            <div *ngIf='!this.requiresSync'>
+              <i class="fa fa-info-circle"></i><span class="{{ isRtl() ? 'editor-detail-rtl' : 'editor-detail' }}" i18n>{{i18n('You are editing the latest version')}}</span><br>
+            </div>
+          </div>
+        <i class="fa fa-info-circle"></i><span class="{{ isRtl() ? 'editor-detail-rtl' : 'editor-detail' }}"><ng-container i18n>{{i18n('Artifact Type: ')}}</ng-container>{{input.type.displayString}}</span><br>
+  		</div>
+  	</div>
+    <div class="left-pad {{ isRtl() ? 'float-left toolbar-rtl' : 'float-right toolbar' }}">
+      <div *ngIf='nonEditableOther()'>
+       <button type="button" class="btn btn-primary btn-xs btn-wide" [disabled]='disableButtons' (click)='onCheckout()' [style.width]="isRtl() ? '10em' : '8em'">
+          <i class='fa fa-sm fa-code-fork' style="padding-right: 2px; padding-left: 2px;"></i><ng-container i18n>{{i18n(' Check Out')}}</ng-container></button>
+        <button *ngIf='showValidate' [disabled]='isDirty() || disableButtons' type="button" class="btn btn-primary btn-xs btn-narrow"
+          (click)='onValidate()' style="width:9em;">
+          <i class="fa fa-exclamation-circle" aria-hidden="true" style="padding-right: 2px; padding-left: 2px;"></i><ng-container i18n>{{i18n(' Validate')}}</ng-container></button>
+        <button *ngIf='supportVerify' [disabled]='disableButtons' type="button" class="btn btn-primary btn-xs btn-narrow"
+          (click)='onVerify()' [style.width]="isRtl() ? '10em' : '8em'">
+          <i class='fa fa-sm fa-bolt' style="padding-right: 2px; padding-left: 2px;"></i><ng-container i18n>{{i18n(' Verify')}}</ng-container></button>
+      </div>
+      <div *ngIf='canEdit()' class="left-pad">
+          <button [disabled]='!canSave() || disableButtons' type="button" class="btn btn-primary btn-xs btn-narrow right-margin" (click)='onSave()' [style.width]="isRtl() ? '10em' : '8em'">
+            <i class='fa fa-sm fa-floppy-o' style="padding-right: 2px; padding-left: 2px;"></i><ng-container i18n>{{i18n(' Save')}}</ng-container></button>
+          <button type="button" [disabled]='!canCommit() || disableButtons' class="btn btn-primary btn-xs btn-narrow right-margin" (click)='onCommit()' [style.width]="isRtl() ? '10em' : '9.5em'">
+            <i class='fa fa-sm fa-share-alt' style="padding-right: 2px; padding-left: 2px;"></i><ng-container i18n>{{i18n(' Commit')}}</ng-container></button>
+          <button *ngIf='showValidate' [disabled]='isDirty() || disableButtons' type="button" class="btn btn-primary btn-xs btn-narrow right-margin"
+            (click)='onValidate()' [style.width]="isRtl() ? '10em' : '8em'">
+            <i class="fa fa-exclamation-circle" aria-hidden="true" style="padding-right: 2px; padding-left: 2px;"></i><ng-container i18n>{{i18n(' Validate')}}</ng-container></button>
+          <button *ngIf='supportVerify' type="button" [disabled]='disableButtons' class="btn btn-primary btn-xs btn-narrow right-margin"
+            (click)='onVerify()' [style.width]="isRtl() ? '10em' : '8em'">
+            <i class='fa fa-sm fa-bolt' style="padding-right: 2px; padding-left: 2px;"></i><ng-container i18n>{{i18n(' Verify')}}</ng-container></button>
+          <span *ngIf='loaded'>
+            <button *ngIf='supportUndoRedo' type="button" class="btn btn-primary btn-xs right-margin" (click)='undo()' [disabled]='!canUndo()' [style.width]="isRtl() ? '10em' : '8em'">
+              <i class='fa fa-sm fa-undo' style="padding-right: 2px; padding-left: 2px;"></i><ng-container i18n>{{i18n(' Undo')}}</ng-container></button>
+            <button *ngIf='supportUndoRedo' type="button" class="btn btn-primary btn-xs right-margin" (click)='redo()' [disabled]='!canRedo()' [style.width]="isRtl() ? '10em' : '8em'">
+              <i class='fa fa-sm fa-repeat' style="padding-right: 2px; padding-left: 2px;"></i><ng-container i18n>{{i18n(' Redo')}}</ng-container></button>
+          </span>
+          <button *ngIf='showAnalyzer' type="button" class="btn btn-primary btn-xs right-margin" (click)='analyze()' [style.width]="isRtl() ? '10em' : '8em'"><ng-container i18n>{{i18n(' Analyze')}}</ng-container></button>
+          <button *ngIf='!this.isBEUI && input.needSync' [disabled]='disableButtons' type="button" class='btn btn-info btn-xs btn-wide call-to-action' (click)='onSynchronize()' [style.width]="isRtl() ? '10em' : '8em'">
+            <i class='fa fa-sm fa-compress' style="padding-right: 2px; padding-left: 2px;"></i><ng-container i18n>{{i18n(' Synchronize')}}</ng-container></button>
+          <button *ngIf='this.isBEUI && this.requiresSync' [disabled]='disableButtons' [style.width]="isRtl() ? '10em' : '8em'" type="button" class='btn btn-info btn-xs btn-wide call-to-action' (click)='getOnSyncCheckoutHandler()'>
+            <i class='fa fa-sm fa-compress' style="padding-right: 2px; padding-left: 2px;"></i><ng-container i18n>{{i18n(' Synchronize')}}</ng-container></button>
+      </div>
+       <div *ngIf="showContentMetadataToggle()" class="btn-group btn-group-toggle left-pad right-pad" ngbRadioGroup>
+         <label ngbButtonLabel class="btn btn-xs" [ngClass]="{'btn-primary': 'content' === handleToggle, 'btn-light': 'content' !== handleToggle}">
+           <input ngbButton type="radio" value="content" [disabled]='disableButtons'
+           [(ngModel)]="handleToggle" i18n> Content
+         </label>
+         <label ngbButtonLabel class="btn btn-xs btn-primary" [ngClass]="{'btn-primary': 'metadata' === handleToggle, 'btn-light': 'metadata' !== handleToggle}">
+           <input ngbButton type="radio" value="metadata" [disabled]='disableButtons'
+           [(ngModel)]="handleToggle" i18n>{{i18n(' Metadata')}}
+         </label>
+       </div>
+       <button *ngIf="!nonEditableSummary()" type="button" class='btn btn-primary btn-xs' (click)='onEditOptions($event)'>
+         <i class='fa fa-sm fa-ellipsis-v'></i>
+       </button>
+    </div>
+  </div>
+  <div class="editor-body" #editor [style.height.px]='editorHeight | async'>
+    <split *ngIf='!hideContent()' direction='vertical' gutterSize='3'>
+      <split-area [size]='70'>
+        <split direction='vertical' gutterSize='3'>
+          <split-area [size]='70'>
+            <split direction='horizontal' gutterSize='3'>
+                 <split-area [size]='75'>
+                   <div class='card-body' style='height: 100%'>
+                     <editor-loader #editorLoader [params]='editorParams' (editorLoader)='handleEditor($event)'></editor-loader>
+                   </div>
+                </split-area>
+                <split-area *ngIf='isshowAnalyzer' [size]="25" >
+                  <table-analyzer
+                   [input]='input'
+                   [editorComponent]='this.editorLoader.getEditor()'
+                   (toggle)='onTestDataCoverage()'
+                  ></table-analyzer>
+               </split-area>
+             </split> 
+           </split-area>
+          <div *ngIf='panelOpen' class='bottom-pad-sm'></div>
+          <split-area *ngIf='panelOpen' class="splitSection" [size]="30">
+            <artifact-panel #artifactPanel [supportVerify]='supportVerify' [verifyConfig]='verifyConfig' (close)='onClosePanel()' (startVerify)='onVerify()'></artifact-panel>
+          </split-area>
+        </split>
+      </split-area>
+    </split>
+    <div *ngIf='hideContent()' class='panel-body' style="height: 100%">
+      <span i18n>{{i18n('
+        This artifact contains binary content and cannot be displayed.
+        ')}}</span>
+    </div>
+  </div>
+  <artifact-status-bar (toggle)='onStatusBarClick()' *ngIf='!input.isBinary && !this.isBEUI'></artifact-status-bar>
+  <div id='options-context-menu' hidden='true'></div>
+</div>

@@ -1,0 +1,195 @@
+/**
+ * @description Fetch names of all artifacts of this project. (Checkout operation).
+ */
+WebStudio.Core.Concepts.DataSources.WS_C_TemporaryReturnData rulefunction WebStudio.Core.RuleFunctions.Actions.WS_RF_FetchProjectArtifactNames {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object servletRequest;
+		WebStudio.Security.Authn.Concepts.WS_C_LoggedInUser loggedInUser;
+		String projectName;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.WS_RF_FetchProjectArtifactNames");
+		//Get names of project artifacts from source control system.
+		//Get project name from request
+	    
+	    WS_C_ResponseData responseData = null;
+		int responseStatus = 0;
+		int recordCount = 0;
+		String errorCode = null;
+		String responseMessage = null;
+
+		if (!WS_RF_CheckHTTPMethod(servletRequest, "GET")) {
+			responseStatus = -1;
+			recordCount = 0;
+			errorCode = "ERR_5101";
+			responseMessage = "Invalid HTTP Method, expect method is [GET].";
+		} else {
+			//Get the User roles
+			String[] roles = Instance.PropertyArray.toArrayString(loggedInUser.roles);
+			
+			Log.log(LOGGER, "Debug", "Project name %s passed as parameter", projectName);
+			
+			double numberOfArtifacts;
+			responseData = Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/WS_C_ResponseData");
+	
+			String userProjectExtId = WS_RF_CreateUserArtifactExtId(null, null, projectName, loggedInUser.username, null, null);
+			WebStudio.Core.Concepts.WS_C_UserProject userProject = 
+				Cluster.DataGrid.CacheLoadConceptByExtIdByUri(userProjectExtId, true, "/WebStudio/Core/Concepts/WS_C_UserProject");
+				
+			String subscriptionId = null;
+			if (loggedInUser.jwtToken != null) subscriptionId = loggedInUser.jwtToken.sbsc;
+				
+			String scsRootURL = WS_RF_GetSCSRootURL(projectName, subscriptionId);
+			Log.log(LOGGER, "Debug", "SCS root URL configured is %s", scsRootURL);
+			
+			// Need to get the artifacts from the SCS
+			if (scsRootURL == null) {
+				throw Exception.newException(null, "Source control repository location not present. Set ws.scs.rootURL property", null);
+			}
+			String scsIntegrationType = System.getSystemPropertyAsString("ws.scs.impl.type", null);
+			//Check if a filter class is specified
+			//TODO document this property.
+			String filterClass = System.getSystemPropertyAsString("ws.scs.fetch.artifacts.filter", null);
+			
+			// fetch the preferences for SCS userName/password details
+			String[] scsCredentials = WS_RF_GetSCSCredentials(loggedInUser.username);
+			
+			String artifactChangeType = "Added";
+			String output; boolean checkIfDeleted = false;
+			if (userProject != null && !userProject.softDelete) {
+				//User already checkedout this project and artifacts available as part of user workspace
+				String workspaceQueryString = WS_RF_BuildWorkspaceQueryString();
+				String queryArgsKey = "Query_Args_" + System.nanoTime();
+				Util.HashMap.createMap(queryArgsKey);
+				Util.HashMap.putObject(queryArgsKey, "parentProjectId", userProject@extId);
+				Util.HashMap.putObject(queryArgsKey, "searchPath", "/");
+				Object[] workspaceResults = WS_RF_QueryWorkspaceForMatches(workspaceQueryString, queryArgsKey);
+				
+				String artifactPath = "";
+				for (int resultLoop = 0, length = workspaceResults@length; resultLoop < length; resultLoop++) {
+					Object workspaceResult = workspaceResults[resultLoop];
+					if (workspaceResult instanceof WebStudio.Core.Concepts.WS_C_UserArtifact) {
+						WebStudio.Core.Concepts.WS_C_UserArtifact userArtifact = workspaceResult;
+	
+						artifactPath += userArtifact.artifactPath + "." + userArtifact.artifactType + "$$";
+					}
+				}
+				output = WS.SCS.listManagedProjectArtifacts(scsIntegrationType, scsRootURL, projectName, artifactPath, scsCredentials[0], scsCredentials[1], "com.tibco.be.ws.scs.impl.filter.CheckoutCacheFilter", null);
+				checkIfDeleted = true;
+				
+				// clean up the map
+				Util.HashMap.clear(queryArgsKey);
+				Util.HashMap.deleteMap(queryArgsKey);
+			} else {
+				//TODO checkout case. Set filter context class through property.
+				output = WS.SCS.listManagedProjectArtifacts(scsIntegrationType, scsRootURL, projectName, null, scsCredentials[0], scsCredentials[1], filterClass, null);
+			}
+			Log.log(LOGGER, "Debug", "XML output %s", output);
+				
+			// fetch the list of supported artifact types
+			WebStudio.Core.Concepts.WS_C_SupportedArtifactTypesConfig supportedArtifactsConfig = Cluster.DataGrid.CacheLoadConceptByExtIdByUri("WS_SUPP_ARTIFACTS_CFG", false, "/WebStudio/Core/Concepts/WS_C_SupportedArtifactTypesConfig");
+			String[] artifactTypesSupported = Instance.PropertyArray.toArrayString(supportedArtifactsConfig.artifactTypes);
+			
+			String artifactType, artifactPath, artifactFileExtn, artifactImageSrc, EXTENSION;
+			boolean isSupported, hasAccess;
+		
+			// make sure output is not empty
+			if (output != null && !String.equals(output, "")) {
+				//Convert to concept model
+				WS_C_SCSProjectContents scsProjectContents = Instance.createTransientInstanceFromXML("/WebStudio/Core/Concepts/Common/WS_C_SCSProjectContents", output);
+				WS_C_ProjectArtifacts projectArtifacts = scsProjectContents.projectArtifacts;
+				WS_C_Artifact[] artifacts = Instance.PropertyArray.toArrayContainedConcept(projectArtifacts.artifact);
+				Log.log(LOGGER, "Debug", "Project Artifact Size - %s", artifacts@length);
+				
+				WS_C_ProjectArtifactNamesDataSourceRecord projectArtifactDataSourceRecord = null;
+				
+				if (roles != null) {
+					for (int i = 0; i < artifacts@length; i++) {
+						artifactType = artifacts[i].artifactType;
+					    	artifactPath = artifacts[i].artifactPath;
+					    	artifactFileExtn = artifactType;
+					    	
+					    	Log.log(LOGGER, "Debug", "Artifact being checked Path[%s] & Type[%s]", artifactPath, artifactType);
+					    	
+						artifactImageSrc = Util.HashMap.get("ARTIFACT_TYPE_IMAGES", artifactType);
+						if (artifactImageSrc == null) artifactImageSrc = "file.png";
+						
+						EXTENSION = String.toUpperCase(artifactFileExtn);
+						
+						isSupported = WS_RF_IsArtifactTypeSupported(EXTENSION, artifactTypesSupported);						
+						if (isSupported) {			
+							hasAccess = RMS.Authorization.ensureAccess(projectName, subscriptionId, roles, artifactPath, EXTENSION, "read");
+		
+							if (hasAccess) {
+								if (checkIfDeleted) {
+									String artifactExtId = WS_RF_CreateUserArtifactExtId(null, artifactPath, projectName, loggedInUser.username, null, null);
+									WS_C_UserArtifact userArtifact = null;
+									if (artifactType == "ruletemplateinstance" || artifactType == "ruletemplate") {
+										userArtifact = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(artifactExtId, false, "/WebStudio/Core/Concepts/RuleTemplateInstance/WS_C_RuleTemplateInstanceUserArtifact");
+									} else if (artifactType == "rulefunctionimpl" || artifactType == "rulefunction") {
+										userArtifact = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(artifactExtId, false, "/WebStudio/Core/Concepts/Decision/WS_C_UserDTableArtifact");
+									} else if (artifactType == "beprocess") {
+										userArtifact = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(artifactExtId, false, "/WebStudio/Core/Concepts/Process/WS_C_ProcessUserArtifact");
+									} else if (artifactType == "domain") {
+										userArtifact = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(artifactExtId, false, "/WebStudio/Core/Concepts/Domain/WS_C_DomainUserArtifact");
+									} else {
+										userArtifact = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(artifactExtId, false, "/WebStudio/Core/Concepts/WS_C_UserArtifact");
+									}
+									if (userArtifact != null && userArtifact.softDelete == true) {
+										Log.log(LOGGER, "Debug", " Artifact[%s] is already checkedout but marked for deletion.", artifactPath);
+										continue;
+									}
+								}
+							
+								WS_C_AbstractDataSourceRecord projectArtifactsDataSourceRecord = 
+									Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/Records/WS_C_ProjectArtifactNamesDataSourceRecord");
+								projectArtifactDataSourceRecord = projectArtifactsDataSourceRecord;
+								projectArtifactDataSourceRecord.artifactPath = artifactPath;
+								projectArtifactDataSourceRecord.artifactType = artifactType;
+								projectArtifactDataSourceRecord.fileExtension = artifactFileExtn;
+								projectArtifactDataSourceRecord.imageSrc = artifactImageSrc;
+								projectArtifactDataSourceRecord.no = (i+1) + "";
+								projectArtifactDataSourceRecord.changeType = artifactChangeType;
+								WebStudio.Core.Concepts.Lifecycle.Lock.WS_C_CheckArtifactLockResponse artifactLockStatus 
+										= WebStudio.Core.RuleFunctions.Actions.Lifecycle.Lock.WS_RF_CheckMasterArtifactLock(projectName, artifactPath, loggedInUser.username);
+								projectArtifactDataSourceRecord.locked = artifactLockStatus.holdsLock;
+								
+								if (String.equals(artifactFileExtn, "rulefunctionimpl") || String.equals(artifactFileExtn, "ruletemplateinstance")) {
+									// get the base Artifact Name
+									String baseArtifactName = WS_RF_GetImplementsPath(loggedInUser.username, projectName, artifactPath, artifactFileExtn, scsRootURL);
+									if (baseArtifactName != null) {
+										String baseArtifactExtn = "rulefunction";
+										if (String.equals(artifactFileExtn, "ruletemplateinstance")) {
+											baseArtifactExtn = "ruletemplate";
+										}
+										projectArtifactDataSourceRecord.baseArtifactPath = baseArtifactName + "." + baseArtifactExtn;
+									}
+									
+								} else if (WS.Common.isBPMNInstalled() && String.equals(artifactFileExtn, "beprocess")) {
+									// get process Type
+									String processType = WS_RF_GetProcessType(loggedInUser.username, projectName, artifactPath, artifactFileExtn, scsRootURL);
+									if (processType != null && !String.equals(processType, "")) {
+										projectArtifactDataSourceRecord.processType = processType;
+									}
+								}
+							
+								Instance.PropertyArray.appendContainedConcept(responseData.record, projectArtifactsDataSourceRecord, 1L);
+								numberOfArtifacts++;
+							}															
+							
+							Log.log(LOGGER, "Debug", "Artifact Details -> [Path:%s] [Type:%s] [Extension:%s] [ImageSrc:%s] [HasAccess:%s]", artifactPath, artifactType, artifactFileExtn, artifactImageSrc, hasAccess);
+						}
+					}
+				}
+			}
+			
+			responseStatus = 0;
+			recordCount = numberOfArtifacts;
+		}
+		
+		return WS_RF_CreateTemporaryReturnData(responseStatus, recordCount, null, null, responseData);
+	}
+}

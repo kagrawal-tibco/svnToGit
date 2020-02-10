@@ -1,0 +1,53 @@
+/**
+ * @description Create View|Builder concepts based on the input recieved during a save request.
+ */
+Concept rulefunction WebStudio.Core.RuleFunctions.Utils.RT.WS_RF_CreateRuleTemplateInstanceModelFactory {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String username;
+		String[] roles;
+		String projectName;
+		String artifactContent;
+		String artifactType; 
+		//Only for RTIs and DTables
+		String implementsPath;
+		WebStudio.Core.Concepts.RuleTemplateInstance.WS_C_RuleTemplateInstanceUserArtifact childRuleTemplateInstanceUserArtifact;
+		String contentType;
+		int rulePriority;
+		String description;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.RT.WS_RF_CreateRuleTemplateInstanceModelFactory");
+		
+		//Check if view or builder
+		//Look up base RT from cache
+		String baseRTExtId = WS_RF_CreateUserArtifactExtId(null, implementsPath, projectName, username, null, null);
+		boolean baseRTLock = Cluster.DataGrid.Lock(baseRTExtId, -1, false);
+		
+		if (baseRTLock) {
+			WS_C_RuleTemplateInstanceUserArtifact baseRuleTemplateInstanceUserArtifact = Instance.getByExtIdByUri(baseRTExtId, "/WebStudio/Core/Concepts/RuleTemplateInstance/WS_C_RuleTemplateInstanceUserArtifact");
+			String[] revisionIds = Instance.PropertyArray.toArrayString(baseRuleTemplateInstanceUserArtifact.artifactRevisionIds);
+			if (revisionIds@length == 0) {
+				Log.log(LOGGER, "Error", "No revisions found for artifact [%s]. The rule template matching this not found.", implementsPath);
+			} else {
+				//Load instance with this latest revision id
+				String latestRevisionId = revisionIds[0];
+				WS_C_UserArtifactRevision userArtifactRevision = Instance.getByExtIdByUri(latestRevisionId, "/WebStudio/Core/Concepts/WS_C_UserArtifactRevision");
+				
+				Log.log(LOGGER, "Debug", "Artifact Content ID for %s", userArtifactRevision.artifactContentsId);
+				//Either builder or view
+				Concept baseRuleTemplateContainedConcept = WS_RF_GetArtifactContentInstance(userArtifactRevision.artifactContentsId, userArtifactRevision.parentArtifactType);
+				if (baseRuleTemplateContainedConcept instanceof WS_C_RuleTemplateInstanceBuilder) {
+					Log.log(LOGGER, "Info", "Artifact to be saved of builder type");
+					return WS_RF_CreateRuleTemplateInstanceContainedBuilder(username, projectName, artifactContent, artifactType, implementsPath, baseRuleTemplateInstanceUserArtifact, contentType, rulePriority, description);
+				} else {
+					Log.log(LOGGER, "Info", "Artifact to be saved of view type");
+					return WS_RF_CreateRuleTemplateInstanceContainedView(username, roles, projectName, artifactContent, artifactType, implementsPath, childRuleTemplateInstanceUserArtifact, baseRuleTemplateInstanceUserArtifact, contentType, rulePriority, description);
+				}
+			}
+		}
+		return null;
+	}
+}

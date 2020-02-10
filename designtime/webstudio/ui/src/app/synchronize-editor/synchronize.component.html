@@ -1,0 +1,49 @@
+<div class="row">
+    <div class="col-sm-12">
+        <div class="card">
+            <div class="card-header">
+                <ng-container i18n>{{i18n('Synchronize Artifact ')}}</ng-container>{{base?.name}}
+                <br/>
+                <small [innerHTML]="getMessage()"></small>
+            </div>
+            <div class="card-body scrollable-body">
+                <div class="row">
+                    <span class="col-sm-4" i18n>'
+                        {{i18n('Mine')}}
+                    </span>
+                    <span class="col-sm-4" i18n>
+                        {{i18n('Result')}}
+                        </span>
+                    <span class="col-sm-4">
+                        <ng-container i18n>{{i18n('AMS Revision ')}}</ng-container>{{rhs.revisionNumber}}
+                    </span>
+                </div>
+                <div class="row">
+                    <div style="width: 100%" #codeMirror></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-12">
+        <div class="col-sm-12 left-pad right-pad bottom-pad top-pad">
+            <button class="btn btn-outline-primary btn-sm btn-narrow" [disabled]="editor.getDoc().historySize().undo === 0" (click)="editor.getDoc().undo()">
+                <ng-container i18n>{{i18n(' Undo')}}</ng-container>
+            </button>
+            <button class="btn btn-outline-primary btn-sm btn-narrow" [disabled]="editor.getDoc().historySize().redo === 0" (click)="editor.getDoc().redo()">
+                <ng-container i18n>{{i18n(' Redo')}}</ng-container>
+            </button>
+        </div>
+    </div>
+</div>
+<div class="row left-pad right-pad bottom-pad top-pad">
+    <div class='text-left col-sm-1'>
+        <button class='btn btn-outline-primary btn-sm btn-narrow' (click)='onCancel()' i18n>{{i18n('Cancel')}}</button>
+    </div>
+    <div class='col-sm-10 text-right'>
+      <span *ngIf='!canConfirm()' class='opague'><i><small i18n>{{i18n('You have merge conflicts, please resolve them first.')}}</small></i></span>
+    </div>
+    <div class='text-right col-sm-1'>
+      <button class='btn btn-primary btn-sm btn-narrow pull-right' (click)='onConfirm()' [disabled]='!canConfirm()' i18n>{{i18n('Confirm')}}</button>
+    </div>
+</div>
+

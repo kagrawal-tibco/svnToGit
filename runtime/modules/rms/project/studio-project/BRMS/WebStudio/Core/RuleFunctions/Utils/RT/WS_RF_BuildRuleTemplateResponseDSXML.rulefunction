@@ -1,0 +1,53 @@
+/**
+ * @description Build the Rule Template response XML  
+ */
+WebStudio.Core.Concepts.DataSources.WS_C_ResponseData rulefunction WebStudio.Core.RuleFunctions.Utils.RT.WS_RF_BuildRuleTemplateResponseDSXML {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String artifactPath;
+		String artifactExtn;
+		WebStudio.Core.Concepts.RuleTemplateInstance.WS_C_AbstractRuleTemplate artifactContents; 
+		int responseStatus;
+		int recordCount;
+		String errorCode;
+		String responseMessage;
+	}
+	body {
+		
+		WS_C_ResponseData responseData = 
+			Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/WS_C_ResponseData");
+
+//		String responseDSXML = null;	
+		if (errorCode == null) {
+			WS_C_RuleTemplateArtifactDetails ruleTemplateDetails = Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/WS_C_RuleTemplateArtifactDetails");
+	
+			ruleTemplateDetails.artifactPath = artifactPath;
+			ruleTemplateDetails.artifactType = artifactExtn;
+			Instance.PropertyAtom.setConceptReference(ruleTemplateDetails.artifactContent, artifactContents, 1L);
+	
+			WS_C_AbstractDataSourceRecord abstractDataSourceRecord = 
+				Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/Records/WS_C_ArtifactContentsDataSourceRecord");
+	
+			WS_C_AnyArtifactDetails anyDetails = ruleTemplateDetails;
+			
+			WS_C_ArtifactContentsDataSourceRecord artifactContentsDataSourceRecord = abstractDataSourceRecord;	
+			Instance.PropertyAtom.setContainedConcept(artifactContentsDataSourceRecord.artifactDetails, anyDetails, 1L);
+			Instance.PropertyArray.appendContainedConcept(responseData.record, abstractDataSourceRecord, 1L);
+
+//			responseDSXML = WS_RF_CreateAndSerializeResponseDataSource(responseStatus, recordCount, errorCode, responseMessage, responseData);
+//
+//			if (ruleTemplateDetails != null) {
+//				//Dereference it so that it can be referenced for next request if needed.
+//				Instance.PropertyAtom.setConceptReference(ruleTemplateDetails.artifactContent, null, 1L);
+//			}
+
+		} 
+//		else {
+//			responseDSXML = WS_RF_CreateAndSerializeResponseDataSource(responseStatus, recordCount, errorCode, responseMessage, responseData);			
+//		}			
+
+		return responseData;
+	}
+}

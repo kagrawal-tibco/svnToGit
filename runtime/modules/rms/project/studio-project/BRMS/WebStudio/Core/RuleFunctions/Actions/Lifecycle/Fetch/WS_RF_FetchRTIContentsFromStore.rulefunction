@@ -1,0 +1,106 @@
+/**
+ * @description 
+ */
+String rulefunction WebStudio.Core.RuleFunctions.Actions.Lifecycle.Fetch.WS_RF_FetchRTIContentsFromStore {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		boolean loadContentsFromSCS;
+		WebStudio.Core.Concepts.WS_C_UserArtifact userArtifact;
+		WebStudio.Core.Concepts.DataSources.WS_C_AnyArtifactDetails ruleTemplateInstanceContents;
+		String projectName;
+		String username;
+		String[] roles;
+		Object asyncContextObject;
+		String contentType;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.Lifecycle.Fetch.WS_RF_FetchRTIContentsFromStore");
+		
+		WS_C_AnyArtifactDetails ruleTemplateInstance = ruleTemplateInstanceContents;
+		
+		String scsRootURL = WS_RF_GetSCSRootURL(projectName, WS_RF_GetSubscriptionId(username));
+		WS_C_ResponseData responseData = Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/WS_C_ResponseData");
+		
+		String responseDSXML = null;
+		
+		//Do this only for flag = true.
+		if (loadContentsFromSCS) {
+			String scsIntegrationType = System.getSystemPropertyAsString("ws.scs.impl.type", null);
+			Log.log(LOGGER, "Info", "Contents need to be loaded for artifact %s from SCS", userArtifact.artifactPath);
+			//Load from SCS
+			String artifactContents = WS_RF_FetchContentFromSCS(scsRootURL, projectName, userArtifact.artifactPath, userArtifact.artifactFileExtn, username);
+			Log.log(LOGGER, "Debug", "Contents of artifact loaded from SCS %s", artifactContents);
+			Object ruleTemplateObject = WS.RT.getBaseRuleTemplate(projectName, artifactContents, userArtifact.artifactFileExtn);
+			
+			Log.log(LOGGER, "Debug", "Artifact Path [%s], Type[%s]", userArtifact.artifactPath, userArtifact.artifactFileExtn);
+			
+			//Get concept for it
+			//TODO fetch integration class for SCS.
+			ruleTemplateInstance = WS_RF_CreateAbstractRuleTemplateConceptFromSCS(projectName, username, null, scsRootURL, userArtifact.artifactPath, userArtifact.artifactFileExtn, ruleTemplateObject, roles);
+			Log.log(LOGGER, "Debug", "Instance of Rule Template user artifact %s", userArtifact);
+			//Acquire lock on this artifact's extid
+			boolean ruleTemplateUserArtifactLock = Cluster.DataGrid.Lock(userArtifact@extId, -1, false);
+			if (ruleTemplateUserArtifactLock) { 
+				WS_E_RuleTemplateModelInstanceCreationEvent ruleTemplateModelInstanceCreationEvent =
+					Event.createEvent("xslt://{{/WebStudio/Core/Events/WS_E_RuleTemplateModelInstanceCreationEvent}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"2.0\" exclude-result-prefixes=\"xsl xsd\"><xsl:output method=\"xml\"/><xsl:param name=\"projectName\"/><xsl:param name=\"userArtifact\"/><xsl:param name=\"ruleTemplateInstance\"/><xsl:template name=\"Function\" match=\"/\"><createEvent><event><projectName><xsl:value-of select=\"$projectName\"/></projectName><xsl:if test=\"$userArtifact/artifactPath\"><artifactPath><xsl:value-of select=\"$userArtifact/artifactPath\"/></artifactPath></xsl:if><xsl:if test=\"$ruleTemplateInstance/@extId\"><artifactModelInstanceId><xsl:value-of select=\"$ruleTemplateInstance/@extId\"/></artifactModelInstanceId></xsl:if><operation><xsl:value-of select=\"&quot;Fetch&quot;\"/></operation><artifactType><xsl:value-of select=\"&quot;ruletemplate&quot;\"/></artifactType></event></createEvent></xsl:template></xsl:stylesheet>");
+				ruleTemplateModelInstanceCreationEvent.username = username;	
+				// Set the existing rule Id into RTIUserArtifact to make sure same Id continues
+				if (userArtifact != null && String.equals(userArtifact.artifactType, "ruletemplateinstance")) {
+					// Get the Id from the RTI EmfObject
+					String ruleTemplateInstanceId = WS.RTI.getRuleTemplateInstanceId(ruleTemplateObject);
+					// Set the id into the ruleTemplateInstanceUserArtifact
+					if (ruleTemplateInstanceId != null) {
+						ruleTemplateModelInstanceCreationEvent.UUID = ruleTemplateInstanceId;
+					}
+				}
+				Event.assertEvent(ruleTemplateModelInstanceCreationEvent);
+			}
+			
+			WS_C_AnyArtifactDetails  anyDetails = Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/WS_C_RuleTemplateArtifactDetails");
+			WS_C_RuleTemplateArtifactDetails ruleTemplateDetails = anyDetails;
+					
+			//Manipulate using java references.
+			ruleTemplateDetails.artifactPath = userArtifact.artifactPath;
+			ruleTemplateDetails.artifactType = userArtifact.artifactFileExtn;
+	
+			Instance.PropertyAtom.setConceptReference(ruleTemplateDetails.artifactContent, ruleTemplateInstance, 1L);
+			
+			WS_C_AbstractDataSourceRecord abstractDataSourceRecord =
+							Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/Records/WS_C_ArtifactContentsDataSourceRecord");
+			WS_C_ArtifactContentsDataSourceRecord artifactContentsDataSourceRecord = abstractDataSourceRecord;	
+			Instance.PropertyAtom.setContainedConcept(artifactContentsDataSourceRecord.artifactDetails, anyDetails, 1L);
+			Instance.PropertyArray.appendContainedConcept(responseData.record, abstractDataSourceRecord, 1L);
+						
+			// Create RTI/RT serialized state
+			responseDSXML = WS_RF_CreateAndSerializeResponseDataSource(0, 1, null, null, responseData, contentType);
+			if (anyDetails instanceof WS_C_RuleTemplateArtifactDetails) {
+				//Dereference it so that it can be referenced for next request if needed.
+				Instance.PropertyAtom.setConceptReference(ruleTemplateDetails.artifactContent, null, 1L);
+			}
+		} else {			
+			String rtiType = null;
+			String roleList = WS.Common.joinStringArray(roles, ",");
+			if (ruleTemplateInstance instanceof WS_C_RuleTemplateInstanceBuilder) {
+				rtiType = "/WebStudio/Core/Concepts/RuleTemplateInstance/Builder/WS_C_RuleTemplateInstanceBuilder";
+			} else if (ruleTemplateInstance instanceof WS_C_RuleTemplateInstanceView) {
+				rtiType = "/WebStudio/Core/Concepts/RuleTemplateInstance/View/WS_C_RuleTemplateInstanceView";
+			}
+			
+			String asyncContextId = WS.Common.generateUUID();
+			String mapLockKey = "UPDATE_DOMAIN_MODEL_ASYNC_CONTEXT_MAP_" + System.nanoTime();
+			//Concurrent Rete case. Lock locally
+			boolean mapLocked = Cluster.DataGrid.Lock(mapLockKey, -1, true);
+			if (mapLocked) { 
+				Util.HashMap.createMap(mapLockKey);
+				Util.HashMap.putObject(mapLockKey, asyncContextId, asyncContextObject);
+			}
+			
+			WS_E_UpdateAssociatedDomainModelEvent updateAssociatedDMEvent = Event.createEvent("xslt://{{/WebStudio/Core/Events/WS_E_UpdateAssociatedDomainModelEvent}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"2.0\"><xsl:param name=\"userArtifact\"/><xsl:param name=\"projectName\"/><xsl:param name=\"username\"/><xsl:param name=\"contentType\"/><xsl:param name=\"ruleTemplateInstance\"/><xsl:param name=\"rtiType\"/><xsl:param name=\"asyncContextId\"/><xsl:param name=\"mapLockKey\"/><xsl:param name=\"roleList\"/><xsl:template name=\"Function\" match=\"/\"><createEvent><event><xsl:if test=\"$ruleTemplateInstance/@extId\"><ruleTemplateInstanceId><xsl:value-of select=\"$ruleTemplateInstance/@extId\"/></ruleTemplateInstanceId></xsl:if><asyncContextId><xsl:value-of select=\"$asyncContextId\"/></asyncContextId><mapKey><xsl:value-of select=\"$mapLockKey\"/></mapKey><contentType><xsl:value-of select=\"$contentType\"/></contentType><userName><xsl:value-of select=\"$username\"/></userName><xsl:if test=\"$userArtifact/artifactPath\"><artifactPath><xsl:value-of select=\"$userArtifact/artifactPath\"/></artifactPath></xsl:if><xsl:if test=\"$userArtifact/artifactFileExtn\"><artifactFileExtn><xsl:value-of select=\"$userArtifact/artifactFileExtn\"/></artifactFileExtn></xsl:if><ruleTemplateInstanceType><xsl:value-of select=\"$rtiType\"/></ruleTemplateInstanceType><projectName><xsl:value-of select=\"$projectName\"/></projectName><roleList><xsl:value-of select=\"$roleList\"/></roleList></event></createEvent></xsl:template></xsl:stylesheet>");
+			Event.assertEvent(updateAssociatedDMEvent);
+		}
+		
+		return responseDSXML;										
+	}
+}

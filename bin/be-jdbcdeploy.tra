@@ -1,0 +1,236 @@
+#
+# Copyright (c) 2004-2019 TIBCO Software Inc.
+# All Rights Reserved.
+#
+# This software is the confidential and proprietary information of
+# TIBCO Software Inc.
+#
+#==========================================================
+# Common environment variables.
+#==========================================================
+#
+tibco.env.PSP=%PS%
+tibco.env.TIB_HOME=%TIBCO_HOME_ESC%
+tibco.env.BE_HOME=%TIBCO_BE_HOME_ESC%
+tibco.env.AS_HOME=%TIBCO_AS_HOME_ESC%
+tibco.env.RV_HOME=
+tibco.env.EMS_HOME=
+tibco.env.TERR_HOME=
+tibco.env.ECLIPSE_PATH=%TIBCO_ECLIPSE_PATH_ESC%
+tibco.env.BE_ECLIPSE_HOME=%BE_HOME%/eclipse-platform/%ECLIPSE_PATH%
+ECLIPSE_HOME=%TIBCO_CUSTOMER_ECLIPSE_DIR%
+
+#
+# Other arguments to the application
+#
+tibco.env.APP_ARGS=
+
+#
+# Customizable Classpath information...
+#    e.g g:/a1/b1;d:/a2/b2/c.jar
+#    All classes and jars in these directories will be automatically picked
+#    up. You can also specify individual files. Use forward slashes only.
+#
+tibco.env.CUSTOM_EXT_PREPEND_CP=
+tibco.env.CUSTOM_EXT_APPEND_CP=
+
+#==========================================================
+# JVM related settings. Choose your options carefully.
+#==========================================================
+
+tibco.env.TIB_JAVA_HOME=%TIBCO_JAVA_HOME_ESC%
+#
+# Ensure that the JVM_LIB_PATH points to the appropriate JVM Server DLL or SO.
+#
+# Example:
+#    64 bit Sun JVM for Intel or AMD on Linux should use JVM_LIB_PATH =
+#    %TIB_JAVA_HOME%/lib/amd64/server/libjvm.so
+#
+#    64 bit Sun JVM for Intel or AMD on Windows should use JVM_LIB_PATH =
+#    %TIB_JAVA_HOME%/lib/amd64/server/libjvm.dll
+#
+#    32 bit Sun JVM for Intel or AMD on Windows should use JVM_LIB_PATH =
+#    %TIB_JAVA_HOME%/lib/i386/server/libjvm.dll
+#
+#
+tibco.env.JVM_LIB_PATH=%TIBCO_JVM_LIB_SERVER_ESC%
+tibco.env.JVM_LIB_DIR=%TIBCO_JVM_LIB_DIR_ESC%
+
+
+java.extended.properties=-server -Xms1024m -Xmx1024m -Xss2m -javaagent:%BE_HOME%/lib/cep-base.jar -XX:MaxMetaspaceSize=256m
+
+#
+# 64 bit JVM parameters for production. Increase heap size and tune other
+# parameters as needed.
+# Note: On some platforms the "-d64" switch might not work. Please
+#         consult the JVM's documentation to ensure that the correct
+#         switch is set to enable the 64bit JVM mode.
+# Note: Additional options for Sun JVMs. Consult the appropriate JVM
+#         manual for high performance options.
+#       Ex: -XX:MaxGCPauseMillis=150 -XX:+DisableExplicitGC -XX:+UseTLAB
+
+
+
+#
+# Parameters for remote debugging.
+#
+# tibco.env.JDI_PORT=5192
+# java.extended.properties=-Xms1024m -Xmx1024m -XX:MaxMetaspaceSize=256m -Xdebug -Xrunjdwp:transport=dt_socket,address=%JDI_PORT%,suspend=n,server=y
+
+#==========================================================
+# Classpath and other environment settings. You do not have
+# to modify these.
+#==========================================================
+#
+# TIBCO standard classpath
+#
+tibco.env.STD_EXT_CP %PSP%%TIB_JAVA_HOME%/lib%PSP%%TIB_JAVA_HOME%/lib/ext%PSP%%BE_HOME%/hotfix/lib/eclipse/plugins%PSP%%BE_HOME%/lib/eclipse/plugins%PSP%%BE_HOME%/hotfix/mm/lib%PSP%%BE_HOME%/mm/lib%PSP%%BE_HOME%/hotfix/views/lib%PSP%%BE_HOME%/views/lib%PSP%%BE_HOME%/hotfix/views/lib/ext%PSP%%BE_HOME%/views/lib/ext%PSP%%BE_HOME%/hotfix/lib%PSP%%BE_HOME%/lib%PSP%%BE_HOME%/hotfix/lib/palettes%PSP%%BE_HOME%/lib/palettes%PSP%%BE_HOME%/hotfix/lib/ext/tpcl%PSP%%BE_HOME%/lib/ext/tpcl%PSP%%BE_HOME%/hotfix/lib/ext/tpcl/emf%PSP%%BE_HOME%/lib/ext/tpcl/emf%PSP%%BE_HOME%/hotfix/lib/ext/tpcl/apache%PSP%%BE_HOME%/lib/ext/tpcl/apache%PSP%%BE_HOME%/hotfix/lib/ext/tpcl/tomsawyer%PSP%%BE_HOME%/lib/ext/tpcl/tomsawyer%PSP%%BW_HOME%/lib/palettes/xdata.jar%PSP%%BE_HOME%/hotfix/lib/ext/tibco%PSP%%BE_HOME%/lib/ext/tibco%PSP%%BE_HOME%/hotfix/lib/ext%PSP%%BE_HOME%/lib/ext%PSP%%AS_HOME%/lib%PSP%%RV_HOME%/lib/tibrvj.jar%PSP%%RV_HOME%/lib%PSP%%EMS_HOME%/lib%PSP%%EMS_HOME%/clients/java%PSP%%BW_CUSTOM_EXT_PREPEND_CP%%PSP%%BW_STD_EXT_CP%%PSP%%BW_CUSTOM_EXT_APPEND_CP%%PSP%%HAWK_HOME%/lib
+
+#
+# TIBCO Standard Path (Applicable to all Platforms)
+#
+tibco.env.PATH %BE_HOME%/hotfix/bin%PSP%%BE_HOME%/bin%PSP%%AS_HOME%/lib%PSP%%RV_HOME%/bin%PSP%%BW_PATH%%PSP%%HAWK_HOME%/bin%PSP%%TIB_JAVA_HOME%/bin%PSP%%TERR_HOME%/library/terrJava/libs%PSP%%PATH%
+
+#
+# TIBCO Load Library Path
+# Load Library Path (LD_LIBRARY_PATH, SHLIB_PATH, LIBPATH) are ignored
+# on Windows environments.
+#
+tibco.env.DYLD_LIBRARY_PATH %BE_HOME%/hotfix/lib%PSP%%BE_HOME%/lib%PSP%%BE_HOME%/hotfix/lib/eclipse/plugins%PSP%%BE_HOME%/lib/eclipse/plugins%PSP%%BE_HOME%/hotfix/mm/lib%PSP%%BE_HOME%/mm/lib%PSP%%BE_HOME%/hotfix/lib/ext/tpcl%PSP%%BE_HOME%/lib/ext/tpcl%PSP%%BE_HOME%/hotfix/lib/ext/tpcl/emf%PSP%%BE_HOME%/lib/ext/tpcl/emf%PSP%%BE_HOME%/hotfix/lib/ext/tpcl/apache%PSP%%BE_HOME%/lib/ext/tpcl/apache%PSP%%BE_HOME%/hotfix/lib/ext/tibco%PSP%%BE_HOME%/lib/ext/tibco%PSP%%BE_HOME%/hotfix/lib/ext%PSP%%BE_HOME%/lib/ext%PSP%%AS_HOME%/lib%PSP%%RV_HOME%/lib%PSP%%HAWK_HOME%/lib%PSP%%DYLD_LIBRARY_PATH%
+
+#tibco.env.LD_PRELOAD %JVM_LIB_DIR%/server
+
+tibco.env.LD_LIBRARY_PATH %AS_HOME%/lib%PSP%%JVM_LIB_DIR%/server%PSP%%JVM_LIB_DIR%%PSP%%RV_HOME%/lib%PSP%%EMS_HOME%/clients/java%PSP%%BW_LD_LIBRARY_PATH%%PSP%%TERR_HOME%/library/terrJava/libs%PSP%%LD_LIBRARY_PATH%
+
+tibco.env.SHLIB_PATH %BE_HOME%/hotfix/lib%PSP%%BE_HOME%/lib%PSP%%BE_HOME%/hotfix/lib/eclipse/plugins%PSP%%BE_HOME%/lib/eclipse/plugins%PSP%%BE_HOME%/hotfix/lib/ext/tpcl%PSP%%BE_HOME%/lib/ext/tpcl%PSP%%BE_HOME%/hotfix/lib/ext/tpcl/emf%PSP%%BE_HOME%/lib/ext/tpcl/emf%PSP%%BE_HOME%/hotfix/lib/ext/tpcl/apache%PSP%%BE_HOME%/lib/ext/tpcl/apache%PSP%%BE_HOME%/hotfix/lib/ext/tibco%PSP%%BE_HOME%/lib/ext/tibco%PSP%%BE_HOME%/hotfix/lib/ext%PSP%%BE_HOME%/lib/ext%PSP%%AS_HOME%/lib%PSP%%JVM_LIB_DIR%/server%PSP%%JVM_LIB_DIR%%PSP%%RV_HOME%/lib%PSP%%EMS_HOME%/clients/java%PSP%%BW_SHLIB_PATH%%PSP%%SHLIB_PATH%
+
+tibco.env.LIBPATH %BE_HOME%/hotfix/lib%PSP%%BE_HOME%/lib%PSP%%BE_HOME%/hotfix/lib/eclipse/plugins%PSP%%BE_HOME%/lib/eclipse/plugins%PSP%%BE_HOME%/hotfix/lib/ext/tpcl%PSP%%BE_HOME%/lib/ext/tpcl%PSP%%BE_HOME%/hotfix/lib/ext/tpcl/emf%PSP%%BE_HOME%/lib/ext/tpcl/emf%PSP%%BE_HOME%/hotfix/lib/ext/tpcl/apache%PSP%%BE_HOME%/lib/ext/tpcl/apache%PSP%%BE_HOME%/hotfix/lib/ext/tibco%PSP%%BE_HOME%/lib/ext/tibco%PSP%%BE_HOME%/hotfix/lib/ext%PSP%%BE_HOME%/lib/ext%PSP%%AS_HOME%/lib%PSP%%JVM_LIB_DIR%/server%PSP%%JVM_LIB_DIR%%PSP%%RV_HOME%/lib%PSP%%EMS_HOME%/clients/java%PSP%%BW_LIBPATH%%PSP%%LIBPATH%
+
+#
+# Specifies the JVM to be used to launch this application
+#
+java.library %JVM_LIB_PATH%
+
+#
+# Specifies the JVM to be used to launch this application
+#
+java.start.class com.tibco.be.jdbcstore.JdbcDeployment
+
+#
+# Specifies the main function in invoke
+#
+java.start.method main
+
+#
+# Specifies the function to shutdown
+#
+java.stop.method
+
+#
+# Installation details
+#
+java.property.tibco_home %TIB_HOME%
+java.property.tibco_tra_version %TRA_APPEND_VERSION%
+java.property.BE_HOME %TIBCO_BE_HOME_ESC%
+
+#
+# Specifies the classpath with expansion on
+#
+tibco.class.path.extended %CUSTOM_EXT_PREPEND_CP%%PSP%%STD_EXT_CP%%PSP%%CUSTOM_EXT_APPEND_CP%%PSP%
+
+#
+# Sets the SAX and DOM JAXP factories to use
+#
+java.property.javax.xml.parsers.SAXParserFactory org.apache.xerces.jaxp.SAXParserFactoryImpl
+java.property.javax.xml.parsers.DocumentBuilderFactory org.apache.xerces.jaxp.DocumentBuilderFactoryImpl
+
+#
+# Registers the encryption provider
+#
+TIBCO_SECURITY_VENDOR %TIBCO_SECURITY_VENDOR%
+
+#
+# Specify values to connect to the domain for authorization (http activity)
+#
+java.property.TIBCO_TRA_HOME %TRA_HOME%
+java.property.TIBCO_DOMAIN_HOME %TRA_HOME%/../domain
+
+#
+# Runtime Implementation of EventPayload class has to be declared.
+# BusinessEvents by default uses XiNodePayload, ObjectPayload, TibrvMsgPayload.
+#
+be.event.payload.classes com.tibco.cep.runtime.model.event.impl.XiNodePayload, com.tibco.cep.runtime.model.event.impl.ObjectPayload, com.tibco.cep.driver.tibrv.serializer.TibrvMsgPayload
+
+#==========================================================
+# Extended options. Specify custom properties here.
+#==========================================================
+
+#
+# Arguments to pass to the application
+#
+application.args %APP_ARGS%
+
+#
+# Language Properties
+#
+#be.locale.language en
+#be.locale.country
+#be.locale.variant
+
+# Jars that should be skipped by Tomcat server's TLDJarScanner
+tomcat.util.scan.StandardJarScanFilter.jarsToSkip=xdata.jar,tibrvj.jar
+
+#
+# Base type schema/keyword files:
+# Valid database types: oracle, sqlserver, db2, mysql, postgresql
+#
+java.property.jdbcdeploy.bootstrap.basetype.file %BE_HOME%/bin/base_types.xml
+java.property.jdbcdeploy.bootstrap.keyword.file %BE_HOME%/bin/dbkeywordmap.xml
+java.property.jdbcdeploy.database.type oracle
+
+#
+# Schema Migration
+# If following 3 properties are provided, schema-migration script will be generated.
+# URL should point to the source DB. The URL is used solely to collect information about
+# existing schema, and no DDL/DML operations are performed.
+#
+# For Oracle:
+#be.jdbc.schemamigration.url jdbc:oracle:thin:@localhost:1521:XE
+# For SQL Server:
+#be.jdbc.schemamigration.url jdbc:sqlserver://localhost:1433;databasename=BE
+# For DB2:
+#be.jdbc.schemamigration.url jdbc:db2://localhost:50000/BE
+#be.jdbc.schemamigration.user user-name
+#be.jdbc.schemamigration.pswd password
+# For MySQL:
+#be.jdbc.schemamigration.url jdbc:mysql://localhost:3306/BE
+#be.jdbc.schemamigration.user user-name
+#be.jdbc.schemamigration.pswd password
+# For PostgreSQL:
+#be.jdbc.schemamigration.url jdbc:postgresql://localhost:5432/BE
+#be.jdbc.schemamigration.user user-name
+#be.jdbc.schemamigration.pswd password
+
+#
+# Database over SSL
+# If above configured database connects over SSL, specify truststore and other configurations.
+# For Oracle:
+#javax.net.ssl.trustStore /Users/apps/ora_certs/truststore/truststore.jks
+#javax.net.ssl.trustStoreType JKS
+#javax.net.ssl.trustStorePassword password
+#javax.net.ssl.keyStore /Users/apps/ora_certs/client_jks/client.jks
+#javax.net.ssl.keyStoreType JKS
+#javax.net.ssl.keyStorePassword password
+# For MySQL
+#javax.net.ssl.keyStore path_to_keystore_file
+#javax.net.ssl.keyStorePassword password
+#javax.net.ssl.trustStore path_to_truststore_file
+#javax.net.ssl.trustStorePassword password
+# For SQL Server
+#trustStore C:/sql_certs/sqlserver.ks
+#trustStoreType JKS
+#trustStorePassword password
+#hostNameInCertificate myserver.domain.com
+# For PostgreSQL
+#javax.net.ssl.trustStore path_to_truststore_file
+#javax.net.ssl.trustStorePassword password

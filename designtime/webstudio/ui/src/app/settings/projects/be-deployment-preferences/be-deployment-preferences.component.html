@@ -1,0 +1,92 @@
+<div class="slide-content">
+  <mat-grid-list cols="4" gutterSize='10px' rowHeight="2:1">
+    <mat-grid-tile colspan='1'>
+      <div class='full-top'>
+      
+        <h6 mat-subheader>
+          <ng-container i18n>{{i18n('Deployments')}}</ng-container>
+          <i 
+            class="material-icons {{ isRtl() ? 'add-rtl' : 'add' }}"
+            [class.disabled]="this.isNewConfiguration || this.isUpdatedConfiguration || this.isDeletedConfiguration" 
+            (click)='!(this.isNewConfiguration || this.isUpdatedConfiguration || this.isDeletedConfiguration) && this.onAddDeploymentConfiguration()'
+            matTooltip="{{i18n('Create new deployment preferences.')}}" i18n-matTooltip>add_circle_outline</i>
+        </h6>
+        <mat-divider></mat-divider>
+        <mat-nav-list *ngIf='deploymentPreferenceList.length > 0' role="navigation">
+          <mat-list-item 
+            *ngFor='let displayConfig of deploymentPreferenceList; let i = index' 
+            [class.active]='i === this.selectedDeploymentConfigurationIndex'
+            [class.updated]='this.isEqual(displayConfig) && this.isEditingInProgress'
+            (click)='!this.isEditingInProgress && this.onDeploymentConfigurationSelection(i)'>
+            {{displayConfig.displayName}}
+            <i *ngIf="i === this.selectedDeploymentConfigurationIndex" 
+            class="material-icons {{isRtl() ? 'custom-edit-rtl' : 'custom-edit' }}" 
+            matTooltip="{{i18n('Update deployment configuration.')}}" i18n-matTooltip
+            [class.disabled]="this.isNewConfiguration || this.isUpdatedConfiguration || this.isDeletedConfiguration"
+            (click)="!(this.isNewConfiguration || this.isDeletedConfiguration || this.isUpdatedConfiguration) && this.onEditDeploymentConfiguration()">edit</i>
+            <i 
+              *ngIf='i === this.selectedDeploymentConfigurationIndex' 
+              class="material-icons {{ isRtl() ? 'custom-deployment-removal-rtl' : 'custom-deployment-removal' }}" 
+              [class.disabled]="this.isNewConfiguration || this.isUpdatedConfiguration || this.isDeletedConfiguration"
+              (click)="!(this.isNewConfiguration || this.isDeletedConfiguration || this.isUpdatedConfiguration) &&  this.onDeleteDeploymentConfiguration()"
+              matTooltip="{{i18n('Delete deployment configuration.')}}" i18n-matTooltip
+            >remove_circle_outline</i>
+          </mat-list-item>
+        </mat-nav-list>
+        <mat-nav-list *ngIf='deploymentPreferenceList.length === 0' role="navigation">
+            <mat-list-item i18n>
+              {{i18n('No deployment configurations are available.')}}
+              </mat-list-item>
+        </mat-nav-list>
+      </div>
+    </mat-grid-tile>
+    <mat-grid-tile class="custom-tile" colspan='1'>
+      <div class='full-top'>
+      
+        <h6 mat-subheader>
+          <ng-container i18n>{{i18n('Configuration Details')}}</ng-container>
+        </h6>
+        <mat-divider class="custom-divider"></mat-divider>
+        <mat-nav-list *ngIf='deploymentPreferenceList.length > 0' role="navigation">
+            <mat-list-item>
+              <span> <label for="name" i18n>{{i18n('Name: ')}}</label> {{this.selectedDeploymentConfiguration.name}} </span>
+            </mat-list-item>
+            <mat-list-item>
+              <span> <label for="project" i18n>{{i18n('Project: ')}}</label> {{this.selectedDeploymentConfiguration.projectName}} </span>
+            </mat-list-item>
+            <mat-list-item>
+              <span> <label for="enable" i18n>{{i18n('Enabled: ')}}</label> {{this.selectedDeploymentConfiguration.enable}} </span>
+            </mat-list-item>
+            <mat-list-item>
+              <span> <label for="host" i18n>{{i18n('Host: ')}}</label> {{this.selectedDeploymentConfiguration.host}} </span>
+            </mat-list-item>
+            <mat-list-item>
+              <span> <label for="port" i18n>{{i18n('Port: ')}}</label> {{this.selectedDeploymentConfiguration.port}} </span>
+            </mat-list-item>
+            <mat-list-item>
+              <span> <label for="port" i18n>{{i18n('User Name: ')}}</label> {{this.selectedDeploymentConfiguration.userName ? this.selectedDeploymentConfiguration.userName : " " }} </span>
+            </mat-list-item>
+            <mat-list-item>
+              <span> <label for="password" i18n>{{i18n('Password: ')}}</label> ****** </span>
+            </mat-list-item>
+            <mat-list-item>
+              <span> <label for="port" i18n>{{i18n('Cluster Name: ')}}</label> {{this.selectedDeploymentConfiguration.clusterName}} </span>
+            </mat-list-item>
+            <mat-list-item>
+              <span> <label for="port" i18n>{{i18n('Agent Name: ')}}</label> {{this.selectedDeploymentConfiguration.agentName}} </span>
+            </mat-list-item>
+            <mat-list-item>
+              <span> <label for="port" i18n>{{i18n('In-memory: ')}}</label> {{this.selectedDeploymentConfiguration.inMemory}} </span>
+            </mat-list-item>
+          </mat-nav-list>
+      </div>
+    </mat-grid-tile>
+  </mat-grid-list>
+  <div class="save-button">
+    <button mat-raised-button  
+      [ngClass]= "{'custom-save-button': !this.disableApply}"
+      [disabled]="this.disableApply"
+      (click)="this.onApply()" i18n
+    >{{i18n(' Apply ')}}</button>
+  </div>
+</div>

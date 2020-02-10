@@ -1,0 +1,74 @@
+<section>  				     
+    <div style="position:relative;">
+    	 <div ng-hide="!conditionArray.data.isNested && conditionArray.data.exp.length==1 && !conditionArray.data.exp[0].isNode" class="expressionBuilderNodePanel">
+    	 	 <div>
+    			 <span class="pull-left" style="padding-top: 8px;"><hr ng-class="!conditionArray.data.isNested? 'expressionBuilderConnectorStart':'expressionBuilderConnector'"></span>
+    		 </div>
+    	 	 <div class="expressionBuilderNode pull-left">
+    	 		<div style="height:30%;">
+    	 			<span ><i style="color:white;padding-left: 110px;" ng-click="deleteExpression($index,$parent.$parent.$parent.conditionArray.data.exp,$parent.$parent.$parent.conditionArray.isNode)" class="fa fa-times"></i></span>
+    	 		</div>
+    	 		<div style="height:70%;">
+    	 			<select ng-model="conditionArray.data.op" style="width:100px;height:30px;">
+            			<option value="AND">AND</option>
+            			<option value="OR">OR</option>     
+         			</select>
+    	 		</div>
+    		 </div>
+    		 <div>
+    			 <span class="pull-left" style="padding-top:18px;"><i ng-click="addNewExpression(conditionArray.data.exp)" class="fa fa-plus-circle"></i></span>
+    		 </div>
+    		 <div>
+    			 <span class="pull-left" style="padding-top: 8px;"><hr class="expressionBuilderConnector"></span>
+    		 </div>
+    	 </div>
+    	 <div ng-class="!conditionArray.data.isNested && conditionArray.data.exp.length==1 && !conditionArray.data.exp[0].isNode? '':'expressionBuilderChild'">
+       		<ul ng-class="!conditionArray.data.isNested && conditionArray.data.exp.length==1 && !conditionArray.data.exp[0].isNode?'':'expressionBuilderDiv'">
+            	<li ng-repeat="conditionArray in conditionArray.data.exp">
+            		<div ng-if="!conditionArray.isNode">
+            			<div>
+    			 			<span class="pull-left" style="padding-top: 8px;"><hr ng-class="!$parent.$parent.conditionArray.data.isNested && $parent.$parent.conditionArray.data.exp.length==1 && !$parent.$parent.conditionArray.data.exp[0].isNode?'':'expressionBuilderConnector'"></span>
+    		 			</div>
+                		<div class="expressionBuilderTreeItem">
+                			<div style="height:30%;">
+                				<span title="AND/OR"><i style="color:white;" ng-click="!$parent.$parent.conditionArray.data.isNested && $parent.$parent.conditionArray.data.exp.length ==1  ?addNewExpression($parent.$parent.conditionArray.data.exp) :toggleToConditionNode($index,$parent.$parent.conditionArray.data.exp,conditionArray.data.exp)" class="fa fa-random"></i></span>
+                				<span ng-hide="$first && $last" style="color:white;padding-left:250px;"><i ng-click="deleteExpression($index,$parent.$parent.conditionArray.data.exp,false)" class="fa fa-times"></i></span>
+                			</div>
+                			<div style="height:70%;">
+                				<span>
+                        			<select style="width:100px;height:30px;" ng-options="attribute as attribute['display-name'] group by getName(attribute.type) for attribute in attributes track by attribute.name" ng-model="conditionArray.data.exp.attribute"></select>
+                    			</span>
+                    			<span>
+                       	 			<select ng-if="conditionArray.data.exp.attribute['type']=='DIMENSION_NAME'" style="width:60px;height:30px;" ng-model="conditionArray.data.exp.operator">
+                           	 			<option ng-selected="{{key == conditionArray.data.exp.operator}}" ng-repeat="(key,value) in dimensionOperators" value="{{key}}">{{value}}</option>
+                        			</select>
+                        			<select ng-if="conditionArray.data.exp.attribute['type']=='MEASUREMENT_NAME' && conditionArray.data.exp.attribute['display-storage-datatype'] == 'BOOLEAN'" style="width:60px;height:30px;" ng-model="conditionArray.data.exp.operator">
+                           	 			<option ng-selected="{{key == conditionArray.data.exp.operator}}" ng-repeat="(key,value) in booleanOperators" value="{{key}}">{{value}}</option>
+                        			</select>
+                        			<select ng-if="(conditionArray.data.exp.attribute['type']=='MEASUREMENT_NAME' && (conditionArray.data.exp.attribute['display-storage-datatype'] == 'INTEGER' ||conditionArray.data.exp.attribute['display-storage-datatype'] ==  'LONG' ||conditionArray.data.exp.attribute['display-storage-datatype'] ==  'DOUBLE')) || conditionArray.data.exp.attribute['display-storage-datatype'] == undefined" style="width:60px;height:30px;" ng-model="conditionArray.data.exp.operator">
+                           	 			<option ng-selected="{{key == conditionArray.data.exp.operator}}" ng-repeat="(key,value) in integerOperators" value="{{key}}">{{value}}</option>
+                        			</select>
+                        			<select ng-if="conditionArray.data.exp.attribute['type']=='MEASUREMENT_NAME' && conditionArray.data.exp.attribute['display-storage-datatype'] == 'STRING'" style="width:60px;height:30px;" ng-model="conditionArray.data.exp.operator">
+                           	 			<option ng-selected="{{key == conditionArray.data.exp.operator}}" ng-repeat="(key,value) in stringOperators" value="{{key}}">{{value}}</option>
+                        			</select>
+                    			</span>
+                    			<span>
+                    				<select ng-if="conditionArray.data.exp.attribute['display-storage-datatype'] == 'BOOLEAN'" ng-model="conditionArray.data.exp.value" style="width:100px;height:30px;">
+            							<option ng-selected="{{value == conditionArray.data.exp.value}}" value="1">True</option>
+            							<option value="0">False</option>     
+         							</select>
+         							<input ng-if="conditionArray.data.exp.attribute['display-storage-datatype'] == 'INTEGER' || conditionArray.data.exp.attribute['display-storage-datatype'] == 'LONG'" onkeypress="return angular.element(this).scope().isNumber(event)" style="width:100px;height:30px;" ng-model="conditionArray.data.exp.value" type="text" value="{{conditionArray.data.exp.value}}" />
+                    				<input ng-if="conditionArray.data.exp.attribute['display-storage-datatype'] == 'DOUBLE'" onkeypress="return angular.element(this).scope().isdecimalNumber(event)" ng-model="conditionArray.data.exp.value" type="text" style="width:100px;height:30px;" value="{{conditionArray.data.exp.value}}"/>
+                    				<input ng-if="conditionArray.data.exp.attribute['display-storage-datatype'] == 'STRING' || conditionArray.data.exp.attribute['display-storage-datatype'] == undefined" type="text"  style="width:100px;height:30px;" ng-model="conditionArray.data.exp.value"/>
+                    			</span>
+                			</div>
+                		</div>
+            		</div>
+            		<div style="padding-top:15px;min-height:100px;" ng-if="conditionArray.isNode">
+            			<ng-include src="'partials/templates/directive/expressionBuilder.html'"></ng-include>
+            		</div>
+           		</li>
+        	</ul>
+    	</div>
+    </div>
+</section>

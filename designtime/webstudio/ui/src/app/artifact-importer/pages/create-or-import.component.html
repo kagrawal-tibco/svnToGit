@@ -1,0 +1,52 @@
+<div class="card panel-sm page">
+  <div class="card-header">
+    {{title}}
+  </div>
+  <div class="card-body page-body">
+    <div class="row">
+      <div *ngIf='!isOnlyCreate()' class="col-sm-2 page-col divider-right">
+        <tabset
+          [vertical]='true'
+          [type]='"pills"'
+          >
+          <tab
+            (select)='setInCreate()'
+            [active]='inCreate()'
+            >
+            <ng-template tabHeading>
+              <small i18n>{{i18n('Create')}}</small>
+            </ng-template>
+          </tab>
+          <tab
+            (select)='setInImport()'
+            [active]='inImport()'
+            *ngIf='showImport()'
+            >
+            <ng-template tabHeading>
+              <small i18n>{{i18n('Import')}}</small>
+            </ng-template>
+          </tab>
+        </tabset>
+      </div>
+      <div [ngClass]="{'col-sm-10': !this.isOnlyCreate(), 'col-sm-12': this.isOnlyCreate()}">
+        <div *ngIf='inImport()'>
+          <artifact-uploader
+            [(result)]='uploadedArtifacts'
+          ></artifact-uploader>
+        </div>
+        <div *ngIf='inCreate()'>
+          <artifact-info
+            [input]='params.result'
+            [edit]='true'
+            [projectName]='params.projectName'
+            [projectEditable]='true'
+            [baseDir]='params.baseDir'
+            [checkPathUnique]='params.existingArtifactPaths'
+            (checkPathUniqueSuccess)='onValidPath($event)'
+            (checkDirty)='onDirty($event)'
+            ></artifact-info>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

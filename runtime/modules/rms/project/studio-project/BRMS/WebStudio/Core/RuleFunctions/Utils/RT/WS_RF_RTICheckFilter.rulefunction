@@ -1,0 +1,28 @@
+/**
+ * @description Checks RTI filter for validation error.
+ */
+void rulefunction WebStudio.Core.RuleFunctions.Utils.RT.WS_RF_RTICheckFilter {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		WebStudio.Core.Concepts.RuleTemplateInstance.Builder.WS_C_AbstractConditionsFilter[] filters;
+		WebStudio.Core.Concepts.DataSources.Problems.WS_C_RTValidationResponse validationResponse;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.WS_RF_RTICheckFilter");
+		
+		for(int loopCount = 0 ; loopCount < filters@length ; loopCount++) {
+			WS_C_AbstractConditionsFilter conditionFilter = filters[loopCount];
+			if(conditionFilter.filter@length > 0) {
+				WS_C_AbstractConditionsFilter[] subFilters = Instance.PropertyArray.toArrayConcept(conditionFilter.filter);
+				WS_RF_RTICheckFilter(subFilters,validationResponse);
+			} else if(conditionFilter.filter@length == 0) {	
+				WebStudio.Core.Concepts.DataSources.Problems.WS_C_Problem problem = WS_RF_CheckSingleFilter(conditionFilter,true);
+				if(null != problem) {
+					Instance.PropertyArray.appendContainedConcept(validationResponse.problem,problem,1L);
+				}
+			} 
+		}
+	}
+}

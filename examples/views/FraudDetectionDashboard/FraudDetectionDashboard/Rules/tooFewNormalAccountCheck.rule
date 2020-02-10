@@ -1,0 +1,19 @@
+/**
+ * @description 
+ * @author anpatil-T61
+ */
+rule Rules.tooFewNormalAccountCheck {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Dashboards.M_DailyCurrAccountsByStatus currAccountMetric;
+	}
+	when {
+		currAccountMetric.AccntStatus == "Normal" && currAccountMetric.CurrentCount < 10;
+	}
+	then {
+		System.debugOut("Too few normal accounts["+currAccountMetric.CurrentCount+"] in the system");  
+	}
+}

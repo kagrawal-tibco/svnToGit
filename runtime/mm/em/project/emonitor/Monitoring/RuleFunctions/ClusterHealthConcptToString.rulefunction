@@ -1,0 +1,43 @@
+/**
+ * @description 
+ */
+String rulefunction Monitoring.RuleFunctions.ClusterHealthConcptToString {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		
+		Monitoring.Concepts.ClustHealthOverview cho;
+	}
+	body {
+		String LOG_NAME = "ClusterHealthConcptToString";
+		
+		if (cho == null) {
+			Shared.RuleFunctions.log(LOG_NAME,"DEBUG","Concept ClustHealthOverview == null" +
+									 " Returning empty String" );
+		 	return"";
+		}
+		
+		String chStr = "ClusterHealth[";
+		
+		int typeCnt = cho.entityTypes@length;
+		
+		for (int i = 0 ; i < typeCnt ; i = i + 1){
+		    if (i > 0){
+		         chStr = chStr + ";"; 
+		    }
+		    String typeStr = "type="+cho.entityTypes[i];
+		    typeStr = typeStr + ":total="+cho.entityCount[i];
+		    typeStr = typeStr + ",active="+cho.entityActiveCount[i];
+		    typeStr = typeStr + ",inactive="+cho.entityInActiveCount[i];
+		    typeStr = typeStr + ",normal="+cho.entityNormalHealthLevelCount[i];
+		    typeStr = typeStr + ",warning="+cho.entityWarningHealthLevelCount[i];
+		    typeStr = typeStr + ",critical="+cho.entityCriticalHealthLevelCount[i];
+		    chStr = chStr + typeStr;
+		}
+		
+		chStr = chStr + "]";
+
+		return chStr;
+	}
+}

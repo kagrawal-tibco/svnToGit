@@ -1,0 +1,423 @@
+#
+# $HeadURL$ $Revision$ $Date$
+#
+# Copyright© 2010 TIBCO Software Inc. All rights reserved.
+#
+# Official build procedure notes.
+#
+
+1. Clean up the workspace.
+==========================
+
+1.1. Clean up the Linux network workspace.
+
+	bash> cd /tsi/root/src/REL/be/trunk/leo/build
+	bash> /bin/rm -rf Enterprise Final logs
+
+1.2. Clean up the Linux local workspace (rellinux64).
+
+	bash> cd /local/src/REL/be/trunk/leo/build
+	bash> /bin/rm -rf Enterprise logs
+	bash> cd ..
+	bash> /bin/rm -rf dashboard/metricengine/src/com/tibco/cep/metric/condition/ast
+	bash> /bin/rm -rf build/tomcat.log
+	bash> /bin/rm -rf query/src/com/tibco/cep/query/ast/parser
+
+1.3. Clean up the Windows local workspace (italia).
+
+	cygwin-bash> cd c:/root/src/REL/be/trunk/leo/build
+	cygwin-bash> /bin/rm -rf logs
+	cygwin-bash> mv Enterprise c:/
+	cygwin-bash> cd c:/Enterprise/exp/win/x86/dbg/Final/win/x86
+	cygwin-bash> mv be_eclipse c:/
+	cygwin-bash> cd c:/
+	cygwin-bash> /bin/rm -rf Enterprise be_eclipse
+	cygwin-bash> cd c:/root/src/REL/be/trunk/leo
+	cygwin-bash> /bin/rm -rf dashboard/metricengine/src/com/tibco/cep/metric/condition/ast
+	cygwin-bash> /bin/rm -rf build/tomcat.log
+	cygwin-bash> /bin/rm -rf query/src/com/tibco/cep/query/ast/parser
+
+1.4. Notes.
+
+	o The above tasks 1.1 - 1.3 can be run in parallel.
+
+2. Update the workspace.
+========================
+
+2.1. Update the Linux network workspace.
+
+	bash> cd /tsi/root/src/REL/be/trunk/leo
+	bash> svn update ; svn status --no-ignore
+
+2.2. Update the Linux local workspace.
+
+	bash> cd /local/src/REL/be/trunk/leo
+	bash> svn update ; svn status --no-ignore
+
+2.3. Update the Windows local workspace.
+
+	cygwin-bash> cd c:/root/src/REL/be/trunk/leo
+	bash> svn update ; svn status --no-ignore
+
+2.4. Notes.
+
+	o svn for 2.1 and 2.2 is 1.6.9.
+
+	o svn for 2.3 is 1.4.2.
+
+	o Source URL is http://svn.tibco.com/be/trunk/leo
+
+	o Assuming we need to update to the HEAD revision, otherwise
+	  modify the above command properly. The only important difference
+	  between build the latest svn rev and any prior one is related
+	  to how tagging is done. It is much easier/faster in the former
+	  case. See below on tagging.
+
+3. Updating the build number.
+=============================
+
+3.1. Update the build number on the Linux network workspace.
+
+	bash> cd /tsi/root/src/REL/be/trunk/leo/build
+	bash> svn info . | grep Revision
+	Revision: 32415
+
+	[ The above is just an example]
+
+	bash> vi version.properties
+
+	[ editing resulting in the example diff below ]
+
+	bash> svn diff version.properties
+
+	Index: version.properties
+	===================================================================
+	--- version.properties  (revision 32415)
+	+++ version.properties  (working copy)
+	@@ -18,7 +18,7 @@
+
+	 # Build number
+
+	-env.BE_BUILD=020.155
+	+env.BE_BUILD=021
+
+	[ build number incremented by 1, any suffix reset to empty ]
+
+	 UI_PLUGINS_VERSION=
+	 # UI_PLUGINS_VERSION=.hf1
+	@@ -30,4 +30,4 @@
+	 BE_LIB=${BE_HOME}/${env.BUILD_TYPE}/lib
+
+	 # Revision number
+	-env.BE_REVISION=32414
+	+env.BE_REVISION=32416
+
+	[ svn rev set to the "next" one ]
+
+	bash> svn commit -m "TIBCO BusinessEvents Enterprise Suite Version 4.0.0.021" version.properties
+
+4. Processing the version files.
+================================
+
+4.1. Applying the build number to the version files on the Linux network workspace.
+
+	bash> cd /tsi/root/src/REL/be/trunk/leo/build
+	bash> sh pre-all.sh
+
+5. Updating the local workspace with the updated version files.
+===============================================================
+
+5.1. Update the Linux local workspace.
+
+5.1.1. Copy the logs from the Linux network workspace.
+
+	bash> cd /local/src/REL/be/trunk/leo/build
+	bash> cp -rp /tsi/root/src/REL/be/trunk/leo/build/logs logs
+
+5.1.2. Update the version files.
+
+	bash> cd /local/src/REL/be/trunk/leo/build/logs
+	bash> grep Index: pre-all-*.log | sed -e 's,^Index: ,,' | sort -u > ../../vf.txt
+	bash> echo "build/version.properties" >> ../../vf.txt
+
+	[ got the full version file list ]
+
+	bash> cd /local/src/REL/be/trunk/leo
+	bash> svn update `cat vf.txt`
+
+5.2. Update the Windows local workspace.
+
+5.2.1. Copy the logs from the Linux network workspace.
+
+	cygwin-bash> cd c:/root/src/REL/be/trunk/leo/build
+	cygwin-bash> cp -rp R:/src/REL/be/trunk/leo/build/logs logs
+
+5.2.2. Update the version files.
+
+	cygwin-bash> cd c:/root/src/REL/be/trunk/leo/build/logs
+	cygwin-bash> grep Index: pre-all-*.log | sed -e 's,^Index: ,,' | sort -u > ../../vf.txt
+	cygwin-bash> echo "build/version.properties" >> ../../vf.txt
+
+	[ got the full version file list ]
+
+	cygwin-bash> cd c:/root/src/REL/be/trunk/leo
+	cygwin-bash> svn update `cat vf.txt`
+	cygwin-bash> /bin/rm -f vf.txt
+
+6. Tagging the code.
+====================
+
+6.1. Tagging the code at the latest svn rev (on Linux).
+
+	bash> cd /tsi/root/src/REL/be/tags
+	bash> cat /local/src/REL/be/trunk/leo/build/logs/rev-epe.log
+	32417
+	bash> svn copy -r 32417 -m "TIBCO BusinessEvents Enterprise Suite Version 4.0.0.021" \
+		http://svn.tibco.com/be/trunk/leo http://svn.tibco.com/be/tags/be-epe-4.0.0.021
+
+6.1.1. Cleaning up the Version file list as it is not needed any more.
+
+	bash> cd /local/src/REL/be/trunk/leo
+	bash> /bin/rm -f vf.txt
+
+6.2. Tagging the code at a non-latest svn rev (on Linux).
+
+	[ perform all the steps in 6.1 above, assuming  ]
+	[ the svn rev is 32417 but it is NOT the latest ]
+
+	bash> svn update be-epe-4.0.0.021
+	bash> cd /local/src/REL/be/trunk/leo
+	cp build/version.properties /tsi/root/src/REL/be/tags/be-epe-4.0.0.021/build
+	find `cat vf.txt` -print | cpio -pdvmu  /tsi/root/src/REL/be/tags/be-epe-4.0.0.021
+	bash> mv vf.txt /tsi/root/src/REL/be/tags/be-epe-4.0.0.021
+	bash> cd /tsi/root/src/REL/be/tags/be-epe-4.0.0.021
+	bash> svn commit -m "TIBCO BusinessEvents Enterprise Suite Version 4.0.0.021" \
+		build/version.properties `cat vf.txt`
+	bash> /bin/rm -f vf.txt
+
+7. Running the build.
+=====================
+
+7.1. Running the Linux build (rellinux64).
+
+	bash> cd /local/src/REL/be/trunk/leo/build
+	bash> sh build-all.sh
+
+7.2. Running the Windows build (italia).
+
+	cygwin-bash> cd c:/root/src/REL/be/trunk/leo/build
+	cygwin-bash> sh build-all.sh
+
+8. Updating the logs.
+=====================
+
+8.1. Updating the Linux logs.
+
+	bash> cd /local/src/REL/be/trunk/leo/build/logs
+	bash> cp -rp * /tsi/root/src/REL/be/trunk/leo/build/logs
+
+8.2. Updating the Windows logs.
+
+	cygwin-bash> cd c:/root/src/REL/be/trunk/leo/build/logs
+	cygwin-bash> cp -rp * R:/src/REL/be/trunk/leo/build/logs
+
+9. Preparing the Final directory for packaging.
+===============================================
+
+9.1. Copying the Linux Final directory.
+
+	bash> mkdir -p /tsi/root/src/REL/be/trunk/leo/build/Enterprise/exp/linux26gl25/x86/dbg
+	bash> cd /local/src/REL/be/trunk/leo/build/Enterprise/exp/linux26gl25/x86/dbg
+	bash> cp -rp Final /tsi/root/src/REL/be/trunk/leo/build/Enterprise/exp/linux26gl25/x86/dbg
+
+9.2. Adjusting Final for all the other Unix ports.
+
+	bash> cd /tsi/root/src/REL/be/trunk/leo/build
+	bash> sh Final.sh
+
+9.3. Copying the Windows Final directory.
+
+	cygwin-bash> cd c:/root/src/REL/be/trunk/leo/build/Enterprise/exp/win/x86/dbg/Final
+	cygwin-bash> mv win c:/
+	cygwin-bash> cd c:/
+	cygwin-bash> cp -rp win R:/tmp/win
+	cygwin-bash> cd c:/root/src/REL/be/trunk/leo/build/Enterprise/exp/win/x86/dbg/Final
+	cygwin-bash> mv c:/win .
+
+	bash> cd /tsi/root/src/REL/be/trunk/leo/build/Enterprise/exp/linux26gl25/x86/dbg/Final
+	bash> mv /tsi/root/tmp/win .
+ * or *
+	cygwin-bash> cd R:/src/REL/be/trunk/leo/build/Enterprise/exp/linux26gl25/x86/dbg/Final
+	cygwin-bash> mv R:/tmp/win .
+
+9.4. Notes.
+
+	o The trick in 9.3 is a workaround to resolve a 'path too long' problem.
+
+10. Preparing the installers using EC Commander.
+================================================
+
+10.1. Logging in into commander.
+
+	Must be user "testuser1". Password is available for the release group only.
+
+10.2. Running the procedures.
+
+	You need to run each of the following procedures below
+	(standard takes significantly the most time):
+
+		BE-datamodeling-formalbuild
+		BE-decisionmanager-formalbuild
+		BE-eventstreamprocessing-formalbuild
+		BE-standard-formalbuild
+		BE-views-formalbuild
+
+	Select "Run/Run" (*NOT* "Run/Run Immediately" as you need to set the correct
+	parameters for each one of them)
+
+10.3. Parameters.
+
+	All the parameters are already set properly for each procedure, except for
+	the following, which need to be set for each one of them. Using the same
+	example as above:
+
+  bomsvn:		     32417
+  dev_email_address:   yourself@tibco.com
+  EXPORT_DIR:	       /tsi/root/src/REL/be/trunk/leo/build/Enterprise/exp/linux26gl25/x86/dbg/Final
+  overridebuildnumber: 21
+  VERSION_UPDATE:      021
+
+10.4. Running the packaging.
+
+	Simply hit the "Run" button at the bottom right end of the parameters section.
+
+11. Setting the correct permissions for the installers.
+=======================================================
+
+11.1. Becoming user "relbuild".
+
+	bash> su
+	bash> su - relbuild
+
+11.2. Removing older builds.
+
+	Only the latest two builds stay available:
+
+	bash> cd /tsi/root/pkg/be/4.0.0
+	bash> chmod -R u+w */V19
+	bash> /bin/rm -rf */V19
+
+11.3. Removing older test-installers.
+
+	Only the latest test installer stays available:
+
+	bash> ls -l */test-installers
+	bash> [ Remove everything that is *not* pointed to by the L link ]
+
+11.4. Update the L links.
+
+	bash> /bin/rm -f */L
+	bash> for d in * ; do ln -s V21 ${d}/L ; done
+
+11.5. Set the permissions.
+
+	bash> chmod -R ugo-w */V21
+	bash> chmod -R o-rwx */V21
+
+12. Notifying the requestors.
+=============================
+
+	You can use the latest BE 4.0 build announcement as a template and copy and paste
+	the installer file names and packaging log files.
+
+A. Appendix: backing up the build area.
+=======================================
+
+A.1. Backing up the Linux build area.
+
+A.1.1. Executing the actual copy.
+
+	bash> cd /tsi/root/src/REL/be/trunk/leo/build
+	bash> d="`date '+%Y-%m-%d-%H%M'`"
+	bash> cp -rp Enterprise Enterprise.${d}
+
+A.2. Backing up the Windows build area.
+
+A.2.1. Moving directories before the copy.
+
+	cygwin-bash> cd c:/root/src/REL/be/trunk/leo/build
+	cygwin-bash> mv Enterprise c:/
+	cygwin-bash> cd c:/Enterprise/exp/win/x86/dbg/Final/win/x86/be_eclipse/eclipse-platform
+	cygwin-bash> mv eclipse c:/Enterprise
+	cygwin-bash> cd c:/
+
+A.2.2. Executing the actual copy.
+
+	cygwin-bash> d="`date '+%Y-%m-%d-%H%M'`"
+	cygwin-bash> cp -rp Enterprise Enterprise.${d}
+
+A.2.3. Moving directories after the copy.
+
+	cygwin-bash> cd c:/Enterprise
+	cygwin-bash> mv eclipse exp/win/x86/dbg/Final/win/x86/be_eclipse/eclipse-platform
+	cygwin-bash> cd c:/
+	cygwin-bash> mv Enterprise c:/root/src/REL/be/trunk/leo/build
+
+	cygwin-bash> cd c:/Enterprise.${d}
+	cygwin-bash> mv eclipse exp/win/x86/dbg/Final/win/x86/be_eclipse/eclipse-platform
+	cygwin-bash> cd c:/
+	cygwin-bash> mv Enterprise.${d} c:/root/src/REL/be/trunk/leo/build
+
+A.2.4. Notes.
+
+	o The trick in A.1 is a workaround to resolve a 'path too long' problem.
+
+B. Appendix: repackaging.
+=========================
+
+B.1. Updating the tag.
+
+	o Any changes to the code must be applied to the tag used for the original build:
+
+	bash> cd /tsi/root/src/REL/be/tags
+	bash> svn update be-epe-4.0.0.021
+	bash> cd /tsi/root/src/REL/be/trunk/leo
+	bash> list="[list of modified files]"
+	bash> find ${list} -print | cpio -pdvmu /tsi/root/src/REL/be/tags/be-epe-4.0.0.021
+	bash> cd /tsi/root/src/REL/be/tags/be-epe-4.0.0.021
+	bash> svn commit -m "TIBCO BusinessEvents Enterprise Suite Version 4.0.0.021.1" ${list}
+
+B.2. Rebuilding the Linux Final area.
+
+	bash> cd /local/root/src/REL/be/trunk/leo/build
+	bash> sh repackage.sh
+
+B.3. Rebuilding the Windows Final area.
+
+	cygwin-bash> cd c:/root/src/REL/be/trunk/leo/build
+	cygwin-bash> sh repackage.sh
+
+B.4. Preparing the Final directory for packaging.
+
+	o Execute paragraph 9.
+
+B.5. Preparing the installers using EC Commander.
+
+	o Execute paragraph 10. In particular use the ".N" (n>=1) notation in the
+	  "overridebuildnumber" and "VERSION_UPDATE" parameters:
+
+		overridebuildnumber: 21.1
+		     VERSION_UPDATE: 021.1
+
+	  Also, bomsvn may have changed as per development request:
+
+		bomsvn: [ > 32417 ]
+
+B.6. Setting the correct permissions for the installers.
+
+	o Execute paragraph 11 using V21.1 instead of V21 in 11.4 and 11.5.
+
+B.7. Notifying the requestors.
+
+	o Execute paragraph 12 using V21.1 instead of V21, and updating all
+	  the changed svn information.

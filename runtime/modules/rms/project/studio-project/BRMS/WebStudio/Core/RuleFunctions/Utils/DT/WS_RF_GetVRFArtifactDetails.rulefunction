@@ -1,0 +1,38 @@
+/**
+ * @description Get the Name, Return Type & Symbols of the VRF
+ */
+Object[] rulefunction WebStudio.Core.RuleFunctions.Utils.DT.WS_RF_GetVRFArtifactDetails {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String loggedInUsername;
+		String projectName;
+		String vrfPath;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.DT.WS_RF_GetVRFArtifactDetails");
+
+		String qUsername =  WS_RF_CreateUserArtifactExtId("webstudio", null, null, loggedInUsername, null, null);
+		WS_C_LoggedInUser loggedInUser = Instance.getByExtIdByUri(qUsername, "/WebStudio/Security/Authn/Concepts/WS_C_LoggedInUser");
+		String[] roles = Instance.PropertyArray.toArrayString(loggedInUser.roles);
+		WS_C_ResponseTransferObjectData artifactData = WebStudio.Core.RuleFunctions.Utils.
+															WS_RF_GetArtifactContentsFromStore(loggedInUsername, roles, projectName, vrfPath, "rulefunction");
+		WS_C_RuleFunctionArtifact rulefunctionArtifact = artifactData.artifactContents;
+		Log.log(LOGGER, "Debug", "Get VRF Details for - %s", vrfPath);
+		
+		String name = rulefunctionArtifact.name;
+		String returnType = rulefunctionArtifact.returnType;
+		WS_C_DecisionTableArgument[] vrfSymbols = Instance.PropertyArray.toArrayConcept(rulefunctionArtifact.symbol);		
+		Log.log(LOGGER, "Debug", "Number of symbols for VRF %s - %s", vrfPath, vrfSymbols@length);
+		Object symbolsList = Collections.List.createArrayList();				
+		for (int loop = 0; loop < vrfSymbols@length; loop++) {
+			String type = vrfSymbols[loop].path;
+			Log.log(LOGGER, "Debug", "Symbol for VRF %s - %s", vrfPath, type);
+			Collections.add(symbolsList, type);
+		}													
+		Object[] symbols = Collections.toArray(symbolsList);
+		Object[] returnValue = Object[]{name, returnType, symbols};		
+		return returnValue;		
+	}
+}

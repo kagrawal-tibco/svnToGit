@@ -1,0 +1,198 @@
+<div class="slide-content">
+  <mat-grid-list cols="3" gutterSize='12.5px' rowHeight="2:1">
+    <mat-grid-tile>
+      <div class='full-top'>
+        <h6 mat-subheader>
+          <ng-container i18n>{{i18n('Projects')}}</ng-container>
+        </h6>
+        <mat-divider></mat-divider>
+        <mat-nav-list role='navigation'>
+          <mat-list-item *ngFor="let emailPreference of this.emailNotificationList; let i = index" [class.active]="i == this.selectedProjectIndex"
+          (click)="this.onProjectSelection(i)">
+            <i *ngIf='i === this.selectedProjectIndex' class="material-icons custom-left">folder_open</i>
+            <i *ngIf='i !== this.selectedProjectIndex' class="material-icons custom-left">folder</i>
+            {{emailPreference.project}}
+          </mat-list-item>
+        </mat-nav-list>
+      </div>
+    </mat-grid-tile>
+    <mat-grid-tile>
+      <div class='full-top'>
+        <h6 mat-subheader>
+          <ng-container i18n>{{i18n('Actions')}}</ng-container>
+        </h6>
+        <mat-divider></mat-divider>
+        <mat-nav-list role='navigation'>
+          <mat-list-item *ngFor="let action of this.selectedProject.actions">
+            <mat-checkbox [(ngModel)]="action.permission"  (change)='this.onActionChange()' labelPosition="before">
+              {{action.displayText}}
+            </mat-checkbox>
+          </mat-list-item>
+      </mat-nav-list>
+      </div>
+    </mat-grid-tile>
+    <mat-grid-tile>
+      <div class='full-top'>
+      
+        <h6 mat-subheader>
+          <ng-container i18n>{{i18n('Email ID')}}</ng-container>
+          <i class="material-icons {{ isRtl() ? 'add-rtl' : 'add' }}" (click)='!this.enableAddEmailId && this.onAddEmailId()' matTooltip='Register email-id to the project.'>add_circle_outline</i>
+        </h6>
+        <mat-divider></mat-divider>
+        <mat-nav-list *ngIf='this.selectedProject.emailIds.length > 0' role='navigation'>
+          <mat-list-item  *ngFor='let emailId of this.selectedProject.emailIds'  [class.active]="emailId === this.selectedEmailId"
+          (click)='this.onEmailSelection(emailId)'>
+            <span *ngIf="!(this.editEmailId  && emailId === this.selectedEmailId)">
+              {{emailId}}
+              <i *ngIf="emailId === this.selectedEmailId"
+              class="material-icons {{ isRtl() ? 'custom-edit-rtl' : 'custom-edit' }}"
+              matTooltip="{{i18n('Edit email-id')}}"
+              i18n-matTooltip
+              (click)='this.onEditEmailId()'>edit</i>
+              <i 
+                *ngIf='emailId === this.selectedEmailId' 
+                class="material-icons {{ isRtl() ? 'custom-emailid-removal-rtl' : 'custom-emailid-removal' }}" 
+                (click)="this.deleteEmailId(this.selectedEmailId)"
+                matTooltip="{{i18n('Delete email-id.')}}"
+                i18n-matTooltip
+               >remove_circle_outline</i>
+            </span>
+            <span *ngIf='this.editEmailId  && emailId === this.selectedEmailId'>
+              <input-with-confirm
+                [required]='true'
+                [value]='this.selectedEmailId'
+                (result)='this.confirmEditEmailId($event)'
+                (cancel)='this.cancelEditEmailId()'
+              ></input-with-confirm>
+            </span>
+          </mat-list-item>
+        </mat-nav-list>
+        <mat-nav-list>
+          <mat-list-item *ngIf='this.enableAddEmailId'>
+            <input-with-confirm
+            [required]='true'
+            [placeholder]='"Enter e-mail id  for the project..."'
+            i18n-placeholder
+            (result)='this.confirmAddEmailId($event)'
+            (cancel)='this.cancelAddEmailId()'
+          ></input-with-confirm>
+          </mat-list-item>
+        </mat-nav-list>
+        <mat-nav-list *ngIf="this.selectedProject.emailIds.length === 0">
+          <mat-list-item>
+            <i class="material-icons custom-warning" i18n> warning </i>
+            <small>
+              <ng-container i18n>{{i18n('No email-id(s) registered with this project for receiving notifications.')}}</ng-container>
+            </small>
+          </mat-list-item>
+        </mat-nav-list>
+      </div>
+    </mat-grid-tile>
+  </mat-grid-list>
+  <div class="save-button">
+    <button mat-raised-button  
+      [ngClass]= "{'custom-save-button': !this.disableApply}"
+      [disabled]="this.disableApply"
+      (click)="this.updateEmailNotification()" i18n
+    >{{i18n(' Apply ')}}</button>
+  </div>
+</div>
+<!-- <div class="card">
+  <div class="card-header">
+    Notification Settings
+  </div>
+  <div class="card-body">
+    <div class="row">
+      <div class="col-sm-4">
+        <div class="card rol e-list">
+          <div class="card-header">
+            <span>
+              Project List
+            </span>
+          </div>
+          <div class="list-group">
+            <a *ngFor="let emailPreference of this.emailNotificationList; let i = index"
+                class="list-group-item clickable"
+                [class.active]="i == this.selectedProjectIndex"
+                (click)="this.onProjectSelection(i)">
+              <small>{{emailPreference.project}}</small>
+            </a>
+          </div>
+        </div>
+      </div>
+      <div class="col-sm-4">
+        <div class="card role-list">
+          <div class="card-header">
+            <span>
+              Actions
+            </span>
+          </div>
+          <div class="list-group">
+            <a *ngFor="let action of this.selectedProject.actions"
+                class="list-group-item">
+                <toggle-switch
+                  class="toggle-switch"
+                  [size]='"mini"'
+                  [(value)]='action.permission'
+                  (valueChange)='this.onActionChange()'
+                ></toggle-switch>
+                {{action.displayText}}
+            </a>
+          </div>
+        </div>
+      </div>
+      <div class="col-sm-4">
+        <div class="card role-list">
+          <div class="card-header">
+            <span>
+              Email-Ids
+            </span>
+            <span class='pull-right'>
+              <i class="fa fa-plus"
+                [ngClass]="{ 'clickable active' : !this.enableAddEmailId }"
+                (click)='!this.enableAddEmailId && this.onAddEmailId()'></i>
+              <i class="fa fa-minus"
+                [ngClass]="{ 'clickable active' : this.selectedProject && !this.enableAddEmailId && this.selectedProject.emailIds.length > 0 }"
+                (click)='(this.selectedEmailId && !this.enableAddEmailId) &&this.deleteEmailId(this.selectedEmailId)'
+                ></i>
+            </span>
+          </div>
+          <div class="list-group">
+            <a
+              *ngFor='let emailId of this.selectedProject.emailIds'
+              class="list-group-item clickable"
+              [class.active]="emailId === this.selectedEmailId"
+              (click)='this.onEmailSelection(emailId)'
+              (dblclick) ='this.onEditEmailId()'
+            ><small *ngIf='!this.editEmailId'>{{emailId}}</small>
+            <a class='list-group-item' *ngIf='this.editEmailId  && emailId === this.selectedEmailId'>
+              <input-with-confirm
+                [required]='true'
+                [value]='this.selectedEmailId'
+                (result)='this.confirmEditEmailId($event)'
+                (cancel)='this.cancelEditEmailId()'
+              ></input-with-confirm>
+            </a>
+            </a>
+            <a class='list-group-item' *ngIf='this.enableAddEmailId'>
+              <input-with-confirm
+                [required]='true'
+                [placeholder]='"Enter e-mail id  for the project..."'
+                (result)='this.confirmAddEmailId($event)'
+                (cancel)='this.cancelAddEmailId()'
+              ></input-with-confirm>
+            </a>
+          </div >
+          <div class='card-body empty-msg' *ngIf='this.selectedProject.emailIds.length === 0'>
+            <small>No e-mail Id is available with this project.</small>
+          </div>
+        </div>
+      </div>
+    </div>
+      <button
+        class="ws-notificationpreferences-apply-button btn btn-primary btn-sm btn-narrow"
+        [disabled]="this.disableApply"
+        (click)="this.updateEmailNotification()"
+      >Apply</button>
+  </div>
+</div> -->

@@ -1,0 +1,91 @@
+/**
+ * @description Carry out actual workspace sync based on user selection in sync ws dialog.
+ */
+WebStudio.Core.Concepts.DataSources.WS_C_TemporaryReturnData rulefunction WebStudio.Core.RuleFunctions.Actions.Lifecycle.Update.WS_RF_SynchronizeWorkspace {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object asyncContextObject;
+		WebStudio.Security.Authn.Concepts.WS_C_LoggedInUser loggedInUser;
+		String contentType;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.Lifecycle.Update.WS_RF_SynchronizeWorkspace");
+		
+		Object servletRequest = HTTP.Servlet.getServletRequest(asyncContextObject);
+		
+		String responseMessage = null;
+		String errorCode = null;
+		int recordCount = 1;
+		int responseStatus = 0;
+		
+		WS_C_TemporaryReturnData tempReturnData = null;
+		
+		if (!WS_RF_CheckHTTPMethod(servletRequest, "POST")) {
+			responseStatus = -1;
+			recordCount = 0;
+			errorCode = "ERR_5101";
+			responseMessage = "Invalid HTTP Method, expect method is [POST].";
+			
+			tempReturnData = WS_RF_CreateTemporaryReturnData(responseStatus, recordCount, errorCode, responseMessage, null);
+		} else {
+			String username = loggedInUser.username;
+			Object requestDataBytes = HTTP.Servlet.Request.getRequestContent(servletRequest);
+			//Check for content
+			String requestData = String.convertByteArrayToString(requestDataBytes, "UTF-8");
+			
+			//Convert to concept model
+			WS_C_CheckoutRequest checkoutRequest = null;
+			if (String.equals(contentType, System.getGlobalVariableAsString("WebStudio/CONTENT_TYPE/XML", "application/xml"))) {
+				checkoutRequest = Instance.createTransientInstanceFromXML("/WebStudio/Core/Concepts/Request/Usecases/Checkout/WS_C_CheckoutRequest", requestData);
+			} else {
+				checkoutRequest = Instance.createTransientInstanceFromJSON("/WebStudio/Core/Concepts/Request/Usecases/Checkout/WS_C_CheckoutRequest", requestData);
+			}
+			
+			WS_C_CheckoutRequestData requestContainedData = checkoutRequest.data;
+			WS_C_CheckoutRequestProject project = Instance.PropertyArray.toArrayContainedConcept(requestContainedData.project)[0];
+			String projectName = project.name;
+			
+			Log.log(LOGGER, "Debug", "Project Name Request value Received [%s]", projectName);
+			
+			if (projectName != null && username != null) {
+				//Lock and load workspace concept
+				String userWorkspaceExtId = WS_RF_CreateUserArtifactExtId("WORKSPACE", null, null, username, null, null);
+				boolean userWorkspaceLock = Cluster.DataGrid.Lock(userWorkspaceExtId, 1000, false);
+				if (userWorkspaceLock) {
+					WS_C_UserWorkspace userWorkspace = Instance.getByExtIdByUri(userWorkspaceExtId, "/WebStudio/Core/Concepts/WS_C_UserWorkspace");
+					
+					Log.log(LOGGER, "Debug", "User workspace instance id %s", userWorkspace@id);
+					String userProjectExtId = WS_RF_CreateUserArtifactExtId(null, null, projectName, username, null, null);
+					boolean userProjectLock = Cluster.DataGrid.Lock(userProjectExtId, -1, false);
+					if (userProjectLock) {
+						//Need to modify it so
+						WS_C_UserProject userProject = 
+							Cluster.DataGrid.CacheLoadConceptByExtIdByUri(userProjectExtId, false, "/WebStudio/Core/Concepts/WS_C_UserProject");
+						//Project cannot be null. If it is throw error.
+						if (userProject == null) {
+							errorCode = "ERR_1150";
+							responseMessage = String.format("No project found in workspace with name %s", projectName);
+						} else {
+							String asyncContextId = WS.Common.generateUUID();
+							String mapLockKey = "SYNC_WS_ASYNC_CONTEXT_MAP_" + System.nanoTime();
+							//Concurrent Rete case. Lock locally
+							boolean mapLocked = Cluster.DataGrid.Lock(mapLockKey, -1, true);
+							if (mapLocked) { 
+								Util.HashMap.createMap(mapLockKey);
+								Util.HashMap.putObject(mapLockKey, asyncContextId, asyncContextObject);
+							}
+
+							WS_E_WorkspaceSynchronizationEvent workspaceSyncEvent = 
+								Event.createEvent("xslt://{{/WebStudio/Core/Events/Lifecycle/WS_E_WorkspaceSynchronizationEvent}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" xmlns:ns=\"www.tibco.com/be/ontology/WebStudio/Core/Concepts/Request/Usecases/Checkout/WS_C_CheckoutRequestProject\" version=\"2.0\" exclude-result-prefixes=\"xsl ns xsd\"><xsl:output method=\"xml\"/><xsl:param name=\"username\"/><xsl:param name=\"mapLockKey\"/><xsl:param name=\"asyncContextId\"/><xsl:param name=\"project\"/><xsl:param name=\"contentType\"/><xsl:template name=\"Function\" match=\"/\"><createEvent><event><username><xsl:value-of select=\"$username\"/></username><mapLockKey><xsl:value-of select=\"$mapLockKey\"/></mapLockKey><asyncContextId><xsl:value-of select=\"$asyncContextId\"/></asyncContextId><contentType><xsl:value-of select=\"$contentType\"/></contentType><payload><xsl:for-each select=\"$project\"><ns:WS_C_CheckoutRequestProject><xsl:if test=\"@extId\"><xsl:attribute name=\"extId\"><xsl:value-of select=\"@extId\"/></xsl:attribute></xsl:if><xsl:if test=\"@Id\"><xsl:attribute name=\"Id\"><xsl:value-of select=\"@Id\"/></xsl:attribute></xsl:if><xsl:if test=\"name\"><name><xsl:value-of select=\"name\"/></name></xsl:if><xsl:for-each select=\"artifactItem\"><artifactItem><xsl:if test=\"@extId\"><xsl:attribute name=\"extId\"><xsl:value-of select=\"@extId\"/></xsl:attribute></xsl:if><xsl:if test=\"@Id\"><xsl:attribute name=\"Id\"><xsl:value-of select=\"@Id\"/></xsl:attribute></xsl:if><xsl:if test=\"artifactPath\"><artifactPath><xsl:value-of select=\"artifactPath\"/></artifactPath></xsl:if><xsl:if test=\"artifactType\"><artifactType><xsl:value-of select=\"artifactType\"/></artifactType></xsl:if><xsl:if test=\"fileExtension\"><fileExtension><xsl:value-of select=\"fileExtension\"/></fileExtension></xsl:if><xsl:if test=\"changeType\"><changeType><xsl:value-of select=\"changeType\"/></changeType></xsl:if></artifactItem></xsl:for-each></ns:WS_C_CheckoutRequestProject></xsl:for-each></payload></event></createEvent></xsl:template></xsl:stylesheet>");
+							Event.assertEvent(workspaceSyncEvent);	
+						}
+					}
+				}
+			}
+		}
+
+		return tempReturnData;
+	}
+}

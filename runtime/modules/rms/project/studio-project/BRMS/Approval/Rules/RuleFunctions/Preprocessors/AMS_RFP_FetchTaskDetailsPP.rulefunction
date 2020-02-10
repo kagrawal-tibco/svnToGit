@@ -1,0 +1,40 @@
+/**
+ * @description Preprocessor for task detail.
+ */
+void rulefunction Approval.Rules.RuleFunctions.Preprocessors.AMS_RFP_FetchTaskDetailsPP {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Approval.Events.ArtifactEvents.Worklist.AMS_E_TaskDetailsRequestEvent ams_e_taskdetailsrequestevent;
+	}
+	body {
+		String taskExtId = ams_e_taskdetailsrequestevent.revisionId;
+		if (taskExtId == null) {
+			AMS_E_ErrorEvent errorEvent = 
+				Approval.CommonServices.AMS_RF_CreateErrorEvent("ERROR", "Revision Id cannot be null", null);
+			Event.replyEvent(ams_e_taskdetailsrequestevent, errorEvent);
+			//Consume the event so that RTC is not triggered
+			Event.consumeEvent(ams_e_taskdetailsrequestevent);
+			throw Exception.newException("ERROR", 
+										 "Revision Id cannot be null", null);
+		}
+		boolean isUserLoggedIn = 
+			Approval.CommonServices.AMS_RF_ValidateUsername(ams_e_taskdetailsrequestevent) != null;
+		
+		if (!isUserLoggedIn) {
+			AMS_E_ErrorEvent errorEvent = 
+				Approval.CommonServices.AMS_RF_CreateErrorEvent("COMMIT_ERROR", "The user " + ams_e_taskdetailsrequestevent.loggedInUserName + " is not logged in", null);
+			Event.replyEvent(ams_e_taskdetailsrequestevent, errorEvent);
+			//Consume the event so that RTC is not triggered
+			Event.consumeEvent(ams_e_taskdetailsrequestevent);
+			throw Exception.newException("CHECKIN_ERROR", 
+										 "The user " + ams_e_taskdetailsrequestevent.loggedInUserName + " is not logged in", null);	
+		}
+		//Lock and load the task concept
+		boolean reviewTaskLock = Cluster.DataGrid.Lock(taskExtId, -1, false);
+		if (reviewTaskLock) {
+			Cluster.DataGrid.CacheLoadConceptByExtId(taskExtId, false);
+		}
+	}
+}

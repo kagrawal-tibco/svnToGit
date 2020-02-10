@@ -1,0 +1,100 @@
+/**
+ * @description Rule function to get Decsion Table Analyzer pane component details.
+ */
+WebStudio.Core.Concepts.DataSources.WS_C_TemporaryReturnData rulefunction WebStudio.Core.RuleFunctions.Actions.WS_RF_ShowDecisionTableAnalyzerPane {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object servletRequest;
+		WebStudio.Security.Authn.Concepts.WS_C_LoggedInUser loggedInUser;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.WS_RF_DecisionTableShowCoverageAction");
+		
+		String responseMessage = null;
+		String errorCode = null;
+		int recordCount = 1;
+		int responseStatus = 0;
+
+		String projectName = HTTP.Servlet.Request.getRequestParameter(servletRequest, "projectName");
+		String artifactPath = HTTP.Servlet.Request.getRequestParameter(servletRequest, "artifactPath");
+		String artifactExtn = HTTP.Servlet.Request.getRequestParameter(servletRequest, "artifactExtension");
+		Log.log(LOGGER, "Debug", "Project Name %s, Artifact Path %s, Artifact Extension %s", projectName, artifactPath, artifactExtn);
+						
+		WS_C_DecisionTableAnalyzerDetails tableAnalyzerDetails = null;		
+		if (!WS_RF_CheckHTTPMethod(servletRequest, "GET")) {
+			responseStatus = -1;
+			recordCount = 0;
+			errorCode = "ERR_5101";
+			responseMessage = "Invalid HTTP Method, expect method is [GET].";
+		} else {
+			String subscriptionId = null;
+			if (loggedInUser.jwtToken != null) subscriptionId = loggedInUser.jwtToken.sbsc;
+			
+			String scsRootURL = WS_RF_GetSCSRootURL(projectName, subscriptionId);
+			if (scsRootURL == null) {
+				throw Exception.newException(null, "Source control repository location not present. Set ws.scs.rootURL property", null);
+			}
+			String scsIntegrationType = System.getSystemPropertyAsString("ws.scs.impl.type", null);
+			// fetch the preferences for SCS userName/password details
+			String[] scsCredentials = WS_RF_GetSCSCredentials(loggedInUser.username);
+
+			String username = loggedInUser.username;			
+			//Get the User roles
+			String[] roles = Instance.PropertyArray.toArrayString(loggedInUser.roles);
+			//Get the Decision Table artifact contents from Users workspace 
+			WS_C_ResponseTransferObjectData fetchedResponseData = WebStudio.Core.RuleFunctions.Utils.WS_RF_GetArtifactContentsFromStore(username, roles, projectName, artifactPath, artifactExtn);			
+			WS_C_AnyArtifactDetails artifactContents = fetchedResponseData.artifactContents;
+			//Create the Decision Table EMF object			
+			Object decisionTableEMFObj = WebStudio.Core.RuleFunctions.Utils.DT.WS_RF_CreateEMFObjectForDecisionTable(artifactContents);
+			//Analyze the Decision Table
+			Object[] columnFilters = WS.Decision.TableAnalyzer.getAllColumnFilters(decisionTableEMFObj);
+			//Build the TableAnalyzer Filter details response concept
+			tableAnalyzerDetails = Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/Artifacts/Decision/TableAnalyzer/WS_C_DecisionTableAnalyzerDetails");
+			tableAnalyzerDetails.projectName = projectName;
+			tableAnalyzerDetails.artifactPath = artifactPath;
+			for (int i = 0; i < columnFilters@length; i++) {
+				Object columnFilter = columnFilters[i];
+				WS_C_TableAnalyzerFilter analyzerFilter = Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/Artifacts/Decision/TableAnalyzer/WS_C_TableAnalyzerFilter");
+				analyzerFilter.columnName = WS.Decision.TableAnalyzer.getColumnName(columnFilter);
+				boolean isRange = WS.Decision.TableAnalyzer.isRangeColumnFilter(columnFilter);			
+				analyzerFilter.isRangeFilter = isRange;
+				if (isRange) {
+					Log.log(LOGGER, "Debug", "Range Filter for column - %s", analyzerFilter.columnName);
+					String[] range = WS.Decision.TableAnalyzer.getColumnRangeFilter(columnFilter);
+					analyzerFilter.minValue = range[0];
+					analyzerFilter.maxValue = range[1];				
+				} else {
+					Log.log(LOGGER, "Debug", "Equals Filter for column - %s", analyzerFilter.columnName);
+					Object[] items = WS.Decision.TableAnalyzer.getColumnEqualsFilter(columnFilter);
+					for (int j = 0; j < items@length; j++) {
+						String itemValue = items[j];
+						Instance.PropertyArray.appendString(analyzerFilter.value, itemValue, 1L);
+					}	
+				}
+				Instance.PropertyArray.appendConceptReference(tableAnalyzerDetails.filter, analyzerFilter, 1L);												
+			}	
+		
+			WS_C_ProjectArtifactNamesDataSourceRecord[] projectArtifactDataSourceRecords = WebStudio.Core.RuleFunctions.Utils.DT.Analyzer.WS_RF_FetchTestDataArtifactNames(scsRootURL, scsIntegrationType, scsCredentials, projectName, loggedInUser);		
+			for (int i = 0; i < projectArtifactDataSourceRecords@length; i++) {
+				Instance.PropertyArray.appendConceptReference(tableAnalyzerDetails.artifactRecord, projectArtifactDataSourceRecords[i], 1L);
+			}			
+		}
+				
+		WS_C_ResponseData responseData = Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/WS_C_ResponseData");
+		if (errorCode == null) {							
+			WS_C_AbstractDataSourceRecord abstractDataSourceRecord = 
+											Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/Records/WS_C_ArtifactContentsDataSourceRecord");
+	
+			WS_C_ArtifactContentsDataSourceRecord artifactContentsDataSourceRecord = abstractDataSourceRecord;
+			
+			WS_C_AnyArtifactDetails responseDetails = tableAnalyzerDetails;
+			Instance.PropertyAtom.setContainedConcept(artifactContentsDataSourceRecord.artifactDetails, responseDetails, 1L);	
+
+			Instance.PropertyArray.appendContainedConcept(responseData.record, abstractDataSourceRecord, 1L);
+		}
+		
+		return WS_RF_CreateTemporaryReturnData(responseStatus, recordCount, errorCode, responseMessage, responseData);
+	}
+}

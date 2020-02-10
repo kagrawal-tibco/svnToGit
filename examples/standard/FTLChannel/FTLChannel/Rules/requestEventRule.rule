@@ -1,0 +1,24 @@
+rule Rules.requestEventRule {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Events.timerRE timerRE;
+	}
+	when {
+		
+	}
+	then {
+		System.debugOut("\n==============================start requestEventRule==============================");
+		
+		
+		Events.tibrequestEvent request = Events.tibrequestEvent.tibrequestEvent("","","Client Request",2000);
+		
+		Events.tibreplyEvent response = Event.requestEvent(request, "/Events/tibreplyEvent", "/Channels/FTLChannel/tibreply_dest", 50000, null);
+		System.debugOut("Event Received");
+		System.debugOut("\nString : " + response.MyString  + "\n Long:" +response.MyLong);
+		
+		System.debugOut("\n================================end requestEventRule===============================");
+	}
+}

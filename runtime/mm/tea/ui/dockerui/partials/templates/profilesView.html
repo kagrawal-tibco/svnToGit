@@ -1,0 +1,226 @@
+<div ng-controller='IndexCtrl'
+	class="appManagementPage tea-theme wrapper row-offcanvas row-offcanvas-left">
+	<div ng-include src="'partials/templates/header.html'"></div>
+	<div class="beTeaAgentView">
+		<aside class="left-side sidebar-offcanvas" ng-class="">
+			<div ng-include src="'partials/templates/leftNav.html'"></div>
+		</aside>
+		<div ng-controller="profilesViewCtrl">
+			<div class="adminView row box-sizing">
+				<div ng-show="notification.show">
+					<div
+						ng-include="'partials/templates/directive/showNotification.html'"></div>
+				</div>
+
+				<h3>Profiles</h3>
+				<div ng-include="'partials/templates/aboutBETeaView.html'"></div>
+				<div class="row" style="padding-bottom: 10px">
+					<ul class="appBox clearfix">
+						<li class="pull-left">
+							<div ng-include="'partials/templates/addApplicationProfile.html'"></div>
+							<div class="operation" ng-click="showAddProfileWizard()">
+								<i class="fa fa-plus-circle fa-lg"></i> <span>Add Profile</span>
+							</div>
+						</li>
+
+					</ul>
+				</div>
+				<div class="container" ng-show="undefined!==profiles&&!null!=profiles&&profiles.length>0">
+					<div
+						ng-include="'partials/templates/deleteApplicationProfile.html'"></div>
+					<div class="instanceListView" style="height: 500px">
+						<table tea-table class="tea-table">
+							<thead>
+								<tr>
+								   <th></th>
+									<th>Name <i title="sort" class="operation fa fa-sort" ng-click="onSortCall('name')" ></i>
+									</th>
+									<th></th>
+								</tr>
+							</thead>
+							<tbody>
+							    <tr>
+								<td class="selection"><input type="radio"
+										name="defultProfile" ng-click="setApplicationDefaultProfile()"
+										ng-value="undefined===selectedAppName.config.defaultProfile || null===selectedAppName.config.defaultProfile||''===selectedAppName.config.defaultProfile"
+										ng-checked="undefined===selectedAppName.config.defaultProfile || null===selectedAppName.config.defaultProfile||''===selectedAppName.config.defaultProfile">
+								</td>
+								<td>
+								<div>No Profile (default)</div>
+								</td>
+								<td></td>
+								</tr>
+								<tr ng-repeat-start="profile in profiles | orderBy:sort.column:sort.descending">
+									<td style="width: 6%;"><input type="radio"
+										style="margin-right: 5px;" name="defultProfile"
+										ng-click="setApplicationDefaultProfile(profile)"
+										ng-value="profile.toString()===selectedAppName.config.defaultProfile"
+										ng-checked="profile.toString()===selectedAppName.config.defaultProfile">
+										<a class="fa fa-minus-circle fa-lg" ng-if="profile.expanded"
+										ng-click="profile.expanded = false"></a> <a
+										class="fa fa-plus-circle fa-lg" ng-if="!profile.expanded"
+										ng-click="getApplicationProfileDetails(profile);profile.expanded = true"></a>
+									</td>
+									<td>{{profile.toString()}}</td>
+									<td style="float: right;"><i title="Edit"
+										class="fa fa-pencil operation"
+										ng-click="showEditProfileWizard(profile)"></i> <i
+										title="Delete" style="margin-left: 10px;"
+										class="operation fa fa-trash-o"
+										ng-click="showDeleteProfileWizard(profile)"></i></td>
+								</tr>
+								<tr ng-if="profile.expanded" ng-repeat-end="" 
+									style="border: none; height: 200px">
+									<td colspan="4"
+										style="position: absolute; width: 80%; left: 11%;">
+										<div class="">
+											<ul class="configNavTable">
+												<li ng-class="{active:isSetConfigType('global',profile)}"
+													ng-click="setConfigurationType('global',profile)"
+													id="global"><a ng-class="{active:isSetConfigType('global')}"> <i class="fa fa-globe"></i> <span>Global
+															Variables</span>
+												</a></li>
+												<li
+													ng-class="{active:isSetConfigType('systemProps',profile)}"
+													ng-click="setConfigurationType('systemProps',profile)"
+													id="systemProps"><a ng-class="{active:isSetConfigType('systemProps')}"><i class="fa fa-laptop"></i>
+														<span>System Properties</span>
+												</a></li>
+												<li ng-class="{active:isSetConfigType('beProps',profile)}"
+													ng-click="setConfigurationType('beProps',profile)"
+													id="beProps"><a ng-class="{active:isSetConfigType('beProps')}"> <i class="fa fa-laptop"></i> <span>BusinessEvents
+															Properties</span>
+												</a></li>
+											</ul>
+											<div>
+												<div class="be_configurationDiv">
+													<div ng-show="isSetConfigType('global',profile)">
+														<div>
+															<div
+																ng-show="profileVariables[profile.toString()+'_gv']!= null && profileVariables[profile.toString()+'_gv'].length!==0"
+																class="globalVariablesPanel"
+																style="overflow: hidden; padding-top: 0px; min-height: 290px;">
+																<table class="be-table">
+																	<thead>
+																		<tr>
+																			<th>Name</th>
+																			<th>Value</th>
+																		</tr>
+																	</thead>
+																</table>
+																<div style="overflow: auto; height: 200px; width: 100%">
+																	<table class="be-table">
+																		<tbody>
+																			<tr
+																				ng-repeat="gv in profileVariables[profile.toString()+'_gv']">
+																				<td title="{{gv.key}}" style="width:50%;">{{gv.key}}</td>
+																				<td>
+																					<div class="row"
+																						ng-if="gv.key!= 'Deployment' && gv.key!= 'Domain'">
+																						{{gv.value}}</div>
+																				</td>
+																			</tr>
+																		</tbody>
+																	</table>
+																</div>
+															</div>
+															<div
+																ng-show="profileVariables[profile.toString()+'_gv'] == null || profileVariables[profile.toString()+'_gv'].length==0"
+																class="globalVariablesPanel"
+																style="overflow: hidden; padding-top: 0px; min-height: 290px;">
+																<span class="globalVariableNoRecords" style="margin-left: 10%; top:60px;"> No Records
+																	Found </span>
+															</div>
+
+														</div>
+													</div>
+
+													<!-- System properties -->
+													<div ng-show="isSetConfigType('systemProps',profile)">
+														<div>
+															<div
+																ng-show="profileVariables[profile.toString()+'_sysProps']!= null && profileVariables[profile.toString()+'_sysProps'].length!==0"
+																class="globalVariablesPanel"
+																style="overflow: hidden; padding-top: 0px; min-height: 290px;">
+																<table class="be-table">
+																	<thead>
+																		<tr>
+																			<th>Name</th>
+																			<th>Value</th>
+																		</tr>
+																	</thead>
+																</table>
+																<div style="overflow: auto; height: 200px; width: 100%">
+																	<table class="be-table">
+																		<tbody>
+																			<tr
+																				ng-repeat="sp in profileVariables[profile.toString()+'_sysProps']">
+																				<td title="{{sp.key}}" style="width:50%;">{{sp.key}}
+																				<td>{{sp.value}}</td>
+																			</tr>
+																		</tbody>
+																	</table>
+																</div>
+															</div>
+															<div
+																ng-show="profileVariables[profile.toString()+'_sysProps'] == null || profileVariables[profile.toString()+'_sysProps'].length==0"
+																class="globalVariablesPanel"
+																style="overflow: hidden; padding-top: 0px; min-height: 290px;">
+																<span class="globalVariableNoRecords" style="margin-left: 10%; top:60px;"> No Records
+																	Found </span>
+															</div>
+														</div>
+													</div>
+
+													<!-- BE Properties -->
+
+													<div ng-show="isSetConfigType('beProps',profile)">
+														<div>
+															<div
+																ng-show="profileVariables[profile.toString()+'_beProps']!= null && profileVariables[profile.toString()+'_beProps'].length!==0"
+																class="globalVariablesPanel"
+																style="overflow: hidden; padding-top: 0px; min-height: 290px;">
+																<table class="be-table">
+																	<thead>
+																		<tr>
+																			<th>Name</th>
+																			<th>Value</th>
+																		</tr>
+																	</thead>
+																</table>
+																<div style="overflow: auto; height: 200px; width: 100%">
+																	<table class="be-table">
+																		<tbody>
+																			<tr
+																				ng-repeat="beProp in profileVariables[profile.toString()+'_beProps']">
+																				<td title="{{beProp.key}}" style="width:50%;">{{beProp.key}}</td>
+																				<td>{{beProp.value}}</td>
+																			</tr>
+																		</tbody>
+																	</table>
+																</div>
+															</div>
+															<div
+																ng-show="profileVariables[profile.toString()+'_beProps'] == null || profileVariables[profile.toString()+'_beProps'].length==0"
+																class="globalVariablesPanel"
+																style="overflow: hidden; padding-top: 0px; min-height: 290px;">
+																<span class="globalVariableNoRecords" style="margin-left: 10%; top:60px;"> No Records
+																	Found </span>
+															</div>
+														</div>
+													</div>
+												</div>
+											</div>
+
+										</div>
+									</td>
+								</tr>
+							</tbody>
+
+						</table>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>

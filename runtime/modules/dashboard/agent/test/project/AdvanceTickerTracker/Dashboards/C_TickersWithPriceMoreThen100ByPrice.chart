@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beviewsconfig:ChartComponent xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:beviewsconfig="http://www.tibco.com/be/designer" xmlns:designtime="http:///com/tibco/cep/designtime/core/model/designtime_ontology.ecore" namespace="/Dashboards/" folder="/Dashboards/" name="C_TickersWithPriceMoreThen100ByPrice" description="Shows Tickers With Price More Then 100 By Price" GUID="DF5ECB02-CE64-DDF1-3769-6106109AC71B" ownerProjectName="AdvanceTickerTracker" version="1334002510139" displayName="Tickers By Price" componentColorSetIndex="0" seriesColorIndex="0">
+  <extendedProperties>
+    <properties xsi:type="designtime:SimpleProperty" name="Category">
+      <extendedProperties>
+        <properties xsi:type="designtime:SimpleProperty" name="TIBX"/>
+        <properties xsi:type="designtime:SimpleProperty" name="CSCO"/>
+        <properties xsi:type="designtime:SimpleProperty" name="GOOG"/>
+        <properties xsi:type="designtime:SimpleProperty" name="IBM"/>
+      </extendedProperties>
+    </properties>
+    <properties xsi:type="designtime:SimpleProperty" name="MaxValue" value="400"/>
+    <properties xsi:type="designtime:SimpleProperty" name="MinValue" value="10"/>
+  </extendedProperties>
+  <visualization xsi:type="beviewsconfig:BarChartVisualization" namespace="/Dashboards/" folder="/Dashboards/" name="TCV_" description="" GUID="4F726D96-78B4-2149-6CCE-417CAA7D77D5" ownerProjectName="AdvanceTickerTracker" version="1334002510140" width="10" topCapThickness="0.5" overlapPercentage="0" orientation="vertical">
+    <seriesConfig xsi:type="beviewsconfig:ChartSeriesConfig" namespace="/Dashboards/" folder="/Dashboards/" name="Price" description="" GUID="74AD05AF-8AAC-6529-9FEF-163E72367D45" ownerProjectName="AdvanceTickerTracker" version="1334002510140" anchor="Q1">
+      <actionRule namespace="/Dashboards/" folder="/Dashboards/" name="Series__AR" description="" GUID="ED94BCCF-BAFB-7598-B172-06E0DD0FAA33" ownerProjectName="AdvanceTickerTracker" version="1334002510140" threshold="0" thresholdUnit="count">
+        <dataSource href="DS_TickersWithPriceMoreThen100SortedByPrice.datasource#/"/>
+        <drillableFields href="M_TickerTracker.metric#//@properties.0"/>
+      </actionRule>
+      <valueDataConfig xsi:type="beviewsconfig:ChartValueDataConfig">
+        <extractor>
+          <sourceField href="M_TickerTracker.metric#//@properties.1"/>
+        </extractor>
+        <formatter xsi:type="beviewsconfig:TextFieldFormat" toolTipFormat="{Ticker}={Price}" displayFormat="{Price}" showLabel="true">
+          <formatStyle fontSize="10" fontStyle="normal"/>
+        </formatter>
+      </valueDataConfig>
+      <categoryDataConfig xsi:type="beviewsconfig:ChartCategoryDataConfig">
+        <extractor>
+          <sourceField href="M_TickerTracker.metric#//@properties.0"/>
+        </extractor>
+        <formatter xsi:type="beviewsconfig:TextFieldFormat" displayFormat="{Ticker}"/>
+      </categoryDataConfig>
+    </seriesConfig>
+  </visualization>
+  <layoutConstraint xsi:type="beviewsconfig:FlowLayoutConstraint" componentRowSpan="1" componentColSpan="1"/>
+  <plotArea>
+    <foreground line="both"/>
+  </plotArea>
+  <categoryGuidelineConfig headerName="Tickers" sortOrder="unsorted">
+    <headerFormatStyle fontSize="10" fontStyle="normal"/>
+    <labelFormatStyle fontSize="10" fontStyle="normal"/>
+  </categoryGuidelineConfig>
+  <valueGuidelineConfig headerName="Price" scale="normal" division="5">
+    <headerFormatStyle fontSize="10" fontStyle="normal"/>
+    <labelFormatStyle fontSize="10" fontStyle="normal"/>
+  </valueGuidelineConfig>
+</beviewsconfig:ChartComponent>

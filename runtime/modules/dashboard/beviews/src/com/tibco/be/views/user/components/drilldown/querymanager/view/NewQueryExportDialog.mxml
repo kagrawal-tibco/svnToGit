@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FloatingBEVPanel 
+	xmlns="com.tibco.be.views.user.dashboard.*" 
+	xmlns:mx="http://www.adobe.com/2006/mxml" 
+	containerTitle="Query Manager Export"
+	layout="horizontal"
+	width="400"
+	height="220"  
+	resizeable="false"
+	verticalScrollPolicy="off"
+	externallyClosable="false"
+	styleName="queryExportDialog"
+>
+	
+	<mx:Script>
+		<![CDATA[
+		
+			[Bindable]
+			private var _qmComponent:QueryManagerMainPanel = null;
+			private var _validityDict:Dictionary = null;
+			
+			public function set qmComponent(qComponent:QueryManagerMainPanel):void {
+				_qmComponent = qComponent;
+			}
+			
+			private function initializeDialog():void{
+				_validityDict = new Dictionary();
+			}
+			
+			public function initQueryExportDialog(type:String, depth:String, pertypecount:String, overallcount:String, includesystemfields:String):void {
+				_validityDict = new Dictionary();
+				if(type == "xml"){
+					xml.selected = true;
+					csv.selected = false;
+				}
+				exportdepth.text = depth;
+				exporttypecount.text = pertypecount;
+				exportallcount.text = overallcount;
+				this.includesystemfields.selected = includesystemfields == "true";
+			}
+			
+            private function okPressed():void{
+            	trace("Ok button pressed");
+            	// get latest user entered values
+            	var type:String = xml.selected?"xml":"csv";
+            	var depth:String = exportdepth.text;
+            	var pertypecount:String = exporttypecount.text;
+            	var overallcount:String = exportallcount.text;
+            	var includesystemfields:String = this.includesystemfields.selected?"true":"false";
+				_qmComponent.exportQueryData(type,depth,pertypecount,overallcount,includesystemfields);
+                close();
+            }
+            
+            
+            private function valid(name:String):void{
+            	_validityDict[name] = true;
+				for each(var val:Boolean in _validityDict){
+					if(val == false){
+						okButton.enabled = false;
+						return;
+					}
+				}
+				okButton.enabled = true;            	
+            }
+            
+			private function invalid(name:String):void{
+            	_validityDict[name] = false;
+            	okButton.enabled = false;
+            }
+			
+		]]>
+	</mx:Script>
+
+	<!-- Export Depth Validator -->
+	<mx:NumberValidator 
+		source="{exportdepth}" 
+		property="text" 
+		allowNegative="false" 
+		domain="int"
+		minValue="1"
+		integerError="The depth must be an integer."
+		invalidCharError="The depth contains invalid characters"
+		lowerThanMinError="The depth should be 1 or more"
+		negativeError="The depth may not be negative" 
+		valid="valid('exportdepth')" 
+		invalid="invalid('exportdepth')"/>
+	
+	<!-- Per Type Count Validator -->
+	<mx:NumberValidator 
+		source="{exporttypecount}" 
+		property="text" 
+		allowNegative="false" 
+		domain="int"
+		integerError="The per type count must be an integer."
+		invalidCharError="The per type count contains invalid characters"
+		negativeError="The per type count may not be negative" 
+		valid="valid('exporttypecnt')" 
+		invalid="invalid('exporttypecnt')"/>
+	
+	<!-- Overall Count Validator -->
+	<mx:NumberValidator 
+		source="{exportallcount}" 
+		property="text" 
+		allowNegative="false" 
+		domain="int"
+		integerError="The overall count must be an integer."
+		invalidCharError="The overall count contains invalid characters"
+		negativeError="The overall count may not be negative" 
+		valid="valid('exportallcnt')" 
+		invalid="invalid('exportallcnt')"/>
+		
+	<mx:Form width="100%" height="100%" defaultButton="{okButton}">
+		<!-- Export Type -->
+		<mx:FormItem label="Export As" width="100%" direction="horizontal">
+			<mx:RadioButton groupName="exporttype" id="csv" label="CSV" toolTip="Export data as comma separated values" selected="true"/>
+			<mx:RadioButton groupName="exporttype" id="xml" label="XML" toolTip="Export data as XML"/>			
+		</mx:FormItem>
+		<!-- Export Depth -->
+		<mx:FormItem label="Depth" required="true" width="100%"> 
+			<mx:TextInput id="exportdepth" width="100%" focusAlpha="0"/>
+		</mx:FormItem>
+		<!-- Per Type Count -->
+		<mx:FormItem label="Per Type Count" required="true" width="100%">
+			<mx:TextInput id="exporttypecount" width="100%" focusAlpha="0"/>
+		</mx:FormItem>
+		<!-- Over All Count -->
+		<mx:FormItem label="Overall Count" required="true" width="100%">
+			<mx:TextInput id="exportallcount" width="100%" focusAlpha="0"/>	
+		</mx:FormItem>
+		<!-- Include System Fields -->
+		<mx:FormItem label="Include System Fields(s)" width="100%">
+			<mx:CheckBox id="includesystemfields" selected="true" width="100%"/>	
+		</mx:FormItem>
+		<!-- button bar -->
+		<mx:HBox width="100%">
+			<mx:Spacer width="100%"/>
+			<mx:Button id="okButton" label="Export" click="okPressed()" width="100" styleName="commonButton"/>
+			<mx:Button id="cancelButton" label="Close" click="close()" width="100" styleName="commonButton"/>
+			<mx:Spacer width="100%"/>			
+		</mx:HBox>
+	</mx:Form>
+	
+</FloatingBEVPanel>

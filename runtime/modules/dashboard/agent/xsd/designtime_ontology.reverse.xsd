@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<xsd:schema xmlns:designtime="http:///com/tibco/cep/designtime/core/model/designtime_ontology.ecore" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:validation="http:///com/tibco/cep/designtime/core/model/validation" xmlns:xsd="http://www.w3.org/2001/XMLSchema" ecore:nsPrefix="designtime" ecore:package="com.tibco.cep.designtime.core.model" targetNamespace="http:///com/tibco/cep/designtime/core/model/designtime_ontology.ecore">
+  <xsd:import namespace="http://www.eclipse.org/emf/2002/Ecore" schemaLocation="Ecore.xsd"/>
+  <xsd:element ecore:ignore="true" name="Entity" type="designtime:Entity"/>
+  <xsd:element ecore:ignore="true" name="SimpleProperty" type="designtime:SimpleProperty"/>
+  <xsd:element ecore:ignore="true" name="ObjectProperty" type="designtime:ObjectProperty"/>
+  <xsd:element ecore:ignore="true" name="RuleParticipant" type="designtime:RuleParticipant"/>
+  <xsd:element ecore:ignore="true" name="PropertyMap" type="designtime:PropertyMap"/>
+  <xsd:complexType abstract="true" ecore:interface="true" name="Entity">
+    <xsd:annotation>
+      <xsd:appinfo ecore:key="operations" source="http://www.eclipse.org/emf/2002/Ecore">
+        <operation lowerBound="1" name="getFullPath" type="ecore:EString"/>
+        <operation name="getModelErrors" type="ecore:EEList{validation:ModelError}"/>
+        <operation lowerBound="1" name="isValid" type="ecore:EBoolean"/>
+      </xsd:appinfo>
+    </xsd:annotation>
+    <xsd:sequence>
+      <xsd:element ecore:resolveProxies="true" minOccurs="0" name="extendedProperties" type="designtime:PropertyMap"/>
+      <xsd:element ecore:resolveProxies="true" minOccurs="0" name="hiddenProperties" type="designtime:PropertyMap"/>
+      <xsd:element ecore:resolveProxies="true" ecore:transient="true" minOccurs="0" name="transientProperties" type="designtime:PropertyMap"/>
+    </xsd:sequence>
+    <xsd:attribute name="namespace" type="ecore:EString" use="required"/>
+    <xsd:attribute name="folder" type="ecore:EString" use="required"/>
+    <xsd:attribute name="name" type="ecore:EString" use="required"/>
+    <xsd:attribute name="description" type="ecore:EString" use="required"/>
+    <xsd:attribute name="lastModified" type="ecore:EString" use="required"/>
+    <xsd:attribute ecore:name="GUID" name="GUID" type="ecore:EString" use="required"/>
+    <xsd:attribute ecore:reference="xsd:anyType" name="ontology" type="xsd:anyURI"/>
+    <xsd:attribute name="ownerProjectName" type="ecore:EString"/>
+  </xsd:complexType>
+  <xsd:complexType name="SimpleProperty">
+    <xsd:complexContent>
+      <xsd:extension base="designtime:Entity">
+        <xsd:attribute name="value" type="ecore:EString" use="required"/>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="ObjectProperty">
+    <xsd:complexContent>
+      <xsd:extension base="designtime:Entity">
+        <xsd:sequence>
+          <xsd:element ecore:resolveProxies="true" name="value" type="xsd:anyType"/>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType abstract="true" name="RuleParticipant">
+    <xsd:complexContent>
+      <xsd:extension base="designtime:Entity"/>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="PropertyMap">
+    <xsd:sequence>
+      <xsd:element ecore:resolveProxies="true" maxOccurs="unbounded" minOccurs="0" name="properties" type="designtime:Entity"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:simpleType ecore:name="PROPERTY_TYPES" name="PROPERTY_TYPES">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="String"/>
+      <xsd:enumeration value="Integer"/>
+      <xsd:enumeration value="Long"/>
+      <xsd:enumeration value="Double"/>
+      <xsd:enumeration value="Boolean"/>
+      <xsd:enumeration value="DateTime"/>
+      <xsd:enumeration value="Concept"/>
+      <xsd:enumeration value="ConceptReference"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType ecore:name="TIMEOUT_UNITS" name="TIMEOUT_UNITS">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="Milliseconds"/>
+      <xsd:enumeration value="Seconds"/>
+      <xsd:enumeration value="Minutes"/>
+      <xsd:enumeration value="Hours"/>
+      <xsd:enumeration value="Days"/>
+      <xsd:enumeration value="WeekDays"/>
+      <xsd:enumeration value="Weeks"/>
+      <xsd:enumeration value="Months"/>
+      <xsd:enumeration value="Years"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType ecore:name="METRIC_TYPE" name="METRIC_TYPE">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="Regular"/>
+      <xsd:enumeration value="RollingTime"/>
+      <xsd:enumeration value="RollingCount"/>
+      <xsd:enumeration value="PeriodicTime"/>
+      <xsd:enumeration value="PeriodicCount"/>
+      <xsd:enumeration value="WindowTime"/>
+      <xsd:enumeration value="WindowCount"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType ecore:name="METRIC_AGGR_TYPE" name="METRIC_AGGR_TYPE">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="Set"/>
+      <xsd:enumeration value="Count"/>
+      <xsd:enumeration value="Maximum"/>
+      <xsd:enumeration value="Minimum"/>
+      <xsd:enumeration value="Sum"/>
+      <xsd:enumeration value="SumOfSquares"/>
+      <xsd:enumeration value="Average"/>
+      <xsd:enumeration value="Variance"/>
+      <xsd:enumeration value="StandardDeviation"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType ecore:name="HISTORY_POLICY" name="HISTORY_POLICY">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="ChangesOnly"/>
+      <xsd:enumeration value="AllValues"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType ecore:name="DOMAIN_DATA_TYPES" name="DOMAIN_DATA_TYPES">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="String"/>
+      <xsd:enumeration value="Integer"/>
+      <xsd:enumeration value="Long"/>
+      <xsd:enumeration value="Double"/>
+      <xsd:enumeration value="Boolean"/>
+      <xsd:enumeration value="DateTime"/>
+      <xsd:enumeration value="Object"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+</xsd:schema>

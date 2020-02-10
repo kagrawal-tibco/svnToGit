@@ -1,0 +1,21 @@
+/**
+ * @description 
+ * @author Ryans-MacBook-Pro.local
+ */
+rule Rules.PriceAdjustmentRule {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Events.PriceAdjustmentEvent se;
+		Concepts.InventoryItem p;
+	}
+	when {
+		se.SKU == p.SKU;
+	}
+	then {
+		System.debugOut("Received a price adjustment event for SKU: '"+p.SKU+"'.  Adjusting price by "+se.AdjustmentAmount);
+		p.Price += se.AdjustmentAmount;
+	}
+}

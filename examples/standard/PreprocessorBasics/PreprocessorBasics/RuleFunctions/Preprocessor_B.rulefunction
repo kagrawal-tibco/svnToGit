@@ -1,0 +1,22 @@
+/**
+ * @description 
+ */
+void rulefunction RuleFunctions.Preprocessor_B {
+	
+	attribute {
+		validity = ACTION;
+	}
+	
+	scope {
+		Events.TextEvent	textevent;
+	}
+	
+	body {
+		System.debugOut("Preprocessor_B received TextEvent: "+ textevent.Text);
+		
+		// Consumes the event to prevent further processing.
+		RuleFunctions.CloseHttpRequest(textevent);
+		Event.consumeEvent(textevent);
+	}
+	
+}

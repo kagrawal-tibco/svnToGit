@@ -1,0 +1,15 @@
+/**
+ * @description 
+ */
+void rulefunction Shared.RuleFunctions.topology.scheduleTopologyUpdateEvent {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		
+	}
+	body {
+		long delay = System.getGlobalVariableAsLong("TopologyUpdateFreq",30000);
+		Shared.Events.reqres.topology.TopologyUpdateRequestEvent.scheduleTopologyUpdateRequestEvent(delay,"",0);
+	}
+}

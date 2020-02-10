@@ -1,0 +1,69 @@
+/**
+ * @description Perform any startup activities here.
+ */
+void rulefunction WebStudio.Core.RuleFunctions.Startup.WS_RF_PerformStartupActivities {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Startup.WS_RF_PerformStartupActivities");
+		
+		String mapId = "ARTIFACT_TYPE_IMAGES";
+		
+		//Put images in hashmap.
+		Util.HashMap.createMap(mapId);
+		Util.HashMap.put(mapId, "concept", "concept.png");
+		Util.HashMap.put(mapId, "event", "event.png");
+		Util.HashMap.put(mapId, "rule", "rule.png");
+		Util.HashMap.put(mapId, "rulefunction", "rulefunction.png");
+		Util.HashMap.put(mapId, "rulefunctionimpl", "decisiontable.png");
+		Util.HashMap.put(mapId, "ruletemplate", "rulesTemplate.png");
+		Util.HashMap.put(mapId, "scorecard", "scorecard.png");
+		Util.HashMap.put(mapId, "channel", "channel.png");
+		Util.HashMap.put(mapId, "domain", "domain.png");
+		Util.HashMap.put(mapId, "ruletemplateinstance", "rulesTemplateInstance.png");
+		Util.HashMap.put(mapId, "ruletemplateview", "rulesTemplateView.png");
+		Util.HashMap.put(mapId, "beprocess", "appicon16x16.gif");
+		Util.HashMap.put(mapId, "cdd", "cdd_16x16.gif");
+		
+		// Load non file SCS command path
+		String scsIntegrationType = System.getSystemPropertyAsString("ws.scs.impl.type", null);
+		if (!String.equals(scsIntegrationType, "file")) {
+			String scsCommandPath = System.getSystemPropertyAsString("ws.scs.command.path", null);
+			if (scsCommandPath != null && !String.equals(scsCommandPath, "")) {
+				WS.SCS.setSCSCommandPath(scsIntegrationType, null, scsCommandPath);
+			}
+		}
+		
+		boolean tceMode = System.getSystemPropertyAsBoolean("ws.mode.tce.enabled", false);
+	
+		//Load ACL config
+		if (!tceMode) WS_RF_ValidateACLConfig(true);
+		
+		//Initialize the revision number
+		WS_RF_GetRevisionNumber(null);
+		
+		//Load Deployment Configs
+		if (!tceMode) WS_RF_LoadDeploymentConfigs();
+		
+		//Notification service
+		WS_RF_StartNotificationService();
+		
+		// Create a scheduler
+		Cluster.createScheduler("DELETE_STALE_DOMAIN_MODEL_SCHEDULER", 2000, 2000);
+		
+		// finally delete the map post all startup activities
+		Collections.Map.deleteMap("ProjectListOutputMap");
+		
+		// setup admin roles
+		WS_RF_SetupAdminRoles();
+		
+		// set the JMX hot deploy type
+		String jmxHotDeployType = System.getSystemPropertyAsString("ws.jmx.hotdeploy.type", "JMX");
+		WS.JMX.setJMXHotDeployInstance(jmxHotDeployType);
+
+	}
+}

@@ -1,0 +1,134 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>     Adhoc LoadBalancer
+
+- TIBCO BusinessEvents&reg; Examples
+</title>
+<meta http-equiv="Content-type" content="text/html; charset=iso-8859-1" />
+<meta http-equiv="Content-Language" content="en-us" />
+<link rel="Shortcut Icon" href="../../_resources/icon.gif" type="image/gif" />
+<style type="text/css" media="all">@import "../../_resources/examples.css";</style>
+</head>
+<body onLoad="buildForms()">
+
+
+<h1>Adhoc LoadBalancer</h1>
+
+
+<h2>Purpose of This Example</h2>
+
+<p>This example shows how the LoadBalancer feature can be used by inference and query agents to route events to a cluster of agents in such a way that only one subscribing agent will receive all the events sent with the same routing key. This concept of sending events with the same routing key to a single subscriber when there are many is commonly called "sticky sessions" or "consistent hash based routing".</p>
+
+<h2>About the project</h2>
+
+<p>The project has 2 agent classes - a receiver inference class and a router inference class.</p>
+
+<h3>Router agent</h3>
+
+<p>The router agent class has a simple rule triggered by a timer event. Every time the timer event fires, the rule sends out an event with a routing key to the loadbalanced subscribers. The routing key cycles back and repeats every 20 events.</p>
+
+<p>The router agent does not have any destinations. In its startup function it retrieves a reference to the adhoc loadbalancer that is configured in the Load Balancer tab of the CDD. This reference to the loadbalancer is used by the rule to send events to subscribers.</p>
+
+<h3>Receiver agent</h3>
+
+<p>The receiver agent class has a local destination, a pre-processor on that destination and a rule for events that arrive on the destination. The destination is merely a proxy on which messages from the router arrive at the receiver. Communication between the receiver and the router happens through an internal TCP connection.</p>
+
+<p>It also has a startup function in which it registers itself programmatically  as a subscriber (hence, adhoc) with the loadbalancer configured in the CDD.</p>
+
+<p>When this agent starts up it will start "owning" a subset of all the routing keys and therefore it will receive all the events that have the same routing key. This set of routing keys is dynamic. As new keys are generated, each receiver agent will own a subset of the entire set of keys. In this example the set of routing keys is always fixed at 20 per router instance/agent id. When this receiver shuts down, the keys owned by this agent will be divvied up among the remaining subscriber agents.</p>
+
+<h3>Running the project</h3>
+
+<ol>
+
+<li><p>Open a command window. Start a receiver agent instance.</p>
+<pre class="commands">
+cd <i>BE_HOME</i>\bin
+be-engine.exe -c <i>BE_HOME</i>\examples\standard\LoadBalancer\AdhocRouting\Deployments\adhocrouting.cdd -u receiver <i>BE_HOME</i>\examples\standard\LoadBalancer\adhocrouting.ear
+</pre>
+</li>
+
+<li><p>Open another command window and start a second receiver agent instance.</p>
+<pre class="commands">
+cd <i>BE_HOME</i>\bin
+be-engine.exe -c <i>BE_HOME</i>\examples\standard\LoadBalancer\AdhocRouting\Deployments\adhocrouting.cdd -u receiver <i>BE_HOME</i>\examples\standard\LoadBalancer\adhocrouting.ear
+</pre>
+</li>
+
+<li><p>Open another command window and start a router agent instance.</p>
+<pre class="commands">
+cd <i>BE_HOME</i>\bin
+be-engine.exe -c <i>BE_HOME</i>\examples\standard\LoadBalancer\AdhocRouting\Deployments\adhocrouting.cdd -u router <i>BE_HOME</i>\examples\standard\LoadBalancer\adhocrouting.ear
+</pre>
+</li>
+
+</ol>
+
+<h3>Output</h3>
+
+<p>Once the engines are up and running the loadbalanced results will appear as follows.</p>
+
+<p>Note: The distribution of the events to the receivers will change each time the cluster is restarted and also when a receiver leaves or joins the cluster.</p>
+
+<h4>Sample output from the router</h4>
+
+<pre class="commands">
+...
+[inference-router-class] Sending event to remote receiver with name/routing key=from-timer-at [inference-router-class:1] 2
+[inference-router-class] Sent event to remote receiver
+[inference-router-class] Sending event to remote receiver with name/routing key=from-timer-at [inference-router-class:1] 3
+[inference-router-class] Sent event to remote receiver
+[inference-router-class] Sending event to remote receiver with name/routing key=from-timer-at [inference-router-class:1] 4
+[inference-router-class] Sent event to remote receiver
+[inference-router-class] Sending event to remote receiver with name/routing key=from-timer-at [inference-router-class:1] 5
+[inference-router-class] Sent event to remote receiver
+[inference-router-class] Sending event to remote receiver with name/routing key=from-timer-at [inference-router-class:1] 6
+[inference-router-class] Sent event to remote receiver
+[inference-router-class] Sending event to remote receiver with name/routing key=from-timer-at [inference-router-class:1] 7
+[inference-router-class] Sent event to remote receiver
+[inference-router-class] Sending event to remote receiver with name/routing key=from-timer-at [inference-router-class:1] 8
+[inference-router-class] Sent event to remote receiver
+...
+</pre>
+
+<h4>Sample output from the first receiver</h4>
+<pre class="commands">
+...
+[inference-receiver-class] Received event with name: from-timer-at [inference-router-class:1] 0 on local channel
+[inference-receiver-class] Processing event with name: from-timer-at [inference-router-class:1] 0 in rule
+[inference-receiver-class] Received event with name: from-timer-at [inference-router-class:1] 3 on local channel
+[inference-receiver-class] Processing event with name: from-timer-at [inference-router-class:1] 3 in rule
+[inference-receiver-class] Received event with name: from-timer-at [inference-router-class:1] 4 on local channel
+[inference-receiver-class] Processing event with name: from-timer-at [inference-router-class:1] 4 in rule
+...
+</pre>
+
+<h4>Sample output from the second receiver</h4>
+<pre class="commands">
+...
+[inference-receiver-class] Received event with name: from-timer-at [inference-router-class:1] 1 on local channel
+[inference-receiver-class] Processing event with name: from-timer-at [inference-router-class:1] 1 in rule
+[inference-receiver-class] Received event with name: from-timer-at [inference-router-class:1] 2 on local channel
+[inference-receiver-class] Processing event with name: from-timer-at [inference-router-class:1] 2 in rule
+[inference-receiver-class] Received event with name: from-timer-at [inference-router-class:1] 5 on local channel
+[inference-receiver-class] Processing event with name: from-timer-at [inference-router-class:1] 5 in rule
+[inference-receiver-class] Received event with name: from-timer-at [inference-router-class:1] 6 on local channel
+[inference-receiver-class] Processing event with name: from-timer-at [inference-router-class:1] 6 in rule
+[inference-receiver-class] Received event with name: from-timer-at [inference-router-class:1] 7 on local channel
+[inference-receiver-class] Processing event with name: from-timer-at [inference-router-class:1] 7 in rule
+[inference-receiver-class] Received event with name: from-timer-at [inference-router-class:1] 8 on local channel
+[inference-receiver-class] Processing event with name: from-timer-at [inference-router-class:1] 8 in rule
+[inference-receiver-class] Received event with name: from-timer-at [inference-router-class:1] 9 on local channel
+...
+</pre>
+
+
+<div class="footer">
+<p>TIBCO BusinessEvents&reg; 5.6<br />
+Copyright&copy; 2004-2019 TIBCO Software Inc. All rights reserved.</p>
+</div>
+</body>
+</html>

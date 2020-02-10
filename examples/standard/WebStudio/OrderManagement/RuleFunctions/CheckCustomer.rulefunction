@@ -1,0 +1,60 @@
+/**
+ * @description This function checks the customer data
+ */
+ boolean rulefunction RuleFunctions.CheckCustomer {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		boolean isValidOrder;
+		String orderItemName;
+		int orderItemQuantity;
+		String customerName;
+	}
+	body {
+		
+		boolean isCustValid=false;
+		
+		if(isValidOrder)
+		{	
+			
+			System.debugOut("#### Checking Customer Details for "+customerName);
+		
+			Concepts.Customer customer =Instance.getByExtId("CUST-"+customerName);
+			
+			//Get the existing item from the inventory.
+			Concepts.Item existingItem=RuleFunctions.OM_GetExistingInventoryItem(orderItemName);
+			
+			if(null!=customer)
+			{			
+				System.debugOut(customerName+ " is the valid customer.");
+			
+				if(null!=existingItem)
+				{
+					 double itemPrice = existingItem.price;
+					 double totalCost = itemPrice * orderItemQuantity;
+							
+						double accountBalance= customer.balance;			
+									
+						if(accountBalance < totalCost)
+						{
+							System.debugOut(customerName + " does not have sufficient balance in his account.Order cannot be placed.");
+						}
+						else
+						{
+							isCustValid = true;
+						}
+					}			
+				}else
+			{
+				System.debugOut(customerName+ " is not the valid customer.");			
+			}	
+			}
+			else
+			{
+				System.debugOut(customerName+ " is not the valid customer.");			
+			}	
+		
+		return isCustValid;
+	}
+}

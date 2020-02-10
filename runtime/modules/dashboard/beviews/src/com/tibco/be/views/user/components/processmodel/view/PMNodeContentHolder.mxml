@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas 
+	xmlns:mx="http://www.adobe.com/2006/mxml"
+	verticalScrollPolicy="off"
+	horizontalScrollPolicy="off"
+>
+	<mx:Script>
+		<![CDATA[
+		
+			public static const DEFAULT_TOP_GRADIENT_COLOR:uint = 0xFFFFFF;
+			public static const DEFAULT_BOTTOM_GRADIENT_COLOR:uint = 0xD3D3D3;
+			
+			private var _expanded:Boolean = false;
+			private var _topGradientColor:uint = DEFAULT_TOP_GRADIENT_COLOR;
+			private var _bottomGradientColor:uint = DEFAULT_BOTTOM_GRADIENT_COLOR;
+			
+			public function set expanded(value:Boolean):void{
+				if(value == _expanded){ return; }
+				//toggle expansion state
+				_expanded = value;
+				var temp:uint = _topGradientColor;
+				if(_expanded){
+					_topGradientColor = _bottomGradientColor;
+					_bottomGradientColor = temp;
+				}
+				else{
+					_topGradientColor = _bottomGradientColor;
+					_bottomGradientColor = temp;
+				}
+			}
+			
+			public function updateColors(topGradientColor:uint, bottomGradientColor:uint):void {
+				_topGradientColor = topGradientColor;
+				_bottomGradientColor = bottomGradientColor;
+				invalidateDisplayList();
+			}
+			
+			public function resetColors():void {
+				_topGradientColor = DEFAULT_TOP_GRADIENT_COLOR;
+				_bottomGradientColor = DEFAULT_BOTTOM_GRADIENT_COLOR;
+				invalidateDisplayList();
+			}
+		
+			override public function addChild(child:DisplayObject):DisplayObject{
+				if(child is PMNodeProgressBar){
+					child.width = 0.9*width;
+				}
+				return super.addChild(child);
+			}
+			
+			override protected function updateDisplayList(unscaledWidth:Number, unscaledHeight:Number):void{
+				draw(unscaledWidth, unscaledHeight);
+				super.updateDisplayList(unscaledWidth, unscaledHeight);
+			}
+			
+			private function draw(width:int, height:int):void{
+				graphics.clear();
+				var m:Matrix = new Matrix();
+				m.createGradientBox(width, height, Math.PI/2);
+				graphics.beginGradientFill(
+					GradientType.LINEAR,
+					[_topGradientColor, _bottomGradientColor],
+					[1, 1],
+					[0x00, 0xFF],
+					m
+				);
+				//graphics.drawRoundRectComplex(0, 0, width, height, 0, 0, 5, 5);
+				graphics.drawRect(0, 0, width, height);
+				graphics.endFill();
+			}
+		]]>
+	</mx:Script>
+</mx:Canvas>

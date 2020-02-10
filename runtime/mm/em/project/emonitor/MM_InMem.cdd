@@ -1,0 +1,328 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<cluster xmlns="http://tibco.com/businessevents/configuration/5.6">
+    <revision>
+        <version>317</version>
+        <author>TIBCO Software Inc.</author>
+        <date>2014/08/11 16:48:05</date>
+        <comment>CDD For MM</comment>
+    </revision>
+    <name>be.internal.mm</name>
+    <message-encoding>UTF-8</message-encoding>
+    <object-management>
+        <memory-manager/>
+        <db-concepts>
+            <db-uris/>
+            <check-interval>60</check-interval>
+            <inactivity-timeout>0</inactivity-timeout>
+            <initial-size>5</initial-size>
+            <max-size>5</max-size>
+            <min-size>5</min-size>
+            <property-check-interval>900</property-check-interval>
+            <retry-count>-1</retry-count>
+            <wait-timeout>1</wait-timeout>
+        </db-concepts>
+    </object-management>
+    <rulesets/>
+    <function-groups/>
+    <destination-groups/>
+    <process-groups/>
+    <log-configs>
+        <log-config id="logConfig">
+            <enabled>true</enabled>
+            <roles>*:info</roles>
+            <files>
+                <enabled>true</enabled>
+                <dir>logs</dir>
+                <name>BEMM.log</name>
+                <max-number>10</max-number>
+                <max-size>10000000</max-size>
+                <append>true</append>
+            </files>
+            <terminal>
+                <enabled/>
+                <sys-out-redirect/>
+                <sys-err-redirect/>
+                <encoding/>
+            </terminal>
+            <line-layout>
+                <enabled>false</enabled>
+                <class/>
+                <arg/>
+            </line-layout>
+        </log-config>
+    </log-configs>
+    <agent-classes>
+        <inference-agent-class id="be_agent_mm_internal_inference">
+            <rules>
+                <uri>/</uri>
+            </rules>
+            <destinations>
+                <destination id="Destination-0">
+                    <pre-processor/>
+                    <queue-size/>
+                    <thread-count/>
+                    <threading-model>shared-queue</threading-model>
+                    <uri>/InternalChannel/RemoteMetricEventsDestination</uri>
+                </destination>
+                <destination id="Destination-1">
+                    <pre-processor/>
+                    <queue-size/>
+                    <thread-count/>
+                    <threading-model>shared-queue</threading-model>
+                    <uri>/InternalChannel/QueryMetricEventsDestination</uri>
+                </destination>
+                <destination id="Destination-2">
+                    <pre-processor/>
+                    <queue-size/>
+                    <thread-count/>
+                    <threading-model>shared-queue</threading-model>
+                    <uri>/InternalChannel/PingEventDestination</uri>
+                </destination>
+                <destination id="Destination-3">
+                    <pre-processor/>
+                    <queue-size/>
+                    <thread-count/>
+                    <threading-model>shared-queue</threading-model>
+                    <uri>/InternalChannel/AlertRangeCheckEventDestination</uri>
+                </destination>
+                <destination id="Destination-4">
+                    <pre-processor/>
+                    <queue-size/>
+                    <thread-count/>
+                    <threading-model>caller</threading-model>
+                    <uri>/HttpChannel/login</uri>
+                </destination>
+                <destination id="Destination-5">
+                    <pre-processor/>
+                    <queue-size/>
+                    <thread-count/>
+                    <threading-model>caller</threading-model>
+                    <uri>/HttpChannel/logout</uri>
+                </destination>
+                <destination id="Destination-6">
+                    <pre-processor/>
+                    <queue-size/>
+                    <thread-count/>
+                    <threading-model>caller</threading-model>
+                    <uri>/HttpChannel/gettopology</uri>
+                </destination>
+                <destination id="Destination-7">
+                    <pre-processor/>
+                    <queue-size/>
+                    <thread-count/>
+                    <threading-model>caller</threading-model>
+                    <uri>/HttpChannel/getcomponentdata</uri>
+                </destination>
+                <destination id="Destination-8">
+                    <pre-processor/>
+                    <queue-size/>
+                    <thread-count/>
+                    <threading-model>caller</threading-model>
+                    <uri>/HttpChannel/getpagetemplate</uri>
+                </destination>
+                <destination id="Destination-9">
+                    <pre-processor/>
+                    <queue-size/>
+                    <thread-count/>
+                    <threading-model>caller</threading-model>
+                    <uri>/HttpChannel/subscribe</uri>
+                </destination>
+                <destination id="Destination-10">
+                    <pre-processor/>
+                    <queue-size/>
+                    <thread-count/>
+                    <threading-model>caller</threading-model>
+                    <uri>/HttpChannel/unsubscribe</uri>
+                </destination>
+                <destination id="Destination-11">
+                    <pre-processor/>
+                    <queue-size/>
+                    <thread-count/>
+                    <threading-model>caller</threading-model>
+                    <uri>/HttpChannel/unsubscribeall</uri>
+                </destination>
+                <destination id="Destination-12">
+                    <pre-processor/>
+                    <queue-size/>
+                    <thread-count/>
+                    <threading-model>caller</threading-model>
+                    <uri>/HttpChannel/purgetopology</uri>
+                </destination>
+                <destination id="Destination-13">
+                    <pre-processor/>
+                    <queue-size/>
+                    <thread-count/>
+                    <threading-model>caller</threading-model>
+                    <uri>/HttpChannel/getmethodslayout</uri>
+                </destination>
+                <destination id="Destination-14">
+                    <pre-processor/>
+                    <queue-size/>
+                    <thread-count/>
+                    <threading-model>caller</threading-model>
+                    <uri>/HttpChannel/getmethoddescription</uri>
+                </destination>
+                <destination id="Destination-15">
+                    <pre-processor/>
+                    <queue-size/>
+                    <thread-count/>
+                    <threading-model>caller</threading-model>
+                    <uri>/HttpChannel/invokeentitymethod</uri>
+                </destination>
+                <destination id="Destination-16">
+                    <pre-processor/>
+                    <queue-size/>
+                    <thread-count/>
+                    <threading-model>caller</threading-model>
+                    <uri>/HttpChannel/startpu</uri>
+                </destination>
+                <destination id="Destination-17">
+                    <pre-processor/>
+                    <queue-size/>
+                    <thread-count/>
+                    <threading-model>caller</threading-model>
+                    <uri>/HttpChannel/deploypu</uri>
+                </destination>
+                <destination id="Destination-18">
+                    <pre-processor/>
+                    <queue-size/>
+                    <thread-count/>
+                    <threading-model>caller</threading-model>
+                    <uri>/HttpChannel/gettopologyxmlfile</uri>
+                </destination>
+                <destination id="Destination-19">
+                    <pre-processor/>
+                    <queue-size/>
+                    <thread-count/>
+                    <threading-model>caller</threading-model>
+                    <uri>/HttpChannel/executecommand</uri>
+                </destination>
+                <destination id="Destination-20">
+                    <pre-processor/>
+                    <queue-size/>
+                    <thread-count/>
+                    <threading-model>caller</threading-model>
+                    <uri>/HttpChannel/startstopta</uri>
+                </destination>
+                <destination id="Destination-21">
+                    <pre-processor/>
+                    <queue-size/>
+                    <thread-count/>
+                    <threading-model>caller</threading-model>
+                    <uri>/HttpChannel/getglobalvariables</uri>
+                </destination>
+                <destination id="Destination-22">
+                    <pre-processor/>
+                    <queue-size/>
+                    <thread-count/>
+                    <threading-model>caller</threading-model>
+                    <uri>/HttpChannel/setglobalvariables</uri>
+                </destination>
+            </destinations>
+            <startup>
+                <uri>/Shared/RuleFunctions/setUpScheduler</uri>
+                <uri>/Shared/RuleFunctions/checkHawkHome</uri>
+                <uri>/Shared/RuleFunctions/topology/loadTopologyXML</uri>
+                <uri>/Shared/RuleFunctions/topology/discoverTopology</uri>
+            </startup>
+            <shutdown>
+                <uri>/Shared/RuleFunctions/topology/shutDownHealthPingers</uri>
+                <uri>/Monitoring/RuleFunctions/view/tearDownSubscribedViews</uri>
+            </shutdown>
+            <local-cache>
+                <eviction>
+                    <max-size/>
+                    <max-time/>
+                </eviction>
+            </local-cache>
+            <shared-queue>
+                <size>1024</size>
+                <workers>10</workers>
+            </shared-queue>
+            <load>
+                <max-active/>
+            </load>
+            <concurrent-rtc>false</concurrent-rtc>
+            <check-for-duplicates>false</check-for-duplicates>
+            <businessworks>
+                <uri/>
+            </businessworks>
+            <property-group>
+                <property-group comment="" name="engine">
+                    <property name="be.engine.cluster.isSeeder" value="true"/>
+                </property-group>
+                <property-group comment="" name="mm">
+                    <property-group comment="" name="topology">
+                        <property name="be.mm.topology.file" value="%MM_ST_FILE_LOCATION%"/>
+                    </property-group>
+                    <property-group comment="" name="monitoring">
+                        <property name="be.mm.monitor.in.mem" value="true"/>
+                    </property-group>
+                    <property-group comment="" name="auth">
+                        <property name="be.mm.auth.type" value="file"/>
+                        <property name="be.mm.auth.file.location" value="%TIBCO_BE_HOME_ESC%/mm/config/users.pwd"/>
+                        <property name="java.security.auth.login.config" value="%TIBCO_BE_HOME_ESC%/mm/config/jaas-config.config"/>
+                    </property-group>
+                    <property-group comment="" name="http">
+                        <property name="be.channel.http.propertiesAsXML" value="true"/>
+                    </property-group>
+                    <property-group comment="" name="actions_email">
+                        <property name="be.mm.email.protocol" value="smtp"/>
+                        <property name="be.mm.email.authentication" value="false"/>
+                        <property name="be.mm.email.host" value="smtp.email.com"/>
+                        <property name="be.mm.email.host.port" value="25"/>
+                        <property name="be.mm.email.from" value="some@email.address"/>
+                    </property-group>
+                </property-group>
+                <property-group comment="" name="global_variable_overwrite">
+                    <property-group comment="" name="http">
+                        <property name="tibco.clientVar.HTTPHost" value="localhost"/>
+                        <property name="tibco.clientVar.HTTPPort" value="9000"/>
+                        <property name="tibco.clientVar.BEMMDocRoot" value="%TIBCO_BE_HOME_ESC%/mm/web-root"/>
+                        <property name="tibco.clientVar.BEMMDocPage" value="\index.html"/>
+                    </property-group>
+                    <property-group comment="" name="frequencies">
+                        <property name="tibco.clientVar.TopologyUpdateFreq" value="30000"/>
+                        <property name="tibco.clientVar.JMXUpdateFreq" value="30000"/>
+                        <property name="tibco.clientVar.HealthCheckFreq" value="30000"/>
+                        <property name="tibco.clientVar.SweepFreq" value="300000"/>
+                        <property name="tibco.clientVar.SweepThreshold" value="600000"/>
+                    </property-group>
+                    <property-group comment="" name="hawk">
+                        <property name="tibco.clientVar.Domain" value="domain"/>
+                        <property name="tibco.clientVar.TIBHawkService" value="7474"/>
+                        <property name="tibco.clientVar.TIBHawkDaemon" value="tcp:7474"/>
+                        <property name="tibco.clientVar.TIBHawkNetwork" value=""/>
+                    </property-group>
+                </property-group>
+            </property-group>
+        </inference-agent-class>
+    </agent-classes>
+    <processing-units>
+        <processing-unit id="default">
+            <agents>
+                <agent>
+                    <ref>be_agent_mm_internal_inference</ref>
+                    <key/>
+                    <priority/>
+                </agent>
+            </agents>
+            <logs>logConfig</logs>
+            <hot-deploy>false</hot-deploy>
+            <cache-storage-enabled>true</cache-storage-enabled>
+            <db-concepts>false</db-concepts>
+            <property-group/>
+        </processing-unit>
+    </processing-units>
+    <load-balancer-configs>
+        <pair-configs/>
+        <adhoc-configs/>
+    </load-balancer-configs>
+    <property-group>
+        <property-group comment="" name="auth">
+            <property name="be.mm.auth.type" value="file"/>
+            <property name="be.mm.auth.file.location" value="%TIBCO_BE_HOME_ESC%/mm/config/users.pwd"/>
+            <property name="java.security.auth.login.config" value="%TIBCO_BE_HOME_ESC%/mm/config/jaas-config.config"/>
+        </property-group>
+    </property-group>
+</cluster>

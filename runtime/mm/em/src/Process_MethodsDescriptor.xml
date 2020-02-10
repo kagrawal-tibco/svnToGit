@@ -1,0 +1,165 @@
+<process_methods type="Process">
+    <methods>
+        <methodgroup group="Channels">
+            <method name="ReconnectChannels">
+                <annotation>Restarts all channels or a single channel</annotation>
+                <arg name="channelURI" type="string" desc="URI of the channel to restart. All channels are restarted if no argument is provided. (Optional)" defaultvalue=""/>
+            </method>
+            <!--<method name="resumeChannels">
+                <annotation>Resumes all channels or a single channel</annotation>
+                <arg name="channelURI" type="string" desc="URI of the channel to resume. All channels are resumed if no argument is provided. (Optional)" defaultvalue=""/>
+            </method>-->
+            <!--<method name="suspendChannels">
+                <annotation>Suspends all channels or a single channel</annotation>
+                <arg name="channelURI" type="string" desc="URI of the channel to suspend. All channels are suspended if no argument is provided. (Optional)" defaultvalue=""/>
+            </method>-->
+            <method name="ResumeDestinations">
+                <annotation>Resumes one or all of the destinations of one or all of the channels, depending on the arguments provided.</annotation>
+                <arg name="channelURI" type="string" desc="URI of the channel whose destination(s) are to be resumed. Destination(s) of all of the channels are resumed if no argument is provided. (Optional)" defaultvalue=""/>
+                <arg name="destinationName" type="string" desc="Name of the destination to be resumed (in one or all of the channels). All of the destinations in one or all of the channels are resumed if no argument is provided. (Optional)" defaultvalue=""/>
+            </method>
+            <method name="SuspendDestinations">
+                <annotation>Suspends one or all of the destinations of one or all of the channels, depending on the arguments provided.</annotation>
+                <arg name="channelURI" type="string" desc="URI of the channel whose destination(s) are to be suspended. Destination(s) of all the channels are suspended if no argument is provided. (Optional)" defaultvalue=""/>
+                <arg name="destinationName" type="string" desc="Name of the destination to be suspended (in one or all of the channels). All of the destinations in one or all of the channels are suspended if no argument is provided. (Optional)" defaultvalue=""/>
+            </method>
+            <method name="GetChannels">
+                <annotation>Retrieves channel info</annotation>
+                <arg name="channelURI" type="string" desc="URI of the channel. Info of all the channels is returned if no argument is provided. (Optional)" defaultvalue=""/>
+            </method>
+            <method name="GetDestinations">
+                <annotation>Retrieves destination info</annotation>
+                <arg name="channelURI" type="string" desc="URI of the channel whose destination(s) info is to be retrieved. Destination(s) info of all the channels is returned if no argument is provided. (Optional)" defaultvalue=""/>
+                <arg name="destinationName" type="string" desc="Name of the destination whose info is to be retrived (in one or all the channels). All of the destinations in one or all of the channels are retrieved if no argument is provided. (Optional)" defaultvalue=""/>
+            </method>
+            <method name="GetSessionInputDestinations">
+                <annotation>Retrieves the destinations enabled for input in the specified session</annotation>
+                <arg name="sessionName" type="string" desc="Name of the session for which enabled destinations are to be shown. Use the agent key if you specified one at design time" defaultvalue="" required="true"/>
+            </method>
+        </methodgroup>
+
+        <methodgroup group="Engine">
+            <method name="StopEngine">
+                <annotation>Shuts down the agent. All checkpoint files will be preserved and the agent's operating system process will exit</annotation>
+                <arg/>
+            </method>
+            <method name="SetLogLevel">
+                <annotation>Change the level of all loggers matching the pattern</annotation>
+                <arg name="loggerNamePattern" type="string" desc="The name pattern to use to find the logger(s). Use * for all loggers" defaultvalue="" required="true"/>
+                <arg name="logLevel" type="string" desc="The log level. defaults to debug.(Optional)" defaultvalue="debug" required="false"/>
+            </method>
+            <method name="GetHostInformation">
+                <annotation>Gets the value of the specified host information property, or of all properties if none specified</annotation>
+                <arg name="Name" type="string" desc="Name of the property whose value is to be obtained. (Optional)" defaultvalue=""/>
+            </method>
+            <method name="GetNumberOfEvents">
+                <annotation>Gets the total number of events existing in the specified session or in every session</annotation>
+                <arg name="Name" type="string" desc="Name of the Session. (Optional)" defaultvalue=""/>
+            </method>
+            <method name="GetNumberOfInstances">
+                <annotation>Gets the total number of instances existing in the specified session or in every session</annotation>
+                <arg name="Name" type="string" desc="Name of the Session. (Optional)" defaultvalue=""/>
+            </method>
+            <method name="GetMemoryUsage">
+                <annotation>Gets the engine's memory usage information</annotation>
+                <arg/>
+            </method>
+        </methodgroup>
+
+        <methodgroup group="Object Management">
+            <method name="GetEvent">
+                <annotation>Retrieves an event with the specified Id from the specified Session or from every Session</annotation>
+                <arg name="Session" type="string" desc="Name of the session. Iterates over all sessions if no argument is provided. (Optional)" defaultvalue=""/>
+                <arg name="Id" type="string" desc="Id of the Event" defaultvalue="" required="true"/>
+                <arg name="isExternal" type="string" desc="String representing Boolean. True to use the event's external Id. False to use the internal Id. (Optional)" defaultvalue="true"/>
+            </method>
+            <method name="GetInstance">
+                <annotation>Retrieves an instance with the specified Id from the specified Session or from every Session</annotation>
+                <arg name="Session" type="string" desc="Name of the session. Iterates over all sessions if no argument is provided. (Optional)" defaultvalue=""/>
+                <arg name="Id" type="string" desc="Id of the Instance" defaultvalue="" required="true"/>
+                <arg name="isExternal" type="string" desc="String representing Boolean: 'true' to use the event's external Id, 'false' to use the internal Id. (Optional)" defaultvalue="true"/>
+            </method>
+            <method name="GetScorecards">
+                <annotation>No URI provided: Returns a table with of all of the scorecards in the specified Session or in every Session. URI provided: retrieves scorecard information in the specified Session or in every Session</annotation>
+                <arg name="Session" type="string" desc="Name of the session. Iterates over all sessions if no argument is provided. (Optional)" defaultvalue=""/>
+                <arg name="Scorecard URI" type="string" desc="URI of the scorecard to retrieve information. Returns a table with of all of the scorecards if no argument is provided. (Optional)" defaultvalue=""/>
+            </method>
+        </methodgroup>
+
+        <methodgroup group="Profiler">
+            <method name="StartFileBasedProfiler">
+                <annotation>Turns On BusinessEvents profiler and starts collecting data for the specified duration. When the time is complete or the Profiler is turned Off, profiling data will be saved to a file in comma separated format</annotation>
+                <arg name="Session" type="string" desc="Name of the session. Optional if only one session exists. (Optional)" defaultvalue=""/>
+                <arg name="FileName" type="string" desc="Absolute path of the file to where the profiling data is to be saved." defaultvalue="" required="true"/>
+                <arg name="Level" type="int" desc="Level of depth profiling data will be collected. Pick -1 for all levels, 1 for RTC level only" defaultvalue="-1" required="true"/>
+                <arg name="Duration" type="long" desc="Time interval, in seconds, the profiling data will be collected. If a negative value is provided the profiler will be On until explicitly turned Off." defaultvalue="-1" required="true"/>
+            </method>
+            <method name="StopFileBasedProfiler">
+                <annotation>Turns Off BusinessEvents profiler and stops collecting data. Profiling data is stored in a file in comma separated format</annotation>
+                <arg name="Session" type="string" desc="Name of the session. Optional if only one session exists. (Optional)" defaultvalue=""/>
+                </method>
+        </methodgroup>
+
+        <!--<methodgroup group="Recorder">
+            <method name="StartFileBasedRecorder">
+                <annotation>Starts the File Based Recorder. It records agent activity to the files in the specified directory.</annotation>
+                <arg name="Session" type="string" desc="Name of the session whose activity is to be recorded" defaultvalue="" required="true"/>
+                <arg name="Output Directory" type="string" desc="Directory location of the recorded file" defaultvalue="" required="true"/>
+                <arg name="Mode" type="string" desc="Recording modes. Any space separated combination of 'c' 'u' 'd' 's' 'r' 'a' 'x' 'f' 'e'" defaultvalue="" required="true"/>
+            </method>
+            <method name="StopFileBasedRecorder">
+                <annotation>Stops the File Based Recorder. It flushes the agent activity to the files in the specified directory.</annotation>
+                <arg name="Session" type="string" desc="Name of the session." defaultvalue="" required="true"/>
+            </method>
+        </methodgroup>-->
+
+        <methodgroup group="Rule Service Provider">
+            <method name="ResumeRuleServiceProvider">
+                <annotation>Resumes the RuleServiceProvider</annotation>
+                <arg/>
+            </method>
+            <method name="SuspendRuleServiceProvider">
+                <annotation>Suspends the RuleServiceProvider</annotation>
+                <arg/>
+            </method>
+        </methodgroup>
+
+        <methodgroup group="Working Memory">
+            <method name="ActivateRule">
+                <annotation>Activates a Rule in the specified inference session or in every inference session. Other session types are disregarded.</annotation>
+                <arg name="Session" type="string" desc="Name of the inference session where the rule is going to be activated. The rule with the specified URI is activated in every inference session if no session name is provided. (Optional)" defaultvalue=""/>
+                <arg name="URI" type="string" desc="URI of the Rule" defaultvalue="" required="true"/>
+            </method>
+            <method name="DeactivateRule">
+                <annotation>Deactivates a Rule in the specified inference session or in every inference session. Other session types are disregarded.</annotation>
+                <arg name="Session" type="string" desc="Name of the inference session where the rule is going to be deactivated. The rule with the specified URI is deactivated in every inference session if no session name is provided. (Optional)" defaultvalue=""/>
+                <arg name="URI" type="string" desc="URI of the Rule" defaultvalue="" required="true"/>
+            </method>
+            <method name="ResetTotalNumberRulesFired">
+                <annotation>Resets the total number of rules fired to zero for the specified inference session or for every inference session. Other session types are disregarded.</annotation>
+                <arg name="Session" type="string" desc="Name of the inference session in which the rules fired counter is to be reset. The rules fired counter is reset in every inference session if no session name is provided. (Optional)" defaultvalue=""/>
+            </method>
+            <method name="GetWorkingMemoryDump">
+                <annotation>Gets the working memory dump for the specified inference session or for every inference session. Other session types are disregarded.</annotation>
+                <arg name="Session" type="string" desc="Name of the inference session from where the working memory dump is to be retrieved. Working memory dump is retrieved for every inference session if no session name is provided. (Optional)" defaultvalue=""/>
+            </method>
+            <method name="GetRule">
+                <annotation>Gets info about the rule with the specified URI for the specified inference session or for every inference session. Other session types are disregarded.</annotation>
+                <arg name="Session" type="string" desc="Name of the inference session where the rule info is to be obtained. Rule info is retrieved for every inference session if no session name is provided. (Optional)" defaultvalue=""/>
+                <arg name="Rule URI" type="string" desc="URI of the Rule" defaultvalue="" required="true"/>
+            </method>
+            <method name="GetRules">
+                <annotation>Gets a table listing the rules deployed for the specified inference session or for every inference session. Other session types are disregarded.</annotation>
+                <arg name="Session" type="string" desc="Name of the inference session from where the deployed rules list is to be retrieved. Deployed rules info is retrieved for every inference session if no session name is provided. (Optional)" defaultvalue=""/>
+            </method>
+            <method name="GetTotalNumberRulesFired">
+                <annotation>Gets a table listing the total number of rules fired for the specified inference session or for every inference session</annotation>
+                <arg name="Session" type="string" desc="Name of the inference session. Total number of rules fired is retrieved for every inference session if no session name is provided. (Optional)" defaultvalue=""/>
+            </method>
+            <method name="GetRuleSessions">
+                <annotation>Gets a table listing every active session</annotation>
+                <arg/>
+            </method>
+        </methodgroup>
+    </methods>
+</process_methods>

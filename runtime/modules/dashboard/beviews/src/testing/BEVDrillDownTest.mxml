@@ -1,0 +1,256 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Application
+	xmlns:mx="http://www.adobe.com/2006/mxml"
+	layout="absolute"
+	backgroundColor="#b0b0b0"
+	creationComplete="init()"
+	implements="com.tibco.be.views.core.events.IEventBusListener"
+>
+<mx:Style source="assets/styles/CoreStyles.css"/>
+<mx:Script>
+	<![CDATA[
+		import com.tibco.be.views.core.events.io.PullDataRequestEvent;
+		
+		import com.tibco.be.views.core.Configuration;
+		import com.tibco.be.views.core.Session;
+		import com.tibco.be.views.core.events.EventTypes;
+		import com.tibco.be.views.core.events.EventBus;
+		import com.tibco.be.views.core.events.EventBusEvent;
+		import com.tibco.be.views.core.events.lc.LocalConnectionResponse;
+		import com.tibco.be.views.core.events.lc.LocalConnectionRequest;
+		import com.tibco.be.views.core.events.tasks.ConfigRequestEvent;
+		import com.tibco.be.views.core.events.tasks.ConfigResponseEvent;
+		import com.tibco.be.views.core.events.tasks.ControlRequestEvent;
+		import com.tibco.be.views.core.events.tasks.ControlResponseEvent;
+		import com.tibco.be.views.core.events.tasks.ServerRequestEvent;
+		import com.tibco.be.views.core.io.IOService;
+		import com.tibco.be.views.core.lc.LocalConnectionService;
+		import com.tibco.be.views.core.logging.LoggingService;
+		import com.tibco.be.views.core.tasks.ServerCommandService;
+		import com.tibco.be.views.user.components.drilldown.tabletree.BEVTableTreeComponent;
+		import com.tibco.be.views.user.components.drilldown.tabletree.view.GroupByRow;
+		import com.tibco.be.views.user.components.drilldown.tabletree.view.TableDataRow;
+		import com.tibco.be.views.user.components.drilldown.tabletree.view.TableHeaderRow;
+		import com.tibco.be.views.user.components.drilldown.tabletree.view.TypeHeaderRow;
+		import com.tibco.be.views.utils.URLParser;
+		
+		import mx.collections.ArrayCollection;
+		import mx.controls.Alert;
+		import mx.events.FlexEvent;
+		import mx.utils.UIDUtil;
+		
+		private var _drillDown:BEVTableTreeComponent;
+		private var _stoken:String;
+		
+		private var _urlParser:URLParser;
+		
+		protected function init():void{
+			_urlParser = new URLParser(ExternalInterface.call("window.location.href.toString"));
+			_urlParser.parse();
+			var lcName:String = String(_urlParser.getQueryParam("lcname"));
+			if(lcName == null || lcName == ""){ lcName = "TEST-LC"; }
+			
+			//LocalConnectionService.instance.init(lcName, false, true);
+			startEventBusServices();
+			registerListeners();
+			
+			_drillDown = new BEVTableTreeComponent();
+			_drillDown.percentWidth = 100;
+			_drillDown.percentHeight = 100;
+			_drillDown.addEventListener(FlexEvent.CREATION_COMPLETE, this.constructedDrillDown);
+			dashboard.addChildAt(_drillDown, 1);
+		}
+		
+		protected function constructedDrillDown(event:FlexEvent):void{
+			btn_RunTeset.enabled = true;
+		}
+		
+		protected function runTest():void{
+			//fake configuration data
+			var config:XML = 
+			<configuration>
+			    <streamingreconnectattempts>2</streamingreconnectattempts>
+			    <pullrequestport>8181</pullrequestport>
+			    <pullrequestbaseurl>/dashboard/controller</pullrequestbaseurl>
+			    <hostname>localhost</hostname>
+			    <streamingreconnectfrequency>5000</streamingreconnectfrequency>
+			    <debug>false</debug>
+			    <streamingport>8787</streamingport>
+			</configuration>;
+			
+			var hostParts:Array = tb_Host.text.split(":");
+			config.hostname = hostParts[0];
+			config.pullrequestport = hostParts.length > 1 ? hostParts[1]:"8181";
+			config.pullrequestbaseurl = tb_Path.text;
+			config.streamingport = tb_Port.text
+			
+			var fakeCtrlResponse:ControlResponseEvent = new ControlResponseEvent(null, null);
+			fakeCtrlResponse.data = config;
+			Configuration.instance.handleConfigLoadFinish(fakeCtrlResponse);
+			
+			//send login
+			var loginReq:ControlRequestEvent = new ControlRequestEvent(ControlRequestEvent.LOGIN_COMMAND, this);
+			loginReq.addXMLParameter("username", tb_User.text);
+			loginReq.addXMLParameter("rawpassword", tb_Pass.text);
+			EventBus.instance.dispatchEvent(loginReq);
+		}
+		
+		private function startEventBusServices():void{
+			IOService.instance.init();
+			LoggingService.instance.init(LoggingService.DEBUG_MODE);
+			ServerCommandService.instance.init();
+		}
+		
+		private function handlePullRequest(request:PullDataRequestEvent):void{
+			requestData.text = request.payload.toString();
+		}
+		
+		private function handleControlResponse(response:ControlResponseEvent):void{
+			if(response.failMessage != ""){
+				Alert.show(response.failMessage);
+				return;
+			}
+			switch(response.command){
+				case(ControlRequestEvent.LOGIN_COMMAND):
+					//token set by control processor
+					
+					//set Session stuff usually set by getRoles
+					var roles:ArrayCollection = new ArrayCollection();
+					roles.addItem(tb_Role.text);
+					Session.instance.roles = roles;
+					Session.instance.preferredRole = tb_Role.text;
+					
+					//Send set role
+					var selectRoleCmd:ControlRequestEvent = new ControlRequestEvent(ControlRequestEvent.SET_ROLE_COMMAND, this);
+					selectRoleCmd.addXMLParameter("role", tb_Role.text);
+					EventBus.instance.dispatchEvent(selectRoleCmd);
+					break;
+				case(ControlRequestEvent.SET_ROLE_COMMAND):
+					var getLayout:ConfigRequestEvent = new ConfigRequestEvent(ConfigRequestEvent.GET_LAYOUT_COMMAND, this);
+					EventBus.instance.dispatchEvent(getLayout);
+					break;
+				default:
+					trace("unhandled control response: " + response.logMessage);
+			}
+		}
+		
+		private function handleConfigResponse(response:ConfigResponseEvent):void{
+			if(response.failMessage != ""){
+				Alert.show(response.failMessage);
+				return;
+			}
+			switch(response.command){
+				case(ConfigRequestEvent.GET_LAYOUT_COMMAND):
+					handleLayout(response.dataAsXML);
+					break;
+				case(ConfigRequestEvent.GET_COMPONENT_CONFIG_COMMAND):
+					handleConfig(response.dataAsXML);
+					break;
+				case(ConfigRequestEvent.GET_COMPONENT_DATA_COMMAND):
+					handleData(response.dataAsXML);
+					break;
+				case(LocalConnectionRequest.GET_DRILLDOWN_DATA):
+					//component will be listening for data
+					responseData.text = response.dataAsXML.toString();
+				default:
+					trace("unhandled config response: " + response.logMessage);
+			}
+			
+		}
+		
+		private function handleLayout(pagesconfig:XML):void{
+			if(pagesconfig.@name == "Drilldown Page"){
+				setSessionId(pagesconfig);
+				_drillDown.init();
+			}
+			else{
+				var chartCompsXML:XMLList = pagesconfig.pageconfig.partitionconfig.panelconfig.componentconfig.(@type == "ChartComponent");
+				if(chartCompsXML.length() > 0){
+					var compId:String = new String((chartCompsXML[0] as XML).@id);
+					var getConfigReq:ConfigRequestEvent = new ConfigRequestEvent(ConfigRequestEvent.GET_COMPONENT_CONFIG_COMMAND, this);
+					getConfigReq.addXMLParameter("componentid", compId);
+					EventBus.instance.dispatchEvent(getConfigReq);
+				}
+			}
+		}
+		
+		private function handleConfig(chartmodel:XML):void{
+			var compId:String = new String(chartmodel.@componentid);
+			var getDataReq:ConfigRequestEvent = new ConfigRequestEvent(ConfigRequestEvent.GET_COMPONENT_DATA_COMMAND, this);
+			getDataReq.addXMLParameter("componentid", compId);
+			EventBus.instance.dispatchEvent(getDataReq);
+		}
+		
+		private function handleData(visualizationdata:XML):void{
+			//pull the link value from a datacolumn to parse and request drill down
+			var links:XMLList = visualizationdata.datarow.datacolumn.link;
+			if(links.length() > 0){
+				var ddPageRequest:ConfigRequestEvent = new ConfigRequestEvent(ConfigRequestEvent.GET_LAYOUT_COMMAND, this);
+				var link:String = String(links[0]);
+				var linkParts:Array = link.split("?");
+				var params:Array = linkParts.length > 1 ? (linkParts[1] as String).split("&"):[""];
+				for each(var param:String in params){
+					var paramParts:Array = param.split("=");
+					ddPageRequest.addXMLParameter(paramParts[0], paramParts[1]);
+				}
+				EventBus.instance.dispatchEvent(ddPageRequest);
+			}
+			else{
+				trace("No Links Found!!!");
+			}
+		}
+		
+		private function setSessionId(pagesConfig:XML):void{
+			try{
+				var sessionId:String = "";
+				var sessionIds:XMLList = pagesConfig.pageconfig.variable.(@name=="sessionid");
+				if(sessionIds.length() > 0){
+					var sessionIdXML:XML = sessionIds[0] as XML;
+					Session.instance.sessionId = new String(sessionIdXML);
+				}
+			}
+			catch(error:Error){
+				Alert.show("ERROR:\NHandle LocalConnection Response - " + error.message); 
+			}
+		}
+		
+		public function registerListeners():void{
+			EventBus.instance.addEventListener(EventTypes.PULL_DATA_REQUEST, handlePullRequest);
+			EventBus.instance.addEventListener(EventTypes.CONTROL_COMMAND_RESPONSE, handleControlResponse);
+			EventBus.instance.addEventListener(EventTypes.CONFIG_COMMAND_RESPONSE, handleConfigResponse);
+		}
+		public function isRecipient(event:EventBusEvent):Boolean{
+			return event.intendedRecipient == this;
+		}
+
+		
+	]]>
+</mx:Script>
+<mx:VBox width="100%" height="100%" paddingTop="10">
+	<mx:VBox id="argsContainer" width="100%">
+		<mx:HBox width="100%" height="27" verticalAlign="middle">
+			<mx:Label text="Host:" /><mx:TextInput id="tb_Host" text="localhost:8181"/><mx:Spacer width="20" />
+			<mx:Label text="Path:" /><mx:TextInput id="tb_Path" text="/dashboard/controller"/><mx:Spacer width="20" />
+			<mx:Label text="Port:" /><mx:TextInput id="tb_Port" width="40" text="8787"/>
+		</mx:HBox>
+		<mx:HBox width="100%" height="27" verticalAlign="middle">
+			<mx:Label text="User:" /><mx:TextInput id="tb_User" text="admin"/><mx:Spacer width="20" />
+			<mx:Label text="Pass:" /><mx:TextInput id="tb_Pass" text="admin"/><mx:Spacer width="20" />
+			<mx:Label text="Role:" /><mx:TextInput id="tb_Role" text="SUPER_USER"/><mx:Spacer width="20" />
+			<mx:Button id="btn_RunTeset" label="Run" click="runTest()" enabled="false"/><mx:Spacer width="40" />
+		</mx:HBox>
+	</mx:VBox>
+	<mx:HDividedBox id="dashboard" width="100%" height="100%">
+		<mx:HBox id="queryManger" width="400" height="100%" horizontalAlign="center" verticalAlign="middle" backgroundColor="#C3C3C3">
+			<mx:Label text="Query Manager Place Holder" />
+		</mx:HBox>
+	</mx:HDividedBox>
+	<mx:VBox width="100%" height="200">
+		<mx:HDividedBox id="requestResponseData" width="100%" height="100%">
+			<mx:TextArea id="requestData" width="50%" height="100%" />
+			<mx:TextArea id="responseData" width="50%" height="100%" />
+		</mx:HDividedBox>
+	</mx:VBox>
+</mx:VBox>
+	
+</mx:Application>

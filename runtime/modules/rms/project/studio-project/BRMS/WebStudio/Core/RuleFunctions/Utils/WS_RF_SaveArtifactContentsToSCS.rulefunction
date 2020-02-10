@@ -1,0 +1,40 @@
+/**
+ * @description Perform actual save of the artifact to SCS
+ */
+void rulefunction WebStudio.Core.RuleFunctions.Utils.WS_RF_SaveArtifactContentsToSCS {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String scsIntegrationType;
+		String scsRootURL;
+		String projectName;
+		String artifactPath;
+		String artifactExtn;
+		Object artifactEModel;
+		String commitComments;		
+		long revisionId;
+	}
+	body {
+		Object serializedBytes = null;
+
+		if (String.equals(artifactExtn, "ruletemplate") || String.equals(artifactExtn, "ruletemplateinstance")) {
+			serializedBytes = WS.RTI.serializeRuleTemplateInstance(artifactEModel);
+		} else if (String.equals(artifactExtn, "rulefunctionimpl")) {
+			serializedBytes = WS.Decision.serializeDecisionTableEMFObject(artifactEModel);
+		} else if (String.equals(artifactExtn, "beprocess")) {
+			serializedBytes = WS.Process.serializeProcessEMFModel(artifactEModel);
+		} else if (String.equals(artifactExtn, "domain")) {
+			serializedBytes = WS.Domain.serializeDomainEMFObject(artifactEModel);
+ 		}
+				
+		WS.SCS.commitFileContents(scsIntegrationType, 
+		                          scsRootURL,
+		                          projectName,
+		                          artifactPath,
+		                          artifactExtn,
+		                          serializedBytes,
+		                          commitComments,
+		                          revisionId);
+	}
+}

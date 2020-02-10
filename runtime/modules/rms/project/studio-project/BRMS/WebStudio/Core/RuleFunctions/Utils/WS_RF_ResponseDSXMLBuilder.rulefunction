@@ -1,0 +1,63 @@
+/**
+ * @description Factory Impl to build the artifact response XML  
+ */
+WebStudio.Core.Concepts.DataSources.WS_C_ResponseData rulefunction WebStudio.Core.RuleFunctions.Utils.WS_RF_ResponseDSXMLBuilder {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String projectName;
+		String artifactPath;
+		String artifactExtn;
+		WebStudio.Core.Concepts.DataSources.WS_C_AnyArtifactDetails artifactContents; 
+		String errorCode;
+		String userName;
+		int pageNum;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.WS_RF_ResponseDSXMLBuilder");
+	
+		WS_C_ResponseData responseData = null;
+		if (String.equals(artifactExtn, "rulefunctionimpl")) {
+			responseData = WS_RF_BuildDecisionTableResponse(projectName, artifactPath, artifactExtn, artifactContents, errorCode, userName, pageNum);
+			
+		} else if (String.equals(artifactExtn, "ruletemplate") || String.equals(artifactExtn, "ruletemplateinstance") || String.equals(artifactExtn, "domain")) {
+			if (errorCode == null) {
+				WS_C_AnyArtifactDetails anyDetails = null;
+				
+				if (String.equals(artifactExtn, "ruletemplate") || String.equals(artifactExtn, "ruletemplateinstance")) {
+					WS_C_RuleTemplateArtifactDetails ruleTemplateDetails = Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/WS_C_RuleTemplateArtifactDetails");
+	
+					ruleTemplateDetails.artifactPath = artifactPath;
+					ruleTemplateDetails.artifactType = artifactExtn;
+					Instance.PropertyAtom.setConceptReference(ruleTemplateDetails.artifactContent, artifactContents, 1L);
+					
+					anyDetails = ruleTemplateDetails;
+					
+				} else if (String.equals(artifactExtn, "domain")) {
+					WS_C_DomainArtifactDetails domainDetails = Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/WS_C_DomainArtifactDetails");
+					
+					domainDetails.artifactPath = artifactPath;
+					domainDetails.artifactType = artifactExtn;
+					Instance.PropertyAtom.setConceptReference(domainDetails.artifactContent, artifactContents, 1L);
+					
+					anyDetails = domainDetails;
+				}
+				
+				WS_C_AbstractDataSourceRecord abstractDataSourceRecord = 
+				Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/Records/WS_C_ArtifactContentsDataSourceRecord");
+				
+				WS_C_ArtifactContentsDataSourceRecord artifactContentsDataSourceRecord = abstractDataSourceRecord;	
+				Instance.PropertyAtom.setContainedConcept(artifactContentsDataSourceRecord.artifactDetails, anyDetails, 1L);
+				
+				if (responseData == null) {
+					responseData = Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/WS_C_ResponseData");
+				}
+				Instance.PropertyArray.appendContainedConcept(responseData.record, abstractDataSourceRecord, 1L);
+				
+				responseData.clearContentReference = true;
+			}
+		}
+		return responseData;		
+	}
+}

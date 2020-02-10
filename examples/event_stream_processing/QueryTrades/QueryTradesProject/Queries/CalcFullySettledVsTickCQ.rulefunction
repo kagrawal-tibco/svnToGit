@@ -1,0 +1,26 @@
+/**
+ * @description 
+ */
+void rulefunction Queries.CalcFullySettledVsTickCQ {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String	uniqueId;
+	}
+	body {
+		String queryName = "CalcFullySettledVsTickCQ";
+		String statementName = queryName + "-CQ-" + uniqueId;
+		String listenerName = queryName + "-CQ-L" + uniqueId;
+		
+		Query.Statement.open(queryName, statementName);
+		//Trades need snapshot.
+		Query.Statement.setSnapshotRequired(statementName, "trade", true);
+		//StockTicks do not need snapshot.
+		Query.Statement.setSnapshotRequired(statementName, "tick", false);
+		Query.Statement.executeWithCallback(statementName, listenerName, 
+		                                    "/Queries/CalcFullySettledVsTickCQCallback", true, uniqueId);
+		
+		System.debugOut("Started query: " + statementName);
+	}
+}

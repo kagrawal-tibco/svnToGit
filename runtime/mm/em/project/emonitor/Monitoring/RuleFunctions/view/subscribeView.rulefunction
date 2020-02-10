@@ -1,0 +1,28 @@
+/**
+ * @description 
+ */
+void rulefunction Monitoring.RuleFunctions.view.subscribeView {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Shared.Concepts.AbstractMonitorView	view;
+		
+	}
+	body {
+		Shared.RuleFunctions.log("subscribeView","DEBUG","Attempting to subscribe "+view@extId+"...");
+		String componentConfigMapId = getComponentConfigMapId(view.monitorable,view.type);
+		String dataRetrievalType = Util.HashMap.getObject(componentConfigMapId,"dataretrievaltype");
+		if (Util.HashMap.getObject(componentConfigMapId,"subscribable") == true) {
+		    long frequency = System.getGlobalVariableAsLong("JMXUpdateFreq",30000);
+		    String name = view.monitorable.name;
+		    String eventURI = Util.HashMap.getObject(componentConfigMapId,"retrievalconfig1");
+		    String typeWithPath = Shared.RuleFunctions.topology.getTypePath(view.monitorable)+"/"+view.type;
+		    BEMM.metrics.subscribe(view@extId,name,dataRetrievalType,Instance.PropertyArray.toArrayString(view.monitorable.properties),typeWithPath,eventURI);
+		    Shared.RuleFunctions.log("subscribeView","DEBUG",view@extId+" successfully subscribed...");
+		}
+		else {
+		    Shared.RuleFunctions.log("subscribeView","DEBUG",view@extId+" is not subscribable...");
+		}
+	}
+}

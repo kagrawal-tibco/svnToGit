@@ -1,0 +1,66 @@
+/**
+ * @description 
+ */
+WebStudio.Core.Concepts.DataSources.WS_C_TemporaryReturnData rulefunction WebStudio.Core.RuleFunctions.Actions.Deployment.WS_RF_FetchDeploymentConfigs {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object servletRequest;
+		WebStudio.Security.Authn.Concepts.WS_C_LoggedInUser loggedInUser;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.Lifecycle.BuildAndDeploy.WS_RF_FetchDeployConfigs");
+				
+		String responseMessage = null;
+		String errorCode = null;
+		int recordCount = 0;
+		int responseStatus = 0;
+		
+		WS_C_ResponseData responseData = Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/WS_C_ResponseData");
+		
+		if (!WS_RF_CheckHTTPMethod(servletRequest, "GET")) {
+			responseStatus = -1;
+			recordCount = 0;
+			errorCode = "ERR_5101";
+			responseMessage = "Invalid HTTP Method, expect method is [GET].";
+		} else {
+			String username = loggedInUser.username;
+			Log.log(LOGGER, "Debug", "Logged in user [%s]", username);
+			
+			String subscriptionId = null;
+			if (loggedInUser.jwtToken != null) subscriptionId = loggedInUser.jwtToken.sbsc;
+			
+			String deployConfigContainerExtId = WS_RF_CreateUserArtifactExtId("DEPLOYMENT_CONFIG_CONTAINER", null, null, null, subscriptionId, null);
+			WS_C_DeploymentConfigContainer wsDeployConfigContainer = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(deployConfigContainerExtId, true, "/WebStudio/Core/Concepts/Lifecycle/WS_C_DeploymentConfigContainer");
+			if (wsDeployConfigContainer == null) {
+				wsDeployConfigContainer = Instance.createInstance("xslt://{{/WebStudio/Core/Concepts/Lifecycle/WS_C_DeploymentConfigContainer}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"2.0\"><xsl:param name=\"deployConfigContainerExtId\"/><xsl:template name=\"Function\" match=\"/\"><createObject><object><xsl:attribute name=\"extId\"><xsl:value-of select=\"$deployConfigContainerExtId\"/></xsl:attribute></object></createObject></xsl:template></xsl:stylesheet>");
+			}
+			
+			WS_C_DeploymentConfig[] deployConfigs = Instance.PropertyArray.toArrayContainedConcept(wsDeployConfigContainer.deploymentConfigs);
+		    
+		    if (deployConfigs != null) {
+		    		Log.log(LOGGER, "Debug", "Total Deploy Config found - %s", deployConfigs@length);
+		    		for (int i=0; i<deployConfigs@length; i++) {
+	    				WS_C_AbstractDataSourceRecord abstractDataSourceRecord = Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/Records/WS_C_DeploymentConfigDataSourceRecord");
+	    				WS_C_DeploymentConfigDataSourceRecord deploymentConfigDSR = abstractDataSourceRecord;
+	    				deploymentConfigDSR.name = deployConfigs[i].name;
+	    				deploymentConfigDSR.host = deployConfigs[i].host;
+	    				deploymentConfigDSR.port = deployConfigs[i].port;
+	    				deploymentConfigDSR.enabled = deployConfigs[i].enabled;
+	    				deploymentConfigDSR.userName = deployConfigs[i].userName;
+	    				deploymentConfigDSR.password = deployConfigs[i].password;
+	    				deploymentConfigDSR.agentName = deployConfigs[i].agentName;
+	    				deploymentConfigDSR.clusterName = deployConfigs[i].clusterName;
+	    				deploymentConfigDSR.inMemory = deployConfigs[i].inMemory;
+	    				deploymentConfigDSR.projectName = deployConfigs[i].projectName;
+	    				
+	    				Instance.PropertyArray.appendContainedConcept(responseData.record, abstractDataSourceRecord, 1L);
+					recordCount++;
+		    		}
+		    }
+		}
+			    
+	    return WS_RF_CreateTemporaryReturnData(responseStatus, recordCount, errorCode, responseMessage, responseData);
+	}
+}

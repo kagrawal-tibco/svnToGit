@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<basetypes>
+    <!-- string related type definitions -->
+    <type name="t_string_col" arrayof="string"/>
+    <type name="t_string_hist_tuple">
+        <attribute name="timeIdx" type="timestamp"/>
+        <attribute name="val" type="string"/>
+    </type>
+    <type name="t_string_hist_table" arrayof="t_string_hist_tuple"/>
+    <type name="t_string_hist">
+        <attribute name="howMany" type="integer"/>
+        <attribute name="vals" type="t_string_hist_tuple" isarray="true"/>
+    </type>
+    <type name="t_string_col_hist" arrayof="t_string_hist" multidimension="true"/>
+
+    <!-- integer related type definitions -->
+    <type name="t_int_col" arrayof="integer"/>
+    <type name="t_int_hist_tuple">
+        <attribute name="timeIdx" type="timestamp"/>
+        <attribute name="val" type="integer"/>
+    </type>
+    <type name="t_int_hist_table" arrayof="t_int_hist_tuple"/>
+    <type name="t_int_hist">
+        <attribute name="howMany" type="integer"/>
+        <attribute name="vals" type="t_int_hist_tuple" isarray="true"/>
+    </type>
+    <type name="t_int_col_hist" arrayof="t_int_hist" multidimension="true"/>
+
+    <!-- long related type definitions -->
+    <type name="t_long_col" arrayof="long"/>
+    <type name="t_long_hist_tuple">
+        <attribute name="timeIdx" type="timestamp"/>
+        <attribute name="val" type="long"/>
+    </type>
+    <type name="t_long_hist_table" arrayof="t_long_hist_tuple"/>
+    <type name="t_long_hist">
+        <attribute name="howMany" type="integer"/>
+        <attribute name="vals" type="t_long_hist_tuple" isarray="true"/>
+    </type>
+    <type name="t_long_col_hist" arrayof="t_long_hist" multidimension="true"/>
+
+    <!-- double related type definitions -->
+    <type name="t_double_col" arrayof="double"/>
+    <type name="t_double_hist_tuple">
+        <attribute name="timeIdx" type="timestamp"/>
+        <attribute name="val" type="double"/>
+    </type>
+    <type name="t_double_hist_table" arrayof="t_double_hist_tuple"/>
+    <type name="t_double_hist">
+        <attribute name="howMany" type="integer"/>
+        <attribute name="vals" type="t_double_hist_tuple" isarray="true"/>
+    </type>
+    <type name="t_double_col_hist" arrayof="t_double_hist" multidimension="true"/>
+
+    <!-- boolean related type definitions -->
+    <type name="t_boolean_col" arrayof="integer"/>
+    <type name="t_boolean_hist_tuple">
+        <attribute name="timeIdx" type="timestamp"/>
+        <attribute name="val" type="integer"/>
+    </type>
+    <type name="t_boolean_hist_table" arrayof="t_boolean_hist_tuple"/>
+    <type name="t_boolean_hist">
+        <attribute name="howMany" type="integer"/>
+        <attribute name="vals" type="t_boolean_hist_tuple" isarray="true"/>
+    </type>
+    <type name="t_boolean_col_hist" arrayof="t_boolean_hist" multidimension="true"/>
+
+    <!-- number related type definitions -->
+    <type name="t_number_col" arrayof="number"/>
+    <type name="t_number_hist_tuple">
+        <attribute name="timeIdx" type="timestamp"/>
+        <attribute name="val" type="number"/>
+    </type>
+    <type name="t_number_hist_table" arrayof="t_number_hist_tuple"/>
+    <type name="t_number_hist">
+        <attribute name="howMany" type="integer"/>
+        <attribute name="vals" type="t_number_hist_tuple" isarray="true"/>
+    </type>
+    <type name="t_number_col_hist" arrayof="t_number_hist" multidimension="true"/>
+
+    <!-- datetime related type definitions -->
+    <type name="t_datetime">
+        <attribute name="tm" type="timestamp"/>
+        <attribute name="tz" type="string" size="100"/>
+    </type>
+    <type name="t_datetime_col" arrayof="t_datetime"/>
+    <type name="t_datetime_hist_tuple">
+        <attribute name="timeIdx" type="timestamp"/>
+        <attribute name="val" type="t_datetime"/>
+    </type>
+    <type name="t_datetime_hist_table" arrayof="t_datetime_hist_tuple"/>
+    <type name="t_datetime_hist">
+        <attribute name="howMany" type="integer"/>
+        <attribute name="vals" type="t_datetime_hist_tuple" isarray="true"/>
+    </type>
+    <type name="t_datetime_col_hist" arrayof="t_datetime_hist" multidimension="true"/>
+
+    <!-- entity related type definitions -->
+    <type name="t_entity">
+        <attribute name="id$" type="long"/>
+        <attribute name="extId$" type="string"/>
+        <attribute name="state$" type="char"/>
+    </type>
+    <type name="t_entity_ref">
+        <attribute name="id$" type="long"/>
+    </type>
+    <type name="t_entity_ref_table" arrayof="t_entity_ref"/>
+    <type name="t_entityref_hist_tuple">
+        <attribute name="timeidx" type="timestamp"/>
+        <attribute name="val" type="t_entity_ref"/>
+    </type>
+    <type name="t_entityref_hist_table" arrayof="t_entityref_hist_tuple"/>
+    <type name="t_entityref_hist">
+        <attribute name="howMany" type="integer"/>
+        <attribute name="vals" type="t_entityref_hist_tuple" isarray="true"/>
+    </type>
+    <type name="t_entityref_col_hist" arrayof="t_entityref_hist" multidimension="true"/>
+
+    <!-- reverse reference related type definitions -->
+    <type name="t_reverse_ref">
+        <attribute name="propertyName$" type="string"/>
+        <attribute name="id$" type="long"/>
+    </type>
+    <type name="t_reverse_ref_table" arrayof="t_reverse_ref"/>
+
+    <!-- concept related type definitions -->
+    <type name="t_concept" extends="t_entity">
+        <attribute name="time_created$" type="timestamp"/>
+        <attribute name="time_last_modified$" type="timestamp"/>
+        <attribute name="parent$" type="t_entity_ref"/>
+        <attribute name="rrf$" type="t_reverse_ref" isarray="true"/>
+    </type>
+
+    <!-- process related type definitions -->
+    <type name="t_process" extends="t_concept">
+        <attribute name="processStatus$" type="integer"/>
+        <attribute name="parentProcess$" type="t_entity_ref"/>
+        <attribute name="lastTaskExecuted$" type="integer"/>
+        <attribute name="processTemplateVersion$" type="integer"/>
+        <attribute name="pendingEventMap$" type="t_string_col"/>
+    </type>
+
+    <!-- event related type definitions -->
+    <type name="t_event" extends="t_entity">
+        <attribute name="time_created$" type="timestamp"/>
+    </type>
+    <type name="t_simple_event" extends="t_event">
+        <attribute name="time_acknowledged$" type="timestamp"/>
+        <attribute name="time_sent$" type="timestamp"/>
+    </type>
+    <type name="t_time_event" extends="t_event">
+        <attribute name="currentTime" type="long"/>
+        <attribute name="nextTime" type="long"/>
+        <attribute name="closure" type="string"/>
+        <attribute name="ttl" type="long"/> <!-- should it be long or integer? -->
+        <attribute name="fired" type="integer"/>
+    </type>
+    <type name="t_statemachine_timeout" extends="t_time_event">
+        <attribute name="smid" type="long" psuedotype="t_entity_ref"/>
+        <attribute name="propertyName" type="string"/>
+    </type>
+
+    <!-- property related type definitions -->
+    <type name="t_concept_property$">
+        <attribute name="propertyName$" type="string" size="2000"/>
+        <attribute name="propertyIndex$" type="integer"/>
+        <attribute name="propertyType$" type="integer"/>
+        <attribute name="isArray" type="integer"/>
+        <attribute name="historySize" type="integer"/>
+        <attribute name="referredPath" type="string"/>
+    </type>
+    <type name="t_concept_property_table$" arrayof="t_concept_property$"/>
+
+    <type name="t_event_property$">
+        <attribute name="propertyName$" type="string" size="2000"/>
+        <attribute name="propertyIndex$" type="integer"/>
+        <attribute name="propertyType$" type="integer"/>
+    </type>
+    <type name="t_event_property_table$" arrayof="t_event_property$"/>
+
+    <!-- description related type definitions -->
+    <type name="t_entity_description$">
+        <attribute name="masterCache$" type="string" size="2000"/>
+        <attribute name="entityCache$" type="string" size="2000"/>
+        <attribute name="entityClass" type="string" size="2000"/>
+        <attribute name="cacheId" type="integer"/>
+        <attribute name="version" type="integer"/>
+    </type>
+
+    <type name="t_concept_description$" extends="t_entity_description$">
+        <attribute name="isContained" type="integer"/>
+        <attribute name="properties" type="t_concept_property$" isarray="true"/>
+    </type>
+
+    <type name="t_event_description$" extends="t_entity_description$">
+        <attribute name="properties" type="t_event_property$" isarray="true"/>
+    </type>
+</basetypes>

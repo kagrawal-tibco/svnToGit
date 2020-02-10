@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<cluster xmlns="http://tibco.com/businessevents/configuration/5.1">
+    <revision>
+        <version>10</version>
+        <author>Bob</author>
+        <date>2010/11/05 14:29:02</date>
+        <comment>Some text here.</comment>
+    </revision>
+    <name>My_Cluster</name>
+    <message-encoding>UTF-8</message-encoding>
+    <object-management>
+        <memory-manager/>
+        <db-concepts>
+            <db-uris/>
+            <check-interval>60</check-interval>
+            <inactivity-timeout>0</inactivity-timeout>
+            <initial-size>5</initial-size>
+            <max-size>5</max-size>
+            <min-size>5</min-size>
+            <property-check-interval>900</property-check-interval>
+            <retry-count>-1</retry-count>
+            <wait-timeout>1</wait-timeout>
+        </db-concepts>
+    </object-management>
+    <rulesets>
+        <rules id="rs-001">
+            <uri>/Rules/DemoRule</uri>
+        </rules>
+    </rulesets>
+    <function-groups>
+        <functions id="functions-init">
+            <uri>/RuleFunctions/UverseDemo</uri>
+        </functions>
+    </function-groups>
+    <destination-groups>
+        <destinations id="endpoint-group-1">
+            <destination id="demo_758C172C">
+                <pre-processor/>
+                <queue-size>0</queue-size>
+                <thread-count/>
+                <threading-model>shared-queue</threading-model>
+                <uri>/Channels/RV/demo</uri>
+            </destination>
+        </destinations>
+    </destination-groups>
+    <log-configs>
+        <log-config id="log-01">
+            <enabled>true</enabled>
+            <roles>default:info channel:warn</roles>
+            <files>
+                <enabled>true</enabled>
+                <dir>logs</dir>
+                <name/>
+                <max-number>10</max-number>
+                <max-size>10000000</max-size>
+                <append>true</append>
+            </files>
+            <terminal>
+                <enabled/>
+                <sys-err-redirect/>
+                <sys-out-redirect/>
+            </terminal>
+            <line-layout>
+                <enabled>false</enabled>
+                <class/>
+                <arg/>
+            </line-layout>
+        </log-config>
+        <log-config id="log-02">
+            <enabled>true</enabled>
+            <roles>default:info</roles>
+            <files>
+                <enabled>false</enabled>
+                <dir/>
+                <name/>
+                <max-number/>
+                <max-size/>
+                <append>false</append>
+            </files>
+            <terminal>
+                <enabled>true</enabled>
+                <sys-err-redirect/>
+                <sys-out-redirect/>
+            </terminal>
+            <line-layout>
+                <enabled>false</enabled>
+                <class>org.apache.log4j.PatternLayout</class>
+                <arg>[%d{dd MMM yyyy HH:mm:ss}][%-5p][%t] - %m%n</arg>
+            </line-layout>
+        </log-config>
+    </log-configs>
+    <agent-classes>
+        <inference-agent-class id="ia-213">
+            <rules>
+                <ref>rs-001</ref>
+            </rules>
+            <destinations>
+                <ref>endpoint-group-1</ref>
+            </destinations>
+            <startup>
+                <ref>functions-init</ref>
+            </startup>
+            <shutdown>
+                <ref>functions-init</ref>
+            </shutdown>
+            <local-cache>
+                <eviction>
+                    <max-size>1000</max-size>
+                    <max-time>3600</max-time>
+                </eviction>
+            </local-cache>
+            <concurrent-rtc>false</concurrent-rtc>
+            <businessworks>
+                <uri/>
+            </businessworks>
+            <property-group/>
+        </inference-agent-class>
+    </agent-classes>
+    <processing-units>
+        <processing-unit id="unit1">
+            <agents>
+                <agent>
+                    <ref>ia-213</ref>
+                    <key/>
+                    <priority/>
+                </agent>
+            </agents>
+            <logs>log-01</logs>
+            <hot-deploy>false</hot-deploy>
+            <db-concepts>false</db-concepts>
+            <http>
+                <connection-timeout>60000</connection-timeout>
+                <accept-count>-1</accept-count>
+                <connection-linger>-1</connection-linger>
+                <socket-output-buffer-size>9000</socket-output-buffer-size>
+                <max-processors>-1</max-processors>
+                <tcp-no-delay>true</tcp-no-delay>
+                <document-root/>
+                <document-page/>
+                <stale-connection-check>false</stale-connection-check>
+                <ssl>
+                    <key-manager-algorithm/>
+                    <trust-manager-algorithm/>
+                    <protocols/>
+                    <ciphers/>
+                </ssl>
+            </http>
+            <property-group/>
+        </processing-unit>
+    </processing-units>
+    <property-group/>
+</cluster>

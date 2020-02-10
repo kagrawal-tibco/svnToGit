@@ -1,0 +1,35 @@
+/**
+ * @description 
+ */
+void rulefunction WebStudio.Core.RuleFunctions.Utils.RT.Builder.WS_RF_CreateBuilderDisplayProperties {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object ruleTemplateObject;
+		WebStudio.Core.Concepts.RuleTemplateInstance.Builder.WS_C_RuleTemplateInstanceBuilder ruleTemplateInstanceBuilder;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.RT.Builder.WS_RF_CreateBuilderDisplayProperties");
+		
+		Object[] displayPropertyList = WS.RT.Builder.getDisplayProperties(ruleTemplateObject);
+		if (displayPropertyList != null && displayPropertyList@length > 0) {
+			
+			WS_C_DisplayProperties displayProperties = Instance.newInstance("/WebStudio/Core/Concepts/RuleTemplateInstance/Builder/WS_C_DisplayProperties", null);
+			Instance.PropertyAtom.setConceptReference(ruleTemplateInstanceBuilder.displayProperties, displayProperties, 1L);	
+			
+			for (int i=0; i<displayPropertyList@length; i++) {
+				WS_C_PropertyInfo displayProperty = Instance.newInstance("/WebStudio/Core/Concepts/RuleTemplateInstance/Builder/WS_C_PropertyInfo", null);
+				Instance.PropertyArray.appendContainedConcept(displayProperties.displayProperty, displayProperty, 1L);
+				
+				String propKey = WS.RT.Builder.getDisplayPropertyKey(displayPropertyList[i]);
+				Instance.PropertyAtom.setString(displayProperty.propKey, propKey, 1L);
+				
+				String value = WS.RT.Builder.getDisplayPropertyValue(displayPropertyList[i]);
+				Instance.PropertyAtom.setString(displayProperty.propValue, value, 1L);
+				
+				Log.log(LOGGER, "Info", "Key - %s, Value -%s", propKey, value);
+			}
+		}
+	}
+}

@@ -1,0 +1,102 @@
+/**
+ * @description Read Lock workflow info.
+ */
+void rulefunction Approval.Rules.RuleFunctions.ArtifactRuleFunctions.Startup.AMS_RF_ReadLockWorkflowConfig {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		
+	}
+	body {
+		Object LOGGER = Log.getLogger("Approval.Rules.RuleFunctions.ArtifactRuleFunctions.Startup.AMS_RF_ReadLockWorkflowConfig");
+		Object encoding = "UTF-8";
+		String pathSeparator = "/";
+		String baseProjectDir = System.getSystemPropertyAsString("rms.projects.baselocation", null);
+		//Read the LockWorkflowStages.xml file
+		String filePath = 
+			System.getSystemPropertyAsString("rms.lockworkflowstages.config.file", 
+			                                  baseProjectDir + pathSeparator + "LockWorkflowStages.xml");
+		
+//		String stageInfo = 
+//			"<tns:WorkflowInfo xmlns:tns=\"www.tibco.com/be/rms/RoleWorkflowStages\">\n <tns:WorkflowStages>"; 
+		String stages = null;
+		if (File.fileExists(filePath)) {
+			String fileContents = File.readFileAsString(filePath, encoding);
+			
+			String prefixes = "tns=www.tibco.com/be/rms/RoleWorkflowStages";
+			//Check for all roles
+			String allRolesCountXPath = "count($var//tns:role)";
+			//Get number of role entries
+			String roleEntriesString = 
+				XPath.execute(allRolesCountXPath, fileContents, prefixes);
+			
+			//Strangely this comes out to be a double
+			double countRoles = Number.doubleValue(roleEntriesString);
+			
+			//XPath indexes start from 1
+			for (int loop = 1; loop <= countRoles; loop++) {
+				//Get each role chunk xml
+				String roleXPath = "$var//tns:role[" + loop + "]";
+				String roleXML = XPath.execute(roleXPath, fileContents, prefixes);
+				if (roleXML != null) {
+					//Get name
+					String roleNameXPath = "string($var//attribute::tns:name)";
+					//Execute on chunked XML
+					String roleName = XPath.execute(roleNameXPath, roleXML, prefixes);
+					Log.log(LOGGER, "Debug", "Role name obtained in AMS_RF_ReadLockWorkflowConfig - %s ", roleName);
+					//Check if it already exists
+					//This is cache-only. Lock and load it first.
+					boolean roleLock = Cluster.DataGrid.Lock(roleName, -1, false);
+					if (roleLock) {
+						AAA.Concepts.AMS_C_Role role = Cluster.DataGrid.CacheLoadConceptByExtId(roleName, false);
+						if (role == null) {
+							role = 
+								Instance.createInstance("xslt://{{/AAA/Concepts/AMS_C_Role}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"1.0\" exclude-result-prefixes=\"xsl xsd\">\n    <xsl:output method=\"xml\"/>\n    <xsl:param name=\"roleName\"/>\n    <xsl:template match=\"/\">\n        <createObject>\n            <object>\n                <xsl:attribute name=\"extId\">\n                    <xsl:value-of select=\"$roleName\"/>\n                </xsl:attribute>\n            </object>\n        </createObject>\n    </xsl:template>\n</xsl:stylesheet>");
+						}
+						//Clear previous stages if any
+						Instance.PropertyArray.clear(role.lockStages);
+						//Get count of stages
+						String stagesCountXPath = "count($var//child::tns:stage)";
+						String stagesCountString = 
+							XPath.execute(stagesCountXPath, roleXML, prefixes);
+						
+						double stagesCount = Number.doubleValue(stagesCountString);
+						Log.log(LOGGER, "Debug", "Number of stages for role %s - %s", roleName, stagesCount);
+								
+						for (int innerLoop = 1; innerLoop <= stagesCount; innerLoop++) {
+							String stageNameXPath = "string($var//child::tns:stage[" + innerLoop + "]/attribute::tns:name)";
+							String stageName = 
+								XPath.execute(stageNameXPath, roleXML, prefixes);
+							Log.log(LOGGER, "Debug", "Stage Name %s", stageName);
+							
+							String stageIdXPath = "string($var//child::tns:stage[" + innerLoop + "]/attribute::tns:id)";
+							String stageId = 
+								XPath.execute(stageIdXPath, roleXML, prefixes);
+							Log.log(LOGGER, "Debug", "Stage Id %s", stageName);
+							//Check whether concept exists with this stage name
+							//This is cache-only. Lock and load it first.
+							boolean workflowStageLock = Cluster.DataGrid.Lock(stageName, -1, false);
+							if (workflowStageLock) {
+								AMS_C_WorkflowStage workflowStage = Cluster.DataGrid.CacheLoadConceptByExtId(stageName, false);
+								if (workflowStage == null) {
+									workflowStage = 
+										Instance.createInstance("xslt://{{/Approval/Concepts/ArtifactsConcepts/AMS_C_WorkflowStage}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"1.0\" exclude-result-prefixes=\"xsl xsd\">\n    <xsl:output method=\"xml\"/>\n    <xsl:param name=\"stageName\"/>\n    <xsl:param name=\"stageId\"/>\n    <xsl:template match=\"/\">\n        <createObject>\n            <object>\n                <xsl:attribute name=\"extId\">\n                    <xsl:value-of select=\"$stageName\"/>\n                </xsl:attribute>\n                <stageId>\n                    <xsl:value-of select=\"$stageId\"/>\n                </stageId>\n                <name>\n                    <xsl:value-of select=\"$stageName\"/>\n                </name>\n            </object>\n        </createObject>\n    </xsl:template>\n</xsl:stylesheet>");
+								}	
+								//Unlock
+								Cluster.DataGrid.UnLock(stageName, false);
+								//Add it to role's stages
+								Instance.PropertyArray.appendConceptReference(role.lockStages, workflowStage, 1L);
+							}
+						}
+						Cluster.DataGrid.UnLock(roleName, false);
+					}
+				}
+			}	
+		} else {
+			Exception fileNotFoundException = 
+				Exception.newException("FILE_MISSING", "Workflow Configuration file for Lock workflow not found", null);
+			throw fileNotFoundException;
+		}
+	}
+}

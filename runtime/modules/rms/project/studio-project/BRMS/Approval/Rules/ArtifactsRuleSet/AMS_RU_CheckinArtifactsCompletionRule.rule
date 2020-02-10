@@ -1,0 +1,111 @@
+/**
+ * @description 
+ * @author aathalye-lt
+ */
+rule Approval.Rules.ArtifactsRuleSet.AMS_RU_CheckinArtifactsCompletionRule {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Approval.Events.ArtifactEvents.Commit.AMS_E_CheckinCompletionEvent ams_e_checkincompletionevent;
+	}
+	when {
+		//TODO need to join with previous checkin request. Need to find a way to identify it.
+		ams_e_checkincompletionevent.projectname != null;
+	}
+	then {
+		Object LOGGER = Log.getLogger("Approval.Rules.ArtifactsRuleSet.AMS_RU_CheckinArtifactsCompletionRule");
+		Log.log(LOGGER, "Debug", "In rule %s", "AMS_RU_CheckinArtifactsCompletionRule");
+		
+		String baseProjectDir = WS_RF_GetSCSRootURL(ams_e_checkincompletionevent.projectname, null);
+		String pathSeparator = "/";
+		
+		String payload = ams_e_checkincompletionevent@payload;
+		
+		AMS_C_RevisionNumber revisionNumberC = Instance.getByExtIdByUri("REV_NUMBER", "/Approval/Scorecards/AMS_C_RevisionNumber");
+		long revisionId = revisionNumberC.revisionNumber;
+        
+        //Increment
+        revisionNumberC.revisionNumber = revisionNumberC.revisionNumber + 1;
+        Log.log(LOGGER, "Info", "Request Id generated %s", revisionId);
+        
+        //Assert this so that SM may fire.
+        AMS_C_Checkin artifactCheckinCompletion = 
+        	Instance.createInstanceFromXML("/Approval/Concepts/ArtifactsConcepts/AMS_C_Checkin", payload);
+        //Set project name	
+		artifactCheckinCompletion.projectName = ams_e_checkincompletionevent.projectname;
+		Log.log(LOGGER, "Debug", "Project name %s", artifactCheckinCompletion.projectName);
+        //Get all paths checked in
+        String[] checkinArtifactPaths = 
+        	Instance.PropertyArray.toArrayString(artifactCheckinCompletion.artifactPaths);
+        	
+        String patternId = artifactCheckinCompletion.patternId;
+        Log.log(LOGGER, "Debug", "Pattern Id %s", patternId);
+
+        artifactCheckinCompletion.revisionId = String.valueOfLong(revisionId);
+        //Create a folder with this request id
+        boolean folderCreated = false;
+        boolean commitSuccess = true;
+        
+        //Convert to WS model.
+        WS_C_UserCheckin userCheckin = AMS_RF_TransformCheckinModel(artifactCheckinCompletion);
+		WS_C_CommittableDeltaEntry[] committableDeltaEntries = Instance.PropertyArray.toArrayConcept(userCheckin.committables);
+		int noOfCommitables = committableDeltaEntries@length;
+
+        if (noOfCommitables > 0) {
+	        for (int loop = 0, length = checkinArtifactPaths@length; loop < length; loop++) {
+	        	String checkinArtifactPath = checkinArtifactPaths[loop];
+	        	String extId = 
+	        		String.concat(String.concat(patternId, "@"), checkinArtifactPath);
+	        	
+	        	Log.log(LOGGER, "Debug", "Ext Id %s", extId);
+	        	//Lock with this id
+	        	boolean committedArtifactLock = Cluster.DataGrid.Lock(extId, -1, false);
+				if (committedArtifactLock) {
+		        	//Load concept with this extid since this concept is cache-only
+		        	//and it is possible that a checkin request could be divided into
+		        	//multiple agents by a load-balancer. As an example if one checkin
+		        	//consists of Files F1, F2, and F3, an LB could route F1, F2 checkin events
+		        	//to Inf1 and F3 followed by completion event to Inf2.
+		        	//So Inf1 needs to create concepts for F1 and F2 and dump them in cache
+		        	//while Inf2 will dump F3 to cache and when Inf2 processes completion event
+		        	//each concept for F1, F2, F3 needs to be loaded into Inf2's WM before
+		        	//processing.
+		        	AMS_C_ArtifactCommited committed = null;
+		        	int retryCounter = 0;
+		        	while (committed == null && retryCounter < 10) {
+		        	    committed = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(extId, false, "/Approval/Concepts/ArtifactsConcepts/AMS_C_ArtifactCommited");
+		        	    retryCounter++;
+		        	}
+	        		//Create checkin history entry.
+//	        		AMS_RF_CreateCheckinLogEntry(ams_e_checkincompletionevent.projectName, checkinArtifactPath, revisionId);
+		        	//Do this irrespective of operation
+		        	Log.log(LOGGER, "Debug", "Artifact Path [%s] and operation [%s]", checkinArtifactPath, committed.operation);
+		        	committed.patternId = artifactCheckinCompletion.patternId;
+		        	committed.revisionId = revisionId;	
+		        	//Set project name
+		        	committed.projectName = ams_e_checkincompletionevent.projectname;
+		        	committed.status = "Committed";
+	        	}
+	        }
+        }	        
+
+        //Send response
+        AMS_E_CheckinCompletionResponseEvent response = 
+        	Event.createEvent("xslt://{{/Approval/Events/ArtifactEvents/Commit/AMS_E_CheckinCompletionResponseEvent}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"1.0\" exclude-result-prefixes=\"xsl xsd\">\n    <xsl:output method=\"xml\"/>\n    <xsl:param name=\"revisionId\"/>\n    <xsl:template match=\"/\">\n        <createEvent>\n            <event>\n                <revisionId>\n                    <xsl:value-of select=\"$revisionId\"/>\n                </revisionId>\n            </event>\n        </createEvent>\n    </xsl:template>\n</xsl:stylesheet>");
+
+        //Consume this event so that rule is not fired again
+        Event.consumeEvent(ams_e_checkincompletionevent);
+        
+        String stackID = patternId;
+	    Object stack = WS.Common.Stack.create(stackID);
+        	while(!WS.Common.Stack.isEmpty(stack)) {
+        		Event event = WS.Common.Stack.pop(stack);
+        		Event.consumeEvent(event);
+        	}
+        	if (WS.Common.Stack.isEmpty(stack)) WS.Common.Stack.delete(stackID);	
+
+        Event.replyEvent(ams_e_checkincompletionevent, response);    
+	}
+}

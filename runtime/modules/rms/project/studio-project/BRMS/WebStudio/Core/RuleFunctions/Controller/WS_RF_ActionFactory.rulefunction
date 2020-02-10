@@ -1,0 +1,630 @@
+/**
+ * @description 
+ */
+WebStudio.Core.Concepts.DataSources.WS_C_TemporaryReturnData rulefunction WebStudio.Core.RuleFunctions.Controller.WS_RF_ActionFactory {
+	attribute {
+		validity = ACTION;
+	}
+	scope {		
+		String contextPath;
+		Object asyncContextObject;
+		WebStudio.Security.Authn.Concepts.WS_C_LoggedInUser loggedInUser;
+		String contentType;
+		String apiToken;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Controller.WS_RF_ActionFactory");
+		
+		Object servletRequest = HTTP.Servlet.getServletRequest(asyncContextObject);
+		
+		Log.log(LOGGER, "Debug", "Context Path  - %s", contextPath);
+		
+		boolean contextMatchFound = false;
+		WS_C_TemporaryReturnData tempReturnData = null;
+		
+		String preContextPath = WS_RF_GetNextStringToken(contextPath, "/");
+		Log.log(LOGGER, "Debug", "Pre Context Path  - %s", preContextPath);
+		
+		String baseURI = "/ws/api/" + apiToken + "/";
+		String extension = ".json";
+		if (String.equals(contentType, System.getGlobalVariableAsString("WebStudio/CONTENT_TYPE/XML", "application/xml"))) {
+			extension = ".xml";			
+		} 
+		
+		if (String.equals(preContextPath, System.getGlobalVariableAsString("Webstudio/ApiContext/Logout", "logout"))) {
+			// GET
+			contextMatchFound = true;
+			tempReturnData = WS_RF_PerformLogout(servletRequest, loggedInUser, null);
+		
+		} else if (String.equals(preContextPath, System.getGlobalVariableAsString("Webstudio/ApiContext/GetDisplayProperties", "displayProperties"))) {
+			// GET
+			contextMatchFound = true;
+			tempReturnData = WS_RF_FetchDisplayProperties(servletRequest, loggedInUser);
+			
+		} else if (String.equals(preContextPath, System.getGlobalVariableAsString("Webstudio/ApiContext/GetProcessPalette", "processPalette"))) {
+			// GET
+			contextMatchFound = true;
+			tempReturnData = WS_RF_FetchProcessPalette(servletRequest, loggedInUser);
+			
+		} else if (String.equals(preContextPath, System.getGlobalVariableAsString("Webstudio/ApiContext/AboutWebStudio", "about"))) {
+			// GET
+			contextMatchFound = true;
+			tempReturnData = WS_RF_AboutWebStudio(servletRequest);
+			
+		} else if (String.equals(preContextPath, System.getGlobalVariableAsString("Webstudio/ApiContext/GetWorkSpaceContents", "workspace"))) {
+			// GET
+			contextMatchFound = true;
+			tempReturnData = WS_RF_FetchUserWorkspaceContents(servletRequest, loggedInUser);
+			
+		} else if (String.equals(preContextPath, System.getGlobalVariableAsString("Webstudio/ApiContext/GetDelegatableRoles", "delegateRoles"))) {
+			// GET
+			contextMatchFound = true;
+			tempReturnData = WS_RF_FetchUserRolesToDelegateTo(servletRequest, loggedInUser);
+			
+		} else if (String.equals(preContextPath, System.getGlobalVariableAsString("Webstudio/ApiContext/CheckToken", "checkToken"))) {
+			// GET
+			contextMatchFound = true;
+			tempReturnData = WS_RF_PerformLoginByToken(servletRequest);
+			
+		} else if (String.equals(preContextPath, System.getGlobalVariableAsString("Webstudio/ApiContext/LogoutByToken", "logoutByToken"))) {
+			// GET
+			contextMatchFound = true;
+			tempReturnData = WS_RF_PerformLogoutByToken(servletRequest);
+			
+		} else if (String.equals(preContextPath, System.getGlobalVariableAsString("Webstudio/ApiContext/CheckDeployable", "checkDeployable"))) {
+			// GET
+			contextMatchFound = true;
+			tempReturnData = WS_RF_CheckForDeployable(servletRequest, loggedInUser);
+			
+		} else if (String.equals(preContextPath, System.getGlobalVariableAsString("Webstudio/ApiContext/GetProjectsForLockManagement", "projectsLockMgmt"))) {
+			// GET
+			contextMatchFound = true;
+			tempReturnData = WS_RF_FetchManagedProjectsList(servletRequest, loggedInUser, "manage_locks");
+		
+		} else if (String.equals(preContextPath, System.getGlobalVariableAsString("Webstudio/ApiContext/LoadAndParseWSDL", "loadWSDL"))) {
+			// GET
+			contextMatchFound = true;
+			tempReturnData = WS_RF_LoadAndParseWSDL(servletRequest, loggedInUser);
+			
+		} else if (String.equals(preContextPath, System.getGlobalVariableAsString("Webstudio/ApiContext/GetDomains", "domains"))) {
+			String subContextPath = String.substringAfter(contextPath, preContextPath + "/");
+			
+			// GET
+			if (subContextPath == null) {
+				contextMatchFound = true;
+				tempReturnData = WS_RF_FetchDTColumnDomains(servletRequest, loggedInUser);
+			
+			// GET
+			} else if (String.equals(subContextPath, System.getGlobalVariableAsString("Webstudio/ApiContext/GetDomainValues", "values"))) {
+				contextMatchFound = true;
+				tempReturnData = WS_RF_GetDomainArtifactsByDataType(servletRequest, loggedInUser);
+			}
+			
+		} else if (String.equals(preContextPath, System.getGlobalVariableAsString("Webstudio/ApiContext/GetRecentlyOpenedArtifacts", "recentlyOpened"))) {
+			String subContextPath = String.substringAfter(contextPath, preContextPath + "/");
+			
+			// GET
+			if (subContextPath == null) {
+				contextMatchFound = true;
+				tempReturnData = WS_RF_FetchRecentlyOpenedArtifacts(servletRequest, loggedInUser);
+				
+			// PUT
+			} else if (String.equals(subContextPath, System.getGlobalVariableAsString("Webstudio/ApiContext/AddToRecentlyOpenedArtifacts", "add"))) {
+				contextMatchFound = true;
+				tempReturnData = WS_RF_AddToRecentlyOpenedArtifact(servletRequest, loggedInUser);
+			}
+			
+		} else if (String.equals(preContextPath, System.getGlobalVariableAsString("Webstudio/ApiContext/GetFavourites", "favourites"))) {
+			String subContextPath = String.substringAfter(contextPath, preContextPath + "/");
+			
+			// GET
+			if (subContextPath == null) {
+				contextMatchFound = true;
+				tempReturnData = WS_RF_FetchFavoriteArtifacts(servletRequest, loggedInUser);
+				
+			// PUT
+			} else if (String.equals(subContextPath, System.getGlobalVariableAsString("Webstudio/ApiContext/AddToFavourites", "add"))) {
+				contextMatchFound = true;
+				tempReturnData = WS_RF_AddToFavoriteArtifacts(servletRequest, loggedInUser);
+			}
+		
+		} else if (String.equals(preContextPath, System.getGlobalVariableAsString("Webstudio/ApiContext/GetPreferences", "preferences"))) {
+			String subContextPath = String.substringAfter(contextPath, preContextPath + "/");
+			
+			// GET
+			if (subContextPath == null) {
+				contextMatchFound = true;
+				String newContextPath =  baseURI + "preferences/user" + extension;	
+				tempReturnData = WS_RF_RedirectHTTPRequest(contextPath, newContextPath);
+				
+			} else {
+				// PUT
+				if (String.equals(contextPath, System.getGlobalVariableAsString("Webstudio/ApiContext/UpdatePreferences", "update"))) {
+					contextMatchFound = true;
+					String newContextPath =  baseURI + "preferences/user/update" + extension;	
+					tempReturnData = WS_RF_RedirectHTTPRequest(contextPath, newContextPath);
+			
+				// User Preferences
+				} else if (String.startsWith(subContextPath, "user")) {
+					String finalContextPath = String.substringAfter(contextPath, "user/");
+					
+					//GET
+					if (finalContextPath == null) {
+						contextMatchFound = true;
+						tempReturnData = WS_RF_FetchUserPreferences(servletRequest, loggedInUser);
+						
+					//PUT
+					} else if (String.equals(finalContextPath, System.getGlobalVariableAsString("Webstudio/ApiContext/NewUpdatePreferences","update"))) {
+						contextMatchFound = true;
+						tempReturnData = WS_RF_UpdateUserPreferences(asyncContextObject,loggedInUser, contentType);
+					}
+				
+				// Application Preferences
+				} else if (String.startsWith(subContextPath, "app")) {
+					String finalContextPath = String.substringAfter(contextPath, "app/");
+					
+					//GET
+					if (finalContextPath == null) {
+						contextMatchFound = true;
+						tempReturnData = WS_RF_FetchApplicationPreferences(servletRequest, loggedInUser);
+						
+					// PUT
+					} else if (String.equals(finalContextPath, System.getGlobalVariableAsString("Webstudio/ApiContext/NewUpdatePreferences", "update"))) {
+						contextMatchFound = true;
+						tempReturnData = WS_RF_UpdateApplicationPreferences(asyncContextObject,loggedInUser, contentType);
+					
+					// GET
+					} else if (String.equals(finalContextPath, System.getGlobalVariableAsString("Webstudio/ApiContext/NewAppPreferencesPermission", "permission"))) {
+						contextMatchFound = true;
+						tempReturnData = WS_RF_CheckAppPrefPortletPermission(servletRequest, loggedInUser);
+					}
+				
+				// Notification Preferences
+				} else if (String.startsWith(subContextPath, "notify")) {
+					String finalContextPath = String.substringAfter(contextPath, "notify/");
+					
+					//GET
+					if (finalContextPath == null) {
+						contextMatchFound = true;
+						tempReturnData = WS_RF_FetchNotificationPreferences(servletRequest, loggedInUser);
+						
+					// PUT
+					} else if (String.equals(finalContextPath, System.getGlobalVariableAsString("Webstudio/ApiContext/NewUpdatePreferences", "update"))) {
+						contextMatchFound = true;
+						tempReturnData = WS_RF_UpdateNotificationPreferences(asyncContextObject,loggedInUser, contentType);
+	
+					}
+				}
+			}
+		
+		} else if (String.equals(preContextPath, System.getGlobalVariableAsString("Webstudio/ApiContext/NewGetUserData", "users"))) {
+			String subContextPath = String.substringAfter(contextPath, preContextPath + "/");
+			
+			// GET
+			if (subContextPath == null) {
+				// GET
+				contextMatchFound = true;
+			    tempReturnData = WS_RF_FetchUserData(servletRequest, loggedInUser);
+			    
+			} else {
+				String userName = WS_RF_GetNextStringToken(subContextPath, "/");
+				Log.log(LOGGER, "Debug", "User Name - %s", userName);
+		
+				// PUT
+				if (String.equals(subContextPath, System.getGlobalVariableAsString("Webstudio/ApiContext/NewUpdateUserData", "update"))) {
+					contextMatchFound = true;
+					tempReturnData = WS_RF_UpdateUsers(asyncContextObject,loggedInUser, contentType);
+					
+				// GET
+				} else {
+					contextMatchFound = true;
+					tempReturnData = WS_RF_GetUserEntry(servletRequest, loggedInUser, userName);
+				}
+			}
+			
+		} else if (String.equals(contextPath, System.getGlobalVariableAsString("Webstudio/ApiContext/NewUpdateAclData", "acl/update"))) {
+			// PUT
+			contextMatchFound = true;
+			tempReturnData = WS_RF_UpdateAclContent(asyncContextObject, loggedInUser, contentType);
+			
+		// TODO - Do we need this, can we not just have a single /projects.json?filter=all/checkout
+		} else if (String.equals(preContextPath, System.getGlobalVariableAsString("Webstudio/ApiContext/GetAllProjects", "allProjects"))) {
+			// GET
+			contextMatchFound = true;
+			tempReturnData = WS_RF_FetchManagedProjectsList(servletRequest, loggedInUser, null);
+			    
+		} else if (String.equals(preContextPath, System.getGlobalVariableAsString("Webstudio/ApiContext/GetManagedProjects", "projects"))) {
+			String subContextPath = String.substringAfter(contextPath, preContextPath + "/");
+			Log.log(LOGGER, "Debug", "Context Path [%s], Pre Context Path [%s] & Sub Context Path [%s]", contextPath, preContextPath, subContextPath);
+			
+			if (subContextPath == null) {
+				// GET
+				contextMatchFound = true;
+				tempReturnData = WS_RF_FetchManagedProjectsList(servletRequest, loggedInUser, "checkout");
+				
+			} else {
+				String projectName = WS_RF_GetNextStringToken(subContextPath, "/");
+				Log.log(LOGGER, "Debug", "Project Name - %s", projectName);
+				
+				String lastContextPath = String.substringAfter(subContextPath, projectName + "/");
+				Log.log(LOGGER, "Debug", "Last Context Path - %s", lastContextPath);
+				
+				if (String.equals(lastContextPath, System.getGlobalVariableAsString("Webstudio/ApiContext/GetProjectArtifacts", "artifacts"))) {
+					// GET
+					contextMatchFound = true;
+					tempReturnData = WS_RF_FetchProjectArtifactNames(servletRequest, loggedInUser, projectName);
+
+				} else if (String.equals(lastContextPath, System.getGlobalVariableAsString("Webstudio/ApiContext/GetProjectSummary", "summary"))) {
+					// GET
+					contextMatchFound = true;
+					tempReturnData = WS_RF_FetchProjectSummary(servletRequest, loggedInUser, projectName);
+
+				} else if (String.equals(lastContextPath, System.getGlobalVariableAsString("Webstudio/ApiContext/GetProjectCommittables", "committables"))) {
+					// POST
+					contextMatchFound = true;
+					tempReturnData = WS_RF_ShowWorkspaceCommittables(servletRequest, loggedInUser, contentType);
+				
+				} else if (String.equals(lastContextPath, System.getGlobalVariableAsString("Webstudio/ApiContext/ProjectExport", "multiexport"))) {
+					// POST
+					contextMatchFound = true;
+					tempReturnData = WS_RF_ExportMultipleArtifacts(servletRequest, loggedInUser, projectName, contentType);
+				
+				} else if (String.equals(lastContextPath, System.getGlobalVariableAsString("Webstudio/ApiContext/GetProjectSyncronizables", "synchronizables"))) {
+					// POST
+					contextMatchFound = true;
+					tempReturnData = WS_RF_ShowWorkspaceSynchronizables(servletRequest, loggedInUser, contentType);
+					
+				} else if (String.equals(lastContextPath, System.getGlobalVariableAsString("Webstudio/ApiContext/GenerateDeployable", "generateDeployable"))) {
+					// GET
+					contextMatchFound = true;
+					tempReturnData = WS_RF_GenerateDeployable(servletRequest, loggedInUser, projectName);
+					
+				} else if (String.equals(lastContextPath, System.getGlobalVariableAsString("Webstudio/ApiContext/NewGetAclData", "acl"))) {
+					// GET
+					contextMatchFound = true;
+					tempReturnData = WS_RF_FetchAclData(servletRequest, loggedInUser, projectName);
+									
+				} else if (String.equals(lastContextPath, System.getGlobalVariableAsString("Webstudio/ApiContext/NewGetProjectArtifactLocks", "locks"))) {
+					// GET
+					contextMatchFound = true;
+					tempReturnData = WS_RF_FetchProjectArtifactsLockInfo(projectName, loggedInUser.username);
+					
+				} else if (String.equals(lastContextPath, System.getGlobalVariableAsString("Webstudio/ApiContext/ProjectCheckout", "checkout"))) {
+					// POST
+					contextMatchFound = true;
+					tempReturnData = WS_RF_PerformProjectCheckout(servletRequest, loggedInUser, contentType);
+				
+				} else if (String.equals(lastContextPath,  System.getGlobalVariableAsString("Webstudio/ApiContext/CommitProjectArtifacts", "commit"))) {
+					// POST
+					contextMatchFound = true;
+					tempReturnData = WS_RF_CommitWorkspaceArtifacts(servletRequest, loggedInUser, contentType);
+					
+				} else if (String.equals(lastContextPath, System.getGlobalVariableAsString("Webstudio/ApiContext/SynchronizeProjectArtifacts", "synchronize"))) {
+					// POST
+					contextMatchFound = true;
+					tempReturnData = WS_RF_SynchronizeWorkspace(asyncContextObject, loggedInUser, contentType);
+					
+				} else if (String.equals(lastContextPath, System.getGlobalVariableAsString("Webstudio/ApiContext/RevertArtifact", "revert"))) {
+					// POST
+					contextMatchFound = true;
+					tempReturnData = WS_RF_RevertWorkspaceArtifacts(servletRequest, loggedInUser, contentType);
+					
+				} else if (String.equals(lastContextPath, System.getGlobalVariableAsString("Webstudio/ApiContext/RepositorySync", "repositorySync"))) {
+					// POST
+					contextMatchFound = true;
+					tempReturnData = WS_RF_SyncArtifactsToRepository(servletRequest, loggedInUser, contentType, projectName);
+					
+				} else if (String.equals(lastContextPath, System.getGlobalVariableAsString("Webstudio/ApiContext/GetArtifactsForRepositorySync", "repositorySyncArtifacts"))) {
+					// GET
+					contextMatchFound = true;
+					tempReturnData = WS_RF_GetArtifactsForSyncToRepository(servletRequest, loggedInUser, projectName);
+					
+				} else if (String.equals(lastContextPath, System.getGlobalVariableAsString("Webstudio/ApiContext/CheckPermission", "permission"))) {
+					// GET
+					contextMatchFound = true;
+					tempReturnData = WS_RF_CheckPermission(servletRequest, loggedInUser, projectName);
+					
+				} else if (String.equals(lastContextPath, System.getGlobalVariableAsString("Webstudio/ApiContext/ImportProject", "import"))) {
+					// POST
+					contextMatchFound = true;
+					tempReturnData = WS_RF_ImportProject(servletRequest, loggedInUser, projectName);
+								
+				} else if (String.equals(lastContextPath, System.getGlobalVariableAsString("Webstudio/ApiContext/GetAclData", "aclData"))) {
+					// GET
+					contextMatchFound = true;
+					String projectSpecificPath = "projects/" + projectName + "/";
+					String newContextPath =   baseURI + projectSpecificPath + "acl" + extension;	
+					tempReturnData = WS_RF_RedirectHTTPRequest(contextPath, newContextPath);
+				
+				} else if (String.equals(lastContextPath, System.getGlobalVariableAsString("Webstudio/ApiContext/GetProjectArtifactLocks", "artifactLocks"))) {
+					// GET
+					contextMatchFound = true;
+					String projectSpecificPath = "projects/" + projectName + "/";
+					String newContextPath =  baseURI + projectSpecificPath + "locks" + extension;
+					tempReturnData = WS_RF_RedirectHTTPRequest(contextPath, newContextPath);
+				}
+			} 
+			
+		} else if (String.equals(preContextPath, System.getGlobalVariableAsString("Webstudio/ApiContext/GetArtifactContent", "artifact"))) {
+			String subContextPath = String.substringAfter(contextPath, preContextPath + "/");
+			Log.log(LOGGER, "Debug", "Context Path [%s], Pre Context Path [%s] & Sub Context Path [%s]", contextPath, preContextPath, subContextPath);
+			
+			if (subContextPath == null) {
+				// GET
+				contextMatchFound = true;
+				tempReturnData = WS_RF_FetchArtifactContentsFromStore(asyncContextObject, loggedInUser, contentType);
+				
+			} else {
+				if (String.equals(contextPath, System.getGlobalVariableAsString("Webstudio/ApiContext/SaveArtifactChanges", "artifact/save"))) {
+					// PUT
+					contextMatchFound = true;
+					tempReturnData = WS_RF_SaveLocalChangesToWorkspace(servletRequest, loggedInUser, contentType);
+					
+				} else if (String.equals(contextPath, System.getGlobalVariableAsString("Webstudio/ApiContext/RenameArtifact", "artifact/rename"))) {
+					// PUT
+					contextMatchFound = true;
+					tempReturnData = WS_RF_RenameArtifact(servletRequest, loggedInUser, contentType);
+				
+				} else if (String.equals(contextPath, System.getGlobalVariableAsString("Webstudio/ApiContext/DeleteArtifacts", "artifact/delete"))) {
+					// DELETE
+					contextMatchFound = true;
+					tempReturnData = WS_RF_PerformDeleteOps(asyncContextObject, loggedInUser, contentType);
+					
+				} else if (String.equals(contextPath, System.getGlobalVariableAsString("Webstudio/ApiContext/ExportArtifact", "artifact/export"))) {
+					/// GET
+					contextMatchFound = true;
+					tempReturnData = WS_RF_ExportArtifact(servletRequest, loggedInUser);
+					
+				} else if (String.equals(contextPath, System.getGlobalVariableAsString("Webstudio/ApiContext/GetArtifactVersionDiff", "artifact/compare"))) {
+					// GET
+					contextMatchFound = true;
+					tempReturnData = WS_RF_FetchArtifactVersionDiff(servletRequest, loggedInUser);
+				
+				} else if (String.equals(contextPath, System.getGlobalVariableAsString("Webstudio/ApiContext/ValidateArtifact", "artifact/validate"))) {
+					// GET
+					contextMatchFound = true;
+					tempReturnData = WS_RF_Validate(servletRequest, loggedInUser, contentType);
+					
+				} else if (String.equals(contextPath, System.getGlobalVariableAsString("Webstudio/ApiContext/GetArtifactHistory", "artifact/history"))) {
+					// GET
+					contextMatchFound = true;
+					tempReturnData = WS_RF_FetchArtifactHistory(servletRequest, loggedInUser);
+					
+				} else if (String.equals(contextPath, System.getGlobalVariableAsString("Webstudio/ApiContext/LockArtifact", "artifact/lock"))) {
+					// POST
+					contextMatchFound = true;
+					tempReturnData = WS_RF_LockArtifact(servletRequest, loggedInUser, contentType);
+				
+				} else if (String.equals(contextPath, System.getGlobalVariableAsString("Webstudio/ApiContext/UnlockArtifact", "artifact/unlock"))) {
+					// POST
+					contextMatchFound = true;
+					tempReturnData = WS_RF_UnLockArtifact(servletRequest, loggedInUser, contentType);
+				}
+			}
+			
+		} else if (String.equals(preContextPath, System.getGlobalVariableAsString("Webstudio/ApiContext/GetDecisionTable", "decisiontable"))) {
+			
+			if (String.equals(contextPath, System.getGlobalVariableAsString("Webstudio/ApiContext/ImportDecisionTable", "decisiontable/import"))) {
+				// POST
+				contextMatchFound = true;
+				tempReturnData = WS_RF_ImportDecisionTableFromExcel(servletRequest, loggedInUser, contentType);
+				
+			} else if (String.equals(contextPath, System.getGlobalVariableAsString("Webstudio/ApiContext/AnalyzeDecisionTable", "decisiontable/analyze"))) {
+				// GET
+				contextMatchFound = true;
+				tempReturnData = WS_RF_DecisionTableAnalyzeAction(servletRequest, loggedInUser, contentType);
+			
+			} else if (String.equals(contextPath, System.getGlobalVariableAsString("Webstudio/ApiContext/DecisionTableAnalyzerValues", "decisiontable/analyzerValues"))) { 
+				// GET
+				contextMatchFound = true;
+				tempReturnData = WS_RF_ShowDecisionTableAnalyzerPane(servletRequest, loggedInUser);
+			
+			} else if (String.equals(contextPath, System.getGlobalVariableAsString("Webstudio/ApiContext/GetDecisionTableCoverage", "decisiontable/coverage"))) {
+				// GET
+				contextMatchFound = true;
+				tempReturnData = WS_RF_ShowDecisionTableCoverage(servletRequest, loggedInUser, contentType);
+			
+			} else if (String.equals(contextPath, System.getGlobalVariableAsString("Webstudio/ApiContext/GetDecisionTableArguments", "decisiontable/arguments"))) {
+				// GET
+				contextMatchFound = true;
+				tempReturnData = WS_RF_FetchDecisionTableArguments(servletRequest, loggedInUser);
+			}
+			
+		} else if (String.equals(preContextPath, System.getGlobalVariableAsString("Webstudio/ApiContext/GetWorkList", "worklist"))) {
+			String subContextPath = String.substringAfter(contextPath, preContextPath + "/");
+			Log.log(LOGGER, "Debug", "Context Path [%s], Pre Context Path [%s] & Sub Context Path [%s]", contextPath, preContextPath, subContextPath);
+			
+			if (subContextPath == null) {
+				// GET
+				contextMatchFound = true;
+				tempReturnData = WS_RF_FetchReviewWorklist(servletRequest, loggedInUser);
+				
+			} else if (String.equals(contextPath, System.getGlobalVariableAsString("Webstudio/ApiContext/ChangeArtifactStatus", "worklist/statusChange"))) {
+				// PUT
+				contextMatchFound = true;
+				tempReturnData = WS_RF_ChangeCommitStatus(asyncContextObject, loggedInUser, contentType);
+			
+			} else if (String.equals(contextPath, System.getGlobalVariableAsString("Webstudio/ApiContext/ReviewArtifactContent", "worklist/review"))) {
+				// GET
+				contextMatchFound = true;
+				tempReturnData = WS_RF_FetchCommittableEntryContents(servletRequest, loggedInUser);
+				
+			} else if (String.equals(contextPath, System.getGlobalVariableAsString("Webstudio/ApiContext/DeleteWorkListItem", "worklist/delete"))) {
+				// DELETE
+				contextMatchFound = true;
+				tempReturnData = WS_RF_DeleteWorklistItem(asyncContextObject, loggedInUser, contentType);
+				
+			} else if (String.equals(contextPath, System.getGlobalVariableAsString("Webstudio/ApiContext/DelegateWorkListItem", "worklist/delegate"))) {
+				// PUT
+				contextMatchFound = true;
+				tempReturnData = WS_RF_DelegateWorklistItem(asyncContextObject, loggedInUser, contentType);
+				
+			} else {
+				String workListItemId = WS_RF_GetNextStringToken(subContextPath, "/");
+				Log.log(LOGGER, "Debug", "WorkList Item Id - %s", workListItemId);
+				
+				String lastContextPath = String.substringAfter(subContextPath, workListItemId + "/");
+				Log.log(LOGGER, "Debug", "Last Context Path - %s", lastContextPath);
+				
+				if (String.equals(lastContextPath, System.getGlobalVariableAsString("Webstudio/ApiContext/GetWorkListItemDetails", "details"))) {
+					// GET
+					contextMatchFound = true;
+					tempReturnData = WS_RF_FetchWorkItemDetailItemsForReview(servletRequest, loggedInUser, workListItemId);
+				}
+			}
+			
+		} else if (String.equals(preContextPath, System.getGlobalVariableAsString("Webstudio/ApiContext/GetGroups", "groups"))) {
+			String subContextPath = String.substringAfter(contextPath, preContextPath + "/");
+			Log.log(LOGGER, "Debug", "Context Path [%s], Pre Context Path [%s] & Sub Context Path [%s]", contextPath, preContextPath, subContextPath);
+			
+			if (subContextPath == null) {
+				// GET
+				contextMatchFound = true;
+				tempReturnData = WS_RF_FetchUserGroups(servletRequest, loggedInUser);
+				
+			} else {
+				String groupName = WS_RF_GetNextStringToken(subContextPath, "/");
+				Log.log(LOGGER, "Debug", "Group Name - %s", groupName);
+				
+				String lastContextPath = String.substringAfter(subContextPath, groupName + "/");
+				Log.log(LOGGER, "Debug", "Last Context Path - %s", lastContextPath);
+				
+				if (String.equals(lastContextPath, System.getGlobalVariableAsString("Webstudio/ApiContext/AddGroup", "add"))) {
+					// POST
+					contextMatchFound = true;
+					tempReturnData = WS_RF_AddUserGroup(servletRequest, loggedInUser, contentType);
+					
+				} else if (String.equals(lastContextPath, System.getGlobalVariableAsString("Webstudio/ApiContext/DeleteGroup", "delete"))) {
+					// DELETE
+					contextMatchFound = true;
+					tempReturnData = WS_RF_DeleteUserGroup(servletRequest, loggedInUser, HTTP.decodeURL(groupName, "utf-8"));
+				
+				}  else if (String.equals(lastContextPath, System.getGlobalVariableAsString("Webstudio/ApiContext/UpdateGroup", "update"))) {
+					// PUT
+					contextMatchFound = true;
+					tempReturnData = WS_RF_UpdateUserGroup(servletRequest, loggedInUser, HTTP.decodeURL(groupName, "utf-8"));
+				
+				} else if (String.equals(lastContextPath, System.getGlobalVariableAsString("Webstudio/ApiContext/GetGroupArtifacts", "artifacts"))) {					
+					// GET
+					contextMatchFound = true;
+					tempReturnData = WS_RF_FetchUserGroupArtifacts(servletRequest, loggedInUser, HTTP.decodeURL(groupName, "utf-8"));
+				}
+			}
+			
+		} else if (String.equals(preContextPath, System.getGlobalVariableAsString("Webstudio/ApiContext/GetDeploymentConfigs", "deployConfigs"))) {
+			
+			if (String.equals(contextPath, System.getGlobalVariableAsString("Webstudio/ApiContext/AddDeploymentConfig", "deployConfigs/add"))) {
+				// POST
+				contextMatchFound = true;
+				tempReturnData = WS_RF_AddDeploymentConfig(asyncContextObject, loggedInUser, contentType);
+			} else if (String.equals(contextPath, System.getGlobalVariableAsString("Webstudio/ApiContext/DeleteDeploymentConfig", "deployConfigs/delete"))) {
+				// DELETE
+				contextMatchFound = true;
+				tempReturnData = WS_RF_DeleteDeploymentConfig(asyncContextObject, loggedInUser, contentType);
+			} else if (String.equals(contextPath, System.getGlobalVariableAsString("Webstudio/ApiContext/UpdateDeploymentConfig", "deployConfigs/update"))) {
+				// PUT
+				contextMatchFound = true;
+				tempReturnData = WS_RF_UpdateDeploymentConfig(asyncContextObject, loggedInUser, contentType);
+			} else {
+				// GET
+				contextMatchFound = true;
+				tempReturnData = WS_RF_FetchDeploymentConfigs(servletRequest, loggedInUser);
+			}
+			
+		} else if (String.equals(preContextPath, System.getGlobalVariableAsString("Webstudio/ApiContext/GetAuditTrail", "auditTrail"))) {
+			// GET
+			contextMatchFound = true;
+			tempReturnData = WS_RF_FetchAuditTrail(servletRequest, loggedInUser);
+			
+		} else if (String.equals(preContextPath, System.getGlobalVariableAsString("Webstudio/ApiContext/Subscription", "subscriptions"))) {
+			String subContextPath = String.substringAfter(contextPath, preContextPath + "/");
+			Log.log(LOGGER, "Debug", "Context Path [%s], Pre Context Path [%s] & Sub Context Path [%s]", contextPath, preContextPath, subContextPath);
+			
+			if (subContextPath != null) {
+				String subscriptionId = WS_RF_GetNextStringToken(subContextPath, "/");
+				Log.log(LOGGER, "Debug", "Group Name - %s", subscriptionId);
+				
+				String lastContextPath = String.substringAfter(subContextPath, subscriptionId + "/");
+				Log.log(LOGGER, "Debug", "Last Context Path - %s", lastContextPath);
+				
+				// DELETE
+				if (String.equals(lastContextPath, System.getGlobalVariableAsString("Webstudio/ApiContext/DeleteSubscription", "delete"))) {
+					contextMatchFound = true;
+					tempReturnData = WS_RF_DeleteSubscription(servletRequest, subscriptionId, loggedInUser);
+				}
+			}
+		
+		// All deprecated api paths ========================================================================
+		// TODO - legacy api path, remove it in next release
+		} else if (String.equals(preContextPath, System.getGlobalVariableAsString("Webstudio/ApiContext/GetAppPreferences", "appPreferences"))) {
+			// PUT
+			if (String.equals(contextPath, System.getGlobalVariableAsString("Webstudio/ApiContext/UpdateAppPreferences", "appPreferences/update"))) {
+				contextMatchFound = true;
+				//tempReturnData = WS_RF_UpdateApplicationPreferences(asyncContextObject,loggedInUser, contentType);
+				String newContextPath = baseURI + "preferences/app/update" + extension;	
+				tempReturnData = WS_RF_RedirectHTTPRequest(contextPath, newContextPath);
+			
+			// GET
+			} else if (String.equals(contextPath, System.getGlobalVariableAsString("Webstudio/ApiContext/AppPreferencesPermission", "appPreferences/permission"))) {
+				contextMatchFound = true;
+				//tempReturnData = WS_RF_CheckAppPrefPortletPermission(servletRequest, loggedInUser);
+				String newContextPath = baseURI + "preferences/app/permission" + extension;	
+				tempReturnData = WS_RF_RedirectHTTPRequest(contextPath, newContextPath);
+			} else  {			
+				contextMatchFound = true;
+				//tempReturnData = WS_RF_FetchApplicationPreferences(servletRequest, loggedInUser);
+				String newContextPath = baseURI + "preferences/app" + extension;	
+				tempReturnData = WS_RF_RedirectHTTPRequest(contextPath, newContextPath);
+			}
+		
+		} else if (String.equals(preContextPath, System.getGlobalVariableAsString("Webstudio/ApiContext/GetNotifyPreferences", "notifyPreferences"))) {
+			// PUT
+			if (String.equals(contextPath, System.getGlobalVariableAsString("Webstudio/ApiContext/UpdateNotifyPreferences", "notifyPreferences/update"))) {
+				contextMatchFound = true;
+				//tempReturnData = WS_RF_UpdateNotificationPreferences(asyncContextObject,loggedInUser, contentType);
+				String newContextPath =  baseURI + "preferences/notify/update" + extension;	
+				tempReturnData = WS_RF_RedirectHTTPRequest(contextPath, newContextPath);
+			
+			// GET
+			} else {			
+				contextMatchFound = true;
+				//tempReturnData = WS_RF_FetchNotificationPreferences(servletRequest, loggedInUser);
+				String newContextPath = baseURI + "preferences/notify" + extension;
+				tempReturnData = WS_RF_RedirectHTTPRequest(contextPath, newContextPath);
+			}
+		
+		} else if (String.equals(preContextPath, System.getGlobalVariableAsString("Webstudio/ApiContext/GetUserPermission", "aclData"))) {
+			// PUT
+			if (String.equals(contextPath, System.getGlobalVariableAsString("Webstudio/ApiContext/UpdateAclData", "aclData/update"))) {
+				contextMatchFound = true;
+				//tempReturnData = WS_RF_UpdateAclContent(asyncContextObject,loggedInUser, contentType);
+				String newContextPath = baseURI + "acl/update" + extension;	
+				tempReturnData = WS_RF_RedirectHTTPRequest(contextPath, newContextPath);
+			}
+		
+		} else if (String.equals(preContextPath, System.getGlobalVariableAsString("Webstudio/ApiContext/GetUserData", "userData"))) {
+			// PUT
+			if (String.equals(contextPath, System.getGlobalVariableAsString("Webstudio/ApiContext/UpdateUserData", "userData/update"))) {
+				contextMatchFound = true;
+				//tempReturnData = WS_RF_UpdateUsers(asyncContextObject,loggedInUser, contentType);
+				String newContextPath = baseURI + "users/update" + extension;
+				tempReturnData = WS_RF_RedirectHTTPRequest(contextPath, newContextPath);
+			
+			// GET
+			} else {
+				contextMatchFound = true;
+			    //tempReturnData = WS_RF_FetchUserData(servletRequest, loggedInUser);
+			    String newContextPath = baseURI + "users" + extension;
+				tempReturnData = WS_RF_RedirectHTTPRequest(contextPath, newContextPath);
+			}		
+		}
+
+		// need to check if not context match found
+		if (!contextMatchFound) {
+			String responseMessage = "No matching context path found for [" + contextPath + "]";
+			tempReturnData = WS_RF_CreateTemporaryReturnData(-1, 0, "ERR_5100", responseMessage, null);
+		}
+		
+		return tempReturnData;
+	}
+}

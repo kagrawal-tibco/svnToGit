@@ -1,0 +1,24 @@
+/**
+ * @description 
+ */
+Concepts.Common.Customer rulefunction RuleFunctions.Inference.NewCustomer {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		
+	}
+	body {
+		String extId = "customer-" + (Status.totalSoFar + 1);
+		String name = extId;
+		int age = Status.totalSoFar % 5;
+		
+		Concepts.Common.Customer c = Concepts.Common.Customer.Customer(extId, name, age);
+		
+		System.debugOut("Created customer [" + c@extId + ", name=" + c.name + ", age=" + c.age + "]");
+		
+		Status.totalSoFar = Status.totalSoFar + 1;
+		
+		return c;
+	}
+}

@@ -1,0 +1,155 @@
+/**
+ * @description Perform sync with workspace based on sync type (ADD|MODIFY|DELETE).
+ */
+void rulefunction WebStudio.Core.RuleFunctions.Actions.Lifecycle.Update.WS_RF_PerformArtifactSynchronization {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String artifactPath;
+		String artifactType;
+		String username;
+		//ADD|MODIFY|DELETE
+		String syncType;
+		WebStudio.Core.Concepts.WS_C_UserProject userProject;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.Lifecycle.Update.WS_RF_PerformArtifactSynchronization");
+		
+		String projectName = userProject.name;
+		String subscriptionId = WS_RF_GetSubscriptionId(username);
+		String userArtifactExtId = WS_RF_CreateUserArtifactExtId(null, artifactPath, projectName, username, null, null);
+		
+		WS_C_UserArtifact userArtifact = null;
+		
+		if (syncType == "Added") {
+			Log.log(LOGGER, "Info", "Adding artifact [%s] to user project [%s]", artifactPath, projectName);
+			
+			if (artifactType == "ruletemplateinstance") {
+				userArtifact = Instance.getByExtIdByUri(userArtifactExtId, "/WebStudio/Core/Concepts/RuleTemplateInstance/WS_C_RuleTemplateInstanceUserArtifact");
+			} else if (artifactType == "rulefunctionimpl") {
+				userArtifact = Instance.getByExtIdByUri(userArtifactExtId, "/WebStudio/Core/Concepts/Decision/WS_C_UserDTableArtifact");
+			} else if (artifactType == "beprocess") {
+				userArtifact = Instance.getByExtIdByUri(userArtifactExtId, "/WebStudio/Core/Concepts/Process/WS_C_ProcessUserArtifact");
+			} else if (artifactType == "domain") {
+				userArtifact = Instance.getByExtIdByUri(userArtifactExtId, "/WebStudio/Core/Concepts/Domain/WS_C_DomainUserArtifact");
+			}
+			if (userArtifact == null) {
+				//Add it to the project if it is not already deleted from WS
+				userArtifact = 
+					WS_RF_UserArtifactCreationFactory(userArtifactExtId, artifactPath, artifactType, artifactType, userProject@extId);
+				Log.log(LOGGER, "Debug", "User Artifact from factory instance id [%s]", userArtifact@id);
+				//See if master exists
+				String masterArtifactExtId = WS_RF_CreateUserArtifactExtId(null, artifactPath, projectName, null, subscriptionId, null);
+				WS_C_MasterArtifact masterArtifact = Instance.getByExtIdByUri(masterArtifactExtId, "/WebStudio/Core/Concepts/Lifecycle/WS_C_MasterArtifact");
+				if (masterArtifact != null) {
+					Log.log(LOGGER, "Debug", "Master Artifact Id for artifact path [%s] is [%s]", artifactPath, masterArtifact@id);
+					//So a master copy indeed exists
+					WS_C_UserArtifactRevision currentMasterRevision = Instance.PropertyAtom.getConceptReference(masterArtifact.currentMasterRevision, 1L);
+					if (currentMasterRevision == null) {
+						Log.log(LOGGER, "Info", "No approved master copy revision exists for artifact path [%s]", artifactPath);
+						//No approved copy
+					} else {
+						WS_RF_SetCheckpointRevisionConceptReference(userArtifact, currentMasterRevision);
+					}
+				}
+	    		//Append this to project
+				Instance.
+					PropertyArray.
+						appendContainedConcept(userProject.userArtifacts, userArtifact, 1L);	
+			} else {
+				WS_RF_FlipSoftDeleteState(userArtifact);
+				
+				boolean addNewRevision = true;
+				WS_C_UserArtifactRevision checkpointRevision = Instance.PropertyAtom.getConceptReference(userArtifact.checkpointRevision, 1L);
+				Log.log(LOGGER, "Debug", "checkpointRevision - %s", checkpointRevision);
+				if (checkpointRevision != null) {
+					WS_C_LifecycleMetadata lifecycleMetadata = Instance.PropertyAtom.getContainedConcept(checkpointRevision.lifecycleMetadata, 1L);
+					WS_C_ArtifactBaseState artifactCurrentState = Instance.PropertyAtom.getConceptReference(lifecycleMetadata.currentState, 1L);
+					
+					Log.log(LOGGER, "Debug", "artifactCurrentState.stateName - %s", artifactCurrentState.stateName);
+					
+					// Case - Delete -> Reject -> should not need to create a new revision
+					if (artifactCurrentState instanceof WS_C_ArtifactRejectedState) {
+						//On Delete -> Commit the checkpoint revision was set to then current revision
+						//So on Reject -> Sync Reset the checkpoint revision to the master revision
+						String masterArtifactExtId = WS_RF_CreateUserArtifactExtId(null, artifactPath, projectName, null, subscriptionId, null);
+						WS_C_MasterArtifact masterArtifact = Instance.getByExtIdByUri(masterArtifactExtId, "/WebStudio/Core/Concepts/Lifecycle/WS_C_MasterArtifact");
+						if (masterArtifact != null) {
+							Log.log(LOGGER, "Debug", "Delete -> Rejected -> Sync");
+							Log.log(LOGGER, "Debug", "Master Artifact Id for artifact path [%s] is [%s]", artifactPath, masterArtifact@id);
+							//So a master copy indeed exists
+							WS_C_UserArtifactRevision currentMasterRevision = Instance.PropertyAtom.getConceptReference(masterArtifact.currentMasterRevision, 1L);
+							if (currentMasterRevision != null) {
+								WS_RF_SetCheckpointRevisionConceptReference(userArtifact, currentMasterRevision);
+							} else {
+								Log.log(LOGGER, "Info", "No approved master copy revision exists for artifact path [%s]", artifactPath);
+								//No approved copy
+							}
+						}
+						addNewRevision = false;
+					}
+				} 
+				Log.log(LOGGER, "Debug", "addNewRevision - %s", addNewRevision);
+				if (addNewRevision) {
+					String nextRevisionExtId = userArtifact@extId + "@" + userArtifact.currentArtifactVersion;
+					WS_C_UserArtifactRevision nextRevision = Instance.getByExtId(nextRevisionExtId);
+					if(nextRevision == null) {
+						double nextVersion = userArtifact.currentArtifactVersion + 1;
+						nextRevision = 
+							Instance.newInstance("/WebStudio/Core/Concepts/WS_C_UserArtifactRevision", nextRevisionExtId);
+						//Set parent artifact id
+						userArtifact.currentArtifactVersion = nextVersion;
+						nextRevision.parentArtifactId = userArtifact@extId;
+						nextRevision.parentArtifactType = userArtifact.artifactType;
+						nextRevision.version = nextVersion;
+						nextRevision.creationTime = DateTime.now();
+					}
+					//Also make this the checkpoint revision
+					WS_RF_SetCheckpointRevisionConceptReference(userArtifact, nextRevision);
+					Instance.PropertyArray.appendString(userArtifact.artifactRevisionIds, nextRevision@extId, 1L);
+					
+					Log.log(LOGGER, "Debug", "Next Revision Id[%s], Version[%s] & ExtId[%s]", nextRevision@id, nextRevision.version, nextRevision@extId);
+					
+					String masterArtifactExtId = WS_RF_CreateUserArtifactExtId(null, userArtifact.artifactPath, projectName, null, subscriptionId, null);
+					WS_C_MasterArtifact masterArtifact = Instance.getByExtIdByUri(masterArtifactExtId, "/WebStudio/Core/Concepts/Lifecycle/WS_C_MasterArtifact");
+					if (masterArtifact != null) {
+						// Set the master artifact to the latest checkpoint revision post sync
+						Log.log(LOGGER, "Debug", "Master Artifact Id for artifact path [%s] is [%s]", artifactPath, masterArtifact@id);
+						Instance.PropertyAtom.setConceptReference(masterArtifact.currentMasterRevision, nextRevision, 1L);
+						Instance.PropertyAtom.setDateTime(masterArtifact.masterRevUpdateTime, DateTime.now(), 1L);
+					}
+					
+					WS_RF_PerformLifecycleStateOps(null, projectName, username, "Fetch", userArtifact, nextRevision);
+				}
+			}
+		} else if (syncType == "Deleted") {
+			Log.log(LOGGER, "Info", "Deleting artifact [%s] from user project [%s]", artifactPath, projectName);
+			
+			if (artifactType == "ruletemplateinstance") {
+				userArtifact = Instance.getByExtIdByUri(userArtifactExtId, "/WebStudio/Core/Concepts/RuleTemplateInstance/WS_C_RuleTemplateInstanceUserArtifact");
+			} else if (artifactType == "rulefunctionimpl") {
+				userArtifact = Instance.getByExtIdByUri(userArtifactExtId, "/WebStudio/Core/Concepts/Decision/WS_C_UserDTableArtifact");
+			}
+			if (userArtifact != null) {
+				//Remove it
+				Instance.PropertyArray.removeContainedConcept(userProject.userArtifacts, userArtifact);
+			}
+		} else if (syncType == "Modified") {
+			Log.log(LOGGER, "Info", "Modifying artifact [%s] in user project [%s]", artifactPath, projectName);
+			
+			if (artifactType == "ruletemplateinstance") {
+				userArtifact = Instance.getByExtIdByUri(userArtifactExtId, "/WebStudio/Core/Concepts/RuleTemplateInstance/WS_C_RuleTemplateInstanceUserArtifact");
+			} else if (artifactType == "rulefunctionimpl") {
+				userArtifact = Instance.getByExtIdByUri(userArtifactExtId, "/WebStudio/Core/Concepts/Decision/WS_C_UserDTableArtifact");
+			} else if (artifactType == "domain") {
+				userArtifact = Instance.getByExtIdByUri(userArtifactExtId, "/WebStudio/Core/Concepts/Domain/WS_C_DomainUserArtifact");
+			}
+			if (userArtifact != null) {
+				//There is no revision created hence last parameter is null.
+				//In checkout case a revision is present.
+				WS_RF_FetchAndSetLatestArtifactContentsFromMaster(projectName, userArtifact, null, WS_RF_GetSubscriptionId(username));
+			}
+		}
+	}
+}

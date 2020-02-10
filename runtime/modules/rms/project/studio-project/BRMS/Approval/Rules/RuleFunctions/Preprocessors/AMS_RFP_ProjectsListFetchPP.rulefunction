@@ -1,0 +1,29 @@
+/**
+ * @description 
+ */
+void rulefunction Approval.Rules.RuleFunctions.Preprocessors.AMS_RFP_ProjectsListFetchPP {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Approval.Events.ArtifactEvents.Checkout.AMS_E_ProjectsListRequestEvent ams_e_projectslistrequestevent;
+	}
+	body {
+		Object LOGGER = Log.getLogger("Approval.Rules.RuleFunctions.Preprocessors.AMS_RFP_ProjectsListFetchPP");
+
+		boolean locked = Cluster.DataGrid.Lock("MANAGED_PROJECTS", -1, false);
+		if (locked) {
+			WS_C_ManagedProjects managedProjects = Instance.getByExtIdByUri("MANAGED_PROJECTS", "/WebStudio/Core/Concepts/WS_C_ManagedProjects");
+			Log.log(LOGGER, "Debug", "Managed projects - %s", managedProjects);
+			if (managedProjects == null) {
+				try {
+					// Load from SCS if not already loaded
+					managedProjects = WS_RF_LoadProjectsFromSCS(ams_e_projectslistrequestevent.loggedInUserName, true, null);	
+				} catch (Exception e) {
+					Log.logException(LOGGER, "Error", "", e);
+					Event.consumeEvent(ams_e_projectslistrequestevent);
+				}
+			}
+		}
+	}
+}

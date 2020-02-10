@@ -1,0 +1,34 @@
+/**
+ * @description 
+ */
+String rulefunction Shared.RuleFunctions.topology.getClustName {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Shared.Concepts.MonitorableEntity me;
+	}
+	body {
+		String LOG_NAME = "getClustName";
+		
+		if (me!=null) {
+			Shared.RuleFunctions.log(LOG_NAME,"DEBUG","Searching for Cluster name. " + 
+			 "entity.type = " + me.type + " entity.name = " + me.name);
+		}
+		
+		if(me == null || me.type == "site")
+			return "";
+			
+		if (me.type == "cluster") {
+			Shared.RuleFunctions.log(LOG_NAME,"DEBUG","FOUND Cluster. name = " + me.name);
+			return me.name;
+		}
+			
+		if (me.type == "machine" || me.type == "process" || me.type == "inference" ||
+			me.type == "query"   || me.type == "cache" ) {
+			return getClustName(me.parent);
+		}
+		
+		return "";
+	}
+}

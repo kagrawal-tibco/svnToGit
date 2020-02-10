@@ -1,0 +1,425 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.2"?>
+<plugin>
+ <extension
+         point="org.eclipse.ui.editors">
+      <editor
+            class="com.tibco.cep.studio.ui.statemachine.diagram.editors.StateMachineEditor"
+            contributorClass="com.tibco.cep.studio.ui.statemachine.diagram.editors.StateMachineDiagramEditorContributor"
+            default="true"
+            extensions="statemachine"
+            icon="icons/state_machine.png"
+            id="com.tibco.cep.studio.ui.statemachine.editor"
+            name="State Model Editor">
+      </editor>
+   </extension>
+      <extension
+            id="com.tibco.cep.statemachine.preferencePages"
+            name="Preference Pages"
+            point="org.eclipse.ui.preferencePages">
+         <page
+               category="com.tibco.cep.studio.ui.editors.preference.page.diagram"
+               class="com.tibco.cep.studio.ui.statemachine.diagram.preference.StateMachinePreferencePage"
+               id="com.tibco.cep.statemachine.pref_page"
+               name="State Model">
+         </page>
+      </extension>
+      <extension
+            point="org.eclipse.ui.views.properties.tabbed.propertyContributor">
+         <propertyContributor
+               contributorId="com.tibco.cep.statemachine.smPropertyContributor"
+               labelProvider="com.tibco.cep.studio.ui.statemachine.tabbed.properties.StateMachinePropertiesLabelProvider">
+            <propertyCategory
+                  category="default">
+            </propertyCategory>
+         </propertyContributor>
+      </extension>
+      <extension
+            point="org.eclipse.ui.views.properties.tabbed.propertyTabs">
+         <propertyTabs
+               contributorId="com.tibco.cep.statemachine.smPropertyContributor">
+            <propertyTab
+                  category="default"
+                  id="statemachine.propertyTab.general"
+                  label="General">
+            </propertyTab>
+            <propertyTab
+                  afterTab="statemachine.propertyTab.general"
+                  category="default"
+                  id="com.tibco.cep.studio.ui.statemachine.entryactionPropertyTab"
+                  label="Entry Action">
+            </propertyTab>
+            <propertyTab
+                  afterTab="com.tibco.cep.studio.ui.statemachine.entryactionPropertyTab"
+                  category="default"
+                  id="com.tibco.cep.studio.ui.statemachine.exitactionPropertyTab"
+                  label="Exit Action">
+            </propertyTab>
+            <propertyTab
+                  afterTab="com.tibco.cep.studio.ui.statemachine.actionPropertyTab"
+                  category="default"
+                  id="com.tibco.cep.studio.ui.statemachine.timeoutPropertyTab"
+                  label="Timeout">
+            </propertyTab>
+            <propertyTab
+                  afterTab="com.tibco.cep.studio.ui.statemachine.timeoutPropertyTab"
+                  category="default"
+                  id="com.tibco.cep.studio.ui.statemachine.timeoutExpressionpropertyTab"
+                  label="Timeout Expression">
+            </propertyTab>
+            <propertyTab
+                  afterTab="com.tibco.cep.studio.ui.statemachine.timeoutExpressionpropertyTab"
+                  category="default"
+                  id="com.tibco.cep.studio.ui.statemachine.timeoutStatepropertyTab"
+                  label="Timeout Action">
+            </propertyTab>
+            <propertyTab
+                  afterTab="com.tibco.cep.studio.ui.statemachine.timeoutPropertyTab"
+                  category="default"
+                  id="com.tibco.cep.studio.ui.statemachine.extPropertyTab"
+                  label="Extended">
+            </propertyTab>
+            <propertyTab
+                  afterTab="statemachine.propertyTab.general"
+                  category="default"
+                  id="com.tibco.cep.studio.ui.statemachine.rulePropertyTab"
+                  label="Rule">
+            </propertyTab>
+         </propertyTabs>
+      </extension>
+      <extension
+            point="org.eclipse.ui.views.properties.tabbed.propertySections">
+         <propertySections
+               contributorId="com.tibco.cep.statemachine.smPropertyContributor">
+            <propertySection
+                  class="com.tibco.cep.studio.ui.statemachine.tabbed.properties.sections.GeneralPropertySection"
+                  filter="com.tibco.cep.studio.ui.statemachine.tabbed.properties.GeneralPropertyFilter"
+                  id="com.tibco.cep.statemachine.genpropertySection"
+                  tab="statemachine.propertyTab.general">
+               <input
+                     type="com.tomsawyer.graphicaldrawing.TSEObject">
+               </input>
+            </propertySection>
+            <propertySection
+                  class="com.tibco.cep.studio.ui.statemachine.tabbed.properties.sections.TimeoutPropertySection"
+                  filter="com.tibco.cep.studio.ui.statemachine.tabbed.properties.StateMachineTimeoutFilter"
+                  id="com.tibco.cep.studio.ui.statemachine.timeoutPropertySection"
+                  tab="com.tibco.cep.studio.ui.statemachine.timeoutPropertyTab">
+               <input
+                     type="com.tomsawyer.graphicaldrawing.TSEObject">
+               </input>
+            </propertySection>
+            <propertySection
+                  class="com.tibco.cep.studio.ui.statemachine.tabbed.properties.sections.ExtendedPropertySection"
+                  filter="com.tibco.cep.studio.ui.statemachine.tabbed.properties.StateExtPropertiesFilter"
+                  id="com.tibco.cep.studio.ui.statemachine.extPropertySection"
+                  tab="com.tibco.cep.studio.ui.statemachine.extPropertyTab">
+               <input
+                     type="com.tomsawyer.graphicaldrawing.TSEObject">
+               </input>
+            </propertySection>
+            <propertySection
+                  class="com.tibco.cep.studio.ui.statemachine.tabbed.properties.sections.EntryActionPropertySection"
+                  filter="com.tibco.cep.studio.ui.statemachine.tabbed.properties.EntryActionFilter"
+                  id="com.tibco.cep.studio.ui.statemachine.entryactionFieldPropertySection"
+                  tab="com.tibco.cep.studio.ui.statemachine.entryactionPropertyTab">
+               <input
+                     type="com.tomsawyer.graphicaldrawing.TSEObject">
+               </input>
+            </propertySection>
+            <propertySection
+                  class="com.tibco.cep.studio.ui.statemachine.tabbed.properties.sections.ExitActionPropertySection"
+                  filter="com.tibco.cep.studio.ui.statemachine.tabbed.properties.ExitActionFilter"
+                  id="com.tibco.cep.studio.ui.statemachine.exitactionFieldPropertySection"
+                  tab="com.tibco.cep.studio.ui.statemachine.exitactionPropertyTab">
+               <input
+                     type="com.tomsawyer.graphicaldrawing.TSEObject">
+               </input>
+            </propertySection>
+            <propertySection
+                  class="com.tibco.cep.studio.ui.statemachine.tabbed.properties.sections.CallStateMachinePropertySection"
+                  filter="com.tibco.cep.studio.ui.statemachine.tabbed.properties.CallStateMachineGeneralSectionFilter"
+                  id="com.tibco.cep.studio.ui.statemachine.callstatemachinegenpropertySection"
+                  tab="statemachine.propertyTab.general">
+               <input
+                     type="com.tomsawyer.graphicaldrawing.TSEObject">
+               </input>
+            </propertySection>
+            <propertySection
+                  class="com.tibco.cep.studio.ui.statemachine.tabbed.properties.sections.TransitionGeneralPropertySection"
+                  filter="com.tibco.cep.studio.ui.statemachine.tabbed.properties.TransitionGeneralPropertySectionFilter"
+                  id="com.tibco.cep.studio.ui.statemachine.transitiongenpropertySection"
+                  tab="statemachine.propertyTab.general">
+               <input
+                     type="com.tomsawyer.graphicaldrawing.TSEObject">
+               </input>
+            </propertySection>
+            <propertySection
+                  class="com.tibco.cep.studio.ui.statemachine.tabbed.properties.sections.RulePropertySection"
+                  filter="com.tibco.cep.studio.ui.statemachine.tabbed.properties.TransitionGeneralPropertySectionFilter"
+                  id="com.tibco.cep.studio.ui.statemachine.rulepropertySection"
+                  tab="com.tibco.cep.studio.ui.statemachine.rulePropertyTab">
+               <input
+                     type="com.tomsawyer.graphicaldrawing.TSEObject">
+               </input>
+            </propertySection>
+            <propertySection
+                  class="com.tibco.cep.studio.ui.statemachine.tabbed.properties.sections.TimeoutExpressionPropertySection"
+                  filter="com.tibco.cep.studio.ui.statemachine.tabbed.properties.StateTimeoutFilter"
+                  id="com.tibco.cep.studio.ui.statemachine.timeoutExpressionpropertySection"
+                  tab="com.tibco.cep.studio.ui.statemachine.timeoutExpressionpropertyTab">
+               <input
+                     type="com.tomsawyer.graphicaldrawing.TSEObject">
+               </input>
+            </propertySection>
+            <propertySection
+                  class="com.tibco.cep.studio.ui.statemachine.tabbed.properties.sections.TimeoutStatePropertySection"
+                  filter="com.tibco.cep.studio.ui.statemachine.tabbed.properties.StateTimeoutFilter"
+                  id="com.tibco.cep.studio.ui.statemachine.timeoutpropertySection"
+                  tab="com.tibco.cep.studio.ui.statemachine.timeoutStatepropertyTab">
+               <input
+                     type="com.tomsawyer.graphicaldrawing.TSEObject">
+               </input>
+            </propertySection>
+         </propertySections>
+      </extension>
+      <extension
+            point="org.eclipse.ui.editorActions">
+         <editorContribution
+               id="com.tibco.cep.studio.ui.statemachine.editorContribution"
+               targetID="com.tibco.cep.studio.ui.statemachine.editor">
+          <menu
+               id="com.tibco.cep.studio.ui.statemachine.diagram.menu"
+               label="Diagram"
+               path="additions">
+            <separator
+                  name="DiagramGroup1">
+            </separator>
+            <separator
+                  name="DiagramGroup2">
+            </separator>
+            <separator
+                  name="DiagramGroup3">
+            </separator>
+            <separator
+                  name="DiagramGroup4">
+            </separator>
+            <separator
+                  name="DiagramGroup5">
+            </separator>
+         </menu>
+         <menu
+               id="com.tibco.cep.diagramming.layout_menu"
+               label="&amp;Layout"
+               path="com.tibco.cep.studio.ui.statemachine.diagram.menu/DiagramGroup1">
+            <separator
+                  name="LayoutGroup">
+            </separator>
+         </menu>
+         <menu
+               id="com.tibco.cep.diagramming.tool_menu"
+               label="&amp;Interactive Tools"
+               path="com.tibco.cep.studio.ui.statemachine.diagram.menu/DiagramGroup1">
+            <separator
+                  name="ToolsGroup">
+            </separator>
+         </menu>
+		<action
+        class="com.tibco.cep.diagramming.actions.ExportToImageActionDelegate"
+        icon="icons/imageExport.gif"
+        id="com.tibco.cep.tomsawyer.imageexport"
+        label="Export to Image..."
+        menubarPath="com.tibco.cep.studio.ui.statemachine.diagram.menu/DiagramGroup3"
+        tooltip="Diagram Export to Image">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.PrintActionDelegate"
+               icon="icons/print.gif"
+               id="com.tibco.cep.tomsawyer.print"
+               label="Print"
+               menubarPath="com.tibco.cep.studio.ui.statemachine.diagram.menu/DiagramGroup2"
+               tooltip="Diagram Print">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.PrintPreviewActionDelegate"
+               icon="icons/printPreview.gif"
+               id="com.tibco.cep.tomsawyer.printpreview"
+               label="Print Preview..."
+               menubarPath="com.tibco.cep.studio.ui.statemachine.diagram.menu/DiagramGroup2"
+               tooltip="Diagram Print Preview">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.PrintSetupActionDelegate"
+               icon="icons/printSetup.gif"
+               id="com.tibco.cep.tomsawyer.printsetup"
+               label="Print Setup..."
+               menubarPath="com.tibco.cep.studio.ui.statemachine.diagram.menu/DiagramGroup2"
+               tooltip="Diagram Print Setup">
+         </action>
+         <action
+               class="com.tibco.cep.studio.ui.statemachine.actions.StateMachineLinkNavigatorActionDelegate"
+               icon="icons/linkNavigation.gif"
+               id="com.tibco.cep.tomsawyer.linknavigator"
+               label="Link &amp;Navigator"
+               menubarPath="com.tibco.cep.studio.ui.statemachine.diagram.menu/com.tibco.cep.diagramming.tool_menu/ToolsGroup"
+               tooltip="Link Navigator">
+         </action>
+         <action
+               class="com.tibco.cep.studio.ui.statemachine.actions.StateMachineInteractiveZoomActionDelegate"
+               icon="icons/interactiveZoom.gif"
+               id="com.tibco.cep.tomsawyer.interactivezoom"
+               label="&amp;Interactive Zoom"
+               menubarPath="com.tibco.cep.studio.ui.statemachine.diagram.menu/com.tibco.cep.diagramming.tool_menu/ToolsGroup"
+               tooltip="Interactive Zoom">
+         </action>
+         <action
+               class="com.tibco.cep.studio.ui.statemachine.actions.StateMachineZoomActionDelegate"
+               icon="icons/zoom.gif"
+               id="com.tibco.cep.tomsawyer.marqueezoom"
+               label="&amp;Marquee Zoom"
+               menubarPath="com.tibco.cep.studio.ui.statemachine.diagram.menu/com.tibco.cep.diagramming.tool_menu/ToolsGroup"
+               tooltip="Marquee Zoom">
+         </action>
+         <action
+               class="com.tibco.cep.studio.ui.statemachine.actions.StateMachinePanActionDelegate"
+               icon="icons/pan.gif"
+               id="com.tibco.cep.tomsawyer.pan"
+               label="Pan"
+               menubarPath="com.tibco.cep.studio.ui.statemachine.diagram.menu/com.tibco.cep.diagramming.tool_menu/ToolsGroup"
+               tooltip="Pan">
+         </action>
+         <action
+               class="com.tibco.cep.studio.ui.statemachine.actions.StateMachineSelectActionDelegate"
+               icon="icons/select.gif"
+               id="com.tibco.cep.tomsawyer.select"
+               label="&amp;Select"
+               menubarPath="com.tibco.cep.studio.ui.statemachine.diagram.menu/com.tibco.cep.diagramming.tool_menu/ToolsGroup"
+               tooltip="Select">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.FitWindowActionDelegate"
+               icon="icons/fitInCanvas.gif"
+               id="com.tibco.cep.tomsawyer.fitinwindow"
+               label="&amp;Fit In Window"
+               menubarPath="com.tibco.cep.studio.ui.statemachine.diagram.menu/DiagramGroup5"
+               tooltip="Fit In Window">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.IncrementalLayoutActionDelegate"
+               icon="icons/incrementalLayout.gif"
+               id="com.tibco.cep.tomsawyer.incrementallayout"
+               label="In&amp;cremental Layout"
+               menubarPath="com.tibco.cep.studio.ui.statemachine.diagram.menu/DiagramGroup4"
+               tooltip="Arrange all objects incrementally">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.RoutingActionDelegate"
+               icon="icons/routing.gif"
+               id="com.tibco.cep.tomsawyer.edge.routing"
+               label="Link Routing"
+               menubarPath="com.tibco.cep.studio.ui.statemachine.diagram.menu/DiagramGroup4"
+               tooltip="Arrange all edges">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.LabelingActionDelegate"
+               icon="icons/labeling.gif"
+               id="com.tibco.cep.tomsawyer.labeling"
+               label="L&amp;abeling"
+               menubarPath="com.tibco.cep.studio.ui.statemachine.diagram.menu/DiagramGroup4"
+               tooltip="Arrange all labels">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.HierarchicalObliqueLayoutActionDelegate"
+               icon="icons/hierarchicaldeep.png"
+               id="com.tibco.cep.tomsawyer.hierarchical.oblique.layout"
+               label="Hierarchical Layout (Oblique)"
+               menubarPath="com.tibco.cep.studio.ui.statemachine.diagram.menu/com.tibco.cep.diagramming.layout_menu/LayoutGroup"
+               tooltip="Arranges the nodes in a hierarchical layout">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.HierarchicalRectilinearLayoutActionDelegate"
+               icon="icons/hierarchicaldeep.png"
+               id="com.tibco.cep.tomsawyer.hierarchical.rectilinear.layout"
+               label="Hierarchical Layout (Rectilinear)"
+               menubarPath="com.tibco.cep.studio.ui.statemachine.diagram.menu/com.tibco.cep.diagramming.layout_menu/LayoutGroup"
+               tooltip="Arranges the nodes in a hierarchical layout">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.SymmetricLayoutActionDelegate"
+               icon="icons/symmetricdeep.png"
+               id="com.tibco.cep.tomsawyer.symmetric.layout"
+               label="Symmetric Layout"
+               menubarPath="com.tibco.cep.studio.ui.statemachine.diagram.menu/com.tibco.cep.diagramming.layout_menu/LayoutGroup"
+               tooltip="Arranges the nodes in a symmetric layout">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.OrthogonalLayoutActionDelegate"
+               icon="icons/orthogonaldeep.png"
+               id="com.tibco.cep.tomsawyer.orthogonal.layout"
+               label="Orthogonal Layout"
+               menubarPath="com.tibco.cep.studio.ui.statemachine.diagram.menu/com.tibco.cep.diagramming.layout_menu/LayoutGroup"
+               tooltip="Arranges the nodes in a orthogonal layout">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.CircularLayoutActionDelegate"
+               icon="icons/circulardeep.png"
+               id="com.tibco.cep.tomsawyer.circular.layout"
+               label="Circular Layout"
+               menubarPath="com.tibco.cep.studio.ui.statemachine.diagram.menu/com.tibco.cep.diagramming.layout_menu/LayoutGroup"
+               tooltip="Arranges the nodes in a circualr layout">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.LayoutActionDelegate"
+               icon="icons/globalLayout.png"
+               id="com.tibco.cep.tomsawyer.default.layout"
+               label="Default Layout"
+               menubarPath="com.tibco.cep.studio.ui.statemachine.diagram.menu/com.tibco.cep.diagramming.layout_menu/LayoutGroup"
+               tooltip="Sets default layout">
+         </action>
+         <action
+               class="com.tibco.cep.studio.ui.statemachine.actions.StateMachineMagnifyActionDelegate"
+               icon="icons/magnifyZoom.png"
+               id="com.tibco.cep.tomsawyer.magnify"
+               label="&amp;Magnify"
+               menubarPath="com.tibco.cep.studio.ui.statemachine.diagram.menu/com.tibco.cep.diagramming.tool_menu/ToolsGroup"
+               style="push"
+               tooltip="Magnify Zoom">
+         </action>
+         </editorContribution>
+      </extension>
+      <extension
+            point="com.tibco.cep.studio.core.projectResourceValidator">
+         <validator
+               Validator="com.tibco.cep.studio.ui.statemachine.validation.StateModelValidator"
+               extensions="statemachine">
+         </validator>
+      </extension>
+      <extension
+            id="com.tibco.cep.studio.ui.statemachine.newWizards"
+            point="org.eclipse.ui.newWizards">
+            <wizard
+            canFinishEarly="false"
+            category="com.tibco.cep.studio.ui.category"
+            class="com.tibco.cep.studio.ui.statemachine.wizards.NewStateMachineWizard"
+            finalPerspective="com.tibco.cep.studio.application.perspective"
+            icon="icons/state_machine.png"
+            id="com.tibco.cep.studio.ui.statemachine.wizards.newStateMachinewizard"
+            name="State Model">
+         <description>
+            Create a new state model
+         </description>
+      </wizard>
+      </extension>
+      <extension
+            point="org.eclipse.core.runtime.preferences">
+         <initializer
+               class="com.tibco.cep.studio.ui.statemachine.diagram.preference.StateMachinePreferenceInitializer">
+         </initializer>
+      </extension>
+      <extension
+            point="org.eclipse.ui.startup">
+         <startup
+               class="com.tibco.cep.studio.ui.statemachine.StateMachinePluginStartup">
+         </startup>
+      </extension>
+</plugin>

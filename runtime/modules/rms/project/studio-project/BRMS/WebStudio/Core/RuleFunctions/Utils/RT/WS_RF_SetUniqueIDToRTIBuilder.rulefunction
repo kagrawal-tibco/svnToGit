@@ -1,0 +1,29 @@
+/**
+ * @description 
+ */
+void rulefunction WebStudio.Core.RuleFunctions.Utils.RT.WS_RF_SetUniqueIDToRTIBuilder {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		WebStudio.Core.Concepts.RuleTemplateInstance.Builder.WS_C_AbstractConditionsFilter[] filterList;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.RT.WS_RF_SetUniqueIDToRTIBuilder");
+		
+		Log.log(LOGGER, "Debug", "======= Setting unique Id to Filters");
+		
+		for (int i=0; i < filterList@length; i++) {
+			WS_C_AbstractConditionsFilter filter = filterList[i];
+			if (filter.filterId == null || String.equals(filter.filterId, "")) {
+				filter.filterId = WS.Common.getUniqueId();
+			}
+			Log.log(LOGGER, "Debug", "======= Setting unique Id to Filter - %s", filter.filterId);
+			
+			if (filter.filter != null && filter.filter@length > 0) {
+				WS_C_AbstractConditionsFilter[] containedFilterList = Instance.PropertyArray.toArrayConcept(filter.filter);
+				WS_RF_SetUniqueIDToRTIBuilder(containedFilterList);
+			}
+		}
+	}
+}

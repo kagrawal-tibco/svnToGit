@@ -1,0 +1,27 @@
+<div class="card panel-sm">
+  <div class="card-header">
+    {{title}}
+  </div>
+  <div class="list-group" *ngIf='options && options.length > 0'>
+    <a *ngFor='let opt of options' [ngClass]='setClasses(c)'>
+      <div class="row">
+        <div class="col-sm-9">
+          <a [class.clickable]='opt.enableCheckbox' [class.disabled-clickable]='!opt.checkable' (click)='onCheck(opt)'>
+            <input type="checkbox" *ngIf='opt.enableCheckbox' [disabled]='!opt.checkable' [(ngModel)]='opt.checked'><span> {{getDescription(c)}}</span>
+          </a>
+        </div>
+        <div class="col-sm-3">
+          <div *ngIf='opt.enableBtn'>
+            <button class='btn btn-outline-primary btn-sm' (click)='onClick(c)'>{{btnText}}</button>
+          </div>
+          <div *ngIf='!opt.enableBtn'>
+            <span>{{opt.noBtnText}}</span>
+          </div>
+        </div>
+      </div>
+    </a>
+  </div>
+  <div class="card-body" *ngIf='!options || options.length === 0'>
+    {{emptyMsg}}
+  </div>
+</div>

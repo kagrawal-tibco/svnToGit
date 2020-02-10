@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<project name="post-install" default="post-install" basedir=".">
+	<property file="post-install.properties"/>
+	<import file="common-tasks.xml"/>
+
+	<taskdef resource="net/sf/antcontrib/antcontrib.properties"/>
+	
+	<target name="post-install" depends="import-wrappers,
+					     				set-subst-vars,
+										set-perm">
+		<echo message="Done post-installation tasks." />
+	</target>
+
+	<target name="import-wrappers">
+	</target>
+	
+	<target name="set-subst-vars">
+		<antcall target="substitute-variables-examples">
+			<param name="examples-path" value="${tibco.home}/be/${beVersionShort}/examples/standard" />
+		</antcall>
+	</target>
+	
+	<target name="set-perm">
+		<chmod perm="755">
+			<fileset dir="${tibco.home}/be/${beVersionShort}/examples/standard" casesensitive="no">
+					<include name="**/*.sh"/>
+			</fileset>
+		</chmod>
+	</target>
+	
+</project>	

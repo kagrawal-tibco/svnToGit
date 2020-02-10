@@ -1,0 +1,49 @@
+/**
+ * @description 
+ */
+void rulefunction WebStudio.Core.RuleFunctions.Utils.WS_RF_SetupReviewSink {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.WS_RF_SetupReviewSink");
+
+		// Default sink to collect all admin specific reviews		
+		String reviewSinkExtId = WS_RF_CreateUserArtifactExtId("COMMON_REVIEW_SINK", null, null, null, null, null);
+		//Check if common review sink exists
+		boolean reviewSinkLock = Cluster.DataGrid.Lock(reviewSinkExtId, -1, false);
+		if (reviewSinkLock) {
+			WS_C_CommonReviewSink commonReviewSink = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(reviewSinkExtId, false, "/WebStudio/Core/Concepts/Lifecycle/WS_C_CommonReviewSink");
+			if (commonReviewSink == null) {
+				commonReviewSink = Instance.newInstance("/WebStudio/Core/Concepts/Lifecycle/WS_C_CommonReviewSink", reviewSinkExtId);
+			}
+		}
+		
+		// create sink for admins specific to a project/subscription
+		String adminRoleExtId = WS_RF_CreateUserArtifactExtId("ADMIN_ROLES", null, null, null, null, null);
+		WS_C_AdminRoles adminRolesEntity = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(adminRoleExtId, false, "/WebStudio/Core/Concepts/WS_C_AdminRoles");
+		
+		if (adminRolesEntity != null) {
+			WS_C_RoleMap[] roleMap = Instance.PropertyArray.toArrayContainedConcept(adminRolesEntity.entry);
+			
+			String adminRoleSinkExtId = null;
+			for (int i=0; i< roleMap@length; i++) {
+				if (!String.equals(roleMap[i].coverage, "All")) {
+					adminRoleSinkExtId = WS_RF_CreateUserArtifactExtId(null, null, roleMap[i].coverage, null, null,"REVIEW_SINK");
+					Log.log(LOGGER, "Debug", "Creating project/subscription based review sink with ExtId - %s", adminRoleSinkExtId);
+					
+					reviewSinkLock = Cluster.DataGrid.Lock(adminRoleSinkExtId, -1, false);
+					if (reviewSinkLock) {
+						WS_C_CommonReviewSink projectReviewSink = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(adminRoleSinkExtId, false, "/WebStudio/Core/Concepts/Lifecycle/WS_C_CommonReviewSink");
+						if (projectReviewSink == null) {
+							projectReviewSink = Instance.newInstance("/WebStudio/Core/Concepts/Lifecycle/WS_C_CommonReviewSink", adminRoleSinkExtId);
+						}
+					}	
+				}
+			}
+		}
+	}
+}

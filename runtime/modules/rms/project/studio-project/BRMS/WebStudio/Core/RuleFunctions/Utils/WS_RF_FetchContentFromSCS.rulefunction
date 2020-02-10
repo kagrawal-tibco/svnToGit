@@ -1,0 +1,34 @@
+/**
+ * @description 
+ */
+String rulefunction WebStudio.Core.RuleFunctions.Utils.WS_RF_FetchContentFromSCS {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String scsRootURL; 
+		String projectName;
+		String artifactPath;
+		String artifactExtn;
+		String username;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.WS_RF_FetchContentFromSCS");
+		
+		String content = null;
+		
+		String scsIntegrationType = System.getSystemPropertyAsString("ws.scs.impl.type", null);
+		
+		String userName = null, password = null;
+		if (!String.equals(scsIntegrationType, "file") && String.startsWith(scsRootURL, "http")) {
+			// fetch the preferences for SCS userName/password details
+			String[] scsCredentials = WS_RF_GetSCSCredentials(username);
+			userName = scsCredentials[0];
+			password = scsCredentials[1];
+		}
+		
+		content = WS.SCS.showArtifactContents(scsIntegrationType, scsRootURL, projectName, artifactPath, artifactExtn, userName, password);
+	
+		return content;
+	}
+}

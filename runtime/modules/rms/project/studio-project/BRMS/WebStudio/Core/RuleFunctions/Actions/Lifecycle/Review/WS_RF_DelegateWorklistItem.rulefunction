@@ -1,0 +1,85 @@
+/**
+ * @description 
+ */
+WebStudio.Core.Concepts.DataSources.WS_C_TemporaryReturnData rulefunction WebStudio.Core.RuleFunctions.Actions.Lifecycle.Review.WS_RF_DelegateWorklistItem {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object asyncContextObject;
+		WebStudio.Security.Authn.Concepts.WS_C_LoggedInUser loggedInUser;
+		String contentType;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.Lifecycle.Review.WS_RF_DelegateWorklistItem");
+		
+		Object servletRequest = HTTP.Servlet.getServletRequest(asyncContextObject);
+		
+		WS_C_ResponseData responseData = null;
+		int responseStatus = 0;
+		int recordCount = 0;
+		String errorCode = null;
+		String responseMessage = null;
+
+		WS_C_TemporaryReturnData tempReturnData = null;
+		
+		if (!WS_RF_CheckHTTPMethod(servletRequest, "PUT")) {
+			responseStatus = -1;
+			recordCount = 0;
+			errorCode = "ERR_5101";
+			responseMessage = "Invalid HTTP Method, expect method is [PUT].";
+			
+			tempReturnData = WS_RF_CreateTemporaryReturnData(responseStatus, recordCount, errorCode, responseMessage, responseData);
+		} else {
+			Object requestDataBytes = HTTP.Servlet.Request.getRequestContent(servletRequest);
+			String requestData = String.convertByteArrayToString(requestDataBytes, "UTF-8");
+			Log.log(LOGGER, "Debug", "Request Post Data Received %s", requestData);
+			
+			//Convert to concept model
+			WS_C_WorklistDelegateRequest worklistDelegateBaseRequest = null;
+			if (String.equals(contentType, System.getGlobalVariableAsString("WebStudio/CONTENT_TYPE/XML", "application/xml"))) {
+				worklistDelegateBaseRequest = Instance.createTransientInstanceFromXML("/WebStudio/Core/Concepts/Request/Usecases/Lifecycle/Review/Delegation/WS_C_WorklistDelegateRequest", requestData);
+			} else {
+				worklistDelegateBaseRequest = Instance.createTransientInstanceFromJSON("/WebStudio/Core/Concepts/Request/Usecases/Lifecycle/Review/Delegation/WS_C_WorklistDelegateRequest", requestData);
+			}
+		
+			Log.log(LOGGER, "Debug", "Request concept deserialized %s", worklistDelegateBaseRequest);
+			
+			String[] roles = Instance.PropertyArray.toArrayString(loggedInUser.roles);
+			String currentUserRole = WS.Common.joinStringArray(roles, ",");
+			Log.log(LOGGER, "Debug", "Current User role %s", currentUserRole);
+			
+			WS_C_WorklistDelegateItem worklistDelegateItem = worklistDelegateBaseRequest.data.worklist;
+			
+			WS_C_WorklistDelegateRoles worlistDelegateRole = worklistDelegateItem.roles;
+			String worklistRoles = WS.Common.joinStringArray(Instance.PropertyArray.toArrayString(worlistDelegateRole.role), ",");
+			Log.log(LOGGER, "Debug", "Roles to delegate to %s", worklistRoles);
+			
+			WS_C_WorklistDelegateRevisionIds worklistDelegateRevisionId = worklistDelegateItem.revisions;
+			String worklistRevisions = WS.Common.joinStringArray(Instance.PropertyArray.toArrayString(worklistDelegateRevisionId.revisionId), ",");
+			Log.log(LOGGER, "Debug", "Revisions to delegate to %s", worklistRevisions);
+			
+			String asyncContextId = WS.Common.generateUUID();
+			String mapLockKey = "WORKLIST_DELEGATE_ASYNC_CONTEXT_MAP_" + System.nanoTime();
+			//Concurrent Rete case. Lock locally
+			boolean mapLocked = Cluster.DataGrid.Lock(mapLockKey, -1, true);
+			if (mapLocked) { 
+				Util.HashMap.createMap(mapLockKey);
+				Util.HashMap.putObject(mapLockKey, asyncContextId, asyncContextObject);
+			}
+			
+			String subscriptionId = null;
+			if (loggedInUser.jwtToken != null) subscriptionId = loggedInUser.jwtToken.sbsc; 
+			WS_E_WorklistDelegationEvent worklistDelegateEvent = Event.createEvent("xslt://{{/WebStudio/Core/Events/Lifecycle/WS_E_WorklistDelegationEvent}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"2.0\" exclude-result-prefixes=\"xsl xsd\"><xsl:output method=\"xml\"/><xsl:param name=\"asyncContextId\"/><xsl:param name=\"mapLockKey\"/><xsl:param name=\"subscriptionId\"/><xsl:template name=\"Function\" match=\"/\"><createEvent><event><asyncContextId><xsl:value-of select=\"$asyncContextId\"/></asyncContextId><mapLockKey><xsl:value-of select=\"$mapLockKey\"/></mapLockKey><subscriptionId><xsl:value-of select=\"$subscriptionId\"/></subscriptionId></event></createEvent></xsl:template></xsl:stylesheet>");
+			worklistDelegateEvent.roles = worklistRoles;
+			worklistDelegateEvent.revisionIds = worklistRevisions;
+			worklistDelegateEvent.userRole = currentUserRole;
+			worklistDelegateEvent.contentType = contentType;
+			worklistDelegateEvent.userName = loggedInUser.username;
+			
+			Event.assertEvent(worklistDelegateEvent);
+		}
+
+		return tempReturnData;
+	}
+}

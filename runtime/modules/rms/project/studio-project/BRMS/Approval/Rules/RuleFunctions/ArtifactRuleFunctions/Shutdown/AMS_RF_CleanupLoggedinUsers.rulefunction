@@ -1,0 +1,29 @@
+/**
+ * @description Cleanup any logged in users.
+ */
+void rulefunction Approval.Rules.RuleFunctions.ArtifactRuleFunctions.Shutdown.AMS_RF_CleanupLoggedinUsers {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		
+	}
+	body {
+		boolean loggedInUsersLock = Cluster.DataGrid.Lock("LOGGEDIN_USERS", -1, false);
+		AMS_C_LoggedInUsers loggedInUsersC = null;
+		if (loggedInUsersLock) {
+			loggedInUsersC = Cluster.DataGrid.CacheLoadConceptByExtIdByUri("LOGGEDIN_USERS", false, "/Approval/Scorecards/AMS_C_LoggedInUsers");
+			if (loggedInUsersC != null) {
+				String[] loggedInUsers = 
+					Instance.PropertyArray.toArrayString(loggedInUsersC.loggedInUsers);
+				
+				System.debugOut("Cleaning up logged in users");
+				for (int loop = 0, length = loggedInUsers@length; loop < length; loop++) {
+					AMS_C_LoggedInUser loggedInUser = Instance.getByExtIdByUri(loggedInUsers[loop], "/AAA/Concepts/AMS_C_LoggedInUser");
+					//Delete this
+					Instance.deleteInstance(loggedInUser);
+				}	
+			}
+		}
+	}
+}

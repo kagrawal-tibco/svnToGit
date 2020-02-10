@@ -1,0 +1,44 @@
+/**
+ * @description Load any existing templates from the policy store if requested.
+ * @author aathalye-T410
+ */
+rule Authentication.MDS.Services.PolicyStore.Rules.BAAS_RU_LoadExistingAuthnPolicyTemplates {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Authentication.MDS.Services.PolicyStore.Events.BAAS_E_LoadTemplatesRequestEvent baas_e_loadtemplatesrequestevent;
+	}
+	when {
+		
+	}
+	then {
+		//Load cache only concept
+		BAAS_C_PolicyStore mdsPolicyStore = Instance.getByExtId("POLICY_STORE");
+		BAAS_C_PolicyTemplate[] templates = Instance.PropertyArray.toArrayConcept(mdsPolicyStore.policyTemplates);
+		
+		//Serialize root
+		Object responseBuilder = String.createBuffer(0);
+		String.append(responseBuilder, "<PolicyTemplates>");
+		String.append(responseBuilder, "\n");
+		for (int loop = 0; loop < templates@length; loop++) {
+			BAAS_C_PolicyTemplate policyTemplate = templates[loop];
+			String templateString = Instance.filterAndSerializeUsingDefaults(policyTemplate, "templateContent");
+			//Chunk it
+			templateString = Common.RuleFunctions.BAAS_RF_ChunkXMLHeader(templateString);
+			String.append(responseBuilder, templateString);
+		}
+		String.append(responseBuilder, "\n");
+		String.append(responseBuilder, "</PolicyTemplates>");
+		
+		String templateResult = String.convertBufferToString(responseBuilder);
+		String.clearBuffer(responseBuilder);
+		responseBuilder = null;
+		
+		BAAS_E_LoadExistingTemplatesResponseEvent loadTemplatesResponseEvent = 
+			Authentication.MDS.Services.PolicyStore.Events.BAAS_E_LoadExistingTemplatesResponseEvent.BAAS_E_LoadExistingTemplatesResponseEvent(null, templateResult);
+		
+		Event.replyEvent(baas_e_loadtemplatesrequestevent, loadTemplatesResponseEvent);	 
+	}
+}

@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ruleDefCollection>
+   <rules xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="InstanceRule" xsi:noNamespaceSchemaLocation="true">
+      <properties>
+         <property name="entity" value="instance" />
+      </properties>
+      <clear-actions name="Set-Health-Action">
+         <actionFunctionDescriptor name="Set-Health-Action">
+            <param-value datatype="STRING" description="Health Level (Ok/Warning/Critical)" index="0" ref="HealthValue">
+               <value xmlns:xs="http://www.w3.org/2001/XMLSchema" xsi:type="xs:string">ok</value>
+            </param-value>
+            <param-value datatype="STRING" description="Alert text" index="1" ref="AlertText">
+               <value xmlns:xs="http://www.w3.org/2001/XMLSchema" xsi:type="xs:string">Processing unit Instance ${instance.name} is in ${entity.health} state</value>
+            </param-value>
+         </actionFunctionDescriptor>
+         <alert-level>medium</alert-level>
+         <constraint xsi:type="invokeConstraintImpl">
+            <type>ONCE_ONLY</type>
+         </constraint>
+      </clear-actions>
+      <clear-condition xsi:type="queryFilterDefImpl">
+         <schema>BE_MM</schema>
+         <batch>1</batch>
+         <cube>BEMMCube</cube>
+         <hierarchy>instancehealthhierarchy</hierarchy>
+         <filters xsi:type="andFilterImpl">
+            <name xsi:type="ltFilterImpl">
+               <key>avgmemusage</key>
+               <value xmlns:xs="http://www.w3.org/2001/XMLSchema" xsi:type="xs:double">60.0</value>
+               <filterqualifier>MEASUREMENT_NAME</filterqualifier>
+            </name>
+         </filters>
+      </clear-condition>
+      <set-actions name="Set-Health-Action">
+         <actionFunctionDescriptor name="Set-Health-Action">
+            <param-value datatype="STRING" description="Health Level (Ok/Warning/Critical)" index="0" ref="HealthValue">
+               <value xmlns:xs="http://www.w3.org/2001/XMLSchema" xsi:type="xs:string">warning</value>
+            </param-value>
+            <param-value datatype="STRING" description="Alert text" index="0" ref="AlertText">
+               <value xmlns:xs="http://www.w3.org/2001/XMLSchema" xsi:type="xs:string">Processing unit Instance ${instance.name} is in ${entity.health} state</value>
+            </param-value>
+         </actionFunctionDescriptor>
+         <alert-level>medium</alert-level>
+         <constraint xsi:type="invokeConstraintImpl">
+            <type>ONCE_ONLY</type>
+         </constraint>
+      </set-actions>
+      <set-condition xsi:type="queryFilterDefImpl">
+         <schema>BE_MM</schema>
+         <batch>1</batch>
+         <cube>BEMMCube</cube>
+         <hierarchy>instancehealthhierarchy</hierarchy>
+         <filters xsi:type="andFilterImpl">
+            <name xsi:type="gtFilterImpl">
+               <key>avgmemusage</key>
+               <value xmlns:xs="http://www.w3.org/2001/XMLSchema" xsi:type="xs:double">60.0</value>
+               <filterqualifier>MEASUREMENT_NAME</filterqualifier>
+            </name>
+         </filters>
+      </set-condition>
+      <enabled>true</enabled>
+      <isStreaming>false</isStreaming>
+      <user-name>admin</user-name>
+      <version>1.0</version>
+   </rules>
+   <rules xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="AppRule" xsi:noNamespaceSchemaLocation="true">
+      <properties>
+         <property name="entity" value="app" />
+      </properties>
+      <clear-actions name="Set-Health-Action">
+         <actionFunctionDescriptor name="Set-Health-Action">
+            <param-value datatype="STRING" description="Health Level (Ok/Warning/Critical)" index="0" ref="HealthValue">
+               <value xmlns:xs="http://www.w3.org/2001/XMLSchema" xsi:type="xs:string">ok</value>
+            </param-value>
+            <param-value datatype="STRING" description="Alert text" index="0" ref="AlertText">
+               <value xmlns:xs="http://www.w3.org/2001/XMLSchema" xsi:type="xs:string">Cluster ${application.name} is in ${entity.health} state</value>
+            </param-value>
+         </actionFunctionDescriptor>
+         <alert-level>medium</alert-level>
+         <constraint xsi:type="invokeConstraintImpl">
+            <type>ONCE_ONLY</type>
+         </constraint>
+      </clear-actions>
+      <clear-condition xsi:type="queryFilterDefImpl">
+         <schema>BE_MM</schema>
+         <batch>1</batch>
+         <cube>BEMMCube</cube>
+         <hierarchy>clusterhealthhierarchy</hierarchy>
+         <filters xsi:type="andFilterImpl">
+            <name xsi:type="gtFilterImpl">
+               <key>instancepercentokhealth</key>
+               <value xmlns:xs="http://www.w3.org/2001/XMLSchema" xsi:type="xs:long">50</value>
+               <filterqualifier>MEASUREMENT_NAME</filterqualifier>
+            </name>
+         </filters>
+      </clear-condition>
+      <set-actions name="Set-Health-Action">
+         <actionFunctionDescriptor name="Set-Health-Action">
+            <param-value datatype="STRING" description="Health Level (Ok/Warning/Critical)" index="0" ref="HealthValue">
+               <value xmlns:xs="http://www.w3.org/2001/XMLSchema" xsi:type="xs:string">warning</value>
+            </param-value>
+            <param-value datatype="STRING" description="Alert text" index="1" ref="AlertText">
+               <value xmlns:xs="http://www.w3.org/2001/XMLSchema" xsi:type="xs:string">Cluster ${application.name} is in ${entity.health} state</value>
+            </param-value>
+         </actionFunctionDescriptor>
+         <alert-level>medium</alert-level>
+         <constraint xsi:type="invokeConstraintImpl">
+            <type>ONCE_ONLY</type>
+         </constraint>
+      </set-actions>
+      <set-condition xsi:type="queryFilterDefImpl">
+         <schema>BE_MM</schema>
+         <batch>1</batch>
+         <cube>BEMMCube</cube>
+         <hierarchy>clusterhealthhierarchy</hierarchy>
+         <filters xsi:type="andFilterImpl">
+            <name xsi:type="ltFilterImpl">
+               <key>instancepercentokhealth</key>
+               <value xmlns:xs="http://www.w3.org/2001/XMLSchema" xsi:type="xs:long">50</value>
+               <filterqualifier>MEASUREMENT_NAME</filterqualifier>
+            </name>
+         </filters>
+      </set-condition>
+      <enabled>true</enabled>
+      <isStreaming>false</isStreaming>
+      <user-name>admin</user-name>
+      <version>1.0</version>
+   </rules>
+   <rules xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="InferenceRule" xsi:noNamespaceSchemaLocation="true">
+      <properties>
+         <property name="entity" value="inference" />
+      </properties>
+      <clear-actions name="Set-Health-Action">
+         <actionFunctionDescriptor name="Set-Health-Action">
+            <param-value datatype="STRING" description="Health Level (Ok/Warning/Critical)" index="0" ref="HealthValue">
+               <value xmlns:xs="http://www.w3.org/2001/XMLSchema" xsi:type="xs:string">ok</value>
+            </param-value>
+            <param-value datatype="STRING" description="Alert text" index="1" ref="AlertText">
+               <value xmlns:xs="http://www.w3.org/2001/XMLSchema" xsi:type="xs:string">Processing unit Instance ${instance.name} is in ${entity.health} state</value>
+            </param-value>
+         </actionFunctionDescriptor>
+         <alert-level>medium</alert-level>
+         <constraint xsi:type="invokeConstraintImpl">
+            <type>ONCE_ONLY</type>
+         </constraint>
+      </clear-actions>
+      <clear-condition xsi:type="queryFilterDefImpl">
+         <schema>BE_MM</schema>
+         <batch>1</batch>
+         <cube>BEMMCube</cube>
+         <hierarchy>inferencehealthhierarchy</hierarchy>
+         <filters xsi:type="andFilterImpl">
+            <name xsi:type="ltFilterImpl">
+               <key>pendinglockstorelease</key>
+               <value xmlns:xs="http://www.w3.org/2001/XMLSchema" xsi:type="xs:long">5</value>
+               <filterqualifier>MEASUREMENT_NAME</filterqualifier>
+            </name>
+         </filters>
+      </clear-condition>
+      <set-actions name="Set-Health-Action">
+         <actionFunctionDescriptor name="Set-Health-Action">
+            <param-value datatype="STRING" description="Health Level (Ok/Warning/Critical)" index="0" ref="HealthValue">
+               <value xmlns:xs="http://www.w3.org/2001/XMLSchema" xsi:type="xs:string">warning</value>
+            </param-value>
+            <param-value datatype="STRING" description="Alert text" index="0" ref="AlertText">
+               <value xmlns:xs="http://www.w3.org/2001/XMLSchema" xsi:type="xs:string">Processing unit Instance ${instance.name} is in ${entity.health} state</value>
+            </param-value>
+         </actionFunctionDescriptor>
+         <alert-level>high</alert-level>
+         <constraint xsi:type="invokeConstraintImpl">
+            <type>ONCE_ONLY</type>
+         </constraint>
+      </set-actions>
+      <set-condition xsi:type="queryFilterDefImpl">
+         <schema>BE_MM</schema>
+         <batch>1</batch>
+         <cube>BEMMCube</cube>
+         <hierarchy>inferencehealthhierarchy</hierarchy>
+         <filters xsi:type="andFilterImpl">
+            <name xsi:type="gtFilterImpl">
+               <key>pendinglockstorelease</key>
+               <value xmlns:xs="http://www.w3.org/2001/XMLSchema" xsi:type="xs:long">10</value>
+               <filterqualifier>MEASUREMENT_NAME</filterqualifier>
+            </name>
+         </filters>
+      </set-condition>
+      <enabled>true</enabled>
+      <isStreaming>false</isStreaming>
+      <user-name>admin</user-name>
+      <version>1.0</version>
+   </rules>
+</ruleDefCollection>

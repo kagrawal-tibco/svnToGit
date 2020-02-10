@@ -1,0 +1,83 @@
+/**
+ * @description 
+ */
+WebStudio.Core.Concepts.RuleTemplateInstance.Builder.WS_C_AbstractSymbolInfo rulefunction WebStudio.Core.RuleFunctions.Utils.RT.Builder.WS_RF_CreateBuilderSymbolToUpdate {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String entityName;
+		String entityType;
+		String projectName;
+		Object entityPropertiesObject;
+		String userName;
+		String[] roles;
+		String scsRootURL;
+		String scsIntegrationType;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.RT.Builder.WS_RF_CreateBuilderSymbolToUpdate");
+		
+		boolean isComplexType = (String.indexOfString(entityType, 0, "/") != -1);
+		
+		Log.log(LOGGER, "Debug", "Adding Symbol[%s] of type[%s] and isComplex[%s].", entityName, entityType, isComplexType);
+		
+		WS_C_AbstractSymbolInfo symbolInfo = null;
+		if (isComplexType) {
+			// Need to check if should create a new one every time?
+			String symbolExtId =  WS_RF_CreateUserArtifactExtId("SHARED_SYMBOL", entityType + ".concept", projectName, userName, null, "" + System.nanoTime());
+			WS_C_ComplexSymbolInfo complexSymbolInfo = Instance.getByExtIdByUri(symbolExtId,"/WebStudio/Core/Concepts/RuleTemplateInstance/Builder/WS_C_ComplexSymbolInfo");
+			Log.log(LOGGER, "Debug", "LookingUp/Creating Symbol with ExtId - %s.", symbolExtId);
+			
+			if (complexSymbolInfo == null) {
+				Log.log(LOGGER, "Debug", "Symbol not found, creating a new one.");
+				complexSymbolInfo = Instance.newInstance("/WebStudio/Core/Concepts/RuleTemplateInstance/Builder/WS_C_ComplexSymbolInfo", symbolExtId);
+			}
+			symbolInfo = complexSymbolInfo;	
+		} else {
+			Log.log(LOGGER, "Debug", "Symbol - Simple Type - %s.", entityType);
+			WS_C_SimpleSymbolInfo simpleSymbolInfo = Instance.newInstance("/WebStudio/Core/Concepts/RuleTemplateInstance/Builder/WS_C_SimpleSymbolInfo", null);
+			symbolInfo = simpleSymbolInfo;	
+		}
+		
+		if (symbolInfo != null) {
+			symbolInfo.symbolAlias = entityName;
+			symbolInfo.type = entityType;
+					
+			// Load associated Domain Model's if any provided its not already associated from a previous lookup
+			if (symbolInfo.domainInfo == null) {
+				String[] domainPaths = WS.Decision.getDomainPathsForProperty(entityPropertiesObject, entityName, scsIntegrationType, scsRootURL, projectName);				
+				if (domainPaths != null && domainPaths@length > 0) {
+					Log.log(LOGGER, "Debug", "Total Domain models associated - %s.", domainPaths@length);
+					for (int i = 0; i < domainPaths@length; i++) {
+						WS_C_Domain domainInfoConcept = WS_RF_FetchDomainEntries(userName, roles, projectName, domainPaths[i], "domain", true);
+						Instance.PropertyArray.appendConceptReference(symbolInfo.domainInfo, domainInfoConcept, 1L);
+						WS.Common.assertInstance(domainInfoConcept, false);
+					}
+				}
+			}
+			
+			// if symbolInfo is again of complex type then need to look up recursively
+			if (symbolInfo instanceof WS_C_ComplexSymbolInfo) {
+				String artifactType = "concept";			
+				Log.log(LOGGER, "Debug", "ArtifactType - %s", artifactType);
+				symbolInfo.type = symbolInfo.type + "." + artifactType;
+				
+				Object propertiesObj = WS_RF_FetchDTArgumentProperties(projectName, entityType, artifactType, artifactType, userName, roles, false);
+				Object[] entityProperties = Collections.toArray(propertiesObj);
+				
+				String propName = null, propType = null;
+				for (int index = 0; index < entityProperties@length; index++) {
+					propName = WS.Decision.TableModel.Arguments.getPropertyName(entityProperties[index]);
+					propType = WS.Decision.TableModel.Arguments.getPropertyType(entityProperties[index]);
+					
+					WS_C_AbstractSymbolInfo symbolToAdd = WS_RF_CreateBuilderSymbolToUpdate(propName, propType, projectName, propertiesObj, userName, roles, scsRootURL, scsIntegrationType);
+					WS_C_ComplexSymbolInfo complexSymbol = symbolInfo;
+					Instance.PropertyArray.appendConceptReference(complexSymbol.symbolInfo, symbolToAdd, 1L);				
+				}
+			}
+		}
+		
+		return symbolInfo;
+	}
+}

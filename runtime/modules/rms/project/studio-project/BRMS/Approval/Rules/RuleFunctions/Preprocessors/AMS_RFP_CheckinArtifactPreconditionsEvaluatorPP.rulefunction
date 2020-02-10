@@ -1,0 +1,68 @@
+/**
+ * @description Check for pre-conditions becfore checkin request is sent.
+ */
+void rulefunction Approval.Rules.RuleFunctions.Preprocessors.AMS_RFP_CheckinArtifactPreconditionsEvaluatorPP {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Approval.Events.ArtifactEvents.Commit.AMS_E_GenericCommitEvent ams_e_genericcommitevent;
+	}
+	body {
+		Object LOGGER = Log.getLogger("Approval.Rules.RuleFunctions.Preprocessors.AMS_RFP_CheckinArtifactPreconditionsEvaluatorPP");
+		boolean isUserLoggedIn = AMS_RF_ValidateUsername(ams_e_genericcommitevent) != null;
+		
+		Log.log(LOGGER, "Debug", "In pp %s", "AMS_RFP_CheckinArtifactPreconditionsEvaluatorPP");
+		if (!isUserLoggedIn) {
+			AMS_E_ErrorEvent errorEvent = 
+				Approval.CommonServices.AMS_RF_CreateErrorEvent("COMMIT_ERROR", "The user " + ams_e_genericcommitevent.loggedInUserName + " is not logged in", null);
+			Event.replyEvent(ams_e_genericcommitevent, errorEvent);
+			//Consume the event so that RTC is not triggered
+			Event.consumeEvent(ams_e_genericcommitevent);
+			throw Exception.newException("CHECKIN_ERROR", 
+										 "The user " + ams_e_genericcommitevent.loggedInUserName + " is not logged in", null);	
+		}
+		if (ams_e_genericcommitevent instanceof AMS_E_CheckinCompletionEvent) {
+			boolean patternIdLock = Cluster.DataGrid.Lock(ams_e_genericcommitevent.patternId, -1, false);
+			Log.log(LOGGER, "Debug", "Acquiring Lock on patternid %s", ams_e_genericcommitevent.patternId);
+			if (patternIdLock) {
+				Cluster.DataGrid.CacheLoadConceptByExtIdByUri(ams_e_genericcommitevent.patternId, false, "/Approval/Concepts/ArtifactsConcepts/AMS_C_TransientCheckinInfo");
+			}
+			boolean revisionNumberLock = Cluster.DataGrid.Lock("REV_NUMBER", -1, false);
+			if (revisionNumberLock) {
+		        Cluster.DataGrid.CacheLoadConceptByExtIdByUri("REV_NUMBER", false, "/Approval/Scorecards/AMS_C_RevisionNumber");
+			}
+		} else if (ams_e_genericcommitevent instanceof AMS_E_CheckinRequestEvent) {
+			String payload = ams_e_genericcommitevent@payload;
+			AMS_E_CheckinRequestEvent ams_e_checkinevent = ams_e_genericcommitevent;
+			Approval.Concepts.ArtifactsConcepts.AMS_C_ArtifactCommited artifactCommitted = Instance.createTransientInstanceFromXML("/Approval/Concepts/ArtifactsConcepts/AMS_C_ArtifactCommited", payload);
+			String username = ams_e_genericcommitevent.loggedInUserName;
+			String projectname = ams_e_checkinevent.projectname;
+			String[] returnValue = Approval.Rules.RuleFunctions.ArtifactRuleFunctions.AMS_RF_ExecutePreconditionsForCommit(username, projectname, artifactCommitted);
+			String errorCode = returnValue[0];
+			int responseStatus = Number.intValue(returnValue[1], 10);
+			String responseMessage = returnValue[2];
+			Log.log(LOGGER, "Debug", "Error code [%s] and response message [%s] from preconditions check for commit", returnValue[0], returnValue[2]);
+			if (errorCode != null) {
+				responseMessage = "Commit Failed : " + responseMessage;
+				AMS_E_ErrorEvent errorEvent = Approval.CommonServices.AMS_RF_CreateErrorEvent("COMMIT_ERROR", responseMessage, null);
+				Event.replyEvent(ams_e_genericcommitevent, errorEvent);
+				//Consume the event so that RTC is not triggered
+				Event.consumeEvent(ams_e_genericcommitevent);
+				throw Exception.newException("CHECKIN_ERROR", responseMessage, null);
+			}																		
+		}							
+		
+		String reviewSinkExtId = "COMMON_REVIEW_SINK";
+		//Check if common review sink exists
+		boolean reviewSinkLock = Cluster.DataGrid.Lock(reviewSinkExtId, -1, false);
+		if (reviewSinkLock) {
+			WS_C_CommonReviewSink commonReviewSink = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(reviewSinkExtId, false, "/WebStudio/Core/Concepts/Lifecycle/WS_C_CommonReviewSink");
+			if (commonReviewSink == null) {
+				commonReviewSink = 
+					Instance.newInstance("/WebStudio/Core/Concepts/Lifecycle/WS_C_CommonReviewSink", reviewSinkExtId);
+			}
+		}
+		//TODO ACL checks to be added here
+	}
+}

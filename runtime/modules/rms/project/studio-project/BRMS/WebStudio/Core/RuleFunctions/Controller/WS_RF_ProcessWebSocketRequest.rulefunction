@@ -1,0 +1,56 @@
+/**
+ * @description 
+ */
+void rulefunction WebStudio.Core.RuleFunctions.Controller.WS_RF_ProcessWebSocketRequest {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		WebStudio.Core.Events.WS_E_WebSocketSubscribeEvent ws_e_subscribeEvent;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Controller.WS_RF_ProcessWebSocketRequest");
+		
+		String contextMapID = "WS_CONTEXT_MAP";
+		
+		Util.HashMap.createMap(contextMapID);
+		
+		String queryParameterMap = HTTP.WebSocket.getRequestParameters(ws_e_subscribeEvent);
+		Log.log(LOGGER, "Debug", "Query Parameter Map - %s", queryParameterMap);
+		
+		String token = String.substringBefore(String.substringAfter(queryParameterMap, "token=["), "]");
+		Log.log(LOGGER, "Debug", "Token Retrieved - %s", token);
+		
+		WS_C_LoggedInUser loggedInUser = WS_RF_ValidateLogin(token + "/", true);
+		if (loggedInUser != null) {
+			String uName = loggedInUser.username;
+			if (loggedInUser.jwtToken != null) uName = loggedInUser.jwtToken.uname;
+			
+			Object context = Util.HashMap.getObject(contextMapID, uName);
+			if (context == null) {
+				Log.log(LOGGER, "Debug", "Adding Session Context for token - %s", token);
+				context = HTTP.WebSocket.getSessionContext(ws_e_subscribeEvent);
+				Util.HashMap.putObject(contextMapID, uName, context);
+			} else {
+				Log.log(LOGGER, "Debug", "Session Context already exists for token - %s", token);
+				Object currentContext = HTTP.WebSocket.getSessionContext(ws_e_subscribeEvent);
+				if (currentContext != context) {
+					Log.log(LOGGER, "Debug", "Updating Context, since its different from the existing one");
+					Util.HashMap.putObject(contextMapID, uName, currentContext);
+					context = currentContext;
+				}
+			}
+			Log.log(LOGGER, "Debug", "Total entries in the map are - %s", Util.HashMap.size(contextMapID));
+			
+			Log.log(LOGGER, "Debug", "Message Type - %s", ws_e_subscribeEvent.kind);
+			if (String.equals(ws_e_subscribeEvent.kind, "HEARTBEAT")) {
+				Log.log(LOGGER, "Debug", "Sending Heartbeat message back");
+				Event.replyEvent(ws_e_subscribeEvent, ws_e_subscribeEvent);
+			}
+		} else {
+			HTTP.WebSocket.closeConnection(ws_e_subscribeEvent, 1008, "Authentication Failed, User is not logged in.", false);
+		}
+		
+		Event.consumeEvent(ws_e_subscribeEvent);
+	}
+}

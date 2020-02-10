@@ -1,0 +1,25 @@
+/**
+ * @description 
+ */
+WebStudio.Core.Concepts.DataSources.WS_C_TemporaryReturnData rulefunction WebStudio.Core.RuleFunctions.Utils.WS_RF_CreateTemporaryReturnData {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		int responseStatus;
+		int recordCount;
+		String errorCode;
+		String responseMessage;
+		WebStudio.Core.Concepts.DataSources.WS_C_ResponseData responseData;
+	}
+	body {
+		WS_C_TemporaryReturnData tempReturnData = Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/WS_C_TemporaryReturnData");
+		tempReturnData.errorCode = errorCode;
+		tempReturnData.recordCount = recordCount;
+		tempReturnData.responseData = responseData;
+		tempReturnData.responseMessage = responseMessage;
+		tempReturnData.responseStatus = responseStatus;
+		
+		return tempReturnData;
+	}
+}

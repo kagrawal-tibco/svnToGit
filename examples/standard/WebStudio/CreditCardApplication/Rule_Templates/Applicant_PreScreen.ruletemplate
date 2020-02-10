@@ -1,0 +1,30 @@
+/**
+ * @description 
+ * @author rhollom-W520
+ */
+ruletemplate Rule_Templates.Applicant_PreScreen {
+	attribute {
+		priority = 1;
+		forwardChain = true;
+	}
+	views{
+		Rule_Templates.PreScreenTemplateView;
+	}
+	bindings {
+		int minimumIncome = 0;
+		int minimumAge = 0;
+		String creditType(Domains.CreditTypes);
+	}
+	declare {
+		Events.ApplicationReceived	applicationreceived;
+		Concepts.Applicant        applicant;
+	}
+	when {
+		applicant.Income > minimumIncome;
+		applicant.Age > minimumAge;
+	}
+	actionContext {
+		System.debugOut("Min Income[" + minimumIncome + "], Min Age[" + minimumAge + "] Credit Type [" + creditType + "]");
+//		Event.consumeEvent(applicationreceived);
+	}
+}

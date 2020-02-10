@@ -1,0 +1,31 @@
+/**
+ * @description 
+ * @author snannuri-MBP
+ */
+rule Rules.PutData {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Events.PutData putData;
+	}
+	when {
+		
+	}
+	then {
+		String asURL = "http://localhost:5056";
+		String containerName = "mytable";
+		Store.open(asURL, containerName);
+		
+		//put data
+		Concepts.Data d = Concepts.Data.Data(null,putData.tid,putData.value); 
+		Store.put(asURL, containerName, d);
+		
+		System.debugOut("Put Data[" + putData.tid + "] with value [" + putData.value + "]");
+		
+		Store.close(asURL, containerName);
+		
+		Event.replyEvent(putData, putData);
+	}
+}

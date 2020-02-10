@@ -1,0 +1,135 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>     XML Processing: Collection
+
+- TIBCO BusinessEvents&reg; Examples
+</title>
+<meta http-equiv="Content-type" content="text/html; charset=iso-8859-1" />
+<meta http-equiv="Content-Language" content="en-us" />
+<link rel="Shortcut Icon" href="../../_resources/icon.gif" type="image/gif" />
+<style type="text/css" media="all">@import "../../_resources/examples.css";</style>
+<script type="text/javascript" src="../../_resources/examples.js" /></script>
+<script type="text/javascript">
+function buildForms() {
+ var form;
+
+
+ SendEventForm.setServer("http://localhost:8116");
+
+ form = SendEventForm.get("f");
+ form.setDestinationPath("/Channels/Http/AllOperations");
+ form.setEventPath("/Events/OrderEvent");
+ form.addProperty("@payload",
+   '<p:order xmlns:p="http://www.tibco.com/be/collection">\n'
+	+'    <p:orderId>4001</p:orderId>\n'
+	+'    <p:custId>1234</p:custId>\n'
+	+'    <p:orderline>\n'
+	+'        <p:lineId>1</p:lineId>\n'
+	+'        <p:productId>prod-abc</p:productId>\n'
+	+'        <p:qty>1000</p:qty>\n'
+	+'    </p:orderline>\n'
+	+'    <p:orderline>\n'
+	+'        <p:lineId>2</p:lineId>\n'
+	+'        <p:productId>prod-xyz</p:productId>\n'
+	+'        <p:qty>200</p:qty>\n'
+	+'    </p:orderline>\n'
+	+'</p:order>',
+   15);
+ form.build();
+
+}
+</script>
+</head>
+<body onLoad="buildForms()">
+
+
+<h1>XML Processing: Collection</h1>
+
+
+<h2>Purpose of This Example</h2>
+
+<p>The <em>XML Processing: Collection</em> example shows one way to
+extract a collection of data nodes from the XML payload of an event,
+using an <em>XPath catalog function</em> and a <em>mapper</em>.</p>
+
+<h2>How it Works</h2>
+
+<p>An HTTP destination receives HTTP requests and transforms them into events.</p>
+
+<p>When an <code>Events.OrderEvent</code> event is received,
+it triggers the rule <code>Rules.IterateOverOrderline</code>.</p>
+
+<p>This rule first uses the catalog function <code>XPath.evalAsInt</code>,
+with the appropriate XPath expression,
+to count the <code>orderline</code> elements in the event's payload.</p>
+
+<p>Then, for each of these <code>orderline</code> elements,
+using the catalog function <code>Event.createEvent</code>,
+the rule creates one <code>Events.OrderlineEvent</code> event
+with a payload set to the <code>orderline</code> element,
+and displays this new payload.</p>
+
+<h2>How to Run the Example</h2>
+<ol>
+
+<li>
+<p>Open a command window and at the command prompt,
+start the TIBCO BusinessEvents&reg; engine using the following command.
+
+<pre class="commands">
+cd <i>BE_HOME</i>/examples/standard/XMLProcessingCollection
+<i>BE_HOME</i>/bin/be-engine --propFile <i>BE_HOME</i>/bin/be-engine.tra -u default -c XMLProcessingCollection/XMLProcessingCollection.cdd XMLProcessingCollection.ear
+</pre>
+
+<p>Adapt the command as needed,
+for example if you have customized the example project,
+or are running it from a different directory.</p>
+</li>
+
+
+<li>
+<p>Send an <code>Events.OrderEvent</code> event with an XML payload
+following the <code>http://www.tibco.com/be/collection</code> schema.</p>
+<p>Be sure to include several <code>orderline</code> elements,
+to see multiple items in the results.</p>
+
+<form id="f"></form>
+
+<p>In the command window you see a message like this:</p>
+<pre class="logs">orderline[1] as xml:
+
+&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+
+&lt;p:orderline xmlns:p="http://www.tibco.com/be/collection"&gt;
+    &lt;p:lineId&gt;1&lt;/p:lineId&gt;
+    &lt;p:productId&gt;prod-abc&lt;/p:productId&gt;
+    &lt;p:qty&gt;1000&lt;/p:qty&gt;
+&lt;/p:orderline&gt;
+
+orderline[2] as xml:
+
+&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+
+&lt;p:orderline xmlns:p="http://www.tibco.com/be/collection"&gt;
+    &lt;p:lineId&gt;2&lt;/p:lineId&gt;
+    &lt;p:productId&gt;prod-xyz&lt;/p:productId&gt;
+    &lt;p:qty&gt;200&lt;/p:qty&gt;
+&lt;/p:orderline&gt;</pre>
+</li>
+
+<li>
+<p> To reset the data, restart the engine at the command line.</p>
+</li>
+
+</ol>
+
+
+<div class="footer">
+<p>TIBCO BusinessEvents&reg; 5.6<br />
+Copyright&copy; 2004-2019 TIBCO Software Inc. All rights reserved.</p>
+</div>
+</body>
+</html>

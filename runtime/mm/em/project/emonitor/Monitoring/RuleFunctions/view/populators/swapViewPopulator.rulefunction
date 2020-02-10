@@ -1,0 +1,49 @@
+/**
+ * @description 
+ */
+void rulefunction Monitoring.RuleFunctions.view.populators.swapViewPopulator {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object	eventArrayObj;
+	}
+	body {
+		if (eventArrayObj == null){
+		    return;
+		}
+		Object[] eventArray = eventArrayObj;
+		if (eventArray@length == 0){
+		    return;
+		}
+		SwapMetricEvent metricevent = eventArray[0];
+		Shared.RuleFunctions.log("swapViewPopulator","DEBUG","Received "+metricevent.name);
+		Shared.Concepts.AbstractMonitorView view = Instance.getByExtId(metricevent.name);
+		if (view == null) {
+		   throw Exception.newException("Warning","No View found matching "+metricevent.name,null);
+		}
+		String componentConfigMapId = getComponentConfigMapId(view.monitorable,view.type);
+		if (componentConfigMapId == null) {
+		    throw Exception.newException("Warning","Invalid component definition found for "+view.type+" using "+metricevent.name,null);
+		}
+		String[] seriesNames = Util.HashMap.getObject(componentConfigMapId,"seriesnames");
+		String timeInMillis = String.valueOfLong(DateTime.getTimeInMillis(metricevent.snapshottime));
+		for (int i = 0 ; i < seriesNames@length ; i = i + 1){
+		    Shared.Concepts.SeriesData series = Instance.getByExtId(view@extId+":"+seriesNames[i]);
+		    series.categories[series.categories@length] = String.valueOfLong(DateTime.getTimeInMillis(metricevent.snapshottime));
+		    if (seriesNames[i] == "Used") {
+		       series.values[series.values@length] = String.valueOfDouble(metricevent.used);
+		       series.rawValues[series.rawValues@length] = String.valueOfDouble(metricevent.used);
+		    }
+		    else if (seriesNames[i] == "Available") {
+		       series.values[series.values@length] = String.valueOfDouble(metricevent.available);
+		       series.rawValues[series.rawValues@length] = String.valueOfDouble(metricevent.available);
+		    }
+		    else {
+		        Shared.RuleFunctions.log("swapViewPopulator","WARNING","Unknown series ["+seriesNames[i]+"]");
+		        series.values[series.values@length] = "0";
+		        series.rawValues[series.rawValues@length] = "0";
+		    }
+		}
+	}
+}

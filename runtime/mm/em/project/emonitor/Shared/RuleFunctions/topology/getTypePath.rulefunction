@@ -1,0 +1,24 @@
+/**
+ * @description 
+ */
+String rulefunction Shared.RuleFunctions.topology.getTypePath {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Shared.Concepts.MonitorableEntity	monitorableentity;
+	}
+	body {
+		if(monitorableentity != null){
+			String path = monitorableentity.type;
+			Shared.Concepts.MonitorableEntity parent = monitorableentity.parent;
+			while (parent != null && String.equals(String.toLowerCase(parent.type),"site") == false){
+			    path = parent.type + "/" + path;
+			    parent = parent.parent;
+			}
+			return path;
+		}
+		else
+			return "";
+	}
+}

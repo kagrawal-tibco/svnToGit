@@ -1,0 +1,44 @@
+/**
+ * @description Rule Function which will read contents of master copy of the requested artifact.
+ */
+void rulefunction Approval.Rules.RuleFunctions.ArtifactRuleFunctions.AMS_RF_ReadArtifactMasterCopyContents {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String projectName;
+		Approval.Concepts.ArtifactsConcepts.AMS_C_Artifact ams_c_artifact;
+		String userName;
+	}
+	body {
+		Object LOGGER = Log.getLogger("Approval.Rules.RuleFunctions.ArtifactRuleFunctions.AMS_RF_ReadArtifactMasterCopyContents");
+		
+		String scsRootURL = WS_RF_GetSCSRootURL(projectName, null);
+		Log.log(LOGGER, "Debug", "Root SCS URL %s", scsRootURL);
+		if (scsRootURL == null) {
+			throw Exception.newException(null, "Source control repository location not present. Set ws.scs.rootURL property", null);
+		}									
+		String scsIntegrationType = System.getSystemPropertyAsString("ws.scs.impl.type", null);	
+		String artifactPath = ams_c_artifact.artifactPath;
+		String artifactExtn = ams_c_artifact.artifactFileExtension;
+		
+		Log.log(LOGGER, "Debug", "Artifact Path [%s] and file extension [%s]", artifactPath, artifactExtn);
+				
+		String masterContents = WS_RF_FetchContentFromSCS(scsRootURL, projectName, artifactPath, artifactExtn, userName);
+		masterContents = HTTP.toBase64(masterContents);
+		ams_c_artifact.artifactContent = masterContents;
+		
+		String masterArtifactExtId = WS_RF_CreateUserArtifactExtId(null, artifactPath, projectName, null, null, null);
+		Log.log(LOGGER, "Debug", "Master artifact Id [%s]", masterArtifactExtId);
+		//Lock and load this
+		boolean masterArtifactLock = Cluster.DataGrid.Lock(masterArtifactExtId, -1, false);
+		if (masterArtifactLock) {
+			WS_C_MasterArtifact masterArtifact = Instance.getByExtIdByUri(masterArtifactExtId, "/WebStudio/Core/Concepts/Lifecycle/WS_C_MasterArtifact");
+			if (masterArtifact != null && masterArtifact.masterRevUpdateTime != null) {
+				ams_c_artifact.artifactUpdateTime = DateTime.getTimeInMillis(masterArtifact.masterRevUpdateTime);	
+			} else {
+				ams_c_artifact.artifactUpdateTime = DateTime.getTimeInMillis(DateTime.now());
+			}		
+		}					
+	}
+}

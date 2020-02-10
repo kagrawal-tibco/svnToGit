@@ -1,0 +1,65 @@
+/**
+ * @description Set applicable stages based on current state.
+ */
+void rulefunction WebStudio.Core.RuleFunctions.Actions.Lifecycle.Review.WS_RF_SetApplicableStagesForCommittable {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		WebStudio.Core.Concepts.Lifecycle.WS_C_CommittableDeltaEntry committableDeltaEntry;
+		//To be used only post deploy
+		WebStudio.Core.Concepts.Lifecycle.WS_C_ArtifactDeployStatus artifactDeployStatus;
+	}
+	body {
+		WS_C_ArtifactBaseState currentCommitLifeCycleState = 
+			Instance.PropertyAtom.getConceptReference(committableDeltaEntry.commitLifeCycleState, 1L);
+		
+		AMS_C_ApplicableStages applicableStages = Instance.getByExtIdByUri(committableDeltaEntry.applicableStagesConceptId, "/Approval/Concepts/ArtifactsConcepts/AMS_C_ApplicableStages");
+		if (currentCommitLifeCycleState instanceof WS_C_ArtifactApprovedState) { 
+			//Clear previous ones
+			Instance.PropertyArray.clear(applicableStages.stages);
+			
+			WS_C_UserArtifactRevision referencedRevision = Instance.PropertyAtom.getConceptReference(committableDeltaEntry.userArtifactRevision, 1L);
+			//Get parent artifact
+			WS_C_UserArtifact parentUserArtifact = WS_RF_IsUserArtifact(referencedRevision.parentArtifactId, referencedRevision.parentArtifactType);
+			//From here you could go to Build&Deploy only if the artifact type is RTI or DT
+			//TODO get this from WS configuration.
+			if (WS_RF_IsManagedArtifactType(parentUserArtifact.artifactType, "Deploy")) {
+				AMS_C_WorkflowStage buildAndDeployStage = 
+					Instance.newInstance("/Approval/Concepts/ArtifactsConcepts/AMS_C_WorkflowStage", null);
+				buildAndDeployStage.name = "BuildAndDeploy";
+				Instance.PropertyArray.appendConceptReference(applicableStages.stages, buildAndDeployStage, 1L);
+			}	
+		} else if (currentCommitLifeCycleState instanceof WS_C_ArtifactCommittedState) {
+			AMS_C_WorkflowStage approveStage = 
+				Instance.newInstance("/Approval/Concepts/ArtifactsConcepts/AMS_C_WorkflowStage", null);
+			approveStage.name = "Approve";	
+			AMS_C_WorkflowStage rejectStage = 
+				Instance.newInstance("/Approval/Concepts/ArtifactsConcepts/AMS_C_WorkflowStage", null);	
+			rejectStage.name = "Reject";
+			//Clear previous ones
+			Instance.PropertyArray.clear(applicableStages.stages);
+			Instance.PropertyArray.appendConceptReference(applicableStages.stages, approveStage, 1L);
+			Instance.PropertyArray.appendConceptReference(applicableStages.stages, rejectStage, 1L);
+		} else if (currentCommitLifeCycleState instanceof WS_C_ArtifactDeployedState) { 
+			//From here there is nothing to go to.
+			//TODO get this from WS configuration. 
+			int statusCode = artifactDeployStatus.statusCode;
+			AMS_C_WorkflowStage buildAndDeployStage = null;
+			if (statusCode != 0) {
+				//Keep it in same stage.
+				buildAndDeployStage = 
+					Instance.newInstance("/Approval/Concepts/ArtifactsConcepts/AMS_C_WorkflowStage", null);
+				buildAndDeployStage.name = "BuildAndDeploy";
+			} 
+			//Clear previous ones
+			Instance.PropertyArray.clear(applicableStages.stages);
+			if (buildAndDeployStage != null) {
+				Instance.PropertyArray.appendConceptReference(applicableStages.stages, buildAndDeployStage, 1L);
+			}
+		} else if (currentCommitLifeCycleState instanceof WS_C_ArtifactRejectedState) {
+			//Clear previous ones
+			Instance.PropertyArray.clear(applicableStages.stages);
+		} 
+	}
+}

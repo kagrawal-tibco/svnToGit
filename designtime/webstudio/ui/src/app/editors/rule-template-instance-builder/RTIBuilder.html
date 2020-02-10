@@ -1,0 +1,33 @@
+<div class="RTIBuilder">
+  <div class="legend-well" *ngIf="this.getShowDiff()">
+    <div class="pull-right-legends">
+      <span class="ws-diff-legend ws-diff-background-add"></span><span class="ws-diff-legend-descrip" i18n>{{i18n(' Added ')}}</span>
+      <span class="ws-diff-legend ws-diff-background-delete"></span><span class="ws-diff-legend-descrip" i18n>{{i18n(' Deleted ')}}</span>
+      <span class="ws-diff-legend ws-diff-background-modify"></span><span class="ws-diff-legend-descrip" i18n>{{i18n(' Modified ')}}</span>
+    </div>
+  </div>
+  <accordion>
+    <accordion-group  class="RTIWhenAccordion" heading="{{i18n('When')}}" i18n-heading isOpen='true'>
+      <rtiWhen #rtiWhen
+              [symbols]="this.base.getSymbols()"
+              [_multiFilter]="this.base.getConditions()"
+              [params]="this.params"
+              [parentRTIEditor]="this" i18n
+        >
+        {{i18n('Loading RTI When...')}}
+        </rtiWhen>
+    </accordion-group>
+    <accordion-group  class="RTIThenAccordion" heading="{{i18n('Then')}}" i18n-heading isOpen='true'>
+      <rtiThen #rtiThen
+               [symbols]="this.base.getSymbols()"
+               [actionsImpl]="this.base.getCommands()"
+               [params]="this.params"
+               [parentRTIEditor]="this" i18n>
+               {{i18n('Loading RTI Then...')}}
+               </rtiThen>
+    </accordion-group>
+    <accordion-group *ngIf='this.showProperties' heading="{{i18n('Properties')}}" i18n-heading>
+      <div><review-properties [artifact]='this.initializationObject'></review-properties></div>
+    </accordion-group>
+  </accordion>
+</div>

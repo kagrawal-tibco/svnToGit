@@ -1,0 +1,31 @@
+/**
+ * @description 
+ * @author aathalye-t410
+ */
+rule Rules.CreateShipment {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Concepts.Customer customer;
+		Concepts.PurchaseableCommodity purchaseablecommodity;
+	}
+	when {
+		purchaseablecommodity != null;
+	}
+	then {
+		//Check whether customer is eligible
+		VirtualRuleFunctions.CheckShipmentEligibilityShipmentVRF(customer);
+		if (customer.shipmentEligibility == true) {
+			//Create a new OrderLineItem
+			Concepts.OrderLineItem orderLineItem = Instance.createInstance("xslt://{{/Concepts/OrderLineItem}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"1.0\" exclude-result-prefixes=\"xsl xsd\">\n    <xsl:output method=\"xml\"/>\n    <xsl:param name=\"purchaseablecommodity\"/>\n    <xsl:template match=\"/\">\n        <createObject>\n            <object>\n                <purchaseableCommodity>\n                    <xsl:if test=\"$purchaseablecommodity/@Id\">\n                        <xsl:attribute name=\"ref\">\n                            <xsl:value-of select=\"$purchaseablecommodity/@Id\"/>\n                        </xsl:attribute>\n                    </xsl:if>\n                </purchaseableCommodity>\n                <orderLineItemId>\n                    <xsl:value-of select=\"&quot;abc&quot;\"/>\n                </orderLineItemId>\n            </object>\n        </createObject>\n    </xsl:template>\n</xsl:stylesheet>");
+			//Create new order
+			Concepts.Order order = Instance.createInstance("xslt://{{/Concepts/Order}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"1.0\" exclude-result-prefixes=\"xsl xsd\">\n    <xsl:output method=\"xml\"/>\n    <xsl:template match=\"/\">\n        <createObject>\n            <object>\n                <invoiceNumber>\n                    <xsl:value-of select=\"&quot;ABC123&quot;\"/>\n                </invoiceNumber>\n            </object>\n        </createObject>\n    </xsl:template>\n</xsl:stylesheet>");
+			Instance.PropertyArray.appendContainedConcept(order.orderLineItems, orderLineItem, -1);
+			//Create a new shipment
+			Concepts.Shipment shipment = Instance.createInstance("xslt://{{/Concepts/Shipment}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"1.0\" exclude-result-prefixes=\"xsl xsd\">\n    <xsl:output method=\"xml\"/>\n    <xsl:param name=\"customer\"/>\n    <xsl:template match=\"/\">\n        <createObject>\n            <object>\n                <xsl:if test=\"$customer/custId\">\n                    <custId>\n                        <xsl:value-of select=\"$customer/custId\"/>\n                    </custId>\n                </xsl:if>\n                <shipmentOrigin>\n                    <xsl:value-of select=\"&quot;Russia&quot;\"/>\n                </shipmentOrigin>\n                <deliveryPeriodDays>\n                    <xsl:value-of select=\"30\"/>\n                </deliveryPeriodDays>\n            </object>\n        </createObject>\n    </xsl:template>\n</xsl:stylesheet>");
+			Instance.PropertyArray.appendConceptReference(shipment.orders, order, -1);
+		}
+	}
+}

@@ -1,0 +1,29 @@
+<div class="workspace full">
+  <div class='full'
+    [ngSwitch]='status | async'
+    >
+    <div
+      *ngSwitchCase='"NORMAL"'
+      class="workspace-content full">
+         <split [disabled]="false" 
+                gutterSize="7" 
+                direction="horizontal" 
+                [useTransition]="panes.useTransition" 
+                (dragEnd)="dragEnd($event)" 
+                (gutterClick)="gutterClick($event)">
+             <split-area [size]="panes.pane1size">
+				<sidebar></sidebar>
+             </split-area>
+             <split-area [size]="panes.pane2size">
+		        <multitab-editor></multitab-editor>
+             </split-area>
+         </split>
+       </div>
+    <div
+      *ngSwitchDefault
+      class="scroll-y"
+      >
+      <welcome></welcome>
+    </div>
+  </div>
+</div>

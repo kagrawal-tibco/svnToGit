@@ -1,0 +1,52 @@
+/**
+ * @description 
+ */
+void rulefunction Approval.CommonServices.StartupRuleFunction {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String	s;
+		String	s_1;
+	}
+	body {
+		//s is the basedir, and s_1 is projectName
+		String baseProjectDir = s;
+		String baseProjectName = s_1;
+		String psp = "/";
+		String earPath = baseProjectDir + psp + baseProjectName + psp + "bin" + psp + baseProjectName + ".ear";
+		//Test if this exists
+		boolean earExists = File.fileExists(earPath);
+		if (!earExists) {
+		  throw Exception.newException("Mandatory file or dir missing", "EAR matching Designer project is absent. The name of the ear should be same as project name inside bin directory", null);
+		}
+		String dataDir = baseProjectDir + psp + baseProjectName + psp + "data";
+		boolean dataDirExists = File.fileExists(dataDir);
+		if (!dataDirExists) {
+		  throw Exception.newException("Mandatory file or dir missing", "Data directory to contain test data is missing. Required even if no test data. Directory name should be data", null);
+		} 
+		String decisionDataDir = baseProjectDir + psp + baseProjectName + psp + "decisiondata";
+		boolean decisionDataDirExists = File.fileExists(decisionDataDir);
+		if (!decisionDataDirExists) {
+		  throw Exception.newException("Mandatory file or dir missing", "Directory to contain approved rule function implementations is missing. The directory name should be decisiondata", null);
+		} 
+		String deploymentDir = baseProjectDir + psp + baseProjectName + psp + "deployment";
+		boolean deploymentDirExists = File.fileExists(deploymentDir);
+		if (!deploymentDirExists) {
+		  throw Exception.newException("Mandatory file or dir missing", "Directory to contain deployment class files for rule function implementations is missing.The directory name should be deployment", null);
+		} 
+		String workspaceDir = baseProjectDir + psp + baseProjectName + psp + "workspace";
+		boolean workspaceDirExists = File.fileExists(workspaceDir);
+		if (!workspaceDirExists) {
+		  throw Exception.newException("Mandatory file or dir missing", "Directory to contain submitted projects is missing.The directory name should be workspace", null);
+		} 
+		String aclConfig = baseProjectDir + psp + baseProjectName + psp + "config" + psp + baseProjectName + ".ac";
+		//TODO Add this back
+		//try {
+		   // RMS.Startup.validateACLConfig(aclConfig);
+		//} catch (Exception e) {
+		   //Exception ex = Exception.newException("Startup Error", "Error during ACL config validation", e);
+		   //throw ex;
+		//}
+	}
+}

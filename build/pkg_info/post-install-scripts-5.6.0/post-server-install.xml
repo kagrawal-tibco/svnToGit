@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<project name="post-install" default="post-install" basedir=".">
+	<property file="post-install.properties"/>
+	<import file="common-tasks.xml"/>
+
+	<taskdef resource="net/sf/antcontrib/antcontrib.properties"/>
+
+	<target name="post-install" depends="import-wrappers,import-wrappers-maven,set-subst-vars,set-subst-vars-maven,set-subst-vars-maven-install,remove-docker-scripts,remove-from-install-scripts,remove-cloud-folder">
+		<echo message="Done post-installation tasks." />
+	</target>
+
+	<target name="import-wrappers">
+		<echo message="Copying be-engine wrapper..." />
+		<copy file="${tibco.home}/tools/wrapper/wrap${tibco.wrapper.extension}"
+			tofile="${tibco.home}/be/${beVersionShort}/bin/be-engine${tibco.wrapper.extension}" />
+		<chmod file="${tibco.home}/be/${beVersionShort}/bin/be-engine${tibco.wrapper.extension}" perm="755" />
+	</target>
+
+	<target name="set-subst-vars">
+		<antcall target="substitute-variables">
+			<param name="out.file" value="${tibco.home}/be/${beVersionShort}/bin/be-engine.tra"/>
+		</antcall>
+	</target>
+	
+	
+	<!--target name="import-wrappers-docker">
+		<echo message="Copying docker wrapper..." />
+		<copy file="${tibco.home}/tools/wrapper/wrap${tibco.wrapper.extension}"
+			tofile="${tibco.home}/be/${beVersionShort}/cloud/docker/bin/be-docker-gen${tibco.wrapper.extension}" />
+		<chmod file="${tibco.home}/be/${beVersionShort}/cloud/docker/bin/be-docker-gen${tibco.wrapper.extension}" perm="755" />
+		<chmod file="${tibco.home}/be/${beVersionShort}/cloud/docker/bin/Dockerfile*" perm="666" />
+		<if>
+			<os family="unix" />
+			<then>	
+				<chmod file="${tibco.home}/be/${beVersionShort}/cloud/docker/frominstall/Dockerfile*" perm="666" />
+			</then>
+		</if>
+	</target-->
+	
+	<!--target name="set-subst-vars-docker">
+		<antcall target="substitute-variables">
+			<param name="out.file" value="${tibco.home}/be/${beVersionShort}/cloud/docker/bin/be-docker-gen.tra"/>
+		</antcall>
+	</target--> 
+	
+	<target name="import-wrappers-maven">
+		<echo message="Copying maven wrapper..." />
+		<copy file="${tibco.home}/tools/wrapper/wrap${tibco.wrapper.extension}"
+			tofile="${tibco.home}/be/${beVersionShort}/maven/bin/be-maven-pom-generator${tibco.wrapper.extension}" />
+		<chmod file="${tibco.home}/be/${beVersionShort}/maven/bin/be-maven-pom-generator${tibco.wrapper.extension}" perm="755" />
+	</target>
+				
+	<target name="set-subst-vars-maven">
+		<antcall target="substitute-variables">
+			<param name="out.file" value="${tibco.home}/be/${beVersionShort}/maven/bin/be-maven-pom-generator.tra"/>
+		</antcall>
+	</target> 
+		
+	<target name="set-subst-vars-maven-install">
+		<antcall target="substitute-variables">
+			<param name="out.file" value="${tibco.home}/be/${beVersionShort}/maven/bin/install-be-maven-plugin.bat"/>
+		</antcall>
+		<antcall target="substitute-variables">
+			<param name="out.file" value="${tibco.home}/be/${beVersionShort}/maven/bin/install-be-maven-plugin.sh"/>
+		</antcall>
+		<chmod file="${tibco.home}/be/${beVersionShort}/maven/bin/install-be-maven-plugin.sh" perm="755" />
+	</target>
+	
+	<target name="set-subst-vars-docker-scripts">
+			<antcall target="substitute-variables">
+				<param name="out.file" value="${tibco.home}/be/${beVersionShort}/cloud/docker/bin/build_dockerfile_and_app_image.sh"/>
+			</antcall>
+	</target> 
+	
+	<target name="remove-docker-scripts" >
+		<echo message="Removing unused scripts" />
+		<if>
+			<os family="windows"/>
+			<then>
+				<delete>
+					<fileset dir="${tibco.home}/be/${beVersionShort}/cloud/docker/bin">
+						<include name="*.sh"/>
+					</fileset>
+				</delete>
+				<delete>
+					<fileset dir="${tibco.home}/be/${beVersionShort}/cloud/docker/frominstall">
+					    <include name="build_app_image.sh"/>
+				    	<include name="build_rms_image.sh"/>
+			    		<include name="build_teagent_image.sh"/>
+					    <include name="Dockerfile_fromtar"/>
+						<include name="Dockerfile_fromtar.rhel"/>
+						<include name="Dockerfile-rms_fromtar"/>
+						<include name="Dockerfile-teagent_fromtar"/>
+					</fileset>
+				</delete>
+			</then>
+			<else>
+				<delete>
+					<fileset dir="${tibco.home}/be/${beVersionShort}/cloud/docker/bin">
+						<include name="*.bat"/>
+						<include name="Dockerfile.win"/>
+						<include name="Dockerfile-rms.win"/>
+					</fileset>
+					<fileset dir="${tibco.home}/be/${beVersionShort}/cloud/docker/lib">
+						<include name="*.bat"/>
+					</fileset>
+				</delete>
+				<delete>
+					<fileset dir="${tibco.home}/be/${beVersionShort}/cloud/docker/frominstall">
+					    <include name="build_app_image.bat"/>
+						<include name="build_rms_image.bat"/>
+						<include name="Dockerfile.win"/>
+						<include name="Dockerfile-rms.win"/>
+					</fileset>
+				</delete>
+			</else>
+		</if>
+	</target>
+	<target name="remove-from-install-scripts" >
+		<echo message="Removing unused scripts for mac" />
+		<if>
+			<os family="mac"/>
+			<then>
+				<delete dir="${tibco.home}/be/${beVersionShort}/cloud/docker/frominstall"/>
+			</then>
+		</if>
+	</target>
+	
+	
+	<!--
+	<target name="update-web-xml">
+        <unjar dest="${tibco.home}/be/${beVersionShort}/rms/bin/temp_ws" src="${tibco.home}/be/${beVersionShort}/rms/bin/WebStudio.war">
+        </unjar>
+		<replace file="${tibco.home}/be/${beVersionShort}/rms/bin/temp_ws/WEB-INF/web.xml" token="%TIBCO_BE_HOME_ESC%" value="${tibco.home}/be/${beVersionShort}" />
+        <delete file="${tibco.home}/be/${beVersionShort}/rms/bin/WebStudio.war" />
+        <jar destfile="${tibco.home}/be/${beVersionShort}/rms/bin/WebStudio.war" basedir="${tibco.home}/be/${beVersionShort}/rms/bin/temp_ws">
+        </jar>
+        <delete dir="${tibco.home}/be/5.5/rms/bin/temp_ws" />
+	</target>
+	
+	<target name="update-fdsecure-files">
+		<replace file="${tibco.home}/be/${beVersionShort}/examples/standard/FraudDetectionSecure/fdpolicy.txt" token="%TIBCO_BE_HOME_ESC%" value="${tibco.home}/be/${beVersionShort}" />
+		<unjar dest="${tibco.home}/be/${beVersionShort}/examples/standard/FraudDetectionSecure/temp_ear" src="${tibco.home}/be/${beVersionShort}/examples/standard/FraudDetectionSecure/fdsecure.ear">
+	    </unjar>
+		<replace file="${tibco.home}/be/${beVersionShort}/examples/standard/FraudDetectionSecure/temp_ear/TIBCO.xml" token="%TIBCO_BE_HOME_ESC%" value="${tibco.home}/be/${beVersionShort}" />
+	    <delete file="${tibco.home}/be/${beVersionShort}/examples/standard/FraudDetectionSecure/fdsecure.ear" />
+	    <jar destfile="${tibco.home}/be/${beVersionShort}/examples/standard/FraudDetectionSecure/fdsecure.ear" basedir="${tibco.home}/be/${beVersionShort}/examples/standard/FraudDetectionSecure/temp_ear">
+	    </jar>
+	    <delete dir="${tibco.home}/be/${beVersionShort}/examples/standard/FraudDetectionSecure/temp_ear" />
+		<replace file="${tibco.home}/be/${beVersionShort}/examples/standard/FraudDetectionSecure/FraudDetectionSecure/defaultVars/defaultVars.substvar" token="%TIBCO_BE_HOME_ESC%" value="${tibco.home}/be/${beVersionShort}" />
+  		<replace file="${tibco.home}/be/${beVersionShort}/examples/standard/FraudDetectionSecure/FraudDetectionSecure/fdsecure.cdd" token="%TIBCO_BE_HOME_ESC%" value="${tibco.home}/be/${beVersionShort}" />
+	</target>
+	-->
+	
+	<target name="remove-cloud-folder" >
+		<echo message="Removing unused docker scripts" />
+		<!-- For SunOS, HP-UX, AIX and zLinux. Deleting cloud folder.-->
+		<echo message="OS Name is: ${os.name}" />
+        
+        <if>
+			<or>
+				<os name="SunOS"/>
+				<os name="HP-UX"/>
+				<os name="AIX"/>
+				<os arch="s390x"/>
+			</or>
+			<then>
+				<delete dir="${tibco.home}/be/${beVersionShort}/cloud" />
+			</then>
+        </if>
+	</target>
+</project>

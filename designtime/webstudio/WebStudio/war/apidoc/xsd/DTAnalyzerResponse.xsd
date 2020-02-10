@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:element name="response">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element type="xs:int" name="status"/>
+        <xs:element type="xs:int" name="startRow"/>
+        <xs:element type="xs:int" name="endRow"/>
+        <xs:element type="xs:int" name="totalRows"/>
+	<xs:element type="xs:string" name="errorCode" maxOccurs="1" minOccurs="0"/>
+        <xs:element name="data" maxOccurs="1" minOccurs="0"> 
+          <xs:complexType  mixed="true">
+            <xs:sequence>
+               <xs:element name="record" maxOccurs="unbounded" minOccurs="0">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="artifactDetails">
+                      <xs:complexType>
+                        <xs:complexContent>
+							<xs:extension base="DecisionTableAnalyzer"/>
+						</xs:complexContent>
+                      </xs:complexType>
+                    </xs:element>
+                  </xs:sequence>
+                  <xs:attribute type="xs:int" name="Id" use="optional"/>
+                  <xs:attribute type="xs:string" name="type" use="optional"/>
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+            <xs:attribute type="xs:int" name="Id" use="optional"/>
+            <xs:attribute type="xs:string" name="type" use="optional"/>
+          </xs:complexType>
+        </xs:element>
+      </xs:sequence>
+      <xs:attribute type="xs:int" name="Id" use="optional"/>
+      <xs:attribute type="xs:string" name="type" use="optional"/>
+    </xs:complexType>
+  </xs:element>
+
+	<xs:complexType name="DecisionTableAnalyzer">
+		<xs:sequence>
+			<xs:element type="xs:string" name="artifactPath" maxOccurs="1" minOccurs="1"/>
+			<xs:element type="xs:string" name="projectName" maxOccurs="1" minOccurs="1"/>
+			<xs:element type="AnalyzerFilter" name="filter" maxOccurs="unbounded" minOccurs="0"/>
+			<xs:element type="xs:string" name="name" maxOccurs="1" minOccurs="0"/>
+			<xs:element type="AbstractDataSourceRecord" name="artifactRecord" maxOccurs="unbounded" minOccurs="0"/>
+		</xs:sequence>
+		<xs:attribute type="xs:int" name="Id"/>
+        <xs:attribute type="xs:string" name="type" use="optional"/>
+	</xs:complexType>
+	
+	
+	<xs:complexType name="AnalyzerFilter">
+		<xs:sequence>
+			<xs:element type="xs:string" name="columnName" maxOccurs="1" minOccurs="1"/>
+			<xs:element type="xs:boolean" name="isRangeFilter" maxOccurs="1" minOccurs="1"/>
+			<xs:element type="xs:string" name="minValue" maxOccurs="1" minOccurs="0"/>
+			<xs:element type="xs:string" name="maxValue" maxOccurs="1" minOccurs="0"/>
+			<xs:element type="xs:string" name="value" maxOccurs="unbounded" minOccurs="0"/>
+		</xs:sequence>
+		<xs:attribute type="xs:int" name="Id"/>
+        <xs:attribute type="xs:string" name="type" use="optional"/>
+	</xs:complexType>
+	
+	<xs:complexType name="AbstractDataSourceRecord">
+		<xs:sequence>
+			<xs:element type="xs:string" name="artifactPath" maxOccurs="1" minOccurs="0"/>
+			<xs:element type="xs:string" name="artifactType" maxOccurs="1" minOccurs="0"/>
+			<xs:element type="xs:string" name="fileExtension" maxOccurs="1" minOccurs="0"/>
+			<xs:element type="xs:string" name="imgSrc" maxOccurs="1" minOccurs="0"/>
+			<xs:element type="xs:int" name="artifactId" maxOccurs="1" minOccurs="0"/>
+			<xs:element type="xs:int" name="parentId" maxOccurs="1" minOccurs="0"/>
+			<xs:element type="xs:string" name="changeType" maxOccurs="1" minOccurs="0"/>
+			<xs:element type="xs:string" name="basicArtifactPath" maxOccurs="1" minOccurs="0"/>
+			<xs:element type="xs:boolean" name="locked" maxOccurs="1" minOccurs="1"/>
+			<xs:element type="xs:string" name="processType" maxOccurs="1" minOccurs="0"/>
+		</xs:sequence>
+		<xs:attribute type="xs:int" name="Id" use="optional"/>
+    	<xs:attribute type="xs:string" name="type" use="optional"/>
+	</xs:complexType>
+</xs:schema>

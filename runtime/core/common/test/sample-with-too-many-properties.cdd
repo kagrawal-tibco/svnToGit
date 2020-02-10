@@ -1,0 +1,472 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- configuration for one cluster -->
+
+<cluster
+        id="cluster-1"
+        xmlns="http://tibco.com/businessevents/configuration/4.0.0/2009/11/25">
+
+
+    <!-- optional revision info -->
+
+    <revision>
+        <name>R31854855</name>
+        <author>Bob</author>
+        <date>2009-11-25</date>
+        <comment>Some text here.</comment>
+    </revision>
+
+
+    <!-- cluster level config -->
+
+    <name>My_Cluster</name>
+
+    <multi-engine>true</multi-engine>
+
+    <object-management>
+
+        <domain-objects>
+            <default-mode>memory</default-mode>
+            <domain-object>
+                <uri>/Ontology/NewConcept</uri>
+                <mode>cache</mode>
+                <pre-processor>/Ontology/NewConcept</pre-processor>
+            </domain-object>
+            <domain-object>
+                <uri>/Ontology/NewEvent</uri>
+            </domain-object>
+            <domain-object>
+                <uri>/Ontology/Scorecard</uri>
+            </domain-object>
+            <domain-object>
+                <uri>/Ontology/OtherEvent</uri>
+                <mode>cacheAndMemory</mode>
+                <subscribe>true</subscribe>
+            </domain-object>
+        </domain-objects>
+
+        <cache-manager>
+            <cache-agent-quorum>1</cache-agent-quorum>
+
+            <eviction>
+                <max-size>50000</max-size>
+                <max-time>3600</max-time>
+            </eviction>
+
+            <backing-store>
+                <enabled>false</enabled>
+                <cache-aside>true</cache-aside>
+                <preload>false</preload>
+                <connections>
+                    <connection>
+                        <uri>...</uri>
+                        <pool>
+                            <initial-size>0</initial-size>
+                            <min-size>0</min-size>
+                            <max-size>0</max-size>
+                        </pool>
+                    </connection>
+                </connections>
+            </backing-store>
+
+            <provider>
+                <coherence>
+                    <property name="blah1" type="bluh" value="bleh" />
+                    <property name="blah2" type="bluh" value="bleh" />
+                </coherence>
+                <!--
+                <activespaces>
+                    <property name="blah1" type="bluh" value="bleh" />
+                    <property name="blah2" type="bluh" value="bleh" />
+                </activespaces>
+                -->
+            </provider>
+        </cache-manager>
+
+    </object-management>
+
+
+    <!-- optional resource identification and grouping -->
+
+    <rulesets>
+        <rules id="rs-001">
+            <uri>/rules/r1</uri>
+            <uri>/rules/r2</uri>
+            <uri>/rules/r3</uri>
+            <uri>/rules/r4</uri>
+            <uri>/rules/r5</uri>
+        </rules>
+        <rules id="rs-002">
+            <uri>/rules/r6</uri>
+            <uri>/rules/r7</uri>
+        </rules>
+        <rules id="rs-003">
+            <uri>/rules/r1</uri>
+            <ref>rs-002</ref>
+            <uri>/rules/r8</uri>
+        </rules>
+    </rulesets>
+
+    <function-groups>
+        <functions id="functions-init">
+            <uri>/...../init</uri>
+        </functions>
+        <functions id="functions-cleanup">
+            <uri>/...../cleanThis</uri>
+            <uri>/...../cleanThat</uri>
+        </functions>
+        <functions id="functions-bye">
+            <uri>/...../buh_bye</uri>
+        </functions>
+    </function-groups>
+
+    <endpoint-groups>
+        <endpoints id="endpoint-group-1">
+            <endpoint id="endpoint-1">
+                <uri>/RVChannel/MyDestination</uri>
+                <pre-processor>/Rules/Preprocessor</pre-processor>
+                <threading-model>shared-queue</threading-model>
+                <thread-count>10</thread-count>
+                <queue-size>10</queue-size>
+            </endpoint>
+        </endpoints>
+    </endpoint-groups>
+
+
+	<!--  logging -->
+
+	<log-configs>
+		<log-config id="log-01">
+			<enabled>true</enabled>
+			<roles>default:info rr:555 channel:warn</roles>
+			<files>
+				<enabled>true</enabled>
+				<dir>logs</dir>
+				<max-number>10</max-number>
+				<max-size>10000000</max-size>
+				<append>true</append>
+			</files>
+		</log-config>
+		<log-config id="log-02">
+			<enabled>true</enabled>
+			<roles>default:info</roles>
+			<line-layout>
+				<class>org.apache.log4j.PatternLayout</class>
+				<arg>[%d{dd MMM yyyy HH:mm:ss}][%-5p][%t] - %m%n</arg>
+			</line-layout>
+			<terminal>
+				<enabled>true</enabled>
+			</terminal>
+			<files>
+				<enabled>false</enabled>
+			</files>		
+		</log-config>
+	</log-configs>
+
+
+    <!-- agent level definitions -->
+
+    <agent-classes>
+
+        <inference-agent-class id="ia-213">
+
+            <rules>
+                <ref>rs-001</ref>
+                <uri>/rules/r8</uri>
+            </rules>
+
+            <endpoints>
+                <ref>endpoint-1</ref>
+            </endpoints>
+
+            <startup>
+                <ref>functions-init</ref>
+            </startup>
+
+            <shutdown>
+                <ref>functions-cleanup</ref>
+                <ref>functions-bye</ref>
+            </shutdown>
+
+            <local-cache>
+                <eviction>
+                    <max-size>1000</max-size>
+                    <max-time>3600</max-time>
+                </eviction>
+            </local-cache>
+
+            <!-- ? <prefetch-aggressive>false</prefetch-aggressive>-->
+            <act-as-cache-agent>false</act-as-cache-agent>
+
+            <concurrent-rtc>false</concurrent-rtc>
+
+        </inference-agent-class>
+
+        <query-agent-class id="qa-1234">
+
+            <endpoints>
+                <ref>endpoint-1</ref>
+                <endpoint id="endpoint-2">
+                    <uri>/RVChannel/MyOtherDestination</uri>
+                    <pre-processor>/Rules/OtherPreprocessor</pre-processor>
+                    <threading-model>workers</threading-model>
+                    <thread-count>10</thread-count>
+                    <queue-size>10</queue-size>
+                </endpoint>
+            </endpoints>
+
+            <startup/>
+
+            <!-- ? <network-mode>standalone</network-mode>-->
+
+        </query-agent-class>
+
+        <cache-agent-class id="ca-1235"/>
+
+    </agent-classes>
+
+
+    <!-- engine level configuration -->
+
+    <processing-units>
+
+        <processing-unit id="unit1">
+            <network>
+                <address>192.168.0.123</address>
+                <port>1235</port>
+            </network>
+            <agents>
+                <agent id="k-1">ia-213</agent>
+            </agents>
+            <logs>log-01</logs>
+        </processing-unit>
+
+        <processing-unit id="unit22">
+            <priority>10</priority>
+            <agents>
+                <agent id="k-2">ia-213</agent>
+                <agent id="k-3">qa-1234</agent>
+            </agents>
+            <logs>log-01</logs>
+        </processing-unit>
+
+    </processing-units>
+
+
+    <!-- code level config -->
+
+    <!--<implementation>-->
+        <!--<event-payload-classes>-->
+            <!--com.tibco.cep.runtime.model.event.impl.XiNodePayload-->
+            <!--com.tibco.cep.runtime.model.event.impl.ObjectPayload-->
+            <!--com.tibco.cep.driver.tibrv.serializer.TibrvMsgPayload-->
+        <!--</event-payload-classes>-->
+        <!--<id-generator-class>...</id-generator-class>-->
+        <!--<lock-manager-class>...</lock-manager-class>-->
+        <!--<rule-administrator-class>...</rule-administrator-class>-->
+        <!--<rule-service-provider-class>...</rule-service-provider-class>-->
+        <!--<rule-session-manager-class>...</rule-session-manager-class>-->
+        <!--<task-controller-class>...</task-controller-class>-->
+        <!--<type-manager-class>...</type-manager-class>-->
+    <!--</implementation>-->
+
+
+    <!-- misc properties -->
+
+    <property-group name="props-all">
+        <property-group name="multicast">
+            <property name="tangosol.coherence.cluster" type="string" value="checkEvent"/>
+            <property name="tangosol.coherence.localhost" type="ip-address" value="127.0.0.1"/>
+            <property name="tangosol.coherence.localport" type="integer" value="8080"/>
+            <property name="tangosol.coherence.clusteraddress" type="ip-address" value="224.3.4.2"/>
+            <property name="tangosol.coherence.clusterport" type="integer" value="31342"/>
+            <property name="tangosol.coherence.ttl" type="integer" value="0"/>
+            <property name="tangosol.coherence.override" type="string" value=""/>
+        </property-group>
+
+        <property-group name="wka">
+            <property name="tangosol.coherence.wka1" type="ip-address" value=""/>
+            <property name="tangosol.coherence.wka1.port" type="string" value=""/>
+            <property name="tangosol.coherence.wka2" type="ip-address" value=""/>
+            <property name="tangosol.coherence.wka2.port" type="string" value=""/>
+            <property name="tangosol.coherence.wka3" type="ip-address" value=""/>
+            <property name="tangosol.coherence.wka3.port" type="string" value=""/>
+            <property name="tangosol.coherence.wka4" type="ip-address" value=""/>
+            <property name="tangosol.coherence.wka4.port" type="string" value=""/>
+            <property name="tangosol.coherence.wka5" type="ip-address" value=""/>
+            <property name="tangosol.coherence.wka5.port" type="string" value=""/>
+            <property name="tangosol.coherence.wka6" type="ip-address" value=""/>
+            <property name="tangosol.coherence.wka6.port" type="string" value=""/>
+        </property-group>
+
+        <property-group name="cluster">
+            <property name="be.engine.cluster.externalClasses.classLoader" type="string" value=""/>
+            <property name="be.engine.cluster.externalClasses.path" type="string" value=""/>
+            <property name="be.engine.cluster.serialization.optimize" type="boolean" value="false"/>
+            <property name="be.engine.cluster.cacheType" type="string" value="dist-unlimited-nobs"/>
+            <property name="be.engine.cluster.isCacheLimited" type="boolean" value="false"/>
+            <property name="be.engine.cluster.cleanup" type="boolean" value="false"/>
+            <property name="be.engine.cluster.preload" type="string" value="all"/>
+            <property name="be.engine.cluster.${EntityClassName}.preload" type="boolean" value="false"/>
+            <property name="be.engine.cluster.externalClasses.classLoader" type="string" value=""/>
+            <property name="be.engine.cluster.externalClasses.path" type="string" value=""/>
+        </property-group>
+
+        <property-group name="node">
+            <property-group name="distributed-cache">
+                <property name="tangosol.coherence.distributed.threads" type="integer" value="30"/>
+                <property name="tangosol.coherence.distributed.backupcount" type="integer" value="1"/>
+                <property name="tangosol.coherence.distributed.localstorage" type="boolean" value="true"/>
+                <property name="tangosol.coherence.cacheconfig" type="string" value=""/>
+            </property-group>
+
+            <property-group name="logs">
+                <property name="tangosol.coherence.log.level" type="integer" value="5"/>
+                <property name="tangosol.coherence.log" type="string" value="stdout"/>
+                <property name="tangosol.coherence.log.limit" type="long" value="0"/>
+            </property-group>
+
+            <property-group name="bw">
+                <property name="tibco.bwengine.name" type="string" value=""/>
+                <property name="tibco.bwrepourl" type="string" value=""/>
+                <property name="Hawk.AMI.DisplayName" type="string" value=""/>
+                <property name="be.hawk.microagent.name" type="string" value=""/>
+            </property-group>
+
+            <property-group name="http">
+                <property name="com.tibco.be.http.docRoot" type="string" value=""/>
+                <property name="com.tibco.be.http.async.workers" type="integer" value="5"/>
+                <property name="com.tibco.be.drivers.http.acceptCount" type="integer" value="10"/>
+                <property name="com.tibco.be.http.maxProcessors" type="integer" value="200"/>
+                <property name="com.tibco.be.http.minProcessors" type="integer" value="4"/>
+                <property name="com.tibco.be.http.socketBufferSize" type="integer" value="9000"/>
+                <property name="com.tibco.be.http.tcpNoDelay" type="boolean" value="true"/>
+                <property name="com.tibco.be.http.connectionTimeout" type="integer" value="0"/>
+                <property name="com.tibco.be.http.connectionLinger" type="integer" value="-1"/>
+                <property name="com.tibco.be.http.async.staleConnectionCheck" type="boolean" value="false"/>
+                <property name="com.tibco.be.http.ssl_server_enabledprotocols" type="string" value=""/>
+                <property name="com.tibco.be.http.ssl_server_ciphers" type="string" value=""/>
+                <property name="com.tibco.be.http.ssl_server_keymanageralgorithm" type="string" value=""/>
+                <property name="com.tibco.be.http.ssl_server_trustmanageralgorithm" type="string" value=""/>
+            </property-group>
+
+            <property-group name="jms">
+                <property name="com.tibco.tibjms.connect.attempts" type="integer" value="0"/>
+                <property name="be.jms.reconnect.timeout" type="integer" value="0"/>
+                <property name="be.jms.reconnect.msgCodes" type="string" value="*"/>
+                <property name="be.channel.tibjms.queue.ack.mode" type="integer" value="2"/>
+                <property name="be.channel.tibjms.topic.ack.mode" type="integer" value="2"/>
+            </property-group>
+
+            <property-group name="dbconcepts">
+                <property name="be.dbconcepts.dburi" type="string" value=""/>
+            </property-group>
+
+            <property-group name="jmx">
+                <property name="tangosol.coherence.management" type="string" value="all"/>
+                <property name="tangosol.coherence.management.remote" type="boolean" value="true"/>
+                <property name="com.sun.management.jmxremote" type="boolean" value="true"/>
+                <property name="com.sun.management.jmxremote.ssl" type="boolean" value="true"/>
+                <property name="com.sun.management.jmxremote.port" type="integer" value="5558"/>
+                <property name="com.sun.management.jmxremote.authenticate" type="boolean" value="false"/>
+            </property-group>
+
+            <property-group name="engine">
+                <property name="be.engine.name" type="string" value=""/>
+                <property name="be.engine.hotDeploy.enabled" type="boolean" value="false"/>
+                <property name="be.engine.cacheServer" type="boolean" value="false"/>
+                <property name="be.engine.cacheServer.channel.disable" type="boolean" value="false"/>
+                <property name="be.engine.om.recovery.threads" type="integer" value="20"/>
+                <property name="be.cache.l1Cache.size" type="integer" value="3000"/>
+                <property name="be.engine.limited.cache.back.size.limit" type="integer" value="10000"/>
+                <property name="com.tibco.cep.runtime.session.RuleAdministrator" type="string"
+                          value="com.tibco.cep.container.standalone.hawk.HawkRuleAdministrator"/>
+            </property-group>
+
+            <property-group name="scheduler">
+                <property name="com.tibco.cep.runtime.scheduler.default.numThreads" type="integer" value="1"/>
+                <property name="com.tibco.cep.runtime.scheduler.queueSize" type="integer" value="0"/>
+            </property-group>
+
+            <property-group name="bdb">
+                <property name="be.engine.om.berkeleydb.internalcachepercent" type="integer" value="20"/>
+                <property name="be.engine.om.berkeleydb.cacheweight.${RuleSession}" type="integer" value="20"/>
+                <property name="be.engine.om.eventcache.defaultmaxsize" type="integer" value="20"/>
+                <property name="be.engine.om.berkeleydb.dbenv" type="string" value="./db"/>
+            </property-group>
+
+            <property-group name="oracle">
+                <property name="be.oracle.debug" type="boolean" value="false"/>
+                <property name="be.oracle.cacheLoaderClass" type="boolean" value="false"/>
+                <property name="be.oracle.dburi.${index}" type="string" value=""/>
+                <property name="be.oracle.dburi.pool.enforce.${index}" type="boolean" value="false"/>
+                <property name="be.oracle.dburi.pool.initial.${index}" type="integer" value="10"/>
+                <property name="be.oracle.dburi.pool.min.${index}" type="integer" value="10"/>
+                <property name="be.oracle.dburi.pool.max.${index}" type="integer" value="10"/>
+                <property name="be.oracle.dburi.pool.waitTimeout.${index}" type="integer" value="1"/>
+                <property name="be.oracle.dburi.pool.inactivityTimeout.${index}" type="integer" value="1"/>
+                <property name="be.engine.tangosol.oracle.prefetch" type="integer" value=""/>
+                <property name="be.engine.tangosol.oracle.batchSize" type="integer" value=""/>
+            </property-group>
+
+            <property-group name="profile">
+                <property name="be.engine.profile.${BAR|*}.enable" type="boolean" value="false"/>
+                <property name="be.engine.profile.${BAR|*}.file" type="string" value="be-profile.csv"/>
+                <property name="be.engine.profile.${BAR|*}.duration" type="integer" value="-1"/>
+                <property name="be.engine.profile.${BAR|*}.level" type="integer" value="-1"/>
+            </property-group>
+
+            <property-group name="agent">
+                <property-group name="inference">
+                    <property name="Agent.${AgentGroupName}.key" type="string" value=""/>
+                    <property name="Agent.${AgentGroupName}.maxActive" type="integer" value="0"/>
+                    <property name="Agent.${AgentGroupName}.priority" type="integer" value="1"/>
+                    <property name="Agent.${AgentGroupName}.l1CacheSize" type="integer" value="10000"/>
+                    <property name="Agent.${AgentGroupName}.threadcount" type="integer" value="10"/>
+                    <property name="Agent.${AgentGroupName}.recoveryPageSize" type="integer" value="0"/>
+                    <property name="Agent.${AgentGroupName}.checkDuplicates" type="boolean" value="false"/>
+                </property-group>
+
+                <property-group name="query">
+                    <property name="be.agent.query.localcache.maxelements" type="integer" value="50000"/>
+                    <property name="be.agent.query.localcache.evictseconds" type="integer" value="900"/>
+                    <property name="be.agent.query.localcache.prefetchaggressive" type="boolean" value="false"/>
+                    <property name="be.network.mode.standalone" type="boolean" value="false"/>
+                </property-group>
+            </property-group>
+
+            <property-group name="tra">
+                <!-- Language Properties -->
+                <property-group name="lang">
+                    <property name="be.locale.language" type="string" value="en"/>
+                    <property name="be.locale.country" type="string" value="US"/>
+                    <property name="be.locale.variant" type="string" value=""/>
+                </property-group>
+                <!-- Trace Properties -->
+                <property-group name="trace" comment="">
+                    <property name="Engine.Log.Dir" type="string" value="logs"/>
+                    <property name="be.trace.enable" type="boolean" value="true"/>
+                    <property name="be.trace.term.enable" type="boolean" value="true"/>
+                    <property name="be.trace.log.enable" type="boolean" value="true"/>
+                    <property name="be.trace.log.maxsize" type="long" value="10000000"/>
+                    <property name="be.trace.log.maxnum" type="integer" value="10"/>
+                    <property name="be.trace.log.append" type="boolean" value="true"/>
+                    <property name="be.trace.publish.enable" type="boolean" value="false"/>
+                    <property name="be.trace.publish.service" type="integer" value="7500"/>
+                    <property name="be.trace.publish.network" type="string" value=""/>
+                    <property name="be.trace.publish.daemon" type="string" value="tcp:7500"/>
+                    <property name="be.trace.publish.subject" type="string" value="be.engine.trace"/>
+                    <property name="be.trace.roles" type="string"
+                              value="infoRole, errorRole, warnRole, debugRole, userRole"/>
+                    <property name="be.trace.layout.class.name" type="string"
+                              value="org.apache.log4j.PatternLayout"/>
+                    <property name="be.trace.layout.class.arg" type="string"
+                              value="[%d{dd MMM yyyy HH:mm:ss}][%-5p][%t] - %m%n"/>
+                </property-group>
+                <property name="tibco.repourl" type="string" value=""/>
+            </property-group>
+        </property-group>
+
+    </property-group>
+
+</cluster>

@@ -1,0 +1,55 @@
+/**
+ * @description If an artifact is deleted and approved while a user's workspace still has it then it is addable.
+ */
+WebStudio.Core.Concepts.DataSources.Records.WS_C_SynchronizableArtifactNamesDataSourceRecord[] rulefunction WebStudio.Core.RuleFunctions.Actions.Lifecycle.Update.WS_RF_AddSyncThrashableArtifactRecord {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object[] workspaceResults;
+		WebStudio.Core.Concepts.Lifecycle.WS_C_ThrashedArtifact[] matchingThrashedArtifacts;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.Lifecycle.Update.WS_RF_AddSyncThrashableArtifactRecord");
+		WS_C_SynchronizableArtifactNamesDataSourceRecord syncNameDataSourceRecord = null;
+		
+		String stackID = "DELETED_ARTIFACT_STACK_" + System.nanoTime();
+		Object deletedArtifactStack = WS.Common.Stack.create(stackID);
+		WS.Common.Stack.clear(deletedArtifactStack);
+		
+		for (int thrashedArtifactLoop = 0; thrashedArtifactLoop < matchingThrashedArtifacts@length; thrashedArtifactLoop++) {
+			WS_C_ThrashedArtifact thrashedArtifact = matchingThrashedArtifacts[thrashedArtifactLoop];
+			//Load the masterartifact
+			WS_C_MasterArtifact masterArtifact = Instance.getByExtIdByUri(thrashedArtifact.deletedMasterArtifactId, "/WebStudio/Core/Concepts/Lifecycle/WS_C_MasterArtifact");
+			if (masterArtifact != null) {
+				String deletedArtifactPath = masterArtifact.artifactPath;
+				
+				for (int workspaceLoop = 0; workspaceLoop < workspaceResults@length; workspaceLoop++) {
+					Object workspaceResult = workspaceResults[workspaceLoop];
+					if (workspaceResult instanceof WS_C_UserArtifact) {
+						WS_C_UserArtifact userArtifact = workspaceResult;
+						String workspaceArtifactPath = userArtifact.artifactPath;
+						if (String.equals(workspaceArtifactPath, deletedArtifactPath)) {
+							Log.log(LOGGER, "Debug", "Adding artifact [%s] to deleted synchronizable list.", deletedArtifactPath);
+							//Artifact exists in workspace of the user.
+							syncNameDataSourceRecord = 
+								Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/Records/WS_C_SynchronizableArtifactNamesDataSourceRecord");
+							syncNameDataSourceRecord.artifactPath = workspaceArtifactPath;
+							syncNameDataSourceRecord.artifactType = masterArtifact.artifactType;
+							syncNameDataSourceRecord.fileExtension = masterArtifact.artifactType;
+							syncNameDataSourceRecord.imageSrc = Util.HashMap.get("ARTIFACT_TYPE_IMAGES", userArtifact.artifactType);
+							syncNameDataSourceRecord.changeType = "Deleted";
+							
+							WS.Common.Stack.push(deletedArtifactStack, syncNameDataSourceRecord);
+						}
+					}
+				}
+			}
+		}
+		
+		WS_C_SynchronizableArtifactNamesDataSourceRecord[] sycnArtifactNames = WS.Common.Stack.toArray(deletedArtifactStack, "be.gen.WebStudio.Core.Concepts.DataSources.Records.WS_C_SynchronizableArtifactNamesDataSourceRecord", "com.tibco.cep.runtime.service.loader.BEClassLoader");
+		WS.Common.Stack.delete(stackID);
+		
+		return sycnArtifactNames;
+	}
+}

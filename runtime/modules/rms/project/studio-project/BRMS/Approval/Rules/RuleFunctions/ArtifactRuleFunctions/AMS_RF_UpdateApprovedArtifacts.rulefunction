@@ -1,0 +1,33 @@
+/**
+ * @description Update the ApprovedArtifacts list for a project
+ */
+void rulefunction Approval.Rules.RuleFunctions.ArtifactRuleFunctions.AMS_RF_UpdateApprovedArtifacts {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String projectName;
+		//The approved artifact path
+		String artifactPath;
+		boolean isDeleted;
+	}
+	body {
+		Object LOGGER = Log.getLogger("Approval.Rules.RuleFunctions.ArtifactRuleFunctions.AMS_RF_UpdateApprovedArtifacts");
+		//Look for approved artifacts in this project
+		AMS_C_ApprovedArtifacts approvedArtifacts = Instance.getByExtIdByUri(projectName, "/Approval/Concepts/ArtifactsConcepts/AMS_C_ApprovedArtifacts");
+		
+		if (approvedArtifacts == null) {
+			approvedArtifacts = 
+				Instance.createInstance("xslt://{{/Approval/Concepts/ArtifactsConcepts/AMS_C_ApprovedArtifacts}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"1.0\" exclude-result-prefixes=\"xsd\">\n    <xsl:output method=\"xml\"/>\n    <xsl:param name=\"projectName\"/>\n    <xsl:template match=\"/\">\n        <createObject>\n            <object>\n                <xsl:attribute name=\"extId\">\n                    <xsl:value-of select=\"$projectName\"/>\n                </xsl:attribute>\n            </object>\n        </createObject>\n    </xsl:template>\n</xsl:stylesheet>");
+		}	
+		if (isDeleted) {
+			Log.log(LOGGER, "Debug", "Removing Artifact - %s from approved artifacts list of project - %s", artifactPath, projectName);
+			Instance.PropertyArray.removeString(approvedArtifacts.approvedArtifacts, artifactPath);
+		} else {
+			Log.log(LOGGER, "Debug", "Adding Artifact - %s to approved artifacts list of project - %s", artifactPath, projectName);
+			if (Instance.PropertyArray.indexOfString(approvedArtifacts.approvedArtifacts, artifactPath) == -1){
+				Instance.PropertyArray.appendString(approvedArtifacts.approvedArtifacts, artifactPath, 1L);
+			}
+		}
+	}
+}

@@ -1,0 +1,76 @@
+<div class="card panel-sm">
+  <div class="card-header">
+    <ng-container i18n>{{i18n('Add Column to Decision Table ')}}</ng-container>{{table.name}}
+  </div>
+  <div class="card-body">
+    <div class='row'>
+      <div class='col-sm-12'>
+        <form #newColumn="ngForm">
+          <div class="form-group">
+            <label for="columnName" class='control-label control-label-normal' i18n>{{i18n('Column Name')}}</label>
+            <input type="text" name="columnName" 
+              #columnNameInput
+              required
+              class='form-control'
+              autocomplete="false"
+              [(ngModel)]="form.columnName"
+              #columnName="ngModel"
+            >
+            <div 
+              class="alert alert-warning"
+              *ngIf="columnNameDuplicate"
+              [innerHTML]="getMessage()"
+              >
+             
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="columnType" class='control-label control-label-normal' i18n>{{i18n('Column Type')}}</label>
+            <select
+              id='column-type'
+              class='form-control'
+              name='columnType'
+              [(ngModel)]="form.columnType"
+              (change)="onColumnTypeChange(form.columnType)"
+              #columnType='ngModel'
+            >
+              <option 
+                *ngFor='let ct of columnTypes | filter: limitColumnTypes'
+                [ngValue]='ct'
+              >{{ct.name}}</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="propertyType" class='control-label control-label-normal' i18n>{{i18n('Property Type')}}</label>
+            <select
+              id='property-type'
+              class='form-control'
+              name='propertyType'
+              [(ngModel)]="form.propertyType"
+              #propertyType='ngModel'
+            >
+              <option 
+                *ngFor='let pt of propertyTypes | filter: limitPropertyTypes(form.columnType)'
+                [ngValue]='pt'
+              >{{pt.name}}</option>
+            </select>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="row left-pad right-pad bottom-pad top-pad">
+  <div class="col-sm-12">
+      <button
+        type="button"
+        class='btn btn-outline-primary btn-sm btn-narrow'
+        (click)='onCancel()' i18n
+        >{{i18n('Cancel')}}</button>
+      <button
+        class='btn btn-primary btn-sm btn-narrow pull-right'
+        [disabled]='! newColumn.valid || columnNameDuplicate'
+        (click)='onSubmit()' i18n
+        >{{i18n('Confirm')}}</button>
+  </div>
+</div>

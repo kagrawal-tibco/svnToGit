@@ -1,0 +1,48 @@
+/**
+ * @description 
+ */
+void rulefunction Queries.Startup {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		
+	}
+	body {
+		String queryName = "CalcAvgStockPriceSS";
+		String queryText = "select s.symbol, avg(s.price) theAvg, count(*) theCount" 
+		                   + "\n from /ConceptModel/StockTick s"
+		                   + "\n where s.symbol = $symbol1 or s.symbol = $symbol2"
+		                   + "\n group by s.symbol"
+		                   + "\n order by theCount;";
+		Query.create(queryName, queryText);
+		System.debugOut("Created query: " + queryName + ", text: " + queryText);
+		
+		//--------
+		
+		queryName = "CalculateLoanCQ";
+		queryText = "select t.counterpartyId, sum(futureRF(t,s)), sum(settledRF(t,s)) "
+		            + "\n from /ConceptModel/Trade t, /ConceptModel/Securities s "
+		            + "\n where t.securityId = s.securityId "
+		            + "\n group by t.counterpartyId;";
+		Query.create(queryName, queryText);
+		System.debugOut("Created query: " + queryName + ", text: " + queryText);
+		
+		//--------
+		
+		queryName = "CalcFullySettledVsTickCQ";
+		queryText = "select tick.symbol, trade.counterpartyId, sum(trade.loanamtusd), avg(tick.price), count(*)"
+		            + "\n from /ConceptModel/Trade trade," 
+		            + "\n /ConceptModel/StockTick {policy: maintain last 1 sliding where symbol = \"TIBX\"} tick"
+		            + "\n where trade.securityId = \"TIBX\""
+		            +     "\n and trade.settlestatus = \"FULLY_SETTLED\""
+		            +     "\n and trade.securityId = tick.symbol"
+		            + "\n group by tick.symbol, trade.counterpartyId;";
+		Query.create(queryName, queryText);
+		System.debugOut("Created query: " + queryName + ", text: " + queryText);
+		
+		//--------
+		
+		System.debugOut("Startup completed successfully.");
+	}
+}

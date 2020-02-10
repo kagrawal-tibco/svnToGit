@@ -1,0 +1,97 @@
+/**
+ * @description 
+ */
+void rulefunction Monitoring.RuleFunctions.view.fetchData {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Shared.Concepts.AbstractMonitorView	view;
+	}
+	body {
+		String LOG_NAME = "fetchData";
+		//populate the data using query or some other means
+		Shared.RuleFunctions.log(LOG_NAME,"DEBUG","Fetching data for view: " +
+                "\n extid = " + view@extId +
+                "\n type = " + view.type);
+
+		String compType = view.type;
+		String componentConfigMapId = getComponentConfigMapId(view.monitorable,view.type);
+
+        if (componentConfigMapId == null) {
+			Shared.RuleFunctions.log(LOG_NAME,"DEBUG","componentConfigMapId == null for view with ext id as "+view@extId);
+		    return;
+		}
+
+		String dataRetrievalType = Util.HashMap.getObject(componentConfigMapId,"dataretrievaltype");
+		String[] seriesNames = Util.HashMap.getObject(componentConfigMapId,"seriesnames");
+		long threshold = Util.HashMap.getObject(componentConfigMapId,"threshold");
+		
+		Shared.RuleFunctions.log(LOG_NAME,"DEBUG","dataRetrievalType = " + dataRetrievalType);
+		Shared.RuleFunctions.log(LOG_NAME,"DEBUG","threshold = " + threshold);
+		for(int n=0; n<seriesNames@length; n++) {
+			Shared.RuleFunctions.log(LOG_NAME,"DEBUG","seriesNames["+n+"]= " + seriesNames[n]);
+		}
+
+		if (dataRetrievalType == "query") {
+		    //we will probably not do much here unless we are able to run the same query as snapshot , but we will figure that later
+		}
+		else if (dataRetrievalType == "simulated") {
+		    String retrievalconfig1 = Util.HashMap.getObject(componentConfigMapId,"retrievalconfig1");
+		    int retrievalconfig2 = Util.HashMap.getObject(componentConfigMapId,"retrievalconfig2");
+		    if (retrievalconfig1 == "<time>") {
+		        long nowTime = System.currentTimeMillis();
+		        for (int i = 0 ; i < view.seriesdata@length ; i = i + 1) {
+		            long startTime = nowTime - view.seriesdata[i].threshold;
+		            //we will simulate 10 values
+		            long increment = (nowTime - startTime)/10;
+		            for (int j = 1 ; j <= 10 ; j = j + 1){
+		                view.seriesdata[i].categories[j-1] = String.valueOfLong(startTime);
+		                view.seriesdata[i].values[j-1] = String.valueOfDouble(retrievalconfig2*Math.random());
+		                view.seriesdata[i].rawValues[j-1] = view.seriesdata[i].values[j-1];
+		                startTime = startTime + increment;
+		            }
+		        }
+		    }
+		    else {
+		        for (int i = 0 ; i < view.seriesdata@length ; i = i + 1) {
+		            for (int j = 1 ; j <= view.seriesdata[i].threshold ; j = j + 1){
+		                view.seriesdata[i].categories[j-1] = retrievalconfig1+j;
+		                view.seriesdata[i].values[j-1] = String.valueOfDouble(retrievalconfig2*Math.random());
+		                view.seriesdata[i].rawValues[j-1] = view.seriesdata[i].values[j-1];
+		            }
+		        }
+		    }
+		}
+		else if (dataRetrievalType == "HAWK" && !Shared.Concepts.GlobalScoreCard.hasHawk) {
+			//we can not do anything without having Hawk.
+			Shared.RuleFunctions.log(LOG_NAME,"DEBUG","Cannot retrieve statistic through Hawk because Hawk not costumized");
+		}
+		else {
+		    Shared.Concepts.MonitorableEntity monitorable = view.monitorable;
+		    String name = monitorable.name;
+		    String typeWithPath = Shared.RuleFunctions.topology.getTypePath(monitorable)+"/"+compType;
+		    Object dataset = null;
+		    if (dataRetrievalType != "computed") {
+		        String eventURI = Util.HashMap.getObject(componentConfigMapId,"retrievalconfig1");
+
+                Shared.RuleFunctions.log(LOG_NAME,"DEBUG","Requesting Snapshot... " +
+                        "\n dataRetrievalType = " + dataRetrievalType +
+                        "\n eventURI = " + eventURI);
+                        
+                String[] props = Instance.PropertyArray.toArrayString(monitorable.properties);
+		        for (int n=0; n < props@length; n++) {
+		        	Shared.RuleFunctions.log(LOG_NAME,"DEBUG","props[" + n + "] = " + props[n]);
+		        } 
+
+                //dataset contains the populated events
+		        dataset = BEMM.metrics.snapshot(view@extId,name,dataRetrievalType,Instance.PropertyArray.toArrayString(monitorable.properties),typeWithPath,eventURI);
+		        
+		        Shared.RuleFunctions.log(LOG_NAME,"DEBUG","Snapshot for monitorable.name = " + monitorable.name + 
+	        							 " is dataset = " + dataset);
+		        
+		        Monitoring.RuleFunctions.view.delegateViewPopulation(typeWithPath,dataRetrievalType,dataset);
+		    }
+		}
+	}
+}

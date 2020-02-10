@@ -1,0 +1,25 @@
+/**
+ * @description Check whether there is a user artifact matching this artifact path.
+ */
+WebStudio.Core.Concepts.WS_C_UserArtifact rulefunction WebStudio.Core.RuleFunctions.Actions.Lifecycle.Common.WS_RF_IsUserArtifact {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String userArtifactExtId;
+		String artifactType;
+	}
+	body {		
+		if (artifactType == "ruletemplateinstance" || artifactType == "ruletemplate") {
+			return Instance.getByExtIdByUri(userArtifactExtId, "/WebStudio/Core/Concepts/RuleTemplateInstance/WS_C_RuleTemplateInstanceUserArtifact");
+		} else if (artifactType == "rulefunctionimpl" || artifactType == "rulefunction") {
+			return Instance.getByExtIdByUri(userArtifactExtId, "/WebStudio/Core/Concepts/Decision/WS_C_UserDTableArtifact");
+		} else if (artifactType == "beprocess") {
+			return Instance.getByExtIdByUri(userArtifactExtId, "/WebStudio/Core/Concepts/Process/WS_C_ProcessUserArtifact");
+		} else if (artifactType == "domain") {
+			return Instance.getByExtIdByUri(userArtifactExtId, "/WebStudio/Core/Concepts/Domain/WS_C_DomainUserArtifact");
+		}
+		
+		return Instance.getByExtIdByUri(userArtifactExtId, "/WebStudio/Core/Concepts/WS_C_UserArtifact");
+	}
+}

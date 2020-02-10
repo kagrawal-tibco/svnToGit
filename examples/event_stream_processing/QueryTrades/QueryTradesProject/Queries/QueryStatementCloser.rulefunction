@@ -1,0 +1,23 @@
+/**
+ * @description 
+ */
+void rulefunction Queries.QueryStatementCloser {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		EventsAndChannels.QueryStopper	querystopper;
+	}
+	body {
+		System.debugOut("Attempting to close Statement: " + querystopper.DATA);
+		
+		if(Query.Statement.isOpen(querystopper.DATA)){
+		    Query.Statement.close(querystopper.DATA);
+		}
+		
+		System.debugOut("Closed Statement: " + querystopper.DATA);
+		
+		Event.replyEvent(querystopper, EventsAndChannels.QueryResponse.QueryResponse(null, null));
+		Event.consumeEvent(querystopper);
+	}
+}

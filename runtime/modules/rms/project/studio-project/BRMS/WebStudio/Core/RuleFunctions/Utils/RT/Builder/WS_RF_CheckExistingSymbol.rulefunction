@@ -1,0 +1,29 @@
+/**
+ * @description 
+ */
+boolean rulefunction WebStudio.Core.RuleFunctions.Utils.RT.Builder.WS_RF_CheckExistingSymbol {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		WebStudio.Core.Concepts.RuleTemplateInstance.Builder.WS_C_ComplexSymbolInfo parentSymbolInfo;
+		WebStudio.Core.Concepts.RuleTemplateInstance.Builder.WS_C_AbstractSymbolInfo childSymbolToAdd;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.RT.Builder.WS_RF_CheckExistingSymbol");
+		
+		boolean symbolExists = false;
+		
+		WS_C_AbstractSymbolInfo[] childSymbols = Instance.PropertyArray.toArrayConcept(parentSymbolInfo.symbolInfo);
+		for (int i=0; i<childSymbols@length; i++) {
+			if (String.equals(childSymbols[i].symbolAlias, childSymbolToAdd.symbolAlias) && String.equals(childSymbols[i].type, childSymbolToAdd.type)) {
+				symbolExists = true;
+				break;
+			}
+		}
+		
+		Log.log(LOGGER, "Debug", "Symbol [%s] is already added in the parent symbol.", childSymbolToAdd.symbolAlias);
+		
+		return symbolExists;
+	}
+}

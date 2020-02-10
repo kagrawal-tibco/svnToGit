@@ -1,0 +1,23 @@
+/**
+ * @description 
+ */
+double rulefunction Rules.CalcTimeToThreshold {
+	attribute {
+		validity = CONDITION;
+	}
+	scope {
+		Concepts.Boiler	boiler;
+	}
+	body {
+		double rate_of_change=Temporal.Calculus.rateOfChangeDouble
+		    (boiler.CurrentTemp, 
+		    Temporal.History.howCurrent(boiler.CurrentTemp)
+		        -MonitoringMetrics.Criteria1.SampleWindow, 
+		    Temporal.History.howCurrent(boiler.CurrentTemp), 
+		        MonitoringMetrics.Criteria1.SampleRate, true);
+		
+		return Math.floor(((MonitoringMetrics.Criteria1.TargetTemp 
+		    - boiler.CurrentTemp)/(rate_of_change*1000*boiler.CurrentTemp)) * 60); 
+		        // Converting minutes to seconds
+	}
+}

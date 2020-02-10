@@ -1,0 +1,24 @@
+/**
+ * @description Get children of an abstract condition filter not visited yet.
+ */
+WebStudio.Core.Concepts.RuleTemplateInstance.Builder.WS_C_AbstractConditionsFilter[] rulefunction WebStudio.Core.RuleFunctions.Utils.RT.Builder.Ops.Save.WS_RF_GetUnvisitedFilterChildren {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		WebStudio.Core.Concepts.RuleTemplateInstance.Builder.WS_C_AbstractConditionsFilter rootConditionsFilter;
+	}
+	body {
+		WS_C_AbstractConditionsFilter[] childFilters = Instance.PropertyArray.toArrayConcept(rootConditionsFilter.filter);
+		WS_C_AbstractConditionsFilter[] unvisitedChildFilters = 
+			WS.Common.getDestinationConceptArray("/WebStudio/Core/Concepts/RuleTemplateInstance/Builder/WS_C_AbstractConditionsFilter", childFilters@length);
+		
+		for (int loop = 0; loop < childFilters@length; loop++) {
+			WS_C_AbstractConditionsFilter childFilter = childFilters[loop];
+//			if (!childFilter.visited) {
+//				unvisitedChildFilters[loop] = childFilter;
+//			}
+		}
+		return unvisitedChildFilters;
+	}
+}

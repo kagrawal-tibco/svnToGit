@@ -1,0 +1,60 @@
+/**
+ * @description Same as WS_RF_GetLastApprovedArtifactVersion except that this function returns just the revisionId instead of whole revision.
+ */
+int rulefunction WebStudio.Core.RuleFunctions.Actions.Lifecycle.History.WS_RF_GetLastApprovedArtifactRevisionId {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		int revisionId;
+		String artifactPath;
+		boolean stateCheck;
+		String subscriptionId;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.Lifecycle.History.WS_RF_GetLastApprovedArtifactVersion");
+		
+		boolean validState = false;
+		WS_C_AbstractReviewTask reviewTask = null;
+		String reviewTaskExtId = null;
+		
+		int baseRevision = System.getSystemPropertyAsInt("rms.checkin.revisionId.initValue", 0);
+		for (int i = revisionId; i >= baseRevision; i--) {
+			reviewTaskExtId = WS_RF_CreateUserArtifactExtId(String.valueOfLong(i), null, null, null, subscriptionId, null);
+			Log.log(LOGGER, "Debug", "Checking Revision [%s]", reviewTaskExtId);
+			
+			reviewTask = Instance.getByExtIdByUri(reviewTaskExtId, "/WebStudio/Core/Concepts/Lifecycle/WS_C_ReviewTask");
+			
+			if (reviewTask != null) {
+				Log.log(LOGGER, "Debug", "Revision Task Object found [%s] & extId[%s]", reviewTask, reviewTask@extId);
+				//Get checkin
+				WS_C_UserCheckin userCheckin = Instance.getByExtIdByUri(reviewTask.referencedCheckinId, "/WebStudio/Core/Concepts/Lifecycle/WS_C_UserCheckin");
+				WS_C_CommittableDeltaEntry[] checkinEntries = Instance.PropertyArray.toArrayConcept(userCheckin.committables);
+			
+				WS_C_UserArtifact parentArtifact = null;
+				for (int loop = 0; loop < checkinEntries@length; loop++) {
+					WS_C_CommittableDeltaEntry checkinEntry = checkinEntries[loop];
+					
+					if (stateCheck) {
+						Log.log(LOGGER, "Debug", "Artifact lifecycle state - %s", checkinEntry.commitLifeCycleState.stateName);
+					    validState = (checkinEntry.commitLifeCycleState instanceof WS_C_ArtifactApprovedState || checkinEntry.commitLifeCycleState instanceof WS_C_ArtifactDeployedState);
+					} else {
+						validState = true;
+					}
+					
+					if (validState) {
+						WS_C_UserArtifactRevision revision = Instance.PropertyAtom.getConceptReference(checkinEntry.userArtifactRevision, 1L);
+						
+						parentArtifact = WS_RF_IsUserArtifact(revision.parentArtifactId, revision.parentArtifactType);
+						if (String.equals(parentArtifact.artifactPath, artifactPath)) {
+							return i;
+						}
+					} else {
+						continue;
+					}
+				}
+			}
+		}
+		return -1;
+	}
+}

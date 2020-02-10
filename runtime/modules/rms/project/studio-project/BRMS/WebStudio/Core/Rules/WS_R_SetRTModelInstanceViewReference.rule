@@ -1,0 +1,117 @@
+/**
+ * @description Set reference of the RT/RTI model instance in the appropriate userArtifact instance using the model instance's id.
+ * @author aathalye-T410
+ */
+rule WebStudio.Core.Rules.WS_R_SetRTModelInstanceViewReference {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		WebStudio.Core.Events.WS_E_RuleTemplateModelInstanceCreationEvent ws_e_ruletemplatemodelinstancecreationevent;
+	}
+	when {
+		ws_e_ruletemplatemodelinstancecreationevent.projectName != null 
+		&& ws_e_ruletemplatemodelinstancecreationevent.username != null
+		&& ws_e_ruletemplatemodelinstancecreationevent.artifactPath != null
+		&& ws_e_ruletemplatemodelinstancecreationevent.artifactType != null;
+	}
+	then {
+		Object LOGGER = Log.getLogger("WebStudio.Core.Rules.WS_R_SetRTModelInstanceViewReference");
+		
+		String projectName = ws_e_ruletemplatemodelinstancecreationevent.projectName;
+		String artifactPath = ws_e_ruletemplatemodelinstancecreationevent.artifactPath;
+		String artifactType = ws_e_ruletemplatemodelinstancecreationevent.artifactType;
+		String username = ws_e_ruletemplatemodelinstancecreationevent.username;
+		
+		Log.log(LOGGER, "Debug", "Project Name [%s] artifact path [%s] and artifact type [%s] in rule WS_R_SetRTModelInstanceViewReference", projectName, artifactPath, artifactType);
+				
+		String userArtifactExtId = WS_RF_CreateUserArtifactExtId(null, artifactPath, projectName, username, null, null);
+		WS_C_UserArtifact userArtifactConceptInstance = null;
+		if (artifactType == "ruletemplateinstance" || artifactType == "ruletemplate") {
+			if (ws_e_ruletemplatemodelinstancecreationevent.isNewArtifact) {
+				userArtifactConceptInstance = Instance.getByExtIdByUri(userArtifactExtId, "/WebStudio/Core/Concepts/RuleTemplateInstance/WS_C_RuleTemplateInstanceUserArtifact");
+			} else {
+				userArtifactConceptInstance = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(userArtifactExtId, false, "/WebStudio/Core/Concepts/RuleTemplateInstance/WS_C_RuleTemplateInstanceUserArtifact");
+			}
+		} else if (artifactType == "rulefunctionimpl" || artifactType == "rulefunction") {
+			if (ws_e_ruletemplatemodelinstancecreationevent.isNewArtifact) {
+				userArtifactConceptInstance = Instance.getByExtIdByUri(userArtifactExtId, "/WebStudio/Core/Concepts/Decision/WS_C_UserDTableArtifact");
+			} else {
+				userArtifactConceptInstance = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(userArtifactExtId, false, "/WebStudio/Core/Concepts/Decision/WS_C_UserDTableArtifact");
+			}
+		} else if (artifactType == "beprocess") {
+			if (ws_e_ruletemplatemodelinstancecreationevent.isNewArtifact) {
+				userArtifactConceptInstance = Instance.getByExtIdByUri(userArtifactExtId, "/WebStudio/Core/Concepts/Process/WS_C_ProcessUserArtifact");
+			} else {
+				userArtifactConceptInstance = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(userArtifactExtId, false, "/WebStudio/Core/Concepts/Process/WS_C_ProcessUserArtifact");
+			}
+		} else if (artifactType == "domain") {
+			if (ws_e_ruletemplatemodelinstancecreationevent.isNewArtifact) {
+				userArtifactConceptInstance = Instance.getByExtIdByUri(userArtifactExtId, "/WebStudio/Core/Concepts/Domain/WS_C_DomainUserArtifact");
+			} else {
+				userArtifactConceptInstance = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(userArtifactExtId, false, "/WebStudio/Core/Concepts/Domain/WS_C_DomainUserArtifact");
+			}
+		}
+		
+		// Set the UUID to user artifact object, this will typically apply only to existing RTI
+		if (ws_e_ruletemplatemodelinstancecreationevent.UUID != null) {
+			userArtifactConceptInstance.UUID = ws_e_ruletemplatemodelinstancecreationevent.UUID;
+		}
+		
+		Log.log(LOGGER, "Debug", "Artifact [%s], Id [%s], UUID [%s] & ExtId [%s]", userArtifactConceptInstance.artifactPath, userArtifactConceptInstance@id, userArtifactConceptInstance.UUID, userArtifactConceptInstance@extId);
+		
+		//Get current version number.
+		double currentVersionNumber = userArtifactConceptInstance.currentArtifactVersion;
+		currentVersionNumber = currentVersionNumber + 1;
+		//Create a new revision instance.
+		String revisionArtifactConceptExtId = userArtifactExtId + "@" + currentVersionNumber;
+		
+		//Check if master artifact exists for it
+		WS_C_UserArtifactRevision userArtifactRevision = 
+			Instance.newInstance("/WebStudio/Core/Concepts/WS_C_UserArtifactRevision", revisionArtifactConceptExtId);
+		//Set parent artifact reference
+		userArtifactRevision.parentArtifactId = userArtifactConceptInstance@extId;
+		userArtifactRevision.parentArtifactType = userArtifactConceptInstance.artifactType;
+				
+		userArtifactRevision.artifactContentsId = ws_e_ruletemplatemodelinstancecreationevent.artifactModelInstanceId;
+		userArtifactRevision.version = currentVersionNumber;
+		userArtifactRevision.creationTime = DateTime.now();
+		Log.log(LOGGER, "Debug", "Artifact Content id saved [%s]", userArtifactRevision.artifactContentsId);
+		
+		// check if the artifact is already marked to be deleted in the commitables
+		String workspaceExtId = WS_RF_CreateUserArtifactExtId("WORKSPACE", null, null, username, null, null);
+		WS_C_UserWorkspace userWorkspace = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(workspaceExtId, false, "/WebStudio/Core/Concepts/WS_C_UserWorkspace");
+		WS_C_WorkspaceCommittableDelta committableDelta = Instance.PropertyAtom.getContainedConcept(userWorkspace.committableDelta, 1L);
+		WS_C_CommittableDeltaEntry committableDeltaEntry = WS_RF_QueryCommitableDeltaEntry(committableDelta, userArtifactRevision);
+		
+		String operation = "Modify";
+		if (committableDeltaEntry != null && (committableDeltaEntry.operation instanceof WS_C_DeleteOperation)) {
+			Log.log(LOGGER, "Debug", "Artifact[%s] is already marked for deletion under committables. So no further processing", artifactPath);
+			Instance.deleteInstance(userArtifactRevision);
+			operation = "Delete";
+		} else {
+			//TODO call state change op to decide whether to contribute to commit or not
+			WS_RF_PerformLifecycleStateOps(null, projectName, username, ws_e_ruletemplatemodelinstancecreationevent.operation, userArtifactConceptInstance, userArtifactRevision);
+			//For now every save will trigger commit.					
+			//This instance is still locked from our action RF.
+			userArtifactConceptInstance.currentArtifactVersion = currentVersionNumber;
+			Instance.PropertyArray.appendString(userArtifactConceptInstance.artifactRevisionIds, userArtifactRevision@extId, 1L);
+			
+			if (ws_e_ruletemplatemodelinstancecreationevent.isNewArtifact) {
+				//Load for modification
+				String projectExtId = WS_RF_CreateUserArtifactExtId(null, null, projectName, username, null, null);
+				WS_C_UserProject userProject = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(projectExtId, false, "/WebStudio/Core/Concepts/WS_C_UserProject");
+				
+				//Add it to project
+				if (userProject != null) {
+					Instance.PropertyArray.appendContainedConcept(userProject.userArtifacts, userArtifactConceptInstance, 1L);
+					Log.log(LOGGER, "Debug", "Updated Total Artifacts in the project - %s", userProject.userArtifacts@length);
+				}
+				operation = "Create";
+			}
+			
+			Log.log(LOGGER, "Debug", "Artifact [%s], Id [%s], UUID [%s] & ExtId [%s]", userArtifactConceptInstance.artifactPath, userArtifactConceptInstance@id, userArtifactConceptInstance.UUID, userArtifactConceptInstance@extId);
+		}
+	}
+}

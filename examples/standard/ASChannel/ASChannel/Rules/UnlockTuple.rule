@@ -1,0 +1,43 @@
+/**
+ * @description 
+ * @author huabin-lt
+ */
+rule Rules.UnlockTuple {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		
+		Events.MyspaceDefEvent myspacedefevent;
+	}
+	when {
+		
+	}
+	then {
+
+		String unlockingTestCase = System.getGlobalVariableAsString("aschannel.myspace.eventlistener.unlocking", "/Channels/aschannel/UnlockingTestCase");
+
+
+//		MyspaceDefEvent event168 = Events.MyspaceDefEvent.MyspaceDefEvent("event168", null, 168, null, null, null, null);
+//		Object[] tuple168 = AS.getTuple(unlockingTestCase, event168);
+//
+//		if (tuple168 != null) {
+//			String value = "";
+			System.debugOut("Unlock Tuple Rule: Unlock the tuple with id 168.");
+//			for (int i=0; i<tuple168@length; i++) {
+//				Object[] field = tuple168[i];
+//				String fieldName = field[0];
+//				if (String.equals("value", fieldName)) {
+//					value = field[1];
+//				}
+//			}
+			MyspaceDefEvent unlockedEvent = Events.MyspaceDefEvent.MyspaceDefEvent("unlockedEvent168", null, 168, null, null, null, null);
+			SimpleEvent[] unlockedEvents = {unlockedEvent};
+			AS.unlockEvents(unlockingTestCase, unlockedEvents);
+//			AS.unlockEvent(unlockingTestCase, unlockedEvent);
+			System.debugOut("Unlock Tuple Rule: The tuple with id 168 is unlocked.");
+//		}
+
+	}
+}

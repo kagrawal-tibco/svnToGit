@@ -1,0 +1,19 @@
+/**
+ * @description 
+ */
+void rulefunction Shared.RuleFunctions.log {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String	family;
+		String	level;
+		String	msg;
+	}
+	body {
+		String allowedFamilies = System.getGlobalVariableAsString("logfamilies","");
+		if (level != "DEBUG" || allowedFamilies == "*" || String.indexOfString(allowedFamilies,0,family) != -1) {
+		    System.debugOut("["+family+"] ["+level+"] "+msg);
+		}
+	}
+}

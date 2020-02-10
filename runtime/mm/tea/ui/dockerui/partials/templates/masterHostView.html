@@ -1,0 +1,288 @@
+<div ng-controller='IndexCtrl'
+	class="appManagementPage tea-theme wrapper row-offcanvas row-offcanvas-left">
+	<div class="header">
+		<nav class="tbt-top-nav navbar-static-top">
+			<span class="dropdown" dropdown on-toggle="toggled(open)"> <a
+				href class="title dropdown-toggle ng-binding" data-toggle="dropdown"
+				aria-haspopup="true" aria-expanded="false"> <i
+					class="tibcoAbb24x24LogoIcon"></i> TIBCO BusinessEvents
+			</a>
+				<ul class="dropdown-menu">
+					<li><a ng-click="openHelpPageForBETea()">Help</a></li>
+					<li><a ng-click="showAboutWindowForBETea()">About
+							BusinessEvents TEA Agent</a></li>
+				</ul>
+			</span>
+			<ul class="topNav">
+				<li title="Application" ng-click="showDashboardApplications()">
+					<i class="fa fa-cube"></i> <span>Application Deployments</span>
+				</li>
+				<li title="Machines" ng-click="showDashboardHosts()"
+					ng-class="{active:true}"><i class="fa fa-desktop"></i> <span>Machines</span></li>
+				<li title="Moitoring" ng-click="showAgentStats()"><i
+					class="fa fa-line-chart"></i> <span>Monitoring</span></li>
+			</ul>
+		</nav>
+	</div>
+	<div ng-controller='masterHostCtrl'>
+		<div class="adminView row main-frame box-sizing">
+			<div ng-show="notification.show">
+				<div
+					ng-include="'partials/templates/directive/showNotification.html'"></div>
+			</div>
+			<div id="loaderdiv" style="display: none;">
+				<img src="images/icons/loader.gif" class="ajax-loader" />
+			</div>
+			<div class="row" ng-show="breadCrumbs.length > 1">
+				<div class="pull-left be_breadCrumbs_div">
+					<ul>
+						<li class="be_breadCrumbs pull-left"
+							ng-repeat="b in breadCrumbs.slice(0,breadCrumbs.length-1)"><a
+							ng-click="breadCrumbsRouting(b)">{{b.name}}</a> ></li>
+						<li class="pull-left">{{breadCrumbs[breadCrumbs.length
+							-1].name}}</li>
+					</ul>
+				</div>
+			</div>
+			<div ng-include="'partials/templates/aboutBETeaView.html'"></div>
+			<div ng-include="'partials/templates/uploadExernalJars.html'"></div>
+			<div class="row" style="padding-bottom: 10px"
+				ng-if="hasPermission(4)">
+				<ul class="appBox clearfix">
+					<!-- <li class="button pull-left" ng-if="hasPermission(8)">
+						<div
+							ng-class="showOperations() && !check.allStarted? 'operation' : 'disableOperation'"
+							ng-click="showOperations() && !check.allStarted ? startInstances() : null">
+							<i class="fa fa-play"></i> <span>Start</span>
+						</div>
+					</li> -->
+					<!-- <li class="button pull-left" ng-if="hasPermission(9)">
+						<div
+							ng-class="showOperations() && !check.allStopped ? 'operation' : 'disableOperation'"
+							ng-click="showOperations() && !check.allStopped ? stopInstances() : null">
+							<i class="fa fa-stop"></i> <span>Stop</span>
+						</div>
+					</li> -->
+					<!-- <li class="button pull-left" ng-if="hasPermission(10)">
+						<div
+							ng-class="showOperations() && !check.allKilled ? 'operation' : 'disableOperation'"
+							ng-click="showOperations()&& !check.allKilled ? killInstances() : null">
+							<i class="fa fa-times"></i> <span>Kill</span>
+						</div>
+					</li> -->
+					<!-- <li class="button pull-left">
+						<div class="operation" ng-click="showUploadExternalJars()">
+							<i class="fa fa-upload"></i> <span>Upload External Jars</span>
+						</div>
+					</li> -->
+					<li class="button pull-right">
+						<div class="operation" ng-click="reloadPage()">
+							<i class="fa fa-refresh"></i> <span>Refresh</span>
+						</div>
+					</li>
+				</ul>
+			</div>
+			<div class="instanceViewPanel2" style="margin-top: 20px;">
+				<div style="margin-top: 10px; margin-bottom: 0; margin-left: 42px;">
+					<div class="row">
+						<div class="pull-left staticInfoDiv">
+							<div class="pull-left" style="width: 25%;">OS Type</div>
+							<div class="pull-left"
+								style="margin-left: 10px; margin-right: 10px;">:</div>
+							<div>{{masterHost.config.os}}</div>
+						</div>
+						<div class="pull-left staticInfoDiv">
+							<div class="pull-left" style="width: 25%;">IP Address</div>
+							<div class="pull-left"
+								style="margin-left: 10px; margin-right: 10px;">:</div>
+							<div>{{masterHost.config.hostIp}}</div>
+						</div>
+					</div>
+					
+				</div>
+			</div>
+			<div>
+				<div class="container">
+					<div ng-include="'partials/templates/actionConfirmation.html'"></div>
+					<section>
+						<ul class="navTable">
+							<li ng-click="setViewType('instances')"
+								ng-class="{active:isSet('instances')}"><a>Instances</a></li>
+							
+						</ul>
+						<div ng-if="isSet('instances')">
+							<div class="instanceListView">
+								<table tea-table class="tea-table">
+									<thead>
+										<tr>
+											<th class="selection"><input type="checkbox"
+												ng-model="filteredValues.allInstancesChecked"
+												ng-change="selectAllInstances();showIndividualOperations()"></th>
+											<th>Application <i title="sort Application"
+												class="operation fa fa-sort"
+												ng-click="onSortCall('basicAttributes.appName')"></i>
+												<div>
+													<input ng-model="search.appName" class="be_filter_input"
+														type="text" />
+													</li>
+												</div>
+											</th>
+											<th>Name <i title="sort" class="operation fa fa-sort"
+												ng-click="onSortCall('name')"></i>
+												<div>
+													<input ng-model="search.name" class="be_filter_input"
+														type="text" />
+													</li>
+												</div>
+											</th>
+											<th>Status <i title="sort" class="operation fa fa-sort"
+												ng-click="onSortCall('status.state')"></i>
+												<div>
+													<input ng-model="search.status" class="be_filter_input"
+														type="text" />
+													</li>
+												</div>
+											</th>
+											<th>UpTime <i title="sort" class="operation fa fa-sort"
+												ng-click="onSortCall('upTime')"></i>
+											</th>
+											<th>JMX Port <i title="sort"
+												class="operation fa fa-sort"
+												ng-click="onSortCall('jmxPort')"></i>
+												<div>
+													<input ng-model="search.jmxPort" class="be_filter_input"
+														type="text" />
+													</li>
+												</div>
+											</th>
+											<th style="min-width: 135px !important;">Processing Unit
+												<i title="sort" class="operation fa fa-sort"
+												ng-click="onSortCall('puId')"></i>
+												<div>
+													<input ng-model="search.puId" class="be_filter_input"
+														type="text" />
+													</li>
+												</div>
+											</th>
+											<th>Process Id <i title="sort"
+												class="operation fa fa-sort"
+												ng-click="onSortCall('processId')"></i>
+												<div>
+													<input ng-model="search.processId" class="be_filter_input"
+														type="text" />
+													</li>
+												</div>
+											</th>
+											<th style="min-width: 155px !important;">Deployment
+												Status <i title="sort" class="operation fa fa-sort"
+												ng-click="onSortCall('deploymentStatus')"></i>
+												<div>
+													<input ng-model="search.deploymentStatus"
+														class="be_filter_input" type="text" />
+													</li>
+												</div>
+											</th>
+											<th>CPU Usage <i title="sort CPU"
+												class="operation fa fa-sort"
+												ng-click="onSortCall('config.cpuUsage.cpuUsageInPercent')"></i>
+											</th>
+											<th>Memory <i title="sort Memory"
+												class="operation fa fa-sort"
+												ng-click="onSortCall('config.memoryUsage.percentUsed')"></i>
+											</th>
+
+										</tr>
+									</thead>
+									<tbody>
+										<tr
+											ng-repeat="instance in masterHostInstances | orderBy:sort.column:sort.descending | filter:filterFunction">
+											<td><input type="checkbox" ng-model="instance.isChecked"
+												ng-change="selectInstanceEntity();showIndividualOperations()"></td>
+											<td>{{instance.basicAttributes.appName}}</td>
+											<td><a
+												ng-click="showInstanceFromMasterHost(instance.basicAttributes.appName,instance.name)">{{instance.name}}</a></td>
+											<td>
+												<ul>
+													<!-- <li class="pull-left"
+														style="margin-left: 10px; margin-top: 4px;"
+														ng-show="instance.status.state=='Stopped'"><span
+														class="operation"> <i title="Start"
+															class="fa fa-play" ng-click=""></i>
+													</span></li>
+													<li class="pull-left"
+														style="margin-left: 10px; margin-top: 4px;"
+														ng-show="instance.status.state=='Running'"><span
+														class="operation"> <i title="Stop"
+															class="fa fa-stop" ng-click=""></i>
+													</span></li> -->
+													<li class="pull-left" style="padding-left: 30px;"
+														ng-show="instance.status.state == 'Needs Deployment' || instance.status.state=='Starting' || instance.status.state=='Stopping'">
+														<div title="{{instance.status.state}}"
+															ng-show="instance.status.state == 'Needs Deployment'"
+															class="instanceStateIndicator_other"></div> <span
+														ng-show="instance.status.state=='Starting' || instance.status.state=='Stopping'">
+															<i title="{{instance.status.state}}"
+															class="be_startingSpinner fa fa-spinner fa-spin fa-2x"></i>
+													</span>
+													</li>
+													<li class="pull-left" style="padding-left: 10px;"
+														ng-show="instance.status.state=='Stopped' || instance.status.state=='Running'">
+														<div title="{{instance.status.state}}"
+															ng-class="{'instanceStateIndicator_stopped':instance.status.state=='Stopped' , 'instanceStateIndicator_ok':instance.status.state=='Running' && instance.config.healthStatus == 'ok','instanceStateIndicator_warning':instance.status.state=='Running' && instance.config.healthStatus == 'warning','instanceStateIndicator_critical':instance.status.state=='Running' && instance.config.healthStatus == 'critical' }"></div>
+													</li>
+												</ul>
+											</td>
+											<td>{{instance.upTime}}</td>
+											<td>{{instance.jmxPort}}</td>
+											<td>{{instance.puId}}</td>
+											<td>{{instance.processId}}</td>
+											<td>{{instance.deploymentStatus}}</td>
+											<td>
+												<div
+													ng-class="{'cpuAndMemoryDiv':instance.status.state == 'Running'}">
+													<cpu-group-div be-instance-object="instance"></cpu-group-div>
+												</div>
+											</td>
+											<td>
+												<div
+													ng-class="{'cpuAndMemoryDiv':instance.status.state == 'Running'}">
+													<memory-group-div be-instance-object="instance"></memory-group-div>
+												</div>
+											</td>
+
+										</tr>
+									</tbody>
+									<tfoot>
+										<tr>
+											<td colspan="11">- END OF DATA -</td>
+										</tr>
+									</tfoot>
+								</table>
+							</div>
+						</div>
+						<div ng-if="isSet('beHomes')">
+							<div class="instanceListView">
+								<table tea-table class="tea-table">
+									<thead>
+										<tr>
+											<th>BE HOME</th>
+											<th>BE TRA</th>
+											<th>Version</th>
+										</tr>
+									</thead>
+									<tbody>
+										<tr ng-repeat="beDetail in masterHost.config.be">
+											<td>{{beDetail.beHome}}</td>
+											<td>{{beDetail.beTra}}</td>
+											<td>{{beDetail.version}}</td>
+										</tr>
+									</tbody>
+								</table>
+							</div>
+						</div>
+					</section>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>

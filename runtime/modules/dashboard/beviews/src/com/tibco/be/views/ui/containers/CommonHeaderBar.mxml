@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:HBox
+	xmlns:mx="http://www.adobe.com/2006/mxml"
+	verticalAlign="middle"
+	paddingTop="2"
+	paddingBottom="2"
+	paddingLeft="5"
+	paddingRight="5"
+>
+	<mx:Metadata>
+		[Style(name="backgroundGradientStart", type="uint", inherit="no")]
+		[Style(name="backgroundGradientEnd", type="uint", inherit="no")]
+		[Style(name="showSecondaryTopBorder", type="boolean", inherit="no")]
+	</mx:Metadata>
+	
+	<mx:Script>
+		<![CDATA[
+	        private static var classConstructed:Boolean = classConstruct();
+	    
+	        private static function classConstruct():Boolean {
+	            if(!StyleManager.getStyleDeclaration("CommonHeaderBar")){
+	                var commonHeaderBarStyle:CSSStyleDeclaration = new CSSStyleDeclaration();
+	                commonHeaderBarStyle.defaultFactory = function():void{
+	                    this.backgroundGradientStart = 0xECECEC;
+	                    this.backgroundGradientEnd = 0xD3D3D3;
+	                    this.showSecondaryTopBorder = true;
+	                }
+	                StyleManager.setStyleDeclaration("CommonHeaderBar", commonHeaderBarStyle, true);
+	            }
+	            return true;
+	        }
+			
+			override protected function updateDisplayList(unscaledWidth:Number, unscaledHeight:Number):void{
+				draw(unscaledWidth, unscaledHeight);
+				super.updateDisplayList(unscaledWidth, unscaledHeight);
+			}
+			
+			private function draw(width:int, height:int):void{
+				var borderColor:uint = getStyle("borderColor");
+				var borderSides:String = getStyle("borderSides");
+				var startGradientColor:uint = getStyle("backgroundGradientStart");
+				var endGradientColor:uint = getStyle("backgroundGradientEnd");
+				var drawWhiteSecondaryTopBorder:Boolean = getStyle("showSecondaryTopBorder");
+				graphics.clear();
+				
+				//draw fill
+				graphics.moveTo(1, 1);
+				var m:Matrix = new Matrix();
+				m.createGradientBox(width-2, height-2, Math.PI/2);
+				graphics.beginGradientFill(
+					GradientType.LINEAR,
+					[startGradientColor, endGradientColor],
+					[1, 1],
+					[0x00, 0xFF],
+					m
+				);
+				graphics.drawRect(1, 1, width-2, height-2);
+				graphics.endFill();
+				
+				//draw border
+				graphics.lineStyle(1, borderColor);
+				graphics.moveTo(0, 0);
+				graphics.lineTo(width-1, 0);
+				graphics.lineTo(width-1, height-1);
+				graphics.lineTo(0, height-1);
+				graphics.lineTo(0, 0);
+				
+				//draw white secondary border (top)
+				if(drawWhiteSecondaryTopBorder){
+					graphics.moveTo(1, 1);
+					graphics.lineStyle(1, 0xFFFFFF);
+					graphics.lineTo(width-1, 1);
+				}
+			}
+			
+		]]>
+	</mx:Script>
+</mx:HBox>

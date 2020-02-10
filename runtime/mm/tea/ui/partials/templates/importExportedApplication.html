@@ -1,0 +1,31 @@
+ <div class="modal fade box-sizing" id="importExportedApplication">
+   <form  enctype="multipart/form-data" method="post" name="paramForm" novalidate>
+       <div class="modal-header box-sizing">
+       	 	<button type="button" class="close" data-dismiss="modal" aria-hidden="true">x</button>
+			<span class="lead"><h4>Import Exported Deployment</h4></span>
+	   </div>
+	   
+	   <div class="modal-body box-sizing">
+			<div class="form-horizontal">
+				<div class="control-group">                   
+                	<label class="control-label">Exported  Application </label>
+					<div class="controls">                    	
+						<input type="text" id="exportedzipfilepath" disabled="disabled" required/>						
+						<button type="button" ng-class="{'tbt-btn':true,'primary-btn':true}" ng-click="browseFile('exportedzipfile')">Browse</button>
+						<span ng-show="isFileExtensionZIP" class="fileuploadError">Only *.zip file is accepted</span>
+						<input type="file" accept=".zip" on-read-file="validateFileExtension($parent.importData.files.name, 'zip')" file-model="$parent.importData.files" style="visibility: hidden;" id="exportedzipfile" onchange="angular.element(this).scope().setPathValue('exportedzipfilepath','exportedzipfile')" required/>				
+					</div>					
+				</div>		
+			</div>
+	  	</div>	
+	  	<div class="modal-footer box-sizing">
+	  		<div ng-show="$parent.isError" class="pull-left">
+				<span class="fileuploadError">*{{$parent.errorMessage}}</span>
+			</div>
+	    	<button type="button" ng-disabled="paramForm.$invalid" class="tbt-btn primary-btn" ng-class="{'button_disabled':paramForm.$invalid || isFileExtensionZIP}" ng-click="$parent.importExportedApplication($parent.importData.files)">Save</button>
+	    	<button type="button" data-dismiss="modal" aria-hidden="true" class="btn tbt-btn secondary-btn" ng-click="close()">
+		   		 Cancel
+	    	</button>
+    	</div>
+    </form>
+ </div>

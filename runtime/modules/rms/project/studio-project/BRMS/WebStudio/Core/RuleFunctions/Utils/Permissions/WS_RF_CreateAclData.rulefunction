@@ -1,0 +1,67 @@
+/**
+ * @description 
+ */
+WebStudio.Core.Concepts.Permissions.WS_C_Acl rulefunction WebStudio.Core.RuleFunctions.Utils.Permissions.WS_RF_CreateAclData {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String projectName;
+		String subscriptionId;
+	}
+	body {
+		Object aclObject =  RMS.Authorization.getACLObjectForProject(projectName, subscriptionId);
+		
+		WS_C_Acl aclData = null;
+		if (aclObject != null) {
+			aclData = Instance.newInstance("/WebStudio/Core/Concepts/Permissions/WS_C_Acl", null);
+			    
+			WebStudio.Core.Concepts.Permissions.WS_C_Entries entries = Instance.newInstance("/WebStudio/Core/Concepts/Permissions/WS_C_Entries", null);
+	
+			Object[] aclentry = WS.Acl.getAclEntryArray(aclObject);
+			for (int j = 0; j < aclentry@length; j++) {
+				WebStudio.Core.Concepts.Permissions.WS_C_Entry entry = Instance.newInstance("/WebStudio/Core/Concepts/Permissions/WS_C_Entry", null);
+				WebStudio.Core.Concepts.Permissions.WS_C_Permissions permissions = Instance.newInstance("/WebStudio/Core/Concepts/Permissions/WS_C_Permissions", null);
+	
+				Object[] aclpermission = WS.Acl.getPermissionArray(aclentry[j]);
+				for (int l = 0; l < aclpermission@length; l++) {
+					WebStudio.Core.Concepts.Permissions.WS_C_Permission permission = Instance.newInstance("/WebStudio/Core/Concepts/Permissions/WS_C_Permission", null);
+					Object aclaction = WS.Acl.getActionObject(aclpermission[l]);
+					WebStudio.Core.Concepts.Permissions.WS_C_Action action = Instance.newInstance("/WebStudio/Core/Concepts/Permissions/WS_C_Action", null);
+	
+					action.type = WS.Acl.getActionType(aclaction);
+					action.value = WS.Acl.getActionValue(aclaction);
+					Instance.PropertyAtom.setContainedConcept(permission.action, action, 1L);	
+	
+					permission.resourceref = WS.Acl.getPermissionResourceRef(aclpermission[l]);
+					permission.type = null; WS.Acl.getPermissionType(aclpermission[l]); 
+		
+					Instance.PropertyArray.appendContainedConcept(permissions.permission, permission, 1L);
+	
+				}
+				Instance.PropertyAtom.setContainedConcept(entry.permissions, permissions, 1L);
+					
+				WebStudio.Core.Concepts.Permissions.WS_C_Role role = Instance.newInstance("/WebStudio/Core/Concepts/Permissions/WS_C_Role", null);
+				role.name = WS.Acl.getRoleName(aclentry[j]);
+				Instance.PropertyAtom.setContainedConcept(entry.role, role, 1L);
+				Instance.PropertyArray.appendContainedConcept(entries.entry, entry, 1L);
+			} 
+			Instance.PropertyAtom.setContainedConcept(aclData.entries, entries, 1L);
+			
+			WebStudio.Core.Concepts.Permissions.WS_C_Resources resources = Instance.newInstance("/WebStudio/Core/Concepts/Permissions/WS_C_Resources", null);
+			Object[] aclresource = WS.Acl.getAclResourcesArray(aclObject);
+	
+			for (int j = 0; j < aclresource@length; j++) {
+				WebStudio.Core.Concepts.Permissions.WS_C_Resource resource = Instance.newInstance("/WebStudio/Core/Concepts/Permissions/WS_C_Resource", null);
+	
+				resource.rid = WS.Acl.getResourceId(aclresource[j]);
+				resource.name = WS.Acl.getResourceName(aclresource[j]);
+				resource.type = WS.Acl.getResourceType(aclresource[j]);
+	
+				Instance.PropertyArray.appendContainedConcept(resources.resource, resource, 1L);
+			}
+			Instance.PropertyAtom.setContainedConcept(aclData.resources, resources, 1L);
+		}
+		return aclData;
+	}
+}

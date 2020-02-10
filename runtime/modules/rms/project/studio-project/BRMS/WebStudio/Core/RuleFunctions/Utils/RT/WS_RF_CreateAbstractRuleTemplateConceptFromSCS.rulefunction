@@ -1,0 +1,27 @@
+/**
+ * @description Create view or builder depending on certain conditions from contents loaded from SCS.
+ */
+WebStudio.Core.Concepts.RuleTemplateInstance.WS_C_AbstractRuleTemplate rulefunction WebStudio.Core.RuleFunctions.Utils.RT.WS_RF_CreateAbstractRuleTemplateConceptFromSCS {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String projectName;
+		String username;
+		String scsIntegrationType;
+		String scsRootURL;
+		String artifactPath;
+		//Tod distinguish between RT and RTI.
+		String artifactExtn;
+		Object ruleTemplateObject;
+		String[] roles;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.RT.WS_RF_CreateAbstractRuleTemplateConceptFromSCS");
+		//Check if it has views
+		if (WS.RT.hasViews(ruleTemplateObject)) {
+			return WS_RF_CreateRuleTemplateViewConceptFromSCSFactory(projectName, username, scsIntegrationType, scsRootURL, artifactPath, artifactExtn, ruleTemplateObject, roles);
+		}
+		return WS_RF_CreateRuleTemplateBuilderConceptFromSCSFactory(projectName, username, scsIntegrationType, scsRootURL, artifactPath, artifactExtn, ruleTemplateObject, roles);
+	}
+}

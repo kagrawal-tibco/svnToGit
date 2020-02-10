@@ -1,0 +1,46 @@
+/**
+ * @description Convert links operators and values etc. to EMF.
+ */
+void rulefunction WebStudio.Core.RuleFunctions.Utils.RT.Builder.Ops.Save.WS_RF_ConvertFilterLinksAndValuesToEMF {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object filterEModel;
+		WebStudio.Core.Concepts.RuleTemplateInstance.Builder.WS_C_AbstractConditionsFilter rootConditionsFilter;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.RT.Builder.Ops.Save.WS_RF_ConvertLinksAndValuesToEMF");
+		//Get links
+		WS_C_Link[] links = Instance.PropertyArray.toArrayConcept(rootConditionsFilter.link);
+		
+		for (int linkLoop = 0; linkLoop < links@length; linkLoop++) {
+			WS_C_Link link = links[linkLoop];
+			//Assert explicitly to maintain reverse refs in cache.
+			WS.Common.assertInstance(link, false);
+			Log.log(LOGGER, "Debug", "Link Name %s and Link Type %s", link.name, link.type);
+			//Add each link to EMF
+			Object linkEModel = WS.RTI.createRuleTemplateInstanceConditionsLink(link.name, link.type);
+			WS.RTI.addChildLink(filterEModel, linkEModel);
+		}
+		String operator = rootConditionsFilter.operator;
+		Log.log(LOGGER, "Debug", "Operator used %s", operator);
+		WS.RTI.setFilterOperator(filterEModel, operator);
+		
+		String filterId = rootConditionsFilter.filterId;
+		if (filterId == null || String.equals(filterId, "")) {
+			// make call to create a unique Id for filter
+			filterId = WS.Common.getUniqueId();
+		}
+		Log.log(LOGGER, "Debug", "Filter Id used %s", filterId);
+		WS.RTI.setFilterId(filterEModel, filterId);
+		
+		//Convert value
+		WebStudio.
+			Core.
+				RuleFunctions.
+					Utils.RT.Builder.
+						Ops.Save.
+							WS_RF_ConvertFilterValueToEMF(filterEModel, rootConditionsFilter);
+	}
+}

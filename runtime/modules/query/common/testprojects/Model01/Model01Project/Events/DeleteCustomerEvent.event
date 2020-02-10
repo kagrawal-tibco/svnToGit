@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<event icon="" name="DeleteCustomerEvent" description="" guid="1210787247677-1121522395" bindings="" namespace="" folder="/Events/" type="simple" specifiedTime="-1" timeInterval="-1" intervalUnit="0" ttl="0" units="Seconds" schedule="ruleBased" super="" timeEventCount="1" serializationFormat="0">
+    <lastModified/>
+    <extendedProperties/>
+    <hiddenProperties/>
+    <subEvents/>
+    <destination name="CustomerDestination" path="/Channels/JMSChannel"/>
+    <extendedProperties/>
+    <userProperties>
+        <userProperty>
+            <name>customerId</name>
+            <type>long</type>
+            <extendedProperties/>
+        </userProperty>
+    </userProperties>
+    <referringRuleSets>
+        <referringRuleSet path="/Events/DeleteCustomerEvent">
+            <referringRule>expiryAction</referringRule>
+        </referringRuleSet>
+        <referringRuleSet path="/Rules/AddModifyRuleSet">
+            <referringRule>deleteCustomerRule</referringRule>
+        </referringRuleSet>
+    </referringRuleSets>
+    <ruleset icon="" name="DeleteCustomerEvent" description="" guid="1210787247677-79687658" bindings="" namespace="" folder="/Events/">
+        <lastModified/>
+        <extendedProperties/>
+        <hiddenProperties/>
+        <rules>
+            <rule icon="" name="expiryAction" description="" guid="1210787247677-172089869" bindings="" namespace="" isAFunction="false" isAConditionFunction="false" compilationStatus="0">
+                <lastModified/>
+                <extendedProperties/>
+                <hiddenProperties/>
+                <priority>5</priority>
+                <testInterval>-1</testInterval>
+                <startTime>-1</startTime>
+                <doesRequeue>false</doesRequeue>
+                <maxRules>1</maxRules>
+                <fwdChain>true</fwdChain>
+                <bwdChain>false</bwdChain>
+                <declarations>
+                    <declaration identifier="event" entity="/Events/DeleteCustomerEvent" entityType="">
+                        <domain>
+                            <entries/>
+                        </domain>
+                    </declaration>
+                </declarations>
+                <condition/>
+                <action/>
+                <requeueVars/>
+                <template/>
+                <author/>
+            </rule>
+        </rules>
+    </ruleset>
+</event>

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<project name="pre-uninstall" default="pre-uninstall" basedir=".">
+	<property file="post-install.properties"/>
+	<import file="common-tasks.xml"/>
+
+	<taskdef resource="net/sf/antcontrib/antcontrib.properties"/>
+	
+	<target name="pre-uninstall" depends="restore-runtime-plugins">
+		<echo message="Done pre-uninstallation tasks." />
+	</target>
+	
+	<target name="restore-runtime-plugins">
+		<echo message="Restoring runtime plugins" />
+		<if>
+			<available file="${tibco.home}/be/5.4/backup/5.4.1_pre/lib/eclipse/plugins" type="dir"/>
+			<then>
+				<move todir="${tibco.home}/be/5.4/lib/eclipse/plugins">
+					<fileset dir="${tibco.home}/be/5.4/backup/5.4.1_pre/lib/eclipse/plugins">
+						<include name="com.tibco.cep.bpmn.common_5.*.jar" />
+					</fileset>
+				</move>
+			</then>
+		</if>	
+	</target>
+	
+</project>	

@@ -1,0 +1,26 @@
+/**
+ * @description 
+ * @author
+ */
+rule Rules.OpenAccount {
+	
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	
+	declare {
+		Events.OpenAccount e;
+	}
+	
+	when {		
+	}
+	
+	then {
+		Concepts.Account account = Concepts.Account.Account(e.accountNumber, e.initialBalance);
+		System.debugOut(" #######   Account Created : " + account@extId
+			+ ", Initial Balance = " + account.balance);
+		Event.consumeEvent(e);		
+	}
+	
+}

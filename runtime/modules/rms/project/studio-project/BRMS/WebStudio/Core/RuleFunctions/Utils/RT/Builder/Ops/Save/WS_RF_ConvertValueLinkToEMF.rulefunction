@@ -1,0 +1,21 @@
+/**
+ * @description Convert each value link to EMF.
+ */
+void rulefunction WebStudio.Core.RuleFunctions.Utils.RT.Builder.Ops.Save.WS_RF_ConvertValueLinkToEMF {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object filterValueEModel;
+		WebStudio.Core.Concepts.RuleTemplateInstance.Builder.WS_C_Link link;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.RT.Builder.Ops.Save.WS_RF_ConvertValueLinkToEMF");
+		
+		Log.log(LOGGER, "Debug", "Link Name %s and Link Type %s", link.name, link.type);
+		//Add each link to EMF
+		Object linkEModel = WS.RTI.createRuleTemplateInstanceConditionsLink(link.name, link.type);
+		//TODO operators etc.
+		WS.RTI.addChildLink(filterValueEModel, linkEModel);
+	}
+}

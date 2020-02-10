@@ -1,0 +1,69 @@
+/**
+ * @description 
+ */
+WebStudio.Core.Concepts.DataSources.WS_C_TemporaryReturnData rulefunction WebStudio.Core.RuleFunctions.Actions.WS_RF_LoadAndParseWSDL {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object servletRequest;
+		WebStudio.Security.Authn.Concepts.WS_C_LoggedInUser loggedInUser;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.WS_RF_LoadAndParseWSDL");
+		
+		int responseStatus = 0;
+		int recordCount = 0;
+		String errorCode = null;
+		String responseMessage = null;
+		WS_C_ResponseData responseData = null;
+		
+		if (!WS_RF_CheckHTTPMethod(servletRequest, "GET")) {
+			responseStatus = -1;
+			recordCount = 0;
+			errorCode = "ERR_5101";
+			responseMessage = "Invalid HTTP Method, expect method is [GET].";
+		} else {
+			String projectName = HTTP.Servlet.Request.getRequestParameter(servletRequest, "projectName");
+			String wsdlPath = HTTP.Servlet.Request.getRequestParameter(servletRequest, "artifactPath");
+			
+			if (projectName == null || String.equals(projectName, "") || wsdlPath == null || String.equals(wsdlPath, "")) {
+				responseStatus = -1;
+				recordCount = 0;
+				errorCode = "ERR_5201";
+				responseMessage = "Either or both the mandatory fields Project Name and/or WSDL Path are empty/null.";
+			} else {
+				String userArtifactExtId = WebStudio.Core.RuleFunctions.Utils.WS_RF_CreateUserArtifactExtId(null, wsdlPath, projectName, loggedInUser.username, null, null);
+				Log.log(LOGGER, "Debug", "WSDL Artifact ExtId - %s", userArtifactExtId);
+				WS_C_UserArtifact userArtifact = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(userArtifactExtId, false, "/WebStudio/Core/Concepts/WS_C_UserArtifact");
+				
+				if (userArtifact == null) {
+					responseStatus = -1;
+					recordCount = 0;
+					errorCode = "ERR_5202";
+					responseMessage = "[" + wsdlPath +"]" + "not checked out from project [" + projectName + "]";
+				} else {
+					String subscriptionId = null;
+					if (loggedInUser.jwtToken != null) subscriptionId = loggedInUser.jwtToken.sbsc;
+			
+					String scsRootURL = WS_RF_GetSCSRootURL(projectName, subscriptionId);
+					if (scsRootURL == null) {
+						throw Exception.newException(null, "Source control repository location not present. Set ws.scs.rootURL property", null);
+					}
+					wsdlPath = scsRootURL + "/" + projectName + wsdlPath;
+					Log.log(LOGGER, "Debug", "WSDL Path - %s", wsdlPath);
+					
+					String wsdl = WS.Common.loadAndParseWSDL(wsdlPath);
+					Log.log(LOGGER, "Debug", "Parsed WSDL - %s", wsdl);
+					
+					responseData = Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/WS_C_ResponseData");
+					WS_C_AbstractDataSourceRecord wsdlRecord = Instance.createInstanceFromXML("/WebStudio/Core/Concepts/DataSources/Artifacts/WSDL/WS_C_WSDLDataSourceRecord", wsdl);
+					Instance.PropertyArray.appendContainedConcept(responseData.record, wsdlRecord, 1L);
+					recordCount++;
+				}
+			}
+		}
+		
+		return WS_RF_CreateTemporaryReturnData(responseStatus, recordCount, errorCode, responseMessage, responseData);
+	}
+}

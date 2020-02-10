@@ -1,0 +1,114 @@
+group conceptTemplateGroup;
+
+conceptPageTemplate(cssPath,dataObject) ::= <<
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<!--NewPage-->
+<HTML>
+<HEAD>
+<TITLE>
+$dataObject.name$
+</TITLE>
+
+<META NAME="date" CONTENT="2011-12-09">
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<LINK REL ="stylesheet" TYPE="text/css" HREF="$cssPath$" TITLE="Style">
+
+</HEAD>
+<BODY BGCOLOR="white" onload="windowTitle();">
+	<hr/>
+	<table width="100%" cellspacing="0" cellpadding="1" border="0" summary=""><tbody>
+		<tr>
+			<td bgcolor="#EEEEFF" class="NavBarCell1" colspan="2">
+				<table cellspacing="3" cellpadding="0" border="0" summary=""><tbody>
+					<tr valign="top" align="center">&nbsp;</tr>
+				</tbody></table>
+			</td>
+			<td valign="top" align="right" rowspan="3"><em>
+				<span style="white-space:nowrap;">$dataObject.currentVersionName$</span></em>
+			</td>
+		</tr>
+		<tr>
+			<td bgcolor="white" class="NavBarCell2" width="50%">
+				<font size="-2">&nbsp;&nbsp;&nbsp;</font>
+			</td>
+			<td bgcolor="white" class="NavBarCell2"><font size="-2">
+				<a target="_top" href="$dataObject.indexFilePath$?$dataObject.fileRelativePath$"><b>FRAMES</b></a>  &nbsp;&nbsp;<a target="_top" href="#"><b>NO FRAMES</b></a>  &nbsp;&nbsp;
+			</font></td>
+		</tr>
+		<tr>
+			<td valign="top" class="NavBarCell3"><font size="-2"></font>
+			</td>
+			<td valign="top" class="NavBarCell3"><font size="-2">
+			</font></td>
+		</tr>
+	</tbody></table>
+	<hr/>
+	<h2>
+		<font size="-1">Concept:</font>
+		<br/>$dataObject.name$
+	</h2>
+	$showDescription(dataObject.description)$
+	
+	$if(dataObject.parentConcept)$
+		<br/>
+		<b>Inherits From:</b> $if(dataObject.parentConcept.link)$ <a href="$dataObject.parentConcept.link$" title="$dataObject.parentConcept.title$" target="$dataObject.parentConcept.target$">$dataObject.parentConcept.name$</a>
+		$else$ $dataObject.parentConcept.name$ $endif$
+	$endif$
+	
+	$showConceptProperties(dataObject.properties)$
+</BODY>
+</HTML>
+>>
+
+showDescription(description) ::= <<
+<!-- Description -->
+	$if(description)$
+	<table width="100%" cellspacing="0" cellpadding="3" border="0" summary=""><tbody>
+		<tr>
+			<td width="5%"></td>
+			<td class="TableSubHeadingColor">$description$</td>
+		</tr>
+	</tbody></table>
+	$endif$
+>>
+
+showConceptProperties(properties) ::= <<
+<!-- Properties -->
+$if(properties)$
+	<br/><hr/>
+	<table width="100%" cellspacing="0" cellpadding="3" border="1" summary=""><tbody>
+		<tr bgcolor="#CCCCFF" class="TableHeadingColor">
+			<th align="left" colspan="6">
+				<font size="+2"><b>Properties</b></font>
+			</th>
+		</tr>
+		<tr bgcolor="white" class="TableRowColor">
+			<td align="center"><b>Name</b></td>
+			<td align="center"><b>Type</b></td>
+			<td align="center"><b>Multiple</b></td>
+			<td align="center"><b>Policy</b></td>
+			<td align="center"><b>History</b></td>
+			<td align="center"><b>Domain</b></td>
+		</tr>
+	$properties: {prop|
+		<tr bgcolor="white" class="TableRowColor">
+			<td>$prop.name$</td>
+			<td>$prop.type$ $if(prop.propertyLink)$
+				(<a href="$prop.propertyLink.link$" title="$prop.propertyLink.title$" target="$prop.propertyLink.target$">$prop.propertyLink.name$</a>)
+				$endif$
+			</td>
+			<td align="center">$if(prop.multiple)$ Yes $else$ No $endif$</td>
+			<td>$prop.policy$</td>
+			<td align="right">$prop.history$</td>
+			<td>$if(prop.domains)$
+					$prop.domains: {domain|
+						$if(domain.link)$<a href="$domain.link$" title="$domain.title$" target="$domain.target$">$domain.name$</a>
+						$else$ $domain.name$ $endif$<br/>
+					}$
+				$endif$
+			</td>
+		</tr>
+	}$
+	</table>
+$endif$
+>>

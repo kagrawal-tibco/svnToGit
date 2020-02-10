@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<process:Process xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:activities="http:///com/tibco/cep/bpmn/core/model/semantic/process/activities/cep-bpmn.ecore" xmlns:common="http:///com/tibco/cep/bpmn/core/model/semantic/core/common/cep-bpmn.ecore" xmlns:events="http:///com/tibco/cep/bpmn/core/model/semantic/core/common/events/cep-bpmn.ecore" xmlns:extn.activities="http:///com/tibco/cep/bpmn/core/extension/semantic/process/activities" xmlns:extn.common="http:///com/tibco/cep/bpmn/core/extension/semantic/core/common" xmlns:extn.data="http:///com/tibco/cep/bpmn/core/extension/semantic/process/data" xmlns:extn.events="http:///com/tibco/cep/bpmn/core/extension/semantic/core/common/events" xmlns:extn.process="http:///com/tibco/cep/bpmn/core/extension/semantic/process" xmlns:process="http:///com/tibco/cep/bpmn/core/model/semantic/process/cep-bpmn.ecore" xsi:schemaLocation="http:///com/tibco/cep/bpmn/core/model/semantic/process/activities/cep-bpmn.ecore platform:/plugin/com.tibco.cep.bpmn.common/model/be/cep-bpmn.ecore#//semantic/process/activities http:///com/tibco/cep/bpmn/core/model/semantic/core/common/cep-bpmn.ecore platform:/plugin/com.tibco.cep.bpmn.common/model/be/cep-bpmn.ecore#//semantic/core/common http:///com/tibco/cep/bpmn/core/model/semantic/core/common/events/cep-bpmn.ecore platform:/plugin/com.tibco.cep.bpmn.common/model/be/cep-bpmn.ecore#//semantic/core/common/events http:///com/tibco/cep/bpmn/core/extension/semantic/process/activities platform:/plugin/com.tibco.cep.bpmn.common/model/be/cep-bpmn-extn.ecore#//semantic/process/activities http:///com/tibco/cep/bpmn/core/extension/semantic/core/common platform:/plugin/com.tibco.cep.bpmn.common/model/be/cep-bpmn-extn.ecore#//semantic/core/common http:///com/tibco/cep/bpmn/core/extension/semantic/process/data platform:/plugin/com.tibco.cep.bpmn.common/model/be/cep-bpmn-extn.ecore#//semantic/process/data http:///com/tibco/cep/bpmn/core/extension/semantic/core/common/events platform:/plugin/com.tibco.cep.bpmn.common/model/be/cep-bpmn-extn.ecore#//semantic/core/common/events http:///com/tibco/cep/bpmn/core/extension/semantic/process platform:/plugin/com.tibco.cep.bpmn.common/model/be/cep-bpmn-extn.ecore#//semantic/process http:///com/tibco/cep/bpmn/core/model/semantic/process/cep-bpmn.ecore platform:/plugin/com.tibco.cep.bpmn.common/model/be/cep-bpmn.ecore#//semantic/process" id="CreateCustomer" name="CreateCustomer" folder="/Processes" ownerProject="SimpleProcess" lastModified="2014-03-26T12:10:38.648+0530" creationDate="2012-06-20T03:30:00.864+0530" processType="PUBLIC">
+  <extensionDefinitions href="bdx:SimpleProcess#{http:///com/tibco/cep/bpmn/core/model/semantic/process/cep-bpmn.ecore}Process"/>
+  <extensionValues>
+    <value xsi:type="extn.process:ExtnProcessData" label="Create Customer" version="27" zoomLevel="2.0"/>
+    <extensionAttributeDefinition href="bdx:SimpleProcess#//@extensions[name='84b95aac']/@definition/@extensionAttributeDefinitions[name='data']"/>
+  </extensionValues>
+  <documentation id="CreateCustomer.Documentation_0" text=""/>
+  <flowElements xsi:type="events:StartEvent" id="CreateCustomer.Message_Start_0" uniqueId="1" name="Message_Start_0" lanes="CreateCustomer.Lane_0" outgoing="CreateCustomer.SequenceFlow_0">
+    <extensionDefinitions href="bdx:SimpleProcess#{http:///com/tibco/cep/bpmn/core/model/semantic/core/common/events/cep-bpmn.ecore}StartEvent"/>
+    <extensionValues>
+      <value xsi:type="extn.events:ExtnStartEventData" toolId="event.start.message" event="/Events/CreateCustomerEvent">
+        <nodePoint x="-159.87073620612696" y="12.22741891508631"/>
+        <labelPoint x="-159.37073620612694" y="-23.739247751580365"/>
+      </value>
+      <extensionAttributeDefinition href="bdx:SimpleProcess#//@extensions[name='36f82a05']/@definition/@extensionAttributeDefinitions[name='data']"/>
+    </extensionValues>
+    <dataOutputAssociation sourceRef="CreateCustomerEvent">
+      <transformation body="xslt://{{/Processes/CreateCustomer}}&lt;?xml version=\&quot;1.0\&quot; encoding=\&quot;UTF-8\&quot;?>\n&lt;xsl:stylesheet xmlns:xsl=\&quot;http://www.w3.org/1999/XSL/Transform\&quot; xmlns:ns=\&quot;www.tibco.com/be/ontology/Processes/CreateCustomer\&quot; xmlns:xsd=\&quot;http://www.w3.org/2001/XMLSchema\&quot; version=\&quot;1.0\&quot; exclude-result-prefixes=\&quot;xsl ns xsd\&quot;>\n    &lt;xsl:output method=\&quot;xml\&quot;/>\n    &lt;xsl:param name=\&quot;CreateCustomerEvent\&quot;/>\n    &lt;xsl:template match=\&quot;/\&quot;>\n        &lt;job>\n            &lt;xsl:attribute name=\&quot;extId\&quot;>\n                &lt;xsl:value-of select=\&quot;concat(\'JCC-\', $CreateCustomerEvent/name)\&quot;/>\n            &lt;/xsl:attribute>\n            &lt;ns:customer/>\n            &lt;xsl:if test=\&quot;$CreateCustomerEvent/name\&quot;>\n                &lt;ns:accountName>\n                    &lt;xsl:value-of select=\&quot;$CreateCustomerEvent/name\&quot;/>\n                &lt;/ns:accountName>\n            &lt;/xsl:if>\n            &lt;xsl:if test=\&quot;$CreateCustomerEvent/balance\&quot;>\n                &lt;ns:accountBalance>\n                    &lt;xsl:value-of select=\&quot;$CreateCustomerEvent/balance\&quot;/>\n                &lt;/ns:accountBalance>\n            &lt;/xsl:if>\n        &lt;/job>\n    &lt;/xsl:template>\n&lt;/xsl:stylesheet>"/>
+    </dataOutputAssociation>
+    <dataOutput id="CreateCustomerEvent" name="CreateCustomerEvent">
+      <itemSubjectRef href="bdx:SimpleProcess#{www.tibco.com/be/ontology/Events/CreateCustomerEvent}CreateCustomerEvent"/>
+    </dataOutput>
+    <eventDefinitions xsi:type="events:MessageEventDefinition" id="CreateCustomer.MessageEventDefinition_0">
+      <messageRef id="CreateCustomerEvent" name="CreateCustomerEvent">
+        <structureRef href="bdx:SimpleProcess#{www.tibco.com/be/ontology/Events/CreateCustomerEvent}CreateCustomerEvent"/>
+      </messageRef>
+    </eventDefinitions>
+  </flowElements>
+  <flowElements xsi:type="events:EndEvent" id="CreateCustomer.Message_End_0" uniqueId="2" name="Message_End_0" lanes="CreateCustomer.Lane_0" incoming="CreateCustomer.SequenceFlow_2">
+    <extensionDefinitions href="bdx:SimpleProcess#{http:///com/tibco/cep/bpmn/core/model/semantic/core/common/events/cep-bpmn.ecore}EndEvent"/>
+    <extensionValues>
+      <value xsi:type="extn.events:ExtnEndEventData" toolId="event.end.message" event="/Events/ReplyEvent" destination="/Channels/HTTP/debugout" replyEvent="true" consumeEvent="true" anyEvent="true">
+        <nodePoint x="124.12926379387304" y="12.22741891508631"/>
+        <labelPoint x="184.09593046053968" y="12.22741891508631"/>
+        <destinationConfig/>
+        <messageStarters messageStarter="CreateCustomer.Message_Start_0" replyTo="true" consume="false"/>
+      </value>
+      <extensionAttributeDefinition href="bdx:SimpleProcess#//@extensions[name='ed70106c']/@definition/@extensionAttributeDefinitions[name='data']"/>
+    </extensionValues>
+    <dataInputAssociation targetRef="ReplyEvent">
+      <transformation body="xslt://{{/Events/ReplyEvent}}&lt;?xml version=\&quot;1.0\&quot; encoding=\&quot;UTF-8\&quot;?>\n&lt;xsl:stylesheet xmlns:xsl=\&quot;http://www.w3.org/1999/XSL/Transform\&quot; xmlns:ns=\&quot;www.tibco.com/be/ontology/Events/ReplyEvent\&quot; xmlns:xsd=\&quot;http://www.w3.org/2001/XMLSchema\&quot; version=\&quot;1.0\&quot; exclude-result-prefixes=\&quot;xsl xsd\&quot;>\n    &lt;xsl:output method=\&quot;xml\&quot;/>\n    &lt;xsl:template match=\&quot;/\&quot;>\n        &lt;ns:ReplyEvent>\n            &lt;xsl:attribute name=\&quot;extId\&quot;>\n                &lt;xsl:value-of select=\&quot;&amp;quot;r1&amp;quot;\&quot;/>\n            &lt;/xsl:attribute>\n        &lt;/ns:ReplyEvent>\n    &lt;/xsl:template>\n&lt;/xsl:stylesheet>"/>
+    </dataInputAssociation>
+    <dataInput id="ReplyEvent" name="ReplyEvent">
+      <itemSubjectRef href="bdx:SimpleProcess#{www.tibco.com/be/ontology/Events/ReplyEvent}ReplyEvent"/>
+    </dataInput>
+    <eventDefinitions xsi:type="events:MessageEventDefinition" id="CreateCustomer.MessageEventDefinition_1">
+      <messageRef id="ReplyEvent" name="ReplyEvent">
+        <structureRef href="bdx:SimpleProcess#{www.tibco.com/be/ontology/Events/ReplyEvent}ReplyEvent"/>
+      </messageRef>
+    </eventDefinitions>
+  </flowElements>
+  <flowElements xsi:type="activities:RuleFunctionTask" id="CreateCustomer.Script_0" uniqueId="3" name="Create Customer" lanes="CreateCustomer.Lane_0" outgoing="CreateCustomer.SequenceFlow_1" incoming="CreateCustomer.SequenceFlow_0" startQuantity="1" completionQuantity="1">
+    <extensionDefinitions href="bdx:SimpleProcess#{http:///com/tibco/cep/bpmn/core/model/semantic/process/activities/cep-bpmn.ecore}RuleFunctionTask"/>
+    <extensionValues>
+      <value xsi:type="extn.activities:ExtnRuleFunctionTaskData" toolId="activity.ruleFunction" checkPoint="true" rulefunction="/RuleFunctions/CreateCustomerAccount">
+        <nodePoint x="-66.87073620612696" y="12.227418915086552"/>
+        <labelPoint x="-66.87073620612694" y="-21.739247751524736"/>
+      </value>
+      <extensionAttributeDefinition href="bdx:SimpleProcess#//@extensions[name='f5be13c6']/@definition/@extensionAttributeDefinitions[name='data']"/>
+    </extensionValues>
+    <ioSpecification>
+      <dataInputs id="arguments" name="arguments"/>
+    </ioSpecification>
+    <dataInputAssociations targetRef="arguments">
+      <transformation body="xslt://{{/RuleFunctions/CreateCustomerAccount}}&lt;?xml version=\&quot;1.0\&quot; encoding=\&quot;UTF-8\&quot;?>\n&lt;xsl:stylesheet xmlns:xsl=\&quot;http://www.w3.org/1999/XSL/Transform\&quot; xmlns:ns=\&quot;www.tibco.com/be/ontology/RuleFunctions/CreateCustomerAccount\&quot; xmlns:xsd=\&quot;http://www.w3.org/2001/XMLSchema\&quot; version=\&quot;1.0\&quot; exclude-result-prefixes=\&quot;xsl ns xsd\&quot;>\n    &lt;xsl:output method=\&quot;xml\&quot;/>\n    &lt;xsl:param name=\&quot;job\&quot;/>\n    &lt;xsl:template match=\&quot;/\&quot;>\n        &lt;ns:CreateCustomerAccount>\n            &lt;args>\n                &lt;ns:accountName>\n                    &lt;xsl:value-of select=\&quot;$job/accountName\&quot;/>\n                &lt;/ns:accountName>\n                &lt;ns:balance>\n                    &lt;xsl:value-of select=\&quot;$job/accountBalance\&quot;/>\n                &lt;/ns:balance>\n            &lt;/args>\n        &lt;/ns:CreateCustomerAccount>\n    &lt;/xsl:template>\n&lt;/xsl:stylesheet>"/>
+    </dataInputAssociations>
+    <dataOutputAssociations>
+      <transformation body="xslt://{{/Processes/CreateCustomer}}&lt;?xml version=\&quot;1.0\&quot; encoding=\&quot;UTF-8\&quot;?>\n&lt;xsl:stylesheet xmlns:xsl=\&quot;http://www.w3.org/1999/XSL/Transform\&quot; xmlns:ns=\&quot;www.tibco.com/be/ontology/Processes/CreateCustomer\&quot; xmlns:xsd=\&quot;http://www.w3.org/2001/XMLSchema\&quot; version=\&quot;1.0\&quot; exclude-result-prefixes=\&quot;xsl xsd\&quot;>\n    &lt;xsl:output method=\&quot;xml\&quot;/>\n    &lt;xsl:param name=\&quot;return\&quot;/>\n    &lt;xsl:template match=\&quot;/\&quot;>\n        &lt;job>\n            &lt;ns:customer>\n                &lt;xsl:if test=\&quot;$return/@Id\&quot;>\n                    &lt;xsl:attribute name=\&quot;ref\&quot;>\n                        &lt;xsl:value-of select=\&quot;$return/@Id\&quot;/>\n                    &lt;/xsl:attribute>\n                &lt;/xsl:if>\n            &lt;/ns:customer>\n        &lt;/job>\n    &lt;/xsl:template>\n&lt;/xsl:stylesheet>"/>
+    </dataOutputAssociations>
+  </flowElements>
+  <flowElements xsi:type="common:SequenceFlow" id="CreateCustomer.SequenceFlow_0" uniqueId="5" name="SequenceFlow_0" lanes="CreateCustomer.Lane_0" isImmediate="true" targetRef="CreateCustomer.Script_0" sourceRef="CreateCustomer.Message_Start_0">
+    <extensionDefinitions href="bdx:SimpleProcess#{http:///com/tibco/cep/bpmn/core/model/semantic/core/common/cep-bpmn.ecore}SequenceFlow"/>
+    <extensionValues>
+      <value xsi:type="extn.common:ExtnSequenceFlowData">
+        <startPoint x="-129.87073620612696" y="12.227418915086552"/>
+        <endPoint x="-101.87073620612696" y="12.227418915086552"/>
+      </value>
+      <extensionAttributeDefinition href="bdx:SimpleProcess#//@extensions[name='fb9f535e']/@definition/@extensionAttributeDefinitions[name='data']"/>
+    </extensionValues>
+  </flowElements>
+  <flowElements xsi:type="common:SequenceFlow" id="CreateCustomer.SequenceFlow_1" uniqueId="6" name="SequenceFlow_1" lanes="CreateCustomer.Lane_0" isImmediate="true" targetRef="CreateCustomer.Script_1" sourceRef="CreateCustomer.Script_0">
+    <extensionDefinitions href="bdx:SimpleProcess#{http:///com/tibco/cep/bpmn/core/model/semantic/core/common/cep-bpmn.ecore}SequenceFlow"/>
+    <extensionValues>
+      <value xsi:type="extn.common:ExtnSequenceFlowData">
+        <startPoint x="-31.870736206126963" y="12.227418915086552"/>
+        <endPoint x="-3.8707362061269635" y="12.227418915086552"/>
+      </value>
+      <extensionAttributeDefinition href="bdx:SimpleProcess#//@extensions[name='fb9f535e']/@definition/@extensionAttributeDefinitions[name='data']"/>
+    </extensionValues>
+  </flowElements>
+  <flowElements xsi:type="activities:RuleFunctionTask" id="CreateCustomer.Script_1" uniqueId="4" name="Add Deposit" lanes="CreateCustomer.Lane_0" outgoing="CreateCustomer.SequenceFlow_2" incoming="CreateCustomer.SequenceFlow_1" startQuantity="1" completionQuantity="1">
+    <extensionDefinitions href="bdx:SimpleProcess#{http:///com/tibco/cep/bpmn/core/model/semantic/process/activities/cep-bpmn.ecore}RuleFunctionTask"/>
+    <extensionValues>
+      <value xsi:type="extn.activities:ExtnRuleFunctionTaskData" toolId="activity.ruleFunction" checkPoint="true" rulefunction="/RuleFunctions/AddDeposit">
+        <nodePoint x="31.129263793873037" y="12.227418915086552"/>
+        <labelPoint x="31.129263793872923" y="-21.739247751524736"/>
+      </value>
+      <extensionAttributeDefinition href="bdx:SimpleProcess#//@extensions[name='f5be13c6']/@definition/@extensionAttributeDefinitions[name='data']"/>
+    </extensionValues>
+    <ioSpecification>
+      <dataInputs id="arguments" name="arguments"/>
+    </ioSpecification>
+    <dataInputAssociations targetRef="arguments">
+      <transformation body="xslt://{{/RuleFunctions/AddDeposit}}&lt;?xml version=\&quot;1.0\&quot; encoding=\&quot;UTF-8\&quot;?>\n&lt;xsl:stylesheet xmlns:xsd=\&quot;http://www.w3.org/2001/XMLSchema\&quot; xmlns:xsl=\&quot;http://www.w3.org/1999/XSL/Transform\&quot; xmlns:ns=\&quot;www.tibco.com/be/ontology/RuleFunctions/AddDeposit\&quot; version=\&quot;1.0\&quot; exclude-result-prefixes=\&quot;xsl xsd\&quot;>\n    &lt;xsl:output method=\&quot;xml\&quot;/>\n    &lt;xsl:param name=\&quot;job\&quot;/>\n    &lt;xsl:template match=\&quot;/\&quot;>\n        &lt;ns:AddDeposit>\n            &lt;args>\n                &lt;ns:c>\n                    &lt;xsl:value-of select=\&quot;$job/customer\&quot;/>\n                &lt;/ns:c>\n            &lt;/args>\n        &lt;/ns:AddDeposit>\n    &lt;/xsl:template>\n&lt;/xsl:stylesheet>"/>
+    </dataInputAssociations>
+  </flowElements>
+  <flowElements xsi:type="common:SequenceFlow" id="CreateCustomer.SequenceFlow_2" uniqueId="7" name="SequenceFlow_2" lanes="CreateCustomer.Lane_0" isImmediate="true" targetRef="CreateCustomer.Message_End_0" sourceRef="CreateCustomer.Script_1">
+    <extensionDefinitions href="bdx:SimpleProcess#{http:///com/tibco/cep/bpmn/core/model/semantic/core/common/cep-bpmn.ecore}SequenceFlow"/>
+    <extensionValues>
+      <value xsi:type="extn.common:ExtnSequenceFlowData">
+        <startPoint x="66.12926379387304" y="12.227418915086439"/>
+        <endPoint x="94.12926379387304" y="12.227418915086439"/>
+      </value>
+      <extensionAttributeDefinition href="bdx:SimpleProcess#//@extensions[name='fb9f535e']/@definition/@extensionAttributeDefinitions[name='data']"/>
+    </extensionValues>
+  </flowElements>
+  <properties name="customer">
+    <extensionDefinitions href="bdx:SimpleProcess#{http:///com/tibco/cep/bpmn/core/model/semantic/process/data/cep-bpmn.ecore}Property"/>
+    <extensionValues>
+      <value xsi:type="extn.data:ExtnPropertyData" propType="ConceptReference"/>
+      <extensionAttributeDefinition href="bdx:SimpleProcess#//@extensions[name='3811313f']/@definition/@extensionAttributeDefinitions[name='data']"/>
+    </extensionValues>
+    <itemSubjectRef href="bdx:SimpleProcess#{www.tibco.com/be/ontology/Concepts/Customer}Customer"/>
+  </properties>
+  <properties name="accountName">
+    <extensionDefinitions href="bdx:SimpleProcess#{http:///com/tibco/cep/bpmn/core/model/semantic/process/data/cep-bpmn.ecore}Property"/>
+    <extensionValues>
+      <value xsi:type="extn.data:ExtnPropertyData"/>
+      <extensionAttributeDefinition href="bdx:SimpleProcess#//@extensions[name='3811313f']/@definition/@extensionAttributeDefinitions[name='data']"/>
+    </extensionValues>
+    <itemSubjectRef href="bdx:SimpleProcess#{http://www.w3.org/2001/XMLSchema}string"/>
+  </properties>
+  <properties name="accountBalance">
+    <extensionDefinitions href="bdx:SimpleProcess#{http:///com/tibco/cep/bpmn/core/model/semantic/process/data/cep-bpmn.ecore}Property"/>
+    <extensionValues>
+      <value xsi:type="extn.data:ExtnPropertyData" propType="Double"/>
+      <extensionAttributeDefinition href="bdx:SimpleProcess#//@extensions[name='3811313f']/@definition/@extensionAttributeDefinitions[name='data']"/>
+    </extensionValues>
+    <itemSubjectRef href="bdx:SimpleProcess#{http://www.w3.org/2001/XMLSchema}double"/>
+  </properties>
+  <laneSets id="CreateCustomer.LaneSet_0">
+    <lanes id="CreateCustomer.Lane_0" name="Create Customer" flowElementRefs="CreateCustomer.Message_Start_0 CreateCustomer.Message_End_0 CreateCustomer.Script_0 CreateCustomer.SequenceFlow_0 CreateCustomer.SequenceFlow_1 CreateCustomer.Script_1 CreateCustomer.SequenceFlow_2">
+      <extensionDefinitions href="bdx:SimpleProcess#{http:///com/tibco/cep/bpmn/core/model/semantic/process/cep-bpmn.ecore}Lane"/>
+      <extensionValues>
+        <value xsi:type="extn.process:ExtnLaneData"/>
+        <extensionAttributeDefinition href="bdx:SimpleProcess#//@extensions[name='ea6906cf']/@definition/@extensionAttributeDefinitions[name='data']"/>
+      </extensionValues>
+      <childLaneSet id="CreateCustomer.LaneSet_1"/>
+    </lanes>
+  </laneSets>
+</process:Process>

@@ -1,0 +1,38 @@
+/**
+ * @description 
+ */
+WebStudio.Core.Concepts.RuleTemplateInstance.View.WS_C_BindingInfo rulefunction WebStudio.Core.RuleFunctions.Utils.RT.View.WS_RF_AddBindings {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object rtBinding;
+		String projectName;
+		String username;
+		String[] roles;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.RT.View.WS_RF_AddBindings");
+		
+		String bindingIdName = WS.RT.View.getBindingId(rtBinding);
+		String bindingType = WS.RT.View.getBindingType(rtBinding);
+		String bindingExpression = WS.RT.View.getBindingExpression(rtBinding);
+		
+		WS_C_BindingInfo bindingConcept = Instance.newInstance("/WebStudio/Core/Concepts/RuleTemplateInstance/View/WS_C_BindingInfo", null);
+		bindingConcept.bindingId = bindingIdName;
+		bindingConcept.type = bindingType;
+		bindingConcept.value = bindingExpression;	
+		
+		//Get all domains as well
+		String[] domainPaths = WS.RT.View.getDomainPathsForBinding(rtBinding);
+		
+		for (int domainLoop = 0; domainLoop < domainPaths@length; domainLoop++) {
+			WS_C_Domain domainInfoConcept = WS_RF_FetchDomainEntries(username, roles, projectName, domainPaths[domainLoop], "domain", true);
+			//Append to binding concept
+			Instance.PropertyArray.appendConceptReference(bindingConcept.domainInfo, domainInfoConcept, 1L);
+			WS.Common.assertInstance(domainInfoConcept, false);
+		}
+		
+		return bindingConcept;
+	}
+}

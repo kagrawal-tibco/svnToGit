@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<ruleFunction icon="" name="ProcessResults" description="" guid="1210891362735-1007523538" bindings="" namespace="" folder="/RuleFunction/Query/" virtual="false">
+    <lastModified>2008-05-15T15:45:05.61-07:00</lastModified>
+    <extendedProperties/>
+    <hiddenProperties/>
+    <validity>ACTION</validity>
+    <arguments>
+        <argument identifier="statementName" entity="String" entityType="">
+            <domain>
+                <entries/>
+            </domain>
+        </argument>
+        <argument identifier="resultsetName" entity="String" entityType="">
+            <domain>
+                <entries/>
+            </domain>
+        </argument>
+        <argument identifier="isContinuous" entity="boolean" entityType="">
+            <domain>
+                <entries/>
+            </domain>
+        </argument>
+    </arguments>
+    <body>if (Query.ResultSet.isOpen(resultsetName)) {
+            System.debugOut("Error: Result set '"  + resultsetName + "' is already open.");
+            return;
+        }
+        System.debugOut("Executing '"  + statementName + "', getting a result set.");
+/*==&gt;*/ Query.Statement.execute(statementName, resultsetName);
+        if (!Query.ResultSet.isOpen(resultsetName)) {
+            System.debugOut("Error: Result set '" + resultsetName + " not successfully open!");
+        } else {
+            System.debugOut("Result set '" + resultsetName + " now open.");
+/*==&gt;*/     while (Query.ResultSet.next(resultsetName)) {
+                //System.debugOut("Got a row.");
+/*==&gt;*/         Object columnValue = Query.ResultSet.get(resultsetName, 0);
+                System.debugOut("Row, first column = " + columnValue);    
+            }
+            System.debugOut("No more row, closing the result set '" + resultsetName + "'.");
+/*==&gt;*/     Query.ResultSet.close(resultsetName);
+}</body>
+</ruleFunction>

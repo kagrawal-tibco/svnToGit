@@ -1,0 +1,36 @@
+/**
+ * @description 
+ * @author vpatil-t420
+ */
+rule WebStudio.Core.Rules.Lifecycle.WS_R_PerformArtifactRevert {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		WebStudio.Core.Events.Lifecycle.WS_E_RevertArtifactsEvent revertArtifactEvent;
+	}
+	when {
+		revertArtifactEvent.artifactExtIds != null &&
+		revertArtifactEvent.projectName != null &&
+		revertArtifactEvent.userName != null;
+	}
+	then {
+		Object LOGGER = Log.getLogger("WebStudio.Core.Rules.Lifecycle.WS_R_PerformArtifactRevert");
+		
+		String[] artifactExtIds = String.split(revertArtifactEvent.artifactExtIds, ";");
+		Log.log(LOGGER, "Debug", "Total ExtId's to revert [%s]", artifactExtIds@length);
+		
+		for (int i=0; i<artifactExtIds@length; i++) {
+			String artifactExtId = artifactExtIds[i];
+			if (!String.equals(artifactExtId, "")) {
+				Log.log(LOGGER, "Debug", "ExtId of the Artifact to revert [%s]", artifactExtId);
+				WS_C_UserArtifact userArtifact = Instance.getByExtId(artifactExtId);
+				
+				if (userArtifact != null) {
+					WS_RF_RevertToLastApprovedVersion(userArtifact, revertArtifactEvent.projectName, revertArtifactEvent.userName);
+				}
+			}
+		}
+	}
+}

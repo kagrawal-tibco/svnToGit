@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema xmlns="http://www.w3.org/2001/XMLSchema"
+ targetNamespace="http://www.tibco.com/be/webstudio/ManagedProjects" 
+ xmlns:tns="http://www.tibco.com/be/webstudio/ManagedProjects" elementFormDefault="qualified">
+
+    <complexType name="ManagedProjectsType">
+    	<sequence>
+    		<element name="entry" type="tns:EntryType" maxOccurs="unbounded" minOccurs="0"/>
+    	</sequence>
+    </complexType>
+    
+    <complexType name="EntryType">
+    	<sequence>
+    		<element ref="tns:path"/>
+    	</sequence>
+    	<attribute name="kind">
+    		<annotation>
+    			<documentation>
+    				Kind of entry File/Directory.
+    			</documentation>
+    		</annotation>
+    		<simpleType>
+    			<restriction base="string">
+    				<enumeration value="directory"/>
+    				<enumeration value="file"/>
+    			</restriction>
+    		</simpleType>
+    	</attribute>
+    </complexType>
+    
+    <element name="path" type="string"/>
+</schema>

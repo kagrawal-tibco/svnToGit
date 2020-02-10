@@ -1,0 +1,51 @@
+/**
+ * @description Fetch selected artifacts during checkout or update request
+ * @author aathalye-lt
+ */
+rule Approval.Rules.ArtifactsRuleSet.AMS_RU_RetrieveSelectedArtifactsRule {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Approval.Events.ArtifactEvents.Checkout.AMS_E_RetrieveSelectedArtifactsRequestEvent ams_e_retrieveselectedartifactsrequestevent;
+	}
+	when {
+		ams_e_retrieveselectedartifactsrequestevent.projectname != null;
+		ams_e_retrieveselectedartifactsrequestevent@payload != null;
+	}
+	then {
+		String projectName = ams_e_retrieveselectedartifactsrequestevent.projectname;
+				
+        AMS_C_Artifact artifactRequested = 
+        	Instance.createTransientInstanceFromEvent("/Approval/Concepts/ArtifactsConcepts/AMS_C_Artifact", ams_e_retrieveselectedartifactsrequestevent);
+		if (artifactRequested == null) {
+			throw Exception.newException("Concept Mapping error", "Could not map event payload to concept", null);
+		}
+		
+		// fetch the preferences for SCS userName/password details
+		String[] scsCredentials = WS_RF_GetSCSCredentials(ams_e_retrieveselectedartifactsrequestevent.loggedInUserName);
+		
+		// checkout the project in background on a local box
+		String scsIntegrationType = System.getSystemPropertyAsString("ws.scs.impl.type", null);
+		if (scsIntegrationType != null && !String.equals(scsIntegrationType, "file")) {
+			String scsRootURL = WS_RF_GetSCSRootURL(ams_e_retrieveselectedartifactsrequestevent.projectname, null);
+			String scsRepotDir = System.getSystemPropertyAsString("ws.scs.repo.dir", null);
+			
+			WS.SCS.checkoutProjectArtifacts(scsIntegrationType, scsRootURL, projectName, scsRepotDir, scsCredentials[0], scsCredentials[1]);
+		}
+		
+		//Read the artifacts contents and set them
+		Approval.Rules.
+			RuleFunctions.
+				ArtifactRuleFunctions.
+					AMS_RF_ReadArtifactMasterCopyContents(projectName, artifactRequested, ams_e_retrieveselectedartifactsrequestevent.loggedInUserName);
+		
+		//Set this back in event payload
+		AMS_E_RetrieveSelectedArtifactsResponseEvent ams_e_retrieveselectedartifactsresponseevent = 
+						Event.createEvent("xslt://{{/Approval/Events/ArtifactEvents/Checkout/AMS_E_RetrieveSelectedArtifactsResponseEvent}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" xmlns:ns=\"www.tibco.com/be/ontology/Approval/Concepts/ArtifactsConcepts/AMS_C_Artifact\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" version=\"2.0\" exclude-result-prefixes=\"xsl ns xsd\"><xsl:output method=\"xml\"/><xsl:param name=\"artifactRequested\"/><xsl:template name=\"Function\" match=\"/\"><createEvent><event><payload><ns:AMS_C_Artifact><xsl:if test=\"$artifactRequested/@extId\"><xsl:attribute name=\"extId\"><xsl:value-of select=\"$artifactRequested/@extId\"/></xsl:attribute></xsl:if><xsl:if test=\"$artifactRequested/@Id\"><xsl:attribute name=\"Id\"><xsl:value-of select=\"$artifactRequested/@Id\"/></xsl:attribute></xsl:if><xsl:if test=\"$artifactRequested/artifactPath\"><artifactPath><xsl:value-of select=\"$artifactRequested/artifactPath\"/></artifactPath></xsl:if><xsl:if test=\"$artifactRequested/artifactType\"><artifactType><xsl:value-of select=\"$artifactRequested/artifactType\"/></artifactType></xsl:if><xsl:if test=\"$artifactRequested/artifactContent\"><artifactContent><xsl:value-of select=\"$artifactRequested/artifactContent\"/></artifactContent></xsl:if><xsl:if test=\"$artifactRequested/artifactFileExtension\"><artifactFileExtension><xsl:value-of select=\"$artifactRequested/artifactFileExtension\"/></artifactFileExtension></xsl:if><xsl:if test=\"$artifactRequested/artifactUpdateTime\"><artifactUpdateTime><xsl:value-of select=\"$artifactRequested/artifactUpdateTime\"/></artifactUpdateTime></xsl:if></ns:AMS_C_Artifact></payload></event></createEvent></xsl:template></xsl:stylesheet>");
+		
+		Event.consumeEvent(ams_e_retrieveselectedartifactsrequestevent);
+		Event.replyEvent(ams_e_retrieveselectedartifactsrequestevent, ams_e_retrieveselectedartifactsresponseevent);	
+	}
+}

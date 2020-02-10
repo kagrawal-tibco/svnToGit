@@ -1,0 +1,139 @@
+/**
+ * @description Bind variables to the Notification message context
+ */
+String rulefunction WebStudio.Core.RuleFunctions.Utils.WS_RF_BindStateChangeNotificationMessageVariables {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String reviewer;
+		String revisionId;
+		String currTimeStamp;
+		WebStudio.Core.Concepts.Lifecycle.WS_C_UserCheckin userCheckIn;
+		WebStudio.Core.Concepts.Lifecycle.WS_C_CommittableDeltaEntry[] applicableCommitables;
+		Object servletRequest;
+		String createdMapIdsMap_Id;
+	}
+	body {											
+		//Create the message data map				
+		Object reusableBuffer = String.createBuffer(0);
+		String.append(reusableBuffer, "NOTIFY_MESSAGE_DATA@");
+		String.append(reusableBuffer, reviewer);
+		String.append(reusableBuffer, "@");
+		String.append(reusableBuffer, revisionId);
+		String.append(reusableBuffer, "@");
+		String.append(reusableBuffer, currTimeStamp);												
+		String messageDataMapId =  String.convertBufferToString(reusableBuffer);		
+		String.clearBuffer(reusableBuffer);		
+		Util.HashMap.createMap(messageDataMapId);
+		Util.HashMap.put(createdMapIdsMap_Id, messageDataMapId, null);
+		//reviewer										 					
+		Util.HashMap.put(messageDataMapId, "reviewer", reviewer);
+		//CheckIn variables
+		Util.HashMap.createMap(messageDataMapId + "@checkIn");
+		Util.HashMap.put(createdMapIdsMap_Id, messageDataMapId + "@checkIn", null);
+		Util.HashMap.put(messageDataMapId + "@checkIn", "userName", userCheckIn.username);
+		String checkInDatetime = DateTime.format(userCheckIn.checkinTime, "MM-dd-yyyy' at 'HH:mm");
+		Util.HashMap.put(messageDataMapId + "@checkIn", "time", checkInDatetime);
+		Util.HashMap.put(messageDataMapId + "@checkIn", "revisionId", revisionId);
+		Util.HashMap.put(messageDataMapId + "@checkIn", "userComments", userCheckIn.checkinComments);
+		Util.HashMap.put(messageDataMapId + "@checkIn", "project", userCheckIn.managedProjectName);
+		Object checkInMap = Util.HashMap.getMap(messageDataMapId + "@checkIn");
+		Util.HashMap.putObject(messageDataMapId, "checkIn", checkInMap);
+		//WebStudio URL
+		String serverURL = WS_RF_GetWebStudioServerURL(servletRequest);
+		Util.HashMap.put(messageDataMapId, "serverURL", serverURL);
+		
+		String stackID = "NOTIFY_ARTIFACTS@" + reviewer + "_" + System.nanoTime();
+		Object artifactsStack = WS.Common.Stack.create(stackID);
+		
+		String subscriptionId = WS_RF_GetSubscriptionId(reviewer);
+		String notficationPreferencesExtId = WS_RF_CreateUserArtifactExtId("NOTIFY_PREFERENCES", null, null, null, subscriptionId, null);
+		
+		WS_C_NotificationPreferences notificationPreferences = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(notficationPreferencesExtId, false, "/WebStudio/Core/Concepts/WS_C_NotificationPreferences");
+		String actionList;
+		for (int count = 0; count < notificationPreferences.emailPreference@length; count++) {
+			WS_C_AbstractEmailPreference emailpreference = notificationPreferences.emailPreference[count];
+			if (emailpreference.project == userCheckIn.managedProjectName) {
+				actionList = emailpreference.actions;
+				break;
+			}
+		}
+		for (int loop = 0; loop < applicableCommitables@length; loop++) {
+			WS_C_CommittableDeltaEntry commitable = applicableCommitables[loop];
+			WS_C_AbstractOperation operation = commitable.operation;
+
+			WS_C_ArtifactBaseState currentCommitLifeCycleState = 
+												Instance.PropertyAtom.getConceptReference(commitable.commitLifeCycleState, 1L);
+	
+			if ((currentCommitLifeCycleState instanceof WS_C_ArtifactApprovedState) || (currentCommitLifeCycleState instanceof WS_C_ArtifactRejectedState) 
+																						|| (currentCommitLifeCycleState instanceof WS_C_ArtifactDeployedState)
+																						|| (currentCommitLifeCycleState instanceof WS_C_ArtifactCommittedState)) {
+	
+				WS_C_UserArtifactRevision referencedRevision = Instance.PropertyAtom.getConceptReference(commitable.userArtifactRevision, 1L);
+				WS_C_UserArtifact userArtifact = WS_RF_IsUserArtifact(referencedRevision.parentArtifactId, referencedRevision.parentArtifactType); 
+				//artifact variables
+				
+				boolean entryMap = true;
+				if (notificationPreferences != null) {
+				  if (currentCommitLifeCycleState instanceof WS_C_ArtifactApprovedState) {
+					if (String.contains(actionList,"approve")) {
+						Util.HashMap.createMap(messageDataMapId + "@artifact@" + loop);
+					} else {
+						entryMap = false;
+					}
+				  } else if (currentCommitLifeCycleState instanceof WS_C_ArtifactRejectedState) {
+					if (String.contains(actionList,"reject")) {
+						Util.HashMap.createMap(messageDataMapId + "@artifact@" + loop);
+					} else {
+						entryMap = false;
+					}
+				  } else if (currentCommitLifeCycleState instanceof WS_C_ArtifactDeployedState) {
+					if (String.contains(actionList,"deploy")) {
+						Util.HashMap.createMap(messageDataMapId + "@artifact@" + loop);
+					} else {
+						entryMap = false;
+					}
+				  } else if (currentCommitLifeCycleState instanceof WS_C_ArtifactCommittedState) {
+					if (String.contains(actionList,"commit")) {
+						Util.HashMap.createMap(messageDataMapId + "@artifact@" + loop);
+					} else {
+						entryMap = false;
+					}
+				  }
+				}
+				
+				if (entryMap) {
+					Util.HashMap.put(createdMapIdsMap_Id, messageDataMapId + "@artifact@" + loop, null);
+					Util.HashMap.put(messageDataMapId + "@artifact@" + loop, "name", userArtifact.artifactPath);
+					Util.HashMap.put(messageDataMapId + "@artifact@" + loop, "project", userCheckIn.managedProjectName);
+					Util.HashMap.put(messageDataMapId + "@artifact@" + loop, "type", userArtifact.artifactType);
+					Util.HashMap.put(messageDataMapId + "@artifact@" + loop, "fileExtension", userArtifact.artifactFileExtn);
+					Util.HashMap.put(messageDataMapId + "@artifact@" + loop, "operation", operation.opName);
+					Util.HashMap.put(messageDataMapId + "@artifact@" + loop, "oldStatus", "");
+					
+					if (currentCommitLifeCycleState instanceof WS_C_ArtifactCommittedState) {					
+						Util.HashMap.put(messageDataMapId + "@artifact@" + loop, "newStatus", "Committed");
+					} else	if (currentCommitLifeCycleState instanceof WS_C_ArtifactApprovedState) {
+						Util.HashMap.put(messageDataMapId + "@artifact@" + loop, "reviewComments", commitable.reviewComments);
+						Util.HashMap.put(messageDataMapId + "@artifact@" + loop, "newStatus", "Approved");
+					} else if (currentCommitLifeCycleState instanceof WS_C_ArtifactRejectedState) {
+						Util.HashMap.put(messageDataMapId + "@artifact@" + loop, "reviewComments", commitable.reviewComments);
+						Util.HashMap.put(messageDataMapId + "@artifact@" + loop, "newStatus", "Rejected");
+					} else if (currentCommitLifeCycleState instanceof WS_C_ArtifactDeployedState) {							
+						Util.HashMap.put(messageDataMapId + "@artifact@" + loop, "reviewComments", commitable.reviewComments);					
+						Util.HashMap.put(messageDataMapId + "@artifact@" + loop, "newStatus", "Deployed");
+					} 
+	
+					Object artifactMap = Util.HashMap.getMap(messageDataMapId + "@artifact@" + loop);								
+					WS.Common.Stack.push(artifactsStack, artifactMap);
+				}																				
+			}			
+		}
+		Object artifacts = WS.Common.Stack.toArrayList(artifactsStack);
+		WS.Common.Stack.delete(stackID); //clear stack
+		Util.HashMap.putObject(messageDataMapId, "artifacts", artifacts);
+		
+		return messageDataMapId;						
+	}
+}

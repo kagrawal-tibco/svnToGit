@@ -1,0 +1,112 @@
+/**
+ * @description Fetch all managed projects list by this WS-Server
+ */
+WebStudio.Core.Concepts.DataSources.WS_C_TemporaryReturnData rulefunction WebStudio.Core.RuleFunctions.Actions.WS_RF_FetchManagedProjectsList {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object servletRequest;
+		WebStudio.Security.Authn.Concepts.WS_C_LoggedInUser loggedInUser;
+		String actionName;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.WS_RF_FetchManagedProjectsList");
+		
+		WS_C_ResponseData responseData = null;
+		int responseStatus = 0;
+		int recordCount = 0;
+		String errorCode = null;
+		String responseMessage = null;
+
+		if (!WS_RF_CheckHTTPMethod(servletRequest, "GET")) {
+			responseStatus = -1;
+			recordCount = 0;
+			errorCode = "ERR_5101";
+			responseMessage = "Invalid HTTP Method, expect method is [GET].";
+		} else {
+			String subscriptionId = null;
+			if (loggedInUser.jwtToken != null) subscriptionId = loggedInUser.jwtToken.sbsc;
+			
+			String managedProjectsExtId = WS_RF_CreateUserArtifactExtId("MANAGED_PROJECTS", null, null, null, subscriptionId, null);
+			
+			Log.log(LOGGER, "Debug", "Trying to acquire lock on %s", managedProjectsExtId);
+			boolean locked = Cluster.DataGrid.Lock(managedProjectsExtId, -1, false);
+			if (locked) {
+				WebStudio.Core.Concepts.WS_C_ManagedProjects managedProjects = null;
+				
+				try {
+					// Load from SCS if not already loaded
+					managedProjects = WS_RF_LoadProjectsFromSCS(loggedInUser.username, true, subscriptionId);
+				} catch (Exception e) {
+					Log.logException(LOGGER, "Error", "", e);
+					errorCode = "ERR_1100";
+					responseMessage = "Fetching managed projects list failed. See server logs for more info";
+					if (managedProjects == null) {
+						managedProjects = Instance.getByExtIdByUri(managedProjectsExtId, "/WebStudio/Core/Concepts/WS_C_ManagedProjects");
+					}
+					if (managedProjects != null) {
+						// delete the managed projects instance so that the projects can be recalculated
+						Log.log(LOGGER, "Debug", "Deleting %s instance", managedProjectsExtId);
+						Instance.deleteInstance(managedProjects);
+					}						
+				}
+				if (errorCode == null) {
+					responseData = Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/WS_C_ResponseData");
+		
+					WS_C_ProjectEntry[] managedProjectEntries = 
+						Instance.PropertyArray.toArrayContainedConcept(managedProjects.managedProjectNames);
+					
+					//Get the User roles
+					String[] roles = Instance.PropertyArray.toArrayString(loggedInUser.roles);		
+							
+					WS_C_ManagedProjectsDataSourceRecord managedProjectDataSourceRecord = null;
+					int managedProjectCnt = 0;
+					for (int loop = 0; loop < managedProjectEntries@length; loop++) {
+						WS_C_ProjectEntry projectEntry = managedProjectEntries[loop];
+						String projectName = projectEntry.name;
+						
+						if (String.contains(projectName, ".")) {
+							continue;
+			            }
+			            
+			            boolean hasAccess;
+						String actionDisplayName;
+			            if	(actionName != null) {
+			           		hasAccess = RMS.Authorization.ensureAccess(projectName, subscriptionId, roles, null, "PROJECT", actionName);
+							if (String.equals(actionName, "checkout")) {
+								actionDisplayName = "CheckOut";
+							} else {
+								actionDisplayName = "Manage Locks";
+							}	
+							Log.log(LOGGER, "Debug", actionDisplayName + " access for project [%s] - [%s]", projectName, hasAccess);	 	
+			            } else {
+			            		hasAccess = RMS.Authorization.isValidProjectName(projectName, subscriptionId);	
+			            }
+						
+						if (hasAccess) {
+							WS_C_AbstractDataSourceRecord projectsDataSourceRecord = 
+								Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/Records/WS_C_ManagedProjectsDataSourceRecord");
+							managedProjectDataSourceRecord = projectsDataSourceRecord;
+							managedProjectDataSourceRecord.projectName = projectName;
+							managedProjectDataSourceRecord.no = "" + (loop + 1);
+							
+							Instance.PropertyArray.appendContainedConcept(responseData.record, projectsDataSourceRecord, 1L);
+							managedProjectCnt++;		
+						}	
+					}
+					
+					if (String.equals(actionName, "manage_locks") && managedProjectEntries@length > 0 && managedProjectCnt == 0) {
+						responseStatus = -1;
+						errorCode = "ERR_1103";
+						responseMessage = "No access to Manage Locks for any of the projects.";					
+					}	
+					recordCount = managedProjectCnt;
+					
+				}
+			}
+		}
+		
+		return WS_RF_CreateTemporaryReturnData(responseStatus, recordCount, errorCode, responseMessage, responseData);
+	}
+}

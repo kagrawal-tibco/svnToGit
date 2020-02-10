@@ -1,0 +1,95 @@
+/**
+ * @description 
+ */
+String rulefunction Shared.RuleFunctions.topology.toXML {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Shared.Concepts.MonitorableEntity	monitorable;
+		int	idepth;
+		Shared.Concepts.MonitorableEntity	selectedEntity;
+		int	purgeVersion;
+	}
+	body {
+		if (monitorable.purged == true){
+		    return "";
+		}
+		int currentdepth = idepth;
+		String tagName = monitorable.type;
+		String agentType = null;
+		if (monitorable.type == "cache" || monitorable.type == "query" || monitorable.type == "inference" || monitorable.type == "dashboard") {
+		    tagName = "agent";
+		    agentType = monitorable.type;
+		}
+		String xml = "<"+tagName;
+		//add id
+		xml = xml + " id=\""+monitorable@extId+"\"";
+		//add name
+		if(monitorable.predefined == true){
+		    if(monitorable.type == "process"){
+		    	xml = xml + getPuNameWithProcId(monitorable);
+		    }
+		    else if(tagName == "agent"){
+		        if(monitorable.active == true)
+		            xml = xml + " name=\""+monitorable.name+"\"";
+		        else
+		            xml = xml + " name=\""+monitorable.topologyProps[0]+"\"";
+		    }
+		    else
+		        xml = xml + " name=\""+monitorable.name+"\"";
+		}
+		else{
+		    xml = xml + " name=\""+monitorable.name+"\"";
+		}
+		//add type if set
+		if (agentType != null){
+		    xml = xml + " type=\""+agentType+"\"";
+		}
+		//add predefine
+		xml = xml + " predefined=\""+monitorable.predefined+"\"";
+		//add deployed for machine and process
+		if(monitorable.type == "machine" || monitorable.type == "process"){
+		    if(monitorable.deployed == true)
+		    xml = xml + " deployed=\""+monitorable.deployed+"\"";
+		    else
+		    xml = xml + " deployed=\"false\"";    
+		}
+		if(monitorable.type == "process"){
+		    if(monitorable.deployed == true)
+		    xml = xml + " lastDeploy=\""+monitorable.lastDeploy+"\"";
+		    else
+		    xml = xml + " lastDeploy=\"\"";    
+		}		
+		//add active
+		xml = xml + " active=\""+monitorable.active+"\"";
+		//add selected node id if present
+		if (selectedEntity != null){
+		    xml = xml + " selected=\""+selectedEntity@extId+"\"";
+		}
+		//add purge version if present
+		if (purgeVersion != -1){
+		    xml = xml + " purgeversion=\""+purgeVersion+"\"";
+		}
+		//end the start tag
+		xml = xml + ">";
+		if (currentdepth > 0) {
+		    currentdepth = currentdepth - 1;
+		    Shared.Concepts.MonitorableEntity deferredEntity = null;
+		    for(int i = 0 ; i < monitorable.children@length ; i=i+1){
+		        if (monitorable.children[i].type == "ontology") {
+		            deferredEntity = monitorable.children[i];
+		        }
+		        else {
+		            String childXML = toXML(monitorable.children[i],currentdepth,null,-1);
+		            xml = xml + childXML;
+		        }
+		    }
+		    if (deferredEntity != null) {
+		        String childXML = toXML(deferredEntity,currentdepth,null,-1);
+		    }
+		}
+		xml = xml + "</"+tagName+">";
+		return xml;
+	}
+}

@@ -1,0 +1,26 @@
+/**
+ * @description 
+ */
+String rulefunction Shared.RuleFunctions.topology.getFQName {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Shared.Concepts.MonitorableEntity	monitorableentity;
+	}
+	body {
+		/*String fqName = monitorableentity.name;
+		if (monitorableentity.parent != null) {
+		    fqName = getFQName(monitorableentity.parent) + ":" + fqName;
+		}
+		return fqName;
+		*/
+		String fqName = monitorableentity.name;
+		Shared.Concepts.MonitorableEntity parent = monitorableentity.parent;
+		while (parent != null){
+		    fqName = parent.name + ":" + fqName;
+		    parent = parent.parent;
+		}
+		return fqName;
+	}
+}

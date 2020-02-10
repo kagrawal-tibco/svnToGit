@@ -1,0 +1,97 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>     MultipleSessionsAndLocalChannel
+
+- TIBCO BusinessEvents&reg; Examples
+</title>
+<meta http-equiv="Content-type" content="text/html; charset=iso-8859-1" />
+<meta http-equiv="Content-Language" content="en-us" />
+<link rel="Shortcut Icon" href="../../_resources/icon.gif" type="image/gif" />
+<style type="text/css" media="all">@import "../../_resources/examples.css";</style>
+<script type="text/javascript" src="../../_resources/examples.js" /></script>
+<script type="text/javascript">
+function buildForms() {
+ var form;
+
+
+ SendEventForm.setServer("http://localhost:8112");
+
+
+ form = SendEventForm.get("postValueForm");
+ form.setDestinationPath("/Channels/HTTPChannel/Orders");
+ form.setEventPath("/Events/OrderEvent");
+ form.addProperty("extId", "OrderID1000");
+ form.addProperty("Description", "Horses");
+ form.addProperty("Amount", "1000");
+ form.build();
+
+
+}
+</script>
+</head>
+<body onLoad="buildForms()">
+
+
+<h1>MultipleSessionsAndLocalChannel</h1>
+
+
+<h2>Purpose of This Example</h2>
+
+<p>This example demonstrates use of multiple agents (also known as sessions) and a local channel in TIBCO BusinessEvents&reg;.</p>
+This example shows how you do the following:
+<ol>
+<li>Create multiple TIBCO BusinessEvents agents using the CDD file.</li>
+<li>Create a local channel.</li>
+<li>Route to an agent through the local channel.</li>
+</ol>
+</p>
+
+<h2>How to Run the Example</h2>
+<ol>
+
+
+<li>
+<p>Open a command window and at the command prompt, start the TIBCO BusinessEvents engine using the following command. Substitute your actual value for <i>BE_HOME</i>.</p>
+
+<pre class="commands">
+cd <i>BE_HOME</i>/examples/standard/MultipleSessionsAndLocalChannel
+<i>BE_HOME</i>/bin/be-engine --propFile <i>BE_HOME</i>/bin/be-engine.tra -u default -c MultipleSessionsAndLocalChannelProject/MultipleSessionsAndLocalChannelProject.cdd MultipleSessionsAndLocalChannelProject.ear
+</pre>
+
+<p>Adapt the command as needed, for example, if you have customized the example project, or are running it from a different directory.</p>
+</li>
+
+
+<li>
+<p>Create an Order Event and give it a value as desired.</p>
+
+<form id="postValueForm"></form>
+
+<p>In the command window you see a message like this:
+<span class="logs">2010 May 21 18:49:11:275 GMT -7 testbox.na.tibco.com Info [I/O_dispatcher_1] - [user] [Routing] Routing to 'toLarge' destination in Local channel.
+2010 May 21 18:49:11:279 GMT -7 testbox.na.tibco.com Info [$default.be.mt$.Thread.1] - [user] [ProcessingLargeOrders] Processing the LARGE order (1000.0) Horses
+2010 May 21 18:49:11:281 GMT -7 testbox.na.tibco.com Info [$default.be.mt$.Thread.1] - [user] [ProcessingLargeOrders] PrintEvent: Event Received with extId - null
+2010 May 21 18:49:11:281 GMT -7 testbox.na.tibco.com Info [$default.be.mt$.Thread.1] - [user] [ProcessingLargeOrders] PrintEvent: Event Received with Description - Horses
+2010 May 21 18:49:11:282 GMT -7 testbox.na.tibco.com Info [$default.be.mt$.Thread.1] - [user] [ProcessingLargeOrders] PrintEvent: Event Received with Amount - 1000.0
+2010 May 21 18:49:25:249 GMT -7 testbox.na.tibco.com Info [I/O_dispatcher_1] - [user] [Routing] Routing to 'toSmall' destination in Local channel.
+2010 May 21 18:49:25:252 GMT -7 testbox.na.tibco.com Info [$default.be.mt$.Thread.1] - [user] [ProcessingSmallOrders] Processing the SMALL order (10.0) Horses
+2010 May 21 18:49:25:252 GMT -7 testbox.na.tibco.com Info [$default.be.mt$.Thread.1] - [user] [ProcessingSmallOrders] PrintEvent: Event Received with extId - null
+2010 May 21 18:49:25:253 GMT -7 testbox.na.tibco.com Info [$default.be.mt$.Thread.1] - [user] [ProcessingSmallOrders] PrintEvent: Event Received with Description - Horses
+2010 May 21 18:49:25:254 GMT -7 testbox.na.tibco.com Info [$default.be.mt$.Thread.1] - [user] [ProcessingSmallOrders] PrintEvent: Event Received with Amount - 10.0
+
+</span></p>
+</li>
+
+
+</ol>
+
+
+<div class="footer">
+<p>TIBCO BusinessEvents&reg; 5.6<br />
+Copyright&copy; 2004-2019 TIBCO Software Inc. All rights reserved.</p>
+</div>
+</body>
+</html>

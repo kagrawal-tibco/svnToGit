@@ -1,0 +1,35 @@
+/**
+ * @description Return true if an artifact specified by path was part of this checkin.
+ */
+boolean rulefunction Approval.Rules.RuleFunctions.ArtifactRuleFunctions.AMS_RF_IsArtifactInCheckin {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		WebStudio.Core.Concepts.Lifecycle.WS_C_UserCheckin userCheckin;
+		String artifactPath;
+	}
+	body {
+		Object LOGGER = Log.getLogger("Approval.Rules.RuleFunctions.ArtifactRuleFunctions.AMS_RF_IsArtifactInCheckin");
+		if (userCheckin == null || artifactPath == null) {
+			return false;
+		}
+		WS_C_CommittableDeltaEntry[] committables = Instance.PropertyArray.toArrayConcept(userCheckin.committables);
+		
+		for (int loop = 0; loop < committables@length; loop++) {
+			WS_C_CommittableDeltaEntry committableDeltaEntry = committables[loop];
+			
+			WS_C_UserArtifactRevision userArtifactRevision = Instance.PropertyAtom.getConceptReference(committableDeltaEntry.userArtifactRevision, 1L);
+			
+			if (userArtifactRevision != null) {
+				Log.log(LOGGER, "Debug", "Parent Artifact Id [%s]", userArtifactRevision.parentArtifactId);
+				//Create a joint extid
+				WS_C_UserArtifact userArtifact = WS_RF_IsUserArtifact(userArtifactRevision.parentArtifactId, userArtifactRevision.parentArtifactType);
+				if (userArtifact.artifactPath == artifactPath) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+}

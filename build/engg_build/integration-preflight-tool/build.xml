@@ -1,0 +1,479 @@
+<project name="IS" basedir=".">
+
+	<target name="setConditions">
+		<condition property="isWindows">
+			<os family="windows" />
+		</condition>
+
+		<condition property="isLinux">
+			<os name="Linux" />
+		</condition>
+
+		<condition property="isMac">
+			<os family="mac"/>
+		</condition>
+	</target>
+
+	<target name="setwin" if="isWindows">
+		<property name="ostype" value="win_x86"/>
+		<property name="ectool" value="ectool.exe"/>
+		<copy file="${ostype}/ectool.exe" tofile="ectool.exe"/>
+	</target>
+
+	<target name="setlnx" if="isLinux">
+		<property name="ostype" value="linux_x86"/>
+		<property name="ectool" value="ectool"/>
+		<antcall target="copyunixfiles" />
+	</target>
+
+	<target name="setmac" if="isMac">
+		<property name="ostype" value="mac_x86"/>
+		<property name="ectool" value="ectool"/>
+		<antcall target="copyunixfiles" />
+	</target>
+
+	<target name="copyunixfiles">
+		<copy file="${ostype}/ectool" tofile="ectool"/>
+		<chmod file="ectool" perm="755"/>
+	</target>
+
+<macrodef name="call-build">
+	<attribute name="multipleports" default="win/x86_64 linux26gl25/x86_64 macosx/x86_64 sol/sparc_64 sol/x86_64 aix61/power_64 hpux112/ia64" />
+	<attribute name="prodid"/>
+	<attribute name="bomsvn" default="HEAD"/>
+	<attribute name="PORT" default="all"/>
+	<attribute name="readmefile" default="" />
+	<attribute name="relnotesfile" default="" />
+	<attribute name="licensefile" default="" />
+	<attribute name="installguidefile" default="" />
+	<attribute name="majorversion" default="5"/>
+	<attribute name="minorversion" default="4"/>
+	<attribute name="updateversion" default="${BE_VERSION_UPDATE}"/>
+	<attribute name="installtype" default="base"/>
+	<attribute name="runqatest" default="false"/>
+	<attribute name="exec" default="${basedir}/ectool"/>
+	<attribute name="bomloc"/>
+	<attribute name="featureconfigfile"/>
+	<sequential>
+		<echo>Creating installers for @{prodid} ...</echo>
+		<exec executable="@{exec}">
+			<arg value="--server"/>
+			<arg value="commander.na.tibco.com"/>
+			<arg value="runProcedure"/>
+			<arg value="install-packaging-tools"/>
+			<arg value="--pollInterval"/>
+			<arg value="10"/>
+			<arg value="--timeout"/>
+			<arg value="99999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999"/>
+			<arg value="--procedureName"/>
+			<arg value="FULL-test-installpackaging-procedure"/>
+			<arg value="--actualParameter"/>
+			<arg value="svn_url=@{bomloc}"/>
+			<arg value="svn_revision=@{bomsvn}"/>
+			<arg value="featureconfig_file=@{featureconfigfile}"/>
+			<arg value="build_type=full build"/>
+			<arg value="ports=@{multipleports}"/>
+			<arg value="recipient_email_address=rjadhav@tibco.com rjain@tibco.com dijadhav@tibco.com"/>
+			<arg value="assembly_id=all"/>
+			<arg value="override_default_export_dir=/ql/build/BE/leo/packaging/${be_version}-main"/>
+			<arg value="override_assembly_build_number=${buildCnt}"/>
+			<arg value="run_qa_tests=@{runqatest}"/>
+		</exec>
+	</sequential>
+</macrodef>
+	
+<macrodef name="call-build-enterprise">
+	<attribute name="multipleports" default="win/x86_64 linux26gl25/x86_64 macosx/x86_64 sol/sparc_64 sol/x86_64 aix61/power_64 hpux112/ia64" />
+	<attribute name="prodid"/>
+	<attribute name="bomsvn" default="HEAD"/>
+	<attribute name="PORT" default="all"/>
+	<attribute name="readmefile" default="" />
+	<attribute name="relnotesfile" default="" />
+	<attribute name="licensefile" default="" />
+	<attribute name="installguidefile" default="" />
+	<attribute name="majorversion" default="5"/>
+	<attribute name="minorversion" default="4"/>
+	<attribute name="updateversion" default="${BE_VERSION_UPDATE}"/>
+	<attribute name="installtype" default="base"/>
+	<attribute name="runqatest" default="false"/>
+	<attribute name="exec" default="${basedir}/ectool"/>
+	<attribute name="enable-zipassembly-creation" default="false"/>
+	<attribute name="bomloc"/>
+	<attribute name="featureconfigfile"/>
+	<sequential>
+		<echo>Creating installers for @{prodid} ...</echo>
+		<exec executable="@{exec}">
+			<arg value="--server"/>
+			<arg value="commander.na.tibco.com"/>
+			<arg value="runProcedure"/>
+			<arg value="install-packaging-tools"/>
+			<arg value="--pollInterval"/>
+			<arg value="10"/>
+			<arg value="--timeout"/>
+			<arg value="99999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999"/>
+			<arg value="--procedureName"/>
+			<arg value="FULL-test-installpackaging-procedure"/>
+			<arg value="--actualParameter"/>
+			<arg value="svn_url=@{bomloc}"/>
+			<arg value="svn_revision=@{bomsvn}"/>
+			<arg value="featureconfig_file=@{featureconfigfile}"/>
+			<arg value="build_type=full build"/>
+			<arg value="ports=@{multipleports}"/>
+			<arg value="recipient_email_address=rjadhav@tibco.com rjain@tibco.com dijadhav@tibco.com"/>
+			<arg value="assembly_id=all"/>
+			<arg value="override_default_export_dir=/ql/build/BE/leo/packaging/${be_version}-main"/>
+			<arg value="override_assembly_build_number=${buildCnt}"/>
+			<arg value="run_qa_tests=@{runqatest}"/>
+		</exec>
+	</sequential>
+</macrodef>
+
+
+
+	
+<target name="set-all" depends="set-properties">
+	<property name="svn_revision" value="HEAD" />
+	<property name="be_version" value="${BE_VERSION_MAJOR}.${BE_VERSION_MINOR}.${BE_VERSION_UPDATE}" />
+	<property name="be_bpmn_version" value="${BE_BPMN_MAJOR}.${BE_BPMN_MINOR}.${BE_BPMN_UPDATE}" />
+	<property name="be_version_short" value="${BE_VERSION_MAJOR}.${BE_VERSION_MINOR}" />
+	<property name="export_dir" value="/ql/build/BE/leo/packaging/${be_version}" />
+</target>
+
+<target name="set-properties">
+	<property file="${basedir}/../../version.properties" />
+	<property name="buildCnt" value="${env.BE_BUILD}" />
+</target>
+	
+<target name="build-all" depends="set-all,
+								    businessevents-process,
+								  	businessevents-views,
+								    businessevents-enterprise">
+</target>	
+	
+	
+<target name="businessevents-standard" depends="setConditions,setwin,setlnx,setmac" >
+	<echo> ostype ${ostype} </echo>
+	<antcall target="login" />
+	<call-build prodid="businessevents-standard"  
+	bomloc="https://svn.tibco.com/svn/be/branches/private/java11/build/pkg_info/bom/6.0.0/businessevents-standard/base"
+	featureconfigfile="businessevents-standard_FeatureConfig.xml"
+	/>
+	<echo> Please see status of job at https://commander.na.tibco.com:5443/commander/jobs.php </echo>
+</target>
+	
+<target name="businessevents-enterprise" depends="setConditions,setwin,setlnx,setmac" >
+	<echo> ostype ${ostype} </echo>
+	<antcall target="login" />
+	<call-build-enterprise prodid="businessevents-enterprise"  
+	bomloc="https://svn.tibco.com/svn/be/trunk/be-main/build/pkg_info/bom/6.0.0/businessevents-enterprise/base"
+	featureconfigfile="businessevents-enterprise_FeatureConfig.xml"
+	runqatest="${qaTests}"
+	/>
+	<echo> Please see status of job at https://commander.na.tibco.com:5443/commander/jobs.php </echo>
+</target>
+	
+<!--target name="businessevents-datamodeling" depends="setConditions,setwin,setlnx,setmac" >
+	<echo> ostype ${ostype} </echo>
+	<antcall target="login" />
+	<call-build prodid="businessevents-datamodeling" 
+	bomloc="https://svn.tibco.com/svn/be/branches/5.5/build/pkg_info/bom/5.5.0/businessevents-datamodeling/base"
+	featureconfigfile="businessevents-datamodeling_FeatureConfig.xml"
+	/>
+	<echo> Please see status of job at https://commander.na.tibco.com:5443/commander/jobs.php </echo>
+</target>
+	
+<target name="businessevents-decisionmanager" depends="setConditions,setwin,setlnx,setmac" >
+	<echo> ostype ${ostype} </echo>
+	<antcall target="login" />
+	<call-build prodid="businessevents-decisionmanager" 
+	bomloc="https://svn.tibco.com/svn/be/branches/5.5/build/pkg_info/bom/5.5.0/businessevents-decisionmanager/base"
+	featureconfigfile="businessevents-decisionmanager_FeatureConfig.xml"
+	 />
+	<echo> Please see status of job at https://commander.na.tibco.com:5443/commander/jobs.php </echo>
+</target>
+	
+<target name="businessevents-eventstreamprocessing" depends="setConditions,setwin,setlnx,setmac" >
+	<echo> ostype ${ostype} </echo>
+	<antcall target="login" />
+	<call-build prodid="businessevents-eventstreamprocessing" 
+	bomloc="https://svn.tibco.com/svn/be/branches/5.5/build/pkg_info/bom/5.5.0/businessevents-eventstreamprocessing/base"
+	featureconfigfile="businessevents-eventstreamprocessing_FeatureConfig.xml"
+	 />
+	<echo> Please see status of job at https://commander.na.tibco.com:5443/commander/jobs.php </echo>
+</target>
+
+<target name="businessevents-express" depends="setConditions,setwin,setlnx,setmac" >
+	<echo> ostype ${ostype} </echo>
+	<antcall target="login" />
+	<call-build prodid="businessevents-express" 
+	bomloc="https://svn.tibco.com/svn/be/branches/5.5/build/pkg_info/bom/5.5.0/businessevents-express/base"
+	featureconfigfile="businessevents-express_FeatureConfig.xml"
+	/>
+	<echo> Please see status of job at https://commander.na.tibco.com:5443/commander/jobs.php </echo>
+</target>-->
+
+<target name="businessevents-process" depends="setConditions,setwin,setlnx,setmac" >
+	<echo> ostype ${ostype} </echo>
+	<antcall target="login" />
+	<call-build prodid="businessevents-process" 
+	bomloc="https://svn.tibco.com/svn/be/trunk/be-main/build/pkg_info/bom/6.0.0/businessevents-process/base"
+	featureconfigfile="businessevents-process_FeatureConfig.xml"
+	/>
+	<echo> Please see status of job at https://commander.na.tibco.com:5443/commander/jobs.php </echo>
+</target>
+
+<target name="businessevents-views" depends="setConditions,setwin,setlnx,setmac" >
+	<echo> ostype ${ostype} </echo>
+	<antcall target="login" />
+	<call-build prodid="businessevents-views" 
+	bomloc="https://svn.tibco.com/svn/be/trunk/be-main/build/pkg_info/bom/6.0.0/businessevents-views/base"
+	featureconfigfile="businessevents-views_FeatureConfig.xml"
+	/>
+	<echo> Please see status of job at https://commander.na.tibco.com:5443/commander/jobs.php </echo>
+</target>
+
+<target name="login">
+	<exec executable="${ostype}/ectool">
+		<arg value="--server"/>
+		<arg value="commander.na.tibco.com"/>
+		<arg value="login"/>
+		<arg value="be-devuser"/>
+		<arg value="be-devuser"/>
+	</exec>
+</target>
+	
+<target name="build-hf"	depends="set-all,businessevents-process-assembly, businessevents-hf"/>	
+
+<target name="businessevents-hf" depends="setConditions,setwin,setlnx" >
+	<echo> ostype ${ostype} </echo>
+	<antcall target="login" />
+	<call-build prodid="businessevents-hf"
+	bomloc="http://svn.tibco.com/be/branches/5.2.2-HF/build/pkg_info/bom/5.6.2/businessevents-hf/hf1"
+	featureconfigfile="businessevents-hf_FeatureConfig.xml"
+	runqatest="${qaTests}" 
+	/>
+	<echo> Please see status of job at https://commander.na.tibco.com:5443/commander/jobs.php </echo>
+</target>
+	
+<target name="businessevents-process-assembly" depends="setConditions,setwin,setlnx">
+		<echo> ostype ${ostype} </echo>
+		<antcall target="login" />
+		<call-assembly-build assemblyid="be_process_server" assemblyversion="${be_bpmn_version}" assemblyport="win/x86 win/x86_64 linux26gl25/x86 linux26gl25/x86_64"/>
+	<!--	<call-assembly-build assemblyid="be_process_editor" assemblyversion="${be_bpmn_version}" assemblyport="win/x86 win/x86_64 linux26gl25/x86 linux26gl25/x86_64"/> --> 
+</target>
+	
+	<target name="build-all-mac" depends="set-all,
+									  businessevents-standard-mac,
+									  businessevents-datamodeling-mac,
+									  businessevents-decisionmanager-mac,
+									  businessevents-eventstreamprocessing-mac,
+									  businessevents-process-mac,
+									  businessevents-views-mac">
+	</target>	
+		
+	<target name="businessevents-standard-mac" depends="setConditions,setwin,setlnx,setmac" >
+		<echo> ostype ${ostype} </echo>
+		<antcall target="login" />
+		<call-build prodid="businessevents-standard" 
+		prodassemblynames="" 
+		bomloc="http://svn.tibco.com/be/branches/private/java11/build/pkg_info/bom/5.6.2/base"
+		installtype="base"
+		multipleports="macosx/x86_64"/>
+		<echo> Please see status of job at https://commander.na.tibco.com:5443/commander/jobs.php </echo>
+	</target>
+
+	<target name="businessevents-datamodeling-mac" depends="setConditions,setwin,setlnx,setmac" >
+		<echo> ostype ${ostype} </echo>
+		<antcall target="login" />
+		<call-build prodid="businessevents-datamodeling" 
+		prodassemblynames="" 
+	    bomloc="http://svn.tibco.com/be/branches/private/java11/build/pkg_info/bom/5.6.2/base"
+		installtype="base"
+		multipleports="macosx/x86_64"/>
+		<echo> Please see status of job at https://commander.na.tibco.com:5443/commander/jobs.php </echo>
+	</target>
+		
+	<target name="businessevents-decisionmanager-mac" depends="setConditions,setwin,setlnx,setmac" >
+		<echo> ostype ${ostype} </echo>
+		<antcall target="login" />
+		<call-build prodid="businessevents-decisionmanager" 
+		prodassemblynames="" 
+		bomloc="http://svn.tibco.com/be/branches/private/java11/build/pkg_info/bom/5.6.2/base"
+		installtype="base"
+		multipleports="macosx/x86_64"/>
+		<echo> Please see status of job at https://commander.na.tibco.com:5443/commander/jobs.php </echo>
+	</target>
+
+	<target name="businessevents-eventstreamprocessing-mac" depends="setConditions,setwin,setlnx,setmac" >
+		<echo> ostype ${ostype} </echo>
+		<antcall target="login" />
+		<call-build prodid="businessevents-eventstreamprocessing" 
+		prodassemblynames="" 
+		bomloc="http://svn.tibco.com/be/branches/private/java11/build/pkg_info/bom/5.6.2/base"
+		installtype="base"
+		multipleports="macosx/x86_64"/>
+		<echo> Please see status of job at https://commander.na.tibco.com:5443/commander/jobs.php </echo>
+	</target>
+
+	<!--<target name="businessevents-express-mac" depends="setConditions,setwin,setlnx,setmac" >
+		<echo> ostype ${ostype} </echo>
+		<antcall target="login" />
+		<call-build prodid="businessevents-express" 
+		prodassemblynames="" 
+		bomloc="http://svn.tibco.com/be/branches/5.1/build/pkg_info/bom/5.1.1/base"
+		installtype="base"
+		multipleports="macosx/x86_64"/>
+		<echo> Please see status of job at https://commander.na.tibco.com:5443/commander/jobs.php </echo>
+	</target>-->
+		
+	<target name="businessevents-process-mac" depends="setConditions,setwin,setlnx,setmac" >
+		<echo> ostype ${ostype} </echo>
+		<antcall target="login" />
+		<call-build prodid="businessevents-process" 
+		prodassemblynames="" majorversion="1" minorversion="0" updateversion="1"
+		bomloc="http://svn.tibco.com/be/branches/private/java11/build/pkg_info/bom/5.6.2/base"
+		installtype="base"
+		multipleports="macosx/x86_64"/>
+		<echo> Please see status of job at https://commander.na.tibco.com:5443/commander/jobs.php </echo>
+	</target>
+		
+	<target name="businessevents-views-mac" depends="setConditions,setwin,setlnx,setmac" >
+		<echo> ostype ${ostype} </echo>
+		<antcall target="login" />
+		<call-build prodid="businessevents-views" 
+		prodassemblynames="" 
+		bomloc="http://svn.tibco.com/be/branches/private/java11/build/pkg_info/bom/5.6.2/base"
+		installtype="base"
+		multipleports="macosx/x86_64"/>
+		<echo> Please see status of job at https://commander.na.tibco.com:5443/commander/jobs.php </echo>
+	</target>
+	
+	<macrodef name="call-assembly-build">
+			<attribute name="assemblyid" />
+			<attribute name="assemblyversion" />
+			<attribute name="assemblyport" default="common"/>
+			<attribute name="exec" default="${basedir}/ectool"/>
+			<sequential>
+				<echo>Creating assemblies for @{assemblyid} ...</echo>
+				<exec executable="@{exec}">
+					<arg value="--server" />
+					<arg value="commander.na.tibco.com" />
+					<arg value="runProcedure" />
+					<arg value="install-packaging-tools" />
+					<arg value="--pollInterval" />
+					<arg value="10" />
+					<arg value="--timeout" />
+					<arg value="99999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999" />
+					<arg value="--procedureName" />
+					<arg value="product-assembly-build" />
+					<arg value="--actualParameter" />
+					<arg value="assembly_id=@{assemblyid}" />
+					<arg value="override_assembly_build_number=${buildCnt}" />
+					<arg value="override_default_export_dir=${export_dir}" />
+					<arg value="ports=@{assemblyport}" />
+					<arg value="recipient_email_address=rjadhav@tibco.com rjain@tibco.com dijadhav@tibco.com" />
+					<arg value="test=true" />
+					<arg value="version=@{assemblyversion}" />
+				</exec>
+			</sequential>
+		</macrodef>
+
+	<!-- Servicepack specific targets -->
+	
+	<target name="build-all-sp" depends="set-all,
+									    businessevents-process-sp,
+									  	businessevents-views-sp,										
+										businessevents-enterprise-sp">
+	</target>		
+
+	
+	<!--target name="businessevents-datamodeling-sp" depends="setConditions,setwin,setlnx,setmac" >
+		<echo> ostype ${ostype} </echo>
+		<antcall target="login" />
+		<call-build prodid="businessevents-datamodeling" 
+		bomloc="https://svn.tibco.com/svn/be/branches/5.5/build/pkg_info/bom/5.5.1/businessevents-datamodeling/sp"
+		featureconfigfile="businessevents-datamodeling_FeatureConfig.xml"
+		installtype="servicepack"
+		/>
+		<echo> Please see status of job at https://commander.na.tibco.com:5443/commander/jobs.php </echo>
+	</target>
+	
+	<target name="businessevents-decisionmanager-sp" depends="setConditions,setwin,setlnx,setmac" >
+		<echo> ostype ${ostype} </echo>
+		<antcall target="login" />
+		<call-build prodid="businessevents-decisionmanager" 
+		bomloc="https://svn.tibco.com/svn/be/branches/5.5/build/pkg_info/bom/5.5.1/businessevents-decisionmanager/sp"
+		featureconfigfile="businessevents-decisionmanager_FeatureConfig.xml"
+		installtype="servicepack"	
+		 />
+		<echo> Please see status of job at https://commander.na.tibco.com:5443/commander/jobs.php </echo>
+	</target>
+
+	<target name="businessevents-eventstreamprocessing-sp" depends="setConditions,setwin,setlnx,setmac" >
+		<echo> ostype ${ostype} </echo>
+		<antcall target="login" />
+		<call-build prodid="businessevents-eventstreamprocessing" 
+		bomloc="https://svn.tibco.com/svn/be/branches/5.5/build/pkg_info/bom/5.5.1/businessevents-eventstreamprocessing/sp"
+		featureconfigfile="businessevents-eventstreamprocessing_FeatureConfig.xml"
+		installtype="servicepack"	
+		 />
+		<echo> Please see status of job at https://commander.na.tibco.com:5443/commander/jobs.php </echo>
+	</target-->
+
+	<target name="businessevents-process-sp" depends="setConditions,setwin,setlnx,setmac" >
+		<echo> ostype ${ostype} </echo>
+		<antcall target="login" />
+		<call-build prodid="businessevents-process" 
+		bomloc="https://svn.tibco.com/svn/be/trunk/be-main/build/pkg_info/bom/5.6.1/businessevents-process/sp"
+		featureconfigfile="businessevents-process_FeatureConfig.xml"
+		installtype="servicepack"
+		/>
+		<echo> Please see status of job at https://commander.na.tibco.com:5443/commander/jobs.php </echo>
+	</target>
+
+	<target name="businessevents-views-sp" depends="setConditions,setwin,setlnx,setmac" >
+		<echo> ostype ${ostype} </echo>
+		<antcall target="login" />
+		<call-build prodid="businessevents-views" 
+		bomloc="https://svn.tibco.com/svn/be/trunk/be-main/build/pkg_info/bom/5.6.1/businessevents-views/sp"
+		featureconfigfile="businessevents-views_FeatureConfig.xml"
+		installtype="servicepack"
+		/>
+		<echo> Please see status of job at https://commander.na.tibco.com:5443/commander/jobs.php </echo>
+	</target>
+	
+	<!--target name="businessevents-standard-sp" depends="setConditions,setwin,setlnx,setmac" >
+		<echo> ostype ${ostype} </echo>
+		<antcall target="login" />
+		<call-build prodid="businessevents-standard"  
+		bomloc="https://svn.tibco.com/svn/be/branches/5.5/build/pkg_info/bom/5.5.1/businessevents-standard/sp"
+		featureconfigfile="businessevents-standard_FeatureConfig.xml"
+		installtype="servicepack"
+		runqatest="${qaTests}"
+		/>
+		<echo> Please see status of job at https://commander.na.tibco.com:5443/commander/jobs.php </echo>
+	</target-->
+	
+	<target name="businessevents-enterprise-sp" depends="setConditions,setwin,setlnx,setmac" >
+		<echo> ostype ${ostype} </echo>
+		<antcall target="login" />
+		<call-build-enterprise prodid="businessevents-enterprise"  
+		bomloc="https://svn.tibco.com/svn/be/trunk/be-main/build/pkg_info/bom/5.6.1/businessevents-enterprise/sp"
+		featureconfigfile="businessevents-enterprise_FeatureConfig.xml"
+		runqatest="${qaTests}"
+		/>
+		<echo> Please see status of job at https://commander.na.tibco.com:5443/commander/jobs.php </echo>
+	</target>
+	
+	<!--target name="businessevents-express-sp" depends="setConditions,setwin,setlnx,setmac" >
+		<echo> ostype ${ostype} </echo>
+		<antcall target="login" />
+		<call-build prodid="businessevents-express" 
+		bomloc="https://svn.tibco.com/svn/be/branches/5.5/build/pkg_info/bom/5.5.1/businessevents-express/sp"
+		featureconfigfile="businessevents-express_FeatureConfig.xml"
+		installtype="servicepack"		
+		/>
+		<echo> Please see status of job at https://commander.na.tibco.com:5443/commander/jobs.php </echo>
+	</target-->
+	
+</project>

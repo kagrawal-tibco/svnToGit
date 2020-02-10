@@ -1,0 +1,47 @@
+/**
+ * @description 
+ */
+void rulefunction Shared.RuleFunctions.topology.discoverTopology {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		
+	}
+	body {
+		//site
+		Shared.Concepts.MonitorableEntity site = Instance.getByExtId("0");      //TODO: This will not work for multiple sites
+		BEMMUtil.LinkedList.createList("conflictingmonitorableentities");
+		String cacheProvider = BEMM.topology.getCacheProvider();
+		
+		Shared.RuleFunctions.log("discoverTopology","DEBUG","Datagrid cache provider is: " + cacheProvider);
+
+		if (site != null) {
+			Shared.RuleFunctions.topology.doTplgyDiscovery(cacheProvider, site);
+		}
+		
+		//I should not have to do this. but it is needed to trigger onNewSiteAdded
+		Shared.Concepts.GlobalScoreCard.siteID = site@extId;
+		String xml = toXML(Instance.getByExtId(Shared.Concepts.GlobalScoreCard.siteID),10,null,Shared.Concepts.GlobalScoreCard.purgeCounts);
+		Shared.RuleFunctions.log("discoverTopology","DEBUG",xml);
+		Shared.RuleFunctions.topology.scheduleTopologyUpdateEvent();
+		int deletedEntitiesCnt = BEMMUtil.LinkedList.size("deletedmonitorableentities");
+		int i = 0;
+		while (i < deletedEntitiesCnt) {
+		    String deletedEntityName = BEMMUtil.LinkedList.get("deletedmonitorableentities",i);
+		    if (BEMMUtil.LinkedList.contains("conflictingmonitorableentities",deletedEntityName) == false){
+		        Shared.RuleFunctions.log("DEBUG","discoverTopology","Wiping out "+deletedEntityName+" from deleted entity name cache...");
+		        boolean removed = BEMMUtil.LinkedList.removeByElement("deletedmonitorableentities",deletedEntityName);
+		        if (removed == true){
+		            deletedEntitiesCnt = deletedEntitiesCnt - 1;
+		        }
+		        else {
+		            i = i + 1;
+		        }
+		    }
+		}
+		BEMMUtil.LinkedList.deleteList("conflictingmonitorableentities");
+		//temporary means to populate the cluster overview scorecard 
+		//SetUpClusterHealthScoreCard();
+	}
+}

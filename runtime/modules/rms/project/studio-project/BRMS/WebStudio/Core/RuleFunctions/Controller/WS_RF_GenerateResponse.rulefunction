@@ -1,0 +1,72 @@
+/**
+ * @description 
+ */
+String rulefunction WebStudio.Core.RuleFunctions.Controller.WS_RF_GenerateResponse {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		WebStudio.Core.Concepts.DataSources.WS_C_TemporaryReturnData tempReturnData;
+		String contentType;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Controller.WS_RF_GenerateResponse");
+		
+		String responseDSXML = null;
+		// if serialized data already present, just return it
+		if (tempReturnData != null && tempReturnData.serializedData != null && !String.equals(tempReturnData.serializedData, "")) {
+			responseDSXML = tempReturnData.serializedData;			
+		} else {
+			responseDSXML = WS_RF_CreateAndSerializeResponseDataSource(tempReturnData.responseStatus, tempReturnData.recordCount, tempReturnData.errorCode, tempReturnData.responseMessage, tempReturnData.responseData, contentType);
+			
+			if (tempReturnData != null) {
+				if (tempReturnData.unEscapeXML) {
+					responseDSXML = WS.Common.unEscapeXML(responseDSXML);
+				}
+				
+				if (tempReturnData.removeXMLHeader) {
+					responseDSXML = String.replaceAll(responseDSXML, "\\<\\?xml (.*)\\?\\>", "");
+				}
+			}
+		}
+		
+		WS_C_ResponseData responseData = tempReturnData.responseData;
+		if (responseData != null && responseData.clearContentReference && responseData.record != null && responseData.record@length == 1) {
+			WS_C_AnyArtifactDetails anyDetails = null;
+			
+			WS_C_AbstractDataSourceRecord[] abstractDataSourceRecords = Instance.PropertyArray.toArrayContainedConcept(responseData.record);
+			for (int i = 0; i < abstractDataSourceRecords@length; i++) {
+				if (abstractDataSourceRecords[i] instanceof WS_C_ArtifactContentsDataSourceRecord) {
+					WS_C_ArtifactContentsDataSourceRecord artifactContentsDataSourceRecord = abstractDataSourceRecords[i];
+					anyDetails = artifactContentsDataSourceRecord.artifactDetails;
+					break;
+					
+				} else if (abstractDataSourceRecords[i] instanceof WS_C_ProcessPaletteDataSourceRecord) {
+					WS_C_ProcessPaletteDataSourceRecord processPaletteDataSourceRecord = abstractDataSourceRecords[i];
+					Instance.PropertyAtom.setContainedConcept(processPaletteDataSourceRecord.palette, null, 1L);
+					break;
+					
+				} else if (abstractDataSourceRecords[i] instanceof WS_C_DisplayPropertiesDataSourceRecord) {
+					boolean isXML = String.equals(contentType, System.getGlobalVariableAsString("WebStudio/CONTENT_TYPE/XML", "application/xml"));
+					responseDSXML = WS.Common.checkAndReplaceKeywords(responseDSXML, false, isXML);
+					break;
+				}
+			}
+			
+			//Dereference it so that it can be referenced for next request if needed.
+			if (anyDetails != null) {
+				if (anyDetails instanceof WS_C_RuleTemplateArtifactDetails) {
+					WS_C_RuleTemplateArtifactDetails ruleTemplateDetails = anyDetails;
+					Instance.PropertyAtom.setConceptReference(ruleTemplateDetails.artifactContent, null, 1L);
+					
+				} else if (anyDetails instanceof WS_C_DomainArtifactDetails) {
+					WS_C_DomainArtifactDetails domainDetails = anyDetails;
+					Instance.PropertyAtom.setConceptReference(domainDetails.artifactContent, null, 1L);
+				}
+			}
+		}
+			
+		
+		return responseDSXML;
+	}
+}

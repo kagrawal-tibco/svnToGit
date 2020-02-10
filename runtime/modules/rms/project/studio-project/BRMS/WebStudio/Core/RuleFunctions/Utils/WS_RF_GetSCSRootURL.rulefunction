@@ -1,0 +1,60 @@
+/**
+ * @description 
+ */
+String rulefunction WebStudio.Core.RuleFunctions.Utils.WS_RF_GetSCSRootURL {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String projectName;
+		String subscriptionId;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.WS_RF_GetSCSRootURL");
+		
+		Log.log(LOGGER, "Debug", "Project Name %s", projectName);
+		
+		String scsRootURL = System.getSystemPropertyAsString("ws.scs.rootURL", null);
+		Log.log(LOGGER, "Debug", "SCS root URL configured is %s", scsRootURL);
+		
+		String scsType = System.getSystemPropertyAsString("ws.scs.impl.type", null);
+		Log.log(LOGGER, "Debug", "SCS Integration type is %s", scsType);
+		
+		if (scsType == null || String.equals(scsType,"") || String.equals(scsType,"file")) {
+			if (String.startsWith(scsRootURL, "http")) {
+				throw Exception.newException("PROPERTY VALUE MISSING", "Property 'ws.scs.impl.type' either not defined or not appropriate type.", null);
+			} else {
+				if (projectName != null) {
+					String projectEntryExtId = WS_RF_CreateUserArtifactExtId("PROJECT_ENTRY", null, projectName, null, subscriptionId, null);
+					WS_C_ProjectEntry projectEntry = Instance.getByExtIdByUri(projectEntryExtId, "/WebStudio/Core/Concepts/WS_C_ProjectEntry");
+					if (projectEntry != null) {
+						return projectEntry.scsUrl;
+					}
+				}
+				return scsRootURL;
+			}			
+		} else if (!String.equals(scsType,"file")) {
+			String scsRepoDir = System.getSystemPropertyAsString("ws.scs.repo.dir", null);
+			Log.log(LOGGER, "Debug", "SCS repo directory is %s", scsRepoDir);
+			
+			// first check if its available in local repo
+			if (File.fileExists(scsRepoDir)) {
+				String[] fileList = File.listFiles(scsRepoDir, null);
+				for (int i = 0; i < fileList@length; i++) {
+					if (String.equals(projectName, fileList[i])) return scsRepoDir;
+				}
+			}
+			
+			// look up the project entry and return the repo url
+			if (projectName != null) {
+				String projectEntryExtId = WS_RF_CreateUserArtifactExtId("PROJECT_ENTRY", null, projectName, null, subscriptionId, null);
+				WS_C_ProjectEntry projectEntry = Instance.getByExtIdByUri(projectEntryExtId, "/WebStudio/Core/Concepts/WS_C_ProjectEntry");
+				if (projectEntry != null) {
+					return projectEntry.scsUrl;
+				}
+			}
+		}
+		
+		return scsRootURL;
+	}
+}

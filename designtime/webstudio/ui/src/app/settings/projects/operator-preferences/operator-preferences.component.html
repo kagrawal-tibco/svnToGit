@@ -1,0 +1,129 @@
+<div class="slide-content">
+  <mat-grid-list cols="3" gutterSize='12.5px' rowHeight="2:1">
+    <mat-grid-tile>
+      <div class='full-top'>
+        <h6 mat-subheader>
+          <ng-container i18n>{{i18n('Field Type')}}</ng-container>
+        </h6>
+        <mat-divider></mat-divider>
+        <mat-nav-list role='navigation'>
+          <mat-list-item 
+            *ngFor="let operatorPreference of this.operatorPreferenceList; let i = index"
+            [class.active]="i == this.selectedFieldTypeIndex"
+            (click)="this.onFieldTypeSelection(i)">
+              <img src="{{this.getImageSrc(operatorPreference.fieldType)}}" class="{{ isRtl() ? 'operator-icons-rtl' : 'operator-icons' }} ">
+              {{operatorPreference.fieldType}}
+          </mat-list-item>
+        </mat-nav-list>
+      </div>
+    </mat-grid-tile>
+    <mat-grid-tile>
+      <div class='full-top'>
+        <h6 mat-subheader>
+          <ng-container i18n>{{i18n('Filter Operators')}}</ng-container>
+        </h6>
+        <mat-divider></mat-divider>
+        <mat-nav-list role='navigation'>
+            <mat-list-item *ngFor="let filterOperator of this.selectedFieldType.filterOperators">
+              <mat-checkbox [(ngModel)]="filterOperator.available" labelPosition="before">
+                {{filterOperator.operator}}
+              </mat-checkbox>
+            </mat-list-item>
+        </mat-nav-list>
+      </div>
+    </mat-grid-tile>
+    <mat-grid-tile>
+      <div class='full-top'>
+        <h6 mat-subheader>
+          <ng-container i18n>{{i18n('Command Operators')}}</ng-container>
+        </h6>
+        <mat-divider></mat-divider>
+        <mat-nav-list role='navigation'>
+            <mat-list-item *ngFor="let commandOperator of this.selectedFieldType.commandOperators">          
+                <mat-checkbox [(ngModel)]="commandOperator.available" labelPosition="before">
+                    {{commandOperator.operator}}
+                </mat-checkbox>
+            </mat-list-item>
+          </mat-nav-list>
+      </div>
+    </mat-grid-tile>
+  </mat-grid-list>
+  <div class="save-button">
+    <button mat-raised-button  
+      [ngClass]= "{'custom-save-button': !this.disableApply}"
+      [disabled]="this.disableApply"
+      (click)="this.updateOperatorPreferences()" i18n
+    >{{i18n(' Apply ')}}</button>
+  </div>
+</div>
+<!-- <div class="card">
+  <div class="card-header">
+    Operator Settings
+  </div>
+  <div class="card-body">
+    <div class="row">
+      <div class="col-sm-4">
+        <div class='card role-list'>
+          <div class="card-header">
+            <span>
+              Field Type
+            </span>
+          </div>
+          <div class="list-group">
+            <a *ngFor="let operatorPreference of this.operatorPreferenceList; let i = index"
+                class="list-group-item clickable"
+                [class.active]="i == this.selectedFieldTypeIndex"
+                (click)="this.onFieldTypeSelection(i)">
+              <img src="{{this.getImageSrc(operatorPreference.fieldType)}}" style="width: 16px; height: 16px;">
+              {{operatorPreference.fieldType}}
+            </a>
+          </div>
+        </div>
+      </div>
+      <div class="col-sm-4">
+        <div class='card role-list'>
+          <div class="card-header">
+            <span>
+              Filter Operators
+            </span>
+          </div>
+          <div class="list-group">
+            <a *ngFor="let filterOperator of this.selectedFieldType.filterOperators"
+                class="list-group-item">
+              <toggle-switch
+                class="toggle-switch"
+                [size]='"mini"'
+                [(value)]='filterOperator.available'
+              ></toggle-switch>
+              {{filterOperator.operator}}
+            </a>
+          </div>
+        </div>
+      </div>
+      <div class="col-sm-4">
+        <div class='card role-list'>
+          <div class="card-header">
+            <span>
+              Command Operators
+            </span>
+          </div>
+          <div class="list-group">
+            <a *ngFor="let commandOperator of this.selectedFieldType.commandOperators" class="list-group-item">
+              <toggle-switch
+                class="toggle-switch"
+                [size]='"mini"'
+                [(value)]='commandOperator.available'
+              ></toggle-switch>
+              {{commandOperator.operator}}
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+    <button
+      class="ws-operatorpreferences-apply-button btn btn-primary btn-sm btn-narrow pull-right"
+      [disabled]="this.disableApply"
+      (click)="this.updateOperatorPreferences()"
+      >Apply</button>
+  </div>
+</div> -->

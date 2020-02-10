@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" styleName="topologyMenuStyle" horizontalScrollPolicy="off" xmlns:containers="com.tibco.cep.ui.monitor.containers.*">	
+	<mx:Script>
+		<![CDATA[
+			import mx.utils.StringUtil;
+			import com.tibco.cep.ui.monitor.util.Logger;
+			import mx.collections.ArrayCollection;
+			import com.tibco.cep.ui.monitor.util.Util;
+			import mx.effects.Fade;
+			import mx.events.EffectEvent;
+			import mx.effects.Resize;
+			import com.tibco.cep.ui.monitor.events.TopologyUpdateFailEvent;
+			import com.tibco.cep.ui.monitor.events.TopologyUpdateEvent;
+			import com.tibco.cep.ui.monitor.events.EventTypes;
+			import mx.collections.XMLListCollection;
+			
+			private var _lastVScrollPos:Number, _lastHScrollPos:Number;
+			private var _lastOpenItems:Dictionary;
+			private var _lastSelectedNodeID:String;
+			private var _dataProvider:XMLListCollection;
+			
+			private var orgWidth:Number = 30;
+			
+			public function saveExpansionState():void{
+				_lastHScrollPos = menuTree.horizontalScrollPosition;
+				_lastVScrollPos = menuTree.verticalScrollPosition;
+				_lastOpenItems = new Dictionary(true);
+				
+				_lastSelectedNodeID = menuTree.selectedItem == null ? "":String((menuTree.selectedItem as XML).@id);
+				
+				var openItems:ArrayCollection = new ArrayCollection(menuTree.openItems as Array);
+				
+//				for each(var expandedNode:XML in menuTree.openItems){
+				for each(var expandedNode:XML in openItems){
+					var id:String = String(expandedNode.@id);					//attempting to avoid memory leak
+					_lastOpenItems[id] = true;
+				}	
+			}
+			
+			
+			public function set dataProvider(dataProvider:XMLListCollection):void {
+				_dataProvider = dataProvider;			
+			}
+			
+			
+			public function restoreExpansionState():void{
+				menuTree.validateNow(); //IMPORTANT!!!
+//				var nodeList:XMLListCollection = menuTree.dataProvider as XMLListCollection;
+//				var root:XML = nodeList.getItemAt(0) as XML;
+				var root:XML = _dataProvider.getItemAt(0) as XML;
+
+				if(root != null){
+					restoreExpandedItems(root);
+					restoreSelectedNode(root);
+				} 
+				menuTree.verticalScrollPosition = _lastVScrollPos;
+				menuTree.horizontalScrollPosition = _lastHScrollPos;
+
+				//To enforce Garbage Collection, thus eliminating memory leaks.
+				_lastOpenItems = null;
+				_lastSelectedNodeID = null;
+				_dataProvider = null;
+			}
+			
+			public function set selectedTreeNode(nodeId:String):void{
+				menuTree.validateNow(); //IMPORTANT!!!
+				var root:XML = (menuTree.dataProvider as XMLListCollection).getItemAt(0) as XML;
+				var nodeToSelect:XML = findAndExpandOn(nodeId, root);
+				if(nodeToSelect == null){
+					Util.errorMessage("TopologyMenu.selectedTreeNode - Can't set node, specified id (" + nodeId + ") not found!");
+				}
+				else{
+					menuTree.selectedItem = nodeToSelect;
+				}
+			}
+			
+			private function findAndExpandOn(nodeIdToFind:String, subTreeRoot:XML):XML{
+				if(subTreeRoot.@id == nodeIdToFind){
+					menuTree.expandItem(subTreeRoot, true);
+					return subTreeRoot;
+				}
+				for each(var child:XML in subTreeRoot.children()){
+					var foundNode:XML = findAndExpandOn(nodeIdToFind, child);
+					if(foundNode != null){
+						menuTree.expandItem(subTreeRoot, true);
+						return foundNode;
+					}
+				}
+				return null;
+			}
+			
+			private function restoreExpandedItems(xml:XML):void {
+				
+//				Logger.logDebug(this, "XML= " + xml);
+				
+				if(xml == null || StringUtil.trim(xml.toString()).length == 0) {
+//					Logger.logDebug(this, "XML is NULL. Returning... ");
+//					xml = null;
+					return;
+				}
+
+				var id:String = String(xml.@id);
+				
+				if(_lastOpenItems != null && _lastOpenItems[id] as Boolean == true){
+					menuTree.expandItem(xml, true);
+//					menuTree.expandItem(menuTree.getChildAt(menuTree.getChildIndex(menuTree.getChildByName(_lastOpenItems[id]))), true);
+					delete _lastOpenItems[id];			//TODO: I might not need this in here. Initially intended to remove memory leak
+				}
+				
+				for each(var child:XML in xml.children()){
+//					Logger.logDebug(this, "child = " + child);
+					restoreExpandedItems(child);
+				}
+			}
+			
+			private function restoreSelectedNode(xml:XML):void{
+				var id:String = String(xml.@id);
+				
+				if(id == _lastSelectedNodeID){
+					menuTree.selectedItem = xml;
+					return;
+				}
+				
+				for each(var child:XML in xml.children()){
+					restoreSelectedNode(child);
+				}
+			}
+			
+			
+			/**
+			 * Gets triggered when user clicks on the toggle button. It
+			*/
+			private function handleToggleClick():void{
+				orgWidth = this.width;
+				toggleTab.visible = true;
+				toggleTab.alpha = 0;
+				
+				var resize:Resize = new Resize();
+				resize.widthFrom = this.width;
+				resize.widthTo = 30;
+				resize.target = this;
+				resize.play();
+				
+				var fadeOut:Fade = new Fade();
+				fadeOut.alphaFrom = 1;
+				fadeOut.alphaTo = 0;
+				fadeOut.targets = [header, navbar, menuTree];
+				fadeOut.play();
+				fadeOut.addEventListener(EffectEvent.EFFECT_END, handleShrinkEnd);
+				
+				var fadeIn:Fade = new Fade();
+				fadeIn.alphaFrom = 0;
+				fadeIn.alphaTo = 1;
+				fadeIn.target = toggleTab;
+				fadeIn.play();				
+			}//end of handleToggleClick()
+			
+			private function handleExpandTabBtnClick():void{
+				var resize:Resize = new Resize();
+				resize.widthFrom = this.width;
+				resize.widthTo = orgWidth;
+				resize.target = this;
+				resize.play();			
+				
+				header.visible = true;
+				navbar.visible = true;
+				menuTree.visible = true;
+								
+				var fadeIn:Fade = new Fade();
+				fadeIn.alphaFrom = 0;
+				fadeIn.alphaTo = 1;
+				fadeIn.targets = [header, navbar, menuTree];
+				fadeIn.play();
+				
+				var fadeOut:Fade = new Fade();
+				fadeOut.alphaFrom = 1;
+				fadeOut.alphaTo = 0;
+				fadeOut.target = toggleTab;
+				fadeOut.play();
+				fadeOut.addEventListener(EffectEvent.EFFECT_END, handleExpandEnd);
+			}//end of handleExpandTabBtnClick			
+			
+			private function handleShrinkEnd(eventObj:EffectEvent):void{
+				header.visible = false;
+				navbar.visible = false;
+				menuTree.visible = false;
+			}//end of handleShrinkEnd
+			
+			private function handleExpandEnd(eventObj:EffectEvent):void{
+				toggleTab.visible = false;
+			}//end of handleExpandEnd			
+
+		]]>
+	</mx:Script>
+	<mx:HBox id="header" x="1" y="1" width="{width - 2}" height="30" verticalAlign="middle">
+		<mx:Label text="Cluster Explorer" styleName="topologyMenuHeaderLblStyle"/>
+		<mx:Spacer width="100%" height="100%"/>
+		<mx:Button id="toggleButton" toolTip="toggles the topology menu" width="17" height="26" 
+			styleName="toggleBtnStyle" buttonMode="true" useHandCursor="true" click="handleToggleClick()">
+			<mx:icon>@Embed(source='../../../../../assets/images/topologyToggler.png')</mx:icon>
+		</mx:Button>		
+	</mx:HBox>
+	<mx:HBox id="navbar" x="1" y="30" width="{width - 2}" height="42" styleName="topologyNavbarStyle" paddingRight="5" paddingLeft="5">
+		<mx:Button id="btn_Deploy" label="Deploy" labelPlacement="bottom" styleName="topologyNavBtnStyle" buttonMode="true" 
+					useHandCursor="true" enabled="false" toolTip="Select a Machine node to enable button">
+		<mx:icon>@Embed(source='../../../../../assets/images/button/deploy.png')</mx:icon>
+		</mx:Button>
+		<mx:Button id="btn_Start" label="Start" labelPlacement="bottom" styleName="topologyNavBtnStyle" buttonMode="true" 
+					useHandCursor="true" enabled="false" toolTip="Select a Process Unit node to enable button">
+		<mx:icon>@Embed(source='../../../../../assets/images/button/start_16x16.gif')</mx:icon>
+		</mx:Button>
+		<mx:Button id="btn_Stop" label="Stop" labelPlacement="bottom" styleName="topologyNavBtnStyle" buttonMode="true" 
+					useHandCursor="true" enabled="false" toolTip="Select a Process Unit node to enable button">
+		<mx:icon>@Embed(source='../../../../../assets/images/button/stop_16x16.gif')</mx:icon>
+		</mx:Button>
+		<mx:Button id="btn_Pause" label="Pause" labelPlacement="bottom" styleName="topologyNavBtnStyle" buttonMode="true" 
+					useHandCursor="true" enabled="false" toolTip="Select an Agent node to enable button">
+		<mx:icon>@Embed(source='../../../../../assets/images/button/pause_16x16.gif')</mx:icon>
+		</mx:Button>
+		<mx:Button id="btn_Resume" label="Resume" labelPlacement="bottom" styleName="topologyNavBtnStyle" buttonMode="true" 
+					useHandCursor="true" enabled="false" toolTip="Select an Agent node to enable button">
+		<mx:icon>@Embed(source='../../../../../assets/images/button/resume_16x16.gif')</mx:icon>
+		</mx:Button>
+		<mx:Button id="btn_Execute" label="Execute" labelPlacement="bottom" styleName="topologyNavBtnStyle" buttonMode="true" 
+					useHandCursor="true" enabled="false" toolTip="Select a Machine node to enable button">
+		<mx:icon>@Embed(source='../../../../../assets/images/button/invoke_16x16.gif')</mx:icon>
+		</mx:Button>
+		<mx:Button id="btn_ThreadDump" label="ThrDump" labelPlacement="bottom" styleName="topologyNavBtnStyle" buttonMode="true" 
+					useHandCursor="true" enabled="false" toolTip="Select a Process Unit node to enable button">
+		<mx:icon>@Embed(source='../../../../../assets/images/button/threaddump_16x16.gif')</mx:icon>
+		</mx:Button>
+		<mx:Button id="btn_Purge" label="Purge" labelPlacement="bottom" styleName="topologyNavBtnStyle" buttonMode="true" useHandCursor="true">
+		<mx:icon>@Embed(source='../../../../../assets/images/button/purge_inactive_16x16.gif')</mx:icon>
+		</mx:Button>
+	</mx:HBox>
+		
+	<containers:AutoSizeTree id="menuTree" labelField="@name" width="{width - 2}" height="{height - menuTree.y}" x="1" y="72"
+		styleName="topologyTreeStyle" verticalScrollPolicy="auto" horizontalScrollPolicy="auto" />	
+	<mx:Canvas x="0" y="0" width="30" height="100%" id="toggleTab" visible="false" horizontalScrollPolicy="off">
+		<mx:Button x="1" y="121" label=" Cluster Explorer" styleName="topologyTabBtnStyle" rotation="-90" width="120" height="28" click="handleExpandTabBtnClick()"/>
+		<mx:Canvas x="27" y="0" width="2" height="100%" borderStyle="none" backgroundColor="#FFFFFF"/>
+	</mx:Canvas>
+</mx:Canvas>

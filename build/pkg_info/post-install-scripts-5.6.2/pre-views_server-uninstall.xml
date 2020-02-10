@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<project name="pre-uninstall" default="pre-uninstall" basedir=".">
+	<property file="post-install.properties"/>
+	
+    <taskdef resource="net/sf/antcontrib/antcontrib.properties"/>
+    
+	<target name="pre-uninstall" depends="uninstall-flash-trust-cfg">
+		<delete dir="${tibco.home.esc}/be/${beVersionShort}/views/bin" />
+		<delete dir="${tibco.home.esc}/be/${beVersionShort}/views/tools" />
+		<echo message="Done pre-uninstallation tasks." />
+	</target>
+
+	<target name="uninstall-flash-trust-cfg">
+		<!-- copy the views-trusted-locations.cfg to the appropriate OS specific location -->
+		<if>
+			<os family="windows"/>
+			<!-- we are in the windows world -->
+			<then>
+				<if>
+					<!-- are we in windows 7 or windows vista world ?-->
+					<available file="${user.home}/AppData/Roaming" type="dir"/> 
+					<then>
+						<!-- yes, we are in windows 7 or windows vista world -->
+						<echo message="Resetting ${user.name}'s flash trust locations on ${os.name}..." />
+						<delete file="${user.home}/AppData/Roaming/Macromedia/Flash Player/#Security/FlashPlayerTrust/${beVersionShort}-views-trusted-locations.cfg"/>
+					</then>
+					<else>
+						<!-- no, we are in pre-windows 7 or windows vista world aka windows 2000 or windows XP -->
+						<echo message="Resetting ${user.name}'s flash trust locations on ${os.name}..." />
+						<delete file="${user.home}/Application Data/Macromedia/Flash Player/#Security/FlashPlayerTrust/${beVersionShort}-views-trusted-locations.cfg"/>					
+					</else>
+				</if>
+			</then>
+			<else>
+				<if>
+					<!-- are we in unix world ?-->		
+					<os family="unix"/>
+					<then>
+						<!-- yes, we are in unix world -->
+						<echo message="Resetting ${user.name}'s flash trust locations on ${os.name}..." />
+						<delete file="${user.home}/.macromedia/Flash_Player/#Security/FlashPlayerTrust/${beVersionShort}-views-trusted-locations.cfg"/>
+					</then>
+				</if>
+			</else>
+		</if>		
+	</target>
+    
+</project>	 

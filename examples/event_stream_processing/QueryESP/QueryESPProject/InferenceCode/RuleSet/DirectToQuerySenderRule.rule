@@ -1,0 +1,28 @@
+/**
+ * @description 
+ * @author 
+ */
+rule InferenceCode.RuleSet.DirectToQuerySenderRule {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		InferenceOntology.DirectToQuerySenderTimeEvent	timeEvent;
+		
+	}
+	when {
+		
+	}
+	then {
+		InferenceOntology.DirectToQueryTrackerSC.count = (InferenceOntology.DirectToQueryTrackerSC.count + 1) % 20;
+		
+		if(InferenceOntology.DirectToQueryTrackerSC.count < 10){
+		    InferenceOntology.DirectToQueryEvent e =
+		        InferenceOntology.DirectToQueryEvent.DirectToQueryEvent(null, null);
+		    Event.sendEvent(e);
+		
+		    System.debugOut("Event sent directly to Query");
+		}
+	}
+}

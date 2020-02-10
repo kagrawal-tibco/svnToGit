@@ -1,0 +1,55 @@
+/**
+ * @description 
+ */
+void rulefunction WebStudio.Core.RuleFunctions.Utils.Permissions.WS_RF_SaveAclData {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		WebStudio.Core.Concepts.Permissions.WS_C_Acl aclData;
+		String projectName;
+		String subscriptionId;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.Permissions.WS_RF_SaveAclData");
+	    WS.Acl.clearCollections();
+	    
+		WebStudio.Core.Concepts.Permissions.WS_C_Resource[] resourceArray = Instance.PropertyArray.toArrayContainedConcept(aclData.resources.resource);
+		
+		for (int i = 0; i < resourceArray@length; i++) {
+			String rname = resourceArray[i].name;
+			String rid = resourceArray[i].rid;
+			String rtype = resourceArray[i].type;
+			
+			WS.Acl.addResourceToCollection(rname, rid, rtype);
+		}
+		
+		WebStudio.Core.Concepts.Permissions.WS_C_Entry[] entryArray = Instance.PropertyArray.toArrayContainedConcept(aclData.entries.entry);
+		
+		for (int i = 0; i < entryArray@length; i++) {
+			String roleNameTest = entryArray[i].role.name;
+			WS.Acl.updatePermCollectionMap(roleNameTest);
+			WebStudio.Core.Concepts.Permissions.WS_C_Permission[] permissionArray = Instance.PropertyArray.toArrayContainedConcept(entryArray[i].permissions.permission);
+			
+			for (int j = 0; j < permissionArray@length; j++) {
+				String resourceref = permissionArray[j].resourceref;
+				String type = permissionArray[j].type;
+				String atype = permissionArray[j].action.type;
+				String avalue = permissionArray[j].action.value;
+								
+				WS.Acl.addPermissionToCollection(resourceref, type, atype, avalue, roleNameTest); 
+			}
+			
+			String roleName = entryArray[i].role.name;
+			WS.Acl.createAndUpdateEntryObjectList(roleName);	
+		}
+		
+		String aclFileLocation = System.getSystemPropertyAsString("ws.projects.acl.location", null);
+		String aclFilePath = aclFileLocation + "/";
+		if (subscriptionId != null) aclFilePath += subscriptionId + "/";
+		aclFilePath += projectName + ".ac";
+		Log.log(LOGGER, "Debug", "AC file path - %s", aclFilePath);
+		 
+		WS.Acl.saveAclContentToFile(projectName, aclFilePath, subscriptionId);	
+	}
+}

@@ -1,0 +1,110 @@
+/**
+ * @description 
+ */
+String[] rulefunction WebStudio.Core.RuleFunctions.Actions.Dashboard.WS_RF_GetGroupArtifactsByType {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String userName;
+		String groupType;
+		String projectName;
+		boolean isSystemProjectGroup;
+		boolean ignoreDeleteStatus;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.Dashboard.WS_RF_GetGroupArtifactsByType");
+		String[] matchingArtifacts;
+		
+		String workspaceExtId = WS_RF_CreateUserArtifactExtId("WORKSPACE", null, null, userName, null, null);
+		//Look for a workspace for this username.
+		boolean workspaceLock = Cluster.DataGrid.Lock(workspaceExtId, 1000, false);
+		Log.log(LOGGER, "Debug", "Lock acquired - %s, for extId - %s", workspaceLock, workspaceExtId);
+		if (workspaceLock) {
+			WS_C_UserWorkspace userWorkspace = 
+				Instance.getByExtIdByUri(workspaceExtId, "/WebStudio/Core/Concepts/WS_C_UserWorkspace");
+			
+			String stackID = "groupArtifacts_" + System.nanoTime();
+			Object artifactStack = WS.Common.Stack.create(stackID);
+			Log.log(LOGGER, "Debug", "User Workspace - %s", userWorkspace);
+			if (userWorkspace != null) {
+				// Now iterate over all the projects
+				WS_C_UserProject[] userProjects = Instance.PropertyArray.toArrayContainedConcept(userWorkspace.userProjects);
+				Log.log(LOGGER, "Debug", "Total Projects to iterate - %s", userProjects@length);
+				
+				for (int i = 0; i < userProjects@length; i++) {
+					WS_C_UserProject project = userProjects[i];
+					Log.log(LOGGER, "Debug", "Project - %s", project);
+					
+					// Fetch artifacts only if the project itself is not deleted
+					if (!project.softDelete) {
+						boolean matchProject = true;
+						if (projectName != null && !String.equals(project.name, projectName)) {
+							matchProject = false;
+						}
+						
+						// case for displaying RT's along with RTI's
+						String additionalArtifactType = null;
+						if (String.equals(groupType, "ruletemplateinstance")) {
+							additionalArtifactType = "ruletemplate";
+						}
+						
+						if (matchProject) {
+							Log.log(LOGGER, "Debug", "Total Artifacts for Project (%s)  - %s", project.name, project.userArtifacts@length);
+							Object buffer = String.createBuffer(0);
+							WS_C_UserArtifact[] userArtifacts = Instance.PropertyArray.toArrayContainedConcept(project.userArtifacts);
+							for (int j = 0; j < userArtifacts@length; j++) {
+								WS_C_UserArtifact userArtifact = userArtifacts[j];
+							
+								Log.log(LOGGER, "Debug", "Artifact Path - %s, File Extn - %s, delete status - %s & base path - %s", userArtifact.artifactPath, userArtifact.artifactFileExtn, userArtifact.softDelete, userArtifact.baseArtifactPath);
+								
+								boolean matchType = false;								
+								if ((!userArtifact.softDelete && !userArtifact.softDeleteViaProjectDelete) || ignoreDeleteStatus) {
+									if (isSystemProjectGroup ||
+										((groupType != null && String.equals(groupType, userArtifact.artifactFileExtn)) ||
+   										(additionalArtifactType != null && String.equals(additionalArtifactType, userArtifact.artifactFileExtn)))) {
+										matchType = true;
+   									}
+								}
+								
+								if (matchType) {
+									String.append(buffer, project.name);
+									String.append(buffer, userArtifact.artifactPath);
+									String.append(buffer, ".");
+									String.append(buffer, userArtifact.artifactFileExtn);
+									
+									String artifactPath = String.convertBufferToString(buffer);
+									String.clearBuffer(buffer);
+									
+									String artifactData = artifactPath;
+									if (userArtifact.baseArtifactPath != null && !String.equals(userArtifact.baseArtifactPath, "")) {
+   										artifactData = artifactData + ":" + userArtifact.baseArtifactPath;
+   										
+   										// for DT, also include the parent VRF in the group list, when DT group is selected
+   										if (!isSystemProjectGroup && String.equals(userArtifact.artifactFileExtn, "rulefunctionimpl")) {
+   											String vrfArtifactPath = project.name + userArtifact.baseArtifactPath;
+   											
+   											if (!WS.Common.Stack.contains(artifactStack, vrfArtifactPath)) {
+	   											Log.log(LOGGER, "Debug", "Pushing VRF Artifact - %s", vrfArtifactPath);
+	   											WS.Common.Stack.push(artifactStack, vrfArtifactPath);
+   											}
+   										}
+   									}
+   									
+   									Log.log(LOGGER, "Debug", "Pushing Artifact - %s", artifactData);
+   									
+									WS.Common.Stack.push(artifactStack, artifactData);
+								}
+							}
+						}
+					}
+				}
+			}
+			matchingArtifacts = WS.Common.Stack.toArray(artifactStack, "java.lang.String", null);
+			WS.Common.Stack.clear(artifactStack);
+			WS.Common.Stack.delete(stackID);
+		}
+		
+		return matchingArtifacts;
+	}
+}

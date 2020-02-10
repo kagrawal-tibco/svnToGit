@@ -1,0 +1,25 @@
+/**
+ * @description 
+ */
+void rulefunction WebStudio.Core.RuleFunctions.Utils.AuditTrail.WS_RF_AddAuditTrailEntry {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String userName;
+		String projectName;
+		String artifactPath;
+		String artifactType;
+		String actionType;
+		String comment;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.AuditTrail.WS_RF_AddAuditTrailEntry");
+		
+		Log.log(LOGGER, "Debug", "Adding Audit Train Entry Type[%s], Project[%s] & Artifact[%s]", actionType, projectName, artifactPath);
+		
+		DateTime actionTime = DateTime.now();
+		
+		Instance.createInstance("xslt://{{/WebStudio/Core/Concepts/WS_C_AuditTrail}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"2.0\"><xsl:param name=\"userName\"/><xsl:param name=\"projectName\"/><xsl:param name=\"artifactPath\"/><xsl:param name=\"actionType\"/><xsl:param name=\"actionTime\"/><xsl:param name=\"comment\"/><xsl:param name=\"artifactType\"/><xsl:template name=\"Function\" match=\"/\"><createObject><object><userName><xsl:value-of select=\"$userName\"/></userName><projectName><xsl:value-of select=\"$projectName\"/></projectName><artifactPath><xsl:value-of select=\"$artifactPath\"/></artifactPath><actionType><xsl:value-of select=\"$actionType\"/></actionType><actionTime><xsl:value-of select=\"$actionTime\"/></actionTime><comment><xsl:value-of select=\"$comment\"/></comment><artifactType><xsl:value-of select=\"$artifactType\"/></artifactType></object></createObject></xsl:template></xsl:stylesheet>");
+	}
+}

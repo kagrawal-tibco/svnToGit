@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<xsd:schema
+    ecore:documentRoot="IdRoot" 
+	ecore:nsPrefix="id"
+	ecore:package="com.tibco.be.util.config.sharedresources.id"
+	elementFormDefault="unqualified"
+	targetNamespace="http://www.tibco.com/xmlns/repo/types/2002"
+	xml:lang="en"
+	xmlns:bt="http://tibco.com/be/basetypes"
+	xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore"
+	xmlns:id="http://www.tibco.com/xmlns/repo/types/2002"
+	xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+	
+	<xsd:import namespace="http://www.eclipse.org/emf/2002/Ecore"
+		schemaLocation="platform:/plugin/org.eclipse.emf.ecore/model/Ecore.xsd" />
+	<xsd:import namespace="http://tibco.com/be/basetypes"
+		schemaLocation="basetypes.xsd" />
+				
+	<!-- - - - - - - - - Elements - - - - - - - - - -->
+		
+	<xsd:element name="repository" type="id:repository-type" />
+
+	 <!-- - - - - - - - - - Types - - - - - - - - - - -->
+	
+	<xsd:complexType ecore:name="Designer" name="designer-type">		
+		<xsd:sequence>
+				<xsd:element ecore:name="lockedProperties" type="xsd:string" name="lockedProperties" form="unqualified" minOccurs="0" />
+				<xsd:element ecore:name="fixedChildren" type="xsd:string" name="fixedChildren" form="unqualified" minOccurs="0" />
+				<xsd:element ecore:name="resourceDescriptions" type="id:resourceDescriptions-type" name="resourceDescriptions" form="unqualified" minOccurs="0" />
+		</xsd:sequence>
+	</xsd:complexType>
+	
+	<xsd:simpleType ecore:name="FileType" name="fileType-type">
+		<xsd:union memberTypes="bt:gv-type">
+			<xsd:simpleType  ecore:name="FileTypeEnum">
+				<xsd:restriction base="xsd:string">
+					<xsd:enumeration value="Entrust" />
+					<xsd:enumeration value="JCEKS" />
+					<xsd:enumeration value="JKS" />
+					<xsd:enumeration value="PEM" />
+					<xsd:enumeration value="PKCS12" />
+		    		<xsd:enumeration value=""/>
+				</xsd:restriction>
+			</xsd:simpleType>
+		</xsd:union>
+	</xsd:simpleType>
+	
+	<xsd:complexType ecore:name="Identity" name="identity-type">		
+		<xsd:sequence>
+				<xsd:element ecore:name="designer" name="designer" type="id:designer-type" form="unqualified" minOccurs="0"/>
+				<xsd:element ecore:name="name" name="name" type="xsd:string" form="unqualified" minOccurs="0" />
+				<xsd:element ecore:name="description" name="description" type="xsd:string" form="unqualified" minOccurs="0"/>
+				<xsd:element ecore:name="objectType" name="objectType"  type="id:objectType-type" form="unqualified" minOccurs="0"/>
+				<xsd:element ecore:name="username" type="xsd:string" name="username" form="unqualified" minOccurs="0"/>
+				<xsd:element ecore:name="password" type="xsd:string" name="password" form="unqualified" minOccurs="0"/>
+				<xsd:element ecore:name="fileType" type="id:fileType-type" name="fileType" form="unqualified"  minOccurs="0"/>
+				<xsd:element ecore:name="url" type="xsd:string" name="url" form="unqualified" minOccurs="0"/>
+				<xsd:element ecore:name="passPhrase" type="xsd:string" name="passPhrase" form="unqualified" minOccurs="0"/>
+				<xsd:element ecore:name="certUrl" type="xsd:string" name="certUrl" form="unqualified" minOccurs="0"/>
+				<xsd:element ecore:name="privateKeyUrl" type="xsd:string" name="privateKeyUrl" form="unqualified" minOccurs="0"/>
+		</xsd:sequence>
+	</xsd:complexType>
+	
+	<xsd:complexType ecore:name="Node" name="node-type">		
+		<xsd:sequence>
+				<xsd:element ecore:name="description" type="xsd:string" name="description" form="unqualified"  minOccurs="0" />
+		</xsd:sequence>
+	</xsd:complexType>
+	
+	<xsd:simpleType ecore:name="ObjectType" name="objectType-type">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="url" />
+			<xsd:enumeration value="certPlusKeyURL" />
+			<xsd:enumeration value="usernamePassword" />
+		</xsd:restriction>
+	</xsd:simpleType>
+	
+	<xsd:complexType ecore:name="Repository" name="repository-type">
+		<xsd:sequence>
+			<xsd:element ecore:name="identity" minOccurs="0" form="unqualified" name="identity" type="id:identity-type"/>
+		</xsd:sequence>
+	</xsd:complexType>
+	
+	<xsd:complexType ecore:name="ResourceDescriptions" name="resourceDescriptions-type">		
+		<xsd:sequence>
+				<xsd:element ecore:name="node" type="id:node-type" name="node" form="unqualified" minOccurs="0"/>
+		</xsd:sequence>
+	</xsd:complexType>
+	
+</xsd:schema>

@@ -1,0 +1,95 @@
+/**
+ * @description Rule function to get artifact contents from underlying store or user's workspace.
+ */
+WebStudio.Core.Concepts.DataSources.WS_C_TemporaryReturnData rulefunction WebStudio.Core.RuleFunctions.Actions.Lifecycle.Fetch.WS_RF_FetchArtifactContentsFromStore {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object asyncContextObject;
+		WebStudio.Security.Authn.Concepts.WS_C_LoggedInUser loggedInUser;
+		String contentType;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.Lifecycle.Fetch.WS_RF_FetchArtifactContentsFromStore");
+		
+		Object servletRequest = HTTP.Servlet.getServletRequest(asyncContextObject);
+		
+		String responseMessage = null;
+		String errorCode = null;
+		int recordCount = 1;
+		int responseStatus = 0;
+		
+		WS_C_TemporaryReturnData tempReturnData = null;
+		
+		if (!WS_RF_CheckHTTPMethod(servletRequest, "GET")) {
+			responseStatus = -1;
+			recordCount = 0;
+			errorCode = "ERR_5101";
+			responseMessage = "Invalid HTTP Method, expect method is [GET].";
+			
+			tempReturnData = WS_RF_CreateTemporaryReturnData(responseStatus, recordCount, errorCode, responseMessage, null);
+		} else {
+			String username = loggedInUser.username;
+			Log.log(LOGGER, "Debug", "Logged in user - %s", username);
+			
+			//Get the User roles
+			String[] roles = Instance.PropertyArray.toArrayString(loggedInUser.roles);
+			
+			String projectName = HTTP.Servlet.Request.getRequestParameter(servletRequest, "projectName");
+			String artifactPath = HTTP.Servlet.Request.getRequestParameter(servletRequest, "artifactPath");
+			String artifactExtn = HTTP.Servlet.Request.getRequestParameter(servletRequest, "artifactExtension");
+			
+			Log.log(LOGGER, "Debug", "Project Name %s", projectName);
+			
+			String subscriptionId = null;
+			if (loggedInUser.jwtToken != null) subscriptionId = loggedInUser.jwtToken.sbsc;
+						
+			//Fetch it from source control first
+			String scsRootURL = WS_RF_GetSCSRootURL(projectName, subscriptionId);
+			if (scsRootURL == null) {
+				throw Exception.newException(null, "Source control repository location not present. Set ws.scs.rootURL property", null);
+			}
+			Log.log(LOGGER, "Debug", "Artifact Path  - [%s], Artifact Extn %s", artifactPath, artifactExtn);
+			
+			WS_C_ResponseTransferObjectData responseTransferObject = null;
+			// check if the artifact is one of the managed types
+			if (WS_RF_IsManagedArtifactType(artifactExtn, "Fetch")) {
+				responseTransferObject = WS_RF_GetArtifactContentsFromStore(username, roles, projectName, artifactPath, artifactExtn);
+				WS_C_AnyArtifactDetails artifactContent = responseTransferObject.artifactContents;
+				// De-reference the artifact contents
+	        		Instance.PropertyAtom.setConceptReference(responseTransferObject.artifactContents, null, 1L);
+				
+				// check if this processed successfully w/o any errors
+				if (responseTransferObject.errorCode == null) {
+					// Based on the artifact type, fetch appropriate serialized state
+					if (String.equals("ruletemplate", artifactExtn) || String.equals("ruletemplateinstance", artifactExtn)) {
+						responseMessage = WS_RF_FetchRTIContentsFromStore(responseTransferObject.loadedFromSCS, responseTransferObject.userArtifact, artifactContent, projectName, username, roles, asyncContextObject, contentType);
+					} else if (String.equals("rulefunction", artifactExtn) || String.equals("rulefunctionimpl", artifactExtn)) {
+						responseMessage = WS_RF_FetchDTArtifactContentsFromStore(responseTransferObject.loadedFromSCS, responseTransferObject.userArtifact, artifactContent, username, projectName, asyncContextObject, contentType);
+					} else if (String.equals("beprocess", artifactExtn)) {
+						responseMessage = WS_RF_FetchProcessArtifactContentsFromStore(artifactContent, responseTransferObject.userArtifact, contentType);
+					} else if (String.equals("domain", artifactExtn)) {
+						responseMessage = WS_RF_FetchDomainArtifactContentsFromStore(responseTransferObject.userArtifact, artifactContent, username, projectName, contentType);
+					}
+				} else {
+					responseStatus = -1;
+					errorCode = responseTransferObject.errorCode;
+					responseMessage = responseTransferObject.errorMessage;
+				}
+			}
+		}
+		
+		// Send response back only if there is a serialized state available
+		if (responseMessage != null) {
+			if (errorCode == null) {
+				tempReturnData = WS_RF_CreateTemporaryReturnData(responseStatus, recordCount, null, null, null);
+				tempReturnData.serializedData = responseMessage;
+			} else {
+				tempReturnData = WS_RF_CreateTemporaryReturnData(responseStatus, recordCount, errorCode, responseMessage, null);
+			}
+		}
+		
+		return tempReturnData;
+	}
+}

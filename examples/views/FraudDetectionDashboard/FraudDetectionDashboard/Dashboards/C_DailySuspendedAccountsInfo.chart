@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beviewsconfig:TextComponent xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:beviewsconfig="http://www.tibco.com/be/designer" xmlns:designtime="http:///com/tibco/cep/designtime/core/model/designtime_ontology.ecore" namespace="/Dashboards/" folder="/Dashboards/" name="C_DailySuspendedAccountsInfo" description="Shows Suspended Accounts Information" GUID="D72AE686-B7D5-17D9-7FC8-825B9AE5481A" ownerProjectName="FraudDetectionDashboard" version="1304549728142" displayName="Suspended Accounts" componentColorSetIndex="0">
+  <extendedProperties>
+    <properties xsi:type="designtime:SimpleProperty" name="Category">
+      <extendedProperties>
+        <properties xsi:type="designtime:SimpleProperty" name="Suspended"/>
+      </extendedProperties>
+    </properties>
+    <properties xsi:type="designtime:SimpleProperty" name="MaxValue" value="100.0"/>
+    <properties xsi:type="designtime:SimpleProperty" name="MinValue" value="0.0"/>
+    <properties xsi:type="designtime:SimpleProperty" name="subtype" value="SingleMeasure"/>
+  </extendedProperties>
+  <visualization xsi:type="beviewsconfig:TextVisualization" namespace="/Dashboards/" folder="/Dashboards/" name="TCV_" description="" GUID="76FBAF7F-BACF-3A58-E587-DADF7ADC1A58" ownerProjectName="FraudDetectionDashboard" version="1304549728142" showHeader="true">
+    <seriesConfig xsi:type="beviewsconfig:TextSeriesConfig" namespace="/Dashboards/" folder="/Dashboards/" name="Max" description="" GUID="B4CB4F8D-A860-3ADB-9775-2E4E90AA276C" ownerProjectName="FraudDetectionDashboard" version="1304549728142">
+      <actionRule namespace="/Dashboards/" folder="/Dashboards/" name="Series__AR" description="" GUID="2FC97D1A-3A0B-2324-B4CD-EE5235D1F227" ownerProjectName="FraudDetectionDashboard" version="1304549728142" threshold="0" thresholdUnit="count">
+        <dataSource href="DS_DailyMaxAccountsByStatus.datasource#/"/>
+        <drillableFields href="M_DailyMaxAccountsByStatus.metric#//@properties.0"/>
+        <drillableFields href="M_DailyMaxAccountsByStatus.metric#//@properties.1"/>
+        <params namespace="/Dashboards/" folder="/Dashboards/" name="trackingDate" description="" GUID="0EA2B438-1CF6-CD24-2CA6-396C36406E52" ownerProjectName="FraudDetectionDashboard" version="1304549728143" value="${SYS:TODAY}" type="DateTime"/>
+        <params namespace="/Dashboards/" folder="/Dashboards/" name="status" description="" GUID="3980F4B6-0DB7-D39F-BB6E-CE5E5FF7126F" ownerProjectName="FraudDetectionDashboard" version="1304549728143" value="Suspended" type="String"/>
+      </actionRule>
+      <valueDataConfig xsi:type="beviewsconfig:TextValueDataConfig" headerName="Max" width="30" alignment="center">
+        <extractor>
+          <sourceField href="M_DailyMaxAccountsByStatus.metric#//@properties.2"/>
+        </extractor>
+        <formatter xsi:type="beviewsconfig:TextFieldFormat" toolTipFormat="Maximum {AccntStatus} accounts ever created - {MaxCount}" displayFormat="{MaxCount}" showLabel="true">
+          <formatStyle fontSize="10" fontStyle="normal"/>
+        </formatter>
+      </valueDataConfig>
+      <categoryDataConfig xsi:type="beviewsconfig:TextCategoryDataConfig">
+        <extractor>
+          <sourceField href="M_DailyMaxAccountsByStatus.metric#//@properties.1"/>
+        </extractor>
+        <formatter xsi:type="beviewsconfig:TextFieldFormat" displayFormat="{AccntStatus}"/>
+      </categoryDataConfig>
+    </seriesConfig>
+    <seriesConfig xsi:type="beviewsconfig:TextSeriesConfig" namespace="/Dashboards/" folder="/Dashboards/" name="Current" description="" GUID="176AA612-C89C-59B2-9209-9C74A1260243" ownerProjectName="FraudDetectionDashboard" version="1304549728143">
+      <actionRule namespace="/Dashboards/" folder="/Dashboards/" name="Series__AR" description="" GUID="07725401-32A8-4F3B-AD78-A9E09B136512" ownerProjectName="FraudDetectionDashboard" version="1304549728143" threshold="0" thresholdUnit="count">
+        <dataSource href="DS_DailyCurrAccountsByStatus.datasource#/"/>
+        <alert xsi:type="beviewsconfig:RangeAlert" namespace="/Dashboards/" folder="/Dashboards/" name="Under" description="" GUID="3964E2EE-1FA1-0FF6-649E-1358CEB7896D" ownerProjectName="FraudDetectionDashboard" version="1304549728143" enabled="true" lowerValue="0.0" upperValue="10.0">
+          <action xsi:type="beviewsconfig:VisualAlertAction" namespace="/Dashboards/" folder="/Dashboards/" name="A_" description="" GUID="00066969-1890-7B40-2C52-681BDE8FDF32" ownerProjectName="FraudDetectionDashboard" version="1304549728143" enabled="true" fillColor="00FF00" fontSize="10" fontStyle="normal" fontColor="000000"/>
+        </alert>
+        <alert xsi:type="beviewsconfig:RangeAlert" namespace="/Dashboards/" folder="/Dashboards/" name="Normal" description="" GUID="3047ACE2-4484-A0D8-1DFB-AC5006539579" ownerProjectName="FraudDetectionDashboard" version="1304549728143" enabled="true" lowerValue="11.0" upperValue="50.0">
+          <action xsi:type="beviewsconfig:VisualAlertAction" namespace="/Dashboards/" folder="/Dashboards/" name="A_" description="" GUID="AE56B439-15B4-AD0E-8F64-E0582AF4C27B" ownerProjectName="FraudDetectionDashboard" version="1304549728143" enabled="true" fillColor="FF8000" fontSize="10" fontStyle="normal" fontColor="000000"/>
+        </alert>
+        <alert xsi:type="beviewsconfig:RangeAlert" namespace="/Dashboards/" folder="/Dashboards/" name="Over" description="" GUID="02FDBC14-C813-AE5D-87EF-BB1A682D1889" ownerProjectName="FraudDetectionDashboard" version="1304549728143" enabled="true" lowerValue="51.0" upperValue="100.0">
+          <action xsi:type="beviewsconfig:VisualAlertAction" namespace="/Dashboards/" folder="/Dashboards/" name="A_" description="" GUID="252E59BE-596C-1BF2-DDD4-F7A5810CB25C" ownerProjectName="FraudDetectionDashboard" version="1304549728144" enabled="true" fillColor="ff0000" fontSize="10" fontStyle="normal" fontColor="000000"/>
+        </alert>
+        <drillableFields href="M_DailyCurrAccountsByStatus.metric#//@properties.0"/>
+        <drillableFields href="M_DailyCurrAccountsByStatus.metric#//@properties.1"/>
+        <params namespace="/Dashboards/" folder="/Dashboards/" name="trackingDate" description="" GUID="4DE8CE65-04C2-6B58-28D2-AC0499F67299" ownerProjectName="FraudDetectionDashboard" version="1304549728144" value="${SYS:TODAY}" type="DateTime"/>
+        <params namespace="/Dashboards/" folder="/Dashboards/" name="status" description="" GUID="19F995CD-12D4-9CC0-E054-5818A575DEA5" ownerProjectName="FraudDetectionDashboard" version="1304549728144" value="Suspended" type="String"/>
+      </actionRule>
+      <valueDataConfig xsi:type="beviewsconfig:TextValueDataConfig" headerName="Current" width="30" alignment="center">
+        <extractor>
+          <sourceField href="M_DailyCurrAccountsByStatus.metric#//@properties.2"/>
+        </extractor>
+        <formatter xsi:type="beviewsconfig:IndicatorFieldFormat" toolTipFormat="Currently {CurrentCount} accounts are in {AccntStatus} status" displayFormat="{CurrentCount}" showLabel="true" showTextValue="true" textValueAnchor="east">
+          <formatStyle fontSize="10" fontStyle="normal"/>
+        </formatter>
+      </valueDataConfig>
+      <categoryDataConfig xsi:type="beviewsconfig:TextCategoryDataConfig">
+        <extractor>
+          <sourceField href="M_DailyCurrAccountsByStatus.metric#//@properties.1"/>
+        </extractor>
+        <formatter xsi:type="beviewsconfig:TextFieldFormat" displayFormat="{AccntStatus}"/>
+      </categoryDataConfig>
+    </seriesConfig>
+    <valueGuidelineConfig xsi:type="beviewsconfig:TextValueGuidelineConfig" headerAlignment="right">
+      <headerFormatStyle fontSize="10" fontStyle="bold"/>
+    </valueGuidelineConfig>
+    <categoryGuidelineConfig xsi:type="beviewsconfig:TextCategoryGuidelineConfig" headerName="Status" sortOrder="unsorted" headerAlignment="left" labelAlignment="left" width="40">
+      <headerFormatStyle fontSize="10" fontStyle="bold"/>
+      <labelFormatStyle fontSize="10" fontStyle="normal"/>
+    </categoryGuidelineConfig>
+  </visualization>
+  <layoutConstraint xsi:type="beviewsconfig:FlowLayoutConstraint" componentRowSpan="1" componentColSpan="1"/>
+  <relatedElement href="C_DailyNormalAccountsInfo.chart#/"/>
+</beviewsconfig:TextComponent>

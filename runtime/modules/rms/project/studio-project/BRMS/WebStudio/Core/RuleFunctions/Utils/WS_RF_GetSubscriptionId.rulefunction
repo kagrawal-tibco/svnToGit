@@ -1,0 +1,26 @@
+/**
+ * @description 
+ */
+String rulefunction WebStudio.Core.RuleFunctions.Utils.WS_RF_GetSubscriptionId {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String loggedInUsername;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.WS_RF_GetSubscriptionId");
+		
+		String subscriptionId = null;
+		
+		String userExtId = WS_RF_CreateUserArtifactExtId("webstudio", null, null, loggedInUsername, null, null);
+		WS_C_LoggedInUser loggedInUser = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(userExtId, false, "/WebStudio/Security/Authn/Concepts/WS_C_LoggedInUser");
+		if (loggedInUser != null) {
+			if (loggedInUser.jwtToken != null) subscriptionId = loggedInUser.jwtToken.sbsc;
+		} else {
+			Log.log(LOGGER, "Debug", "Could not find LoggedIn User with ExtId[%s]", userExtId);
+		}
+		
+		return subscriptionId;
+	}
+}

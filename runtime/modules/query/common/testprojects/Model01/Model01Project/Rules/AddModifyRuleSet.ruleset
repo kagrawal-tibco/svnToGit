@@ -1,0 +1,280 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<ruleset icon="" name="AddModifyRuleSet" description="" guid="1210990851060-1459095868" bindings="" namespace="" folder="/Rules/">
+    <lastModified/>
+    <extendedProperties/>
+    <hiddenProperties/>
+    <rules>
+        <rule icon="" name="deleteCustomerRule" description="" guid="1210990851060-357213360" bindings="" namespace="" isAFunction="false" isAConditionFunction="false" compilationStatus="-1">
+            <lastModified/>
+            <extendedProperties/>
+            <hiddenProperties/>
+            <priority>5</priority>
+            <testInterval>-1</testInterval>
+            <startTime>-1</startTime>
+            <doesRequeue>false</doesRequeue>
+            <maxRules>1</maxRules>
+            <fwdChain>true</fwdChain>
+            <bwdChain>false</bwdChain>
+            <declarations>
+                <declaration identifier="customer" entity="/Concepts/Customer" entityType="concept">
+                    <domain>
+                        <entries/>
+                    </domain>
+                </declaration>
+                <declaration identifier="deletecustomerevent" entity="/Events/DeleteCustomerEvent" entityType="event">
+                    <domain>
+                        <entries/>
+                    </domain>
+                </declaration>
+            </declarations>
+            <condition>"C"+deletecustomerevent.customerId == customer@extId;</condition>
+            <action>System.debugOut("DELETING CUSTOMER:"+customer.customerId);
+RuleFunction.dumpCustomerData(customer);
+for(int i=0;i &lt; customer.orders@length; i=i+1) {
+   if(customer.orders[i] != null) {
+        System.debugOut("DELETING ORDER:"+ customer.orders[i]);
+        Instance.deleteInstance(customer.orders[i]);
+     }
+}
+Instance.deleteInstance(customer);
+</action>
+            <requeueVars/>
+            <template/>
+            <author/>
+        </rule>
+        <rule icon="" name="AddressRule" description="" guid="1210990851060-1319408636" bindings="" namespace="" isAFunction="false" isAConditionFunction="false" compilationStatus="-1">
+            <lastModified/>
+            <extendedProperties/>
+            <hiddenProperties/>
+            <priority>5</priority>
+            <testInterval>-1</testInterval>
+            <startTime>-1</startTime>
+            <doesRequeue>false</doesRequeue>
+            <maxRules>1</maxRules>
+            <fwdChain>true</fwdChain>
+            <bwdChain>false</bwdChain>
+            <declarations>
+                <declaration identifier="addressevent" entity="/Events/AddressEvent" entityType="event">
+                    <domain>
+                        <entries/>
+                    </domain>
+                </declaration>
+                <declaration identifier="customer" entity="/Concepts/Customer" entityType="concept">
+                    <domain>
+                        <entries/>
+                    </domain>
+                </declaration>
+            </declarations>
+            <condition>addressevent.customerId == customer.customerId;</condition>
+            <action>Address address = Instance.getByExtId("A"+String.valueOfLong(addressevent.addressId));
+if(null == address) {
+    address = Instance.newInstance("/Concepts/Address","A"+String.valueOfLong(addressevent.addressId));
+    System.debugOut("ADDING ADDRESS to CUSTOMER:"+customer.customerId);
+    address.addressId = addressevent.addressId;
+    address.street = addressevent.street;
+    address.city = addressevent.city;
+    address.state = addressevent.state;
+    address.country = addressevent.country;
+    customer.addresses[customer.addresses@length]=address;
+} else {
+    System.debugOut("MODIFYING ADDRESS for CUSTOMER:"+customer.customerId);
+    if(null != addressevent.street  &amp;&amp; address.street != addressevent.street) {
+        address.street = addressevent.street;
+    }
+   if(null != addressevent.city  &amp;&amp; address.city != addressevent.city) {
+        address.city = addressevent.city;
+    }
+   if(null != addressevent.state  &amp;&amp; address.state != addressevent.state) {
+        address.state = addressevent.state;
+    }
+    if(null != addressevent.country  &amp;&amp; address.country != addressevent.country) {
+        address.country = addressevent.country;
+    }
+}
+Event.consumeEvent(addressevent);</action>
+            <requeueVars/>
+            <template/>
+            <author/>
+        </rule>
+        <rule icon="" name="OrderRule" description="" guid="1210990851060-701980882" bindings="" namespace="" isAFunction="false" isAConditionFunction="false" compilationStatus="-1">
+            <lastModified/>
+            <extendedProperties/>
+            <hiddenProperties/>
+            <priority>3</priority>
+            <testInterval>-1</testInterval>
+            <startTime>-1</startTime>
+            <doesRequeue>false</doesRequeue>
+            <maxRules>1</maxRules>
+            <fwdChain>true</fwdChain>
+            <bwdChain>false</bwdChain>
+            <declarations>
+                <declaration identifier="orderevent" entity="/Events/OrderEvent" entityType="event">
+                    <domain>
+                        <entries/>
+                    </domain>
+                </declaration>
+                <declaration identifier="customer" entity="/Concepts/Customer" entityType="concept">
+                    <domain>
+                        <entries/>
+                    </domain>
+                </declaration>
+            </declarations>
+            <condition>orderevent.customerId == customer.customerId;
+</condition>
+            <action>Order order = Instance.getByExtId("O"+String.valueOfLong(orderevent.orderId));
+if(null == order ) {
+    System.debugOut("CREATING ORDER:"+orderevent.orderId + " FOR CUSTOMER:" + orderevent.customerId);
+    order = Instance.newInstance("/Concepts/Order","O"+String.valueOfLong(orderevent.orderId));
+    order.customerId = orderevent.customerId;
+    order.orderId = orderevent.orderId;
+    order.items = orderevent.items;
+    order.value = orderevent.value;   
+    Scorecards.ShopCard.numOrders=Scorecards.ShopCard.numOrders+1;
+    //Instance.PropertyArray.appendConceptReference(customer.orders, order,0);
+    customer.orders[customer.orders@length]=order;
+    for(int i=0; i &lt; customer.orders@length; i = i+1) {
+        Order o = customer.orders[i];
+        System.debugOut("*************** Customer orders:" + o);
+    }
+} else {
+    
+    System.debugOut("MODIFYING ORDER:"+orderevent.orderId + " FOR CUSTOMER:" + orderevent.customerId);
+    if(orderevent.items != 0 &amp;&amp; orderevent.items != order.items) {
+        order.items = orderevent.items;
+    }  
+    if(orderevent.value != 0.0 &amp;&amp; orderevent.value != order.value) {
+        order.value = orderevent.value;
+    } 
+    Customer c = Instance.getByExtId("C"+order.customerId);
+    if(null == c) {
+        System.debugOut("No customer found for order :"+order+" with customerid:"+order.customerId);
+        System.debugOut("Removing order :"+ order);
+        Instance.deleteInstance(order);
+    }  
+}
+Event.consumeEvent(orderevent);</action>
+            <requeueVars/>
+            <template/>
+            <author/>
+        </rule>
+        <rule icon="" name="CustomerRule" description="" guid="1210990851060-1379185852" bindings="" namespace="" isAFunction="false" isAConditionFunction="false" compilationStatus="-1">
+            <lastModified>2008-05-16T19:25:58.822-07:00</lastModified>
+            <extendedProperties/>
+            <hiddenProperties/>
+            <priority>5</priority>
+            <testInterval>-1</testInterval>
+            <startTime>-1</startTime>
+            <doesRequeue>false</doesRequeue>
+            <maxRules>1</maxRules>
+            <fwdChain>true</fwdChain>
+            <bwdChain>false</bwdChain>
+            <declarations>
+                <declaration identifier="customerevent" entity="/Events/CustomerEvent" entityType="event">
+                    <domain>
+                        <entries/>
+                    </domain>
+                </declaration>
+            </declarations>
+            <condition/>
+            <action>Customer customer = Instance.getByExtId("C"+String.valueOfLong(customerevent.customerId));
+if(null == customer) {
+    System.debugOut("ADDING CUSTOMER");
+    customer = Instance.newInstance("/Concepts/Customer","C"+String.valueOfLong(customerevent.customerId));
+    customer.name = customerevent.name;
+    customer.age = customerevent.age;
+    customer.customerId = customerevent.customerId;
+    customer.business = customerevent.business;
+    customer.aliases[customer.aliases@length]=customerevent.name;
+    Scorecards.ShopCard.numCustomers=Scorecards.ShopCard.numCustomers+1;
+    customer.pendingOrders = 0;
+} else {
+    System.debugOut("MODIFY CUSTOMER");
+    if(customer.age != customerevent.age) {
+        customer.age = customerevent.age;
+    }
+    if(null != customerevent.name &amp;&amp; customer.name != customerevent.name  ) {
+        customer.aliases[customer.aliases@length]=customerevent.name;
+        customer.name = customerevent.name;
+    }
+    if(null != customerevent.gender &amp;&amp; customer.gender != customerevent.gender) {
+        customer.gender = customerevent.gender;
+    }
+     
+    if(false != customerevent.business &amp;&amp; customer.business != customerevent.business) {
+        customer.business = customerevent.business;
+    }
+}
+Event.consumeEvent(customerevent);</action>
+            <requeueVars/>
+            <template/>
+            <author/>
+        </rule>
+        <rule icon="" name="BusinessEventRule" description="" guid="1210990851060-105941394" bindings="" namespace="" isAFunction="false" isAConditionFunction="false" compilationStatus="-1">
+            <lastModified/>
+            <extendedProperties/>
+            <hiddenProperties/>
+            <priority>5</priority>
+            <testInterval>-1</testInterval>
+            <startTime>-1</startTime>
+            <doesRequeue>false</doesRequeue>
+            <maxRules>1</maxRules>
+            <fwdChain>true</fwdChain>
+            <bwdChain>false</bwdChain>
+            <declarations>
+                <declaration identifier="businessevent" entity="/Events/BusinessEvent" entityType="event">
+                    <domain>
+                        <entries/>
+                    </domain>
+                </declaration>
+            </declarations>
+            <condition>(Scorecards.ShopCard.numCustomers &lt; Scorecards.ShopCard.maxCustomerCapacity) || (Scorecards.ShopCard.numOrders &lt; Scorecards.ShopCard.maxOrderCapacity);</condition>
+            <action>System.debugOut("Shop has "+Scorecards.ShopCard.numCustomers+" customers and "+ Scorecards.ShopCard.numOrders + " orders");
+long customerid = RuleFunction.getRandomId(Scorecards.ShopCard.maxCustomerCapacity);
+CustomerEvent ce = Events.CustomerEvent.CustomerEvent(/*extId String */ null,
+                                                      /*payload String */ null,
+                                                      /*name String */ "TEST-"+RuleFunction.getRandomId(Scorecards.ShopCard.maxCustomerCapacity),
+                                                      /*gender String */ "M",
+                                                      /*age int */   customerid%100,
+                                                      /*business boolean */ false,
+                                                      /*netWorth double */  RuleFunction.getRandomId(Scorecards.ShopCard.maxCustomerCapacity),
+                                                      /*customerId long */ customerid);
+Event.sendEvent(ce);
+//long addressid = RuleFunction.getRandomId(Scorecards.ShopCard.maxCustomerCapacity);
+//int option = RuleFunction.getRandomId(Scorecards.ShopCard.maxCustomerCapacity)%3;
+//String city;
+/*if(option == 0) {
+    city = "PALO ALTO";
+} else if (option == 1 ) {
+    city = "SUNNYVALE";    
+} else if (option == 2) {
+    city = "MOUNTAIN VIEW";
+}*/
+//AddressEvent ad = Events.AddressEvent.AddressEvent(  /*extId String */ null,
+//                                                     /*payload String */ null,
+//                                                     /*addressId long */addressid,
+//                                                     /*street String */"STREET-"+String.valueOfLong(option),
+//                                                     /*city String */ city,
+//                                                     /*state String */ "CA",
+//                                                     /*country String */ "USA",
+//                                                     /*customerId long */ customerid );
+//Event.sendEvent(ad);
+
+//option =  RuleFunction.getRandomId(Scorecards.ShopCard.maxOrderCapacity) % 3;
+//if(option == 0 || option == 1) {
+//    long orderid =customerid;
+//    OrderEvent oe = Events.OrderEvent.OrderEvent(  /*extId String */ null,
+//                                                   /*payload String */ null,
+//                                                   /*orderId long */ orderid,
+//                                                   /*customerId long */ customerid,
+//                                                   /*items int */  RuleFunction.getRandomId(Scorecards.ShopCard.maxOrderCapacity)%10,
+//                                                   /*value double */ RuleFunction.getRandomId(Scorecards.ShopCard.maxOrderCapacity)%50);
+//   Event.sendEvent(oe);  
+//} 
+</action>
+            <requeueVars/>
+            <template/>
+            <author/>
+        </rule>
+    </rules>
+</ruleset>

@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<drivers>
+	<driver>
+		<type>Hawk</type>
+		<label>TIBCO Hawk Connection</label>
+		<class>com.tibco.cep.driver.hawk.HawkDriver</class>
+		<description>TIBCO Hawk besed on RendezVous</description>
+		<version>1.0.0</version>
+		<properties>
+			<property name="Domain" type="String" default="default" />
+			<property name="Transport" type="String" default="RendezVous" />
+			<property name="RV_Service" type="String" default="7474" />
+			<property name="RV_Network" type="String" default="" />
+			<property name="RV_Daemon" type="String" default="tcp:7474" />
+			<property name="EMS_ServerURL" type="String" default="tcp://localhost:7222" />
+			<property name="EMS_UserName" type="String" default="" />
+			<property name="EMS_Password" type="String" default="" />
+		</properties>
+		<destinations>
+			<property name="MonitorType" type="String" default="AlertMonitor" />
+			<property name="SubscriptionMethodURI" displayName="Subscription Method URI" type="String" default="" />
+			<property name="TimeInterval" displayName="TimeInterval (seconds)" type="Integer" default="10" />
+			<property name="Arguments" type="String" default="" />
+		</destinations>
+		<references>
+			<type>ae.shared.HawkResource</type>
+		</references>
+		<serializers userdefined="true">
+			<serializer type="HawkSerializer"
+				class="com.tibco.cep.driver.hawk.serializer.HawkSerializer" default="true" />
+		</serializers>
+		<configuration>
+			<property>
+				<name>Transport</name>
+				<parent>channel</parent>
+				<type>combo-box</type>
+				<choices default="AlertMonitor">
+					<choice displayed="RendezVous" value="RendezVous" />
+					<choice displayed="EMS" value="EMS" />
+				</choices>
+			</property>
+			<property>
+				<name>MonitorType</name>
+				<parent>destination</parent>
+				<type>combo-box</type>
+				<choices default="AlertMonitor">
+					<choice displayed="AlertMonitor" value="AlertMonitor" />
+					<choice displayed="RuleBaseListMonitor" value="RuleBaseListMonitor" />
+					<choice displayed="AgentMonitor" value="AgentMonitor" />
+					<choice displayed="MicroAgentListMonitor" value="MicroAgentListMonitor" />
+					<choice displayed="ErrorMonitor" value="ErrorMonitor" />
+					<choice displayed="WarningMonitor" value="WarningMonitor" />
+					<choice displayed="MicroAgent Method Subscription" value="MicroAgent Method Subscription" />
+				</choices>
+			</property>
+		</configuration>
+	</driver>
+</drivers>

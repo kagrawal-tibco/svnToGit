@@ -1,0 +1,186 @@
+/**
+ * @description Perform core authen.
+ */
+WebStudio.Core.Concepts.DataSources.WS_C_TemporaryReturnData rulefunction WebStudio.Security.Authn.RuleFunctions.WS_RF_PerformLogin {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object servletRequest;
+		String contextPath;
+		WebStudio.Security.Authn.Concepts.WS_C_JWTToken jwtToken;
+		String userRoles;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Security.Authn.RuleFunctions.WS_RF_PerformLogin");
+		
+		WS_C_ResponseData responseData = null;
+		int responseStatus = -1;
+		String errorCode = null;
+		String responseMessage = null;		
+
+		String httpMethod = HTTP.Servlet.Request.getMethod(servletRequest);
+		
+		if (String.equals(httpMethod, "GET")) {
+
+			Log.log(LOGGER, "Debug", "Context Path - %s", contextPath);
+			String username = null;
+			if (contextPath != null) {
+				username = String.substringBefore(contextPath, "/");
+				if (username != null) {
+					username = HTTP.decodeURL(username, null);
+				}
+			} else if (jwtToken != null) {
+				username = jwtToken.uname;
+			}
+			
+			String password = HTTP.Servlet.Request.getRequestParameter(servletRequest, "password");
+			String forceLogin = HTTP.Servlet.Request.getRequestParameter(servletRequest, "forceLogin");
+			String remoteAddress = HTTP.Servlet.Request.getRequestorAddress(servletRequest);
+					
+			WS_C_LoggedInUser loggedInUser = null;			
+			String loginToken = null;
+			String apiToken = null;
+						
+			if (username == null || String.equals("", username)) {
+				Log.log(LOGGER, "Error", "Username cannot be empty.");
+				responseStatus = -1;
+				errorCode = "ERR_1100";
+				responseMessage = "Username cannot be empty";																					
+			} else {	
+
+				WS_E_UpdateLoginUserSessionEvent loginUserSessionEvent =
+					Event.createEvent("xslt://{{/WebStudio/Security/Authn/Events/WS_E_UpdateLoginUserSessionEvent}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"1.0\" exclude-result-prefixes=\"xsl xsd\">\n    <xsl:output method=\"xml\"/>\n    <xsl:template match=\"/\">\n        <createEvent>\n            <event/>\n        </createEvent>\n    </xsl:template>\n</xsl:stylesheet>");
+
+				String qUsername = WS_RF_CreateUserArtifactExtId("webstudio", null, null, username, null, null);
+				boolean locked = Cluster.DataGrid.Lock(qUsername, -1, false);
+				if (locked) {						
+					Log.log(LOGGER, "Info", "Attempting login for user %s", username);
+					
+					try {
+						if (jwtToken == null) {
+							loginToken = Authentication.authenticate(username, password);
+							username = XPath.execute("string($var/token/authen/user/attribute::username)", loginToken, "");
+							qUsername = WS_RF_CreateUserArtifactExtId("webstudio", null, null, username, null, null);
+						}
+						loginUserSessionEvent.username = username;
+						if (loginToken != null || jwtToken != null) {
+							Log.log(LOGGER, "Debug", "Checking for the User concept for username %s in Cache", username);
+							apiToken = String.replaceAll(WS.Common.generateUUID(), "-", "");
+							
+							loggedInUser = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(qUsername, false, "/WebStudio/Security/Authn/Concepts/WS_C_LoggedInUser");					
+							if (loggedInUser == null) {
+								//Create a logged in user entry
+								Log.log(LOGGER, "Debug", "Creating new loggedin user entry for username %s", username);
+								loggedInUser = Instance.createInstance("xslt://{{/WebStudio/Security/Authn/Concepts/WS_C_LoggedInUser}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"1.0\" exclude-result-prefixes=\"xsl xsd\">\n    <xsl:output method=\"xml\"/>\n    <xsl:param name=\"qUsername\"/>\n    <xsl:param name=\"username\"/>\n    <xsl:param name=\"remoteAddress\"/>\n    <xsl:template match=\"/\">\n        <createObject>\n            <object>\n                <xsl:attribute name=\"extId\">\n                    <xsl:value-of select=\"$qUsername\"/>\n                </xsl:attribute>\n                <username>\n                    <xsl:value-of select=\"$username\"/>\n                </username>\n                <loginTime>\n                    <xsl:value-of select=\"current-dateTime()\"/>\n                </loginTime>\n                <accessTimeStamp>\n                    <xsl:value-of select=\"current-dateTime()\"/>\n                </accessTimeStamp>\n                <remoteAddress>\n                    <xsl:value-of select=\"$remoteAddress\"/>\n                </remoteAddress>\n            </object>\n        </createObject>\n    </xsl:template>\n</xsl:stylesheet>");
+								loginUserSessionEvent.operationType = "LOGIN_SUCCESS";
+								loginUserSessionEvent.loginToken = loginToken;
+								loginUserSessionEvent.apiToken = apiToken;
+								responseStatus = 0;												
+							} else {
+								Log.log(LOGGER, "Debug", "User concept for username %s present in Cache", username);
+								int sessionTimeout = System.getGlobalVariableAsInt("Webstudio/sessionTimeOut", 30);						
+								boolean isSessionTimedout = AMS_RF_IsSessionTimedout(sessionTimeout, loggedInUser.accessTimeStamp);
+											
+								if (forceLogin != null && String.equals("true", forceLogin)) {
+									Log.log(LOGGER, "Debug", "ForceLogin for user %s", username);
+									//Create a logged in user entry
+									Instance.deleteInstance(loggedInUser);
+									
+									loggedInUser = Instance.createInstance("xslt://{{/WebStudio/Security/Authn/Concepts/WS_C_LoggedInUser}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"1.0\" exclude-result-prefixes=\"xsl xsd\">\n    <xsl:output method=\"xml\"/>\n    <xsl:param name=\"qUsername\"/>\n    <xsl:param name=\"username\"/>\n    <xsl:param name=\"remoteAddress\"/>\n    <xsl:template match=\"/\">\n        <createObject>\n            <object>\n                <xsl:attribute name=\"extId\">\n                    <xsl:value-of select=\"$qUsername\"/>\n                </xsl:attribute>\n                <username>\n                    <xsl:value-of select=\"$username\"/>\n                </username>\n                <loginTime>\n                    <xsl:value-of select=\"current-dateTime()\"/>\n                </loginTime>\n                <accessTimeStamp>\n                    <xsl:value-of select=\"current-dateTime()\"/>\n                </accessTimeStamp>\n                <remoteAddress>\n                    <xsl:value-of select=\"$remoteAddress\"/>\n                </remoteAddress>\n            </object>\n        </createObject>\n    </xsl:template>\n</xsl:stylesheet>");
+									loginUserSessionEvent.operationType = "LOGIN_SUCCESS";
+									loginUserSessionEvent.loginToken = loginToken;
+									loginUserSessionEvent.apiToken = apiToken;
+									responseStatus = 0;
+								}
+							 	else if (isSessionTimedout) {
+								    //LoggedInUser Concept found in Cache & is of a Stale Login session						
+									loginUserSessionEvent.operationType = "LOGIN_SUCCESS";
+									loginUserSessionEvent.loginToken = loginToken;
+									//Set the new API token
+									loginUserSessionEvent.apiToken = apiToken;
+									loginUserSessionEvent.loginTime = DateTime.now();									
+									responseStatus = 0;																								
+								} else { 
+									//Logging-in, while user already logged-in, So don't allow
+									String errorMessage = String.format("User [%s] already logged-in from [%s]. Multiple user logins not allowed", username, loggedInUser.remoteAddress);						 
+									Log.log(LOGGER, "Error", errorMessage);
+									responseStatus = -1;
+									errorCode = "ERR_1101";
+									responseMessage = errorMessage;																												
+								}					
+							}															
+						} else { //Token is NULL, Authentication failed				
+							Log.log(LOGGER, "Error", "Authentication Failed for username %s. Invalid security token.", username);
+							responseStatus = -1;
+							errorCode = "ERR_1100";
+							responseMessage = "Authentication Failed. Invalid security token.";									
+						}
+					} catch (Exception e) {
+						String message = String.format("Authentication Failed %s", e@message);
+						Log.logException(LOGGER, "Error", message, e);
+						responseStatus = -1;
+						errorCode = "ERR_1100";
+						responseMessage = "Authentication Failed. Please retry or contact the server administrator.";
+					}
+								
+					
+					if (jwtToken != null) {
+						Log.log(LOGGER, "Debug", "Setting subscriptionId[%s] and userRoles[%s] to event", jwtToken.sbsc, userRoles);
+						loginUserSessionEvent.subscriptionId = jwtToken.sbsc;
+						loginUserSessionEvent.userRoles = userRoles;
+					}
+					
+					//Assert the Event
+					Event.assertEvent(loginUserSessionEvent);
+					Log.log(LOGGER, "Debug", "Asserting loginUserSessionEvent Event for user %s", username);
+				} //locked
+			}				
+				
+			if (responseStatus == 0) {
+				Log.log(LOGGER, "Info", "Webstudio login successful for user %s", username);							
+				Log.log(LOGGER, "Debug", "API Token [%s] for user [%s].", apiToken, username);
+				//Create the Response Data
+				responseData = Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/WS_C_ResponseData");
+				//Create the User Login data source
+				WS_C_AbstractDataSourceRecord loginResponseDataSourceRecord = 
+					Instance.newTransientInstance("/WebStudio/Security/Authn/Concepts/DataSources/Records/WS_C_LoginResponseDataSourceRecord");
+				
+				WS_C_LoginResponseDataSourceRecord loginDSRecord = loginResponseDataSourceRecord;
+				loginDSRecord.apiToken = apiToken;
+				
+				// Call addon catalog function
+				loginDSRecord.isDMInstalled = WS.Common.isDecisionManagerInstalled();
+				Log.log(LOGGER, "Debug", "Is Decision Manager Installed: %s", loginDSRecord.isDMInstalled);
+				
+				// Call addon catalog function
+				loginDSRecord.isBPMNInstalled = WS.Common.isBPMNInstalled();
+				Log.log(LOGGER, "Debug", "Is BPMN Installed: %s", loginDSRecord.isBPMNInstalled);
+
+				loginDSRecord.isLockingEnabled = System.getSystemPropertyAsBoolean("ws.scs.locking.enable", false);
+				Log.log(LOGGER, "Debug", "Is Locking Enabled: %s", loginDSRecord.isLockingEnabled);
+				
+				if (jwtToken != null) {
+					loginDSRecord.userName = jwtToken.uname;
+					loginDSRecord.firstName = jwtToken.fn;
+					loginDSRecord.lastName = jwtToken.ln;
+					loginDSRecord.email = jwtToken.email;
+					loginDSRecord.subscriptionId = jwtToken.sbsc;
+				}
+				
+				//Add the UserLogin record to the Response data  
+				Instance.PropertyArray.appendContainedConcept(responseData.record, loginResponseDataSourceRecord, 1L);											
+			}
+			
+			WS_RF_AddAuditTrailEntry(username, null, null, null, "LOGIN", responseMessage);
+														
+		} else { //Method is not 'GET'
+			Log.log(LOGGER, "Error", "Unsupported HTTP method - %s", httpMethod);
+			responseStatus = -1;
+			errorCode = "ERR_1006";
+			responseMessage = "Only GET HTTP method supported for this operation";			
+		}
+		
+		return WS_RF_CreateTemporaryReturnData(responseStatus, 0, errorCode, responseMessage, responseData);						
+	}
+}

@@ -1,0 +1,32 @@
+/**
+ * @description 
+ */
+Concept rulefunction WebStudio.Core.RuleFunctions.Utils.Domain.WS_RF_CreateDomainContentConcept {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String username;
+		String projectName;
+		String artifactContent;
+		String artifactType; 		
+		WebStudio.Core.Concepts.Domain.WS_C_DomainUserArtifact domainUserArtifact;
+		String contentType;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.Domain.WS_RF_CreateDomainContentConcept");
+		
+		WS_C_Domain domain = null;
+		if (String.equals(contentType, System.getGlobalVariableAsString("WebStudio/CONTENT_TYPE/XML", "application/xml"))) {
+			domain = Instance.
+					createTransientInstanceFromXML("/WebStudio/Core/Concepts/Domain/WS_C_Domain", artifactContent);
+		} else {
+			domain = Instance.
+					createTransientInstanceFromJSON("/WebStudio/Core/Concepts/Domain/WS_C_Domain", artifactContent);
+		}
+		WS.Common.setExtId(domain, "DOMAIN_" + WS.Common.generateUUID());
+		Log.log(LOGGER, "Debug", "Transient instance of Domain [%s] from content [%s]", domain.name, artifactContent);
+					
+		return domain;		
+	}
+}

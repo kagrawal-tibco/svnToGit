@@ -1,0 +1,271 @@
+<h1 mat-dialog-title></h1>
+<div mat-dialog-content>
+  <form class="form">
+      <div *ngIf="supportRangeFilter()" class='row justify-content-center'>
+          <div class="col-sm-10">
+              <mat-checkbox
+              name="rangeFilter"
+              [(ngModel)]='this.isRange'
+              labelPosition='before' i18n
+              >{{i18n('Range Entry')}}</mat-checkbox>
+          </div>
+      </div>
+      <div *ngIf="!isRangeFilter()" class='row justify-content-center'>
+          <div *ngIf="!isDateTime()" class="col-sm-10">
+              <mat-form-field class="full-width">
+                  <input 
+                    matInput
+                    #entryValueInput
+                    name="entryValue"
+                    type="text"
+                    placeholder="{{i18n('Entry Value')}}"
+                    i18n-placeholder 
+                    required
+                    autocomplete="false"
+                    [(ngModel)]="form.value"
+                    [disabled]='!canEdit()'
+                    (focusout)="validateSingleValue()"
+                  >
+              </mat-form-field>
+          </div>
+          <div *ngIf="isDateTime()" class="col-sm-10">
+              <datetime-editor
+                [edit]='true'
+                [hideTimezone]='true'
+                [(value)]='form.valueD'
+                floatLabel="{{i18n('Entry Value')}}" i18n-floatLabel
+            ></datetime-editor> 
+          </div>
+          <div class="col-sm-10">
+            <mat-form-field class="full-width">
+              <input
+                matInput
+                #entryDescription 
+                name="entryDescription"
+                type="text" 
+                placeholder="{{i18n('Entry Description')}}"
+                i18n-placeholder
+                autocomplete="false"
+                [(ngModel)]="form.eDescription"
+              >
+            </mat-form-field>
+          </div>
+      </div>
+      <div *ngIf="isRangeFilter()" class='row justify-content-center'>
+        <div *ngIf="!isDateTime()" class="col-sm-5">
+          <mat-form-field class="full-width">
+            <input 
+              matInput
+              name="columnName" 
+              type="text" 
+              placeholder="{{i18n('Lower Value')}}"
+              i18n-placeholder
+              required
+              autocomplete="false"
+              [(ngModel)]="form.lValue"
+              (focusout)="validateRangeValue()"
+            >
+          </mat-form-field>
+        </div>
+        <div *ngIf='isDateTime()' class="col-sm-5">
+            <datetime-editor
+              [edit]='true'
+              [hideTimezone]='true'
+              [(value)]='form.lValueD'
+              floatLabel="{{i18n('Lower Value')}}" i18n-floatLabel
+            ></datetime-editor>
+        </div>
+        <div class="col-sm-5">
+            <mat-checkbox
+              name='lowerIncluded'
+              [(ngModel)] = "this.form.lIncluded"
+              labelPosition='before' i18n
+            >
+            {{i18n('Include lower value')}}
+            </mat-checkbox>
+        </div>
+        <div *ngIf='!isDateTime()' class="col-sm-5">
+            <mat-form-field  class="full-width">
+              <input 
+                matInput
+                type="text" 
+                name="columnName1"
+                placeholder="{{i18n('Upper Value')}}"
+                i18n-placeholder
+                required
+                autocomplete="false"
+                [(ngModel)]="form.uValue"
+                (focusout)="validateRangeValue()"
+              >
+            </mat-form-field> 
+        </div>
+        <div *ngIf='isDateTime()' class="col-sm-5">
+            <datetime-editor
+              [edit]='true'
+              [hideTimezone]='true'
+              [(value)]='form.uValueD'
+              floatLabel="{{i18n('Upper Label')}}" i18n-floatLabel
+            ></datetime-editor>
+        </div>
+        <div class="col-sm-5">
+            <mat-checkbox
+              name='upperIncluded'
+              [(ngModel)] = "this.form.uIncluded"
+              labelPosition='before' i18n
+            >
+            {{i18n('Include upper value')}}
+            </mat-checkbox>
+        </div>
+        <div class="col-sm-10">
+          <mat-form-field class="full-width">
+              <input 
+              matInput
+              #entryDescription2
+              type="text" 
+              name="columnName2" 
+              placeholder="{{i18n('Entry Description')}}"
+              i18n-placeholder
+              autocomplete="false"
+              [(ngModel)]="form.eDescription"         
+            > 
+          </mat-form-field>
+        </div>
+      </div>
+  </form>
+</div>
+<!-- <div  mat-dialog-actions> 
+    <button
+      class="mat-icon-button custom-button"  
+      mat-dialog-close
+      (click)='onCancel()'
+    > <i class="material-icons icon-button custom-clear" matTooltip='Cancel' aria-label="clear">clear</i></button>
+  <button class="mat-icon-button custom-button" (click)='onSubmit()'>
+      <i class="material-icons icon-button custom-check"matTooltip='Confirm' aria-label="check">check</i>
+  </button>
+</div> -->
+<!-- 
+<div class="card panel-sm">
+   <div class="card-header">
+      {{addEditTitle}}
+   </div>
+   <div *ngIf="supportRangeFilter()" class="custom">
+        <label class='control-label control-label-normal'>Range Entry</label>
+        <toggle-switch [size]='"mini"' [value]='isRangeFilter()' (valueChange)='setRangeValue($event)'></toggle-switch>  
+   </div>
+   <br>
+   <div class="card-body">
+      <div *ngIf="!isRangeFilter()" class='row'>
+         <div class='col-sm-12'>
+            <form #newColumn="ngForm">
+               <div *ngIf="!isDateTime()" class="form-group">
+                  <label for="entryValue" class='control-label control-label-normal' >Entry value</label>
+                  <input type="text" name="entryValue" 
+                  #entryValueInput
+                  required
+                  class='form-control'
+                  autocomplete="false"
+                  [(ngModel)]="form.value"
+                  #entryValue="ngModel"
+                  [disabled]='!canEdit()'
+                  (focusout)="validateSingleValue()"
+                  >
+               </div>
+               <div *ngIf="isDateTime()" class="form-group">
+                  <label for="entryValue" class='control-label control-label-normal' >Entry value</label>
+                  <datetime-editor
+                    [edit]='true'
+                    [hideTimezone]='true'
+                    [(value)]='form.valueD'
+                ></datetime-editor> 
+               </div>
+               <div class="form-group">
+                  <label for="entryDescription" class='control-label control-label-normal'>Entry Description</label>
+                  <input type="text" name="entryDescription" 
+                  class='form-control'
+                  autocomplete="false"
+                  [(ngModel)]="form.eDescription"
+                  #entryDescription="ngModel"
+                  > 
+               </div>
+            </form>
+         </div>
+      </div>
+      <div *ngIf="isRangeFilter()" class='row'>
+         <div class='col-sm-12'>
+            <form #newColumn="ngForm">
+              <div style="display: flex">
+               <div *ngIf="!isDateTime()" class="form-group">
+                  <label for="columnName" class='control-label control-label-normal' >Lower value</label>
+                  <input type="text" name="columnName" 
+                  #columnNameInput
+                  required
+                  class='form-control'
+                  autocomplete="false"
+                  [(ngModel)]="form.lValue"
+                  #columnName="ngModel"
+                  (focusout)="validateRangeValue()"
+                  >
+               </div>
+               <div  *ngIf="isDateTime()" class="form-group">
+                  <label for="columnName" class='control-label control-label-normal' >Lower value</label>
+                  <datetime-editor
+                    [edit]='true'
+                    [hideTimezone]='true'
+                    [(value)]='form.lValueD'
+                  ></datetime-editor>
+               </div>
+               <div style="padding-top:30px; padding-left:20px;">
+                 <input type="checkbox" [(ngModel)]="this.form.lIncluded" name="lIncluded"> Included
+               </div>
+              </div>
+              <div style="display: flex">
+               <div *ngIf="!isDateTime()" class="form-group">
+                  <label for="columnName1" class='control-label control-label-normal' >Upper value</label>
+                  <input type="text" name="columnName1" 
+                  required
+                  class='form-control'
+                  autocomplete="false"
+                  [(ngModel)]="form.uValue"
+                  #columnName1="ngModel"
+                  (focusout)="validateRangeValue()"
+                  > 
+               </div>
+               <div *ngIf="isDateTime()" class="form-group">
+                  <label for="columnName1" class='control-label control-label-normal' >Upper value</label>
+                  <datetime-editor
+                    [edit]='true'
+                    [hideTimezone]='true'
+                    [(value)]='form.uValueD'
+                  ></datetime-editor>
+               </div>
+               <div style="padding-top:30px; padding-left:20px;">
+                 <input type="checkbox" [(ngModel)]="this.form.uIncluded" name="uIncluded"> Included
+               </div>
+              </div>
+               <div class="form-group">
+                  <label for="columnName2" class='control-label control-label-normal'>Entry Description</label>
+                  <input type="text" name="columnName2" 
+                  class='form-control'
+                  autocomplete="false"
+                  [(ngModel)]="form.eDescription"
+                  #columnName2="ngModel"
+                  > 
+               </div>
+            </form>
+         </div>
+      </div>
+   </div>
+</div>
+<div class="row left-pad right-pad bottom-pad top-pad">
+   <div class="col-sm-12">
+      <button
+         type="button"
+         class='btn btn-outline-primary btn-sm btn-narrow'
+         (click)='onCancel()'
+         >Cancel</button>
+      <button
+         class='btn btn-primary btn-sm btn-narrow pull-right'
+         (click)='onSubmit()'
+         >Confirm</button>
+   </div>
+</div> -->

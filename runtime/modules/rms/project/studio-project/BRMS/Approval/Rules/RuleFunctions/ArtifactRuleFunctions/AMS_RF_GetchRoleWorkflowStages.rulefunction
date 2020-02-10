@@ -1,0 +1,33 @@
+/**
+ * @description Get applicable stages for workflow for a particular role
+ */
+String rulefunction Approval.Rules.RuleFunctions.ArtifactRuleFunctions.AMS_RF_GetchRoleWorkflowStages {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String role;
+	}
+	body {
+		if (role == null) {
+			return null;
+		}
+				
+		String stageInfo = 
+			"<tns:WorkflowInfo xmlns:tns=\"www.tibco.com/be/rms/RoleWorkflowStages\">\n <tns:WorkflowStages>"; 
+		String stages = null;
+		//Get all stages this role has
+		AMS_C_Role roleConcept = Instance.getByExtIdByUri(role, "/AAA/Concepts/AMS_C_Role");
+		if (roleConcept != null) {
+			AMS_C_WorkflowStage[] applicableStages = Instance.PropertyArray.toArrayConcept(roleConcept.applicableStages);
+			
+			for (int loop = 0, length = applicableStages@length; loop < length; loop++) {	
+				AMS_C_WorkflowStage workflowStage = applicableStages[loop];
+				String serializedStage = "<tns:stage tns:id=\"" + workflowStage.stageId + "\" tns:name=\"" + workflowStage.name + "\"" + "/>";
+				stageInfo = String.concat(stageInfo, "\n" + serializedStage);					                   		
+			}
+		}
+		stageInfo = String.concat(stageInfo, "\n </tns:WorkflowStages>\n </tns:WorkflowInfo>");
+		return stageInfo;
+	}
+}

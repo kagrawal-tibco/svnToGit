@@ -1,0 +1,23 @@
+/**
+ * @description 
+ * @author 
+ */
+rule Rules.Normal.PrintResult {
+	attribute {
+		priority = 3;
+		forwardChain = true;
+	}
+	declare {
+		Model.Context	context;
+		
+	}
+	when {
+		context.status == "end";
+	}
+	then {
+		Seat firstSeat = Instance.getById(context.firstSeat);
+		long total = DateTime.getTimeInMillis(Context.endTime) - getTimeInMillis(Context.startTime);
+		System.debugOut("Total Search Time: " + total + "ms");
+		System.debugOut("Result: " + printPath(firstSeat.leftSeat));
+	}
+}

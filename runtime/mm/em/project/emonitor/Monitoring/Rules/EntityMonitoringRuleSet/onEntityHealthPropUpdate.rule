@@ -1,0 +1,75 @@
+/**
+ * @description 
+ * @author 
+ */
+rule Monitoring.Rules.EntityMonitoringRuleSet.onEntityHealthPropUpdate {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Shared.Concepts.MonitorableEntity	updatedentity;
+		
+	}
+	when {
+            updatedentity.aggregated == true && (updatedentity.previousHealthLevel == "critical" || updatedentity.previousHealthLevel == "warning" || updatedentity.previousHealthLevel == "normal");
+	}
+	then {
+		Shared.RuleFunctions.log("onEntityHealthPropUpdate","DEBUG",getFQName(updatedentity) + 
+								 ", entity.type = " + updatedentity.type + " has been updated");
+								 
+		Shared.RuleFunctions.log("onEntityHealthPropUpdate","DEBUG", 
+								 "updatedentity.healthLevel = " + updatedentity.healthLevel  + 
+								 " updatedentity.previousHealthLevel = " + updatedentity.previousHealthLevel);								   						 
+								 
+		if(updatedentity.healthLevel != updatedentity.previousHealthLevel){
+			Shared.RuleFunctions.log("onEntityHealthPropUpdate","DEBUG", "Executing action on health level");
+			BEMM.actions.executeActionOnHealthLevel(getFQName(updatedentity), updatedentity.type, updatedentity.healthLevel);
+		}
+		
+		Monitoring.Concepts.ClustHealthOverview cho = 
+			Instance.getByExtId(
+				Monitoring.RuleFunctions.getClustHealthConcptExtId(
+					Shared.RuleFunctions.topology.getClustName(updatedentity) ) );
+					
+		int idx = -1;
+		
+		if (cho != null)
+			idx = Instance.PropertyArray.indexOfString(cho.entityTypes,updatedentity.type);
+		
+		if (idx != -1){
+		    if (updatedentity.previousHealthLevel == "critical"){
+		        //remove from critical
+                if (cho.entityCriticalHealthLevelCount[idx] > 0)
+		            cho.entityCriticalHealthLevelCount[idx] = cho.entityCriticalHealthLevelCount[idx] - 1;
+		    }
+		    else if (updatedentity.previousHealthLevel == "warning"){
+		        //remove from warning
+                if (cho.entityWarningHealthLevelCount[idx] > 0)
+		            cho.entityWarningHealthLevelCount[idx] = cho.entityWarningHealthLevelCount[idx] - 1;
+		    }
+		    else if (updatedentity.previousHealthLevel == "normal"){
+		        //remove from normal
+                if (cho.entityNormalHealthLevelCount[idx] > 0)
+		            cho.entityNormalHealthLevelCount[idx] = cho.entityNormalHealthLevelCount[idx] - 1;
+		    }
+		    
+		    if (updatedentity.healthLevel == "critical"){
+		        //add to critical
+		        cho.entityCriticalHealthLevelCount[idx] = cho.entityCriticalHealthLevelCount[idx] + 1;
+		    }
+		    else if (updatedentity.healthLevel == "warning"){
+		        //add to warning
+		        cho.entityWarningHealthLevelCount[idx] = cho.entityWarningHealthLevelCount[idx] + 1;
+		    }
+		    else if (updatedentity.healthLevel == "normal"){
+		        //add to normal
+		        cho.entityNormalHealthLevelCount[idx] = cho.entityNormalHealthLevelCount[idx] + 1;
+		    }
+		    
+		    Shared.RuleFunctions.log("onEntityHealthPropUpdate","DEBUG",ClusterHealthConcptToString(cho));
+		    Monitoring.Events.cmetrics.ComputedMetricEvent event = Monitoring.Events.cmetrics.ComputedMetricEvent.ComputedMetricEvent(null,null,updatedentity@extId,"cluster","cstats");
+		    Event.assertEvent(event);
+		}
+	}
+}

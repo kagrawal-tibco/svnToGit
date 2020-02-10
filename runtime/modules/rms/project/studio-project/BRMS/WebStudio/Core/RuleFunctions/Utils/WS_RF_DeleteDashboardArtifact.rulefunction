@@ -1,0 +1,81 @@
+/**
+ * @description 
+ */
+void rulefunction WebStudio.Core.RuleFunctions.Utils.WS_RF_DeleteDashboardArtifact {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String userName;
+		String artifactId;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.WS_RF_DeleteDashboardArtifact");
+		
+		//Lock and load User Dashboard concept
+		String userDashboardExtId = WS_RF_CreateUserArtifactExtId("DASHBOARD", null, null, userName, null, null);
+		boolean userDashboardLock = Cluster.DataGrid.Lock(userDashboardExtId, 1000, false);
+		Log.log(LOGGER, "Debug", "User Dashboard space locked state - %s", userDashboardLock);
+		
+		if (userDashboardLock) {
+			WS_C_UserDashboard userDashboard = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(userDashboardExtId, true, "/WebStudio/Core/Concepts/Dashboard/WS_C_UserDashboard");
+				
+			if (userDashboard != null) {
+				Log.log(LOGGER, "Debug", "User Dashboard instance id %s", userDashboard@id);
+				
+				WS_C_Group[] userGroups = Instance.PropertyArray.toArrayContainedConcept(userDashboard.userGroups);
+				for (int i = 0; i< userGroups@length; i++) {
+					WS_C_Group group = userGroups[i];
+				 	if (!group.systemGroup) {
+				 		Log.log(LOGGER, "Debug", "Checking Group %s", group.name);
+				 		Log.log(LOGGER, "Debug", "Total artifacts in Group - %s", group.artifactIds@length);
+				 		
+				 		String groupArtifactExtId = WS_RF_CreateUserArtifactExtId("GROUP_ARTIFACT", artifactId, null, null, null, null);
+				 		if (Instance.PropertyArray.indexOfString(group.artifactIds,  groupArtifactExtId) != -1) {
+				 			Log.log(LOGGER, "Debug", "Removing Group Artifact - %s", groupArtifactExtId);
+					    		Instance.PropertyArray.removeString(group.artifactIds,  groupArtifactExtId);
+				 		}
+
+				 		Log.log(LOGGER, "Debug", "Total artifacts in Group after deletion - %s", group.artifactIds@length);
+				 	}
+				}
+				
+				// Need to check if this goup artifact needs to deleted altogether
+				boolean canRemove = true;
+				String groupArtifactExtId = WS_RF_CreateUserArtifactExtId("GROUP_ARTIFACT", artifactId, null, null, null, null);
+				for (int i = 0; i< userGroups@length; i++) {
+					WS_C_Group group = userGroups[i];
+				 	if (!group.systemGroup) {
+				 		if (Instance.PropertyArray.indexOfString(group.artifactIds,  groupArtifactExtId) != -1) {
+				 			canRemove = false;
+				 			break;
+				 		}
+				 	}
+				}
+				if (canRemove) {
+					Log.log(LOGGER, "Debug", "Deleting Group Artifact [%s] as its no longer associated to any group.", groupArtifactExtId);
+			 		WS_C_GroupArtifact groupArtifact = Instance.getByExtIdByUri(groupArtifactExtId, "/WebStudio/Core/Concepts/Dashboard/WS_C_GroupArtifact");
+			    		if (groupArtifact != null) Instance.deleteInstance(groupArtifact);
+			    		else Log.log(LOGGER, "Debug", "Group Artifact with ExtId [%s] not found for deletion.", groupArtifactExtId);
+				}
+				
+				
+				WS_C_RecentlyOpenedArtifacts[] recentlyOpenedArtifacts = Instance.PropertyArray.toArrayContainedConcept(userDashboard.recentlyOpenedArtifacts);
+				Log.log(LOGGER, "Debug", "Total artifacts in Recently Opened - %s", recentlyOpenedArtifacts@length);
+				
+				WS_C_RecentlyOpenedArtifacts recentlyOpenedArtifactToDelete = null;
+				for (int i = 0; i < recentlyOpenedArtifacts@length; i++) {
+					if (recentlyOpenedArtifacts[i].artifactId == artifactId) {
+						recentlyOpenedArtifactToDelete = recentlyOpenedArtifacts[i];
+						break;
+					}
+				}
+				
+				if (recentlyOpenedArtifactToDelete != null) {
+					Instance.PropertyArray.removeContainedConcept(userDashboard.recentlyOpenedArtifacts, recentlyOpenedArtifactToDelete);
+				}
+				Log.log(LOGGER, "Debug", "Total artifacts in Recently Opened after deletion - %s", recentlyOpenedArtifacts@length);
+			}
+		}
+	}
+}

@@ -1,0 +1,54 @@
+/**
+ * @description Send Notification
+ */
+boolean rulefunction WebStudio.Core.RuleFunctions.Utils.Lifecycle.WS_RF_SendNotification {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String notifyType;
+		String notifyContextPropsMapId;
+		String notifyMessageDataMapId;
+		String createdMapIdsMap_Id;	 
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.Lifecycle.WS_RF_SendNotification");
+		
+		String notifyContextImplClass = System.getSystemPropertyAsString("ws.notify.context.impl.class", null);		
+		String notifyImplClass = System.getSystemPropertyAsString("ws.notify.impl.class", null);
+			
+		Object notifyContextProps = Util.HashMap.getMap(notifyContextPropsMapId);
+		Object notifyMessageData = Util.HashMap.getMap(notifyMessageDataMapId);
+		boolean isSuccess = false;			
+		try {		
+			//1. Initialize notification context 
+			Object notifyContext = WS.Common.Notify.initializeNotificationContext(notifyImplClass, notifyContextImplClass, notifyContextProps);		
+			//2. Prepare notification message
+			WS.Common.Notify.prepareNotificationMessage(notifyContext, notifyType, null, notifyMessageData);		
+			//3. Send notification message
+			Object notifyStatus = WS.Common.Notify.sendNotification(notifyContext);
+			//4. Check notification response & if any errors
+			isSuccess = WS.Common.Notify.isNotificationSuccess(notifyStatus);
+			if (!isSuccess) {
+				String statusMessage = WS.Common.Notify.getErrorMessage(notifyStatus);
+				Log.log(LOGGER, "Warn", "Send Notification Failed : %s ", statusMessage);
+			}
+		} catch(Exception e) {
+			Log.logException(LOGGER, "Error", "Send Notification Failed - %s", e, e@message);			
+			isSuccess = false;
+		} finally {
+			//Delete the notify context and message data map
+			Util.HashMap.deleteMap(notifyContextPropsMapId);								
+			//Delete the created Maps
+			String[] createdMapIds = Util.HashMap.getMapKeys(createdMapIdsMap_Id);		
+			for (int loop = 0; loop < createdMapIds@length; loop++) {
+				String mapId = createdMapIds[loop];			
+				Util.HashMap.deleteMap(mapId);			
+			}
+			//Delete the final Map
+			Util.HashMap.deleteMap(createdMapIdsMap_Id);							
+		}	
+
+		return false;					
+	}
+}

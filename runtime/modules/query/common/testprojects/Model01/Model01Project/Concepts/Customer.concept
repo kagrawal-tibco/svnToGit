@@ -1,0 +1,806 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<concept icon="" name="Customer" description="" guid="1182526496140-783330970" bindings="" namespace="" folder="/Concepts/" super="/Concepts/BaseCustomer" isTransient="false" isPOJO="false" implClass="" isAScorecard="false" rootStateMachineGUID="1210866520109-1420483122">
+    <lastModified/>
+    <extendedProperties/>
+    <hiddenProperties/>
+    <propertyDefinitions>
+        <PropertyDefinition name="age" guid="1182526651015-412360698" type="1" conceptType="" isArray="false" policy="0" history="0" value="" transitive="false" super="" order="3">
+            <hiddenAttributes/>
+            <instances/>
+            <equivalents/>
+            <disjoints/>
+            <extendedProperties/>
+        </PropertyDefinition>
+        <PropertyDefinition name="name" guid="1182526651000-901701806" type="0" conceptType="" isArray="false" policy="0" history="0" value="" transitive="false" super="" order="0">
+            <hiddenAttributes/>
+            <instances/>
+            <equivalents/>
+            <disjoints/>
+            <extendedProperties/>
+        </PropertyDefinition>
+        <PropertyDefinition name="gender" guid="1182526960109-1414597191" type="0" conceptType="" isArray="false" policy="0" history="0" value="" transitive="false" super="" order="5">
+            <hiddenAttributes/>
+            <instances/>
+            <equivalents/>
+            <disjoints/>
+            <extendedProperties/>
+        </PropertyDefinition>
+        <PropertyDefinition name="business" guid="1182526960109-1041138607" type="4" conceptType="" isArray="false" policy="0" history="0" value="" transitive="false" super="" order="6">
+            <hiddenAttributes/>
+            <instances/>
+            <equivalents/>
+            <disjoints/>
+            <extendedProperties/>
+        </PropertyDefinition>
+        <PropertyDefinition name="orders" guid="1191882818946-495379310" type="7" conceptType="/Concepts/Order" isArray="true" policy="0" history="5" value="" transitive="false" super="" order="8">
+            <hiddenAttributes/>
+            <instances/>
+            <equivalents/>
+            <disjoints/>
+            <extendedProperties/>
+        </PropertyDefinition>
+        <PropertyDefinition name="addresses" guid="1191882923101-1690813489" type="6" conceptType="/Concepts/Address" isArray="true" policy="0" history="5" value="" transitive="false" super="" order="9">
+            <hiddenAttributes/>
+            <instances/>
+            <equivalents/>
+            <disjoints/>
+            <extendedProperties/>
+        </PropertyDefinition>
+        <PropertyDefinition name="customerId" guid="1199486581609-1352748745" type="2" conceptType="" isArray="false" policy="0" history="0" value="" transitive="false" super="" order="11">
+            <hiddenAttributes/>
+            <instances/>
+            <equivalents/>
+            <disjoints/>
+            <extendedProperties/>
+        </PropertyDefinition>
+        <PropertyDefinition name="pendingOrders" guid="1210867835250-1250472261" type="1" conceptType="" isArray="false" policy="0" history="0" value="" transitive="false" super="" order="12">
+            <hiddenAttributes/>
+            <instances/>
+            <equivalents/>
+            <disjoints/>
+            <extendedProperties/>
+        </PropertyDefinition>
+    </propertyDefinitions>
+    <subConcepts/>
+    <instances/>
+    <views>
+        <view>/Concepts/ConceptView</view>
+    </views>
+    <referringProps/>
+    <referringRuleSets>
+        <referringRuleSet path="/Rules/RuleSet">
+            <referringRule>TestRule</referringRule>
+            <referringRule>ArrayTest</referringRule>
+        </referringRuleSet>
+        <referringRuleSet path="/Rules/DisabledRuleSet">
+            <referringRule>CountRule</referringRule>
+            <referringRule>CountAdults</referringRule>
+        </referringRuleSet>
+        <referringRuleSet path="/Rules/AddModifyRuleSet">
+            <referringRule>AddressRule</referringRule>
+            <referringRule>deleteCustomerRule</referringRule>
+            <referringRule>OrderRule</referringRule>
+        </referringRuleSet>
+        <referringRuleSet path="/Concepts/Customer">
+            <referringRule>StateMachine_timeoutAction</referringRule>
+            <referringRule>StateMachine_hasPendingOrders_entryAction</referringRule>
+            <referringRule>StateMachine_hasPendingOrders_exitAction</referringRule>
+            <referringRule>StateMachine_waittoorder_exitAction</referringRule>
+            <referringRule>StateMachine_Transition_3</referringRule>
+            <referringRule>StateMachine_waittoorder_entryAction</referringRule>
+            <referringRule>/Concepts/Customer</referringRule>
+            <referringRule>StateMachine_waittoorder_timeoutAction</referringRule>
+            <referringRule>StateMachine_hasPendingOrders_timeoutAction</referringRule>
+            <referringRule>StateMachine_End_entryAction</referringRule>
+            <referringRule>StateMachine_Start_exitAction</referringRule>
+            <referringRule>StateMachine_Transition</referringRule>
+            <referringRule>StateMachine_Transition_1</referringRule>
+            <referringRule>StateMachine_Transition_2</referringRule>
+            <referringRule>StateMachine_Transition_4</referringRule>
+            <referringRule>StateMachine_waittoexit_timeoutAction</referringRule>
+            <referringRule>StateMachine_waittoexit_entryAction</referringRule>
+            <referringRule>StateMachine_waittoexit_exitAction</referringRule>
+        </referringRuleSet>
+        <referringRuleSet path="/Concepts/Order">
+            <referringRule>StateMachine_Transition</referringRule>
+        </referringRuleSet>
+        <referringRuleSet path="/RuleFunction/dumpCustomerData">
+            <referringRule>/RuleFunction/dumpCustomerData</referringRule>
+        </referringRuleSet>
+        <referringRuleSet path="Customer">
+            <referringRule>Customer</referringRule>
+        </referringRuleSet>
+    </referringRuleSets>
+    <stateMachines>
+        <StateMachine icon="" name="StateMachine" description="" guid="1210866520109-1420483122" bindings="" namespace="" x="0" y="0" width="0" height="0" timeoutUnits="1" fwdCorrelate="false">
+            <lastModified/>
+            <extendedProperties/>
+            <hiddenProperties/>
+            <rootState>
+                <StateComposite icon="" name="RootState" description="" guid="1210866520109-2121383690" bindings="" namespace="" x="0" y="0" width="0" height="0" timeoutUnits="1" internalTransitionRuleName="false" timeoutPolicy="0" timeoutMilliseconds="0" isConcurrentState="false">
+                    <lastModified/>
+                    <extendedProperties/>
+                    <hiddenProperties/>
+                    <timeoutActionName>
+                        <rule icon="" name="StateMachine_timeoutAction" description="" guid="1211040002532-1967830585" bindings="" namespace="" isAFunction="false" isAConditionFunction="false" compilationStatus="-1">
+                            <lastModified/>
+                            <extendedProperties/>
+                            <hiddenProperties/>
+                            <priority>5</priority>
+                            <testInterval>-1</testInterval>
+                            <startTime>-1</startTime>
+                            <doesRequeue>false</doesRequeue>
+                            <maxRules>1</maxRules>
+                            <fwdChain>true</fwdChain>
+                            <bwdChain>false</bwdChain>
+                            <declarations>
+                                <declaration identifier="customer" entity="/Concepts/Customer" entityType="">
+                                    <domain>
+                                        <entries/>
+                                    </domain>
+                                </declaration>
+                            </declarations>
+                            <condition/>
+                            <action/>
+                            <requeueVars/>
+                            <template/>
+                            <author/>
+                        </rule>
+                    </timeoutActionName>
+                    <timeoutExpressionName>
+                        <ruleFunction icon="" name="StateMachine_timeoutExpression" description="" guid="1211040002532-82014266" bindings="" namespace="" folder="/Concepts/" virtual="false">
+                            <lastModified/>
+                            <extendedProperties/>
+                            <hiddenProperties/>
+                            <validity>CONDITION</validity>
+                            <returnType>int</returnType>
+                            <arguments>
+                                <argument identifier="customer" entity="/Concepts/Customer" entityType="">
+                                    <domain>
+                                        <entries/>
+                                    </domain>
+                                </argument>
+                            </arguments>
+                            <body>return 0;</body>
+                        </ruleFunction>
+                    </timeoutExpressionName>
+                    <elements>
+                        <StateSimple icon="" name="waittoexit" description="" guid="1211039377250-673209191" bindings="" namespace="" x="381" y="182" width="0" height="0" timeoutUnits="1" internalTransitionRuleName="false" timeoutPolicy="2" timeoutStateGUID="1210866520109-2068855185">
+                            <lastModified/>
+                            <extendedProperties/>
+                            <hiddenProperties/>
+                            <entryActionName>
+                                <rule icon="" name="StateMachine_waittoexit_entryAction" description="" guid="1211040002532-1595590481" bindings="" namespace="" isAFunction="false" isAConditionFunction="false" compilationStatus="-1">
+                                    <lastModified/>
+                                    <extendedProperties/>
+                                    <hiddenProperties/>
+                                    <priority>5</priority>
+                                    <testInterval>-1</testInterval>
+                                    <startTime>-1</startTime>
+                                    <doesRequeue>false</doesRequeue>
+                                    <maxRules>1</maxRules>
+                                    <fwdChain>true</fwdChain>
+                                    <bwdChain>false</bwdChain>
+                                    <declarations>
+                                        <declaration identifier="customer" entity="/Concepts/Customer" entityType="">
+                                            <domain>
+                                                <entries/>
+                                            </domain>
+                                        </declaration>
+                                    </declarations>
+                                    <condition/>
+                                    <action/>
+                                    <requeueVars/>
+                                    <template/>
+                                    <author/>
+                                </rule>
+                            </entryActionName>
+                            <exitActionName>
+                                <rule icon="" name="StateMachine_waittoexit_exitAction" description="" guid="1211040002532-53793106" bindings="" namespace="" isAFunction="false" isAConditionFunction="false" compilationStatus="-1">
+                                    <lastModified/>
+                                    <extendedProperties/>
+                                    <hiddenProperties/>
+                                    <priority>5</priority>
+                                    <testInterval>-1</testInterval>
+                                    <startTime>-1</startTime>
+                                    <doesRequeue>false</doesRequeue>
+                                    <maxRules>1</maxRules>
+                                    <fwdChain>true</fwdChain>
+                                    <bwdChain>false</bwdChain>
+                                    <declarations>
+                                        <declaration identifier="customer" entity="/Concepts/Customer" entityType="">
+                                            <domain>
+                                                <entries/>
+                                            </domain>
+                                        </declaration>
+                                    </declarations>
+                                    <condition/>
+                                    <action/>
+                                    <requeueVars/>
+                                    <template/>
+                                    <author/>
+                                </rule>
+                            </exitActionName>
+                            <timeoutActionName>
+                                <rule icon="" name="StateMachine_waittoexit_timeoutAction" description="" guid="1211040002532-418285075" bindings="" namespace="" isAFunction="false" isAConditionFunction="false" compilationStatus="-1">
+                                    <lastModified/>
+                                    <extendedProperties/>
+                                    <hiddenProperties/>
+                                    <priority>5</priority>
+                                    <testInterval>-1</testInterval>
+                                    <startTime>-1</startTime>
+                                    <doesRequeue>false</doesRequeue>
+                                    <maxRules>1</maxRules>
+                                    <fwdChain>true</fwdChain>
+                                    <bwdChain>false</bwdChain>
+                                    <declarations>
+                                        <declaration identifier="customer" entity="/Concepts/Customer" entityType="">
+                                            <domain>
+                                                <entries/>
+                                            </domain>
+                                        </declaration>
+                                    </declarations>
+                                    <condition/>
+                                    <action/>
+                                    <requeueVars/>
+                                    <template/>
+                                    <author/>
+                                </rule>
+                            </timeoutActionName>
+                            <timeoutExpressionName>
+                                <ruleFunction icon="" name="StateMachine_Simple_timeoutExpression" description="" guid="1211040002532-1322438099" bindings="" namespace="" folder="/Concepts/" virtual="false">
+                                    <lastModified/>
+                                    <extendedProperties/>
+                                    <hiddenProperties/>
+                                    <validity>ACTION</validity>
+                                    <arguments>
+                                        <argument identifier="customer" entity="/Concepts/Customer" entityType="">
+                                            <domain>
+                                                <entries/>
+                                            </domain>
+                                        </argument>
+                                    </arguments>
+                                    <body>return;</body>
+                                </ruleFunction>
+                            </timeoutExpressionName>
+                        </StateSimple>
+                        <StateSimple icon="" name="waittoorder" description="" guid="1210869561703-498443713" bindings="" namespace="" x="238" y="90" width="0" height="0" timeoutUnits="1" internalTransitionRuleName="false" timeoutPolicy="0">
+                            <lastModified/>
+                            <extendedProperties/>
+                            <hiddenProperties/>
+                            <entryActionName>
+                                <rule icon="" name="StateMachine_waittoorder_entryAction" description="" guid="1211040002532-2145426830" bindings="" namespace="" isAFunction="false" isAConditionFunction="false" compilationStatus="-1">
+                                    <lastModified/>
+                                    <extendedProperties/>
+                                    <hiddenProperties/>
+                                    <priority>5</priority>
+                                    <testInterval>-1</testInterval>
+                                    <startTime>-1</startTime>
+                                    <doesRequeue>false</doesRequeue>
+                                    <maxRules>1</maxRules>
+                                    <fwdChain>true</fwdChain>
+                                    <bwdChain>false</bwdChain>
+                                    <declarations>
+                                        <declaration identifier="customer" entity="/Concepts/Customer" entityType="">
+                                            <domain>
+                                                <entries/>
+                                            </domain>
+                                        </declaration>
+                                    </declarations>
+                                    <condition/>
+                                    <action>System.debugOut("Customer "+customer+" is waiting to give orders");</action>
+                                    <requeueVars/>
+                                    <template/>
+                                    <author/>
+                                </rule>
+                            </entryActionName>
+                            <exitActionName>
+                                <rule icon="" name="StateMachine_waittoorder_exitAction" description="" guid="1211040002532-895434360" bindings="" namespace="" isAFunction="false" isAConditionFunction="false" compilationStatus="-1">
+                                    <lastModified/>
+                                    <extendedProperties/>
+                                    <hiddenProperties/>
+                                    <priority>5</priority>
+                                    <testInterval>-1</testInterval>
+                                    <startTime>-1</startTime>
+                                    <doesRequeue>false</doesRequeue>
+                                    <maxRules>1</maxRules>
+                                    <fwdChain>true</fwdChain>
+                                    <bwdChain>false</bwdChain>
+                                    <declarations>
+                                        <declaration identifier="customer" entity="/Concepts/Customer" entityType="">
+                                            <domain>
+                                                <entries/>
+                                            </domain>
+                                        </declaration>
+                                    </declarations>
+                                    <condition/>
+                                    <action/>
+                                    <requeueVars/>
+                                    <template/>
+                                    <author/>
+                                </rule>
+                            </exitActionName>
+                            <timeoutActionName>
+                                <rule icon="" name="StateMachine_waittoorder_timeoutAction" description="" guid="1211040002532-1317416367" bindings="" namespace="" isAFunction="false" isAConditionFunction="false" compilationStatus="-1">
+                                    <lastModified/>
+                                    <extendedProperties/>
+                                    <hiddenProperties/>
+                                    <priority>5</priority>
+                                    <testInterval>-1</testInterval>
+                                    <startTime>-1</startTime>
+                                    <doesRequeue>false</doesRequeue>
+                                    <maxRules>1</maxRules>
+                                    <fwdChain>true</fwdChain>
+                                    <bwdChain>false</bwdChain>
+                                    <declarations>
+                                        <declaration identifier="customer" entity="/Concepts/Customer" entityType="">
+                                            <domain>
+                                                <entries/>
+                                            </domain>
+                                        </declaration>
+                                    </declarations>
+                                    <condition/>
+                                    <action>Event e = Events.CheckStateEvent.CheckStateEvent(/*extId String */null,&#xD;
+/*payload String */null,&#xD;
+/*customerId long */customer.customerId);&#xD;
+Event.sendEvent(e);</action>
+                                    <requeueVars/>
+                                    <template/>
+                                    <author/>
+                                </rule>
+                            </timeoutActionName>
+                            <timeoutExpressionName>
+                                <ruleFunction icon="" name="StateMachine_waittoorder_timeoutExpression" description="" guid="1211040002532-227548518" bindings="" namespace="" folder="/Concepts/" virtual="false">
+                                    <lastModified/>
+                                    <extendedProperties/>
+                                    <hiddenProperties/>
+                                    <validity>CONDITION</validity>
+                                    <returnType>int</returnType>
+                                    <arguments>
+                                        <argument identifier="customer" entity="/Concepts/Customer" entityType="">
+                                            <domain>
+                                                <entries/>
+                                            </domain>
+                                        </argument>
+                                    </arguments>
+                                    <body>return 30;</body>
+                                </ruleFunction>
+                            </timeoutExpressionName>
+                        </StateSimple>
+                        <StateSimple icon="" name="hasPendingOrders" description="" guid="1210866541062-265690784" bindings="" namespace="" x="379" y="90" width="0" height="0" timeoutUnits="1" internalTransitionRuleName="false" timeoutPolicy="0">
+                            <lastModified/>
+                            <extendedProperties/>
+                            <hiddenProperties/>
+                            <entryActionName>
+                                <rule icon="" name="StateMachine_hasPendingOrders_entryAction" description="" guid="1211040002532-1403120333" bindings="" namespace="" isAFunction="false" isAConditionFunction="false" compilationStatus="-1">
+                                    <lastModified/>
+                                    <extendedProperties/>
+                                    <hiddenProperties/>
+                                    <priority>5</priority>
+                                    <testInterval>-1</testInterval>
+                                    <startTime>-1</startTime>
+                                    <doesRequeue>false</doesRequeue>
+                                    <maxRules>1</maxRules>
+                                    <fwdChain>true</fwdChain>
+                                    <bwdChain>false</bwdChain>
+                                    <declarations>
+                                        <declaration identifier="customer" entity="/Concepts/Customer" entityType="">
+                                            <domain>
+                                                <entries/>
+                                            </domain>
+                                        </declaration>
+                                    </declarations>
+                                    <condition/>
+                                    <action/>
+                                    <requeueVars/>
+                                    <template/>
+                                    <author/>
+                                </rule>
+                            </entryActionName>
+                            <exitActionName>
+                                <rule icon="" name="StateMachine_hasPendingOrders_exitAction" description="" guid="1211040002532-432441120" bindings="" namespace="" isAFunction="false" isAConditionFunction="false" compilationStatus="-1">
+                                    <lastModified/>
+                                    <extendedProperties/>
+                                    <hiddenProperties/>
+                                    <priority>5</priority>
+                                    <testInterval>-1</testInterval>
+                                    <startTime>-1</startTime>
+                                    <doesRequeue>false</doesRequeue>
+                                    <maxRules>1</maxRules>
+                                    <fwdChain>true</fwdChain>
+                                    <bwdChain>false</bwdChain>
+                                    <declarations>
+                                        <declaration identifier="customer" entity="/Concepts/Customer" entityType="">
+                                            <domain>
+                                                <entries/>
+                                            </domain>
+                                        </declaration>
+                                    </declarations>
+                                    <condition/>
+                                    <action/>
+                                    <requeueVars/>
+                                    <template/>
+                                    <author/>
+                                </rule>
+                            </exitActionName>
+                            <timeoutActionName>
+                                <rule icon="" name="StateMachine_hasPendingOrders_timeoutAction" description="" guid="1211040002532-972018342" bindings="" namespace="" isAFunction="false" isAConditionFunction="false" compilationStatus="-1">
+                                    <lastModified/>
+                                    <extendedProperties/>
+                                    <hiddenProperties/>
+                                    <priority>5</priority>
+                                    <testInterval>-1</testInterval>
+                                    <startTime>-1</startTime>
+                                    <doesRequeue>false</doesRequeue>
+                                    <maxRules>1</maxRules>
+                                    <fwdChain>true</fwdChain>
+                                    <bwdChain>false</bwdChain>
+                                    <declarations>
+                                        <declaration identifier="customer" entity="/Concepts/Customer" entityType="">
+                                            <domain>
+                                                <entries/>
+                                            </domain>
+                                        </declaration>
+                                    </declarations>
+                                    <condition/>
+                                    <action>Event e = Events.CheckStateEvent.CheckStateEvent(/*extId String */null,&#xD;
+/*payload String */null,&#xD;
+/*customerId long */customer.customerId);&#xD;
+Event.sendEvent(e);</action>
+                                    <requeueVars/>
+                                    <template/>
+                                    <author/>
+                                </rule>
+                            </timeoutActionName>
+                            <timeoutExpressionName>
+                                <ruleFunction icon="" name="StateMachine_hasPendingOrders_timeoutExpression" description="" guid="1211040002532-450898671" bindings="" namespace="" folder="/Concepts/" virtual="false">
+                                    <lastModified/>
+                                    <extendedProperties/>
+                                    <hiddenProperties/>
+                                    <validity>CONDITION</validity>
+                                    <returnType>int</returnType>
+                                    <arguments>
+                                        <argument identifier="customer" entity="/Concepts/Customer" entityType="">
+                                            <domain>
+                                                <entries/>
+                                            </domain>
+                                        </argument>
+                                    </arguments>
+                                    <body>return 30;</body>
+                                </ruleFunction>
+                            </timeoutExpressionName>
+                        </StateSimple>
+                        <StateEnd icon="" name="End" description="" guid="1210866520109-2068855185" bindings="" namespace="" x="563" y="91" width="0" height="0" timeoutUnits="1" internalTransitionRuleName="false" timeoutPolicy="0">
+                            <lastModified/>
+                            <extendedProperties/>
+                            <hiddenProperties/>
+                            <entryActionName>
+                                <rule icon="" name="StateMachine_End_entryAction" description="" guid="1211040002532-1710003867" bindings="" namespace="" isAFunction="false" isAConditionFunction="false" compilationStatus="-1">
+                                    <lastModified/>
+                                    <extendedProperties/>
+                                    <hiddenProperties/>
+                                    <priority>5</priority>
+                                    <testInterval>-1</testInterval>
+                                    <startTime>-1</startTime>
+                                    <doesRequeue>false</doesRequeue>
+                                    <maxRules>1</maxRules>
+                                    <fwdChain>true</fwdChain>
+                                    <bwdChain>false</bwdChain>
+                                    <declarations>
+                                        <declaration identifier="customer" entity="/Concepts/Customer" entityType="">
+                                            <domain>
+                                                <entries/>
+                                            </domain>
+                                        </declaration>
+                                    </declarations>
+                                    <condition/>
+                                    <action>System.debugOut("Customer has no more orders, deleting customer :"+customer);&#xD;
+Instance.deleteInstance(customer);</action>
+                                    <requeueVars/>
+                                    <template/>
+                                    <author/>
+                                </rule>
+                            </entryActionName>
+                            <timeoutExpressionName>
+                                <ruleFunction icon="" name="Customer" description="" guid="1211040002532-370112463" bindings="" namespace="" folder="/Concepts/" virtual="false">
+                                    <lastModified/>
+                                    <extendedProperties/>
+                                    <hiddenProperties/>
+                                    <validity>CONDITION</validity>
+                                    <returnType>int</returnType>
+                                    <arguments>
+                                        <argument identifier="customer" entity="/Concepts/Customer" entityType="">
+                                            <domain>
+                                                <entries/>
+                                            </domain>
+                                        </argument>
+                                    </arguments>
+                                    <body>return 0;</body>
+                                </ruleFunction>
+                            </timeoutExpressionName>
+                        </StateEnd>
+                        <StateStart icon="" name="Start" description="" guid="1210866520109-211156049" bindings="" namespace="" x="131" y="90" width="0" height="0" timeoutUnits="1" internalTransitionRuleName="false" timeoutPolicy="0">
+                            <lastModified/>
+                            <extendedProperties/>
+                            <hiddenProperties/>
+                            <exitActionName>
+                                <rule icon="" name="StateMachine_Start_exitAction" description="" guid="1211040002532-306107742" bindings="" namespace="" isAFunction="false" isAConditionFunction="false" compilationStatus="-1">
+                                    <lastModified/>
+                                    <extendedProperties/>
+                                    <hiddenProperties/>
+                                    <priority>5</priority>
+                                    <testInterval>-1</testInterval>
+                                    <startTime>-1</startTime>
+                                    <doesRequeue>false</doesRequeue>
+                                    <maxRules>1</maxRules>
+                                    <fwdChain>true</fwdChain>
+                                    <bwdChain>false</bwdChain>
+                                    <declarations>
+                                        <declaration identifier="customer" entity="/Concepts/Customer" entityType="">
+                                            <domain>
+                                                <entries/>
+                                            </domain>
+                                        </declaration>
+                                    </declarations>
+                                    <condition/>
+                                    <action>int option =  RuleFunction.getRandomId(Scorecards.ShopCard.maxOrderCapacity) % 5;&#xD;
+for(int i=0; i &lt; option ; i=i+1) {&#xD;
+    long orderid =0;&#xD;
+    while(true) {&#xD;
+       orderid = RuleFunction.getRandomId(Scorecards.ShopCard.maxOrderCapacity);&#xD;
+       Object o = Instance.getByExtId("O"+orderid);&#xD;
+       if(o == null) {&#xD;
+          break;&#xD;
+       }&#xD;
+    }&#xD;
+    OrderEvent oe = Events.OrderEvent.OrderEvent(  /*extId String */ null,&#xD;
+                                                   /*payload String */ null,&#xD;
+                                                   /*orderId long */ orderid,&#xD;
+                                                   /*customerId long */ customer.customerId,&#xD;
+                                                   /*items int */  RuleFunction.getRandomId(Scorecards.ShopCard.maxOrderCapacity)%10,&#xD;
+                                                   /*value double */ RuleFunction.getRandomId(Scorecards.ShopCard.maxOrderCapacity)%50);&#xD;
+   Event.sendEvent(oe);  &#xD;
+}&#xD;
+System.debugOut("Created "+ option +" orders for customer:"+customer);&#xD;
+&#xD;
+option = RuleFunction.getRandomId(Scorecards.ShopCard.maxCustomerCapacity)%3;&#xD;
+String city;&#xD;
+for( int i=0; i &lt; option; i=i+1) {&#xD;
+    if(i == 0) {&#xD;
+        city = "PALO ALTO";&#xD;
+    } else if (i == 1 ) {&#xD;
+        city = "SUNNYVALE";    &#xD;
+    } else if (i == 2) {&#xD;
+       city = "MOUNTAIN VIEW";&#xD;
+    }&#xD;
+    long addressid = 0;&#xD;
+    while(true) {&#xD;
+       addressid = RuleFunction.getRandomId(Scorecards.ShopCard.maxCustomerCapacity);&#xD;
+       Object o = Instance.getByExtId("A"+addressid);&#xD;
+       if(o == null) {&#xD;
+          break;&#xD;
+       }&#xD;
+    }&#xD;
+    AddressEvent ad = Events.AddressEvent.AddressEvent(  /*extId String */ null,&#xD;
+                                                     /*payload String */ null,&#xD;
+                                                     /*addressId long */addressid,&#xD;
+                                                     /*street String */"STREET-"+String.valueOfLong(option),&#xD;
+                                                     /*city String */ city,&#xD;
+                                                     /*state String */ "CA",&#xD;
+                                                     /*country String */ "USA",&#xD;
+                                                     /*customerId long */ customer.customerId );&#xD;
+    Event.sendEvent(ad);&#xD;
+}&#xD;
+System.debugOut("Created "+ option +" addresses for customer:"+customer);</action>
+                                    <requeueVars/>
+                                    <template/>
+                                    <author/>
+                                </rule>
+                            </exitActionName>
+                            <timeoutExpressionName>
+                                <ruleFunction icon="" name="Customer" description="" guid="1211040002532-415298220" bindings="" namespace="" folder="/Concepts/" virtual="false">
+                                    <lastModified/>
+                                    <extendedProperties/>
+                                    <hiddenProperties/>
+                                    <validity>CONDITION</validity>
+                                    <returnType>int</returnType>
+                                    <arguments>
+                                        <argument identifier="customer" entity="/Concepts/Customer" entityType="">
+                                            <domain>
+                                                <entries/>
+                                            </domain>
+                                        </argument>
+                                    </arguments>
+                                    <body>return 0;</body>
+                                </ruleFunction>
+                            </timeoutExpressionName>
+                        </StateStart>
+                    </elements>
+                </StateComposite>
+            </rootState>
+            <stateTransitions>
+                <StateTransition icon="" name="Transition_4" description="" guid="1211039403262-920901681" bindings="" namespace="" x="0" y="0" width="0" height="0" timeoutUnits="1" lineColor="0" linePatternWidth="1.0" linePatternCap="2" linePatternJoin="0" toState="1210866520109-2068855185" fromState="1211039377250-673209191" isLambda="false" fwdCorrelate="true">
+                    <lastModified/>
+                    <extendedProperties/>
+                    <hiddenProperties/>
+                    <guardRuleGUID>
+                        <rule icon="" name="StateMachine_Transition_4" description="" guid="1211040002532-484195157" bindings="" namespace="" isAFunction="false" isAConditionFunction="false" compilationStatus="0">
+                            <lastModified>2008-05-17T09:00:47.824-07:00</lastModified>
+                            <extendedProperties/>
+                            <hiddenProperties/>
+                            <priority>5</priority>
+                            <testInterval>-1</testInterval>
+                            <startTime>-1</startTime>
+                            <doesRequeue>false</doesRequeue>
+                            <maxRules>1</maxRules>
+                            <fwdChain>true</fwdChain>
+                            <bwdChain>false</bwdChain>
+                            <declarations>
+                                <declaration identifier="customer" entity="/Concepts/Customer" entityType="concept">
+                                    <domain>
+                                        <entries/>
+                                    </domain>
+                                </declaration>
+                                <declaration identifier="noorderevent" entity="/Events/NoOrderEvent" entityType="event">
+                                    <domain>
+                                        <entries/>
+                                    </domain>
+                                </declaration>
+                            </declarations>
+                            <condition/>
+                            <action/>
+                            <requeueVars/>
+                            <template/>
+                            <author/>
+                        </rule>
+                    </guardRuleGUID>
+                </StateTransition>
+                <StateTransition icon="" name="Transition_3" description="" guid="1210869606531-159033260" bindings="" namespace="" x="0" y="0" width="0" height="0" timeoutUnits="1" lineColor="0" linePatternWidth="1.0" linePatternCap="2" linePatternJoin="0" toState="1210869561703-498443713" fromState="1210866520109-211156049" isLambda="true" fwdCorrelate="true">
+                    <lastModified/>
+                    <extendedProperties/>
+                    <hiddenProperties/>
+                    <guardRuleGUID>
+                        <rule icon="" name="StateMachine_Transition_3" description="" guid="1211040002532-1076747537" bindings="" namespace="" isAFunction="false" isAConditionFunction="false" compilationStatus="-1">
+                            <lastModified/>
+                            <extendedProperties/>
+                            <hiddenProperties/>
+                            <priority>5</priority>
+                            <testInterval>-1</testInterval>
+                            <startTime>-1</startTime>
+                            <doesRequeue>false</doesRequeue>
+                            <maxRules>1</maxRules>
+                            <fwdChain>true</fwdChain>
+                            <bwdChain>false</bwdChain>
+                            <declarations>
+                                <declaration identifier="customer" entity="/Concepts/Customer" entityType="">
+                                    <domain>
+                                        <entries/>
+                                    </domain>
+                                </declaration>
+                            </declarations>
+                            <condition/>
+                            <action/>
+                            <requeueVars/>
+                            <template/>
+                            <author/>
+                        </rule>
+                    </guardRuleGUID>
+                </StateTransition>
+                <StateTransition icon="" name="Transition_2" description="" guid="1210869402750-347554053" bindings="" namespace="" x="0" y="0" width="0" height="0" timeoutUnits="1" lineColor="0" linePatternWidth="1.0" linePatternCap="2" linePatternJoin="0" toState="1211039377250-673209191" fromState="1210869561703-498443713" isLambda="false" fwdCorrelate="true">
+                    <lastModified/>
+                    <extendedProperties/>
+                    <hiddenProperties/>
+                    <guardRuleGUID>
+                        <rule icon="" name="StateMachine_Transition_2" description="" guid="1211040002532-96678586" bindings="" namespace="" isAFunction="false" isAConditionFunction="false" compilationStatus="-1">
+                            <lastModified/>
+                            <extendedProperties/>
+                            <hiddenProperties/>
+                            <priority>5</priority>
+                            <testInterval>-1</testInterval>
+                            <startTime>-1</startTime>
+                            <doesRequeue>false</doesRequeue>
+                            <maxRules>1</maxRules>
+                            <fwdChain>true</fwdChain>
+                            <bwdChain>false</bwdChain>
+                            <declarations>
+                                <declaration identifier="customer" entity="/Concepts/Customer" entityType="">
+                                    <domain>
+                                        <entries/>
+                                    </domain>
+                                </declaration>
+                                <declaration identifier="checkstateevent" entity="/Events/CheckStateEvent" entityType="event">
+                                    <domain>
+                                        <entries/>
+                                    </domain>
+                                </declaration>
+                            </declarations>
+                            <condition>checkstateevent.customerId == customer.customerId;&#xD;
+customer.pendingOrders &lt; 1;</condition>
+                            <action>RuleFunction.dumpCustomerData(customer);
+Event.consumeEvent(checkstateevent);</action>
+                            <requeueVars/>
+                            <template/>
+                            <author/>
+                        </rule>
+                    </guardRuleGUID>
+                </StateTransition>
+                <StateTransition icon="" name="Transition_1" description="" guid="1210866573765-1039363349" bindings="" namespace="" x="0" y="0" width="0" height="0" timeoutUnits="1" lineColor="0" linePatternWidth="1.0" linePatternCap="2" linePatternJoin="0" toState="1210866520109-2068855185" fromState="1210866541062-265690784" isLambda="false" fwdCorrelate="true">
+                    <lastModified/>
+                    <extendedProperties/>
+                    <hiddenProperties/>
+                    <guardRuleGUID>
+                        <rule icon="" name="StateMachine_Transition_1" description="" guid="1211040002532-1581635222" bindings="" namespace="" isAFunction="false" isAConditionFunction="false" compilationStatus="-1">
+                            <lastModified/>
+                            <extendedProperties/>
+                            <hiddenProperties/>
+                            <priority>5</priority>
+                            <testInterval>-1</testInterval>
+                            <startTime>-1</startTime>
+                            <doesRequeue>false</doesRequeue>
+                            <maxRules>1</maxRules>
+                            <fwdChain>true</fwdChain>
+                            <bwdChain>false</bwdChain>
+                            <declarations>
+                                <declaration identifier="customer" entity="/Concepts/Customer" entityType="">
+                                    <domain>
+                                        <entries/>
+                                    </domain>
+                                </declaration>
+                                <declaration identifier="checkstateevent" entity="/Events/CheckStateEvent" entityType="event">
+                                    <domain>
+                                        <entries/>
+                                    </domain>
+                                </declaration>
+                            </declarations>
+                            <condition>checkstateevent.customerId ==  customer.customerId;
+customer.pendingOrders &lt; 1;</condition>
+                            <action>RuleFunction.dumpCustomerData(customer);</action>
+                            <requeueVars/>
+                            <template/>
+                            <author/>
+                        </rule>
+                    </guardRuleGUID>
+                </StateTransition>
+                <StateTransition icon="" name="Transition" description="" guid="1210866572078-1835043515" bindings="" namespace="" x="0" y="0" width="0" height="0" timeoutUnits="1" lineColor="0" linePatternWidth="1.0" linePatternCap="2" linePatternJoin="0" toState="1210866541062-265690784" fromState="1210869561703-498443713" isLambda="false" fwdCorrelate="true">
+                    <lastModified/>
+                    <extendedProperties/>
+                    <hiddenProperties/>
+                    <guardRuleGUID>
+                        <rule icon="" name="StateMachine_Transition" description="" guid="1211040002532-1184652256" bindings="" namespace="" isAFunction="false" isAConditionFunction="false" compilationStatus="-1">
+                            <lastModified/>
+                            <extendedProperties/>
+                            <hiddenProperties/>
+                            <priority>5</priority>
+                            <testInterval>-1</testInterval>
+                            <startTime>-1</startTime>
+                            <doesRequeue>false</doesRequeue>
+                            <maxRules>1</maxRules>
+                            <fwdChain>true</fwdChain>
+                            <bwdChain>false</bwdChain>
+                            <declarations>
+                                <declaration identifier="customer" entity="/Concepts/Customer" entityType="">
+                                    <domain>
+                                        <entries/>
+                                    </domain>
+                                </declaration>
+                                <declaration identifier="checkstateevent" entity="/Events/CheckStateEvent" entityType="event">
+                                    <domain>
+                                        <entries/>
+                                    </domain>
+                                </declaration>
+                            </declarations>
+                            <condition>customer.customerId == checkstateevent.customerId;
+customer.pendingOrders &gt; 0;</condition>
+                            <action>RuleFunction.dumpCustomerData(customer);
+Event.consumeEvent(checkstateevent);</action>
+                            <requeueVars/>
+                            <template/>
+                            <author/>
+                        </rule>
+                    </guardRuleGUID>
+                </StateTransition>
+            </stateTransitions>
+        </StateMachine>
+    </stateMachines>
+</concept>

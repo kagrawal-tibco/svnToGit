@@ -1,0 +1,37 @@
+<div
+  class="tree-view-impl"
+  >
+  <div [@filtered]='input.state' class="{{ isRtl() ? 'tree-view-node-rtl' : 'tree-view-node'}} clickable"
+    [class.tree-view-node-selected]='input.selected'
+    (click)='click(input, $event)'
+    (dblclick)='dblclick(input, $event)'
+    (contextmenu)='rightClick(input, $event)'
+  >
+    <div
+      class="tree-view-node-content"
+      [ngStyle]="setPadding(input)"
+      >
+      <span
+        class="tree-view-node-expander tree-view-node-element"
+        (click)="toggleExpand(input, $event)"
+        (dblclick)='dbltoggle(input, $event)'
+        ><span [class]="input.expanderIcon()"></span></span><!--
+   --><span
+        class="tree-view-node-icon tree-view-node-element"
+        ><span [class]='input.nodeIcon()'></span></span><!--
+   --><span
+      >{{input.text}}</span>
+    </div>
+  </div>
+  <ul
+    class="{{ isRtl() ? 'tree-view-children-rtl' : 'tree-view-children' }}"
+    [class.tree-view-expanded]='input.expanded'
+    [class.tree-view-collapsed]='!input.expanded'
+    >
+    <li
+      *ngFor = 'let child of input.children'
+    >
+      <tree-view-impl [input]="child" [eventEmitter]="eventEmitter"></tree-view-impl>
+    </li>
+  </ul>
+</div>

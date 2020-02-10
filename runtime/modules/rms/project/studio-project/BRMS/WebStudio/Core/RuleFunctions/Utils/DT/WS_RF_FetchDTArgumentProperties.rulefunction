@@ -1,0 +1,66 @@
+/**
+ * @description 
+ */
+Object rulefunction WebStudio.Core.RuleFunctions.Utils.DT.WS_RF_FetchDTArgumentProperties {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String projectName;
+		String argumentPath;
+		String argumentType;
+		String argumentExtn;
+		String username;
+		String[] roles;
+		boolean traverseSuperEntity;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.DT.WS_RF_FetchDTArgumentProperties");
+		String subscriptionId = WS_RF_GetSubscriptionId(username);
+		
+		String scsRootURL = WS_RF_GetSCSRootURL(projectName, subscriptionId);
+		if (scsRootURL == null) {
+			throw Exception.newException(null, "Source control repository location not present. Set ws.scs.rootURL property", null);
+		}
+		Object allProperties = WS.Decision.createEntityPropertiesList();						
+		
+		String superEntityPath = argumentPath;
+						
+		while (superEntityPath != null && !String.equals("", superEntityPath)) {
+			WS_C_EntityArtifact superEntityArtifact = null;
+			String superEntityExtId = WS_RF_CreateUserArtifactExtId("SHARED", superEntityPath, projectName, null, subscriptionId, null);
+			Log.log(LOGGER, "Debug", "Artifact ExtId %s", superEntityExtId);
+	
+			//Check if this argument entity already exists
+			boolean superArtifactLock = Cluster.DataGrid.Lock(superEntityExtId, -1, false);
+			if (superArtifactLock) {
+				superEntityArtifact = Instance.getByExtIdByUri(superEntityExtId, "/WebStudio/Core/Concepts/Common/WS_C_EntityArtifact");
+				if (superEntityArtifact == null) {
+					Log.log(LOGGER, "Debug", "Creating new concept for Artifact %s", superEntityPath);
+					
+					superEntityArtifact = WS_RF_FetchArtifactContentsFactory(scsRootURL, username, projectName, superEntityPath, argumentExtn, superEntityExtId, roles);
+																														
+				} else {
+					Log.log(LOGGER, "Debug", "Artifact already Exists %s", superEntityPath);
+				}
+				Cluster.DataGrid.UnLock(superEntityExtId, false);
+			}
+			
+			Object superEntityEMFObject = WS.Decision.createEntityEMFObject(superEntityArtifact.contents);	
+									
+			WS.Decision.populateEntityProperties(allProperties, superEntityEMFObject);
+
+			if (traverseSuperEntity) {
+				superEntityPath = WS.Decision.getSuperEntityPath(superEntityEMFObject);
+				
+				if (superEntityPath != null) {
+					superEntityPath = String.trim(superEntityPath);
+				}
+			} else {
+				superEntityPath = null;
+			}
+		}
+		
+		return allProperties;					
+	}
+}

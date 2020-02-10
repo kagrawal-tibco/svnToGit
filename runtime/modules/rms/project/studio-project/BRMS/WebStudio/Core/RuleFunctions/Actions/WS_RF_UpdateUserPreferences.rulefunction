@@ -1,0 +1,76 @@
+/**
+ * @description 
+ */
+WebStudio.Core.Concepts.DataSources.WS_C_TemporaryReturnData rulefunction WebStudio.Core.RuleFunctions.Actions.WS_RF_UpdateUserPreferences {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object asyncContextObject;
+		WebStudio.Security.Authn.Concepts.WS_C_LoggedInUser loggedInUser;
+		String contentType;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.WS_RF_UpdateUserPreferences");
+		
+		Object servletRequest = HTTP.Servlet.getServletRequest(asyncContextObject);
+		
+		int responseStatus = 0;
+		int recordCount = 0;
+		String errorCode = null;
+		String responseMessage = null;
+		
+		WS_C_TemporaryReturnData tempReturnData = null;
+		
+		if (!WS_RF_CheckHTTPMethod(servletRequest, "PUT")) {
+			responseStatus = -1;
+			recordCount = 0;
+			errorCode = "ERR_5101";
+			responseMessage = "Invalid HTTP Method, expect method is [PUT].";
+			
+			tempReturnData = WS_RF_CreateTemporaryReturnData(responseStatus, recordCount, errorCode, responseMessage, null);
+		} else {
+			
+			String requestPostParam = System.getGlobalVariableAsString("WebStudio/requestPostParameter", "data");
+			String requestData = HTTP.Servlet.Request.getRequestParameter(servletRequest, requestPostParam);
+			Log.log(LOGGER, "Debug", "Request Post Data Received %s", requestData);
+			if (requestData == null) {
+				Object requestDataBytes = HTTP.Servlet.Request.getRequestContent(servletRequest);
+				requestData = String.convertByteArrayToString(requestDataBytes, "UTF-8");
+				requestData = WS.Common.cleanupRequestData(requestData);
+				Log.log(LOGGER, "Debug", "Request Post Data Received %s", requestData);
+			}	
+			
+			//Convert to concept model
+			WS_C_UserPreferenceBaseRequest userPreferenceBaseRequest = null;
+			if (String.equals(contentType, System.getGlobalVariableAsString("WebStudio/CONTENT_TYPE/XML", "application/xml"))) {
+				userPreferenceBaseRequest = Instance.createTransientInstanceFromXML("/WebStudio/Core/Concepts/Request/Usecases/UpdatePreferences/WS_C_UserPreferenceBaseRequest", requestData);
+			} else {
+				userPreferenceBaseRequest = Instance.createTransientInstanceFromJSON("/WebStudio/Core/Concepts/Request/Usecases/UpdatePreferences/WS_C_UserPreferenceBaseRequest", requestData);
+			}
+		
+			Log.log(LOGGER, "Debug", "Request concept deserialized %s", userPreferenceBaseRequest);
+			
+			WS_C_UserPreferenceRequestData requestContainedData = userPreferenceBaseRequest.data;
+			WS_C_UserPreferenceDataItem userPreferenceDataItem = requestContainedData.userPreference.userPreferenceItem;
+			
+			String userPreferenceItem = Instance.serialize(userPreferenceDataItem, false, "","userPreferenceItem");
+			Log.log(LOGGER, "Debug", "Serialized data format - %s", userPreferenceItem);
+			
+			String asyncContextId = WS.Common.generateUUID();
+			String mapLockKey = "PREFERENCE_UPDATE_ASYNC_CONTEXT_MAP_" + System.nanoTime();
+			//Concurrent Rete case. Lock locally
+			boolean mapLocked = Cluster.DataGrid.Lock(mapLockKey, -1, true);
+			if (mapLocked) { 
+				Util.HashMap.createMap(mapLockKey);
+				Util.HashMap.putObject(mapLockKey, asyncContextId, asyncContextObject);
+			}
+			WS_E_UpdateUserPreferenceEvent updateUserPreferenceEvent =
+				 WebStudio.Core.Events.WS_E_UpdateUserPreferenceEvent.WS_E_UpdateUserPreferenceEvent(null, userPreferenceItem, loggedInUser.username, asyncContextId, mapLockKey, contentType); 
+			
+			Event.assertEvent(updateUserPreferenceEvent);
+		}
+			
+		return tempReturnData;
+	}
+}

@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<cluster xmlns="http://tibco.com/businessevents/configuration/%%BeVersionShort%%">
+    <revision>
+        <version>1</version>
+        <author>%%UserName%%</author>
+        <date>%%DateTime%%</date>
+        <comment/>
+    </revision>
+    <name>%%ClusterName%%</name>
+    <message-encoding>UTF-8</message-encoding>
+    <object-management>
+        <cache-manager>
+            <domain-objects>
+                <default-mode>cache</default-mode>
+                <pre-load-enabled>false</pre-load-enabled>
+                <pre-load-fetch-size>0</pre-load-fetch-size>
+                <pre-load-handles>false</pre-load-handles>
+            </domain-objects>
+            <provider>
+                <name>TIBCO</name>
+            </provider>
+			<explicit-tuple>true</explicit-tuple>
+            <backing-store>
+                <persistence-option>%%UseBackingStore%%</persistence-option>
+                <cache-aside>true</cache-aside>
+                <enforce-pools>true</enforce-pools>
+                <strategy>jdbc</strategy>
+                <type>Oracle</type>
+                <primary-connection>
+                        <uri>%%DbUri1%%</uri>
+                        <initial-size>4</initial-size>
+                        <max-size>8</max-size>
+                        <min-size>1</min-size>
+                </primary-connection>
+            </backing-store>
+        </cache-manager>
+    </object-management>
+    <rulesets>
+        <rules id="all-rules">
+            <uri>/</uri>
+        </rules>
+    </rulesets>
+    <function-groups>
+        <functions id="all-functions">
+            <uri>/</uri>
+        </functions>
+    </function-groups>
+    <destination-groups/>
+    <log-configs>
+        <log-config id="logConfig">
+            <enabled>true</enabled>
+            <roles>*:info</roles>
+            <files>
+                <enabled>true</enabled>
+                <dir>logs</dir>
+                <max-number>10</max-number>
+                <max-size>5000000</max-size>
+                <append>true</append>
+            </files>
+            <terminal>
+                <enabled>true</enabled>
+                <sys-out-redirect>true</sys-out-redirect>
+                <sys-err-redirect>true</sys-err-redirect>
+                <encoding/>
+            </terminal>
+        </log-config>
+    </log-configs>
+    <agent-classes>
+        <cache-agent-class id="cache-class"/>
+        <inference-agent-class id="inference-class">
+            <rules>
+                <ref>all-rules</ref>
+            </rules>
+            <destinations/>
+            <startup/>
+            <shutdown/>
+            <load>
+                <max-active>99</max-active>
+            </load>
+        </inference-agent-class>
+    </agent-classes>
+    <processing-units>
+        <processing-unit id="cache">
+            <agents>
+                <agent>
+                    <ref>cache-class</ref>
+                </agent>
+            </agents>
+            <logs>logConfig</logs>
+            <cache-storage-enabled>true</cache-storage-enabled>            
+            <property-group />
+        </processing-unit>
+        <processing-unit id="default">
+            <agents>
+                <agent>
+                    <ref>inference-class</ref>
+                    <priority>10</priority>
+                </agent>
+            </agents>
+            <logs>logConfig</logs>
+            <property-group />
+        </processing-unit>
+    </processing-units>
+    <property-group name="cluster-level properties">
+    	<property-group name="auth">
+		    <property name="be.mm.auth.type" value="file"/>
+		    <property name="be.mm.auth.file.location" value="%%BE_HOME%%/mm/config/users.pwd"/>
+		    <property name="java.security.auth.login.config" value="%%BE_HOME%%/mm/config/jaas-config.config"/>
+	    </property-group>
+	</property-group>
+</cluster>
+

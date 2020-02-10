@@ -1,0 +1,75 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>SOAP/JMS Channel - TIBCO BusinessEvents&reg; Examples</title>
+<meta http-equiv="Content-type" content="text/html; charset=iso-8859-1" />
+<meta http-equiv="Content-Language" content="en-us" />
+<link rel="Shortcut Icon" href="../../_resources/icon.gif" type="image/gif" />
+<style type="text/css" media="all">@import "../../_resources/examples.css";</style>
+
+</head>
+<h1>SOAP JMS Channel</h1>
+
+<h2>Purpose of This Example</h2>
+
+<p>This example demonstrates how TIBCO BusinessEvents&reg; can be used to implement a web service as defined in a WSDL file. The WSDL file used, is a concrete WSDL with JMS binding.</p>
+
+
+<h2>About this project</h2>
+<p>This section describes how a concrete WSDL with a JMS binding is used to implement its web services using TIBCO BusinessEvents. This example project was created by following these steps:</p>
+<li>Create a new project.</li>
+<li>Copy a concrete WSDL such as "JmsBindingMathOpsConcreteWSDL.wsdl" into the project.</li>
+<li>Import this WSDL using "File->Import->TIBCO BusinessEvents->WSDL.</li>
+<ol>This automatically creates BusinsessEvents artifacts such as Events, Transports, Channels and Destinations corresponding to messages, services and operations as defined in the WSDL.
+Refer to the documentation for details of these mappings.</ol>
+<li>Amongst these, template rules, one per operation are also created. For example, a rule "MathOpsService/MathOps/Rules/MathOps/Add"" corresponding to the "Add" operation is created.</li>
+<ol><p></p>These rules are then manually modified and business logic corresponding to the operation is implemented.
+In this example, math operations "Add" "Subtract" "Divide" and "Multiply" are implemented in correspondig rules and the results of the operations are sent back in the reply events' SOAP payloads.</p></ol>
+
+<li>A CDD is created, and the auto-generated rule function "RegisterSoapEventUris" is added to the Inference Agent's Startup Functions. This sets up the mappings of "soapAction"s to BE Event types.
+It also sets up pre-processors for these event types. You may modify these pre-processor rule functions as required. In this example, they are not modified.</li>
+
+
+<h2> Before You Begin</h2>
+<p>You will need TIBCO EMS Server and SoapUI for JMS to run the example client project.</p>
+<h3>Setup EMS</h3>
+<li>Create the following queues in EMS: "queue.mathops" which is the queue on which a SOAP request is sent to the server, and reply queues "queue.add.reply", "queue.subtract.reply", "queue.multiply.reply" and
+ "queue.divide.reply" over which SOAP responses will be sent by the server.</li>
+
+<h3>Setup SoapUI for JMS</h3>
+<li>Download and install SoapUI 5.0.0 for your platform from here <a href="http://www.soapui.org"/>SoapUI</a></li>
+<li>Modify the hermes-config.xml from this example to point to the correct location of the EMS jar files from your EMS installation. You may use the HermesJMS configuration tool to do so.</li>
+<ol>You may also need to change the EMS server URL and credentials as per your EMS installation</ol>
+<li>Import the project SoapUI project SOAPJMSChannel-soapui-project.xml from this example into SoapUI</li>
+<li>In the project preferences for the project SOAPJMSChannel, change the "Hermes Config" property to point to the folder which contains the modified hermes-config.xml</li>
+<p><i>NOTE: There is a bug in SoapUI where it incorrectly sets the JMSHeader field "SOAPJMS_soapAction" of the JMS payload to the operation name instead of "soapAction" as specified in the WSDL.
+As a workaround, this example uses the same name for the soapAction and the operation in the WSDL.</i></p>
+
+<h2>How to Run the Example</h2>
+
+<ol>
+<li>
+<p>Open a command window,
+and at the command prompt start the TIBCO BusinessEvents engine using the following command.</p>
+<pre class="commands">
+cd <i>BE_HOME</i>/examples/standard/SOAPJMSChannel
+<i>BE_HOME</i>/bin/be-engine --propFile <i>BE_HOME</i>/bin/be-engine.tra -u default -c SOAPJMSChannel/Deployments/SOAPJMSChannel.cdd SOAPJMSChannel.ear
+</pre>
+<p>Adapt the command as needed, for example if you have customized the example project,
+or are running it from a different directory.</p>
+</li>
+
+<li>
+<p>There is a request payload called "Request 1" already setup under each of the operations in the SoapUI project. Fire them and observe the output in SoapUI and on the BE console.</p>
+</li>
+
+</ol>
+
+<div class="footer">
+<p>TIBCO BusinessEvents&reg; 5.6<br />
+Copyright&copy; 2004-2019 TIBCO Software Inc. All rights reserved.</p>
+</div>
+</body>
+</html>

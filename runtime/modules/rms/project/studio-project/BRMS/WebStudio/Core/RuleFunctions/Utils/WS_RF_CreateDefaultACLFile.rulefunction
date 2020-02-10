@@ -1,0 +1,60 @@
+/**
+ * @description 
+ */
+void rulefunction WebStudio.Core.RuleFunctions.Utils.WS_RF_CreateDefaultACLFile {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String projectName;
+		String subscriptionId;
+		String username;
+		boolean isAdminRole;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.WS_RF_CreateDefaultACLFile");
+				
+		String administratorEntry = "{\"permissions\": {\"permission\": [{\"action\": {\"type\": \"approval\", \"value\": \"ALLOW\"}, \"resourceref\": \"PRJ\"}, {\"action\": {\"type\": \"commit\", \"value\": \"ALLOW\"}, \"resourceref\": \"PRJ\"}, {\"action\": {\"type\": \"checkout\", \"value\": \"ALLOW\"}, \"resourceref\": \"PRJ\"}, {\"action\": {\"type\": \"gen_deploy\", \"value\": \"ALLOW\"}, \"resourceref\": \"PRJ\"}, {\"action\": {\"type\": \"manage_locks\", \"value\": \"ALLOW\"}, \"resourceref\": \"PRJ\"}, {\"action\": {\"type\": \"read\", \"value\": \"ALLOW\"}, \"resourceref\": \"SC\"}, {\"action\": {\"type\": \"read\", \"value\": \"ALLOW\"}, \"resourceref\": \"BEP\"}, {\"action\": {\"type\": \"read\", \"value\": \"ALLOW\"}, \"resourceref\": \"PR\"}, {\"action\": {\"type\": \"read\", \"value\": \"ALLOW\"}, \"resourceref\": \"TABLE\"}, {\"action\": {\"type\": \"read\", \"value\": \"ALLOW\"}, \"resourceref\": \"C\"}, {\"action\": {\"type\": \"read\", \"value\": \"ALLOW\"}, \"resourceref\": \"CN\"}, {\"action\": {\"type\": \"read\", \"value\": \"ALLOW\"}, \"resourceref\": \"RU\"}, {\"action\": {\"type\": \"read\", \"value\": \"ALLOW\"}, \"resourceref\": \"E\"}, {\"action\": {\"type\": \"read\", \"value\": \"ALLOW\"}, \"resourceref\": \"RF\"}, {\"action\": {\"type\": \"add_impl\", \"value\": \"ALLOW\"}, \"resourceref\": \"RF\"}, {\"action\": {\"type\": \"del_impl\", \"value\": \"ALLOW\"}, \"resourceref\": \"RF\"}, {\"action\": {\"type\": \"read\", \"value\": \"ALLOW\"}, \"resourceref\": \"RT\"}, {\"action\": {\"type\": \"add_inst\", \"value\": \"ALLOW\"}, \"resourceref\": \"RT\"}, {\"action\": {\"type\": \"del_inst\", \"value\": \"ALLOW\"}, \"resourceref\": \"RT\"}, {\"action\": {\"type\": \"read\", \"value\": \"ALLOW\"}, \"resourceref\": \"RTI\"}, {\"action\": {\"type\": \"read\", \"value\": \"ALLOW\"}, \"resourceref\": \"RTV\"}, {\"action\": {\"type\": \"read\", \"value\": \"ALLOW\"}, \"resourceref\": \"WSL\"}, {\"action\": {\"type\": \"read\", \"value\": \"ALLOW\"}, \"resourceref\": \"DM\"} ] }, \"role\": {\"name\": \"#ROLEPREFIXAdministrator\"} }";
+		String businessUserEntry = "{\"permissions\": {\"permission\": [{\"action\": {\"type\": \"commit\", \"value\": \"ALLOW\"}, \"resourceref\": \"PRJ\"}, {\"action\": {\"type\": \"checkout\", \"value\": \"ALLOW\"}, \"resourceref\": \"PRJ\"}, {\"action\": {\"type\": \"read\", \"value\": \"ALLOW\"}, \"resourceref\": \"BEP\"}, {\"action\": {\"type\": \"read\", \"value\": \"ALLOW\"}, \"resourceref\": \"TABLE\"}, {\"action\": {\"type\": \"read\", \"value\": \"ALLOW\"}, \"resourceref\": \"C\"}, {\"action\": {\"type\": \"read\", \"value\": \"ALLOW\"}, \"resourceref\": \"E\"}, {\"action\": {\"type\": \"read\", \"value\": \"ALLOW\"}, \"resourceref\": \"RF\"}, {\"action\": {\"type\": \"read\", \"value\": \"ALLOW\"}, \"resourceref\": \"RT\"}, {\"action\": {\"type\": \"read\", \"value\": \"ALLOW\"}, \"resourceref\": \"RTI\"}, {\"action\": {\"type\": \"read\", \"value\": \"ALLOW\"}, \"resourceref\": \"RTV\"}, {\"action\": {\"type\": \"read\", \"value\": \"ALLOW\"}, \"resourceref\": \"DM\"} ] }, \"role\": {\"name\": \"Business-User\"} }";
+		String technicalUserEntry = "{\"permissions\": {\"permission\": [{\"action\": {\"type\": \"approval\", \"value\": \"ALLOW\"}, \"resourceref\": \"PRJ\"}, {\"action\": {\"type\": \"commit\", \"value\": \"ALLOW\"}, \"resourceref\": \"PRJ\"}, {\"action\": {\"type\": \"checkout\", \"value\": \"ALLOW\"}, \"resourceref\": \"PRJ\"}, {\"action\": {\"type\": \"gen_deploy\", \"value\": \"ALLOW\"}, \"resourceref\": \"PRJ\"}, {\"action\": {\"type\": \"read\", \"value\": \"ALLOW\"}, \"resourceref\": \"SC\"}, {\"action\": {\"type\": \"read\", \"value\": \"ALLOW\"}, \"resourceref\": \"BEP\"}, {\"action\": {\"type\": \"read\", \"value\": \"ALLOW\"}, \"resourceref\": \"PR\"}, {\"action\": {\"type\": \"read\", \"value\": \"ALLOW\"}, \"resourceref\": \"TABLE\"}, {\"action\": {\"type\": \"read\", \"value\": \"ALLOW\"}, \"resourceref\": \"C\"}, {\"action\": {\"type\": \"read\", \"value\": \"ALLOW\"}, \"resourceref\": \"CN\"}, {\"action\": {\"type\": \"read\", \"value\": \"ALLOW\"}, \"resourceref\": \"RU\"}, {\"action\": {\"type\": \"read\", \"value\": \"ALLOW\"}, \"resourceref\": \"E\"}, {\"action\": {\"type\": \"read\", \"value\": \"ALLOW\"}, \"resourceref\": \"RF\"}, {\"action\": {\"type\": \"add_impl\", \"value\": \"ALLOW\"}, \"resourceref\": \"RF\"}, {\"action\": {\"type\": \"del_impl\", \"value\": \"ALLOW\"}, \"resourceref\": \"RF\"}, {\"action\": {\"type\": \"read\", \"value\": \"ALLOW\"}, \"resourceref\": \"RT\"}, {\"action\": {\"type\": \"add_inst\", \"value\": \"ALLOW\"}, \"resourceref\": \"RT\"}, {\"action\": {\"type\": \"del_inst\", \"value\": \"ALLOW\"}, \"resourceref\": \"RT\"}, {\"action\": {\"type\": \"read\", \"value\": \"ALLOW\"}, \"resourceref\": \"RTI\"}, {\"action\": {\"type\": \"read\", \"value\": \"ALLOW\"}, \"resourceref\": \"RTV\"}, {\"action\": {\"type\": \"read\", \"value\": \"ALLOW\"}, \"resourceref\": \"WSL\"}, {\"action\": {\"type\": \"read\", \"value\": \"ALLOW\"}, \"resourceref\": \"DM\"} ] }, \"role\": {\"name\": \"#ROLEPREFIXTechnical-User\"} }";
+		String resources = "\"resources\": {\"resource\": [{\"rid\": \"PRJ\", \"type\": \"PROJECT\"}, {\"rid\": \"C\", \"type\": \"CONCEPT\"}, {\"rid\": \"SC\", \"type\": \"SCORECARD\"}, {\"rid\": \"DM\", \"type\": \"DOMAIN\"}, {\"rid\": \"RU\", \"type\": \"RULE\"}, {\"rid\": \"E\", \"type\": \"EVENT\"}, {\"rid\": \"CN\", \"type\": \"CHANNEL\"}, {\"rid\": \"RT\", \"type\": \"RULETEMPLATE\"}, {\"rid\": \"RTV\", \"type\": \"RULETEMPLATEVIEW\"}, {\"rid\": \"RTI\", \"type\": \"RULETEMPLATEINSTANCE\"}, {\"rid\": \"TABLE\", \"type\": \"RULEFUNCTIONIMPL\"}, {\"rid\": \"PR\", \"type\": \"PROPERTY\"}, {\"rid\": \"RF\", \"type\": \"RULEFUNCTION\"}, {\"rid\": \"CF\", \"type\": \"CATALOGFUNCTION\"}, {\"rid\": \"WSL\", \"type\": \"WSDL\"}, {\"rid\": \"BEP\", \"type\": \"BEPROCESS\"} ] }"; 
+		
+		Log.log(LOGGER, "Debug", "Creating ACL for Project[%s] & SubscriptionId[%s]", projectName, subscriptionId);
+		
+		Object aclBuffer = String.createBuffer(0);
+		String.append(aclBuffer, "{\"entries\": {\"entry\": [");
+		
+		// root administrator role
+		String.append(aclBuffer, String.replaceAll(administratorEntry, "#ROLEPREFIX", ""));
+		String.append(aclBuffer, ",");
+		
+		String rolePrefix = "";
+		if (subscriptionId != null) {
+			rolePrefix += (subscriptionId + "_");
+			String.append(aclBuffer, String.replaceAll(administratorEntry, "#ROLEPREFIX", rolePrefix));
+			if (!isAdminRole) {
+				rolePrefix = (username + "_");
+				String.append(aclBuffer, ",");
+				String.append(aclBuffer, String.replaceAll(technicalUserEntry, "#ROLEPREFIX", rolePrefix));
+			}
+		} else {
+			String.append(aclBuffer, String.replaceAll(businessUserEntry, "#ROLEPREFIX", rolePrefix));
+			String.append(aclBuffer, ",");
+			String.append(aclBuffer, String.replaceAll(technicalUserEntry, "#ROLEPREFIX", rolePrefix));
+		}
+		
+		String.append(aclBuffer, "]},");
+		String.append(aclBuffer, resources);
+		String.append(aclBuffer, "}");
+		
+		String aclContent = String.convertBufferToString(aclBuffer);
+		
+		Log.log(LOGGER, "Debug", "Generated ACL - " + aclContent);
+		
+		WS_C_Acl defaultAcl = Instance.createTransientInstanceFromJSON("/WebStudio/Core/Concepts/Permissions/WS_C_Acl", aclContent);		
+		if (defaultAcl != null && defaultAcl.entries != null) {
+			WS_RF_SaveAclData(defaultAcl, projectName, subscriptionId);
+			Log.log(LOGGER, "Debug", "Created a default ACL file for project [%s]", projectName);
+		}
+	}
+}

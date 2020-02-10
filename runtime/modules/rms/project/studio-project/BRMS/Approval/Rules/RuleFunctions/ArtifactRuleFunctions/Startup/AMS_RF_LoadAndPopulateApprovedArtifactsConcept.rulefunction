@@ -1,0 +1,58 @@
+/**
+ * @description 
+ */
+void rulefunction Approval.Rules.RuleFunctions.ArtifactRuleFunctions.Startup.AMS_RF_LoadAndPopulateApprovedArtifactsConcept {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String projectName;
+		//The path upto decisiondata or whatever is pointed to by the property.
+		String projectRootPath;
+	}
+	body {
+		Object LOGGER = Log.getLogger("Approval.Rules.RuleFunctions.ArtifactRuleFunctions.Startup.AMS_RF_LoadAndPopulateApprovedArtifactsConcept");
+		//Lock with project name
+		boolean locked = Cluster.DataGrid.Lock(projectName, -1, false);
+		if (locked) {
+			//Clean this during shutdown.
+			AMS_C_ApprovedArtifacts approvedArtifacts = Cluster.DataGrid.CacheLoadConceptByExtId(projectName, false);
+			if (approvedArtifacts == null) {
+				approvedArtifacts = Instance.createInstance("xslt://{{/Approval/Concepts/ArtifactsConcepts/AMS_C_ApprovedArtifacts}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"1.0\" exclude-result-prefixes=\"xsl xsd\">\n    <xsl:output method=\"xml\"/>\n    <xsl:param name=\"projectName\"/>\n    <xsl:template match=\"/\">\n        <createObject>\n            <object>\n                <xsl:attribute name=\"extId\">\n                    <xsl:value-of select=\"$projectName\"/>\n                </xsl:attribute>\n            </object>\n        </createObject>\n    </xsl:template>\n</xsl:stylesheet>");
+
+				String[] projectApprovedFiles = RMS.ArtifactsManagement.listFilesRecursively(projectRootPath, false);
+				
+				for (int loop = 0; loop < projectApprovedFiles@length; loop++) {
+					String projectFile = projectApprovedFiles[loop];
+					Log.log(LOGGER, "Debug", "Project File %s", projectFile);
+					String extension = 
+						String.substring(projectFile, 
+						                 String.lastIndexOfString(projectFile, 0, ".") + 1, String.length(projectFile));
+					String EXTENSION = String.toUpperCase(extension);
+					
+					boolean supportedConfigLock = Cluster.DataGrid.Lock("RMS_SUPP_ARTIFACTS_CFG", -1, false);
+					if (supportedConfigLock) {
+						//Bring into wm
+						AMS_C_SupportedArtifactTypesConfig supportedArtifactsConfig = Cluster.DataGrid.CacheLoadConceptByExtId("RMS_SUPP_ARTIFACTS_CFG", false);
+						
+						//Check if artifact type is supported
+						boolean isSupported = AMS_RF_IsArtifactTypeSupported(EXTENSION);
+						if (isSupported) {	
+							//Convert to forward slashes
+							String filePath = String.replaceAll(projectFile, "\\\\", "/");
+							String tempPath = String.substringAfter(filePath, projectRootPath);
+							String artifactPath = String.substringBefore(tempPath, ".");
+							artifactPath = artifactPath + "." + extension;
+							//Also append extension Path will be /Concepts/Concept.concept
+							Log.log(LOGGER, "Debug", "Artifact Path %s", artifactPath);
+							
+							Instance.PropertyArray.appendString(approvedArtifacts.approvedArtifacts, artifactPath, 1L);
+						}
+						//Release lock
+						Cluster.DataGrid.UnLock("RMS_SUPP_ARTIFACTS_CFG", false);
+					}
+				}
+			}
+		}
+	}
+}

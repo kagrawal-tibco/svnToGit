@@ -1,0 +1,64 @@
+<div class="row">
+  <div class="col-sm-12">
+    <div class="card">
+      <div class="card-header card-header-sm">
+	   	<button (click)='toggleMaximize()' class="float-right btn-outline-primary">
+	    	<i
+		     	class="fa"
+		     	[class.fa-window-restore]="maximized"
+		     	[class.fa-expand]="!maximized"
+		     	>
+	    	</i>
+	   	</button>
+        <strong i18n>{{i18n('Import')}}</strong>
+      </div>
+      <div class="card-body">
+        <div class="form-group">
+          <label class='control-label control-label-normal' i18n>{{i18n('Name')}}</label>
+          <input type="text" class='form-control' [(ngModel)]="resourceName"/>
+        </div>
+        <div class="form-group">
+          <label class='control-label control-label-normal' i18n>{{i18n(' Select File ')}}</label>
+          <input #file style='display:none' type="file" ng2FileSelect [uploader]="uploader" />
+          <br/>
+          <button type="button" class="btn btn-primary btn-sm" (click)="file.value='';file.click();" i18n>{{i18n('Select')}}</button>
+          <label class='control-label control-label-normal'> {{extractName(file.value)}} </label>
+        </div>
+        <div class="form-group">
+          <label class='control-label control-label-normal' i18n>{{i18n('Parent Folder')}}</label>
+          <input type="text" class='form-control' [(ngModel)]="resourceFolderPath"/>
+        </div>
+        <div class="form-group" *ngIf='checkDuplicates()'>
+                  <label class='control-label control-label-normal' i18n>{{i18n('Decision table already exist. Please select one of the following actions')}}</label>
+                  <select
+                  id='actions'
+                  class='form-control'
+                  name='actions'
+                  [(ngModel)]="selectedAction"
+                  #testdataSelect='ngModel'
+                  >
+                  <option 
+                  *ngFor='let action of getActions()'
+                  [value]='action'
+                  >{{action}}</option>
+                  </select>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="row left-pad right-pad bottom-pad top-pad">
+  <div class="col-sm-12">
+    <button type="button" class='btn btn-outline-primary btn-sm' (click)='onClose()' i18n>{{i18n('Close')}}</button>
+    <button 
+      type="button" 
+      class='btn btn-primary btn-sm pull-right' 
+      (click)='onConfirm()'
+      [disabled]='!canConfirm()' i18n
+    >{{i18n('Confirm')}}</button>
+    <a *ngIf="apiInProgress" class='animated no-divider pull-right right-pad'
+      [class.infinite]='apiInProgress'>
+          <small><i class='fa fa-refresh fa-spin'></i></small>
+    </a>
+  </div>
+</div>

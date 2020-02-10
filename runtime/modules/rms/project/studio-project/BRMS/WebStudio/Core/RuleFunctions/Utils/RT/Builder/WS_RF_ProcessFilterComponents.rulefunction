@@ -1,0 +1,81 @@
+/**
+ * @description Process LHS and RHS components of the RT conditions filter.
+ */
+void rulefunction WebStudio.Core.RuleFunctions.Utils.RT.Builder.WS_RF_ProcessFilterComponents {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object[] filterComponents;
+		WebStudio.Core.Concepts.RuleTemplateInstance.Builder.WS_C_AbstractConditionsFilter conditionsFilter;
+		//Is it RHS side in which case it should be treated as value;
+		boolean isRHS;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.RT.Builder.WS_RF_ProcessFilterComponents");
+		WS_C_FilterValue filterValue = null; 
+		
+		if (isRHS) {
+			filterValue = 
+				Instance.newInstance("/WebStudio/Core/Concepts/RuleTemplateInstance/Builder/WS_C_FilterValue", null);
+			if (conditionsFilter instanceof WS_C_SimpleConditionsFilter) {
+				WS_C_SimpleConditionsFilter simpleConditionsFilter = conditionsFilter;
+				Instance.PropertyAtom.setContainedConcept(simpleConditionsFilter.value, filterValue, 1L);
+			}					
+		}
+		for (int loop = 0; loop < filterComponents@length; loop++) {
+			Object filterComponent = filterComponents[loop];
+			int filterComponentType = WS.RT.Builder.getFilterComponentType(filterComponent);
+			//Get its children
+			Object[] filterComponentChildren = WS.RT.Builder.getFilterComponentChildren(filterComponent);
+		
+			if (filterComponentType == 1) {
+				//Add as links
+				WS_C_Link filterLink = 
+					Instance.newInstance("/WebStudio/Core/Concepts/RuleTemplateInstance/Builder/WS_C_Link", null);
+				//2 children
+				String linkName = filterComponentChildren[0];
+				Log.log(LOGGER, "Debug", "Filter Link Name %s", linkName);
+				String linkType = filterComponentChildren[1]; 
+				Log.log(LOGGER, "Debug", "Filter Link Type %s", linkType);
+				filterLink.name = linkName;
+				filterLink.type = linkType;
+				
+				if (isRHS) {
+					Instance.
+						PropertyArray.
+							appendConceptReference(filterValue.link, filterLink, 1L);
+				} else {
+					//Append it directly to conditions
+					Instance.
+						PropertyArray.
+							appendConceptReference(conditionsFilter.link, filterLink, 1L);
+				}
+			} else if (filterComponentType == 0) {
+				//This needs to be added to value
+				//Constant value should have only one child.	
+				filterValue.simple = filterComponentChildren[0];
+				Log.log(LOGGER, "Debug", "Simple value for filter %s", filterValue.simple);
+					
+			} else if (filterComponentType == 2) {
+				Log.log(LOGGER, "Debug", "COmplex value filter encountered");
+				//This needs to be added to value
+				//Complex value will have links	
+				for (int childLoop = 0; childLoop < filterComponentChildren@length; childLoop++) {
+					WS_C_Link filterLink = 
+						Instance.newInstance("/WebStudio/Core/Concepts/RuleTemplateInstance/Builder/WS_C_Link", null);
+					//2 children
+					String linkName = filterComponentChildren[0];
+					Log.log(LOGGER, "Debug", "Filter Link Name %s", linkName);
+					String linkType = filterComponentChildren[1]; 
+					Log.log(LOGGER, "Debug", "Filter Link Type %s", linkType);
+					filterLink.name = linkName;
+					filterLink.type = linkType;
+					
+					//Append it
+					Instance.PropertyArray.appendConceptReference(filterValue.link, filterLink, 1L);
+				}
+			}
+		}
+	}
+}

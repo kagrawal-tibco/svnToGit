@@ -1,0 +1,385 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.2"?>
+<plugin>
+
+   <extension
+         point="org.eclipse.ui.editors">
+      <editor
+            class="com.tibco.cep.studio.cluster.topology.editors.ClusterTopologyEditor"
+            contributorClass="com.tibco.cep.studio.cluster.topology.editors.ClusterTopologyEditorContributor"
+            extensions="st, stopo, sitetopo, sitetopology, siteview"
+            icon="icons/cluster_16x16.png"
+            id="com.tibco.cep.studio.cluster.topology.editors.clusterEditor"
+            name="SiteTopology Editor">
+      </editor>
+   </extension>
+   <extension
+         point="org.eclipse.core.runtime.preferences">
+      <initializer
+            class="com.tibco.cep.studio.cluster.topology.preferences.ClusterTopologyPreferenceInitializer">
+      </initializer>
+   </extension>
+   <extension
+         point="org.eclipse.ui.editorActions">
+      <editorContribution
+            id="com.tibco.cep.studio.cluster.topology.editorContribution"
+            targetID="com.tibco.cep.studio.cluster.topology.editors.clusterEditor">
+              <menu
+               id="com.tibco.cep.decision.process.diagram.menu"
+               label="Diagram"
+               path="additions">
+            <separator
+                  name="DiagramGroup1">
+            </separator>
+            <separator
+                  name="DiagramGroup2">
+            </separator>
+            <separator
+                  name="DiagramGroup3">
+            </separator>
+            <separator
+                  name="DiagramGroup4">
+            </separator>
+            <separator
+                  name="DiagramGroup5">
+            </separator>
+         </menu>
+              <menu
+                    id="com.tibco.cep.diagramming.layout_menu"
+                    label="&amp;Layout"
+                    path="com.tibco.cep.decision.process.diagram.menu/DiagramGroup1">
+                 <separator
+                       name="LayoutGroup">
+                 </separator>
+              </menu>
+         <menu
+               id="com.tibco.cep.diagramming.tool_menu"
+               label="&amp;Interactive Tools"
+               path="com.tibco.cep.decision.process.diagram.menu/DiagramGroup1">
+            <separator
+                  name="ToolsGroup">
+            </separator>
+         </menu>
+		<action
+        class="com.tibco.cep.diagramming.actions.ExportToImageActionDelegate"
+        icon="icons/imageExport.gif"
+        id="com.tibco.cep.diagramming.imageexport"
+        label="Export to Image..."
+        menubarPath="com.tibco.cep.decision.process.diagram.menu/DiagramGroup3"
+        tooltip="Diagram Export to Image">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.PrintActionDelegate"
+               icon="icons/print.gif"
+               id="com.tibco.cep.diagramming.print"
+               label="Print"
+               menubarPath="com.tibco.cep.decision.process.diagram.menu/DiagramGroup2"
+               tooltip="Diagram Print">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.PrintPreviewActionDelegate"
+               icon="icons/printPreview.gif"
+               id="com.tibco.cep.diagramming.printpreview"
+               label="Print Preview"
+               menubarPath="com.tibco.cep.decision.process.diagram.menu/DiagramGroup2"
+               tooltip="Diagram Print Preview">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.PrintSetupActionDelegate"
+               icon="icons/printSetup.gif"
+               id="com.tibco.cep.diagramming.printsetup"
+               label="Print Setup"
+               menubarPath="com.tibco.cep.decision.process.diagram.menu/DiagramGroup2"
+               tooltip="Diagram Print Setup">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.LinkNavigatorActionDelegate"
+               icon="icons/linkNavigation.gif"
+               id="com.tibco.cep.diagramming.linknavigator"
+               label="Link &amp;Navigator"
+               menubarPath="com.tibco.cep.decision.process.diagram.menu/com.tibco.cep.diagramming.tool_menu/ToolsGroup"
+               tooltip="Link Navigator">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.InteractiveZoomActionDelegate"
+               icon="icons/interactiveZoom.gif"
+               id="com.tibco.cep.diagramming.interactivezoom"
+               label="&amp;Interactive Zoom"
+               menubarPath="com.tibco.cep.decision.process.diagram.menu/com.tibco.cep.diagramming.tool_menu/ToolsGroup"
+               tooltip="Interactive Zoom">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.ZoomActionDelegate"
+               icon="icons/zoom.gif"
+               id="com.tibco.cep.diagramming.marqueezoom"
+               label="&amp;Marquee Zoom"
+               menubarPath="com.tibco.cep.decision.process.diagram.menu/com.tibco.cep.diagramming.tool_menu/ToolsGroup"
+               tooltip="Marquee Zoom">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.PanActionDelegate"
+               icon="icons/pan.gif"
+               id="com.tibco.cep.diagramming.pan"
+               label="Pan"
+               menubarPath="com.tibco.cep.decision.process.diagram.menu/com.tibco.cep.diagramming.tool_menu/ToolsGroup"
+               tooltip="Pan">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.SelectActionDelegate"
+               icon="icons/select.gif"
+               id="com.tibco.cep.diagramming.select"
+               label="&amp;Select"
+               menubarPath="com.tibco.cep.decision.process.diagram.menu/com.tibco.cep.diagramming.tool_menu/ToolsGroup"
+               tooltip="Select">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.FitWindowActionDelegate"
+               icon="icons/fitInCanvas.gif"
+               id="com.tibco.cep.diagramming.fitinwindow"
+               label="&amp;Fit In Window"
+               menubarPath="com.tibco.cep.decision.process.diagram.menu/DiagramGroup5"
+               tooltip="Fit In Window">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.IncrementalLayoutActionDelegate"
+               icon="icons/incrementalLayout.gif"
+               id="com.tibco.cep.diagramming.incrementallayout"
+               label="In&amp;cremental Layout"
+               menubarPath="com.tibco.cep.decision.process.diagram.menu/DiagramGroup4"
+               tooltip="Arrange all objects incrementally">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.RoutingActionDelegate"
+               icon="icons/routing.gif"
+               id="com.tibco.cep.diagramming.edge.routing"
+               label="Link Routing"
+               menubarPath="com.tibco.cep.decision.process.diagram.menu/DiagramGroup4"
+               tooltip="Arrange all edges">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.LabelingActionDelegate"
+               icon="icons/labeling.gif"
+               id="com.tibco.cep.diagramming.labeling"
+               label="L&amp;abeling"
+               menubarPath="com.tibco.cep.decision.process.diagram.menu/DiagramGroup4"
+               tooltip="Arrange all labels">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.HierarchicalObliqueLayoutActionDelegate"
+               icon="icons/hierarchicaldeep.png"
+               id="com.tibco.cep.diagramming.hierarchical.oblique.layout"
+               label="Hierarchical Layout (Oblique)"
+               menubarPath="com.tibco.cep.decision.process.diagram.menu/com.tibco.cep.diagramming.layout_menu/LayoutGroup"
+               tooltip="Arranges the nodes in a hierarchical layout">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.HierarchicalRectilinearLayoutActionDelegate"
+               icon="icons/hierarchicaldeep.png"
+               id="com.tibco.cep.diagramming.hierarchical.rectilinear.layout"
+               label="Hierarchical Layout (Rectilinear)"
+               menubarPath="com.tibco.cep.decision.process.diagram.menu/com.tibco.cep.diagramming.layout_menu/LayoutGroup"
+               tooltip="Arranges the nodes in a hierarchical layout">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.SymmetricLayoutActionDelegate"
+               icon="icons/symmetricdeep.png"
+               id="com.tibco.cep.diagramming.symmetric.layout"
+               label="Symmetric Layout"
+               menubarPath="com.tibco.cep.decision.process.diagram.menu/com.tibco.cep.diagramming.layout_menu/LayoutGroup"
+               tooltip="Arranges the nodes in a symmetric layout">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.OrthogonalLayoutActionDelegate"
+               icon="icons/orthogonaldeep.png"
+               id="com.tibco.cep.diagramming.orthogonal.layout"
+               label="Orthogonal Layout"
+               menubarPath="com.tibco.cep.decision.process.diagram.menu/com.tibco.cep.diagramming.layout_menu/LayoutGroup"
+               tooltip="Arranges the nodes in a orthogonal layout">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.CircularLayoutActionDelegate"
+               icon="icons/circulardeep.png"
+               id="com.tibco.cep.diagramming.circular.layout"
+               label="Circular Layout"
+               menubarPath="com.tibco.cep.decision.process.diagram.menu/com.tibco.cep.diagramming.layout_menu/LayoutGroup"
+               tooltip="Arranges the nodes in a circualr layout">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.LayoutActionDelegate"
+               icon="icons/globalLayout.png"
+               id="com.tibco.cep.diagramming.default.layout"
+               label="Default Layout"
+               menubarPath="com.tibco.cep.decision.process.diagram.menu/com.tibco.cep.diagramming.layout_menu/LayoutGroup"
+               tooltip="Sets default layout">
+         </action>
+      </editorContribution>
+   </extension>
+   <extension
+         point="org.eclipse.ui.newWizards">
+      <wizard
+            category="com.tibco.cep.studio.ui.category"
+            class="com.tibco.cep.studio.cluster.topology.wizards.NewClusterTopologyWizard"
+            finalPerspective="com.tibco.cep.studio.application.perspective"
+            icon="icons/cluster_16x16.png"
+            id="com.tibco.cep.deployment.newWizard"
+            name="Site Topology">
+         <description>
+            Create a new Deployment Diagram
+         </description>
+      </wizard>
+   </extension>
+<extension
+         point="org.eclipse.ui.views.properties.tabbed.propertyContributor">
+      <propertyContributor
+            contributorId="com.tibco.cep.studio.cluster.topology.diagram.propertyContributor"
+            labelProvider="com.tibco.cep.studio.cluster.topology.properties.ClusterDiagramPropertyLabelProvider">
+         <propertyCategory
+               category="default"></propertyCategory>
+      </propertyContributor>
+   </extension>
+   <extension
+         point="org.eclipse.ui.views.properties.tabbed.propertyTabs">
+      <propertyTabs
+            contributorId="com.tibco.cep.studio.cluster.topology.diagram.propertyContributor">
+         <propertyTab
+               category="default"
+               id="cluster.diagram.propertyTab.general"
+               label="General">
+         </propertyTab>
+         <propertyTab
+               afterTab="cluster.diagram.propertyTab.general"
+               category="default"
+               id="cluster.diagram.propertyTab.installation"
+               label="Installation">
+         </propertyTab>
+         <propertyTab
+               afterTab="cluster.diagram.propertyTab.installation"
+               category="default"
+               id="cluster.diagram.propertyTab.startPUMethod"
+               label="Start-PU-Method">
+         </propertyTab>
+         <propertyTab
+               afterTab="cluster.diagram.propertyTab.general"
+               category="default"
+               id="cluster.diagram.propertyTab.unit"
+               label="Unit">
+         </propertyTab>
+      </propertyTabs>
+   </extension>
+   <extension
+         point="org.eclipse.ui.views.properties.tabbed.propertySections">
+      <propertySections
+            contributorId="com.tibco.cep.studio.cluster.topology.diagram.propertyContributor">
+         <propertySection
+               class="com.tibco.cep.studio.cluster.topology.properties.ClusterDiagramGeneralPropertySection"
+               filter="com.tibco.cep.studio.cluster.topology.properties.filter.GeneralTopologyPropertyFilter"
+               id="cluster.topology.diagram.general.propertySection"
+               tab="cluster.diagram.propertyTab.general">
+            <input
+                  type="com.tomsawyer.graphicaldrawing.TSEObject">
+            </input>
+         </propertySection>
+         <propertySection
+               class="com.tibco.cep.studio.cluster.topology.properties.ClusterDiagramClusterPropertySection"
+               filter="com.tibco.cep.studio.cluster.topology.properties.filter.ClusterPropertyFilter"
+               id="cluster.topology.diagram.cluster.propertySection"
+               tab="cluster.diagram.propertyTab.general">
+            <input
+                  type="com.tomsawyer.graphicaldrawing.TSEObject">
+            </input>
+         </propertySection>
+         <propertySection
+               afterSection="cluster.topology.diagram.host.propertySection"
+               class="com.tibco.cep.studio.cluster.topology.properties.ClusterDiagramInstallationPropertySection"
+               filter="com.tibco.cep.studio.cluster.topology.properties.filter.InstallationPropertyFilter"
+               id="cluster.topology.diagram.installation.propertySection"
+               tab="cluster.diagram.propertyTab.installation">
+            <input
+                  type="com.tomsawyer.graphicaldrawing.TSEObject">
+            </input>
+         </propertySection>
+<!--
+         <propertySection
+               afterSection="cluster.topology.diagram.installation.propertySection"
+               class="com.tibco.cep.studio.cluster.topology.properties.ClusterDiagramHawkPropertySection"
+               filter="com.tibco.cep.studio.cluster.topology.properties.filter.HawkPropertyFilter"
+               id="cluster.topology.diagram.hawk.propertySection"
+               tab="cluster.diagram.propertyTab.hawk">
+            <input
+                  type="com.tomsawyer.graphicaldrawing.TSEObject">
+            </input>
+         </propertySection>
+-->
+         <propertySection
+               afterSection="cluster.topology.diagram.general.propertySection"
+               class="com.tibco.cep.studio.cluster.topology.properties.ClusterDiagramHostPropertySection"
+               filter="com.tibco.cep.studio.cluster.topology.properties.filter.HostPropertyFilter"
+               id="cluster.topology.diagram.host.propertySection"
+               tab="cluster.diagram.propertyTab.general">
+            <input
+                  type="com.tomsawyer.graphicaldrawing.TSEObject">
+            </input>
+         </propertySection>
+         <propertySection
+               class="com.tibco.cep.studio.cluster.topology.properties.ClusterDiagramProcessingUnitPropertySection"
+               filter="com.tibco.cep.studio.cluster.topology.properties.filter.ProcessingUnitPropertyFilter"
+               id="cluster.topology.diagram.unit.propertySection"
+               tab="cluster.diagram.propertyTab.general">
+            <input
+                  type="com.tomsawyer.graphicaldrawing.TSEObject">
+            </input>
+         </propertySection>
+         <propertySection
+               class="com.tibco.cep.studio.cluster.topology.properties.ClusterDiagramDeploymentUnitPropertySection"
+               filter="com.tibco.cep.studio.cluster.topology.properties.filter.DeploymentUnitPropertyFilter"
+               id="cluster.topology.diagram.deploymentunit.propertySection"
+               tab="cluster.diagram.propertyTab.general">
+            <input
+                  type="com.tomsawyer.graphicaldrawing.TSEObject">
+            </input>
+         </propertySection>
+         <propertySection
+               class="com.tibco.cep.studio.cluster.topology.properties.ClusterDiagramEdgeGeneralPropertySection"
+               filter="com.tibco.cep.studio.cluster.topology.properties.filter.EdgeGeneralPropertyFilter"
+               id="cluster.topology.diagram.edge.genreral.propertySection"
+               tab="cluster.diagram.propertyTab.general">
+            <input
+                  type="com.tomsawyer.graphicaldrawing.TSEObject">
+            </input>
+         </propertySection>         
+         <propertySection
+               afterSection="cluster.topology.diagram.genreral.propertySection"
+               class="com.tibco.cep.studio.cluster.topology.properties.ClusterDiagramSitePropertySection"
+               filter="com.tibco.cep.studio.cluster.topology.properties.filter.SitePropertyFilter"
+               id="cluster.topology.diagram.site.propertySection"
+               tab="cluster.diagram.propertyTab.general">
+            <input
+                  type="com.tomsawyer.graphicaldrawing.TSEObject">
+            </input>
+         </propertySection>
+         <propertySection
+               afterSection="cluster.topology.diagram.installation.propertySection"
+               class="com.tibco.cep.studio.cluster.topology.properties.StartPUMethodPropertySection"
+               filter="com.tibco.cep.studio.cluster.topology.properties.filter.InstallationPropertyFilter"
+               id="com.tibco.cep.studio.cluster.topology.startPUMethodpropertySection"
+               tab="cluster.diagram.propertyTab.startPUMethod">
+            <input
+                  type="com.tomsawyer.graphicaldrawing.TSEObject">
+            </input>
+         </propertySection>
+      </propertySections>
+   </extension>
+   <extension
+         point="com.tibco.cep.studio.core.projectResourceValidator">
+      <validator
+            Validator="com.tibco.cep.studio.cluster.topology.utils.SiteTopologyResourceValidator"
+            extensions="st">
+      </validator>
+   </extension>
+   <extension
+         point="com.tibco.cep.studio.core.refactoringParticipant">
+      <refactoringParticipant
+            participant="com.tibco.cep.studio.cluster.topology.refactor.SiteTopologyRefactoringParticipant">
+      </refactoringParticipant>
+   </extension>
+</plugin>

@@ -1,0 +1,194 @@
+<?xml version="1.0"?>
+<!-- ======================================================================= -->
+<!-- BusinessEvents v1.0 build script                                                    -->
+<!-- ======================================================================= -->
+<project name="TIBCOMapper" default="main" basedir=".">
+
+
+    <!-- Defines locations of all dependent products and versions, relative to tibco home, i.e. c:\tibco -->
+    <property name="env.TIBCO_HOME" value="C:\tibco"/>
+
+    <property name="TIB_JRE_VERSION" value="1.4.2"/>
+
+
+    <property name="prod.TIBCO_AE_HOME" value="${env.TIBCO_HOME}"/>
+    <property name="prod.TIBRV_HOME" value="${env.TIBCO_HOME}/tibrv"/>
+    <property name="prod.TIBJMS_HOME" value="${env.TIBCO_HOME}/jms"/>
+    <property name="prod.TIB_TRA_VERSION" value="5.1"/>
+    <property name="prod.TIB_TRA_HOME" value="${env.TIBCO_HOME}/tra/${prod.TIB_TRA_VERSION}"/>
+    <property name="prod.TIB_DESIGNER_HOME" value="${env.TIBCO_HOME}/designer/5.1"/>
+
+    <property name="prod.TIB_HAWK_HOME" value="${env.TIBCO_HOME}/hawk"/>
+    <property name="prod.TIB_TPCL_HOME" value="${env.TIBCO_HOME}/tpcl/5.1"/>
+    <property name="prod.TIB_ADMINISTRATOR_HOME" value="${env.TIBCO_HOME}/administrator/5.1"/>
+    <property name="prod.TIB_JRE_HOME" value="${env.TIBCO_HOME}/jre/${TIB_JRE_VERSION}"/>
+    <!-- Our target location -->
+    <property name="prod.TIB_BE_HOME" value="${env.TIBCO_HOME}/be/1.0"/>
+
+    <property name="Regexp.HOME" value="C:/Software/java/javatools/jakarta-regexp-1.3"/>
+
+
+    <property name="Name" value="BE"/>
+    <property name="version" value="1.0"/>
+
+    <!-- =============================================================== -->
+    <!-- Root properties  //TODO Root properties -->
+    <!-- =============================================================== -->
+    <property name="root" value="${basedir}"/>
+    <property name="mapper.build" value="${root}/build/"/>
+    <property name="mapper.lib" value="${root}/lib"/>
+
+    <!-- ========================================================================================== -->
+    <!-- Target locations -->
+    <!-- ========================================================================================== -->
+
+
+    <!-- Designer install build locations -->
+    <property name="designer.bin" value="${prod.TIB_DESIGNER_HOME}/bin"/>
+    <property name="designer.lib" value="${prod.TIB_TRA_HOME}/lib"/>
+    <property name="designer.palettes" value="${prod.TIB_TRA_HOME}/lib/palettes"/>
+    <property name="designer.support" value="${prod.TIB_TRA_HOME}/lib"/>
+
+    <!-- TRA install build locations -->
+    <property name="tra.bin" value="${prod.TIB_TRA_HOME}/bin"/>
+    <property name="tra.lib" value="${prod.TIB_TRA_HOME}/lib"/>
+
+
+    <!-- TIBRV library install location -->
+    <property name="tibrv.lib" value="${prod.TIBRV_HOME}/lib"/>
+
+    <!-- TIB JMS library install location -->
+    <property name="tibjms.lib" value="${prod.TIBJMS_HOME}/client/java"/>
+
+    <!-- Hawk install build locations -->
+    <property name="hawk.lib" value="${prod.TIB_HAWK_HOME}/lib"/>
+
+    <!-- Third-party components locations -->
+    <property name="tpcl.lib" value="${prod.TIB_TPCL_HOME}/lib"/>
+    <property name="tpcl.libjdbc" value="${prod.TIB_TPCL_HOME}/jdbc"/>
+    <property name="tpcl.libjviews" value="${prod.TIB_TPCL_HOME}/jviews"/>
+
+
+
+    <!-- ========================================================================================== -->
+    <!-- Classpath properties -->
+    <!-- ========================================================================================== -->
+
+    <!-- Path for all of the main TRA libs -->
+    <path id="deps.tralib.path">
+        <pathelement path="${tra.lib}/TIBCrypt.jar"/>
+        <pathelement path="${tra.lib}/TIBCOrt.jar"/>
+        <pathelement path="${tra.lib}/TIBCOxml.jar"/>
+        <pathelement path="${tra.lib}/Deployment.jar"/>
+        <pathelement path="${tra.lib}/TIBCOtsm.jar"/>
+        <pathelement path="${tra.lib}/TIBCOjms.jar"/>
+        <pathelement path="${tra.lib}/TIBqd.jar"/>
+        <pathelement path="${tra.lib}/DomainUtility.jar"/>
+        <pathelement path="${tra.lib}/turbosdk.jar"/>
+    </path>
+
+    <!-- Path for all of the main TPCL libs -->
+    <path id="deps.tpcl.path">
+        <!-- should this just wildcard-include all *.jar files ? -->
+        <pathelement path="${tpcl.lib}/commons-httpclient.jar"/>
+        <pathelement path="${tpcl.lib}/commons-logging.jar"/>
+        <pathelement path="${tpcl.lib}/cos.jar"/>
+        <pathelement path="${tpcl.lib}/ldapjdk.jar"/>
+        <pathelement path="${tpcl.lib}/log4j.jar"/>
+        <pathelement path="${tpcl.lib}/PerlTools.jar"/>
+        <pathelement path="${tpcl.lib}/slide-webdavlib-20030729.jar"/>
+        <pathelement path="${tpcl.lib}/turbine-2.1.jar"/>
+        <pathelement path="${tpcl.lib}/xercesImpl.jar"/>
+        <pathelement path="${tpcl.lib}/xml.jar"/>
+        <pathelement path="${tpcl.lib}/xmlParserAPIs.jar"/>
+        <pathelement path="${tpcl.lib}/jakarta-regexp-1.3.jar"/>
+        <pathelement path="${tpcl.libjviews}/jviewsall.jar"/>
+    </path>
+
+    <!-- Path for what's needed from Designer 5.1 -->
+    <path id="deps.designer.path">
+        <pathelement path="${designer.lib}/TIBCOdesigner.jar"/>
+        <pathelement path="${designer.support}/TIBCOdesignerext.jar"/>
+        <pathelement path="${designer.palettes}/designerpalettes.jar"/>
+        <pathelement path="${designer.palettes}/TurboPalette.jar"/>
+        <pathelement path="${designer.palettes}/davstore.jar"/>
+        <pathelement path="${designer.support}/turbosdk.jar"/>
+    </path>
+
+    <!-- Path for what's needed from TIBRV -->
+    <path id="deps.tibrv.path">
+        <pathelement path="${tibrv.lib}/tibrvj.jar"/>
+        <pathelement path="${tibrv.lib}/tibrvjsd.jar"/>
+        <pathelement path="${tra.lib}/tibrvtxj.jar"/>
+    </path>
+
+    <!-- ========================================================================================== -->
+    <!-- Built jars -->
+    <!-- ========================================================================================== -->
+
+    <property name="jar.mapper" value="${mapper.lib}/TIBCOMapper.jar"/>
+
+
+    <target name="clean">
+        <echo message="${ant.java.version}"/>
+        <delete quiet="true" dir="${mapper.lib}"/>
+        <delete quiet="true" dir="${mapper.build}"/>
+        <mkdir dir="${mapper.lib}"/>
+        <mkdir dir="${mapper.build}"/>
+    </target>
+
+    <target name="main"
+        depends="clean,build"
+        description="Clean and build everything."/>
+
+    <target name="build" depends="commons,tests"/>
+
+
+
+    <target name="versions" >
+        <!-- generate the VersionTag.java file -->
+    </target>
+
+    <!-- =================================================================== -->
+    <!-- Compiles TIBCOMapper.jar                                                 -->
+    <!-- =================================================================== -->
+    <target name="commons" >
+        <delete quiet="true" dir="{mapper.build}"/>
+        <delete quiet="true" file="{jar.mapper}"/>
+        <mkdir dir="${mapper.build}"/>
+
+        <javac srcdir="${root}/ui/src"
+            destdir="${mapper.build}"
+            debug="on"
+        	source="1.6"
+        	target="1.6"
+            memoryMaximumSize="256M">
+
+            <classpath>
+                <path refid="deps.tralib.path"/>
+                <path refid="deps.tpcl.path"/>
+                <path refid="deps.designer.path"/>
+            </classpath>
+
+            <include name="**/*.java"/>
+
+        </javac>
+
+        <copy todir="${mapper.build}">
+            <fileset dir="${root}/ui/src">
+                <exclude name="**/*.java"/>
+            </fileset>
+        </copy>
+
+        <jar destfile="${jar.mapper}" basedir="${mapper.build}">
+            <manifest></manifest>
+        </jar>
+    </target>
+
+
+    <target name="tests">
+
+    </target>
+
+
+</project>

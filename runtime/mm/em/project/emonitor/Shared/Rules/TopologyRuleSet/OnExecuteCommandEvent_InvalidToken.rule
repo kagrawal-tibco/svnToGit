@@ -1,0 +1,23 @@
+/**
+ * @description 
+ * @author 
+ */
+rule Shared.Rules.TopologyRuleSet.OnExecuteCommandEvent_InvalidToken {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Shared.Events.topology.ExecuteCommandEvent	executecommandevent;
+		
+	}
+	when {
+		executecommandevent.token == null || String.length(executecommandevent.token) == 0;
+	}
+	then {
+		Shared.RuleFunctions.log("OnExecuteCommandEvent","DEBUG","Invalid token!");
+		Shared.Events.reqres.FailureResponseEvent event = Shared.Events.reqres.FailureResponseEvent.FailureResponseEvent(null,null,"001","Invalid token");
+		Event.replyEvent(executecommandevent, event);
+		Event.consumeEvent(executecommandevent);
+	}
+}

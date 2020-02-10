@@ -1,0 +1,30 @@
+/**
+ * @description 
+ */
+Approval.Scorecards.AMS_C_RevisionNumber rulefunction WebStudio.Core.RuleFunctions.Utils.WS_RF_GetRevisionNumber {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String subscriptionId;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.WS_RF_GetRevisionNumber");
+		
+		int initialRevisionNo = System.getSystemPropertyAsInt("rms.checkin.revisionId.initValue", 10000);
+		
+		String revNumberExtId = WS_RF_CreateUserArtifactExtId("REV_NUMBER", null, null, null, subscriptionId, null);
+		boolean revisionNumberCLock = Cluster.DataGrid.Lock(revNumberExtId, -1, false);
+		AMS_C_RevisionNumber revisionNumberConcept = null;
+		if (revisionNumberCLock) {
+			revisionNumberConcept = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(revNumberExtId, false, "/Approval/Scorecards/AMS_C_RevisionNumber");
+			Log.log(LOGGER, "Debug", "revisionNumberConcept - %s", revisionNumberConcept);
+			if (revisionNumberConcept == null) {
+				Log.log(LOGGER, "Debug", "revisionNumberConcept is null, creating new one...", revisionNumberConcept);
+				revisionNumberConcept = Instance.createInstance("xslt://{{/Approval/Scorecards/AMS_C_RevisionNumber}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"2.0\" exclude-result-prefixes=\"xsl xsd\"><xsl:param name=\"revNumberExtId\"/><xsl:param name=\"initialRevisionNo\"/><xsl:output method=\"xml\"/><xsl:template name=\"Function\" match=\"/\"><createObject><object><xsl:attribute name=\"extId\"><xsl:value-of select=\"$revNumberExtId\"/></xsl:attribute><revisionNumber><xsl:value-of select=\"$initialRevisionNo\"/></revisionNumber></object></createObject></xsl:template></xsl:stylesheet>");
+			}
+		}
+		
+		return revisionNumberConcept;
+	}
+}

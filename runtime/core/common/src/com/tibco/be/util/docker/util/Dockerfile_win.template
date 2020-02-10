@@ -1,0 +1,19 @@
+#
+# Dockerfile for project: ${EAR_FILE}
+#
+
+FROM com.tibco.be:${PRODUCT_IMAGE_NAME}
+MAINTAINER ${MAINTAINER} ${EMAIL}
+
+ARG BE_APP_NAME
+ARG BE_APP_VERSION
+ARG TARGET_DIR
+
+LABEL BE_APP_NAME=$BE_APP_NAME BE_APP_VERSION=$BE_APP_VERSION
+
+RUN powershell -Command "@(mkdir ${APP_HOME}\ear -ErrorAction Ignore), @(mkdir ${TIBCO_HOME}\be\ext -ErrorAction Ignore)"
+COPY ${CDD_FILE} "${APP_HOME}"
+COPY ${EAR_FILE} "${APP_HOME}\ear"
+
+ENV CDD_FILE "${APP_HOME}\${CDD_FILE}"
+ENV EAR_FILE "${APP_HOME}\ear\${EAR_FILE}"

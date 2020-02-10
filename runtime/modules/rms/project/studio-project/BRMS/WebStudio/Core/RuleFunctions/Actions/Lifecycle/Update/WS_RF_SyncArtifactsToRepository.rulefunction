@@ -1,0 +1,67 @@
+/**
+ * @description 
+ */
+WebStudio.Core.Concepts.DataSources.WS_C_TemporaryReturnData rulefunction WebStudio.Core.RuleFunctions.Actions.Lifecycle.Update.WS_RF_SyncArtifactsToRepository {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object servletRequest;
+		WebStudio.Security.Authn.Concepts.WS_C_LoggedInUser loggedInUser;
+		String contentType;
+		String projectName;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.Lifecycle.Update.WS_RF_SyncArtifactsToRepository");
+		
+		String responseMessage = null;
+		String errorCode = null;
+		int recordCount = 1;
+		int responseStatus = 0;
+		
+		//The concept representing details.
+		if (!WS_RF_CheckHTTPMethod(servletRequest, "POST")) {
+			responseStatus = -1;
+			recordCount = 0;
+			errorCode = "ERR_5101";
+			responseMessage = "Invalid HTTP Method, expect method is [POST].";
+		} else {
+			String username = loggedInUser.username;
+			Log.log(LOGGER, "Debug", "Logged in user [%s]", username);
+			
+			Object requestDataBytes = HTTP.Servlet.Request.getRequestContent(servletRequest);
+			String requestData = String.convertByteArrayToString(requestDataBytes, "UTF-8");
+			Log.log(LOGGER, "Debug", "Raw Request data - %s", requestData);
+			
+			String roles = WS.Common.joinStringArray(Instance.PropertyArray.toArrayString(loggedInUser.roles), ",");
+			
+			//Convert to concept model
+			WS_C_CheckoutRequest repositorySyncArtifactRequest = null;
+			if (String.equals(contentType, System.getGlobalVariableAsString("WebStudio/CONTENT_TYPE/XML", "application/xml"))) {
+				repositorySyncArtifactRequest = Instance.createTransientInstanceFromXML("/WebStudio/Core/Concepts/Request/Usecases/Checkout/WS_C_CheckoutRequest", requestData);
+			} else {
+				repositorySyncArtifactRequest = Instance.createTransientInstanceFromJSON("/WebStudio/Core/Concepts/Request/Usecases/Checkout/WS_C_CheckoutRequest", requestData);
+			}
+			
+			WS_C_CheckoutRequestData requestContainedData = repositorySyncArtifactRequest.data;
+			WS_C_CheckoutRequestProject project = Instance.PropertyArray.toArrayContainedConcept(requestContainedData.project)[0];
+			
+			// check for only the valid list based on the artifact type
+			// we allow Concept, Event, VRF, RT, RTV
+			if (!WS_RF_CheckForAllowedRepositorySyncTypes(project)) {
+				responseStatus = -1;
+				recordCount = 0;
+				errorCode = "ERR_5107";
+				responseMessage = "Invalid artifact types for repository sync.";				
+			} else {			
+				WS_E_RepositorySyncEvent repositorySyncEvent = Event.createEvent("xslt://{{/WebStudio/Core/Events/Lifecycle/WS_E_RepositorySyncEvent}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" xmlns:tns=\"www.tibco.com/be/ontology/WebStudio/Core/Concepts/Request/Usecases/Checkout/WS_C_CheckoutRequestProject\" version=\"2.0\"><xsl:param name=\"username\"/><xsl:param name=\"project\"/><xsl:param name=\"roles\"/><xsl:template name=\"Function\" match=\"/\"><createEvent><event><userName><xsl:value-of select=\"$username\"/></userName><roles><xsl:value-of select=\"$roles\"/></roles><payload><tns:WS_C_CheckoutRequestProject><xsl:if test=\"$project/@extId\"><xsl:attribute name=\"extId\"><xsl:value-of select=\"$project/@extId\"/></xsl:attribute></xsl:if><xsl:if test=\"$project/@Id\"><xsl:attribute name=\"Id\"><xsl:value-of select=\"$project/@Id\"/></xsl:attribute></xsl:if><xsl:if test=\"$project/name\"><name><xsl:value-of select=\"$project/name\"/></name></xsl:if><xsl:copy-of select=\"$project/artifactItem\"/><xsl:if test=\"$project/operation\"><operation><xsl:value-of select=\"$project/operation\"/></operation></xsl:if></tns:WS_C_CheckoutRequestProject></payload></event></createEvent></xsl:template></xsl:stylesheet>"); 
+				Event.assertEvent(repositorySyncEvent);
+				Log.log(LOGGER, "Debug", "Event asserted.");				
+				
+				responseMessage = "Selected artifacts synced with the respository successfully.";
+			}
+			
+		}
+		return WS_RF_CreateTemporaryReturnData(responseStatus, 0, errorCode, responseMessage, null);
+	}
+}

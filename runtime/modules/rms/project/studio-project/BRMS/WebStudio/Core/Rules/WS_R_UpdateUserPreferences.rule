@@ -1,0 +1,185 @@
+/**
+ * @description 
+ * @author vpatil-t420
+ */
+rule WebStudio.Core.Rules.WS_R_UpdateUserPreferences {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		WebStudio.Core.Events.WS_E_UpdateUserPreferenceEvent ws_e_updateUserPreferenceEvent;
+	}
+	when {
+		ws_e_updateUserPreferenceEvent.userName != null &&
+		ws_e_updateUserPreferenceEvent@payload != null;
+	}
+	then {
+		Object LOGGER = Log.getLogger("WebStudio.Core.Rules.WS_R_UpdateUserPreferences");
+		
+		WS_C_ResponseData responseData = null;
+		int responseStatus = 0;
+		String errorCode = null;
+		String responseMessage = "User Preferences successfully updated";		
+		
+		String userPreferencesExtId = WS_RF_CreateUserArtifactExtId("PREFERENCES", null, null, ws_e_updateUserPreferenceEvent.userName, null, null);
+		Log.log(LOGGER, "Debug", "Trying to acquire lock on User Preference space with ExtId - %s", userPreferencesExtId);
+		
+		boolean userPreferencesLock = Cluster.DataGrid.Lock(userPreferencesExtId, -1, false);
+		if (userPreferencesLock) {
+			Log.log(LOGGER, "Debug", "Lock acquired for User Preference space space.");
+			WS_C_UserPreferences userPreferences = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(userPreferencesExtId, false, "/WebStudio/Core/Concepts/WS_C_UserPreferences");
+			
+			String userPreferenceItem = ws_e_updateUserPreferenceEvent@payload;
+			Log.log(LOGGER, "Debug", "Pay load data - %s.", userPreferenceItem);
+			
+			if (userPreferenceItem != null) {
+				WS_C_UserPreferenceRequest userPreferencesRequest = Instance.createTransientInstanceFromXML("/WebStudio/Core/Concepts/Request/Usecases/UpdatePreferences/WS_C_UserPreferenceRequest", userPreferenceItem);
+				WS_C_UserPreferenceDataItem userPreferencesDataItem = userPreferencesRequest.userPreferenceItem;
+				
+				if (userPreferences.dashboardPortlets != null) {
+					Log.log(LOGGER, "Debug", "Total Portlets to process - %s", userPreferencesDataItem.dashboardPortlets.portlet@length);
+					if (userPreferences.dashboardPortlets.portlet@length > 0) {
+						Log.log(LOGGER, "Debug", "Case for portlets already existing and need to be updated");
+						// update existing and delete missing portlets
+						for (int i = 0; i < userPreferences.dashboardPortlets.portlet@length; i++) {
+							WS_C_DashboardPortletDetails userPreferenceDetails = userPreferences.dashboardPortlets.portlet[i];
+							
+							WS_C_UserPreferencePortletDetails matchedPortlet = null;
+							for (int j = 0; j < userPreferencesDataItem.dashboardPortlets.portlet@length; j++) {
+								WS_C_UserPreferencePortletDetails dashboardPortletDetails = userPreferencesDataItem.dashboardPortlets.portlet[j];
+								
+								if (String.equals(userPreferenceDetails.portletId,dashboardPortletDetails.portletId)) {
+									matchedPortlet = dashboardPortletDetails;
+									break;
+								}							
+							}
+							
+							if (matchedPortlet != null) {
+								Log.log(LOGGER, "Debug", "Updating portlet - %s", matchedPortlet.portletId);
+								userPreferenceDetails.col = matchedPortlet.col;
+								userPreferenceDetails.rw = matchedPortlet.rw;
+								userPreferenceDetails.height = matchedPortlet.height;
+								userPreferenceDetails.colSpan = matchedPortlet.colSpan;
+							} else {
+								Log.log(LOGGER, "Debug", "Deleting portlet - %s", userPreferenceDetails.portletId);
+								Instance.PropertyArray.removeContainedConcept(userPreferences.dashboardPortlets.portlet, userPreferenceDetails);
+								Instance.deleteInstance(userPreferenceDetails);
+							}
+						}
+						
+						// add any new ones
+						if (userPreferencesDataItem.dashboardPortlets.portlet@length > userPreferences.dashboardPortlets.portlet@length) {
+							for (int j = 0; j < userPreferencesDataItem.dashboardPortlets.portlet@length; j++) {
+								WS_C_UserPreferencePortletDetails dashboardPortletDetails = userPreferencesDataItem.dashboardPortlets.portlet[j];
+								
+								boolean portletFound = false;
+								for (int i = 0; i < userPreferences.dashboardPortlets.portlet@length; i++) {
+									WS_C_DashboardPortletDetails userPreferenceDetails = userPreferences.dashboardPortlets.portlet[i];
+									
+									if (String.equals(dashboardPortletDetails.portletId, userPreferenceDetails.portletId)) {
+										portletFound = true;
+										break;
+									}
+								}
+								
+								if (!portletFound) {
+									String userPreferenceDashboardPortletDetailsExtId = userPreferencesExtId + "@PORTLET@" + String.replaceAll(dashboardPortletDetails.portletId," ", "");
+									
+									WS_C_DashboardPortletDetails dashboardPortletDtl = Instance.newInstance("/WebStudio/Core/Concepts/Dashboard/WS_C_DashboardPortletDetails",userPreferenceDashboardPortletDetailsExtId);
+									dashboardPortletDtl.portletId = dashboardPortletDetails.portletId;
+									dashboardPortletDtl.col = dashboardPortletDetails.col;
+									dashboardPortletDtl.rw = dashboardPortletDetails.rw;
+									dashboardPortletDtl.height = dashboardPortletDetails.height;
+									dashboardPortletDtl.colSpan = dashboardPortletDetails.colSpan;
+									
+									Log.log(LOGGER, "Debug", "WS_C_DashboardPortletDetails instance added with ID - %s", dashboardPortletDtl@id);
+									
+									Instance.PropertyArray.appendContainedConcept(userPreferences.dashboardPortlets.portlet, dashboardPortletDtl, 1L);								
+								}
+							}
+						}
+					} else {
+						Log.log(LOGGER, "Debug", "Case portlets to be newly created/added.");
+						for (int i = 0; i < userPreferencesDataItem.dashboardPortlets.portlet@length; i++) {
+							WS_C_UserPreferencePortletDetails upPortletDetails = userPreferencesDataItem.dashboardPortlets.portlet[i];
+							Log.log(LOGGER, "Debug", "Processing portlet Id - %s", upPortletDetails.portletId);
+							
+							String userPreferenceDashboardPortletExtId = userPreferencesExtId + "@PORTLET";
+							if (userPreferences.dashboardPortlets == null) {						
+								userPreferences.dashboardPortlets = Instance.newInstance("/WebStudio/Core/Concepts/Dashboard/WS_C_DashboardPortlet", userPreferenceDashboardPortletExtId);
+								Log.log(LOGGER, "Debug", "Creating a new Dashboard Portlet with instance - %s", userPreferences.dashboardPortlets@id);
+							}
+							
+							String userPreferenceDashboardPortletDetailsExtId = userPreferenceDashboardPortletExtId + "@" + String.replaceAll(upPortletDetails.portletId," ", "");
+							Log.log(LOGGER, "Debug", "Creating a new PortletDetails with ExtId - %s", userPreferenceDashboardPortletDetailsExtId);
+							
+							WS_C_DashboardPortletDetails dashboardPortletDetails = Instance.newInstance("/WebStudio/Core/Concepts/Dashboard/WS_C_DashboardPortletDetails",userPreferenceDashboardPortletDetailsExtId);
+							dashboardPortletDetails.portletId = upPortletDetails.portletId;
+							dashboardPortletDetails.col = upPortletDetails.col;
+							dashboardPortletDetails.rw = upPortletDetails.rw;
+							dashboardPortletDetails.height = upPortletDetails.height;
+							dashboardPortletDetails.colSpan = upPortletDetails.colSpan;
+							
+							Log.log(LOGGER, "Debug", "WS_C_DashboardPortletDetails instance added with ID - %s", dashboardPortletDetails@id);
+							
+							Instance.PropertyArray.appendContainedConcept(userPreferences.dashboardPortlets.portlet, dashboardPortletDetails, 1L);
+						}
+					}
+				} else {
+					Log.log(LOGGER, "Debug", "No Portlets to add/update");
+				}
+				
+				userPreferences.customURL = userPreferencesDataItem.customURL;
+				userPreferences.itemView = userPreferencesDataItem.itemView;
+				userPreferences.portalColumns = userPreferencesDataItem.portalColumns;
+				userPreferences.favoriteArtifactLimit = userPreferencesDataItem.favoriteArtifactLimit;
+				userPreferences.recentlyOpenedArtifactLimit = userPreferencesDataItem.recentlyOpenedArtifactLimit;
+				userPreferences.decisionTablePageSize = userPreferencesDataItem.decisionTablePageSize;
+				userPreferences.scsUserName = userPreferencesDataItem.scsUserName;
+				userPreferences.scsUserPassword = userPreferencesDataItem.scsUserPassword;
+				userPreferences.autoUnLockOnReview = userPreferencesDataItem.autoUnLockOnReview;
+				userPreferences.groupRelatedArtifacts = userPreferencesDataItem.groupRelatedArtifacts;
+				userPreferences.allowCustomDomainValues = userPreferencesDataItem.allowCustomDomainValues;
+				userPreferences.showColumnAliasIfPresent = userPreferencesDataItem.showColumnAliasIfPresent;
+				userPreferences.autoFitColumnsApproch = userPreferencesDataItem.autoFitColumnsApproch;
+				userPreferences.defaultRTIFilterType = userPreferencesDataItem.defaultRTIFilterType;
+				userPreferences.rtiViewStringWidget = userPreferencesDataItem.rtiViewStringWidget;
+				
+				Log.log(LOGGER, "Debug", "Basic Preferences set !!");
+				
+				if (!WS_RF_ValidateSCSCredentials(userPreferencesDataItem.scsUserName, userPreferencesDataItem.scsUserPassword, WS_RF_GetSubscriptionId(ws_e_updateUserPreferenceEvent.userName))) {
+					responseStatus = -1;
+					responseMessage = "Error validating SCS Credentials";
+					errorCode = "ERR_1508";
+				} else {
+					userPreferences.scsUserName = userPreferencesDataItem.scsUserName;
+					userPreferences.scsUserPassword = userPreferencesDataItem.scsUserPassword;
+					// revalidate ACLs after SCS change, in case the previous attempt failed
+					WS_RF_ValidateACLConfig(false);
+				}
+				
+				if (userPreferences.dashboardPortlets != null) Log.log(LOGGER, "Debug", "Total Portlets added for User Dashboard  %s", userPreferences.dashboardPortlets.portlet@length);
+				
+				WS_RF_UpdateDashboardArtifacts(userPreferences, ws_e_updateUserPreferenceEvent.userName);
+			}
+			
+			Log.log(LOGGER, "Info", "Updated User preferences for  %s", ws_e_updateUserPreferenceEvent.userName);
+			
+			WS_RF_AddAuditTrailEntry(ws_e_updateUserPreferenceEvent.userName, null, null, null, "PREFERENCES", "Updated User preferences");
+		}
+		
+		// process response
+		Object asyncContext = Util.HashMap.getObject(ws_e_updateUserPreferenceEvent.mapKey, ws_e_updateUserPreferenceEvent.asyncContextId);
+		//Clear it
+		Util.HashMap.removeObject(ws_e_updateUserPreferenceEvent.mapKey, ws_e_updateUserPreferenceEvent.asyncContextId);
+		Util.HashMap.deleteMap(ws_e_updateUserPreferenceEvent.mapKey);
+		Object servletResponse = HTTP.Servlet.getServletResponse(asyncContext);
+		
+		String responseDSXML = WS_RF_CreateAndSerializeResponseDataSource(responseStatus, 0, errorCode, responseMessage, responseData, ws_e_updateUserPreferenceEvent.contentType);
+		Log.log(LOGGER, "Debug", "Data source response %s", responseDSXML);
+		
+		HTTP.Servlet.Response.setResponseHeader(servletResponse, "Content-type", ws_e_updateUserPreferenceEvent.contentType + ";charset=utf-8");    										
+		HTTP.Servlet.Response.setResponseContent(asyncContext, responseDSXML, true);	
+	}
+}

@@ -1,0 +1,38 @@
+/**
+ * @description
+ * @author anpatil-dt
+ */
+rule Rules.onHourCalculationTrigger {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Events.CalculationTrigger e;
+	}
+	when {
+		e.period == "hour";
+	}
+	then {
+		int duration = 2;
+		System.debugOut("onHourCalculationTrigger::Computing tickers for "+e.Ticker+" for "+duration+" day(s)");
+		//get current time
+		DateTime now = DateTime.now();
+		System.debugOut("onHourCalculationTrigger::Now Is "+DateTime.format(now,"yyyy-MM-dd HH:mm:ss a")+"...");
+		DateTime endOfDayNow = DateTime.createTime(DateTime.getYear(now),DateTime.getMonth(now),DateTime.getDate(now),23,59,59,null);
+		System.debugOut("onHourCalculationTrigger::End of today Is "+DateTime.format(endOfDayNow,"yyyy-MM-dd HH:mm:ss a")+"...");
+		//go back a day
+		endOfDayNow = DateTime.addDay(endOfDayNow,-duration);
+		System.debugOut("onHourCalculationTrigger::End of today -["+duration+"] Is "+DateTime.format(endOfDayNow,"yyyy-MM-dd HH:mm:ss a")+"...");
+		long timeMsecs = DateTime.getTimeInMillis(endOfDayNow);
+		//calculate price for the last whole day @ min resolution
+		for (int i = 0 ; i < duration*24*60 ; i++){
+			DateTime dt = DateTime.parseLong(timeMsecs);
+			double price = Math.random() * 100;
+			long volume = Math.random() * 10000;
+			System.debugOut("Computing tickers for "+e.Ticker+" for "+DateTime.format(dt,"yyyy-MM-dd HH:mm:ss a")+" with price as "+price+" and volume as "+volume);
+			Dashboards.Metrics.MinutelyTickerMetric.compute(DateTime.parseLong(timeMsecs), e.Ticker, price, volume);
+			timeMsecs = timeMsecs + 60*1000;
+		}
+	}
+}

@@ -1,0 +1,29 @@
+/**
+ * @description 
+ */
+String rulefunction Approval.Rules.RuleFunctions.ArtifactRuleFunctions.AMS_RF_SerializeApplicableStages {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String applicableStagesConceptId;
+	}
+	body {
+		Approval.Concepts.ArtifactsConcepts.AMS_C_ApplicableStages applicableStages = Instance.getByExtIdByUri(applicableStagesConceptId, "/Approval/Concepts/ArtifactsConcepts/AMS_C_ApplicableStages");
+		
+		String serialized = null;
+		if (applicableStages != null) {
+			Approval.Concepts.ArtifactsConcepts.AMS_C_WorkflowStage[] stages = 
+				Instance.PropertyArray.toArrayConcept(applicableStages.stages);
+			//Serialize
+			serialized = "<tns:AMS_C_ApplicableStages xmlns:tns=\"www.tibco.com/be/rms/RoleWorkflowStages\">";
+			for (int loop = 0, length = stages@length; loop < length; loop++) {
+				AMS_C_WorkflowStage workflowStage = stages[loop];
+				String temp = "<tns:stage tns:id=\"" + workflowStage.stageId + "\" tns:name=\"" + workflowStage.name + "\"" + "/>";
+				serialized = String.concat(serialized, temp);
+			}
+			serialized = String.concat(serialized, "</tns:AMS_C_ApplicableStages>");
+		}
+		return serialized;
+	}
+}

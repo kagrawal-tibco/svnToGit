@@ -1,0 +1,36 @@
+/**
+ * @description 
+ */
+String rulefunction WebStudio.Core.RuleFunctions.Controller.WS_RF_ValidateContentType {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String contextPath;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Controller.WS_RF_ValidateContentType");
+		
+		String contentType = null;
+		String contextPathMinusQueryString = null;
+		
+		int queryStringIndex = String.indexOfString(contextPath, 0, "?");
+		if (queryStringIndex == -1) {
+			contextPathMinusQueryString = contextPath;
+		} else {
+			contextPathMinusQueryString = String.substring(contextPath, 0, queryStringIndex);
+		}
+		
+		Log.log(LOGGER, "Debug", "Context Path Minus Query String - %s", contextPathMinusQueryString);
+		
+		if (String.endsWith(contextPathMinusQueryString,".xml")) {
+			contentType = System.getGlobalVariableAsString("WebStudio/CONTENT_TYPE/XML", "application/xml");
+		} else if (String.endsWith(contextPathMinusQueryString, ".json")) {
+			contentType = System.getGlobalVariableAsString("WebStudio/CONTENT_TYPE/JSON", "application/json");
+		}
+		
+		Log.log(LOGGER, "Debug", "Content Type - %s", contentType);
+		
+		return contentType;
+	}
+}

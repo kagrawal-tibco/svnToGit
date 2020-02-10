@@ -1,0 +1,103 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>     BQL Console (BE Query Language)
+
+- TIBCO BusinessEvents&reg; Examples
+</title>
+<meta http-equiv="Content-type" content="text/html; charset=iso-8859-1" />
+<meta http-equiv="Content-Language" content="en-us" />
+<link rel="Shortcut Icon" href="../../_resources/icon.gif" type="image/gif" />
+<style type="text/css" media="all">@import "../../_resources/examples.css";</style>
+</head>
+<body>
+
+
+<h1>BQL Console (BE Query Language)</h1>
+
+<h2>Introduction</h2>
+
+<p>TIBCO BusinessEvents&reg; Query Language (BQL) Console allows you to write
+   and execute snapshot queries, continuous queries or snapshot then continuous queries and get data from the
+   BusinessEvents distributed cache. The query works with the ontology
+   definitions defined the TIBCO BusinessEvents&reg; EAR (enterprise archive file).
+
+   For more details on the query language features, see TIBCO
+   BusinessEvents Event Stream Processing Query Developer's Guide.</p>
+</p>
+
+<h2>How to use BQL</h2>
+
+<ul>
+<li>
+	<p>BQL console requires a valid CDD file and EAR file. The CDD must
+   have at least one Query Agent defined. You can launch a console for
+   each query agent in the CDD.
+	</p>
+</li>
+
+<li>
+	<p>To execute queries using BQL, the CDD must be configured for at least
+   one inference agent and one cache agent, and the cluster must be
+   running.
+	</p>
+</li>
+
+<li>
+	<p>You add a property to the Query Agent class in the CDD file, so that
+   BQL Console displays when the processing unit starts. The console
+   itself has an instance of the query agent running, to back it. This
+   Query Agent behaves like a regular Query Agent. It joins the cluster
+   and receives notifications from the cache.
+	</p>
+</li>
+<li>
+	<p>When you type queries into the console, they are executed against
+   the objects in the cache.
+	</p>
+</li>
+
+<li>
+	<p>Note that any Startup and Shutdown functions for the Query Agent,
+   and any channels defined for the Processing Unit are disabled for
+   safety reasons.
+	</p>
+</li>
+</ul>
+<h2> How to run BQL </h2>
+<ol>
+<li>
+<p>Copy bql.jar from <i>BE_HOME</i>/examples/event_stream_processing/bql directory to <i>BE_HOME</i>/lib.</p>
+</li>
+<li>
+<p>In the CDD file, add the following property to the processing
+      unit definition:
+      <b>be.agent.query.console=&lt;QUERY_AGENT_NAME(s)&gt;</b>
+      Replace QUERY_AGENT_NAME with the name of the Query Agent. If
+      multiple query agents are defined and you want to run a console
+      for more than one agent, add the agent names as a comma separated
+      list.</p>
+</li>
+<li>
+<p>Start the TIBCO BusinessEvents process at the command line using the
+      CDD file you configured in step 2:</p>
+	  <pre class="commands">
+		cd <i>BE_HOME</i>/bin
+		<i>BE_HOME</i>/bin/be-engine --propFile be-engine.tra -c &lt;CDD file&gt; -u &lt;processing unit id&gt; &lt;EAR file&gt;
+	  </pre>
+	  <p>Adapt the command as needed, for example, if you have customized the example project, or are running it from a different directory. See <i>TIBCO BusinessEvents Administration</i> for more details about
+      starting the process at the command line.</p>
+</li>
+
+</ol>
+
+
+
+<div class="footer">
+<p>TIBCO BusinessEvents&reg; 5.6<br />
+Copyright&copy; 2004-2019 TIBCO Software Inc. All rights reserved.</p>
+</div>
+</body>
+</html>

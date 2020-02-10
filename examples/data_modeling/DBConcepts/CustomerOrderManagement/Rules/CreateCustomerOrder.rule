@@ -1,0 +1,58 @@
+/**
+ * @description 
+ * @author bmane-lt
+ */
+rule Rules.CreateCustomerOrder {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		
+		Events.CreateCustomerOrder createcustomerorder;
+	}
+	when {
+		
+	}
+	then {
+		Database.setCurrentConnection("/SharedResources/DBConceptsConnection");
+		Database.beginTransaction();
+		
+		// Creating Customer
+		DatabaseConcepts.customer_order.CUSTOMERS customer=Instance.createInstance("xslt://{{/DatabaseConcepts/customer_order/CUSTOMERS}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"1.0\" exclude-result-prefixes=\"xsl xsd\">\n    <xsl:output method=\"xml\"/>\n    <xsl:param name=\"createcustomerorder\"/>\n    <xsl:template match=\"/\">\n        <createObject>\n            <object>\n                <xsl:if test=\"$createcustomerorder/customer_id\">\n                    <CUSTOMER_ID>\n                        <xsl:value-of select=\"$createcustomerorder/customer_id\"/>\n                    </CUSTOMER_ID>\n                </xsl:if>\n                <xsl:if test=\"$createcustomerorder/customer_name\">\n                    <CUSTOMER_NAME>\n                        <xsl:value-of select=\"$createcustomerorder/customer_name\"/>\n                    </CUSTOMER_NAME>\n                </xsl:if>\n                <xsl:if test=\"$createcustomerorder/customer_address\">\n                    <CUSTOMER_ADDRESS>\n                        <xsl:value-of select=\"$createcustomerorder/customer_address\"/>\n                    </CUSTOMER_ADDRESS>\n                </xsl:if>\n                <xsl:if test=\"$createcustomerorder/customer_city\">\n                    <CUSTOMER_CITY>\n                        <xsl:value-of select=\"$createcustomerorder/customer_city\"/>\n                    </CUSTOMER_CITY>\n                </xsl:if>\n                <xsl:if test=\"$createcustomerorder/customer_state\">\n                    <CUSTOMER_STATE>\n                        <xsl:value-of select=\"$createcustomerorder/customer_state\"/>\n                    </CUSTOMER_STATE>\n                </xsl:if>\n            </object>\n        </createObject>\n    </xsl:template>\n</xsl:stylesheet>");
+		String Order_id="ORDER"+customer.CUSTOMER_ID;
+		
+		//Creting Order items entry for all items
+		DatabaseConcepts.customer_order.ORDER_ITEMS Order_item1=Instance.createInstance("xslt://{{/DatabaseConcepts/customer_order/ORDER_ITEMS}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"1.0\" exclude-result-prefixes=\"xsl xsd\">\n    <xsl:output method=\"xml\"/>\n    <xsl:param name=\"Order_id\"/>\n    <xsl:param name=\"createcustomerorder\"/>\n    <xsl:template match=\"/\">\n        <createObject>\n            <object>\n                <ORDER_ID>\n                    <xsl:value-of select=\"$Order_id\"/>\n                </ORDER_ID>\n                <xsl:if test=\"$createcustomerorder/item_id1\">\n                    <ITEM_ID>\n                        <xsl:value-of select=\"$createcustomerorder/item_id1\"/>\n                    </ITEM_ID>\n                </xsl:if>\n                <ITEM_QTY>\n                    <xsl:value-of select=\"1\"/>\n                </ITEM_QTY>\n            </object>\n        </createObject>\n    </xsl:template>\n</xsl:stylesheet>");
+		DatabaseConcepts.customer_order.ORDER_ITEMS Order_item2=Instance.createInstance("xslt://{{/DatabaseConcepts/customer_order/ORDER_ITEMS}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"1.0\" exclude-result-prefixes=\"xsl xsd\">\n    <xsl:output method=\"xml\"/>\n    <xsl:param name=\"Order_id\"/>\n    <xsl:param name=\"createcustomerorder\"/>\n    <xsl:template match=\"/\">\n        <createObject>\n            <object>\n                <ORDER_ID>\n                    <xsl:value-of select=\"$Order_id\"/>\n                </ORDER_ID>\n                <xsl:if test=\"$createcustomerorder/item_id2\">\n                    <ITEM_ID>\n                        <xsl:value-of select=\"$createcustomerorder/item_id2\"/>\n                    </ITEM_ID>\n                </xsl:if>\n                <ITEM_QTY>\n                    <xsl:value-of select=\"1\"/>\n                </ITEM_QTY>\n            </object>\n        </createObject>\n    </xsl:template>\n</xsl:stylesheet>");
+		DatabaseConcepts.customer_order.ORDER_ITEMS Order_item3=Instance.createInstance("xslt://{{/DatabaseConcepts/customer_order/ORDER_ITEMS}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"1.0\" exclude-result-prefixes=\"xsl xsd\">\n    <xsl:output method=\"xml\"/>\n    <xsl:param name=\"Order_id\"/>\n    <xsl:param name=\"createcustomerorder\"/>\n    <xsl:template match=\"/\">\n        <createObject>\n            <object>\n                <ORDER_ID>\n                    <xsl:value-of select=\"$Order_id\"/>\n                </ORDER_ID>\n                <xsl:if test=\"$createcustomerorder/item_id3\">\n                    <ITEM_ID>\n                        <xsl:value-of select=\"$createcustomerorder/item_id3\"/>\n                    </ITEM_ID>\n                </xsl:if>\n                <ITEM_QTY>\n                    <xsl:value-of select=\"1\"/>\n                </ITEM_QTY>\n            </object>\n        </createObject>\n    </xsl:template>\n</xsl:stylesheet>");
+		
+		//Creating Order
+		
+		DatabaseConcepts.customer_order.ORDERS order=Instance.createInstance("xslt://{{/DatabaseConcepts/customer_order/ORDERS}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"1.0\" exclude-result-prefixes=\"xsl xsd\">\n    <xsl:output method=\"xml\"/>\n    <xsl:param name=\"Order_id\"/>\n    <xsl:param name=\"customer\"/>\n    <xsl:template match=\"/\">\n        <createObject>\n            <object>\n                <ORDER_ID>\n                    <xsl:value-of select=\"$Order_id\"/>\n                </ORDER_ID>\n                <xsl:if test=\"$customer/CUSTOMER_ID\">\n                    <CUSTOMER_ID>\n                        <xsl:value-of select=\"$customer/CUSTOMER_ID\"/>\n                    </CUSTOMER_ID>\n                </xsl:if>\n                <ORDER_DATE>\n                    <xsl:value-of select=\"current-dateTime()\"/>\n                </ORDER_DATE>\n            </object>\n        </createObject>\n    </xsl:template>\n</xsl:stylesheet>");
+		order.CUSTOMERS[0]=customer;
+		order.ORDER_ITEMS[0]=Order_item1;
+		order.ORDER_ITEMS[1]=Order_item2;
+		order.ORDER_ITEMS[2]=Order_item3;
+		
+		System.debugOut("Customer Deatils");
+		System.debugOut("   "+customer.CUSTOMER_ID+"   "+customer.CUSTOMER_NAME+"   "+customer.CUSTOMER_ADDRESS+"   "+customer.CUSTOMER_STATE+"   "+customer.CUSTOMER_CITY);
+		
+		System.debugOut("Order Details");
+		System.debugOut("   "+order.ORDER_ID+"   "+order.ORDER_DATE+"   ");
+		
+		System.debugOut("Items");
+		for(int i=0;i<3;i++)
+		{
+		System.debugOut("   "+order.ORDER_ITEMS[i].ITEM_ID+"   "+order.ORDER_ITEMS[i].ITEM_QTY);
+		}
+		
+		//inserting Order
+		Database.insert(order);
+		
+		
+		Database.commit();
+		Database.unsetConnection();
+		
+	}
+}

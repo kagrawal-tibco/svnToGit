@@ -1,0 +1,22 @@
+/**
+ * @description 
+ */
+void rulefunction RuleFunctions.ProducerStartup {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		
+	}
+	body {
+		Concepts.Customer customer = Concepts.Customer.Customer(null, "Bob", 21, "East Street, Chicago");
+		
+		Events.CustomerSignup signup = Event.createEvent("xslt://{{/Events/CustomerSignup}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" xmlns:tns=\"www.tibco.com/be/ontology/Concepts/Customer\" version=\"2.0\"><xsl:param name=\"customer\"/><xsl:template name=\"Function\" match=\"/\"><createEvent><event><ref_code><xsl:value-of select=\"&quot;REF_102&quot;\"/></ref_code><payload><tns:Customer><xsl:if test=\"$customer/name\"><name><xsl:value-of select=\"$customer/name\"/></name></xsl:if><xsl:if test=\"$customer/age\"><age><xsl:value-of select=\"$customer/age\"/></age></xsl:if><xsl:if test=\"$customer/address\"><address><xsl:value-of select=\"$customer/address\"/></address></xsl:if></tns:Customer></payload></event></createEvent></xsl:template></xsl:stylesheet>");
+		
+		Events.CustomerSignup response = Event.sendEvent(signup);
+		
+		if (response != null) {
+			System.debugOut("#### Customer signup - " + customer.name);
+		}
+	}
+}

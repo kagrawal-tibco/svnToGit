@@ -1,0 +1,38 @@
+/**
+ * @description 
+ */
+void rulefunction Queries.CalcAvgStockPriceSS {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String	uniqueId;
+	}
+	body {
+		String queryName = "CalcAvgStockPriceSS";
+		String statementName = queryName + "-SS-" + uniqueId;
+		String resultSetName = queryName + "-SS-RS-" + uniqueId;
+		
+		System.debugOut("Starting query: " + statementName);
+		
+		Query.Statement.open(queryName, statementName);
+		Query.Statement.setVar(statementName, "symbol1", "TIBX");
+		Query.Statement.setVar(statementName, "symbol2", "JNJ");
+		
+		System.debugOut("Started query: " + statementName);
+		
+		Query.Statement.execute(statementName, resultSetName);
+		while(Query.ResultSet.next(resultSetName)){
+		    String s = Query.ResultSet.get(resultSetName, 0) 
+		               + ", " + Query.ResultSet.get(resultSetName, 1) 
+		               + ", " + Query.ResultSet.get(resultSetName, 2);
+		
+		    System.debugOut(resultSetName + " :: " + s);
+		}
+		
+		Query.ResultSet.close(resultSetName);
+		Query.Statement.close(statementName);
+		
+		System.debugOut("Completed query: " + statementName);
+	}
+}

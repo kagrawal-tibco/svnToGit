@@ -1,0 +1,24 @@
+/**
+ * @description 
+ */
+void rulefunction RuleFunctions.DeleteEmployeeFromGrid {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Events.DeleteEmployee deleteEmployee;
+	}
+	body {
+		String asURL = "http://localhost:5055";
+		
+		String containerName = "Employee";
+		
+		Store.open(asURL, containerName);
+
+		Store.delete(asURL, containerName, CreateEmployeeForGet(deleteEmployee));
+		
+		Store.close(asURL, containerName);
+		
+		System.debugOut("Deleted Employee/Address/Phone Concept/s with EmpId[" + deleteEmployee.empId + "], AddressIds[" + deleteEmployee.addressId + "] & Phone[" + deleteEmployee.phoneId + "]");
+	}
+}

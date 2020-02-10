@@ -1,0 +1,145 @@
+<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:element name="artifactContent">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element type="xs:string" name="implementsPath"/>
+        <xs:element name="conditions">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="filter">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="filter">
+                      <xs:complexType>
+                        <xs:sequence>
+                          <xs:element name="link">
+                            <xs:complexType>
+                              <xs:sequence>
+                                <xs:element type="xs:string" name="name"/>
+                                <xs:element type="xs:string" name="type"/>
+                              </xs:sequence>
+                              <xs:attribute type="xs:short" name="Id"/>
+                            </xs:complexType>
+                          </xs:element>
+                          <xs:element name="value">
+                            <xs:complexType>
+                              <xs:simpleContent>
+                                <xs:extension base="xs:string">
+                                  <xs:attribute type="xs:short" name="Id"/>
+                                </xs:extension>
+                              </xs:simpleContent>
+                            </xs:complexType>
+                          </xs:element>
+                          <xs:element type="xs:string" name="operator"/>
+                          <xs:element type="xs:integer" name="filterId"/>
+                        </xs:sequence>
+                        <xs:attribute type="xs:short" name="Id"/>
+                      </xs:complexType>
+                    </xs:element>
+                    <xs:element type="xs:string" name="matchType"/>
+                    <xs:element type="xs:integer" name="filterId"/>
+                  </xs:sequence>
+                  <xs:attribute type="xs:short" name="Id"/>
+                </xs:complexType>
+              </xs:element>
+              <xs:element type="xs:integer" name="filterId"/>
+            </xs:sequence>
+            <xs:attribute type="xs:short" name="Id"/>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="commands">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="commandInfo" maxOccurs="unbounded" minOccurs="0">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element type="xs:string" name="commandAlias"/>
+                    <xs:element type="xs:string" name="type"/>
+                    <xs:element type="xs:string" name="actionType"/>
+                    <xs:element name="symbols">
+                      <xs:complexType>
+                        <xs:sequence>
+                          <xs:element name="symbolInfo">
+                            <xs:complexType>
+                              <xs:sequence>
+                                <xs:element type="xs:string" name="visited"/>
+                                <xs:element name="symbolInfo" maxOccurs="unbounded" minOccurs="0">
+                                  <xs:complexType>
+                                    <xs:sequence>
+                                      <xs:element type="xs:string" name="visited"/>
+                                      <xs:element type="xs:string" name="type"/>
+                                      <xs:element type="xs:string" name="symbolAlias"/>
+                                    </xs:sequence>
+                                    <xs:attribute type="xs:short" name="Id" use="optional"/>
+                                  </xs:complexType>
+                                </xs:element>
+                              </xs:sequence>
+                              <xs:attribute type="xs:short" name="Id" use="optional"/>
+                            </xs:complexType>
+                          </xs:element>
+                        </xs:sequence>
+                        <xs:attribute type="xs:short" name="Id" use="optional"/>
+                      </xs:complexType>
+                    </xs:element>
+                  </xs:sequence>
+                  <xs:attribute type="xs:short" name="Id" use="optional"/>
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+            <xs:attribute type="xs:short" name="Id"/>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="symbols">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="symbolInfo">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element type="xs:string" name="visited"/>
+                    <xs:element type="xs:string" name="type"/>
+                    <xs:element type="xs:string" name="symbolAlias"/>
+                    <xs:element name="symbolInfo" maxOccurs="unbounded" minOccurs="0">
+                      <xs:complexType>
+                        <xs:sequence>
+                          <xs:element type="xs:string" name="visited"/>
+                          <xs:element type="xs:string" name="type"/>
+                          <xs:element type="xs:string" name="symbolAlias"/>
+                          <xs:element name="domainInfo" minOccurs="0">
+                            <xs:complexType>
+                              <xs:sequence>
+                                <xs:element type="xs:string" name="name"/>
+                                <xs:element type="xs:string" name="folder"/>
+                                <xs:element type="xs:string" name="description"/>
+                                <xs:element type="xs:string" name="ownerProjectName"/>
+                                <xs:element type="xs:string" name="dataType"/>
+                                <xs:element type="xs:string" name="namespace"/>
+                                <xs:element name="singleEntry" maxOccurs="unbounded" minOccurs="0">
+                                  <xs:complexType>
+                                    <xs:sequence>
+                                      <xs:element type="xs:string" name="value"/>
+                                      <xs:element type="xs:string" name="description"/>
+                                    </xs:sequence>
+                                    <xs:attribute type="xs:short" name="Id" use="optional"/>
+                                  </xs:complexType>
+                                </xs:element>
+                              </xs:sequence>
+                              <xs:attribute type="xs:short" name="Id"/>
+                            </xs:complexType>
+                          </xs:element>
+                        </xs:sequence>
+                        <xs:attribute type="xs:short" name="Id" use="optional"/>
+                      </xs:complexType>
+                    </xs:element>
+                  </xs:sequence>
+                  <xs:attribute type="xs:short" name="Id"/>
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+            <xs:attribute type="xs:short" name="Id"/>
+          </xs:complexType>
+        </xs:element>
+      </xs:sequence>
+      <xs:attribute type="xs:short" name="Id"/>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

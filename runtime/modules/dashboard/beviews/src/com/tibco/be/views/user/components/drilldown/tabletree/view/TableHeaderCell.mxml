@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:HBox
+	xmlns:mx="http://www.adobe.com/2006/mxml"
+	xmlns:shapes="com.tibco.be.views.ui.shapes.*"
+	height="100%"
+	horizontalScrollPolicy="off"
+	verticalScrollPolicy="off"
+	styleName="tableTreeTableHeaderCell"
+	creationComplete="handleCreationComplete(event)"
+>
+	<mx:Script>
+		<![CDATA[
+			import com.tibco.be.views.core.events.logging.DefaultLogEvent;
+			import com.tibco.be.views.user.components.drilldown.tabletree.events.TableSortEvent;
+			import com.tibco.be.views.user.components.drilldown.tabletree.model.TableTreeColumnConfig;
+			import com.tibco.be.views.utils.BEVUtils;
+			import com.tibco.be.views.utils.Logger;
+			
+			import mx.events.FlexEvent;
+			
+			public static const NO_SORT:String = "none";
+			public static const ASCENDING_SORT:String = "asc";
+			public static const DESCENDING_SORT:String = "desc";
+			
+			[Bindable]
+			protected var _titleLabelText:String;
+			protected var _sortDirection:String = NO_SORT;
+			protected var _viewConfig:TableTreeColumnConfig;
+			
+			public function get titleText():String{ return _titleLabelText; }
+			public function get textHeight():int{ return titleLabel.textHeight; }
+			public function get sortDirection():String{ return _sortDirection; }
+			public function get viewConfig():TableTreeColumnConfig{ return _viewConfig; }
+			
+			public function set titleText(value:String):void{ _titleLabelText = value; }
+			public function set sortDirection(value:String):void{
+				_sortDirection = value;
+				if(sortDirectionArrow != null){ refreshSortArrowDirection(); }
+			}
+			public function set viewConfig(value:TableTreeColumnConfig):void{ _viewConfig = value; }
+			
+			override protected function measure():void{
+				super.measure();
+				measuredWidth = titleLabel.measuredWidth + sortDirectionArrow.measuredWidth + 20;
+			}
+			
+			private function toggleSortDirection():void{
+				//no sort doesn't toggle
+				if(_sortDirection == ASCENDING_SORT){ _sortDirection = DESCENDING_SORT; }
+				else if(_sortDirection == DESCENDING_SORT){ _sortDirection = ASCENDING_SORT; }
+				refreshSortArrowDirection();
+			}
+			
+			private function refreshSortArrowDirection():void{
+				switch(_sortDirection){
+					case(ASCENDING_SORT):
+						sortDirectionArrow.visible = true;
+						sortDirectionArrow.arrowRotation = -Math.PI/2;
+						break;
+					case(DESCENDING_SORT):
+						sortDirectionArrow.visible = true;
+						sortDirectionArrow.arrowRotation = Math.PI/2;
+						break;
+					case(NO_SORT):
+						sortDirectionArrow.visible = false;
+						break;
+					default:
+						Logger.log(DefaultLogEvent.WARNING, BEVUtils.getClassName(this) + ".refreshSortArrowDirection - Unsupported sort direction: \"" + _sortDirection + "\"");
+				}
+			}
+			
+			private function handleCreationComplete(event:FlexEvent):void{
+				titleLabel.addEventListener(MouseEvent.CLICK, handleTitleClick);
+				sortDirectionArrow.color = getStyle("color");
+				if(_viewConfig != null){
+					titleLabel.setStyle("textAlign", _viewConfig.align);
+					//set other properties from the config here...
+				}
+				if(_sortDirection != NO_SORT){  //sort direction set before creation... refresh the arrow
+					refreshSortArrowDirection();
+					invalidateDisplayList();
+				}
+			}
+			
+			private function handleTitleClick(event:MouseEvent):void{
+				var targetTitleLabel:Label = event.target as Label;
+				toggleSortDirection();
+				dispatchEvent(new TableSortEvent(targetTitleLabel.text, _sortDirection));
+			}
+			
+		]]>
+	</mx:Script>
+	<mx:Label id="titleLabel"
+		text="{_titleLabelText}" 
+		buttonMode="true"
+		useHandCursor="true"
+		mouseChildren="false"
+		styleName="tableTreeTableHeaderCellText"
+		rollOver="setStyle('textDecoration', 'underline');"
+		rollOut="setStyle('textDecoration', 'none');"
+	/>
+	<shapes:BoxedArrow id="sortDirectionArrow" showBox="false" width="6" height="6" visible="false" />
+</mx:HBox>

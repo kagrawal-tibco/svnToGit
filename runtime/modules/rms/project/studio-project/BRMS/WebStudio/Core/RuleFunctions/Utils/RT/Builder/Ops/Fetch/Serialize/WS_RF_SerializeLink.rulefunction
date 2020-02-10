@@ -1,0 +1,40 @@
+/**
+ * @description Convert related link to concept model.
+ */
+void rulefunction WebStudio.Core.RuleFunctions.Utils.RT.Builder.Ops.Fetch.Serialize.WS_RF_SerializeLink {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object linkEModel;
+		//Keep generic
+		Concept containerConcept;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.RT.Builder.Ops.Fetch.Serialize.WS_RF_SerializeLink");
+		
+		//This can be a child of a filter or a filter value
+		WS_C_Link linkConcept = 
+			Instance.newInstance("/WebStudio/Core/Concepts/RuleTemplateInstance/Builder/WS_C_Link", null);
+		
+		String linkText = WS.RTI.getLinkText(linkEModel);
+		String linkType = WS.RTI.getLinkType(linkEModel);
+		
+		Log.log(LOGGER, "Debug", "Link Text [%s] and Link Type [%s]", linkText, linkType);
+		
+		linkConcept.name = linkText;
+		linkConcept.type = linkType;
+		
+		if (containerConcept instanceof WS_C_AbstractConditionsFilter) {
+			Log.log(LOGGER, "Debug", "Appending filter as a child of a multi filter");
+			WS_C_AbstractConditionsFilter containerFilter = containerConcept;
+			//Append as reference
+			Instance.PropertyArray.appendConceptReference(containerFilter.link, linkConcept, 1L);
+		} else if (containerConcept instanceof WS_C_FilterValue) {
+			Log.log(LOGGER, "Debug", "Appending filter as a child of a filter value");
+			WS_C_FilterValue containerFilterValue = containerConcept;
+			//Append as reference
+			Instance.PropertyArray.appendConceptReference(containerFilterValue.link, linkConcept, 1L);
+		}	
+	}
+}

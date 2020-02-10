@@ -1,0 +1,61 @@
+/**
+ * @description 
+ */
+String rulefunction Shared.RuleFunctions.topology.refineFQName {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String	fqName;
+	}
+	body {
+		if (fqName == null){
+		    return null;
+		}
+		Shared.RuleFunctions.log("refineFQName","DEBUG","Raw FQName is "+fqName);
+		if (String.indexOfString(fqName,0,"@") == -1){
+		    //we will assume that we are dealing with a fully refined fqname
+		    return fqName;
+		}
+		//Split the incoming fqname
+		String[] splits = String.split(fqName,":");
+		if (splits@length == 0){
+		    return null;
+		}
+		//start creating the refined fqname
+		String refinedFQName = null;
+		for (int i = 0 ; i < splits@length ; i = i + 1){
+		    if (i == 0){
+		        //first split is cluster name
+		        refinedFQName = splits[i];
+		    }
+		    else if (i == 1){
+		        //second split is procid@machine
+		        String[] partSplits = String.split(splits[i],"@");
+		        refinedFQName = refinedFQName + ":" + partSplits[1];
+		        refinedFQName = refinedFQName + ":" + partSplits[0];
+		    }
+		    else if (i == 2){
+		        //third split is agent
+		        if (splits[i] == "LockManager" || splits[i] == "AsyncWorkerDataPublisher"){
+		            //we are missing agent name we will use wildcard
+		            refinedFQName = refinedFQName + ":%agentName%";
+		        }
+		        else if (splits@length > 3){
+		            //we may have a agent name and agent id
+		            try{
+		                //if the next split can be converted to int, then we can assume a valid agent name
+		                refinedFQName = refinedFQName + ":" + splits[i] + "#" + Number.valueOfString(splits[i+1],10);
+		            }catch(Exception e){
+		                Shared.RuleFunctions.log("refineFQName","DEBUG","Could not convert "+splits[i+1]+" to a number");
+		                //no we could convert the next split to int, we will go with wildcard
+		                refinedFQName = refinedFQName + ":%agentName%";
+		            }
+		        }
+		        break;
+		    }
+		}
+		Shared.RuleFunctions.log("refineFQName","DEBUG","Refined FQName is "+refinedFQName);
+		return refinedFQName;
+	}
+}

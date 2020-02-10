@@ -1,0 +1,140 @@
+/**
+ * @description Rule Function to Fetch the Decision Table Arguments
+ */
+WebStudio.Core.Concepts.DataSources.WS_C_TemporaryReturnData rulefunction WebStudio.Core.RuleFunctions.Actions.WS_RF_FetchDecisionTableArguments {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object servletRequest;
+		WebStudio.Security.Authn.Concepts.WS_C_LoggedInUser loggedInUser;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.WS_RF_FetchDecisionTableArguments");
+		
+		String responseMessage = null;
+		String errorCode = null;
+		int recordCount = 1;
+		int responseStatus = 0;
+		
+		String projectName = HTTP.Servlet.Request.getRequestParameter(servletRequest, "projectName");
+		String artifactPath = HTTP.Servlet.Request.getRequestParameter(servletRequest, "artifactPath");
+		String artifactExtn = HTTP.Servlet.Request.getRequestParameter(servletRequest, "artifactExtension");
+		String artifactType = HTTP.Servlet.Request.getRequestParameter(servletRequest, "artifactType");			
+		
+		Log.log(LOGGER, "Debug", "Project Name %s", projectName);
+		
+		String subscriptionId = null;
+		if (loggedInUser.jwtToken != null) subscriptionId = loggedInUser.jwtToken.sbsc;
+		
+		String scsRootURL = WS_RF_GetSCSRootURL(projectName, subscriptionId);
+		if (scsRootURL == null) {
+			throw Exception.newException(null, "Source control repository location not present. Set ws.scs.rootURL property", null);
+		}
+		
+		WS_C_TemporaryReturnData tempReturnData = null;
+		WS_C_ResponseData responseData = null;
+
+		if (!WS_RF_CheckHTTPMethod(servletRequest, "GET")) {
+			responseStatus = -1;
+			recordCount = 0;
+			errorCode = "ERR_5101";
+			responseMessage = "Invalid HTTP Method, expect method is [GET].";
+		} else {
+			responseData = Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/WS_C_ResponseData");	
+
+			String username = loggedInUser.username;
+			//Get the User roles
+			String[] roles = Instance.PropertyArray.toArrayString(loggedInUser.roles);
+			
+			WS_C_DecisionTableArgumentDetails dtArgumentDetails = Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/WS_C_DecisionTableArgumentDetails");										
+			if (artifactType == "RULEFUNCTIONIMPL") {
+				WS_C_ResponseTransferObjectData fetchedResponseData = WS_RF_GetArtifactContentsFromStore(username, roles, projectName, artifactPath, artifactExtn);
+				
+				if (fetchedResponseData.errorCode == null) {
+	
+					WebStudio.Core.Concepts.Decision.Pagination.WS_C_DecisionTable decisionTable = fetchedResponseData.artifactContents;
+					
+					Object decisionTableEMFObj = WS_RF_CreateEMFObjectForDecisionTable(decisionTable);
+					Object[] arguments = WS.Decision.TableModel.getArguments(decisionTableEMFObj);					
+																					
+					for (int index = 0; index < arguments@length; index++) {						
+						WS_C_DecisionTableArgumentResource argumentResource = Instance.newTransientInstance("/WebStudio/Core/Concepts/Decision/Pagination/WS_C_DecisionTableArgumentResource");
+						argumentResource.argumentAlias = WS.Decision.TableModel.Arguments.getAlias(arguments[index]);
+						argumentResource.direction = WS.Decision.TableModel.Arguments.getDirection(arguments[index]);
+						argumentResource.resourceType = WS.Decision.TableModel.Arguments.getResourceType(arguments[index]);
+						argumentResource.path = WS.Decision.TableModel.Arguments.getPath(arguments[index]);										
+						argumentResource.isArray = WS.Decision.TableModel.Arguments.isArray(arguments[index]);						
+						String argumentExtn = String.toLowerCase(argumentResource.resourceType);
+						
+						if (String.equals("CONCEPT", argumentResource.resourceType) || String.equals("EVENT", argumentResource.resourceType))	{																																				
+							Object argumentPropertiesObj = WS_RF_FetchDTArgumentProperties(projectName, argumentResource.path, argumentResource.resourceType, argumentExtn, username, roles, true);
+							Object[] argumentProperties = Collections.toArray(argumentPropertiesObj);
+							for (int index2 = 0; index2 < argumentProperties@length; index2++) {
+								WS_C_ArgumentProperty argumentProperty = Instance.newTransientInstance("/WebStudio/Core/Concepts/Decision/Pagination/WS_C_ArgumentProperty");
+								argumentProperty.name = WS.Decision.TableModel.Arguments.getPropertyName(argumentProperties[index2]);
+								argumentProperty.type = WS.Decision.TableModel.Arguments.getPropertyType(argumentProperties[index2]);
+								argumentProperty.ownerPath = WS.Decision.TableModel.Arguments.getPropertyOwnerPath(argumentProperties[index2]);
+								argumentProperty.isArray = WS.Decision.TableModel.Arguments.isPropertyArray(argumentProperties[index2]);
+								argumentProperty.associatedDomain = WS.Decision.TableModel.Arguments.hasPropertyDomainAssociation(argumentProperties[index2]);
+								argumentProperty.conceptTypePath = WS.Decision.TableModel.Arguments.getPropertyConceptTypePath(argumentProperties[index2]);
+								Instance.PropertyArray.appendContainedConcept(argumentResource.property, argumentProperty, 1L);								 																		
+							}							
+						} else {
+							argumentResource.resourceType = "PRIMITIVE";	
+						}								
+						Instance.PropertyArray.appendContainedConcept(dtArgumentDetails.argument, argumentResource, 1L);						
+					}										
+				} else {
+					responseStatus = -1;	
+					errorCode = fetchedResponseData.errorCode;
+					responseMessage = fetchedResponseData.errorMessage;
+					recordCount = 0;
+					responseData = null;
+				}
+				
+				Instance.PropertyAtom.setConceptReference(fetchedResponseData.artifactContents, null, 1L);			
+			}
+			else if (String.equals("CONCEPT", artifactType) || String.equals("EVENT", artifactType)) {
+				WS_C_DecisionTableArgumentResource argumentResource = Instance.newTransientInstance("/WebStudio/Core/Concepts/Decision/Pagination/WS_C_DecisionTableArgumentResource");				
+				Object argumentPropertiesObj = WS_RF_FetchDTArgumentProperties(projectName, artifactPath, artifactType, artifactExtn, username, roles, true);
+				Object[] argumentProperties = Collections.toArray(argumentPropertiesObj);
+				for (int index = 0; index < argumentProperties@length; index++) {
+					WS_C_ArgumentProperty argumentProperty = Instance.newTransientInstance("/WebStudio/Core/Concepts/Decision/Pagination/WS_C_ArgumentProperty");
+					argumentProperty.name = WS.Decision.TableModel.Arguments.getPropertyName(argumentProperties[index]);
+					argumentProperty.type = WS.Decision.TableModel.Arguments.getPropertyType(argumentProperties[index]);
+					argumentProperty.ownerPath = WS.Decision.TableModel.Arguments.getPropertyOwnerPath(argumentProperties[index]);
+					argumentProperty.isArray = WS.Decision.TableModel.Arguments.isPropertyArray(argumentProperties[index]);
+					argumentProperty.associatedDomain = WS.Decision.TableModel.Arguments.hasPropertyDomainAssociation(argumentProperties[index]);
+					argumentProperty.conceptTypePath = WS.Decision.TableModel.Arguments.getPropertyConceptTypePath(argumentProperties[index]);
+					Instance.PropertyArray.appendContainedConcept(argumentResource.property, argumentProperty, 1L);								 																		
+				}						
+				Instance.PropertyArray.appendContainedConcept(dtArgumentDetails.argument, argumentResource, 1L);						
+			}
+			
+			WS_C_ArtifactContentsDataSourceRecord artifactsDataSourceRecord = 
+				Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/Records/WS_C_ArtifactContentsDataSourceRecord");
+			WS_C_AnyArtifactDetails anyDetails = dtArgumentDetails;
+			Instance.PropertyAtom.setContainedConcept(artifactsDataSourceRecord.artifactDetails, anyDetails, 1L);
+			
+			WS_C_AbstractDataSourceRecord dataSourceRecord = artifactsDataSourceRecord;
+			Instance.PropertyArray.appendContainedConcept(responseData.record, dataSourceRecord, 1L);				
+		}
+		
+		tempReturnData = WS_RF_CreateTemporaryReturnData(responseStatus, recordCount, errorCode, responseMessage, responseData);
+//		if (responseData != null) {
+//			tempReturnData.unEscapeXML = true;
+//		}
+		return tempReturnData;
+								
+//		String responseDSXML = WS_RF_CreateAndSerializeResponseDataSource(responseStatus, recordCount, errorCode, responseMessage, responseData);
+//		
+//		responseMessage = WS.Common.unEscapeXML(responseDSXML);
+			    										
+//		Log.log(LOGGER, "Debug", "Data source response %s", responseMessage);
+//			
+//        HTTP.Servlet.Response.setResponseStatusCode(servletResponse, responseCode);
+//        HTTP.Servlet.Response.setResponseHeader(servletResponse, "Content-type", responseContentType);	    										
+//		HTTP.Servlet.Response.setResponseContent(asyncContextObject, responseMessage, true);
+	}
+}

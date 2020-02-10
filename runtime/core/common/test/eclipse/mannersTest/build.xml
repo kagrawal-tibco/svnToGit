@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project basedir="." default="build" name="mannersTest">
+    <property environment="env"/>
+	<!-- ####################### -->
+	<!-- User defined properties -->
+	<!-- ####################### -->
+	<property file="user.properties" />	
+    <property name="debuglevel" value="source,lines,vars"/>
+    <property name="target" value="1.5"/>
+    <property name="source" value="1.5"/>
+    <path id="manners.classpath">
+        <pathelement location="classes"/>
+        <pathelement location="${BE_HOME}/lib/be-functions.jar"/>
+        <pathelement location="${BE_HOME}/lib/cep-common.jar"/>
+        <pathelement location="${BE_HOME}/lib/cep-container.jar"/>
+        <pathelement location="${BE_HOME}/lib/cep-drivers.jar"/>
+        <pathelement location="${BE_HOME}/lib/cep-kernel.jar"/>
+        <pathelement location="${TRA_HOME}/lib/TIBCOxml.jar"/>
+    </path>
+    <target name="init">
+        <mkdir dir="classes"/>
+        <copy includeemptydirs="false" todir="classes">
+            <fileset dir="src" excludes="**/*.uad, **/*.ucd, **/*.uld, **/*.upd, **/*.udd, **/*.uod, **/*.usd, **/*.utd, **/*.uud, **/*.odd, **/*.ead, **/*.ecd, **/*.eld, **/*.epd, **/*.edd, **/*.eod, **/*.esd, **/*.etd, **/*.eud, **/*.urd*.uml2, **/*.ecore, **/*.launch, **/*.testsuite, **/*.deploy, **/*.location, **/*.execution, **/*.datapool, **/*.artifact, **/*.html, **/*.svg, **/*.java"/>
+        </copy>
+    </target>
+    <target name="clean">
+        <delete dir="classes"/>
+    </target>
+    <target depends="clean" name="cleanall"/>
+	
+    <target depends="build-jars" name="build"/>
+    
+    <target depends="init" name="build-project">
+        <echo message="${ant.project.name}: ${ant.file}"/>
+        <javac debug="true" debuglevel="${debuglevel}" destdir="classes" source="${source}" target="${target}">
+            <src path="src"/>
+            <classpath refid="manners.classpath"/>
+        </javac>
+    </target>    
+	
+	<target depends="build-project" name="build-jars">
+		<jar destfile="mannersTest.jar" basedir="classes">
+			<manifest>
+                <attribute name="Main-Class"
+                      value="manners.MannersTest" />
+            </manifest>
+		</jar>
+	</target>
+</project>

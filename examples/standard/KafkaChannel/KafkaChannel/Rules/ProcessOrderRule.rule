@@ -1,0 +1,28 @@
+/**
+ * @description Processes the orders.
+ * @author
+ */
+rule Rules.ProcessOrderRule {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Events.OrderEvent orderEvent;
+	}
+	when {
+		
+	}
+	then {
+		Concepts.Order order = Instance.createTransientInstanceFromEvent("/Concepts/Order", orderEvent);
+		
+		double ordAmount = RuleFunctions.CalculateOrderAmout(order);
+		
+		System.debugOut("#### Order processed: " + orderEvent.order_id + " Amount: $" + ordAmount + " Customer:" + orderEvent.customer_id);
+		for (int i=0; i<order.items@length; i++) {
+			Concepts.OrderItem item = order.items[i];
+			System.debugOut("#### " + item.item_name + " - $" + item.price + " (X " + item.quantity + ")");
+		}
+		System.debugOut("");
+	}
+}

@@ -1,0 +1,31 @@
+/**
+ * @description 
+ */
+void rulefunction Monitoring.RuleFunctions.alerts.configureAlerts {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Shared.Concepts.MonitorableEntity	monitorableentity;
+	}
+	body {
+        String fqName = getFQName(monitorableentity);
+        Shared.RuleFunctions.log("configureAlerts","DEBUG","Triggered alert configurations for entity: "+fqName);
+		String typePath = getTypePath(monitorableentity);
+		String[] configuredChartsWithAlerts = BEMM.alerts.getChartTypesForEntity(typePath);
+		if (configuredChartsWithAlerts != null){
+		    Monitoring.Concepts.MonitorableEntityAlertHistory alertHistory = Instance.newInstance("/Monitoring/Concepts/MonitorableEntityAlertHistory",monitorableentity@extId+":alerthistory");
+		    alertHistory.entity = monitorableentity;
+		    Shared.RuleFunctions.log("configureAlerts","DEBUG","Found "+configuredChartsWithAlerts@length+" alert configurations for "+fqName);
+		    for (int i = 0 ; i < configuredChartsWithAlerts@length ; i = i + 1){
+		        String chartType = configuredChartsWithAlerts[i];
+		        String compName = fqName + ":" + chartType;
+		    	Shared.RuleFunctions.log("configureAlerts","DEBUG","Creating view of type '" + chartType + "' for entity " + fqName);
+		        Shared.Concepts.AbstractMonitorView view = createView(monitorableentity,chartType,compName);
+		        fetchData(view);
+		        subscribeView(view);
+		    }
+		}
+		monitorableentity.initialized = true;		
+	}
+}

@@ -1,0 +1,51 @@
+ <div class="modal fade box-sizing" id="importApplication">
+   <form  enctype="multipart/form-data" method="post" name="paramForm" novalidate>
+       <div class="modal-header box-sizing">
+       	 	<button type="button" class="close" data-dismiss="modal" aria-hidden="true">x</button>
+			<span class="lead"><h4>Import Deployment</h4></span>
+	   </div>
+	   
+	   <div class="modal-body box-sizing">
+			<div class="form-horizontal">
+				<div class="control-group">                   
+                	<label class="control-label">Site Topology </label>
+					<div class="controls">                    	
+						<input type="text" id="stfilepath" disabled="disabled" required/>						
+						<button type="button" ng-class="{'tbt-btn':true,'primary-btn':true}" ng-click="browseFile('stfile')">Browse</button>
+						<input type="file"  on-read-file="readFileContent($fileContent)"  accept=".st" file-model="$parent.importData.files" style="visibility: hidden;" id="stfile" onchange="angular.element(this).scope().setPathValue('stfilepath','stfile')" required/>				
+					</div>					
+				</div>
+				<div class="control-group">                   
+                	<label class="control-label">Cluster Deployment Descriptor </label>
+					<div class="controls"> 
+						<input type="text"  id="cddfilepath" disabled="disabled" required/>                 	
+						<button type="button" ng-class="{'tbt-btn':true, 'primary-btn':true}" ng-click="$parent.browseFile('cddfile')">Browse</button>
+						<input type="file" accept=".cdd"  multiple file-model="$parent.importData.CDDfiles" style="visibility: hidden;" id="cddfile" onchange="angular.element(this).scope().setPathValue('cddfilepath','cddfile')"/>					
+					</div>					
+				</div>
+				<div class="control-group">                   
+                	<label class="control-label">Enterprise Archive </label>
+					<div class="controls">                    	
+						<input type="text"  id="earfilepath" disabled="disabled" required/>						
+						<button type="button" ng-class="{'tbt-btn':true,'primary-btn':true}" ng-click="$parent.browseFile('earfile')">Browse</button>
+						<input type="file" accept=".ear"  multiple file-model="$parent.importData.EARfiles" style="visibility: hidden;" id="earfile" onchange="angular.element(this).scope().setPathValue('earfilepath','earfile')"/>				
+					</div>					
+				</div>
+				<label class="control-label">Deployment Name </label>
+                <div class="controls">
+                     <input name="appNameInput" type="text" placeholder="DeploymentName" id="appNameTextField" 
+                           ng-model="$parent.importData.applicationName"  required>
+                </div> 
+			</div>
+	  	</div>	
+	  	<div class="modal-footer box-sizing">
+	  		<div ng-show="$parent.isError" class="pull-left">
+				<span class="fileuploadError">*{{$parent.errorMessage}}</span>
+			</div>
+	    	<button type="button" ng-disabled="paramForm.$invalid" class="tbt-btn primary-btn" ng-class="{'button_disabled':paramForm.$invalid}" ng-click="$parent.importApplication($parent.importData.files,$parent.importData.CDDfiles,$parent.importData.EARfiles,$parent.importData.applicationName)">Save</button>
+	    	<button type="button" data-dismiss="modal" aria-hidden="true" class="btn tbt-btn secondary-btn" ng-click="close()">
+		   		 Cancel
+	    	</button>
+    	</div>
+    </form>
+ </div>

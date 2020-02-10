@@ -1,0 +1,196 @@
+  <div class="full">
+    <div class='title-area'>
+      <div class='title-search'>
+        <form >
+            <mat-form-field class="full-width">
+              <span matPrefix><i class="fa fa-search {{isRtl() ? 'left-pad' : 'right-pad'}}"></i></span>
+              <input matInput [formControl]="helpControl" placeholder="{{i18n('Welcome back')}}, {{userName()}}! {{i18n('What would you like to do today?')}}" i18n-placeholder
+                aria-label="What would you like to do today?" [matAutocomplete]="helpOptions">
+              <mat-autocomplete #helpOptions="matAutocomplete">
+                <mat-optgroup label="{{i18n('General Tasks')}}" i18n-label>
+                  <mat-option (onSelectionChange)="performAction($event, option)" *ngFor="let option of filteredOptions | async" [value]="option.desc">
+                    {{ option.desc }}
+                  </mat-option>
+                </mat-optgroup>
+              </mat-autocomplete>
+            </mat-form-field>
+          </form>
+      </div>
+      <div class='title-actions'>
+        <!-- <div *ngIf="!showTCEUI();else deployables"> -->
+          <div>
+              <button (click)="openUnresolvedDialog()" mat-mini-fab color="primary"
+              style="margin-left: 4px;margin-right: 4px;color: white;background-color: #fd7821;"
+              class="button-primary-call">{{getUnresolvedWorkItems().length}}</button>
+              <span style="margin-left: 4px;margin-right: 4px;" i18n>{{i18n('total unresolved item(s)')}}</span>&nbsp;&nbsp;
+              <button (click)="openDeployablesDialog()" mat-mini-fab color="primary"
+                style="margin-left: 4px;margin-right: 4px;"
+                class="button-primary-call">{{getDeployableArtifacts().length}}</button>
+              <span style="margin-left: 4px;margin-right: 4px;" i18n>{{i18n('total deployable artifact(s)')}}</span>           
+          </div>
+        <!-- </div>
+        <ng-template #deployables>
+          <div>
+            <button (click)="openDeployablesDialog()" mat-mini-fab color="primary"
+              style="margin-left: 4px;margin-right: 4px;"
+              class="button-primary-call">{{getDeployableArtifacts().length}}</button>
+            <span style="margin-left: 4px;margin-right: 4px;" i18n>{{i18n('total deployable artifacts')}}</span>
+          </div>
+        </ng-template> -->
+      </div>
+    </div>
+    <div class="dashboard-body">
+      <div class="dashboard-left">
+          <activity-stream>
+          <!-- style="max-height: 60vh;"
+          [ngStyle.gt-sm]="{'margin.px': 12, 'width': 'calc(50% - 24px)'}"
+          [ngStyle.lt-md]="{'margin-bottom.px': 10}"> -->
+        </activity-stream>
+      </div>
+      <div class="{{isRtl() ? 'dashboard-right-rtl': 'dashboard-right'}}">
+        <div class='snapshot-header'>
+          <div style="width: 100%">
+            <mat-checkbox class="snapshot-header-button" 
+            [ngClass]="{
+              'float-right': !isRtl(),
+              'float-left': isRtl()
+            }"
+            (click)='toggleShowCheckedOutProjs()'>
+              <div class="{{isRtl() ? 'pull-left' : 'pull-right'}}" i18n>{{i18n('Hide non-checked out projects')}}</div>
+            </mat-checkbox> 
+            <img class="{{isRtl() ? 'header-img-rtl' : 'header-img'}}" mat-card-avatar src="assets/img/ic-dev.png">
+            <div class="header {{isRtl() ? 'pull-right' : 'pull-left'}}" i18n>{{i18n('Project Snapshots')}}</div>
+          </div>
+          <div>
+            <form>
+              <mat-form-field class="snapshot-search full-width">
+                <span matPrefix><i class="fa fa-search {{isRtl() ? 'left-pad' : 'right-pad'}}"></i></span>
+                <input matInput [formControl]="snapshotsControl" placeholder="{{i18n('Search for projects or artifacts')}}" i18n-placeholder
+                  [matAutocomplete]="artifacts">
+                <mat-autocomplete #artifacts="matAutocomplete">
+                  <mat-optgroup label="{{i18n('Open an artifact (type a name...)')}}" i18n-label>
+                    <mat-option (onSelectionChange)="performAction($event, option)"  [style.fontSize.px]="12" *ngFor="let option of filteredArtifacts | async" [value]="option.name">
+                      {{ option.name }}
+                      <small> [Type '{{option.type.displayString}}' in '{{option.path}}']</small>
+                    </mat-option>
+                  </mat-optgroup>
+                </mat-autocomplete>
+                <button mat-button matSuffix mat-icon-button aria-label="Clear" (click)="clearFilter()">
+                  <i class="fa fa-close"></i>
+                </button>
+              </mat-form-field>
+            </form>
+          </div>          
+        </div>
+        <div class="snapshot-container">
+          <div
+            fxLayout="row wrap"
+            fxLayoutAlign="stretch start"
+            fxLayout.lt-md="row wrap"
+            [ngStyle.lt-md]="{'overflow': 'scroll'}">
+            <!-- TODO : Allow the user to show the old style worklist in a separate card via preferences -->
+            <!--
+              <activity-stream 
+                style="max-height: 60vh;"
+                [ngStyle.gt-sm]="{'margin.px': 12, 'width': 'calc(50% - 24px)'}"
+                [ngStyle.lt-md]="{'margin-bottom.px': 10}">
+              </activity-stream>
+      
+                <mat-card style="max-height: 60vh;"
+                [ngStyle.gt-sm]="{'margin.px': 12, 'width': 'calc(50% - 24px)'}"
+                [ngStyle.lt-md]="{'margin-bottom.px': 10}">
+                <mat-card-header>
+                  <img mat-card-avatar src="https://source.unsplash.com/random/200x200">
+                  <mat-card-title>Work List</mat-card-title>
+                  <mat-card-subtitle>Pending and resolved worklist items are shown here</mat-card-subtitle>
+                </mat-card-header>
+                <mat-divider></mat-divider>
+                <mat-card-content style="margin-bottom:-24px;" class="scrollable-content">
+                  <old-dashboard></old-dashboard>
+                </mat-card-content>
+              </mat-card>
+              -->
+            <mat-card 
+              [ngStyle.gt-md]="{'margin.px': 12, 'width': 'calc(50% - 24px)'}"
+              fxFlex.lt-md="100"
+              [ngStyle.lt-md]="{'margin-bottom.px': 24}"
+              [ngClass]="{ 'read-only': snap.size == -1}"
+            *ngFor='let snap of visibleSnapshots'>
+              <button mat-icon-button [matMenuTriggerFor]="optionsmenu" aria-label="Options"
+                matTooltip="{{i18n('Options')}}" i18n-matTooltip placement="right" container="body" containerClass="animated fadeIn"
+                [ngClass]="{
+                  'opt-icon': !isRtl(),
+                  'opt-icon-rtl': isRtl()
+                }">
+                <mat-icon>more_vert</mat-icon>
+              </button>
+              <mat-menu #optionsmenu="matMenu">
+                <button mat-menu-item (click)="projectCallback(option)"
+                *ngFor='let option of projectOptions(snap.name)'>
+                  <span>{{option[1].name}}</span>
+                </button>
+              </mat-menu>            
+              <mat-card-header>
+                <img mat-card-avatar src="assets/img/ic-dev.png">
+                <mat-card-title>{{snap.name}}</mat-card-title>
+                <mat-card-subtitle>
+                  <!-- <span i18n>{{i18n('Project Snapshot')}}</span> -->
+                  <div *ngIf="snap.lastCommitBy">
+                    <span i18n>{{i18n('Last commit by ')}}</span> : {{snap.lastCommitBy}} <span i18n>{{i18n('on')}}</span> {{snap.lastCommitTime | date : 'short'}}
+                  </div>
+                  <div *ngIf="!snap.lastCommitBy">
+                    <span i18n>{{i18n('No commits found for this project')}}</span>
+                  </div>
+                </mat-card-subtitle>
+              </mat-card-header>
+              <mat-divider></mat-divider>
+              <mat-card-content class="project-summary">
+                <div *ngIf="snap.size != '-1'">
+                  <!-- <div *ngIf="!showTCEUI()"> -->
+                  <div>
+                    <button (click)="openUnresolvedDialog(snap.name)" 
+                      matTooltip="{{getToolTip('unresolved', snap.name)}}" placement="right" container="body" containerClass="animated fadeIn"
+                      [ngClass]="getUnresolvedItems(snap.name).length ? 'button-primary' : 'button-disabled'"
+                      mat-mini-fab color="primary" style="margin: 14px;" class="button-primary-call">
+                        {{getUnresolvedItems(snap.name).length}}
+                    </button>
+                    <span class="h6" i18n>{{i18n('Unresolved worklist item(s)')}}</span>
+                  </div>
+                  <div>
+                    <button (click)="openDeployablesDialog(snap.name)" 
+                      matTooltip="{{getToolTip('deploy', snap.name)}}" placement="right" container="body" containerClass="animated fadeIn"
+                      [ngClass]="getDeployableArtifacts(snap.name).length ? 'button-secondary' : 'button-disabled'"
+                      mat-mini-fab color="primary" style="margin: 14px;margin-top: 0px;" class="button-primary-call">
+                        {{getDeployableArtifacts(snap.name).length}}
+                    </button>
+                    <span class="h6" i18n>{{i18n('Deployable artifact(s)')}}</span>
+                  </div>
+                  <div>
+                    <span class="h6 center-align" i18n>{{i18n('Total number of checked out artifacts ')}}: {{snap.artifactsCount}}</span>
+                  </div>
+                  <div>
+                    <span class="h6 center-align" i18n>{{i18n('Project size ')}}: {{computeSize(snap.size)}}<br></span>
+                  </div>
+                </div>
+                <div *ngIf="snap.size === '-1'" class="top-pad">
+                  <span i18n>{{i18n('Project is not yet checked out, no additional details are available.')}}</span>
+                </div>
+              </mat-card-content>
+              <mat-card-actions class="text-center" *ngIf="snap.size != '-1'" >
+                <button class="card-button" (click)="onDeleteProject(snap.name)" mat-button><span i18n>{{i18n('Delete Project')}}</span></button>
+                <button class="card-button" (click)="openDetailsPage(snap)" mat-button>
+                  <span i18n>{{i18n('View Project Details')}}</span>
+                  <i style="margin-left: 6px" class="fa fa-angle-right"></i>
+                </button>
+              </mat-card-actions>
+              <mat-card-actions class="text-center" *ngIf="snap.size === '-1'">
+                <button class="card-button" (click)="openCheckoutProjectDialog(snap.name)" mat-button>
+                    <i class="fa fa-cloud-download right-margin"></i>
+                    <span i18n>{{i18n('Checkout Project Now')}}</span> 
+                </button>
+              </mat-card-actions>
+            </mat-card>
+          </div>
+        </div>
+      </div>
+    </div>

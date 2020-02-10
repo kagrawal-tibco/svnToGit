@@ -1,0 +1,150 @@
+/**
+ * @description 
+ * @author Vikram Patil
+ */
+rule WebStudio.Core.Rules.WS_R_UpdateUserGroup {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		WebStudio.Core.Events.WS_E_UpdateUserGroupEvent ws_e_AddUserGroupEvent;
+	}
+	when {
+		ws_e_AddUserGroupEvent.userName != null &&
+		ws_e_AddUserGroupEvent.operationType != null &&
+		ws_e_AddUserGroupEvent.groupName != null;
+	}
+	then {
+		Object LOGGER = Log.getLogger("WebStudio.Core.Rules.WS_R_UpdateUserGroup");
+		
+		Log.log(LOGGER, "Debug", "Artifacts - %s", ws_e_AddUserGroupEvent.artifacts);
+		
+		String userDashboardExtId = WS_RF_CreateUserArtifactExtId("DASHBOARD", null, null, ws_e_AddUserGroupEvent.userName, null, null);
+		WS_C_UserDashboard userDashboard = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(userDashboardExtId, false, "/WebStudio/Core/Concepts/Dashboard/WS_C_UserDashboard");
+				
+		if (userDashboard != null) {
+			Log.log(LOGGER, "Debug", "User Dashboard instance id %s", userDashboard@id);
+			Log.log(LOGGER, "Debug", "Existing User Group Count - %s", userDashboard.userGroups@length);
+			
+			String groupExtId = WS_RF_CreateUserArtifactExtId(userDashboardExtId, null, null, null, null, String.replaceAll(ws_e_AddUserGroupEvent.groupName, " ", ""));
+			Log.log(LOGGER, "Debug", "Acquiring lock for group (%s) with extId - %s", ws_e_AddUserGroupEvent.groupName, groupExtId);
+			boolean groupLock = Cluster.DataGrid.Lock(groupExtId, -1, false);
+			
+			if (groupLock) {
+			    WS_C_Group group = Instance.getByExtIdByUri(groupExtId, "/WebStudio/Core/Concepts/Dashboard/WS_C_Group");
+
+				if (group == null && String.equals(ws_e_AddUserGroupEvent.operationType, "ADD_GROUP")) {
+				    group = Instance.newInstance("/WebStudio/Core/Concepts/Dashboard/WS_C_Group", groupExtId);
+					group.name = ws_e_AddUserGroupEvent.groupName;
+					group.systemGroup = false;
+					group.icon = "customgroup.png";
+					
+					WS_RF_AddAuditTrailEntry(ws_e_AddUserGroupEvent.userName, null, null, null, "CREATE", "Group " + group.name + " created");
+					
+					if (ws_e_AddUserGroupEvent.artifacts != null) {
+						Log.log(LOGGER, "Debug", "Artifact Paths in String format - %s", ws_e_AddUserGroupEvent.artifacts);
+						String[] artifactPaths = String.split(ws_e_AddUserGroupEvent.artifacts, "\\$");
+						Log.log(LOGGER, "Debug", "Total Artifact Paths - %s", artifactPaths@length);
+			
+						WS_C_GroupArtifact groupArtifact = null; String groupArtifactExtId = null;
+						for (int i = 0; i < artifactPaths@length; i++) {
+							Log.log(LOGGER, "Debug", "Adding artifact - %s", artifactPaths[i]);
+							WS_C_UserArtifact userArtifact = WS_RF_GetArtifactForGroup(artifactPaths[i], ws_e_AddUserGroupEvent.userName);
+							if (userArtifact != null) {
+								Log.log(LOGGER, "Debug", "Appending Artifact - %s", userArtifact.artifactPath);
+								groupArtifactExtId = WS_RF_CreateUserArtifactExtId("GROUP_ARTIFACT", null, null, null, null, userArtifact@extId);
+								groupArtifact = Instance.createInstance("xslt://{{/WebStudio/Core/Concepts/Dashboard/WS_C_GroupArtifact}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"2.0\"><xsl:param name=\"userArtifact\"/><xsl:param name=\"groupArtifactExtId\"/><xsl:template name=\"Function\" match=\"/\"><createObject><object><xsl:attribute name=\"extId\"><xsl:value-of select=\"$groupArtifactExtId\"/></xsl:attribute><xsl:if test=\"$userArtifact/@extId\"><artifactExtId><xsl:value-of select=\"$userArtifact/@extId\"/></artifactExtId></xsl:if><xsl:if test=\"$userArtifact/artifactType\"><artifactType><xsl:value-of select=\"$userArtifact/artifactType\"/></artifactType></xsl:if></object></createObject></xsl:template></xsl:stylesheet>");
+								Instance.PropertyArray.appendString(group.artifactIds, groupArtifactExtId, 1L);
+								
+								String projectName = String.substring(artifactPaths[i], 0, String.indexOfString(artifactPaths[i],0,"/"));
+								WS_RF_AddAuditTrailEntry(ws_e_AddUserGroupEvent.userName, projectName, userArtifact.artifactPath, userArtifact.artifactType, "GROUP", "Added to group " + group.name);
+							} else {
+								Log.log(LOGGER, "Debug", "User Artifact not found.");
+							}
+						}
+					}
+					
+					// Lock on userDashboard already acquired within the calling RF  
+					Instance.PropertyArray.appendContainedConcept(userDashboard.userGroups, group, 1L);
+					
+					Log.log(LOGGER, "Debug", "User Group instance id %s", group@id);
+					
+			    } else if (group != null && String.equals(ws_e_AddUserGroupEvent.operationType, "DELETE_GROUP")) {
+				    	Log.log(LOGGER, "Debug", "Deleting Group with instance Id - %s", group@id);
+				    	Instance.PropertyArray.removeContainedConcept(userDashboard.userGroups, group);
+					Instance.deleteInstance(group);
+					WS_RF_AddAuditTrailEntry(ws_e_AddUserGroupEvent.userName, null, null, null, "DELETE", "Group " + group.name + " deleted");
+					
+			    } else if (group != null && String.equals(ws_e_AddUserGroupEvent.operationType, "ADD_ARTIFACT")) {
+			    		Log.log(LOGGER, "Debug", "Adding artifacts to Group with instance Id - %s, current count - ", group@id, group.artifactIds@length);
+
+			    		Log.log(LOGGER, "Debug", "Adding artifact - %s", ws_e_AddUserGroupEvent.artifacts);
+					WS_C_UserArtifact userArtifact = WS_RF_GetArtifactForGroup(ws_e_AddUserGroupEvent.artifacts, ws_e_AddUserGroupEvent.userName);
+					
+					if (userArtifact != null) {
+						Log.log(LOGGER, "Debug", "Artifact Id - %s, Existing Artifact Ids - %s", userArtifact@id, group.artifactIds);
+						String groupArtifactExtId = WS_RF_CreateUserArtifactExtId("GROUP_ARTIFACT", null, null, null, null, userArtifact@extId);
+						if (Instance.PropertyArray.indexOfString(group.artifactIds,  groupArtifactExtId) == -1) {
+							Log.log(LOGGER, "Debug", "Appending Artifact - %s", userArtifact.artifactPath);
+							WS_C_GroupArtifact groupArtifact = Instance.getByExtIdByUri(groupArtifactExtId, "/WebStudio/Core/Concepts/Dashboard/WS_C_GroupArtifact");
+							if (groupArtifact == null) {
+								Log.log(LOGGER, "Debug", "Group Artifact with extId [%s] does not exist in any group, creating a new one.", groupArtifactExtId);
+								groupArtifact = Instance.createInstance("xslt://{{/WebStudio/Core/Concepts/Dashboard/WS_C_GroupArtifact}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"2.0\"><xsl:param name=\"userArtifact\"/><xsl:param name=\"groupArtifactExtId\"/><xsl:template name=\"Function\" match=\"/\"><createObject><object><xsl:attribute name=\"extId\"><xsl:value-of select=\"$groupArtifactExtId\"/></xsl:attribute><xsl:if test=\"$userArtifact/@extId\"><artifactExtId><xsl:value-of select=\"$userArtifact/@extId\"/></artifactExtId></xsl:if><xsl:if test=\"$userArtifact/artifactType\"><artifactType><xsl:value-of select=\"$userArtifact/artifactType\"/></artifactType></xsl:if></object></createObject></xsl:template></xsl:stylesheet>");
+							}
+	    						Instance.PropertyArray.appendString(group.artifactIds, groupArtifactExtId, 1L);
+	    						
+	    						String projectName = String.substring(ws_e_AddUserGroupEvent.artifacts, 0, String.indexOfString(ws_e_AddUserGroupEvent.artifacts,0,"/"));
+	    						WS_RF_AddAuditTrailEntry(ws_e_AddUserGroupEvent.userName, projectName, userArtifact.artifactPath, userArtifact.artifactType, "GROUP", "Added to group " + group.name);
+						}
+					} else {
+						Log.log(LOGGER, "Debug", "User Artifact not found.");
+					}
+					Log.log(LOGGER, "Debug", "Current Artifact count post Add - %s", group.artifactIds@length);
+			    	
+			    } else if (group != null && String.equals(ws_e_AddUserGroupEvent.operationType, "DELETE_ARTIFACT")) {
+				    	Log.log(LOGGER, "Debug", "Deleting artifacts from Group with instance Id - %s, current count - ", group@id, group.artifactIds@length);
+				    	
+				    	Log.log(LOGGER, "Debug", "Deleting artifact - %s", ws_e_AddUserGroupEvent.artifacts);
+					WS_C_UserArtifact userArtifact = WS_RF_GetArtifactForGroup(ws_e_AddUserGroupEvent.artifacts, ws_e_AddUserGroupEvent.userName);
+					
+					if (userArtifact != null) {
+						Log.log(LOGGER, "Debug", "Artifact Id - %s, Existing Artifact Ids - %s", userArtifact@id, group.artifactIds);
+						String groupArtifactExtId = WS_RF_CreateUserArtifactExtId("GROUP_ARTIFACT", null, null, null, null, userArtifact@extId);
+					    	if (Instance.PropertyArray.indexOfString(group.artifactIds,  groupArtifactExtId) != -1) {
+					    		Log.log(LOGGER, "Debug", "Removing Artifact - %s", userArtifact.artifactPath);
+					    		Instance.PropertyArray.removeString(group.artifactIds,  groupArtifactExtId);
+
+					    		String projectName = String.substring(ws_e_AddUserGroupEvent.artifacts, 0, String.indexOfString(ws_e_AddUserGroupEvent.artifacts,0,"/"));
+		    					WS_RF_AddAuditTrailEntry(ws_e_AddUserGroupEvent.userName, projectName, userArtifact.artifactPath, userArtifact.artifactType, "GROUP", "Removed from group " + group.name);
+					    	}
+					    	
+				    		boolean canRemove = true;
+						WS_C_Group[] userGroups = Instance.PropertyArray.toArrayContainedConcept(userDashboard.userGroups);
+						for (int i = 0; i< userGroups@length; i++) {
+						 	if (!userGroups[i].systemGroup) {
+						    		if (Instance.PropertyArray.indexOfString(group.artifactIds,  groupArtifactExtId) != -1) {
+						    			canRemove = false;
+						    			break;
+						    		}
+						 	}
+						}
+						
+						if (canRemove) {
+							Log.log(LOGGER, "Debug", "Deleting Group Artifact [%s] as its no longer associated to any group.", groupArtifactExtId);
+							WS_C_GroupArtifact groupArtifact = Instance.getByExtIdByUri(groupArtifactExtId, "/WebStudio/Core/Concepts/Dashboard/WS_C_GroupArtifact");
+					    		if (groupArtifact != null) Instance.deleteInstance(groupArtifact);
+					    		else Log.log(LOGGER, "Debug", "Group Artifact with ExtId [%s] not found for deletion.", groupArtifactExtId);
+						}
+
+					} else {
+						Log.log(LOGGER, "Debug", "User Artifact not found.");
+					}
+			  		Log.log(LOGGER, "Debug", "Current Artifact count post Delete - %s", group.artifactIds@length);
+			   	}
+			    
+			}
+			Log.log(LOGGER, "Debug", "Group count post Update operation - %s", userDashboard.userGroups@length);
+		}
+	}
+}

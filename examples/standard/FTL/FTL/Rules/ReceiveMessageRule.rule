@@ -1,0 +1,29 @@
+/**
+ * @description 
+ * @author abhave-w510
+ */
+rule Rules.ReceiveMessageRule {
+	attribute {
+		priority = 10;
+		forwardChain = true;
+	}
+	declare {
+		Events.FTLResponseEvent ftlresponseenv;
+	}
+	when {
+		
+	}
+	then {
+		System.debugOut("Received a FTLResponseEvent, priting the message received from FTL channel ...");
+		Object subscriber = Util.HashMap.getObject("hashmap","subscriber");
+		System.debugOut("#### SUBSCRIBER received the following message ####");
+		System.debugOut("ts: " + ftlresponseenv.ts);
+		System.debugOut("callerId : " + ftlresponseenv.callerId);
+		System.debugOut("fromBaseStation : " + ftlresponseenv.fromBaseStation);
+		System.debugOut("toBaseStation : " + ftlresponseenv.toBaseStation);
+		System.debugOut("type : " + ftlresponseenv.type);
+		System.debugOut("eventdate : " + ftlresponseenv.eventdate);
+		System.debugOut("#### SUBSCRIBER done printing the message ...");
+		Event.consumeEvent(ftlresponseenv);
+	}
+}

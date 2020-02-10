@@ -1,0 +1,55 @@
+/**
+ * @description Create EMF Objects to be serialized from equivalent concept and persisted to SCS if required.
+ */
+Object rulefunction WebStudio.Core.RuleFunctions.Utils.WS_RF_CreateEMFObjectForArtifact {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Concept artifactConceptInstance;
+		WebStudio.Core.Concepts.WS_C_UserArtifact userArtifact;
+		String userName;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.WS_RF_CreateEMFObjectForArtifact");
+		
+		Log.log(LOGGER, "Debug", "User Artifact %s has UUID - %s", userArtifact.artifactPath, userArtifact.UUID);
+		
+		Object artifactEModel = null;
+		if (artifactConceptInstance instanceof WS_C_RuleTemplateInstanceView) {
+			WS_C_RuleTemplateInstanceView ruleTemplateInstanceView = artifactConceptInstance;
+			//For now write code to save
+			Object ruleTemplateInstanceEObject = WS.RTI.createRuleTemplateInstanceEObject(userArtifact.UUID, ruleTemplateInstanceView.implementsPath);
+			WS.RTI.setRuleTemplateInstanceDescription(ruleTemplateInstanceEObject, ruleTemplateInstanceView.description);
+			WS.RTI.setRuleTemplateInstancePriority(ruleTemplateInstanceEObject, ruleTemplateInstanceView.rulePriority);
+			
+			WS_C_BindingInfo[] bindingInfos = Instance.PropertyArray.toArrayContainedConcept(ruleTemplateInstanceView.view.bindingInfo);
+			
+			for (int loop = 0; loop < bindingInfos@length; loop++) {
+				WS_C_BindingInfo bindingInfo = bindingInfos[loop];
+				WS.RTI.addRuleTemplateInstanceBindingInfo(ruleTemplateInstanceEObject, bindingInfo.bindingId, bindingInfo.value);
+			}
+			artifactEModel = ruleTemplateInstanceEObject;
+			
+		} else if (artifactConceptInstance instanceof WS_C_RuleTemplateInstanceBuilder) {
+			WS_C_RuleTemplateInstanceBuilder ruleTemplateInstanceBuilder = artifactConceptInstance;
+			//For now write code to save
+			artifactEModel = WS_RF_ConvertAllRTIBuilderChildrenToEMF(ruleTemplateInstanceBuilder, userArtifact.UUID);
+			WS.RTI.setRuleTemplateInstanceDescription(artifactEModel, ruleTemplateInstanceBuilder.description);
+			WS.RTI.setRuleTemplateInstancePriority(artifactEModel, ruleTemplateInstanceBuilder.rulePriority);
+			
+		} else if (artifactConceptInstance instanceof WS_C_DecisionTable) {
+			WS_C_DecisionTable decisionTableContents = artifactConceptInstance;
+			artifactEModel = WS_RF_CreateEMFObjectForDecisionTable(decisionTableContents);
+						
+		} else if (artifactConceptInstance instanceof WS_C_ProcessView) {
+			WS_C_ProcessView process = artifactConceptInstance;
+			artifactEModel = WS_RF_CreateEMFObjectForProcess(process, userArtifact, userName);
+			
+		} else if (artifactConceptInstance instanceof WS_C_Domain) {
+			WS_C_Domain domain = artifactConceptInstance;
+			artifactEModel = WS_RF_CreateEMFObjectForDomain(domain);
+ 		}
+		return artifactEModel;
+	}
+}

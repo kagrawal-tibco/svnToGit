@@ -1,0 +1,23 @@
+/**
+ * @description 
+ */
+void rulefunction Monitoring.RuleFunctions.view.tearDownSubscribedViews {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		
+	}
+	body {
+		//search for all mntrViews 
+		String LOG_NAME = "tearDownSubscribedViews";        
+		Shared.RuleFunctions.log(LOG_NAME,"DEBUG","Tearing down views for Coherence datagrid... ");
+		Object[] mntrViews = searchViews(null,null);
+		Shared.RuleFunctions.log("tearDownSubscribedViews","INFO","Shutting down "+mntrViews@length+" subscribed mntrViews...");
+		for (int i = 0 ; i < mntrViews@length ; i = i + 1){
+		    Shared.Concepts.AbstractMonitorView view = mntrViews[i];
+		    Shared.RuleFunctions.log("tearDownSubscribedViews","INFO","Unsubscribing "+view@extId+"...");
+		    unsubscribeView(view);
+		}
+	}
+}

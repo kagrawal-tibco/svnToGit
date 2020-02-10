@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<AccumulatorPlugin xmlns="http://www.tibco.com/cep/bemm/monitoring/metric/config/collectorconfig" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.tibco.com/cep/bemm/monitoring/metric/config/collectorconfig ../xsds/AccumulatorPluginConfig.xsd " name="JMXAdapter" className="com.tibco.cep.bemm.monitoring.metric.probe.accumulator.jmx.JmxAccumulator" spm_schema="BE_MM">
+   <config>
+      <property name="poll-interval" value="15000" />
+   </config>
+   <map-entry >
+      <!-- THREADING -->
+      <mapping source="java.lang:type=Threading" type="attribute">
+         <target-mapping source="ThreadCount" target="threadcount" datatype="INTEGER" defaultValue="0" />
+      </mapping>
+      <mapping source="java.lang:type=Threading" type="operation">
+         <target-mapping source="findDeadlockedThreads" target="deadlockedthreadcount" datatype="INTEGER" defaultValue="0" />
+      </mapping>
+      <!-- JVM -->
+      <mapping source="java.lang:type=Runtime" type="attribute">
+         <target-mapping source="Uptime" target="jvmuptime" datatype="LONG" defaultValue="0" />
+      </mapping>
+   </map-entry>
+   <map-entry >
+      <!-- RTC Transaction related attributes -->
+      <mapping source="com.tibco.be:service=RTCTxnManagerReport" type="attribute" entity="inference">
+         <target-mapping source="TotalDBTxnsCompleted" target="totalsuccessfuldbtxn" datatype="LONG" defaultValue="0" />
+         <target-mapping source="TotalSuccessfulTxns" target="totalsuccessfultxn" datatype="LONG" defaultValue="0" />
+         <target-mapping source="PendingCacheWrites" target="pendingcachewrites" datatype="LONG" defaultValue="0" />
+         <target-mapping source="PendingLocksToRelease" target="pendinglockstorelease" datatype="LONG" defaultValue="0" />
+         <target-mapping source="AvgActionTxnMillis" target="avgactiontxntime" datatype="DOUBLE" defaultValue="0" />
+         <target-mapping source="PendingActions" target="pendingactions" datatype="LONG" defaultValue="0" />
+         <target-mapping source="AvgSuccessfulTxnTimeMillis" target="avgsuctxntime" datatype="DOUBLE" defaultValue="0" />
+         <target-mapping source="AvgCacheQueueWaitTimeMillis" target="avgcachequeuewaittime" datatype="DOUBLE" defaultValue="0" />
+         <target-mapping source="AvgCacheTxnMillis" target="avgcachetxntime" datatype="DOUBLE" defaultValue="0" />
+         <target-mapping source="AvgDBOpsBatchSize" target="avgdbopsbatchsize" datatype="DOUBLE" defaultValue="0" />
+         <target-mapping source="AvgDBQueueWaitTimeMillis" target="avgdbqueuewaittime" datatype="DOUBLE" defaultValue="0" />
+         <target-mapping source="AvgDBTxnMillis" target="avgdbtxntime" datatype="DOUBLE" defaultValue="0" />
+         <target-mapping source="LastDBBatchSize" target="lastdbbatchsize" datatype="LONG" defaultValue="0" />
+         <target-mapping source="PendingEventsToAck" target="pendingeventstoack" datatype="LONG" defaultValue="0" />
+         <target-mapping source="TotalSuccessfulTxns" target="avgtimepertxn" datatype="LONG" defaultValue="0" interceptorName="com.tibco.cep.bemm.monitoring.metric.interceptor.impl.AvgTimePerTxnInterceptor" />
+         <target-mapping source="AvgSuccessfulTxnTimeMillis" target="avgtimepertxn" datatype="DOUBLE" defaultValue="0" interceptorName="com.tibco.cep.bemm.monitoring.metric.interceptor.impl.AvgTimePerTxnInterceptor" />
+         <target-mapping source="TotalErrors" target="transactionerrors" datatype="LONG" defaultValue="0" interceptorName="com.tibco.cep.bemm.monitoring.metric.interceptor.impl.DeltaJmxInterceptor" />
+         <target-mapping source="TotalSuccessfulTxns" target="successfultxn" datatype="LONG" defaultValue="0" interceptorName="com.tibco.cep.bemm.monitoring.metric.interceptor.impl.DeltaJmxInterceptor" />
+      </mapping>
+      <!-- Locks related attributes -->
+      <mapping source="com.tibco.be:type=Agent,agentId=${agentId},subType=AgentStat" type="attribute" entity="inference">
+         <target-mapping source="TotalLocksHeldCount" target="totallocksheld" datatype="LONG" defaultValue="0" />
+         <target-mapping source="LocalLocksHeldCount" target="locallocksheld" datatype="LONG" defaultValue="0" />
+         <target-mapping source="ClusterWideLocksHeldCount" target="clusterwidelocksheld" datatype="LONG" defaultValue="0" />
+      </mapping>
+      <!-- Composite attributes are not supported in case of multi map -->
+      <multi-mapping source="com.tibco.be:dir=Methods,Group=Channels" name="GetDestinations" entity="inference" type="operation">
+         <arg name="p1" value="" type="STRING" />
+         <arg name="p2" value="" type="STRING" />
+         <target-mapping source="Destination URI" target="destination" datatype="STRING" defaultValue="na" />
+         <target-mapping source="Num Events Received" target="eventreceiverate" datatype="LONG" defaultValue="0" interceptorName="com.tibco.cep.bemm.monitoring.metric.interceptor.impl.DeltaJmxInterceptor" />
+         <target-mapping source="Num Events Sent" target="eventsentrate" datatype="LONG" defaultValue="0" interceptorName="com.tibco.cep.bemm.monitoring.metric.interceptor.impl.DeltaJmxInterceptor" />
+      </multi-mapping>
+      <multi-mapping source="com.tibco.be:type=Agent,agentId=${agentId},service=Stats,stat=Engine" name="getRuleStats" entity="inference" type="operation">
+         <arg name="nameOrExpression" value="" type="STRING" />
+         <target-mapping source="URI" target="rule" datatype="STRING" defaultValue="na" />
+         <target-mapping source="averageProcessingTime" target="avgexecutiontime" datatype="DOUBLE" defaultValue="0.0" />
+      </multi-mapping>
+   </map-entry>
+   <map-entry >
+      <!-- MEMORY -->
+      <mapping source="java.lang:type=Memory" type="attribute">
+         <target-mapping source="HeapMemoryUsage.init" target="initmemsize" datatype="DOUBLE" defaultValue="0" />
+         <target-mapping source="HeapMemoryUsage.committed" target="committedmemsize" datatype="DOUBLE" defaultValue="0" />
+         <target-mapping source="HeapMemoryUsage.max" target="maxmemsize" datatype="DOUBLE" defaultValue="0" />
+         <target-mapping source="HeapMemoryUsage.used" target="usedmemsize" datatype="DOUBLE" defaultValue="0"  />
+      </mapping>
+      <!-- CPU -->
+      <mapping source="java.lang:type=OperatingSystem" type="attribute">
+         <target-mapping source="ProcessCpuTime" target="cputime" datatype="LONG" defaultValue="0" />
+         <target-mapping source="AvailableProcessors" target="cpucount" datatype="INTEGER" defaultValue="0" />
+         <target-mapping source="ProcessCpuLoad" target="cpuusage" datatype="DOUBLE" defaultValue="0"  />
+      </mapping>
+   </map-entry>
+</AccumulatorPlugin>

@@ -1,0 +1,28 @@
+/**
+ * @description 
+ * @author 
+ */
+rule Rules.RuleSet.TransferMoney {
+	attribute {
+		priority = 1;
+		forwardChain = true;
+	}
+	declare {
+		Events.Payment	billpayment;
+		Concepts.CheckingAccount	checkingaccount;
+		Concepts.CreditCardAccount	ccaccount;
+		
+	}
+	when {
+		checkingaccount.Id==billpayment.CheckingAccountId;
+		ccaccount.Id==billpayment.CreditCardAccountId;
+	}
+	then {
+		System.debugOut("##### Processing transfer request");
+		System.debugOut("##### Bill payment amount:"+billpayment.Amount);
+		System.debugOut("##### CURRENT BALANCES Credit Card Account <"+ccaccount.Id+">:$"+ccaccount.Amount+" Checking Account <" + checkingaccount.Id+">:$"+checkingaccount.Balance);
+		checkingaccount.Balance=checkingaccount.Balance-billpayment.Amount;
+		ccaccount.Amount=ccaccount.Amount-billpayment.Amount;
+		System.debugOut("##### NEW BALANCES Credit Card Account <"+ccaccount.Id+">:$"+ccaccount.Amount+" Checking Account <" + checkingaccount.Id+">:$"+checkingaccount.Balance);
+	}
+}

@@ -1,0 +1,117 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>     Collocated Inference And Query
+
+- TIBCO BusinessEvents&reg;Examples
+</title>
+<meta http-equiv="Content-type" content="text/html; charset=iso-8859-1" />
+<meta http-equiv="Content-Language" content="en-us" />
+<link rel="Shortcut Icon" href="../../_resources/icon.gif" type="image/gif" />
+<style type="text/css" media="all">@import "../../_resources/examples.css";</style>
+<script type="text/javascript" src="../../_resources/examples.js" /></script>
+
+</head>
+<body onLoad="buildForms()">
+
+
+<h1>Collocated Inference And Query</h1>
+
+<h2>Purpose of This Example</h2>
+
+<p>This example project demonstrates how a query agent collocated with an inference agent in the same processing unit can interact with each other. You can open the project and run the example or you can implement the example yourself to familiarize yourself with the features. </p>
+
+<p>The remainder of this document explains the key points about the example project, and shows you how to run it.</p>
+
+<h2>Project Description</h2>
+
+<h3>Concepts and Events:</h3>
+
+<p>The project has a concept called Customer which is configured to use the cache-only mode. There is one timer event and a scorecard in the inference engine.</p>
+
+<h3>Sample Data Generation:</h3>
+
+<p>The timer event fires every 5 seconds. There are two simple rules (<code>CreateInitialCustomers</code> and <code>CreateAnotherCustomer</code>) that create customers everytime the timer fires.</p>
+
+<p>After the initial set of customers has been created, a new customer is created by the rule, triggered by subsequent timer events. In Select mode, the concepts are written to the cache and are never deleted. Note that the memory required to store these will increase over time.</p>
+
+<h3>Infererence Agent and Query Agent interaction</h3>
+
+<p>The CDD has been configured to start an inference agent as a seeder. This means that there is no need for a separate cache agent (for demonstration purposes only).</p>
+
+<p>The dynamic query session does not require any configuration in the CDD and it runs in the same process as the inference agent.</p>
+
+<p>When the timer event fires, a third rule (<code>ExecuteSelectInQueryAgent</code>) calls a query catalog function (<code>Query.Util.executeInDynamicQuerySession</code>) which executes in the context of the collocated query agent/session.</p>
+
+<pre class="commands">
+...
+
+String queryString =
+                     "select {limit: first 5} c" +
+                     " from /Concepts/Common/Customer as c" +
+                     " where c.age = 4" +
+                     " order by c@id desc;";
+
+Object resultList = Query.Util.executeInDynamicQuerySession(queryString, null, true, -1);
+
+while(Query.Util.sizeOfList(resultList) > 0){
+    Concepts.Common.Customer c = Query.Util.removeFromList(resultList, 0);
+
+    /*
+    Before modifying the concept retrieved from the query agent, inform the
+    inference that this came from a foreign source.
+    */
+    Cluster.DataGrid.CacheLoadEntity(c);
+
+    /*
+    Typically lock + query + load should be done in the pre-processor
+    after acquiring the necessary locks. So, we re-touch the instance
+    by using Instance.getById()
+    */
+    c = Instance.getById(c@id);
+}
+
+</pre>
+
+<p>When the <code>Query.Util.executeInDynamicQuerySession</code> call is made, the <code>ExecuteSelectInQueryAgent</code> rule function is executed synchronously, but in the context of the query session (agent). This function executes the snapshot query string that is provided as the parameter, and returns the results back to the caller.</p>
+
+<h3>Output</h3>
+<p>You will notice from the logs that the control switches to the query session from the inference session when the call is made. It then returns to the rule in the inference agent.</p>
+
+<p>For Coherence: If the <code>be.agent.query.enable.filter.optimizer</code> property is set to true in the query agent, then the index created on the <code>age</code> property will be used by the query optimizer to make the distributed cache filters run faster.</p>
+
+<p>For TIBCO DataGrid: If the <code>be.engine.cluster.as.tuple.explicit</code> property is set to true in the query agent, then the index created on the <code>age</code> property will be used by the query optimizer to make the distributed cache filters run faster.</p>
+
+<p>In order to verify that the concepts retrieved from the query are really being modified in the inference, the following simple, snapshot query may be executed in the BQL console, regularly.</p>
+
+<p>To launch a BQL console against the dynamic query session, the following property has to be added in the CDD <code>be.agent.query.console=be.agent.query.internal.dynamic</code>
+ along with BQL library JAR in the engine <code>/lib</code> directory. This will require an engine restart.</p>
+
+<h2>Deploy and Run the Project</h2>
+
+<p>The Query and Inference agents have been configured to run inside the same processing unit. They run in the same JVM. See <i>TIBCO BusinessEvents Administration</i> for details about cache cluster configuration.</p>
+
+<p>Build the EAR file using TIBCO BusinessEvents Studio. Change to the directory containing the project, the CDD and the EAR file that was generated.</p>
+
+<pre class="commands">
+cd BE_HOME/examples/event_stream_processing/CollocatedInferenceAndQuery/CollocatedInferenceAndQuery
+</pre>
+
+<p>Start the processing unit.</p>
+
+<pre class="commands">
+BE_HOME/bin/be-engine --propFile BE_HOME/bin/be-engine.tra -c Deployments/InferenceAndQuery.cdd -u default ../CollocatedInferenceAndQuery.ear
+</pre>
+
+<p>In this example, the query results retrieved by the inference agent (using the query agent) are printed to the console.</p>
+
+<p></p>
+
+<div class="footer">
+<p>TIBCO BusinessEvents&reg; 5.6<br />
+Copyright&copy; 2004-2019 TIBCO Software Inc. All rights reserved.</p>
+</div>
+</body>
+</html>

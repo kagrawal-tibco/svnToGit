@@ -1,0 +1,43 @@
+<div *ngIf='params'>
+  <div class='row'>
+    <div class='col-sm-12'>
+      <navigable-wizard
+        [params]='params'
+        [pages]='pages'
+        [position]='position'
+      ></navigable-wizard>
+    </div>
+  </div>
+  <div class='row left-pad right-pad bottom-pad top-pad'>
+    <div class='col-sm-6 text-left'>
+      <button 
+        type="button"
+        class='btn btn-outline-primary btn-sm btn-narrow'
+        (click)='onCancel()'
+        i18n >{{i18n('Cancel')}}</button>
+    </div>
+    <div class='col-sm-6 text-right'>
+      <button 
+        *ngIf='showPrev()'
+        [disabled]='!canPrev()'
+        type="button" 
+        class='btn btn-outline-primary btn-sm btn-narrow'
+        (click)='onPrev()'
+        i18n >{{i18n('Prev')}}</button>
+      <button 
+        *ngIf='showNext()'
+        [disabled]='!(params.canNextStep | async)'
+        type="button" 
+        class='btn btn-outline-primary btn-sm btn-narrow'
+        (click)='onNext()'
+        i18n>{{i18n('Next')}}</button>
+      <button 
+        *ngIf='showFinish()'
+        [disabled]='!(params.canFinish | async)'
+        type="button" 
+        class='btn btn-primary btn-sm btn-narrow'
+        (click)='onFinish()'
+        i18n>{{i18n('Deploy')}}</button>
+    </div>
+  </div>
+</div>

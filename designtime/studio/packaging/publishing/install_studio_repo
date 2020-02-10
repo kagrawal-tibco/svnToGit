@@ -1,0 +1,58 @@
+#! /bin/sh
+
+export BEHOME=%TIBCO_BE_HOME_ESC%
+export TIBCOHOME=%TIBCO_HOME_ESC%
+export EXECUTABLE=
+export INIFILE=
+
+export PATH=${TIBCOHOME}/tibcojre64/1.8.0/bin
+export CLASSPATH=${BEHOME}/eclipse-platform/eclipse/plugins/org.apache.ant_1.9.4.v201504302020/lib/ant.jar:${BEHOME}/eclipse-platform/eclipse/plugins/org.apache.ant_1.9.4.v201504302020/lib/ant-launcher.jar
+
+if [ -d ${TIBCOHOME}/tibcojre64/1.8.0 ]
+then 
+	export JAVA_HOME=${TIBCOHOME}/tibcojre64/1.8.0
+fi
+
+echo "###############BusinessEvents Studio Repository Installler###############"
+echo ""
+
+
+if [ $# !=  1 ]
+then 
+	echo "[USAGE]: install_studio_repo applicaton-path"
+	echo "Example: install_studio_repo /home/eclipse/eclipse"
+	echo ""
+	echo "Installation failed."
+	exit 127
+fi
+
+EXECUTABLE=${1}
+
+
+if [ ! -f ${EXECUTABLE} ]
+then
+	echo "File ${EXECUTABLE} does not exist."
+	echo "Installation failed."
+	exit 127
+fi
+echo "File ${EXECUTABLE} exists."
+echo ""
+
+INIFILE=${EXECUTABLE}.ini
+
+if [ ! -f ${INIFILE} ]
+then
+        echo "File ${INIFILE} does not exist.Please provide the ini file."
+        echo "Installation failed."
+        exit 127
+fi
+echo "File ${INIFILE} exists."
+echo ""
+
+echo "Installing...This may take few minutes."
+echo ""
+
+${JAVA_HOME}/bin/java org.apache.tools.ant.Main -buildfile install_studio_repo.xml -DappBinary=${EXECUTABLE} -DappIni=${INIFILE}
+
+exit 0
+

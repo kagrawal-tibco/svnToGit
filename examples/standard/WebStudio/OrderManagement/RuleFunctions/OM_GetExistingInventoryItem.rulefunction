@@ -1,0 +1,44 @@
+/**
+ * @description This function is used to get the item from inventory.
+ */
+Concepts.Item rulefunction RuleFunctions.OM_GetExistingInventoryItem {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String itemName;
+	}
+	body {			
+	
+			Concepts.Inventory inventory =Instance.getByExtId("OMS-INVENTORY");
+			
+			Concepts.Item inventoryItem=null;
+			
+			//Check whether the item exist in the inventory or not.If not then return null  else matched item.
+			if(null!=inventory)
+			{
+				Concepts.Item[] items = Instance.PropertyArray.toArrayConcept(inventory.items);	
+						
+				if(null!=items)
+				{
+					for(int index=0;index < items@length ;index++)
+					{
+					    
+						if(null!=items[index])
+						{
+							if(String.compareTo(items[index].name,itemName)==0) 
+						 		{
+						 	  		inventoryItem =items[index];
+						 	   		break;	
+						 		}
+						}
+					}
+				}		  
+			}			
+			else
+			{
+				System.debugOut("Inventory does not exist");
+			}
+		 return inventoryItem;	
+	}
+}

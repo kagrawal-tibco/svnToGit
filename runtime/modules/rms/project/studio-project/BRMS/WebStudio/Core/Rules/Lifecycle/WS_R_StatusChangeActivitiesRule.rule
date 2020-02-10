@@ -1,0 +1,112 @@
+/**
+ * @description Perform status changes for one or more committed artifact entries followed by any post status change activities.
+ * @author aathalye-T410
+ */
+rule WebStudio.Core.Rules.Lifecycle.WS_R_StatusChangeActivitiesRule {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		WebStudio.Core.Events.Lifecycle.WS_E_CommittableStatusChangeRequestEvent committableStatusChangeRequestEvent;
+	}
+	when {
+		committableStatusChangeRequestEvent@payload != null;
+	}
+	then {
+		Object LOGGER = Log.getLogger("WebStudio.Core.Rules.Lifecycle.WS_R_StatusChangeActivitiesRule");
+		int responseStatus = 0;
+		String responseMessage = null;
+		String errorCode = null;
+		
+		WS_C_StatusChangeRequest statusChangeRequest = 
+			Instance.createTransientInstanceFromEvent("/WebStudio/Core/Concepts/Request/Usecases/Lifecycle/Review/WS_C_StatusChangeRequest", committableStatusChangeRequestEvent);
+		WS_C_StatusChangeRequestData requestContainedData = statusChangeRequest.data;
+		//Get revisions in it
+		WS_C_StatusChangeWorklist[] worklistsData = Instance.PropertyArray.toArrayContainedConcept(requestContainedData.worklist);
+		
+		Log.log(LOGGER, "Debug", "Number of worklists found in a status change request [%s]", worklistsData@length);
+		
+		String loggedInUsername = committableStatusChangeRequestEvent.username;
+		String stackID = loggedInUsername + "@STATE_CHANGE_ITEMS_" + System.nanoTime();
+		Object stateChangeItemsStack = WS.Common.Stack.create(stackID);
+		
+		boolean validationProblems = false;
+		String responseDSXML = null;
+		String reviewTaskExtId = null;
+		
+		for (int worklistLoop = 0; worklistLoop < worklistsData@length; worklistLoop++) {
+			WS_C_StatusChangeWorklist worklistData = worklistsData[worklistLoop];
+			reviewTaskExtId = WS_RF_CreateUserArtifactExtId(worklistData.revisionId, null, null, null, committableStatusChangeRequestEvent.subscriptionId, null);
+			Log.log(LOGGER, "Debug", "Revision Id [%s]", reviewTaskExtId);
+			//Lock and load this
+			boolean revisionIdLock = Cluster.DataGrid.Lock(reviewTaskExtId, -1, false);
+			if (revisionIdLock) {
+				WS_C_AbstractReviewTask reviewTask = Instance.getByExtIdByUri(reviewTaskExtId, "/WebStudio/Core/Concepts/Lifecycle/WS_C_ReviewTask");
+				//Get checkin id
+				WS_C_UserCheckin referencedCheckin = Instance.getByExtIdByUri(reviewTask.referencedCheckinId, "/WebStudio/Core/Concepts/Lifecycle/WS_C_UserCheckin");
+				String[] roles = String.split(committableStatusChangeRequestEvent.roleString, ",");
+				boolean hasAccess = RMS.Authorization.ensureAccess(referencedCheckin.managedProjectName, committableStatusChangeRequestEvent.subscriptionId, roles, null, "PROJECT", "approval");
+				if (hasAccess) {
+				  try {
+					WS_C_AnyArtifactDetails[] validationResponse = WS_RF_CheckForBuildAndDeployValidation(loggedInUsername, referencedCheckin, worklistData);
+					if (validationResponse@length > 0) {
+						validationProblems = true;
+						responseStatus = -1;
+						responseDSXML = WebStudio.
+								Core.
+									RuleFunctions.
+										Utils.WS_RF_BuildValidateResponse(validationResponse, responseStatus, validationResponse@length, errorCode, responseMessage, committableStatusChangeRequestEvent.contentType);		
+						Log.log(LOGGER,"debug","Response Message : [%s]",responseMessage);
+						
+						// caveat being, if all problems are warnings then build and deploy can still go through
+						if (!WS_RF_CheckIfErrorsExist(validationResponse)) {
+							WS_RF_PerformStatusChangeInWSForWS(loggedInUsername, referencedCheckin, worklistData, stateChangeItemsStack);
+						}
+					} else {
+						WS_RF_PerformStatusChangeInWSForWS(loggedInUsername, referencedCheckin, worklistData, stateChangeItemsStack);
+					}
+				  } catch (Exception e) {
+					Log.logException(LOGGER, "Error", "Exception during status change", e);
+					responseStatus = -1;
+					responseMessage = e@message;
+					errorCode = "ERR_1505";
+					break;
+				 }
+			   }else{
+			   	    responseStatus = -1;
+					responseMessage = "Access denied to user to approve the changes as do not have approval permission";
+					break;
+			   }
+				
+			}	
+		}
+		
+		//Get the array of entries
+		WS_C_CommittableDeltaEntry[] stateChangeEntries = 
+			WS.Common.Stack.toArray(stateChangeItemsStack, "be.gen.WebStudio.Core.Concepts.Lifecycle.WS_C_CommittableDeltaEntry", "com.tibco.cep.runtime.service.loader.BEClassLoader");
+		//clear the stack
+		WS.Common.Stack.delete(stackID);
+		
+		Object asyncContext = Util.HashMap.getObject(committableStatusChangeRequestEvent.mapLockKey, committableStatusChangeRequestEvent.asyncContextId);
+				
+		//Send state change notification
+		WS_RF_SendStateChangeNotification(loggedInUsername, stateChangeEntries, asyncContext);
+		
+		//Clear it
+		Util.HashMap.removeObject(committableStatusChangeRequestEvent.mapLockKey, committableStatusChangeRequestEvent.asyncContextId);
+		Util.HashMap.deleteMap(committableStatusChangeRequestEvent.mapLockKey);
+		
+		if (!validationProblems) {
+			WS_C_ResponseData responseData = 
+				Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/WS_C_ResponseData");
+			
+			responseDSXML = WS_RF_CreateAndSerializeResponseDataSource(responseStatus, 0, errorCode, responseMessage, responseData, committableStatusChangeRequestEvent.contentType);
+		}
+		Object servletResponse = HTTP.Servlet.getServletResponse(asyncContext);
+		
+		Log.log(LOGGER, "Debug", "Response DS XML %s", responseDSXML);
+		HTTP.Servlet.Response.setResponseHeader(servletResponse, "Content-type", committableStatusChangeRequestEvent.contentType + ";charset=utf-8");	    										
+		HTTP.Servlet.Response.setResponseContent(asyncContext, responseDSXML, true);	
+	}
+}

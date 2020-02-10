@@ -1,0 +1,70 @@
+/**
+ * @description Create command info and related hierarchy for RT builder.
+ */
+void rulefunction WebStudio.Core.RuleFunctions.Utils.RT.Builder.WS_RF_CreateBuilderCommandHierarchy {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String scsIntegrationType;
+		String scsRootURL;
+		String projectName;
+		Object ruleTemplateObject;
+		WebStudio.Core.Concepts.RuleTemplateInstance.Builder.WS_C_RuleTemplateInstanceBuilder ruleTemplateInstanceBuilder;
+		String username;
+		String[] roles;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.WS_RF_CreateBuilderCommandHierarchy");
+		
+		String subscriptionId = WS_RF_GetSubscriptionId(username);
+		
+		//Get all command
+		Object[] actionSymbols = WS.RT.Builder.getBuilderCommands(ruleTemplateObject);
+		
+		WS_C_Commands commands = 
+			Instance.newInstance("/WebStudio/Core/Concepts/RuleTemplateInstance/Builder/WS_C_Commands", null);
+		for (int loop = 0; loop < actionSymbols@length; loop++) {
+			WS_C_CommandInfo commandInfo = 
+				Instance.newInstance("/WebStudio/Core/Concepts/RuleTemplateInstance/Builder/WS_C_CommandInfo", null);
+			Object actionSymbol = actionSymbols[loop];
+			
+			String commandAlias = WS.RT.Builder.getCommandAlias(actionSymbol);
+			Log.log(LOGGER, "Debug", "Command Alias %s", commandAlias);
+			String commandType = WS.RT.Builder.getCommandType(null, scsRootURL, projectName, actionSymbol, WS_RF_GetEarPath(projectName, subscriptionId));
+			if (commandType == null) {
+				Log.log(LOGGER, "Debug", "Command Type not found for alias %s. Resolving from declaration", commandAlias);
+				commandType = WS_RF_ResolveSymbolType(scsIntegrationType, scsRootURL, projectName, commandAlias, ruleTemplateObject, subscriptionId);
+			}
+			String commandActionType = WS.RT.Builder.getCommandActionType(actionSymbol); 
+			Log.log(LOGGER, "Debug", "Command Action Type %s", commandActionType);
+			
+			if (!String.equals("modify", commandActionType)) {			
+				//Check if this symbol has not been traversed.
+				Object integer = Util.HashMap.getObject("SYMBOL_TYPES", commandType);
+				//If no null, this entry has ben processed.
+				if (integer == null) {
+					//Build its hierarchy inside
+					WS_C_Symbols symbols = 
+						Instance.newInstance("/WebStudio/Core/Concepts/RuleTemplateInstance/Builder/WS_C_Symbols", null);
+		
+					Instance.PropertyAtom.setConceptReference(commandInfo.symbols, symbols, 1L);
+				
+					Log.log(LOGGER, "Info", "Processing previously unprocessed command symbol %s", commandType);
+					WS_RF_TraverseAndBuildSymbolHierarchy(scsIntegrationType, scsRootURL, projectName, actionSymbol, ruleTemplateObject, symbols, true, username, roles, subscriptionId);
+				}
+			}
+								
+			Log.log(LOGGER, "Debug", "Command Type %s", commandType);
+			
+			commandInfo.commandAlias = commandAlias;
+			commandInfo.type = commandType;
+			commandInfo.actionType = commandActionType;
+			
+			//Append it
+			Instance.PropertyArray.appendConceptReference(commands.commandInfo, commandInfo, 1L);
+		}
+		//Append this to base builder
+		Instance.PropertyAtom.setContainedConcept(ruleTemplateInstanceBuilder.commands, commands, 1L);			 
+	}
+}

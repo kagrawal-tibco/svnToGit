@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="ASCII"?>
+<beviewsconfig:ChartComponent xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:beviewsconfig="http://www.tibco.com/be/designer" xmlns:designtime="http:///com/tibco/cep/designtime/core/model/designtime_ontology.ecore" namespace="/Dashboards/" folder="/Dashboards/" name="SampleChart" description="" GUID="2BF68EBD-9663-E874-A2EE-EE00A80FEE1D" ownerProjectName="SampleDashboard" version="1260999776458" displayName="Sample" helpText="Sample Chart" componentColorSetIndex="0" seriesColorIndex="0">
+  <extendedProperties>
+    <properties xsi:type="designtime:SimpleProperty" name="Category">
+      <extendedProperties>
+        <properties xsi:type="designtime:SimpleProperty" name="Value1"/>
+        <properties xsi:type="designtime:SimpleProperty" name="Value2"/>
+        <properties xsi:type="designtime:SimpleProperty" name="Value3"/>
+        <properties xsi:type="designtime:SimpleProperty" name="Value4"/>
+      </extendedProperties>
+    </properties>
+    <properties xsi:type="designtime:SimpleProperty" name="MaxValue" value="100.0"/>
+    <properties xsi:type="designtime:SimpleProperty" name="MinValue" value="1.0"/>
+  </extendedProperties>
+  <visualization xsi:type="beviewsconfig:BarChartVisualization" namespace="/Dashboards/" folder="/Dashboards/" name="TCV_" description="" GUID="60B7DCF9-8836-C8B7-99BD-509E94EE0756" ownerProjectName="SampleDashboard" version="1260999776458" width="10" topCapThickness="0.5" overlapPercentage="0" orientation="horizontal">
+    <seriesConfig xsi:type="beviewsconfig:ChartSeriesConfig" namespace="/Dashboards/" folder="/Dashboards/" name="Sample" description="" GUID="CA2CAF97-AE29-3079-A41A-9BD200B0BAF4" ownerProjectName="SampleDashboard" version="1260999776458" anchor="Q1">
+      <actionRule namespace="/Dashboards/" folder="/Dashboards/" name="Series__AR" description="" GUID="F44F393D-2DFF-8474-8FD3-FFDD2FB58494" ownerProjectName="SampleDashboard" version="1260999776473" threshold="0" thresholdUnit="count">
+        <dataSource href="M1DataSource.datasource#/"/>
+        <alert xsi:type="beviewsconfig:RangeAlert" namespace="/Dashboards/" folder="/Dashboards/" name="Normal" description="" GUID="B4A27C41-0711-64D6-B73F-E053553140C2" ownerProjectName="SampleDashboard" version="1260999776473" enabled="true" lowerValue="0.0" upperValue="50.0">
+          <action xsi:type="beviewsconfig:VisualAlertAction" namespace="/Dashboards/" folder="/Dashboards/" name="A_" description="" GUID="9AD8B232-3EFF-FF9C-4C34-B896895CCD38" ownerProjectName="SampleDashboard" version="1260999776473" fillColor="00FF00" fontSize="10" fontStyle="normal" fontColor="000000"/>
+        </alert>
+        <alert xsi:type="beviewsconfig:RangeAlert" namespace="/Dashboards/" folder="/Dashboards/" name="Warning" description="" GUID="22E5ED9E-CD59-AB74-A7BE-E1888132B141" ownerProjectName="SampleDashboard" version="1260999776473" enabled="true" lowerValue="51.0" upperValue="75.0">
+          <action xsi:type="beviewsconfig:VisualAlertAction" namespace="/Dashboards/" folder="/Dashboards/" name="A_" description="" GUID="992A1A7E-919C-D102-A0F7-107CA2691C85" ownerProjectName="SampleDashboard" version="1260999776473" enabled="true" fillColor="FF8000" fontSize="10" fontStyle="normal" fontColor="000000"/>
+        </alert>
+        <alert xsi:type="beviewsconfig:RangeAlert" namespace="/Dashboards/" folder="/Dashboards/" name="Error" description="" GUID="C6007041-55BA-8586-60C3-3FAB17E847A3" ownerProjectName="SampleDashboard" version="1260999776473" enabled="true" lowerValue="76.0" upperValue="150.0">
+          <action xsi:type="beviewsconfig:VisualAlertAction" namespace="/Dashboards/" folder="/Dashboards/" name="A_" description="" GUID="306A245E-E2C9-4F8D-05DC-3741919308A5" ownerProjectName="SampleDashboard" version="1260999776473" enabled="true" fillColor="ff0000" fontSize="10" fontStyle="normal" fontColor="000000"/>
+        </alert>
+      </actionRule>
+      <valueDataConfig xsi:type="beviewsconfig:ChartValueDataConfig">
+        <extractor>
+          <sourceField href="M1.metric#//@properties.3"/>
+        </extractor>
+        <formatter xsi:type="beviewsconfig:TextFieldFormat" toolTipFormat="{GF1}={AVG}" displayFormat="{AVG}" showLabel="true">
+          <formatStyle fontSize="10" fontStyle="normal"/>
+        </formatter>
+      </valueDataConfig>
+      <categoryDataConfig xsi:type="beviewsconfig:ChartCategoryDataConfig">
+        <extractor>
+          <sourceField href="M1.metric#//@properties.2"/>
+        </extractor>
+        <formatter xsi:type="beviewsconfig:TextFieldFormat" displayFormat="{GF1}"/>
+      </categoryDataConfig>
+    </seriesConfig>
+  </visualization>
+  <layoutConstraint xsi:type="beviewsconfig:FlowLayoutConstraint" componentRowSpan="1" componentColSpan="1"/>
+  <plotArea>
+    <foreground line="both"/>
+  </plotArea>
+  <legend orientation="horizontal" anchor="north"/>
+  <categoryGuidelineConfig headerName="Category" sortOrder="unsorted">
+    <headerFormatStyle fontSize="10" fontStyle="normal"/>
+    <labelFormatStyle fontSize="10" fontStyle="normal"/>
+  </categoryGuidelineConfig>
+  <valueGuidelineConfig headerName="Value" scale="normal" division="5">
+    <headerFormatStyle fontSize="10" fontStyle="normal"/>
+    <labelFormatStyle fontSize="10" fontStyle="normal"/>
+  </valueGuidelineConfig>
+</beviewsconfig:ChartComponent>

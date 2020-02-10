@@ -1,0 +1,26 @@
+/**
+ * @description 
+ * @author 
+ */
+rule Rules.RuleSet.Applicant_Rule {
+	attribute {
+		priority = 1;
+		forwardChain = true;
+	}
+	declare {
+		Events.ApplicationReceived	applicationreceived;
+		Concepts.Applicant        applicant;
+	}
+	when {
+		applicant.Name == applicationreceived.ApplicantName;
+	}
+	then {
+		Object[] arguments = {applicant, applicationreceived};
+		VRF.invokeVRFImplByName("/Virtual_RF/Applicant_VirtualRuleFunction", "Applicant_Simple", arguments);
+
+		// Use this for different configurations
+//		VRF.invokeVRFImplByName("/Virtual_RF/Applicant_VirtualRuleFunction", "Applicant", arguments);
+		
+		System.debugOut("Status[" + applicant.Status + "], Eligible[" + applicant.Eligible + "] & CreditLimit[" + applicant.CreditLimit + "]");
+	}
+}

@@ -1,0 +1,43 @@
+/**
+ * @description Write Artifact Contents to Disk
+ */
+void rulefunction Approval.Rules.RuleFunctions.ArtifactRuleFunctions.AMS_RF_SaveArtifactContents {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Approval.Concepts.ArtifactsConcepts.AMS_C_ArtifactCommited ams_c_artifactcommited;
+		//The path of the root directory to write contents to.
+		//This will be same as request id.
+		String folderPath;
+	}
+	body {
+		//Get contents
+		String compressedContents = ams_c_artifactcommited.artifactContent;
+		//This will be base64 encoded so decode it first
+		//Uncompress this
+		try {
+			Object deflatedBytes = RMS.Util.decodeBase64(compressedContents);
+			Object inflatedBytes = RMS.Util.decompressBytes(deflatedBytes);
+			
+			String artifactPath = ams_c_artifactcommited.artifactPath;
+			String extension = ams_c_artifactcommited.artifactFileExtension;
+			
+			boolean created = File.createFolders(folderPath, artifactPath);
+			
+			if (created) {
+				String absolutePath = folderPath + artifactPath + "." + extension;
+				Object fileWriter = File.openFile(absolutePath, "rw");
+				
+				if (fileWriter != null) {
+					File.fileWriteBytes(fileWriter, inflatedBytes);
+					File.fileClose(fileWriter);
+				}
+			}
+		} catch (Exception exception) {
+			System.debugOut(exception@stackTrace);
+			Exception e = Exception.newException("SAVE_ERROR", exception@message, exception);
+			throw e;
+		}	
+	}
+}

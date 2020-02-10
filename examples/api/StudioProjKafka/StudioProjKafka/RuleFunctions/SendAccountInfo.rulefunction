@@ -1,0 +1,17 @@
+/**
+ * @description 
+ */
+void rulefunction RuleFunctions.SendAccountInfo {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		
+	}
+	body {
+		Concepts.Customer customer = Concepts.Customer.Customer("1","Jon","Doe",35);
+		Events.CreateAccount createAccount = Event.createEvent("xslt://{{/Events/CreateAccount}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" xmlns:tns=\"www.tibco.com/be/ontology/Concepts/Customer\" version=\"2.0\"><xsl:param name=\"customer\"/><xsl:template name=\"Function\" match=\"/\"><createEvent><event><payload><tns:Customer><xsl:if test=\"$customer/@extId\"><xsl:attribute name=\"extId\"><xsl:value-of select=\"$customer/@extId\"/></xsl:attribute></xsl:if><xsl:if test=\"$customer/@Id\"><xsl:attribute name=\"Id\"><xsl:value-of select=\"$customer/@Id\"/></xsl:attribute></xsl:if><xsl:if test=\"$customer/firstName\"><firstName><xsl:value-of select=\"$customer/firstName\"/></firstName></xsl:if><xsl:if test=\"$customer/lastName\"><lastName><xsl:value-of select=\"$customer/lastName\"/></lastName></xsl:if><xsl:if test=\"$customer/age\"><age><xsl:value-of select=\"$customer/age\"/></age></xsl:if></tns:Customer></payload></event></createEvent></xsl:template></xsl:stylesheet>");
+		createAccount.accountType = "savings";
+		Event.sendEvent(createAccount);
+	}
+}

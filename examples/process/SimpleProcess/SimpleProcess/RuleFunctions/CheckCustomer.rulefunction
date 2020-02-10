@@ -1,0 +1,16 @@
+/**
+ * @description Checks if the customer exists
+ */
+boolean rulefunction RuleFunctions.CheckCustomer {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Concepts.Order o;
+	}
+	body {
+		System.debugOut("#### Checking customer...");
+		Concepts.Customer c = Instance.getByExtId(o.name);
+		return c != null;
+	}
+}

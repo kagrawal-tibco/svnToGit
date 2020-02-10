@@ -1,0 +1,79 @@
+/**
+ * @description 
+ * @author 
+ */
+rule Shared.Rules.TopologyRuleSet.OnExecuteCommandEvent_ValidToken {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		
+		
+		Shared.Events.topology.ExecuteCommandEvent executecommandevent;
+	}
+	when {
+		executecommandevent.token != null && String.length(executecommandevent.token) != 0;
+	}
+	then {
+		String family = "OnExecuteCommandEvent";
+		String methodFQName ="";
+		String entityType="";
+		String monitoredEntityName ="";
+		String machine_name="";
+		
+		try {
+            Shared.RuleFunctions.log(family,"DEBUG","Rule " + family + " fired");
+            Shared.RuleFunctions.log(family,"DEBUG","TOKEN: " + executecommandevent.token);
+
+            Shared.Concepts.LoggedInUser user = Instance.getByExtId(executecommandevent.token);
+
+            if (user == null) {
+                Shared.Events.reqres.FailureResponseEvent event = Shared.Events.reqres.FailureResponseEvent.FailureResponseEvent(null,null,"001","Invalid token: " + executecommandevent.token);
+                Event.replyEvent(executecommandevent, event);
+			    Event.consumeEvent(executecommandevent);
+                return;
+            }
+
+			String m_extid = executecommandevent.monitorableid;
+			Shared.Concepts.MonitorableEntity machine = Instance.getByExtId(m_extid);
+
+			if (machine == null) {
+				String warnMsg = "Monitorable object associated with the machine with monitorable id '" + m_extid + "' is NULL. Machine NOT FOUND!";
+			    Shared.RuleFunctions.log(family,"WARN",warnMsg);
+			    Shared.Events.reqres.FailureResponseEvent event = Shared.Events.reqres.FailureResponseEvent.FailureResponseEvent(null,null,"001",warnMsg);
+			    Event.replyEvent(executecommandevent, event);
+			    Event.consumeEvent(executecommandevent);
+			    return;
+			}
+			else {
+				entityType = machine.type;
+				methodFQName = "/"+entityType + "/executeCommand";
+				monitoredEntityName = getFQName(machine);
+				Shared.RuleFunctions.log(family,"DEBUG","MonitorableEntity ID: " + m_extid);
+
+				if(machine.predefined == false){
+					String warnMsg = "Execute commands is only available for hosts that are predefined in a site topology file. '" + machine.name + "' is not predefined.";
+					Shared.RuleFunctions.log(family,"WARN",warnMsg);
+				    Shared.Events.reqres.FailureResponseEvent event = Shared.Events.reqres.FailureResponseEvent.FailureResponseEvent(null,null,"001",warnMsg);
+				    Event.replyEvent(executecommandevent, event);
+				    Event.consumeEvent(executecommandevent);
+				    return;
+				}
+				machine_name = machine.topologyProps[1];
+				Shared.RuleFunctions.log(family,"DEBUG","Executing commmand on host: " + machine_name);
+				
+				String result = BEMM.topology.executeCommand(machine_name,executecommandevent.command,executecommandevent.username,
+													executecommandevent.password,executecommandevent.uiUserName,executecommandevent.uiPwd);
+
+				Shared.Events.reqres.SuccessXMLResponseEvent event = Shared.Events.reqres.SuccessXMLResponseEvent.SuccessXMLResponseEvent(null,result);
+				Event.replyEvent(executecommandevent, event);
+			} 
+		} catch (Exception e) {
+			Management.RuleFunctions.Exceptions.printAndSendException(e /*Except Object */,
+									family/*family String */,methodFQName/*methodFQName String */,
+									monitoredEntityName /*monitoredEntityName String */,executecommandevent/*requestevent Event */);
+		}
+		Event.consumeEvent(executecommandevent);
+	}
+}

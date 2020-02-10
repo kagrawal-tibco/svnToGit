@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Container xmlns:mx="http://www.adobe.com/2006/mxml">
+	<mx:Script>
+		<![CDATA[
+			
+			override protected function updateDisplayList(unscaledWidth:Number, unscaledHeight:Number):void{
+				draw(unscaledWidth, unscaledHeight);
+			}
+			
+			private function draw(width:int, height:int):void{
+				var m:Matrix = new Matrix();
+				m.createGradientBox(width, height, Math.PI/2, 0, 0);
+				graphics.clear();
+				graphics.beginGradientFill(
+					GradientType.LINEAR,
+					[0xEBEBEB, 0xE1E1E1],
+					[1, 1],
+					[0x00, 0xFF],
+					m
+				);
+				graphics.drawRect(0, 0, width, height);
+				graphics.endFill();
+			}
+			
+		]]>
+	</mx:Script>
+</mx:Container>

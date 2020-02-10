@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Application
+	xmlns:mx="http://www.adobe.com/2006/mxml" 
+	layout="horizontal" 
+	styleName="globalStyle" 
+	creationComplete="init()" 
+	verticalAlign="middle" horizontalAlign="center"
+	paddingBottom="0" paddingTop="0"
+	paddingLeft="0" paddingRight="0"
+>
+	<mx:Script>
+		<![CDATA[
+			import mx.utils.StringUtil;
+			private var _controller:BEViewsController;
+				public function addBorderSides(sidesToAdd:String):void{
+				var sides:Array = sidesToAdd.split(" ");
+				var currentSides:Array = String(_content.getStyle("borderSides")).split(" ");
+				currentSides = currentSides.concat(sides);
+				currentSides = currentSides.filter(
+					function(element:*, index:int, arr:Array):Boolean{
+						return currentSides.indexOf(element) == index;
+					}
+				);
+				var sidesToSet:String = StringUtil.trim(currentSides.join(" "));
+				_content.setStyle("borderSides", currentSides.join(" "));
+			}
+			
+			public function removeBorderSides(sidesToRemove:String):void{
+				var sides:Array = sidesToRemove.split(" ");
+				var currentSides:Array = String(_content.getStyle("borderSides")).split(" ");
+				currentSides = currentSides.filter(
+					function(element:*, index:int, arr:Array):Boolean{
+						return sides.indexOf(element) < 0;
+					}
+				);
+				var sidesToSet:String = StringUtil.trim(currentSides.join(" "));
+				_content.setStyle("borderSides", currentSides.join(" "));
+			}
+			
+		]]>
+	</mx:Script>
+	<mx:HBox borderColor="black" width="400" height="400" verticalAlign="middle" horizontalAlign="center" backgroundColor="gray">
+		<mx:HBox id="_content" borderStyle="solid" borderThickness="2" borderColor="yellow" width="200" height="200" verticalAlign="middle" backgroundColor="green" borderSides=""/>
+	</mx:HBox>
+	<mx:VBox>
+		<mx:TextInput id="sidesInput" />
+		<mx:HBox>
+			<mx:Button label="add" click="addBorderSides(sidesInput.text)" />
+			<mx:Button label="remove" click="removeBorderSides(sidesInput.text)" />
+		</mx:HBox>
+	</mx:VBox>
+</mx:Application>

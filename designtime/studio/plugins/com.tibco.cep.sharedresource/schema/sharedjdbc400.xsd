@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+
+<xsd:schema
+        targetNamespace="http://tibco.com/be/shared/jdbc400"
+        xmlns:bt="http://tibco.com/be/shared/basetypes"
+        xmlns:tns="http://tibco.com/be/shared/jdbc400"
+        xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+    <xsd:import schemaLocation="basetypes.xsd"
+                namespace="http://tibco.com/be/shared/basetypes"/>
+
+    <xsd:element name="Configuration" type="tns:Configuration-type"/>
+	<xsd:element name="ConnectionType" type="xsd:string"/>
+    <xsd:element name="Connection-Jdbc" type="tns:Connection-Jdbc-type"/>    
+    <xsd:element name="Connection-Jndi" type="tns:Connection-Jndi-type"/>
+    <xsd:element name="Connection-Xa" type="tns:Connection-Xa-type"/>    
+	<xsd:element name="ContextFactory" type="xsd:string"/>
+	<xsd:element name="Description" type="xsd:string"/>
+	<xsd:element name="Driver" type="xsd:string"/>
+    <xsd:element name="General" type="tns:General-type"/>
+    <xsd:element name="Jdbc" type="tns:Jdbc-type"/>
+	<xsd:element name="JndiDataSourceName" type="xsd:string"/>
+	<xsd:element name="Location" type="xsd:string"/>
+	<xsd:element name="LoginTimeout" type="xsd:string"/>
+    <xsd:element name="MaxConnections" type="xsd:string"/>
+    <xsd:element name="Name" type="xsd:string"/>
+	<xsd:element name="Password" type="xsd:string"/>
+	<xsd:element name="ProviderUrl" type="xsd:string"/>
+	<xsd:element name="ResourceType" type="xsd:string"/>
+	<xsd:element name="SecurityCredentials" type="xsd:string"/>
+	<xsd:element name="SecurityPrincipal" type="xsd:string"/>
+	<xsd:element name="User" type="xsd:string"/>
+	<xsd:element name="UseSharedJndiConfig" type="bt:booleanOrGVs"/>
+	<xsd:element name="XaDsClass" type="xsd:string"/>
+
+    <xsd:complexType name="Jdbc-type">
+        <xsd:sequence>
+            <xsd:element ref="tns:General"/>
+            <xsd:element ref="tns:Configuration"/>
+        </xsd:sequence>
+    </xsd:complexType>
+
+    <xsd:complexType name="General-type">
+        <xsd:sequence>
+            <xsd:element ref="tns:Name"/>
+			<xsd:element ref="tns:Description"/>
+            <xsd:element ref="tns:ResourceType"/>
+        </xsd:sequence>
+    </xsd:complexType>
+    
+	<xsd:complexType name="Configuration-type">
+        <xsd:sequence>
+			<xsd:choice>
+                <xsd:element ref="tns:Connection-Jdbc"/>
+                <xsd:element ref="tns:Connection-Jndi"/>
+                <xsd:element ref="tns:Connection-Xa"/>
+            </xsd:choice>
+		</xsd:sequence>			        
+    </xsd:complexType>
+    
+	<xsd:complexType name="Connection-Jdbc-type">
+        <xsd:sequence>
+            <xsd:element ref="tns:Driver"/>
+            <xsd:element ref="tns:Location"/>            
+            <xsd:element ref="tns:MaxConnections"/>
+            <xsd:element ref="tns:User"/>
+            <xsd:element ref="tns:Password"/>
+            <xsd:element ref="tns:LoginTimeout"/>
+		</xsd:sequence>
+	</xsd:complexType>
+
+	<xsd:complexType name="Connection-Jndi-type">
+        <xsd:sequence>
+            <xsd:element ref="tns:UseSharedJndiConfig"/>
+            <xsd:element ref="tns:ContextFactory"/>
+            <xsd:element ref="tns:ProviderUrl"/>
+            <xsd:element ref="tns:SecurityPrincipal"/>
+            <xsd:element ref="tns:SecurityCredentials"/>
+            <xsd:element ref="tns:JndiDataSourceName"/>
+		</xsd:sequence>
+	</xsd:complexType>
+
+	<xsd:complexType name="Connection-Xa-type">
+        <xsd:sequence>
+			<xsd:element ref="tns:XaDsClass"/>
+            <xsd:element ref="tns:Location"/>            
+            <xsd:element ref="tns:MaxConnections"/>
+            <xsd:element ref="tns:User"/>
+            <xsd:element ref="tns:Password"/>
+		</xsd:sequence>
+	</xsd:complexType>
+    
+</xsd:schema>
+

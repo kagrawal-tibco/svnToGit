@@ -1,0 +1,196 @@
+<div *ngIf='!showBEUI()' class="row">
+  <div class="col-sm-12">
+    <div class="card">
+      <div class="card-header" i18n>{{i18n('
+        Preferences
+        ')}}</div>
+      <div *ngIf='!showBEUI()' class='preference-container'>
+        <div class='row'>
+          <div class='col-sm-12'>
+            <div class='preference-entry divider-bottom'>
+              <mat-slide-toggle color="primary">
+                <p i18n>{{i18n('Only display checked out artifacts in Project Explorer')}}</p>
+              </mat-slide-toggle> 
+
+              <!-- <toggle-switch
+                [size]='"mini"'
+                [(value)]='onlyDisplayCheckedOutArtifacts'></toggle-switch> -->
+            </div>
+          </div>
+        </div>
+        <div class='row'>
+          <div class='col-sm-12'>
+            <div class='preference-entry divider-bottom'>
+                <mat-slide-toggle [(ngModel)]="showDiff" color="primary">
+                    <p i18n>{{i18n('Always highlight differences in Artifact Editor')}}</p>
+                </mat-slide-toggle> 
+
+              <!-- <p i18n>{{i18n('Always highlight differences in Artifact Editor')}}</p>
+              <toggle-switch
+                [size]='"mini"'
+                [(value)]='showDiff'></toggle-switch> -->
+            </div>
+          </div>
+        </div>
+        <div class='row'>
+          <div class='col-sm-12'>
+            <div class='preference-entry divider-bottom'>
+                <mat-slide-toggle [(ngModel)]="autoArtifactValidation" color="primary">
+                    <p i18n>{{i18n('Automatically validate artifacts when saving changes')}}</p>
+              </mat-slide-toggle> 
+              <!-- <p i18n>{{i18n('Automatically validate artifacts when saving changes')}}</p>
+              <toggle-switch
+                [size]='"mini"'
+                [(value)]='autoArtifactValidation'></toggle-switch> -->
+            </div>
+          </div>
+        </div>
+        <div class='row'>
+          <div class='col-sm-12'>
+            <div class='preference-entry divider-bottom'>
+                <mat-slide-toggle [(ngModel)]="showEmptyFolders" color="primary">
+                    <p i18n>{{i18n('Show empty folders when filtering artifacts')}}</p>
+            </mat-slide-toggle> 
+
+              <!-- <p i18n>{{i18n('Show empty folders when filtering artifacts')}}</p>
+              <toggle-switch
+                [size]='"mini"'
+                [(value)]='showEmptyFolders'></toggle-switch> -->
+            </div>
+          </div>
+        </div>
+        <div class='row'>
+          <div class='col-sm-12'>
+            <div class='preference-entry'>
+                <mat-slide-toggle [(ngModel)]="displayWorklistNotifications" color="primary">
+                    <p i18n>{{i18n('Display notifications when work list items have changed status')}}</p>
+            </mat-slide-toggle> 
+
+              <!-- <p i18n>{{i18n('Display notifications when work list items have changed status')}}</p>
+              <toggle-switch
+                [size]='"mini"'
+                [(value)]='displayWorklistNotifications'></toggle-switch> -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div  *ngIf='showBEUI()' class="slide-content">
+  <mat-grid-list cols="3" gutterSize='12.5px' rowHeight="2:1">
+    <mat-grid-tile colspan='3'>
+        <div class='full-top'>
+            <h6 mat-subheader i18n>
+              {{i18n('Preferences')}}
+              </h6>
+            <mat-divider class="custom-divider"></mat-divider>
+    
+            <mat-form-field>
+              <input 
+                type="number" 
+                name="recentlyOpenedArtifactLimit" 
+                matInput autocomplete="false" 
+                [formControl]="recentlyOpenedItemsFormControl"  
+                placeholder="{{i18n('Number of recently opened items')}}"
+                i18n-placeholder 
+                [errorStateMatcher]="this.errorStateMatcher">
+              <mat-error *ngIf="recentlyOpenedItemsFormControl.hasError('required')" [innerHTML]="getMessage('required')">
+                  
+              </mat-error>
+              <mat-error *ngIf="recentlyOpenedItemsFormControl.hasError('min')" [innerHTML]="getMessage('min')">
+                
+              </mat-error>
+              <mat-error *ngIf="recentlyOpenedItemsFormControl.hasError('max')" [innerHTML]="getMessage('max')">
+                
+              </mat-error>
+            </mat-form-field>
+          
+            <mat-form-field *ngIf="!this.showTCEUI()">
+              <input 
+                type="text" 
+                name="scsUserName" 
+                matInput 
+                autocomplete="false" 
+                [(ngModel)]="form.scsUserName" 
+                autocomplete="false" 
+                placeholder="{{i18n('SCS User Name')}}" i18n-placeholder>
+            </mat-form-field>
+          
+            <mat-form-field *ngIf="!this.showTCEUI()">
+              <input type="password" name="scsUserPassword" matInput autocomplete="false" [(ngModel)]="form.scsUserPassword" #scsUserPassword="ngModel"
+                placeholder="{{i18n('SCS User Password')}}" i18n-placeholder>
+            </mat-form-field>
+            
+            <mat-form-field>
+              <mat-select name='itemView' [(ngModel)]="form.itemView" #itemView='ngModel' placeholder="{{i18n('View Project')}}" i18n-placeholder>
+                <mat-option *ngFor='let pv of projectViewTypes' [value]='pv.value'>
+                  {{pv.name}}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+            
+            <mat-form-field>
+              <input 
+                type="number" 
+                name="decisionTablePageSize" 
+                matInput 
+                autocomplete="false" 
+                [formControl]="descisionTablePageSizeFormControl"
+                placeholder="{{i18n('Decision Table Page Size')}}"
+                i18n-placeholder 
+                [errorStateMatcher]="this.errorStateMatcher">
+                <mat-error *ngIf="descisionTablePageSizeFormControl.hasError('required')" [innerHTML]="getMessage('tablereq')">
+                  
+                </mat-error>
+                <mat-error *ngIf="descisionTablePageSizeFormControl.hasError('min')" [innerHTML]="getMessage('lvalue')">
+                
+                </mat-error>
+                <mat-error *ngIf="descisionTablePageSizeFormControl.hasError('max')" [innerHTML]="getMessage('mvalue')">
+                  
+                </mat-error>
+            </mat-form-field>
+          
+            <mat-form-field>
+              <mat-select name='defaultRTIFilterType' [(ngModel)]="form.defaultRTIFilterType" #defaultRTIFilterType='ngModel' placeholder="{{i18n('Default Rule Template Instance Filter')}}" i18n-placeholder>
+                <mat-option *ngFor='let rf of rtiFilterTypes' [value]='rf.value'>
+                  {{rf.name}}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+    
+            <mat-form-field>
+              <mat-select name='rtiViewStringWidget' [(ngModel)]="form.rtiViewStringWidget" #rtiViewStringWidget='ngModel' placeholder="{{i18n('Select widget for string bindings in Rule Template Instance')}}" i18n-placeholder>
+                <mat-option *ngFor='let rw of rtiStringWidgets' [value]='rw.value'>
+                  {{rw.name}}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+        
+            <mat-checkbox [(ngModel)]='autoUnLockOnReview'>
+              <ng-container i18n>{{i18n('Auto Unlock On Approve/Reject')}}</ng-container>
+            </mat-checkbox>
+          
+            <mat-checkbox [(ngModel)]='groupRelatedArtifacts'>
+              <ng-container i18n>{{i18n('Group Related Artifacts')}}</ng-container>
+            </mat-checkbox>
+          
+            <mat-checkbox [(ngModel)]='allowCustomDomainValues'>
+              <ng-container i18n>{{i18n('Allow Custom Domain Values')}}</ng-container>
+            </mat-checkbox>
+          
+            <mat-checkbox [(ngModel)]='showColumnAliasIfPresent'>
+              <ng-container i18n>{{i18n('Show Column Alias If Present')}}</ng-container>
+            </mat-checkbox>
+          </div>
+        </mat-grid-tile>
+      </mat-grid-list>
+  <div class="save-button">
+    <button  mat-raised-button 
+      [ngClass]="{'custom-save-button': !this.disableApply}" 
+      [disabled]='this.disableApply' 
+      (click)='onSubmit()' i18n
+    >{{i18n(' Apply ')}}</button>
+  </div>
+</div>

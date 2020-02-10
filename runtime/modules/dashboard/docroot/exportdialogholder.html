@@ -1,0 +1,71 @@
+<!doctype html public "-//w3c//dtd html 3.2 final//en">
+<html>
+    <head>
+        <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE8" />
+        <title>Export drilldown content</title>
+        <link rel="stylesheet" type="text/css" href="/drilldown/css/page.css"/>
+        <script language="javascript" src="/scripts/servercomm.js"></script>
+        <script language="javascript">
+            function ok_clicked(){
+                var customXSLFileName = getSelectedFile();
+                var form = document.getElementById("fileinputform");
+                var retval = form.action + "&exporttype=" + window.document.fileinputform.mode.value + 
+                        "&customxsl=" + customXSLFileName;
+                window.returnValue = retval;
+                window.close();
+                return true;
+            }
+
+            function transfervalue(conditionasstring){
+                window.returnValue = "";
+                window.close();
+                return true;
+            }
+
+            function chooseMode(mode){
+                var xmlRow = document.getElementById("customxslforxmlrow");
+                var csvRow = document.getElementById("customxslforcsvrow");
+                if (mode == "csv")
+                {
+                    if (xmlRow) xmlRow.style.display = "none";
+                    if (csvRow) csvRow.style.display = "";
+                }
+                else
+                {
+                    if (xmlRow) xmlRow.style.display = "";
+                    if (csvRow) csvRow.style.display = "none";
+                }
+                window.document.fileinputform.mode.value = mode;
+            }
+            
+            function getSelectedFile()
+            {
+                var mode = window.document.fileinputform.mode.value;
+                var customXSLDropDown = null;
+                if (mode == "csv")
+                {
+                    customXSLDropDown = document.getElementById("customxslforcsv");
+                }
+                else
+                {
+                    customXSLDropDown = document.getElementById("customxslforxml");
+                }
+                if (customXSLDropDown != null)
+                {
+                    return customXSLDropDown.options[customXSLDropDown.selectedIndex].value;
+                }
+                else
+                {
+                    return "_default";
+                }
+            }
+        </script>
+    </head>
+    <body leftmargin="" topmargin="">
+        <script type="text/javascript">
+        <!--
+        document.body.innerHTML = window.dialogArguments;
+        //-->
+        </script>
+    </body>
+</html>

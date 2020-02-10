@@ -1,0 +1,15 @@
+/**
+ * @description This rulefunction is used to generate keys for Kafka messages.
+ * Customer_id is used as key to ensure orders for a particular customer always goes to the same partition. 
+ */
+String rulefunction RuleFunctions.OrderKeyRF {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Events.OrderEvent ord;
+	}
+	body {
+		return ord.customer_id;
+	}
+}

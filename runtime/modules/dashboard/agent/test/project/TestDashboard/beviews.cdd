@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<cdd:cluster xmlns:cdd="http://tibco.com/businessevents/configuration/5.0">
+    <cdd:revision>
+        <cdd:date>2010/02/07 00:11:39</cdd:date>
+        <cdd:version>BEViews</cdd:version>
+        <cdd:author>Anand Patil</cdd:author>
+        <cdd:comment>BE Views Configuration For Test Project</cdd:comment>
+    </cdd:revision>
+    <cdd:name>BEViews</cdd:name>
+    <cdd:object-management>
+        <cdd:memory-manager/>
+    </cdd:object-management>
+    <cdd:rulesets/>
+    <cdd:function-groups/>
+    <cdd:destination-groups/>
+    <cdd:log-configs>
+        <cdd:log-config id="logConfig">
+            <cdd:enabled>true</cdd:enabled>
+            <cdd:roles>*:info dashboard:info</cdd:roles>
+            <cdd:files>
+                <cdd:enabled>true</cdd:enabled>
+                <cdd:dir>logs</cdd:dir>
+                <cdd:name/>
+                <cdd:max-number>10</cdd:max-number>
+                <cdd:max-size>10000000</cdd:max-size>
+                <cdd:append>true</cdd:append>
+            </cdd:files>
+            <cdd:terminal>
+                <cdd:enabled/>
+                <cdd:sys-err-redirect/>
+                <cdd:sys-out-redirect/>
+            </cdd:terminal>
+            <cdd:line-layout>
+                <cdd:enabled>false</cdd:enabled>
+                <cdd:class/>
+                <cdd:arg/>
+            </cdd:line-layout>
+        </cdd:log-config>
+    </cdd:log-configs>
+    <cdd:agent-classes>
+        <cdd:dashboard-agent-class id="dashboard-agent">
+            <cdd:rules/>
+            <cdd:destinations/>
+            <cdd:startup/>
+            <cdd:shutdown/>
+            <cdd:property-group>
+                <cdd:property name="be.auth.type" type="string" value="file"/>
+                <cdd:property name="be.auth.file.location" type="string" value="Q:/be/trunk/leo/dashboard/agent/test/config/users.pwd"/>
+                <cdd:property name="be.http.docRoot" type="string" value="Q:/be/trunk/leo/dashboard/docroot"/>
+                <cdd:property name="be.http.docPage" type="string" value="index.html"/>
+                <cdd:property name="java.security.auth.login.config" type="string" value="Q:/be/trunk/leo/dashboard/config/jaas-config.config"/>
+                <cdd:property name="be.agent.dashboard.push.subscription.destination" type="string" value="subscriptions"/>
+                <cdd:property name="be.agent.dashboard.push.payload.destination" type="string" value="updates"/>
+                <cdd:property name="be.agent.dashboard.mal.storage.file.root" type="string" value="Q:/be/trunk/leo/dashboard/agent/test/personalizeddata"/>
+                <cdd:property name="be.agent.dashboard.plugin.beviews.demomode" type="boolean" value="false"/>
+            </cdd:property-group>
+        </cdd:dashboard-agent-class>
+    </cdd:agent-classes>
+    <cdd:processing-units>
+        <cdd:processing-unit id="default">
+            <cdd:agents>
+                <cdd:agent>
+                    <cdd:ref>dashboard-agent</cdd:ref>
+                    <cdd:key>dashboard-agent#1</cdd:key>
+                    <cdd:priority/>
+                </cdd:agent>
+            </cdd:agents>
+            <cdd:logs>logConfig</cdd:logs>
+            <cdd:property-group/>
+        </cdd:processing-unit>
+    </cdd:processing-units>
+    <cdd:property-group/>
+</cdd:cluster>

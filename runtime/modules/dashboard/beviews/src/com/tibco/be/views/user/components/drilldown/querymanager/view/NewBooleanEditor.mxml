@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ConditionEditor 
+	xmlns="com.tibco.be.views.user.components.drilldown.querymanager.view.*" 
+	xmlns:mx="http://www.adobe.com/2006/mxml" 
+	width="100%" height="150"
+	creationPolicy="all"
+	dropShadowEnabled="false"
+	paddingLeft="10"
+	paddingTop="10"
+	paddingBottom="10"
+	
+	>
+		
+	<mx:Script>
+		<![CDATA[
+			import com.tibco.be.views.user.components.drilldown.querymanager.events.ConditionUpdatedEvent;
+			import mx.collections.ArrayCollection;
+			
+			override public function init(fieldID:String, fieldName:String, fieldDataType:String, sOperator:String, conditions:ArrayCollection):void{
+				super.init(fieldID, fieldName, fieldDataType, sOperator, conditions);
+				this.initialize();
+				//conditionsCB.selectedItem = sOperator;
+				switch(_defaultConditions[0]){
+					case "true":
+					trueRD.selected = true;
+					falseRD.selected = false;
+					anyRD.selected = false
+					break;
+					
+					case "false":
+					trueRD.selected = false;
+					falseRD.selected = true;
+					anyRD.selected = false
+					break;
+				}
+				if(sOperator == "Is Any"){
+					trueRD.selected = false;
+					falseRD.selected = false;
+					anyRD.selected = true;
+				}
+			}
+			
+			override public function redraw(operator:String, conditions:ArrayCollection):void{
+				if(operator == "Is Any"){
+					trueRD.selected = false;
+					falseRD.selected = false;
+					anyRD.selected = true;
+					_conditionAsString = " "+operator;
+				}
+				else {
+					switch(conditions[0]){
+						case "true":
+						trueRD.selected = true;
+						falseRD.selected = false;
+						anyRD.selected = false
+						break;
+					
+						case "false":
+						trueRD.selected = false;
+						falseRD.selected = true;
+						anyRD.selected = false
+						break;
+					}
+					_conditionAsString = " "+operator+ " "+(trueRD.selected == true?"True":"False");
+				}
+				dispatchHeaderChangeEvent(new ConditionUpdatedEvent(ConditionUpdatedEvent.IS_HEADER_CHANGED,true,true,_conditionAsString));
+			}
+			
+			private function radioButtonClicked(event:MouseEvent): void{
+				if(!event.target is RadioButton){ return; }
+				var buttonName:String = (event.currentTarget as RadioButton).id;
+				_currentConditions.removeAll();
+				switch(buttonName){ 
+					case "trueRD":
+						_currentConditions.addItem("true");
+						_currentOperator = "Is"
+						break;
+					case "falseRD":
+						_currentConditions.addItem("false");
+						_currentOperator = "Is"
+						break;	
+					case "anyRD":
+						_currentOperator = "Is Any"
+						break;
+				}
+				//headerRenderer.lblCondition.text = " "+currentOperator+ " "+(trueRD.selected == true?"True":"False");
+				if(_currentOperator == "Is Any"){
+					_conditionAsString = " "+_currentOperator;
+				}
+				else {
+					_conditionAsString = " "+_currentOperator+ " "+(trueRD.selected == true?"True":"False");	
+				}
+				// create ConditionUpdatedEvent, set the label value and dispatch it
+				dispatchHeaderChangeEvent(new ConditionUpdatedEvent(ConditionUpdatedEvent.IS_HEADER_CHANGED,true,true,_conditionAsString));
+			}
+		]]>
+	</mx:Script>
+	<mx:Tile id="radioButtons"
+		direction="horizontal"
+		height="100" width="100%"
+		borderStyle="none" 
+		paddingBottom="0" 
+		paddingTop="10" 
+		paddingLeft="0"
+		verticalScrollPolicy="off" 
+		horizontalScrollPolicy="off"
+		>
+		<mx:RadioButton groupName="truefalseany"
+			id="trueRD"
+			label="True"
+			selected="true" click="radioButtonClicked(event);"/>
+		<mx:RadioButton groupName="truefalseany"
+			id="falseRD"
+			label="False"
+			selected = "false" click="radioButtonClicked(event);"/>
+		<mx:RadioButton groupName="truefalseany"
+			id="anyRD"
+			label="Is Any"
+			selected = "false" click="radioButtonClicked(event);"/>			
+	</mx:Tile>	
+	
+	
+</ConditionEditor>

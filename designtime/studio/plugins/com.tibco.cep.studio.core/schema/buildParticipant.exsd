@@ -1,0 +1,116 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!-- Schema file written by PDE -->
+<schema targetNamespace="com.tibco.cep.studio.core" xmlns="http://www.w3.org/2001/XMLSchema">
+<annotation>
+      <appInfo>
+         <meta.schema plugin="com.tibco.cep.studio.core" id="buildParticipant" name="Studio Project Build Participant"/>
+      </appInfo>
+      <documentation>
+         Allows other plugins to contribute to the project build of a designer/studio project.  Each participant is notified of steps in the build, including incremental build, full build, and clean operations.
+
+      </documentation>
+   </annotation>
+
+   <element name="extension">
+      <annotation>
+         <appInfo>
+            <meta.element />
+         </appInfo>
+      </annotation>
+      <complexType>
+         <sequence>
+            <element ref="buildParticipant" minOccurs="1" maxOccurs="unbounded"/>
+         </sequence>
+         <attribute name="point" type="string" use="required">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="id" type="string">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="name" type="string">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+               <appInfo>
+                  <meta.attribute translatable="true"/>
+               </appInfo>
+            </annotation>
+         </attribute>
+      </complexType>
+   </element>
+
+   <element name="buildParticipant">
+      <annotation>
+         <documentation>
+            Allows other plugins to contribute to the project validation of a designer/studio project.  Each validator is responsible for validating one or more resources within the project, reporting errors against those resources.&lt;br&gt;&lt;br&gt;
+
+The validator is also able to determine whether the validation can continue to the next resource/validator, or whether the validation phase should end (presumably when an error is encountered).
+         </documentation>
+      </annotation>
+      <complexType>
+         <attribute name="Participant" type="string" use="required">
+            <annotation>
+               <documentation>
+                  An instance of com.tibco.cep.studio.core.builder.IStudioBuildParticipant that participates in build operations
+               </documentation>
+               <appInfo>
+                  <meta.attribute kind="java" basedOn=":com.tibco.cep.studio.core.builder.IStudioBuildParticipant"/>
+               </appInfo>
+            </annotation>
+         </attribute>
+      </complexType>
+   </element>
+
+   <annotation>
+      <appInfo>
+         <meta.section type="since"/>
+      </appInfo>
+      <documentation>
+         [Enter the first release in which this extension point appears.]
+      </documentation>
+   </annotation>
+
+   <annotation>
+      <appInfo>
+         <meta.section type="examples"/>
+      </appInfo>
+      <documentation>
+            &lt;extension
+         point=&quot;com.tibco.cep.studio.core.buildParticipant&quot;&gt;
+      &lt;buildParticipant
+            Participant=&quot;com.tibco.cep.studio.core.builder.DefaultStudioBuildParticipant&quot;&gt;
+      &lt;/buildParticipant&gt;
+   &lt;/extension&gt;
+
+      </documentation>
+   </annotation>
+
+   <annotation>
+      <appInfo>
+         <meta.section type="apiinfo"/>
+      </appInfo>
+      <documentation>
+         [Enter API information here.]
+      </documentation>
+   </annotation>
+
+   <annotation>
+      <appInfo>
+         <meta.section type="implementation"/>
+      </appInfo>
+      <documentation>
+         [Enter information about supplied implementation of this extension point.]
+      </documentation>
+   </annotation>
+
+
+</schema>

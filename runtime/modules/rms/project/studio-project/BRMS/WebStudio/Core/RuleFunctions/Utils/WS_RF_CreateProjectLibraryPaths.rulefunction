@@ -1,0 +1,29 @@
+/**
+ * @description 
+ */
+String rulefunction WebStudio.Core.RuleFunctions.Utils.WS_RF_CreateProjectLibraryPaths {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String baseProjectLibraryPath;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.WS_RF_CreateProjectLibraryPaths");
+		
+		String plPath = "";
+
+		if (baseProjectLibraryPath != null) {
+			if (File.fileExists(baseProjectLibraryPath)) {
+				String[] plFiles = File.listFiles(baseProjectLibraryPath, "*.projlib");
+				
+				for (int loop = 0; loop < plFiles@length; loop++) {
+					Log.log(LOGGER, "Debug", "Project Library File Path - %s", plFiles[loop]);
+					plPath = String.concat(plPath, plFiles[loop] + WS.Common.getClassPathSeparator());
+				}
+			}
+		}
+		
+		return plPath;
+	}
+}

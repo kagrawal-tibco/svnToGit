@@ -1,0 +1,53 @@
+<div class='row'>
+	<div class='col-sm-12'>
+		<div class='card penal-sm'>
+			<div class='card-header' i18n>{{i18n('
+				Projects Configuration
+				')}}</div>
+			<div class='card-body'>
+				<div *ngIf='!showBEUI()' class='row'>
+					<div class='col-sm-8'>
+            <div *ngIf='!projects'>
+              <i class='fa fa-refresh fa-spin'></i><ng-container i18n>{{i18n(' Loading ')}}</ng-container>
+            </div>
+            <div *ngIf='projects && projects.length === 0'>
+              <div class='card' i18n>{{i18n('
+                No projects available with your permission setup. 
+								')}}</div> 
+            </div>
+						<table class="table" *ngIf='projects && projects.length > 0'>
+							<thead>
+								<tr>
+									<th i18n>{{i18n('Name')}}</th>
+									<th i18n>{{i18n('Show In Explorer')}}</th>
+									<th i18n>{{i18n('Action')}}</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr *ngFor="let p of projects">
+									<td><strong>{{ p.projectName }}</strong></td>
+									<td nowrap>
+										<mat-slide-toggle [checked]="isVisible(p)" (change)='setVisible(p, $event)' color="primary">
+										</mat-slide-toggle> 
+										<!-- <toggle-switch [size]='"mini"' [value]='isVisible(p)' (valueChange)='setVisible(p, $event)'></toggle-switch> -->
+									</td>
+									<td nowrap>
+										<button type="button" class="btn btn-danger btn-sm btn-wide" (click)="onDelete(p)">
+                      <span class="fa fa-trash-o"></span><ng-container i18n>{{i18n('Delete')}}</ng-container>
+                    </button>
+									</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+				</div>
+				<!-- BE UI Components go here -->
+				<div *ngIf='showBEUI()'>
+					<be-project-preferecences i18n>{{i18n('
+						Loading Bussiness Events project preferences... 
+						')}}</be-project-preferecences>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>

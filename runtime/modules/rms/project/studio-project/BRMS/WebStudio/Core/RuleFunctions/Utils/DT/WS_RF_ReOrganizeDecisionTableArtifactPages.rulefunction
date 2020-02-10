@@ -1,0 +1,221 @@
+/**
+ * @description 
+ */
+void rulefunction WebStudio.Core.RuleFunctions.Utils.DT.WS_RF_ReOrganizeDecisionTableArtifactPages {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String username;
+		String tableType;
+		WebStudio.Core.Concepts.Decision.Pagination.WS_C_TableRuleSet tableRuleSet;
+		boolean singlePageView; 
+	}
+	body {		
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.DT.WS_RF_ReOrganizeDecisionTableArtifactPages");
+
+		WS_C_TablePage[] currentTablePages = Instance.PropertyArray.toArrayContainedConcept(tableRuleSet.tablePage);
+				
+		//Get the configured pageSize
+		int pageSize = 0; 
+		long totalTableRules = 0;
+		for (int currPageIndx = 0; currPageIndx < currentTablePages@length; currPageIndx++) {
+			WS_C_TablePage currentTablePage = currentTablePages[currPageIndx];
+			WebStudio.Core.Concepts.Decision.Pagination.WS_C_TableRule[] currentTablePageRules = Instance.PropertyArray.toArrayContainedConcept(currentTablePage.tableRule);
+			totalTableRules = totalTableRules + currentTablePageRules@length;
+
+			WebStudio.Core.Concepts.Decision.Pagination.WS_C_TableRule[] currentTablePageNewRules = Instance.PropertyArray.toArrayConcept(currentTablePage.newTableRule);
+			totalTableRules = totalTableRules + currentTablePageNewRules@length;
+		}
+			
+		if (singlePageView) {
+			pageSize = totalTableRules;
+		} else {	
+			pageSize = WS_RF_GetDecisionTablePageSize(username, tableType, totalTableRules);
+		}			
+		
+		Object newAddedTableRulesMap = Collections.Map.createTreeMap();
+		WS_C_TablePage lastTablePage = null;
+		
+		String[] tablePageIdsArray = Instance.PropertyArray.toArrayString(tableRuleSet.tablePageIds);
+		Log.log(LOGGER, "Debug", "Clear the TableRuleSet PageIds");
+		Instance.PropertyArray.clear(tableRuleSet.tablePageIds);
+		
+		int pageNum = 1;
+		for (int currPageIndx = 0; currPageIndx < tablePageIdsArray@length; currPageIndx++) {
+			//For each Page
+			WS_C_TablePage currentTablePage = Instance.getByExtIdByUri(tablePageIdsArray[currPageIndx], "/WebStudio/Core/Concepts/Decision/Pagination/WS_C_TablePage");
+			int currentPageNum = currentTablePage.pageNumber;
+			//Get the Table Rules on the page
+			WebStudio.Core.Concepts.Decision.Pagination.WS_C_TableRule[] currentTablePageRules = Instance.PropertyArray.toArrayContainedConcept(currentTablePage.tableRule);
+			int tablePageRulesCount = currentTablePageRules@length;
+			Log.log(LOGGER, "Debug", "Page - %s Table Rules count %s",  currentPageNum, tablePageRulesCount);
+
+			if (tablePageRulesCount == 0) {
+				if (tablePageIdsArray@length == 1) { //Single page, dont remove
+					Instance.PropertyArray.appendString(tableRuleSet.tablePageIds, currentTablePage@extId, 1L);
+					Instance.PropertyAtom.setInt(currentTablePage.pageNumber, pageNum, 1L);
+					pageNum = pageNum + 1;
+					lastTablePage = currentTablePage;																	
+				} 
+				else { //Page is empty and is not the only page, remove the page and delete the concept
+					Log.log(LOGGER, "Debug", "Empty Page, Remove");
+					Instance.PropertyArray.removeContainedConcept(tableRuleSet.tablePage, currentTablePage);
+					Instance.deleteInstance(currentTablePage);				
+				}
+				continue;	
+			} 
+			else if (tablePageRulesCount == pageSize){				
+				Log.log(LOGGER, "Debug", "(tablePageRulesCount == pageSize) Add current Page - %s to the ReOrg List", currentPageNum);
+				Instance.PropertyArray.appendString(tableRuleSet.tablePageIds, currentTablePage@extId, 1L);
+				Instance.PropertyAtom.setInt(currentTablePage.pageNumber, pageNum, 1L);
+				pageNum = pageNum + 1;
+				lastTablePage = currentTablePage;								
+			}
+			else if (tablePageRulesCount < pageSize) { //TableRules less than PageSize, shift rules from subsequent pages to this page
+				Log.log(LOGGER, "Debug", "(tablePageRulesCount < pageSize) Add current Page - %s to the ReOrg List", currentPageNum);
+				Instance.PropertyArray.appendString(tableRuleSet.tablePageIds, currentTablePage@extId, 1L);
+				Instance.PropertyAtom.setInt(currentTablePage.pageNumber, pageNum, 1L);
+				pageNum = pageNum + 1;								
+				lastTablePage = currentTablePage;
+				
+				int diffRules = pageSize - tablePageRulesCount;
+				Log.log(LOGGER, "Debug", "Space available on Page %s is %s TableRules", currentPageNum, diffRules);
+				for (int j = currPageIndx + 1; j < tablePageIdsArray@length; j++) {
+					WS_C_TablePage nextTablePage = Instance.getByExtIdByUri(tablePageIdsArray[j], "/WebStudio/Core/Concepts/Decision/Pagination/WS_C_TablePage");
+					WebStudio.Core.Concepts.Decision.Pagination.WS_C_TableRule[] nextTablePageRules = Instance.PropertyArray.toArrayContainedConcept(nextTablePage.tableRule);
+					int nextTablePageRulesCount = nextTablePageRules@length;
+					//Table page is empty, continue and check for next
+					if (nextTablePageRulesCount == 0) {
+						Log.log(LOGGER, "Debug", "Next Page - %s is Empty, continue.", (j + 1));
+						continue;	
+					}	
+					//Shift TableRules to the currentPage from this page
+					int rulesToAdd = Math.minInt(diffRules, nextTablePageRulesCount);				
+					Log.log(LOGGER, "Debug", "Shifting %s TableRules from Page - %s to Page - %s", rulesToAdd, (j + 1), currentPageNum);
+					for (int k = 0; k < rulesToAdd; k++) {
+						Instance.PropertyArray.removeContainedConcept(nextTablePage.tableRule, nextTablePageRules[k]);
+						WebStudio.Core.Concepts.Decision.Pagination.WS_C_TableRule tableRule = WS_RF_CreateTableRuleInstance(nextTablePageRules[k]);
+						WS.Common.assertInstance(tableRule, false);
+						Instance.PropertyArray.appendContainedConcept(currentTablePage.tableRule, tableRule, 1L);																							 	 
+					}
+					diffRules = diffRules - rulesToAdd;
+					if (diffRules == 0) { //Current Page filled
+						break;	
+					}	
+				}
+			} 
+			else if (tablePageRulesCount > pageSize) { //TableRules exceed pageSize			
+				Log.log(LOGGER, "Debug", "(tablePageRulesCount > pageSize) Add current Page - %s to the final ReOrg List", currentPageNum);
+				Instance.PropertyArray.appendString(tableRuleSet.tablePageIds, currentTablePage@extId, 1L);
+				Instance.PropertyAtom.setInt(currentTablePage.pageNumber, pageNum, 1L);
+				pageNum = pageNum + 1;								
+				lastTablePage = currentTablePage;
+				
+				//Get the TableRules from the CurrentPage that need to be shifted to the subsequent pages
+				Object shiftTableRules = Collections.List.createArrayList();
+				for (int j = pageSize; j < tablePageRulesCount; j++) {
+					Instance.PropertyArray.removeContainedConcept(currentTablePage.tableRule, currentTablePageRules[j]);
+					Collections.add(shiftTableRules, currentTablePageRules[j]);
+				}
+				
+				int shiftRulesCount = tablePageRulesCount - pageSize; //No of TableRules to shift
+				Log.log(LOGGER, "Debug", "Shift %s TableRules from current Page - %s to subsequent pages", shiftRulesCount, currentPageNum);
+				int nextPageIndx = currPageIndx + 1;
+				if ((nextPageIndx < tablePageIdsArray@length) && (shiftRulesCount < pageSize)) {
+					Log.log(LOGGER, "Debug", "Shifting %s TableRules from current Page - %s to Page - %s", shiftRulesCount, currentPageNum, (nextPageIndx + 1));
+					WS_C_TablePage nextTablePage = Instance.getByExtIdByUri(tablePageIdsArray[nextPageIndx], "/WebStudio/Core/Concepts/Decision/Pagination/WS_C_TablePage");
+					WebStudio.Core.Concepts.Decision.Pagination.WS_C_TableRule[] nextTablePageRules = Instance.PropertyArray.toArrayContainedConcept(nextTablePage.tableRule);
+					Instance.PropertyArray.clear(nextTablePage.tableRule);
+					for (int j = 0; j < shiftRulesCount; j++) {
+						WebStudio.Core.Concepts.Decision.Pagination.WS_C_TableRule shiftTableRule = Collections.List.get(shiftTableRules, j); 
+						WebStudio.Core.Concepts.Decision.Pagination.WS_C_TableRule shiftTableRuleCopy = WS_RF_CreateTableRuleInstance(shiftTableRule);
+						WS.Common.assertInstance(shiftTableRuleCopy, false);
+						Instance.PropertyArray.appendContainedConcept(nextTablePage.tableRule, shiftTableRuleCopy, 1L);
+					}
+					
+					for (int j = 0; j < nextTablePageRules@length; j++) {
+						Instance.PropertyArray.appendContainedConcept(nextTablePage.tableRule, nextTablePageRules[j], 1L);						
+					}		
+				}	
+				else {
+					WS_C_TablePage newTablePage = null;
+					for (int j = 0; j < shiftRulesCount; j++) {
+				    	if ((j % pageSize) == 0) {	    		
+							newTablePage = Instance.newInstance("/WebStudio/Core/Concepts/Decision/Pagination/WS_C_TablePage", "TABLE_PAGE_" + System.nanoTime());
+							Instance.PropertyAtom.setInt(newTablePage.pageNumber, pageNum, 1L);
+							pageNum = pageNum + 1;								
+							Instance.PropertyArray.appendContainedConcept(tableRuleSet.tablePage, newTablePage, 1L);
+							Instance.PropertyArray.appendString(tableRuleSet.tablePageIds, newTablePage@extId, 1L);
+							lastTablePage = newTablePage;
+							Log.log(LOGGER, "Debug", "Shifting TableRules from current Page - %s to a New Page", currentPageNum);
+							Log.log(LOGGER, "Debug", "Add New Page to the final ReOrg List");
+				    	}
+				    	WebStudio.Core.Concepts.Decision.Pagination.WS_C_TableRule reOrgTableRule = Collections.List.get(shiftTableRules, j);
+						WebStudio.Core.Concepts.Decision.Pagination.WS_C_TableRule moveTableRule = WS_RF_CreateTableRuleInstance(reOrgTableRule);
+						WS.Common.assertInstance(moveTableRule, false);
+						Instance.PropertyArray.appendContainedConcept(newTablePage.tableRule, moveTableRule, 1L);						
+					}					
+				}
+				
+				Collections.clear(shiftTableRules);	
+			}
+										
+			WebStudio.Core.Concepts.Decision.Pagination.WS_C_TableRule[] newTableRules = Instance.PropertyArray.toArrayConcept(currentTablePage.newTableRule);
+			Log.log(LOGGER, "Debug", "Collect the %s new TableRules added to current Page - %s to a collection", newTableRules@length, currentPageNum);
+			for (int j = 0; j < newTableRules@length; j++) {
+				WebStudio.Core.Concepts.Decision.Pagination.WS_C_TableRule newTableRule = WebStudio.Core.RuleFunctions.Utils.DT.WS_RF_CreateTableRuleInstance(newTableRules[j]);
+				WS.Common.assertInstance(newTableRule, false);
+				Collections.Map.put(newAddedTableRulesMap, newTableRule.ruleId, newTableRule);								
+
+				Instance.PropertyArray.removeConceptReference(currentTablePage.newTableRule, newTableRules[j]);
+				Instance.deleteInstance(newTableRules[j]);
+			}
+		} //End of For Loop
+			
+		Object newTableRulesCollection = Collections.Map.values(newAddedTableRulesMap);
+		Object[] newTableRulesArray = Collections.toArray(newTableRulesCollection);
+		int newTableRulesCount = newTableRulesArray@length;
+		Log.log(LOGGER, "Debug", "Total new TableRules - %s", newTableRulesCount);
+
+		//Add new TableRules to Last page
+		int rulesAddToLastPage = 0;
+		if (lastTablePage != null) {
+			WebStudio.Core.Concepts.Decision.Pagination.WS_C_TableRule[] lastPageTableRules = Instance.PropertyArray.toArrayContainedConcept(lastTablePage.tableRule);
+			int tablePageRulesCount = lastPageTableRules@length;
+			Log.log(LOGGER, "Debug", "TableRules on last Page - %s", tablePageRulesCount);
+			if (tablePageRulesCount < pageSize) {
+				int diffRules = pageSize - tablePageRulesCount;
+				rulesAddToLastPage = Math.minInt(diffRules, newTableRulesCount);
+				Log.log(LOGGER, "Debug", "Adding %s of the new TableRules to the Last Page", rulesAddToLastPage);
+				for (int j = 0; j < rulesAddToLastPage; j++) {
+					WebStudio.Core.Concepts.Decision.Pagination.WS_C_TableRule newTableRule = newTableRulesArray[j];
+					Instance.PropertyArray.appendContainedConcept(lastTablePage.tableRule, newTableRule, 1L);
+				}					
+			}	
+		}
+
+		//Append the remaining new TableRules to new TablePages				
+		WebStudio.Core.Concepts.Decision.Pagination.WS_C_TablePage newTablePage = null;
+		int ruleCount = 0;
+		for (int j = rulesAddToLastPage; j < newTableRulesCount; j++) {
+			WebStudio.Core.Concepts.Decision.Pagination.WS_C_TableRule newTableRule = newTableRulesArray[j];
+	    	if ((ruleCount % pageSize) == 0) {
+	    		int rulesAddToNewPage = Math.minInt(pageSize, (newTableRulesCount - j));	    			    		
+				Log.log(LOGGER, "Debug", "Adding %s of the new TableRules to a new Page - %s", rulesAddToNewPage, pageNum);
+				newTablePage = Instance.newInstance("/WebStudio/Core/Concepts/Decision/Pagination/WS_C_TablePage", "TABLE_PAGE_" + System.nanoTime());
+				Instance.PropertyAtom.setInt(newTablePage.pageNumber, pageNum, 1L);
+				pageNum = pageNum + 1;																	
+				Instance.PropertyArray.appendContainedConcept(tableRuleSet.tablePage, newTablePage, 1L);
+				Instance.PropertyArray.appendString(tableRuleSet.tablePageIds, newTablePage@extId, 1L); // Add to final ReOrg List
+				
+	    	}
+			Instance.PropertyArray.appendContainedConcept(newTablePage.tableRule, newTableRule, 1L);
+			ruleCount = ruleCount + 1;							
+		}														
+
+		int totalPages = pageNum - 1;
+		Instance.PropertyAtom.setInt(tableRuleSet.totalPages, totalPages, 1L);		
+	 
+	}
+}

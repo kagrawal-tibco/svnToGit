@@ -1,0 +1,17 @@
+/**
+ * @description 
+ */
+String rulefunction Shared.RuleFunctions.getComponentConfigMapId {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Shared.Concepts.MonitorableEntity	monitorableentity;
+		String	cType;
+	}
+	body {
+		String path = getTypePath(monitorableentity);
+		path = path + "/" + cType;
+		return BEMM.dashboard.getConfigMapID(path);
+	}
+}

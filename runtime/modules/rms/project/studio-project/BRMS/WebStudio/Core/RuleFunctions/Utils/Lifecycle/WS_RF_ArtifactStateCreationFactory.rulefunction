@@ -1,0 +1,45 @@
+/**
+ * @description Factory function used to instantiate appropriate Artifact state concept based on name.
+ */
+WebStudio.Core.Concepts.Lifecycle.States.WS_C_ArtifactBaseState rulefunction WebStudio.Core.RuleFunctions.Utils.Lifecycle.WS_RF_ArtifactStateCreationFactory {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String stateName;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.Lifecycle.WS_RF_ArtifactStateCreationFactory");
+		WS_C_ArtifactBaseState artifactState = null;
+		if (stateName == "New") {
+			artifactState = 
+				Instance.newInstance("/WebStudio/Core/Concepts/Lifecycle/States/WS_C_ArtifactNewState", null);
+		} else if (stateName == "Borrowed") {
+			artifactState = 
+				Instance.newInstance("/WebStudio/Core/Concepts/Lifecycle/States/WS_C_ArtifactBorrowedState", null);
+		} else if (stateName == "Committed") {
+			artifactState = 
+				Instance.newInstance("/WebStudio/Core/Concepts/Lifecycle/States/WS_C_ArtifactCommittedState", null);
+		} else if (stateName == "Approved" || stateName == "Approve") {
+			artifactState = 
+				Instance.newInstance("/WebStudio/Core/Concepts/Lifecycle/States/WS_C_ArtifactApprovedState", null);
+		} else if (stateName == "Rejected" || stateName == "Reject") {
+			artifactState = 
+				Instance.newInstance("/WebStudio/Core/Concepts/Lifecycle/States/WS_C_ArtifactRejectedState", null);
+		} else if (stateName == "Save") {
+			artifactState = 
+				Instance.newInstance("/WebStudio/Core/Concepts/Lifecycle/States/WS_C_ArtifactSaveState", null);
+		} else if (stateName == "Delete") {
+			artifactState = 
+				Instance.newInstance("/WebStudio/Core/Concepts/Lifecycle/States/WS_C_ArtifactDeleteState", null);
+		} else if (stateName == "BuildAndDeploy") {
+			artifactState = 
+				Instance.newInstance("/WebStudio/Core/Concepts/Lifecycle/States/WS_C_ArtifactDeployedState", null);
+		}
+		if (artifactState != null) {
+			artifactState.stateName = stateName;
+		}
+		//TODO add more later
+		return artifactState;
+	}
+}

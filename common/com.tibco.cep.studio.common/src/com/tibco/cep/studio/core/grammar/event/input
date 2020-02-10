@@ -1,0 +1,44 @@
+/**
+ * @description This is my sweet description
+ * @GUID this-is-my-GUID
+ */
+event Events.SpecialOffers extends Parent.EventName {
+	attributes {
+		retryOnException = true;
+		timeToLive=10 Seconds;
+	}
+	properties {
+		int creditCard;
+		String userID {
+			domain=MyDomains.ConceptDomain;
+		}
+		DateTime[] dates;
+	}
+	expiryAction {
+		declare {
+			Concepts.Name name;
+			Name name2;
+			Name name3;
+			Name name4;
+			Name name5;
+		}
+		then {
+			if (account.Status !="Suspended") {
+				account.Debits=debit.Amount;
+				System.debugOut("#### Debiting account " +account@extId+ " by $" +debit.Amount);
+				account.Balance=account.Balance - debit.Amount;
+				System.debugOut("#### New balance: $" + account.Balance);
+			}
+			else {
+				System.debugOut("#### Cannot debit the suspended account " +account@extId );
+			}
+		}
+	}
+	payload {
+		namespaces {
+			xsd="http://www.w3.org/2001/XMLSchema";
+			pfx="urn:tibco:payments:webservices";
+		}
+		payloadString="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?>&#xA;&#xA;&lt;payload>&#xA;    &lt;xs:element xmlns:xs=&quot;http://www.w3.org/2001/XMLSchema&quot; name=&quot;message&quot;>&#xA;        &lt;xs:complexType>&#xA;            &lt;xs:sequence>&#xA;                &lt;xs:element name=&quot;Envelope&quot;>&#xA;                    &lt;xs:complexType>&#xA;                        &lt;xs:sequence>&#xA;                            &lt;xs:element name=&quot;Header&quot; minOccurs=&quot;0&quot;>&#xA;                                &lt;xs:complexType>&#xA;                                    &lt;xs:sequence/>&#xA;                                &lt;/xs:complexType>&#xA;                            &lt;/xs:element>&#xA;                            &lt;xs:element name=&quot;Body&quot;>&#xA;                                &lt;xs:complexType>&#xA;                                    &lt;xs:sequence>&#xA;                                        &lt;xs:element name=&quot;Fault&quot; minOccurs=&quot;0&quot;>&#xA;                                            &lt;xs:complexType>&#xA;                                                &lt;xs:sequence/>&#xA;                                            &lt;/xs:complexType>&#xA;                                        &lt;/xs:element>&#xA;                                        &lt;xs:element ref=&quot;pfx:BillPaymentViaUnregisteredPaymentMethodRequest&quot; minOccurs=&quot;0&quot;/>&#xA;                                    &lt;/xs:sequence>&#xA;                                &lt;/xs:complexType>&#xA;                            &lt;/xs:element>&#xA;                        &lt;/xs:sequence>&#xA;                    &lt;/xs:complexType>&#xA;                &lt;/xs:element>&#xA;            &lt;/xs:sequence>&#xA;        &lt;/xs:complexType>&#xA;    &lt;/xs:element>&#xA;&lt;/payload>";
+	}
+}

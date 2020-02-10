@@ -1,0 +1,258 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<project name="bebw" default="build-bebw">
+<property environment="env" />
+<property file="build.properties" />
+
+<target name="set-jar">
+        <property name="bebw.jar"  value="${lib.exp}/palettes/be-bw.jar" />
+</target>
+
+<target name="set-bwdep" depends="set-jar">
+
+        <!-- ****************** -->
+        <!-- BusinessWorks (BW) -->
+        <!-- ****************** -->
+        
+        <path id="bw.classpath">
+            <pathelement path="${BW_LIB}/palettes/processPalettes.jar" />
+            <pathelement path="${BW_LIB}/palettes/paletteCommon.jar"   />
+            <pathelement path="${BW_LIB}/palettes/mapper.jar"          />
+            <pathelement path="${BW_LIB}/palettes/xdata.jar"           />
+            <pathelement path="${BW_LIB}/palettes/serviceBindings.jar" />
+            <pathelement path="${BW_LIB}/palettes/plugins.jar"         />
+            <pathelement path="${BW_LIB}/engine.jar"                   />
+        </path>
+
+        <!-- ******************* -->
+        <!-- Designer - from TRA -->
+        <!-- ******************* -->
+
+        <path id="designer.classpath">
+            <pathelement path="${TRA_LIB}/TIBCOdesigner.jar"             />
+            <pathelement path="${TRA_LIB}/palettes/designerpalettes.jar" />
+            <pathelement path="${TRA_LIB}/palettes/TurboPalette.jar"     />
+            <pathelement path="${TRA_LIB}/turbosdk.jar"                  />
+        </path>
+
+
+    <!-- *** -->
+    <!-- EMF -->
+    <!-- *** -->
+
+    <path id="emf.classpath">
+        <fileset dir="${env.ECLIPSE_EMF_HOME}/plugins">
+            <include name="**/*.jar"/>
+        </fileset>
+    </path>
+
+
+    <!-- **** -->
+    <!-- Jide -->
+    <!-- **** -->
+
+    <path id="jide.classpath">
+        <pathelement path="${JIDE_LIB}/jide-action.jar"/>
+        <pathelement path="${JIDE_LIB}/jide-common.jar"/>
+        <pathelement path="${JIDE_LIB}/jide-components.jar"/>
+        <pathelement path="${JIDE_LIB}/jide-dialogs.jar"/>
+        <pathelement path="${JIDE_LIB}/jide-dock.jar"/>
+        <pathelement path="${JIDE_LIB}/jide-editor.jar"/>
+        <pathelement path="${JIDE_LIB}/jide-grids.jar"/>
+        <pathelement path="${JIDE_LIB}/jide-pivot.jar"/>
+        <pathelement path="${JIDE_LIB}/jide-shortcut.jar"/>
+    </path>
+
+
+    <!-- *** -->
+    <!-- MDT -->
+    <!-- *** -->
+
+    <path id="mdt.classpath">
+        <fileset dir="${env.ECLIPSE_MDT_HOME}">
+            <include name="**/*.jar"/>
+        </fileset>
+    </path>
+
+    <!-- **** -->
+	<!-- Tpcl -->
+	<!-- **** -->
+
+	<path id="tpcl.classpath">
+	    <pathelement path="${TPCL_LIB}/httpclient_3.0/commons-httpclient.jar" />
+	    <pathelement path="${TPCL_LIB}/../ant/lib/junit.jar"                  />
+	    <pathelement path="${TPCL_LIB}/commons-logging.jar"                   />
+	    <pathelement path="${TPCL_LIB}/cos.jar"                               />
+	    <pathelement path="${TPCL_LIB}/ldapjdk.jar"                           />
+	    <pathelement path="${TPCL_LIB}/log4j.jar"                             />
+	    <pathelement path="${TPCL_LIB}/PerlTools.jar"                         />
+	    <pathelement path="${TPCL_LIB}/jakarta-slide-webdavlib-2.0.jar"       />
+	    <pathelement path="${TPCL_LIB}/turbine-2.1.jar"                       />
+	    <pathelement path="${TPCL_LIB}/xercesImpl.jar"                        />
+	    <pathelement path="${TPCL_LIB}/xmlParserAPIs.jar"                     />
+	    <pathelement path="${env.TOMCAT_HOME}/common/lib/servlet-api.jar"     />
+	    <pathelement path="${TPCL_LIB}/retroguard.jar"                        />
+		<pathelement path="${TPCL_LIB}/../tomcat/5.5/compatible/lib/retroguard.jar"/>
+	</path>
+
+        
+	<!-- ************************* -->
+	<!-- Tibco Runtime Agent (TRA) -->
+	<!-- ************************* -->
+
+	<path id="tra.classpath">
+	    <pathelement path="${TRA_LIB}/TIBCrypt.jar"      />
+	    <pathelement path="${TRA_LIB}/TIBCOrt.jar"       />
+	    <pathelement path="${TRA_LIB}/Deployment.jar"    />
+	    <pathelement path="${TRA_LIB}/TIBCOtsm.jar"      />
+	    <pathelement path="${TRA_LIB}/TIBCOjms.jar"      />
+	    <pathelement path="${TRA_LIB}/TIBqd.jar"         />
+	    <pathelement path="${TRA_LIB}/DomainUtility.jar" />
+	    <pathelement path="${TXML_LIB}/TIBCOxml.jar"/>
+	</path>
+
+        <path id="regexp.classpath">
+            <pathelement path="${REGEXP_LIB}/jakarta-regexp-${env.REGEXP_VERSION}.jar" />
+        </path>
+		
+
+	<!-- ********** -->
+	<!-- Rendezvous -->
+	<!-- ********** -->
+
+	<path id="rv.classpath">
+		<pathelement path="${RV_LIB}/tibrvj.jar" />
+	</path>		
+</target>
+
+
+<!-- ======= -->
+<!-- set-plt -->
+<!-- ======= -->
+
+<!-- Palette files -->
+
+<target name="set-plt">
+	<property name="bebw.plt"  value="${bebw.verd}/bebw"  />
+</target>
+
+<!-- ======== -->
+<!-- pre-bebw -->
+<!-- ======== -->
+
+<target name="pre-bebw" depends="set-plt">
+	<filter token="BE_VERSION"   value="${BE_VERSION}"     />
+	<filter token="BE_BUILD"     value="${env.BE_BUILD}"   />
+	<filter token="BE_DATE"      value="${BE_DATE}"        />
+	<filter token="BE_COMPANY"   value="${BE_COMPANY}"     />
+	<filter token="BE_COPYRIGHT" value="${BE_COPYRIGHT}"   />
+	<filter token="BE_PRODUCT"   value="${env.BE_PRODUCT}" />
+	<filter token="BE_LICENSE"   value="${env.BE_LICENSE}" />
+	<copy   file="${bebw.verf}.tag"
+		tofile="${bebw.verf}.java"
+		filtering="true"
+		overwrite="true">
+	</copy>
+	<if>
+	    <equals arg1="${env.USE_BEBW_EXTENDED_ACTIVITIES}" arg2="true" />
+	    <then>
+		<property name="bebw.plt.ex.tag" value="${bebw.plt}2.tag" />
+	    </then>
+	    <else>
+		<property name="bebw.plt.ex.tag" value="${bebw.plt}.tag" />
+	    </else>
+	</if>
+	<copy   file="${bebw.plt.ex.tag}"
+		tofile="${bebw.plt}.aepalette"
+		filtering="true"
+		overwrite="true">
+	</copy>
+</target>
+
+
+<!-- ========== -->
+<!-- build-bebw -->
+<!-- ========== -->
+
+<target name="build-bebw" depends="set-plt,set-bwdep">
+	<property name="bebw.src"  value="${env.SRC_ROOT}/runtime/modules/bw/src"              />
+	<property name="bebw.bld"  value="${be.obj}/bebw"                      />
+	<property name="bebw.verd"  value="${bebw.src}/com/tibco/be/bw/plugin" />
+	<property name="bebw.verf"  value="${bebw.verd}/be_bwVersion"          />
+    <property name="bebw.exp"  value="${be.exp}/bw"                        />
+
+	<echo message="bebw.src=${bebw.src}" />
+	<echo message="bebw.bld=${bebw.bld}" />
+	
+	<mkdir dir="${bebw.bld}" />
+	<mkdir dir="${bebw.exp}" />
+
+	<!--
+	pre-bebw is invoked from the master build.xml, so that BE_DATE can be set correctly.
+	<if>
+	    <equals arg1="${env.TAG_FILTERING}" arg2="on" />
+	    <then>
+		<antcall target="pre-bebw" />
+	    </then>
+	    <else>
+	    </else>
+	</if>
+	-->
+
+	<mkdir dir="${bebw.bld}" />
+	<mkdir dir="${lib.exp}"  />
+    <mkdir dir="${lib.exp}/palettes" />
+
+	<javac srcdir="${bebw.src}"
+	       destdir="${bebw.bld}"
+	       debug="on"
+	       source="1.6"
+		   target="1.6">
+	    <classpath>
+		<path refid="bw.classpath"        />
+		<path refid="designer.classpath"  />
+        <path refid="emf.classpath"       />
+        <path refid="mdt.classpath"       />
+        <path refid="jide.classpath"      />
+		<path refid="tra.classpath"       />
+		<path refid="tpcl.classpath"      />
+		<path refid="rv.classpath"        />
+		<path refid="regexp.classpath"    />
+		<path location="${kernel.bld}"    />
+		<path location="${common.bld}"    />
+		<path location="${functions.bld}" />
+		<path location="${studiort.bld}" />
+	    </classpath>
+	    <include name="**/*.java" />
+	</javac>
+
+	<copy todir="${bebw.bld}">
+	    <fileset dir="${bebw.src}">
+		<exclude name="**/*.java" />
+		<exclude name="**/*.tag"  />
+	    </fileset>
+	</copy>
+
+	<jar destfile="${bebw.jar}" basedir="${bebw.bld}">
+	    <manifest>
+		<attribute name="Specification-Title"    value="bebwplugin"                    />
+		<attribute name="Specification-Version"  value="${BE_VERSION}"                 />
+		<attribute name="Specification-Vendor"   value="${BE_COMPANY}"                 />
+		<attribute name="Implementation-Title"   value="bebwplugin"                    />
+		<attribute name="Implementation-Version" value="${BE_VERSION}.${env.BE_BUILD}" />
+		<attribute name="Implementation-Vendor"  value="${BE_COMPANY}"                 />
+		<attribute name="Main-Class"             value="com.tibco.be.bw.plugin.be_bwVersion" />
+	    </manifest>
+	</jar>
+</target>
+
+<target name="clean-bebw" depends="clean-plt">
+	<delete verbose="true" file="${bebw.jar}" />
+	<delete verbose="true" dir="${bebw.bld}"  />
+	<delete verbose="true" file="${bebw.verf}.java" />
+</target>
+    
+<target name="clean-plt" depends="set-plt">
+    <delete verbose="true" file="${bebw.plt}.aepalette" />
+</target>
+
+</project>

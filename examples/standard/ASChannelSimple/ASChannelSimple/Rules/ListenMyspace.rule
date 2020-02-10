@@ -1,0 +1,34 @@
+/**
+ * @description 
+ * @author huabin-lt
+ */
+rule Rules.ListenMyspace {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		
+		Events.MyspaceEvent mySpaceEvent;
+	}
+	when {
+		
+	}
+	then {
+		System.debugOut("MyspaceEvent ID: "					+ mySpaceEvent.eid);
+		System.debugOut("MyspaceEvent VALUE: "				+ mySpaceEvent.value);
+		System.debugOut("MyspaceEvent CONSUMPTION MODE: "	+ mySpaceEvent.consumption_mode);
+		System.debugOut("MyspaceEvent EVENT TYPE: "			+ mySpaceEvent.event_type);
+
+		Events.OutspaceEvent newOutSpaceEvent = Events.OutspaceEvent.OutspaceEvent(
+			"New OutspaceEvent",
+			null,
+			mySpaceEvent.eid + 500,
+			"New text for Outspace: " + mySpaceEvent.value,
+			DateTime.now(),
+			null, null);
+
+		Event.sendEvent(newOutSpaceEvent);
+		System.debugOut("Send event to Outspace.");
+	}
+}

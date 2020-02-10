@@ -1,0 +1,30 @@
+/**
+ * @description Build query string to query user workspace for all non-deleted artifacts.
+ *
+ */
+String rulefunction WebStudio.Core.RuleFunctions.Actions.Lifecycle.Common.WS_RF_BuildBasicWorkspaceQueryString {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.Lifecycle.Common.WS_RF_BuildBasicWorkspaceQueryString");
+		
+		Object queryBuffer = String.createBuffer(0);
+		
+		String.append(queryBuffer, "select ua from /WebStudio/Core/Concepts/WS_C_UserArtifact ua");	
+		String.append(queryBuffer, " where");
+		String.append(queryBuffer, " ua.softDelete = false");
+		String.append(queryBuffer, " and ua.parentProjectId = $parentProjectId");
+		String.append(queryBuffer, " and /#String/regionMatches(");	
+		String.append(queryBuffer, "false, ua.artifactPath, 0, $syncPath, 0, /#String/length($syncPath))");
+	
+		String workspaceQueryString = String.convertBufferToString(queryBuffer);
+		Log.log(LOGGER, "Debug", "Workspace sync query with bind variables [%s]", workspaceQueryString);
+		String.clearBuffer(queryBuffer);
+		
+		return workspaceQueryString;
+	}
+}

@@ -1,0 +1,20 @@
+/**
+ * @description 
+ * @author vasharma-t440
+ */
+rule Rules.FileAddedRule {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Events.FileAddedEvent e;
+	}
+	when {
+
+	}
+	then {
+		System.debugOut("##########FILE EVENT TYPE:"+e.TYPE);
+		System.debugOut("##########Directory addded with file: "+String.convertByteArrayToString(Event.getPayloadAsBytes(e),"UTF-8"));	
+	}
+}

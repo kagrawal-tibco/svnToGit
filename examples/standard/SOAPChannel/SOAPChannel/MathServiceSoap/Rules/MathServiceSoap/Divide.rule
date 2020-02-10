@@ -1,0 +1,50 @@
+/**
+ * @description 
+ * @author null
+ */
+rule MathServiceSoap.Rules.MathServiceSoap.Divide {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		MathServiceSoap.Events.DivideSoapIn	soapeventin;
+		
+	}
+	when {
+		
+	}
+	then {
+		
+		System.debugOut("###DIVISION###");
+		System.debugOut("###Printing SOAPEventIn Payload###");
+		System.debugOut(soapeventin@payload);
+		
+		System.debugOut("****Getting the first and second value and dividing****");
+		System.debugOut("The dividend is ="+XPath.evalAsDouble("xpath://<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xpath>\n    <expr>$soapeventin/payload/xsd6:message/xsd3:Envelope/xsd3:Body/xsd2:Divide/a</expr>\n    <namespaces>\n        <namespace URI=\"http://www.tibco.com/TNT/webservices/\" pfx=\"xsd2\"/>\n        <namespace URI=\"http://www.w3.org/2001/XMLSchema\" pfx=\"xsd\"/>\n        <namespace URI=\"www.tibco.com/be/ontology/MathService/MathServiceSoap/Events/AddSoapIn\" pfx=\"xsd4\"/>\n        <namespace URI=\"http://schemas.xmlsoap.org/soap/envelope/\" pfx=\"xsd3\"/>\n        <namespace URI=\"www.tibco.com/be/ontology/MathServiceSoap/Events/DivideSoapIn\" pfx=\"xsd6\"/>\n        <namespace URI=\"www.tibco.com/be/ontology/MathService/MathServiceSoap/Events/DivideSoapIn\" pfx=\"xsd5\"/>\n    </namespaces>\n    <variables>\n        <variable>soapeventin</variable>\n    </variables>\n</xpath>"));
+		double divisor=XPath.evalAsDouble("xpath://<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xpath>\n    <expr>$soapeventin/payload/xsd6:message/xsd3:Envelope/xsd3:Body/xsd2:Divide/b</expr>\n    <namespaces>\n        <namespace URI=\"http://www.w3.org/1999/XSL/Transform\" pfx=\"xsl\"/>\n        <namespace URI=\"http://www.tibco.com/TNT/webservices/\" pfx=\"xsd2\"/>\n        <namespace URI=\"http://www.w3.org/2001/XMLSchema\" pfx=\"xsd\"/>\n        <namespace URI=\"www.tibco.com/be/ontology/MathService/MathServiceSoap/Events/AddSoapIn\" pfx=\"xsd4\"/>\n        <namespace URI=\"http://schemas.xmlsoap.org/soap/envelope/\" pfx=\"xsd3\"/>\n        <namespace URI=\"www.tibco.com/be/ontology/MathServiceSoap/Events/DivideSoapIn\" pfx=\"xsd6\"/>\n        <namespace URI=\"www.tibco.com/be/ontology/MathService/MathServiceSoap/Events/DivideSoapIn\" pfx=\"xsd5\"/>\n    </namespaces>\n    <variables>\n        <variable>soapeventin</variable>\n    </variables>\n</xpath>");
+		System.debugOut("The divisor is ="+divisor);
+	    if(divisor!=0)
+	    {
+		System.debugOut("*******Creating the SoapEventOut********");
+		MathServiceSoap.Events.DivideSoapOut soapeventout=Event.createEvent("xslt://{{/MathServiceSoap/Events/DivideSoapOut}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:ns=\"http://www.tibco.com/TNT/webservices/\" xmlns:ns1=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:ns2=\"www.tibco.com/be/ontology/MathServiceSoap/Events/DivideSoapIn\" xmlns:ns3=\"www.tibco.com/be/ontology/MathServiceSoap/Events/DivideSoapOut\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"1.0\" exclude-result-prefixes=\"ns2 ns1 ns xsd\">\n    <xsl:output method=\"xml\"/>\n    <xsl:param name=\"soapeventin\"/>\n    <xsl:template match=\"/\">\n        <createEvent>\n            <event>\n                <payload>\n                    <ns3:message>\n                        <ns1:Envelope>\n                            <ns1:Body>\n                                <ns:DivideResponse>\n                                    <DivideResult>\n                                        <xsl:value-of select=\"$soapeventin/payload/ns2:message/ns1:Envelope/ns1:Body/ns:Divide/a div $soapeventin/payload/ns2:message/ns1:Envelope/ns1:Body/ns:Divide/b\"/>\n                                    </DivideResult>\n                                </ns:DivideResponse>\n                            </ns1:Body>\n                        </ns1:Envelope>\n                    </ns3:message>\n                </payload>\n            </event>\n        </createEvent>\n    </xsl:template>\n</xsl:stylesheet>");
+		System.debugOut("###The division of the 2 numbers are=###"+XPath.evalAsDouble("xpath://<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xpath>\n    <expr>$soapeventout/payload/xsd7:message/xsd3:Envelope/xsd3:Body/xsd2:DivideResponse/DivideResult</expr>\n    <namespaces>\n        <namespace URI=\"http://www.tibco.com/TNT/webservices/\" pfx=\"xsd2\"/>\n        <namespace URI=\"http://www.w3.org/2001/XMLSchema\" pfx=\"xsd\"/>\n        <namespace URI=\"www.tibco.com/be/ontology/MathService/MathServiceSoap/Events/AddSoapIn\" pfx=\"xsd4\"/>\n        <namespace URI=\"http://schemas.xmlsoap.org/soap/envelope/\" pfx=\"xsd3\"/>\n        <namespace URI=\"www.tibco.com/be/ontology/MathService/MathServiceSoap/Events/DivideSoapOut\" pfx=\"xsd6\"/>\n        <namespace URI=\"www.tibco.com/be/ontology/MathService/MathServiceSoap/Events/AddSoapOut\" pfx=\"xsd5\"/>\n        <namespace URI=\"www.tibco.com/be/ontology/MathServiceSoap/Events/DivideSoapOut\" pfx=\"xsd7\"/>\n    </namespaces>\n    <variables>\n        <variable>soapeventout</variable>\n    </variables>\n</xpath>"));
+		System.debugOut("###Printing SOAPEventOut Payload###");
+		System.debugOut(soapeventout@payload);
+		Event.replyEvent(soapeventin,soapeventout);
+	    }
+	    else
+	    {
+	    	System.debugOut("###Divide by Zero Error###"); 
+	    	MathServiceSoap.Events.DivideSoapOut soapeventout=Event.createEvent("xslt://{{/MathServiceSoap/Events/DivideSoapOut}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" xmlns:ns=\"www.tibco.com/be/ontology/MathServiceSoap/Events/DivideSoapOut\" xmlns:ns1=\"http://schemas.xmlsoap.org/soap/envelope/\" version=\"1.0\" exclude-result-prefixes=\"xsl xsd\">\n    <xsl:output method=\"xml\"/>\n    <xsl:template match=\"/\">\n        <createEvent>\n            <event>\n                <payload>\n                    <ns:message>\n                        <ns1:Envelope>\n                            <ns1:Body>\n                                <ns1:Fault>\n                                    <faultcode>\n                                        <xsl:value-of select=\"&quot;Server.DivideByZero&quot;\"/>\n                                    </faultcode>\n                                    <faultstring>\n                                        <xsl:value-of select=\"&quot;Divide by Zero Error&quot;\"/>\n                                    </faultstring>\n                                </ns1:Fault>\n                            </ns1:Body>\n                        </ns1:Envelope>\n                    </ns:message>\n                </payload>\n            </event>\n        </createEvent>\n    </xsl:template>\n</xsl:stylesheet>");
+	    	System.debugOut("###Printing SOAPEventOut Payload###");
+		    System.debugOut(soapeventout@payload);
+			Event.replyEvent(soapeventin,soapeventout);
+	    }
+	    
+	}
+	
+}
+	  
+		
+	

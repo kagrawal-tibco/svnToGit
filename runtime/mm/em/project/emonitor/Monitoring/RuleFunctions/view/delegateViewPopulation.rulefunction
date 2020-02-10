@@ -1,0 +1,21 @@
+/**
+ * @description 
+ */
+void rulefunction Monitoring.RuleFunctions.view.delegateViewPopulation {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String	compType;
+		String	dataRetrievalType;
+		Object	dataset;
+	}
+	body {
+		if (dataRetrievalType == "computed"){
+		    delegateComputedMetricsViewPopulation(compType,dataset);
+		}
+		else {
+		    delegateRemoteMetricsViewPopulation(compType,dataset);
+		}
+	}
+}

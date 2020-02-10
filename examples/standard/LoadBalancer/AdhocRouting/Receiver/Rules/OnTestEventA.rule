@@ -1,0 +1,21 @@
+/**
+ * @description 
+ * @author ajayapra-W510
+ */
+rule Receiver.Rules.OnTestEventA {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Entities.TestEventA t;
+	}
+	when {
+		
+	}
+	then {
+		System.debugOut("Processing event with name: " + t.name + " in rule");
+		
+		Event.consumeEvent(t);
+	}
+}

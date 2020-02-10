@@ -1,0 +1,187 @@
+/**
+ * @description Generate Deployable for the project
+ */
+WebStudio.Core.Concepts.DataSources.WS_C_TemporaryReturnData rulefunction WebStudio.Core.RuleFunctions.Actions.WS_RF_GenerateDeployable {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object servletRequest;
+		WebStudio.Security.Authn.Concepts.WS_C_LoggedInUser loggedInUser;
+		String projectName;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.WS_RF_GenerateDeployable");
+		
+		String responseMessage = null;
+		String errorCode = null;
+		int recordCount = 0;
+		int responseStatus = 0;
+		WS_C_ResponseData responseData = null;
+		String pathSeparator = "/";
+		
+		String buildClassesOnly = HTTP.Servlet.Request.getRequestParameter(servletRequest, "buildClassesOnly");
+
+		if (!WS_RF_CheckHTTPMethod(servletRequest, "GET")) {
+			responseStatus = -1;
+			errorCode = "ERR_5101";
+			responseMessage = "Invalid HTTP Method, expect method is [GET].";
+		} else {
+			String subscriptionId = null;
+			if (loggedInUser.jwtToken != null) subscriptionId = loggedInUser.jwtToken.sbsc;
+			
+			String scsRootURL = WS_RF_GetSCSRootURL(projectName, subscriptionId);
+			if (scsRootURL == null) {
+				throw Exception.newException(null, "Source control repository location not present. Set ws.scs.rootURL property", null);
+			}
+
+			//Get the User roles
+			String[] roles = Instance.PropertyArray.toArrayString(loggedInUser.roles);			
+			boolean hasAccess = RMS.Authorization.ensureAccess(projectName, subscriptionId, roles, null, "PROJECT", "gen_deploy");
+			
+			if (!hasAccess) {		
+				Log.log(LOGGER, "Debug", "Access Denied to user %s to generate deployable for project %s.", loggedInUser.username, projectName);
+				responseStatus = -1;
+				responseMessage = String.format("Access Denied to generate deployable for project [%s].", projectName);
+				errorCode = "ERR_1191";
+			} else {
+				Object reusableBuffer = String.createBuffer(0);
+				//Project Path
+				String.append(reusableBuffer, scsRootURL);
+				String.append(reusableBuffer, pathSeparator);
+				String.append(reusableBuffer, projectName);				
+				String projectPath = String.convertBufferToString(reusableBuffer);				
+		        String.clearBuffer(reusableBuffer);
+		        
+				//Output Directory
+				String sharedLocation = System.getSystemPropertyAsString("ws.artifact.deploy.location", null);				
+				String.append(reusableBuffer, sharedLocation);
+				String.append(reusableBuffer, pathSeparator);
+				if (subscriptionId != null && !String.equals(subscriptionId, "")) {
+					String.append(reusableBuffer, subscriptionId);
+					String.append(reusableBuffer, pathSeparator);
+				}
+				String.append(reusableBuffer, projectName);
+				String outputDirectory = String.convertBufferToString(reusableBuffer);
+				
+				//Ear Path								
+				String.append(reusableBuffer, pathSeparator);
+				String.append(reusableBuffer, projectName);
+				String.append(reusableBuffer, ".ear");					
+				String earPath = String.convertBufferToString(reusableBuffer);				
+				String.clearBuffer(reusableBuffer);
+				
+				//Extended classpath
+				String customLibsPath = System.getSystemPropertyAsString("ws.projects.customLib.location", null);	
+				String.append(reusableBuffer, customLibsPath);
+				String.append(reusableBuffer, pathSeparator);
+				if (subscriptionId != null && !String.equals(subscriptionId, "")) {
+					String.append(reusableBuffer, subscriptionId);
+					String.append(reusableBuffer, pathSeparator);
+				}
+				String.append(reusableBuffer, projectName);
+				String libPath = String.convertBufferToString(reusableBuffer);
+				String.clearBuffer(reusableBuffer);					
+				Log.log(LOGGER, "Debug", "Libray path in lib dir %s", libPath);
+				
+				String extendedClasspath = 
+					Approval.Rules.RuleFunctions.ArtifactRuleFunctions.AMS_RF_CreateClasspath(libPath);					
+				Log.log(LOGGER, "Debug", "Extended Classpath %s", extendedClasspath);
+				
+				//Project Library Path
+				String projectLibsPath = System.getSystemPropertyAsString("ws.projects.projectLib.location", null);	
+				String.append(reusableBuffer, projectLibsPath);
+				String.append(reusableBuffer, pathSeparator);
+				if (subscriptionId != null && !String.equals(subscriptionId, "")) {
+					String.append(reusableBuffer, subscriptionId);
+					String.append(reusableBuffer, pathSeparator);
+				}
+				String.append(reusableBuffer, projectName);
+				String plPath = String.convertBufferToString(reusableBuffer);
+				String.clearBuffer(reusableBuffer);					
+				Log.log(LOGGER, "Debug", "Project Libray path dir %s", plPath);
+				
+				String projectLibraryPath = WS_RF_CreateProjectLibraryPaths(plPath);					
+				Log.log(LOGGER, "Debug", "Project Library Path %s", projectLibraryPath);
+				
+				// if to use legacy compilation
+				boolean useLegacyCompilation = System.getSystemPropertyAsBoolean("be.codegen.useLegacyCompilation", false);
+				
+				String genDeployLockKey = projectName + "@GEN_DEPLOY";
+				if (subscriptionId != null) genDeployLockKey += ("@" + subscriptionId);
+		
+				//Call Build ear if buildClassesOnly is false
+				if (String.equals(buildClassesOnly, "true")) {
+					boolean classesBuilt = false;
+					try {
+						boolean locked = Cluster.DataGrid.Lock(genDeployLockKey, -1, false);
+						if (locked) {
+							classesBuilt = StudioUtil.buildClasses(projectName, projectPath, outputDirectory, extendedClasspath, useLegacyCompilation, projectLibraryPath);
+							Log.log(LOGGER, "Debug", "Classes Built for project %s - %s", projectName, classesBuilt);
+						}	
+					} catch (Exception e) {
+						Log.logException(LOGGER, "Error", "Deployable generation Failed, Could not generate Classes for project [%s]", e, projectName);
+					}
+					Log.log(LOGGER, "Debug", "Deployment Status - %s", classesBuilt);
+					if (classesBuilt) {
+						responseMessage = "Deployable generated successfully.";
+						String[] warnMessages = WS_RF_CheckSupportedArtifactsInProject(loggedInUser.username, projectName, scsRootURL);
+						if (warnMessages != null && warnMessages@length > 0) {
+							responseData = Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/WS_C_ResponseData");
+							for (int loop = 0; loop < warnMessages@length; loop++) {
+								WS_C_GenerateDeployableProblemRecord warnRecord = 
+																		Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/Records/WS_C_GenerateDeployableProblemRecord");
+								warnRecord.errorMessage = warnMessages[loop];
+								WS_C_AbstractDataSourceRecord abstractDSRecord = warnRecord;
+								Instance.PropertyArray.appendContainedConcept(responseData.record, abstractDSRecord, 1L);
+								recordCount++;
+							}
+						}							
+					} else {
+						responseMessage = String.format("Deployable generation Failed, Could not generate Classes for project [%s]", projectName);
+						errorCode = "ERR_1192";
+						responseStatus = -1;					
+					}								                                   
+				} else {			
+					boolean earBuilt = false;
+					try {
+						boolean locked = Cluster.DataGrid.Lock(genDeployLockKey, -1, false);
+						if (locked) {
+							earBuilt = StudioUtil.buildEar(projectName, projectPath, earPath, extendedClasspath, useLegacyCompilation, projectLibraryPath);
+							Log.log(LOGGER, "Debug", "Ear generated for project %s - %s", projectName, earBuilt);
+						}	
+					} catch (Exception e) {
+						Log.logException(LOGGER, "Error", "Deployable generation Failed, Could not generate EAR for project [%s]", e, projectName);
+					}
+					Log.log(LOGGER, "Debug", "Deployment Status - %s", earBuilt);
+					if (earBuilt) {
+						//If ear gen is successful, update the dirty state of concept deployablestate to false
+						WS_RF_UpdateDeployableState(projectName, false, loggedInUser.username);
+						responseMessage = "Deployable generated successfully.";
+						WS_RF_UpdateProjectSummary(projectName, loggedInUser.username, "GENERATE_DEPLOYABLE");
+						
+						String[] warnMessages = WS_RF_CheckSupportedArtifactsInProject(loggedInUser.username, projectName, scsRootURL);					
+						if (warnMessages != null && warnMessages@length > 0) {
+							responseData = Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/WS_C_ResponseData");
+							for (int loop = 0; loop < warnMessages@length; loop++) {
+								WS_C_GenerateDeployableProblemRecord warnRecord = 
+																		Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/Records/WS_C_GenerateDeployableProblemRecord");
+								warnRecord.errorMessage = warnMessages[loop];																										
+								WS_C_AbstractDataSourceRecord abstractDSRecord = warnRecord;
+								Instance.PropertyArray.appendContainedConcept(responseData.record, abstractDSRecord, 1L);
+								recordCount++;
+							}
+						}	
+					} else {
+						responseMessage = String.format("Deployable generation Failed, Could not generate EAR for project [%s]", projectName);
+						errorCode = "ERR_1193";
+						responseStatus = -1;					
+					}								                                   
+				}
+				WS_RF_AddAuditTrailEntry(loggedInUser.username, projectName, null, null, "GENERATE_DEPLOYABLE", responseMessage);				
+			}
+		}
+		
+		return WS_RF_CreateTemporaryReturnData(responseStatus, recordCount, errorCode, responseMessage, responseData);
+	}
+}

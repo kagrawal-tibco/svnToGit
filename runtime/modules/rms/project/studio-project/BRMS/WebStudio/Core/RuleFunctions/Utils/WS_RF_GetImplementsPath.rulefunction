@@ -1,0 +1,89 @@
+/**
+ * @description Gets the ImplementsPath (VRF Path for DT / RT Path for RTI)
+ */
+String rulefunction WebStudio.Core.RuleFunctions.Utils.WS_RF_GetImplementsPath {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String username;
+		String projectName;
+		String artifactPath;
+		String artifactExtn;
+		String scsRepoURL;
+	}
+	body {
+		
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.WS_RF_GetImplementsPath");
+		
+		String implementsPath = null;
+		WS_C_AnyArtifactDetails artifactContents = null;
+		
+		String userArtifactExtId = WS_RF_CreateUserArtifactExtId(null, artifactPath, projectName, username, null, null);
+		
+		WS_C_UserArtifact userArtifact = null;
+		if (artifactExtn == "ruletemplateinstance") {
+			userArtifact = Instance.getByExtIdByUri(userArtifactExtId, "/WebStudio/Core/Concepts/RuleTemplateInstance/WS_C_RuleTemplateInstanceUserArtifact");
+		} else if (artifactExtn == "rulefunctionimpl") {
+			userArtifact = Instance.getByExtIdByUri(userArtifactExtId, "/WebStudio/Core/Concepts/Decision/WS_C_UserDTableArtifact");
+		}
+		
+		boolean loadEObjectFromSCS = false; 
+		
+		String[] revisionIds = null;
+		if (userArtifact != null) {
+			revisionIds = Instance.PropertyArray.toArrayString(userArtifact.artifactRevisionIds);
+		}
+		
+		if (revisionIds == null || revisionIds@length == 0) {
+			Log.log(LOGGER, "Info", "No artifact revsision has been created yet for artifact %s", artifactPath);
+			loadEObjectFromSCS = true;
+		} else {
+			//Load instance with this latest revision id
+			String latestRevisionId = revisionIds[revisionIds@length - 1];
+			WS_C_UserArtifactRevision userArtifactRevision = Instance.getByExtIdByUri(latestRevisionId, "/WebStudio/Core/Concepts/WS_C_UserArtifactRevision");
+			
+			Log.log(LOGGER, "Debug", "Artifact Content ID for [%s]", userArtifactRevision.artifactContentsId);
+			
+			artifactContents = WS_RF_GetArtifactContentInstance(userArtifactRevision.artifactContentsId, userArtifactRevision.parentArtifactType);
+									 
+			if (artifactContents != null) {
+				Log.log(LOGGER, "Info", "Existing artifact value for %s in project %s", artifactContents, projectName);
+				if (artifactContents instanceof WS_C_AbstractRuleTemplate) {
+					WS_C_AbstractRuleTemplate ruleTemplateInstance = artifactContents;
+					implementsPath = ruleTemplateInstance.implementsPath;
+				}
+				else if (artifactContents instanceof WS_C_DecisionTable) {
+					WS_C_DecisionTable decisionTableContents = artifactContents;
+					implementsPath = decisionTableContents.implementsPath;	
+				}		
+			} else {
+				//This means artifact was checked out but contents not yet loaded.
+				loadEObjectFromSCS = true;				
+			}
+		}
+		
+		if (loadEObjectFromSCS) {
+			Log.log(LOGGER, "Debug", "Contents need to be loaded for artifact [%s] from SCS", artifactPath);
+			
+			//Load from SCS
+			String contents = null;
+			
+			try {
+				contents = WS_RF_FetchContentFromSCS(scsRepoURL, projectName, artifactPath, artifactExtn, username);
+			} catch(Exception exception) {
+				Log.log(LOGGER, "Warning", "Exception reading file content - " + exception@message);
+			}
+
+			if (String.equals("ruletemplateinstance", artifactExtn)) {
+				Object ruleTemplateInstanceEObject = WS.RT.getBaseRuleTemplate(projectName, contents, artifactExtn);
+				implementsPath = WS.RTI.getRuleTemplateInstanceImplementsPath(ruleTemplateInstanceEObject);
+			}
+			else if (String.equals("rulefunctionimpl", artifactExtn)) {
+				implementsPath = WS.Decision.getVRFPath(contents);	
+			}								
+		}
+		
+		return implementsPath;			
+	}
+}

@@ -1,0 +1,22 @@
+/**
+ * @description Perform cleanup activities.
+ */
+void rulefunction Approval.Rules.RuleFunctions.ArtifactRuleFunctions.Shutdown.AMS_RF_CleanupRuleFunction {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		
+	}
+	body {
+		boolean supportedConfigLock = Cluster.DataGrid.Lock("RMS_SUPP_ARTIFACTS_CFG", -1, false);
+		if (supportedConfigLock) {
+			//Bring into wm
+			AMS_C_SupportedArtifactTypesConfig supportedArtifactsConfig = Cluster.DataGrid.CacheLoadConceptByExtIdByUri("RMS_SUPP_ARTIFACTS_CFG", false, "/Approval/Scorecards/AMS_C_SupportedArtifactTypesConfig");
+			if (supportedArtifactsConfig != null) {
+				Instance.PropertyArray.clear(supportedArtifactsConfig.artifactTypes);
+				Instance.deleteInstance(supportedArtifactsConfig);
+			}
+		}
+	}
+}

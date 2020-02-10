@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema xmlns="http://www.w3.org/2001/XMLSchema" 
+targetNamespace="http://www.tibco.com/be/baas/authn/PolicyTemplateSchema" 
+xmlns:tns="http://www.tibco.com/be/baas/authn/PolicyTemplateSchema"
+xmlns:jxb="http://java.sun.com/xml/ns/jaxb" jxb:version="2.0"
+elementFormDefault="qualified">
+   
+	<annotation>
+	  <appinfo>
+	    <jxb:schemaBindings>
+	      <jxb:package name="com.tibco.be.baas.security.authn.saml.metadata.policy.model">
+		 <jxb:javadoc>
+	   <![CDATA[<body> Package level documentation for 
+	generated package com.tibco.be.baas.security.authn.saml.metadata.policy.model</body>]]>
+		 </jxb:javadoc>
+	      </jxb:package>
+	    </jxb:schemaBindings>
+	  </appinfo>
+	</annotation> 	
+    
+
+    <complexType name="PolicyTemplateType">
+        <annotation>
+        	<documentation>All authentication policy templates should adhere to this schema.</documentation>
+        </annotation>
+        <sequence>
+    		<element name="policyConfig" type="tns:PolicyConfigType" maxOccurs="1" minOccurs="1"/>
+    	</sequence>
+    	<attribute name="ID" type="ID" use="required">
+    		<annotation>
+    			<documentation>
+    				Unique ID to identify the Template.
+    			</documentation>
+    		</annotation>
+    	</attribute>
+    	<attribute name="name" use="required">
+    		<simpleType>
+    			<restriction base="Name">
+    				<whiteSpace value="collapse"/>
+    			</restriction>
+    		</simpleType>
+        </attribute>	
+    	<attribute name="description" type="string"/>
+    </complexType>
+
+    <complexType name="AuthnPolicyType">
+        <annotation>
+        	<documentation>All authentication policy templates should adhere to this schema.</documentation>
+        </annotation>
+        <sequence>
+    		<element name="policyConfig" type="tns:PolicyConfigType" maxOccurs="1" minOccurs="1"/>
+    	</sequence>
+    	<attribute name="ID" type="ID" use="required">
+    		<annotation>
+    			<documentation>
+    				Unique ID to identify the Template.
+    			</documentation>
+    		</annotation>
+    	</attribute>
+    	<attribute name="name" use="required">
+    		<simpleType>
+    			<restriction base="Name">
+    				<whiteSpace value="collapse"/>
+    			</restriction>
+    		</simpleType>
+        </attribute>	
+    	<attribute name="description" type="string"/>
+    </complexType>
+    
+    <complexType name="PolicyType" mixed="true"/>
+
+    <complexType name="PolicyConfigType">
+    	<annotation>
+    		<documentation>
+    			Add all configuration for this policy in form of
+    			attributes/properties to it.
+    		</documentation>
+    	</annotation>
+    	<sequence>
+    		<element name="configProperty" type="tns:ConfigPropertyType" maxOccurs="unbounded" minOccurs="0"/>
+    	</sequence>
+    </complexType>
+    
+    <complexType name="ConfigPropertyType">
+    	<sequence>
+    		<element name="value" type="string" maxOccurs="unbounded" minOccurs="0"/>
+    	</sequence>
+    	<attribute name="name" use="required">
+    		<annotation>
+    			<documentation>
+    				Specify unique name inside a policyconfig
+    			</documentation>
+    		</annotation>
+    		<simpleType>
+    			<restriction base="Name">
+    				<whiteSpace value="collapse"/>
+    			</restriction>
+    		</simpleType>
+    	</attribute>
+    	<attribute name="dataType" use="required">
+    		<simpleType>
+    			<restriction base="string">
+    				<enumeration value="integer"/>
+    				<enumeration value="boolean"/>
+    				<enumeration value="double"/>
+    				<enumeration value="float"/>
+    				<enumeration value="datetime"/>
+    				<enumeration value="string"/>
+    				<enumeration value="long"/>
+    			</restriction>
+    		</simpleType>
+    	</attribute>
+    </complexType>
+
+    <element name="AuthnPolicy" type="tns:AuthnPolicyType"/>
+
+    <element name="AuthnPolicyTemplate" type="tns:PolicyTemplateType"/>
+
+    <element name="AuthnPolicyConfig" type="tns:PolicyConfigType"/>
+    
+    <element name="AuthnPolicyConfigProperty" type="tns:ConfigPropertyType"/>	
+</schema>

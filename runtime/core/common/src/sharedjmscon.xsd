@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<xsd:schema
+    ecore:documentRoot="SharedJmsConRoot" 
+	ecore:nsPrefix="sharedjmscon"
+	ecore:package="com.tibco.be.util.config.sharedresources.sharedjmscon"
+	elementFormDefault="unqualified"
+	xml:lang="en"
+	xmlns:aems="http://www.tibco.com/xmlns/aemeta/services/2002"
+	xmlns:bt="http://tibco.com/be/basetypes"
+	xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore"
+	xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+	
+	<xsd:import namespace="http://www.eclipse.org/emf/2002/Ecore"
+		schemaLocation="platform:/plugin/org.eclipse.emf.ecore/model/Ecore.xsd" />
+    <xsd:import namespace="http://tibco.com/be/basetypes"
+    	schemaLocation="basetypes.xsd" />
+    <xsd:import namespace="http://www.tibco.com/xmlns/aemeta/services/2002"
+    	schemaLocation="aemetaservices.xsd"/>
+		
+	<!-- - - - - - - - - Elements - - - - - - - - - -->
+		
+	<xsd:element name="BWSharedResource" type="BWSharedResource-type" />
+
+	<!-- - - - - - - - - - Types - - - - - - - - - - -->
+
+	<xsd:complexType ecore:name="BwSharedResource" name="BWSharedResource-type">
+		<xsd:sequence>
+			<xsd:element ecore:name="name" name="name" type="xsd:string" minOccurs="0" />
+			<xsd:element ecore:name="resourceType" name="resourceType">
+				<xsd:simpleType ecore:name="ResourceType">
+					<xsd:restriction base="xsd:string">
+						<xsd:enumeration value="ae.shared.JMSConnectionKey"/>
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:element>
+			<xsd:element ecore:name="description" name="description" type="xsd:string" minOccurs="0"/>
+			<xsd:element ecore:name="config" name="config" type="Config-type"/>
+		</xsd:sequence>
+	</xsd:complexType>
+	
+	<xsd:complexType ecore:name="Config" name="Config-type">
+		<xsd:sequence>
+			<xsd:element ecore:name="namingEnvironment" name="NamingEnvironment" type="NamingEnvironment-type" />
+			<xsd:element ecore:name="connectionAttributes" name="ConnectionAttributes" type="ConnectionAttributes-type" />
+			<xsd:element ecore:name="useXacf" name="UseXACF" type="bt:booleanOrGVs-type"/>
+			<xsd:element ecore:name="useSsl" name="useSsl" type="bt:booleanOrGVs-type" minOccurs="0"/>
+			<xsd:element ecore:name="useSharedJndiConfig" name="UseSharedJndiConfig" type="bt:booleanOrGVs-type" minOccurs="0"/>
+			<xsd:element ecore:name="admFactorySslPassword" name="AdmFactorySslPassword" type="xsd:string" minOccurs="0"/>
+			<xsd:element ecore:name="ssl" ref="aems:ssl" minOccurs="0"/>
+			<xsd:element ecore:name="jndiSharedConfiguration" name="JndiSharedConfiguration" type="xsd:string" minOccurs="0"/>
+			<xsd:element ecore:name="jndiProperties" name="JNDIProperties" type="JNDIProperties-type" minOccurs="0" />
+		</xsd:sequence>
+	</xsd:complexType>
+	
+	<xsd:complexType ecore:name="ConnectionAttributes" name="ConnectionAttributes-type">
+		<xsd:sequence>
+			<xsd:element ecore:name="username" name="username" type="xsd:string"/>
+			<xsd:element ecore:name="password" name="password" type="xsd:string"/>
+			<xsd:element ecore:name="clientId" name="clientID" type="xsd:string"/>
+			<xsd:element ecore:name="autoGenClientID" name="autoGenClientID" type="bt:booleanOrGVs-type"/>
+		</xsd:sequence>
+	</xsd:complexType>
+
+	<xsd:complexType ecore:name="JndiProperties" name="JNDIProperties-type">
+		<xsd:sequence minOccurs="0" maxOccurs="unbounded">
+			<xsd:element ecore:name="row" name="row" type="Row-type" maxOccurs="unbounded" minOccurs="0"/>
+		</xsd:sequence>
+	</xsd:complexType>
+
+	<xsd:complexType ecore:name="NamingEnvironment" name="NamingEnvironment-type">
+		<xsd:sequence>
+			<xsd:element ecore:name="useJndi" name="UseJNDI" type="bt:booleanOrGVs-type"/>
+			<xsd:element ecore:name="providerUrl" name="ProviderURL" type="xsd:string"/>
+			<xsd:element ecore:name="namingUrl" name="NamingURL" type="xsd:string"/>
+			<xsd:element ecore:name="namingInitialContextFactory" name="NamingInitialContextFactory" type="xsd:string"/>
+			<xsd:element ecore:name="topicFactoryName" name="TopicFactoryName" type="xsd:string"/>
+			<xsd:element ecore:name="queueFactoryName" name="QueueFactoryName" type="xsd:string"/>
+			<xsd:element ecore:name="namingPrincipal" name="NamingPrincipal" type="xsd:string"/>
+			<xsd:element ecore:name="namingCredential" name="NamingCredential" type="xsd:string"/>
+		</xsd:sequence>
+	</xsd:complexType>
+
+	<xsd:complexType ecore:name="Row" name="Row-type">
+		<xsd:sequence>
+			<xsd:element ecore:name="name" name="Name" type="xsd:string"/>
+			<xsd:element ecore:name="type" name="Type" type="bt:jndiPropertyTypeOrGvs-type"/>
+			<xsd:element ecore:name="value" name="Value" type="xsd:string"/>
+		</xsd:sequence>
+	</xsd:complexType>
+	
+</xsd:schema>

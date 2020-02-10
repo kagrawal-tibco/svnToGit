@@ -1,0 +1,40 @@
+<div  (outsideClick)='disablePicker()' >
+  <div (click)='handleClick($event)'>
+    <div [class.input-group]="edit && datetime">
+      <mat-form-field >
+       	  <mat-label>{{floatLabel}}</mat-label>
+	      <input
+	      	matInput
+	        type="text" 
+	        placeholder='{{format}}'
+	        autocomplete="off"
+	        id='datetimeInput'
+	        [readonly]="!edit" 
+	        [(ngModel)]="datetimeInputString" 
+	        (blur)='endEditingFromInputBox()' 
+	        validDatetime 
+	        #datetimeInput ='ngModel'
+	        name='datetimeInput"' 
+	        (focus)='enablePicker()'>
+		 <button mat-button *ngIf='edit && value' matSuffix mat-icon-button aria-label="Clear" (click)='clear()'>
+		    <!-- <mat-icon>close</mat-icon> -->
+		    <i class='fa fa-trash'></i>
+		  </button>
+		  <mat-hint *ngIf='hint' align="start"><strong>{{hint}}</strong> </mat-hint>
+	  	</mat-form-field>
+     <!--  <span class="input-group-btn" *ngIf='edit && datetime'>
+        <button 
+          type="button" 
+          class='btn btn-sm btn-outline-primary' 
+          (click)='clear()'
+          > <i class='fa fa-trash'></i> </button>
+      </span> -->
+    </div>
+    <div class='alert alert-warning' style='position: absolute; z-index: 1009' *ngIf='datetimeInput.errors && datetimeInput.errors["invalidDateTime"]'>
+      <small>{{datetimeInput.errors["invalidDateTime"]}}</small>
+    </div>
+    <div *ngIf='showPicker' class='datetime-picker'>
+      <datetime-picker [allowPastValues]='allowPastValues' [(value)]='datetime'></datetime-picker>
+    </div>
+  </div>
+</div>

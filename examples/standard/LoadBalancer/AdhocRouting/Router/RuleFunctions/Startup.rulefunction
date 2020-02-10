@@ -1,0 +1,21 @@
+/**
+ * @description 
+ */
+void rulefunction Router.RuleFunctions.Startup {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		
+	}
+	body {
+		Router.Entities.Counter c = Router.Entities.Counter.Counter("the-only-counter", 0);
+		
+		System.debugOut("Creating a load balancer to: adhoc1");        
+        Object loadBalancer = LoadBalancer.Router.createLoadBalancerTo("adhoc1");
+		System.debugOut("Created a load balancer to: adhoc1");
+		
+		Util.HashMap.createMap("AllLoadBalancers");
+		Util.HashMap.putObject("AllLoadBalancers", "demoLB", loadBalancer);
+	}
+}

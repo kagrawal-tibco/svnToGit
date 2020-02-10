@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<drivers>
+ 	<driver>
+		<type>FTL</type>
+		<label>TIBCO FTL Connection</label>
+		<class>com.tibco.cep.driver.ftl.FTLDriver</class>
+		<description>TIBCO FTL based on RendezVous</description>
+		<version>1.0.0</version>
+		<properties>
+			<property name="RealmServer" type="String" default="http://localhost:8080" />
+			<property name="UserName" type="String" default="" />
+			<property name="Password" type="String" default="" mask="true" />
+			<property name="Secondary" type="String" default="" />
+		</properties>
+		<destinations>
+			<property name="AppName" displayName="Application Name" type="String" default="" />
+			<property name="EndpointName" displayName="Endpoint Name" type="String" default="" />
+			<property name="InstName" displayName="Instance Name" type="String" default="default" />
+			<property name="Formats" displayName="Format Name" type="String" default=""/>
+			<property name="Match" displayName="Content Matcher" type="String" default="" />
+			<property name="DurableName" displayName="Durable Name" type="String" default="" />
+		</destinations>
+		<references>
+			<type>ae.shared.FTLResource</type>
+		</references>
+		<serializers userdefined="true">
+			<serializer type="FTLSerializer"
+				class="com.tibco.cep.driver.ftl.serializer.FTLSerializer" default="true" />
+		</serializers>
+		<configuration>
+			<property>
+				<name>MessageType</name>
+				<parent>destination</parent>
+				<type>combo-box</type>
+				<choices default="managedFormat">
+					<choice displayed="Managed Format" value="managedFormat" />
+					<choice displayed="Built-in Format(Opaque Format)" value="built-in(opaque)" />
+					<choice displayed="Built-in Format(Keyed Opaque Format)" value="built-in(keyedOpaque)" />
+					<choice displayed="Dynamic" value="dynamic" />
+				</choices>
+			</property>
+		</configuration>
+		
+	</driver>
+</drivers>

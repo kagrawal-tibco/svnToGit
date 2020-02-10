@@ -1,0 +1,43 @@
+/**
+ * @description 
+ * @author 
+ */
+rule Rules.Normal.AssignSeat {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Model.Seat	seat;
+		Model.Guest	guest;
+		Model.Guest	rightGuest;
+		Model.Context	context;
+		
+	}
+	when {
+		seat.guest == guest;
+		guest.sex != rightGuest.sex;
+		checkHobbies(seat, rightGuest);
+		notAssigned(seat.leftSeat, rightGuest);
+		context.status == "processing";
+	}
+	then {
+		Seat rightSeat = Model.Seat.Seat(null/*extId String */,
+		                      rightGuest/*guest Model.Guest */,
+		                      seat/*leftSeat Model.Seat */,
+		                      seat.position+1/*position int */);
+		
+		//System.debugOut("Search Path: " + printPath(rightSeat));
+		
+		//check if we are done
+		if(rightSeat.position == context.numGuest) {
+		    Seat firstSeat = Instance.getById(context.firstSeat);
+		    if(checkHobbies(rightSeat, firstSeat.guest)) {  
+		        //check with the guest in first seat
+		        firstSeat.leftSeat = rightSeat;
+		        context.endTime = DateTime.now();
+		        context.status = "end";     
+		    }
+		}
+	}
+}

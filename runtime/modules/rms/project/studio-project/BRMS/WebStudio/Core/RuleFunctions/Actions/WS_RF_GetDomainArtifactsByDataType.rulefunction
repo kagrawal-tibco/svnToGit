@@ -1,0 +1,86 @@
+/**
+ * @description 
+ */
+WebStudio.Core.Concepts.DataSources.WS_C_TemporaryReturnData rulefunction WebStudio.Core.RuleFunctions.Actions.WS_RF_GetDomainArtifactsByDataType {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object servletRequest;
+		WebStudio.Security.Authn.Concepts.WS_C_LoggedInUser loggedInUser;		
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.Domain.WS_RF_GetDomainArtifactsByDataType");
+		WS_C_ResponseData responseData = 
+			Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/WS_C_ResponseData");
+
+		int responseStatus = 0;
+		int recordCount = 0;
+		String errorCode = null;
+		String responseMessage = null;
+		
+		if (!WS_RF_CheckHTTPMethod(servletRequest, "GET")) {
+			responseStatus = -1;
+			recordCount = 0;
+			errorCode = "ERR_5101";
+			responseMessage = "Invalid HTTP Method, expect method is [GET].";
+		} else {
+			String username = loggedInUser.username;
+			Log.log(LOGGER, "Debug", "Logged in user - %s", username);			
+			//Get the User roles
+			String[] roles = Instance.PropertyArray.toArrayString(loggedInUser.roles);			
+			String projectName = HTTP.Servlet.Request.getRequestParameter(servletRequest, "projectName");
+			String dataType = HTTP.Servlet.Request.getRequestParameter(servletRequest, "dataType");
+
+			String userWorkspaceExtId = WS_RF_CreateUserArtifactExtId("WORKSPACE", null, null, username, null, null);				
+			WS_C_UserWorkspace userWorkspace = Instance.getByExtIdByUri(userWorkspaceExtId, "/WebStudio/Core/Concepts/WS_C_UserWorkspace");
+			Log.log(LOGGER, "Debug", "Existing workspace concept id %s", userWorkspace@id);
+			if (userWorkspace != null) {
+				//Get project with this name
+				String projectExtId = WS_RF_CreateUserArtifactExtId(null, null, projectName, loggedInUser.username, null, null);
+				WS_C_UserProject userProject = Instance.getByExtIdByUri(projectExtId, "/WebStudio/Core/Concepts/WS_C_UserProject");
+				Log.log(LOGGER, "Debug", "User project instance id %s", userProject@id);
+				
+				//Get artifact instance matching this in user project
+				WS_C_UserArtifact[] userArtifacts = Instance.PropertyArray.toArrayContainedConcept(userProject.userArtifacts);
+				for (int innerLoop = 0; innerLoop < userArtifacts@length; innerLoop++) {
+					WS_C_UserArtifact userArtifact = userArtifacts[innerLoop];
+					if (userArtifact instanceof WS_C_DomainUserArtifact) {
+						WS_C_ResponseTransferObjectData responseTransferObject = WS_RF_GetArtifactContentsFromStore(username, roles, projectName, userArtifact.artifactPath, userArtifact.artifactFileExtn);
+						WS_C_Domain baseDomain = responseTransferObject.artifactContents;
+						if (responseTransferObject.errorCode == null && baseDomain != null) {					
+							if (String.equals(dataType, baseDomain.dataType)) {
+								WS_C_ArtifactContentsDataSourceRecord domainDataSourceRecord = 
+									Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/Records/WS_C_ArtifactContentsDataSourceRecord");
+	
+								WS_C_DomainArtifactDetails domainArtifactdetails = 
+									Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/WS_C_DomainArtifactDetails");
+								domainArtifactdetails.artifactPath = userArtifact.artifactPath;
+								domainArtifactdetails.artifactType = userArtifact.artifactType;
+								WS_C_AnyArtifactDetails anyArtifactDetails = domainArtifactdetails;
+								
+								WebStudio.Core.Concepts.Domain.WS_C_Domain domainConfig = Instance.newTransientInstance("/WebStudio/Core/Concepts/Domain/WS_C_Domain");
+								domainConfig.name = baseDomain.name;
+								domainConfig.dataType = baseDomain.dataType;
+								WS.Common.setExtId(domainConfig, "DOMAIN_" + WS.Common.generateUUID());
+															
+								Instance.PropertyAtom.setConceptReference(domainArtifactdetails.artifactContent, domainConfig, 1L);
+								Instance.PropertyAtom.setContainedConcept(domainDataSourceRecord.artifactDetails, anyArtifactDetails, 1L);
+								
+								WS_C_AbstractDataSourceRecord dataSourceRecord = domainDataSourceRecord;
+								Instance.PropertyArray.appendContainedConcept(responseData.record, dataSourceRecord, 1L);
+							}	
+						} else {
+							responseStatus = -1;
+							recordCount = 0;
+							errorCode = responseTransferObject.errorCode;
+							responseMessage = responseTransferObject.errorMessage;							
+						}													
+					}	
+				}	
+			}
+		}
+		
+		return WS_RF_CreateTemporaryReturnData(responseStatus, recordCount, errorCode, responseMessage, responseData);
+	}
+}

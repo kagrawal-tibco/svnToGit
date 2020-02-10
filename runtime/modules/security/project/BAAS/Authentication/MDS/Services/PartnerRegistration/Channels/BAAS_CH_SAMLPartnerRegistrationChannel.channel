@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<channel:Channel xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:channel="http:///com/tibco/cep/designtime/core/model/service/channel" xmlns:designtime="http:///com/tibco/cep/designtime/core/model/designtime_ontology.ecore" namespace="/Authentication/MDS/Services/PartnerRegistration/Channels/" folder="/Authentication/MDS/Services/PartnerRegistration/Channels/" name="BAAS_CH_SAMLPartnerRegistrationChannel" description="Partner registration services channel." GUID="32A4B429-CE6B-1671-9D99-EF426E97482E" ownerProjectName="BAAS">
+  <driver xsi:type="channel:HttpChannelDriverConfig" configMethod="REFERENCE" reference="/Authentication/MDS/Services/PartnerRegistration/SharedResources/BAAS_TR_PartnerRegsitrationHTTPConnection.sharedhttp" label="HTTP" channel="/">
+    <destinations name="BAAS_DS_SAMLSPPartnerRegistrationDestination" description="Register SAML SP." GUID="1D3BFB68-E034-6B8B-C476-FDE1BFE00C18" ownerProjectName="BAAS" eventURI="/Authentication/MDS/Services/PartnerRegistration/Events/BAAS_E_RegisterSAMLSPPartnerRequestEvent" serializerDeserializerClass="com.tibco.cep.driver.http.serializer.RESTMessageSerializer" driverConfig="//@driver">
+      <properties>
+        <properties xsi:type="designtime:SimpleProperty" name="be.http.PageFlow" value="false"/>
+        <properties xsi:type="designtime:SimpleProperty" name="be.http.contextPath" value=""/>
+        <properties xsi:type="designtime:SimpleProperty" name="be.http.pageFlowFunction" value=""/>
+      </properties>
+    </destinations>
+    <extendedConfiguration>
+      <properties name="serverType" value="TOMCAT"/>
+    </extendedConfiguration>
+    <driverType xsi:type="channel:DriverTypeInfo" driverTypeName="HTTP"/>
+    <choice value="TOMCAT">
+      <extendedConfiguration>
+        <properties name="be.http.debug" value="false"/>
+        <properties name="be.http.connectionTimeout" value="60000"/>
+        <properties name="be.http.acceptCount" value="-1"/>
+        <properties name="be.http.socketBufferSize" value="9000"/>
+        <properties name="be.http.maxProcessors" value="-1"/>
+        <properties name="be.http.connectionLinger" value="-1"/>
+        <properties name="be.http.enableDNSLookups" value="false"/>
+        <properties name="be.http.tcpNoDelay" value="true"/>
+        <properties name="be.http.compression" value="off"/>
+        <properties name="be.http.useBodyEncodingForURI" value="false"/>
+        <properties name="be.http.URIEncoding" value=""/>
+        <properties name="be.http.maxKeepAliveRequest" value="-1"/>
+        <properties name="be.http.maxHttpHeaderSize" value="4096"/>
+        <properties name="be.http.maxPostSize" value="2097152"/>
+        <properties name="be.http.maxSavePostSize" value="4096"/>
+        <properties name="be.http.protocol" value=""/>
+        <properties name="be.http.maxSpareThreads" value="50"/>
+        <properties name="be.http.minSpareThreads" value="4"/>
+        <properties name="be.http.compressableMimeType" value="text/html,text/xml,text/plain"/>
+        <properties name="be.http.restrictedUserAgents" value=""/>
+        <properties name="be.http.docRoot" value=""/>
+        <properties name="be.http.docPage" value=""/>
+      </extendedConfiguration>
+    </choice>
+  </driver>
+</channel:Channel>

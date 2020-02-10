@@ -1,0 +1,313 @@
+<?xml version="1.0"?> <process Id="157" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="Process.xsd">
+                        <label>Create Customer</label>
+                        <version>30</version>
+                        <processType>Public</processType>
+                        <laneset Id="160">
+                            <lane Id="161">
+                                <laneId>CreateCustomer.Lane_0</laneId>
+                                <name>Create Customer</name>
+                            </lane>
+                        </laneset>
+                        <properties Id="158">
+                            <property Id="159">
+                                <name>customer</name>
+                                <type>Concept</type>
+                                <isMultiple>false</isMultiple>
+                                <path>/Concepts/Customer</path>
+                            </property>
+                        </properties>
+                        <flowNodes Id="175">
+                            <flowNodeElement Id="176">
+                                <elementId>CreateCustomer.Message_Start_0</elementId>
+                                <type>StartEvent</type>
+                                <name>Message_Start_0</name>
+                                <nodePoint Id="178">
+                                    <x>-1.5987073620612696E2</x>
+                                    <y>1.222741891508631E1</y>
+                                </nodePoint>
+                                <labelPoint Id="179">
+                                    <x>-1.5937073620612694E2</x>
+                                    <y>-2.3739247751580365E1</y>
+                                </labelPoint>
+                                <resourcePath>/Events/CreateCustomerEvent</resourcePath>
+                                <outgoing>CreateCustomer.SequenceFlow_0</outgoing>
+                                <lanes Id="177">
+                                    <lane Id="161">
+                                        <laneId>CreateCustomer.Lane_0</laneId>
+                                        <name>Create Customer</name>
+                                    </lane>
+                                </lanes>
+                                <uniqueId>0</uniqueId>
+                                <version>0</version>
+                                <checkpoint>false</checkpoint>
+                                <outputMap Id="181">
+                                    <mapping>xslt://{{/Processes/CreateCustomer}}&lt;?xml version=\"1.0\" encoding=\"UTF-8\"?&gt;\n&lt;xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" xmlns:ns=\"www.tibco.com/be/ontology/Processes/CreateCustomer\" version=\"1.0\" exclude-result-prefixes=\"xsl ns xsd\"&gt;\n    &lt;xsl:output method=\"xml\"/&gt;\n    &lt;xsl:param name=\"CreateCustomerEvent\"/&gt;\n    &lt;xsl:template match=\"/\"&gt;\n        &lt;job&gt;\n            &lt;xsl:attribute name=\"extId\"&gt;\n                &lt;xsl:value-of select=\"concat(\'JCC-\', $CreateCustomerEvent/name)\"/&gt;\n            &lt;/xsl:attribute&gt;\n            &lt;ns:customer&gt;\n                &lt;xsl:if test=\"$CreateCustomerEvent/name\"&gt;\n                    &lt;xsl:attribute name=\"extId\"&gt;\n                        &lt;xsl:value-of select=\"$CreateCustomerEvent/name\"/&gt;\n                    &lt;/xsl:attribute&gt;\n                &lt;/xsl:if&gt;\n                &lt;xsl:if test=\"$CreateCustomerEvent/name\"&gt;\n                    &lt;name&gt;\n                        &lt;xsl:value-of select=\"$CreateCustomerEvent/name\"/&gt;\n                    &lt;/name&gt;\n                &lt;/xsl:if&gt;\n                &lt;account&gt;\n                    &lt;xsl:attribute name=\"extId\"&gt;\n                        &lt;xsl:value-of select=\"concat(\'ACT-\', $CreateCustomerEvent/name)\"/&gt;\n                    &lt;/xsl:attribute&gt;\n                    &lt;xsl:if test=\"$CreateCustomerEvent/balance\"&gt;\n                        &lt;balance&gt;\n                            &lt;xsl:value-of select=\"$CreateCustomerEvent/balance\"/&gt;\n                        &lt;/balance&gt;\n                    &lt;/xsl:if&gt;\n                &lt;/account&gt;\n            &lt;/ns:customer&gt;\n        &lt;/job&gt;\n    &lt;/xsl:template&gt;\n&lt;/xsl:stylesheet&gt;</mapping>
+                                </outputMap>
+                                <priorityValue>5</priorityValue>
+                            </flowNodeElement>
+                            <flowNodeElement Id="182">
+                                <elementId>CreateCustomer.Message_End_0</elementId>
+                                <type>EndEvent</type>
+                                <name>Message_End_0</name>
+                                <nodePoint Id="184">
+                                    <x>1.2412926379387304E2</x>
+                                    <y>1.222741891508631E1</y>
+                                </nodePoint>
+                                <labelPoint Id="185">
+                                    <x>1.8409593046053968E2</x>
+                                    <y>1.222741891508631E1</y>
+                                </labelPoint>
+                                <resourcePath>/Events/DebugOut</resourcePath>
+                                <incoming>CreateCustomer.SequenceFlow_2</incoming>
+                                <lanes Id="183">
+                                    <lane Id="161">
+                                        <laneId>CreateCustomer.Lane_0</laneId>
+                                        <name>Create Customer</name>
+                                    </lane>
+                                </lanes>
+                                <uniqueId>0</uniqueId>
+                                <version>0</version>
+                                <checkpoint>false</checkpoint>
+                                <inputMap Id="187">
+                                    <mapping>xslt://{{/Events/DebugOut}}&lt;?xml version=\"1.0\" encoding=\"UTF-8\"?&gt;\n&lt;xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" xmlns:ns=\"www.tibco.com/be/ontology/Events/DebugOut\" version=\"1.0\" exclude-result-prefixes=\"xsl xsd\"&gt;\n    &lt;xsl:output method=\"xml\"/&gt;\n    &lt;xsl:param name=\"job\"/&gt;\n    &lt;xsl:template match=\"/\"&gt;\n        &lt;ns:DebugOut&gt;\n            &lt;debugOut&gt;\n                &lt;xsl:value-of select=\"concat(\'#### Created customer:\', $job/customer/name,\' with balance:\',$job/customer/account/balance   )\"/&gt;\n            &lt;/debugOut&gt;\n        &lt;/ns:DebugOut&gt;\n    &lt;/xsl:template&gt;\n&lt;/xsl:stylesheet&gt;</mapping>
+                                </inputMap>
+                                <priorityValue>-1</priorityValue>
+                                <messageStarterList Id="188">
+                                    <messageStarter Id="189">
+                                        <msgStarterId>CreateCustomer.Message_Start_0</msgStarterId>
+                                        <replyTo>true</replyTo>
+                                        <consume>false</consume>
+                                    </messageStarter>
+                                    <messageStarter Id="190">
+                                        <msgStarterId>CreateCustomer.Receive_Message_0</msgStarterId>
+                                        <replyTo>true</replyTo>
+                                        <consume>false</consume>
+                                    </messageStarter>
+                                </messageStarterList>
+                            </flowNodeElement>
+                            <flowNodeElement Id="191">
+                                <elementId>CreateCustomer.Script_0</elementId>
+                                <type>RuleFunctionTask</type>
+                                <name>Create Customer</name>
+                                <nodePoint Id="193">
+                                    <x>-6.687073620612696E1</x>
+                                    <y>1.2227418915086552E1</y>
+                                </nodePoint>
+                                <labelPoint Id="194">
+                                    <x>-6.687073620612694E1</x>
+                                    <y>-2.1739247751524736E1</y>
+                                </labelPoint>
+                                <resourcePath>/RuleFunctions/CreateCustomerAccount</resourcePath>
+                                <incoming>CreateCustomer.SequenceFlow_0</incoming>
+                                <outgoing>CreateCustomer.SequenceFlow_1</outgoing>
+                                <lanes Id="192">
+                                    <lane Id="161">
+                                        <laneId>CreateCustomer.Lane_0</laneId>
+                                        <name>Create Customer</name>
+                                    </lane>
+                                </lanes>
+                                <uniqueId>0</uniqueId>
+                                <version>0</version>
+                                <checkpoint>true</checkpoint>
+                                <loopCharacteristics Id="195">
+                                    <isSequential>true</isSequential>
+                                    <loopCardinality>xpath://&lt;?xml version=\"1.0\" encoding=\"UTF-8\"?&gt;\n&lt;xpath&gt;\n    &lt;expr&gt;$job/customer/@Id&lt;/expr&gt;\n    &lt;namespaces&gt;\n        &lt;namespace URI=\"http://www.w3.org/1999/XSL/Transform\" pfx=\"xsl\"/&gt;\n        &lt;namespace URI=\"http://www.w3.org/2001/XMLSchema\" pfx=\"xsd\"/&gt;\n    &lt;/namespaces&gt;\n    &lt;variables&gt;\n        &lt;variable&gt;job&lt;/variable&gt;\n    &lt;/variables&gt;\n&lt;/xpath&gt;</loopCardinality>
+                                    <behavior>Complex</behavior>
+                                    <completionCondition>xpath://&lt;?xml version=\"1.0\" encoding=\"UTF-8\"?&gt;\n&lt;xpath&gt;\n    &lt;expr&gt;number($job/customer/account/@Id) = number($job/customer/account/@Id)&lt;/expr&gt;\n    &lt;namespaces&gt;\n        &lt;namespace URI=\"http://www.w3.org/1999/XSL/Transform\" pfx=\"xsl\"/&gt;\n        &lt;namespace URI=\"http://www.w3.org/2001/XMLSchema\" pfx=\"xsd\"/&gt;\n    &lt;/namespaces&gt;\n    &lt;variables&gt;\n        &lt;variable&gt;job&lt;/variable&gt;\n        &lt;variable&gt;job&lt;/variable&gt;\n    &lt;/variables&gt;\n&lt;/xpath&gt;</completionCondition>
+                                    <type>MultiInstanceLoopCharacteristics</type>
+                                </loopCharacteristics>
+                                <inputMap Id="196">
+                                    <mapping>xslt://{{/RuleFunctions/CreateCustomerAccount}}&lt;?xml version=\"1.0\" encoding=\"UTF-8\"?&gt;\n&lt;xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" xmlns:ns=\"www.tibco.com/be/ontology/RuleFunctions/CreateCustomerAccount\" version=\"1.0\" exclude-result-prefixes=\"xsl xsd\"&gt;\n    &lt;xsl:output method=\"xml\"/&gt;\n    &lt;xsl:param name=\"job\"/&gt;\n    &lt;xsl:template match=\"/\"&gt;\n        &lt;ns:CreateCustomerAccount&gt;\n            &lt;args&gt;\n                &lt;ns:c&gt;\n                    &lt;xsl:value-of select=\"$job/customer\"/&gt;\n                &lt;/ns:c&gt;\n            &lt;/args&gt;\n        &lt;/ns:CreateCustomerAccount&gt;\n    &lt;/xsl:template&gt;\n&lt;/xsl:stylesheet&gt;</mapping>
+                                </inputMap>
+                            </flowNodeElement>
+                            <flowNodeElement Id="197">
+                                <elementId>CreateCustomer.Script_1</elementId>
+                                <type>RuleFunctionTask</type>
+                                <name>Add Deposit</name>
+                                <nodePoint Id="199">
+                                    <x>3.1129263793873037E1</x>
+                                    <y>1.2227418915086552E1</y>
+                                </nodePoint>
+                                <labelPoint Id="200">
+                                    <x>3.1129263793872923E1</x>
+                                    <y>-2.1739247751524736E1</y>
+                                </labelPoint>
+                                <resourcePath>/RuleFunctions/AddDeposit</resourcePath>
+                                <incoming>CreateCustomer.SequenceFlow_1</incoming>
+                                <outgoing>CreateCustomer.SequenceFlow_2</outgoing>
+                                <lanes Id="198">
+                                    <lane Id="161">
+                                        <laneId>CreateCustomer.Lane_0</laneId>
+                                        <name>Create Customer</name>
+                                    </lane>
+                                </lanes>
+                                <uniqueId>0</uniqueId>
+                                <version>0</version>
+                                <checkpoint>true</checkpoint>
+                                <inputMap Id="201">
+                                    <mapping>xslt://{{/RuleFunctions/AddDeposit}}&lt;?xml version=\"1.0\" encoding=\"UTF-8\"?&gt;\n&lt;xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" xmlns:ns=\"www.tibco.com/be/ontology/RuleFunctions/AddDeposit\" version=\"1.0\" exclude-result-prefixes=\"xsl xsd\"&gt;\n    &lt;xsl:output method=\"xml\"/&gt;\n    &lt;xsl:param name=\"job\"/&gt;\n    &lt;xsl:template match=\"/\"&gt;\n        &lt;ns:AddDeposit&gt;\n            &lt;args&gt;\n                &lt;ns:c&gt;\n                    &lt;xsl:value-of select=\"$job/customer\"/&gt;\n                &lt;/ns:c&gt;\n            &lt;/args&gt;\n        &lt;/ns:AddDeposit&gt;\n    &lt;/xsl:template&gt;\n&lt;/xsl:stylesheet&gt;</mapping>
+                                </inputMap>
+                            </flowNodeElement>
+                            <flowNodeElement Id="202">
+                                <elementId>CreateCustomer.Business_Rule_0</elementId>
+                                <type>BusinessRuleTask</type>
+                                <name>Business_Rule_0</name>
+                                <nodePoint Id="204">
+                                    <x>-4.0842622302831444E1</x>
+                                    <y>-5.7819961754561405E1</y>
+                                </nodePoint>
+                                <labelPoint Id="205">
+                                    <x>-4.0842622302831444E1</x>
+                                    <y>-9.58199617545614E1</y>
+                                </labelPoint>
+                                <resourcePath>/RuleFunctions/Virtual/MyVirtualRF</resourcePath>
+                                <lanes Id="203">
+                                    <lane Id="161">
+                                        <laneId>CreateCustomer.Lane_0</laneId>
+                                        <name>Create Customer</name>
+                                    </lane>
+                                </lanes>
+                                <uniqueId>0</uniqueId>
+                                <version>0</version>
+                                <checkpoint>false</checkpoint>
+                                <uriList Id="206">
+                                    <implementationURI Id="207">
+                                        <uri>/Rules/MyDT</uri>
+                                        <isDeployed>true</isDeployed>
+                                    </implementationURI>
+                                    <implementationURI Id="208">
+                                        <uri>/Rules/MyDT2</uri>
+                                        <isDeployed>false</isDeployed>
+                                    </implementationURI>
+                                </uriList>
+                            </flowNodeElement>
+                            <flowNodeElement Id="209">
+                                <elementId>CreateCustomer.Web_Service_0</elementId>
+                                <type>ServiceTask</type>
+                                <name>Web_Service_0</name>
+                                <nodePoint Id="211">
+                                    <x>9.888114604444414E1</x>
+                                    <y>-7.334482490425869E1</y>
+                                </nodePoint>
+                                <labelPoint Id="212">
+                                    <x>9.888114604444414E1</x>
+                                    <y>-1.1134482490425869E2</y>
+                                </labelPoint>
+                                <resourcePath>/Sample</resourcePath>
+                                <lanes Id="210">
+                                    <lane Id="161">
+                                        <laneId>CreateCustomer.Lane_0</laneId>
+                                        <name>Create Customer</name>
+                                    </lane>
+                                </lanes>
+                                <uniqueId>0</uniqueId>
+                                <version>0</version>
+                                <checkpoint>false</checkpoint>
+                                <service>WsaaServiceService</service>
+                                <port>WsaaService</port>
+                                <operation>getAssetType</operation>
+                                <soapAction>mySoapAction</soapAction>
+                                <opTimeout>10</opTimeout>
+                                <transport>http://localhost:9080/dmhws/services/WsaaService</transport>
+                                <bindingType>HTTP</bindingType>
+                            </flowNodeElement>
+                            <flowNodeElement Id="213">
+                                <elementId>CreateCustomer.Receive_Message_0</elementId>
+                                <type>ReceiveTask</type>
+                                <name>Receive_Message_0</name>
+                                <nodePoint Id="215">
+                                    <x>-1.9279810101047462E2</x>
+                                    <y>-7.71084280920641E1</y>
+                                </nodePoint>
+                                <labelPoint Id="216">
+                                    <x>-1.9279810101047462E2</x>
+                                    <y>-1.151084280920641E2</y>
+                                </labelPoint>
+                                <resourcePath>/Events/CloseOrderEvent</resourcePath>
+                                <lanes Id="214">
+                                    <lane Id="161">
+                                        <laneId>CreateCustomer.Lane_0</laneId>
+                                        <name>Create Customer</name>
+                                    </lane>
+                                </lanes>
+                                <uniqueId>0</uniqueId>
+                                <version>0</version>
+                                <checkpoint>false</checkpoint>
+                                <keyExpression>xpath://&lt;?xml version=\"1.0\" encoding=\"UTF-8\"?&gt;\n&lt;xpath&gt;\n    &lt;expr&gt;$CloseOrderEvent/@extId&lt;/expr&gt;\n    &lt;namespaces&gt;\n        &lt;namespace URI=\"http://www.w3.org/1999/XSL/Transform\" pfx=\"xsl\"/&gt;\n        &lt;namespace URI=\"http://www.w3.org/2001/XMLSchema\" pfx=\"xsd\"/&gt;\n    &lt;/namespaces&gt;\n    &lt;variables&gt;\n        &lt;variable&gt;CloseOrderEvent&lt;/variable&gt;\n    &lt;/variables&gt;\n&lt;/xpath&gt;</keyExpression>
+                            </flowNodeElement>
+                        </flowNodes>
+                        <processId>CreateCustomer</processId>
+                        <sequenceFlows Id="162">
+                            <sequenceElement Id="163">
+                                <elementId>CreateCustomer.SequenceFlow_0</elementId>
+                                <type>SequenceFlow</type>
+                                <name>SequenceFlow_0</name>
+                                <lanes Id="164">
+                                    <lane Id="161">
+                                        <laneId>CreateCustomer.Lane_0</laneId>
+                                        <name>Create Customer</name>
+                                    </lane>
+                                </lanes>
+                                <uniqueId>0</uniqueId>
+                                <isImmediate>true</isImmediate>
+                                <targetReference>CreateCustomer.Script_0</targetReference>
+                                <sourceReference>CreateCustomer.Message_Start_0</sourceReference>
+                                <startPoint Id="165">
+                                    <x>-1.2987073620612696E2</x>
+                                    <y>1.2227418915086552E1</y>
+                                </startPoint>
+                                <endPoint Id="166">
+                                    <x>-1.0187073620612696E2</x>
+                                    <y>1.2227418915086552E1</y>
+                                </endPoint>
+                            </sequenceElement>
+                            <sequenceElement Id="167">
+                                <elementId>CreateCustomer.SequenceFlow_1</elementId>
+                                <type>SequenceFlow</type>
+                                <name>SequenceFlow_1</name>
+                                <lanes Id="168">
+                                    <lane Id="161">
+                                        <laneId>CreateCustomer.Lane_0</laneId>
+                                        <name>Create Customer</name>
+                                    </lane>
+                                </lanes>
+                                <uniqueId>0</uniqueId>
+                                <isImmediate>true</isImmediate>
+                                <targetReference>CreateCustomer.Script_1</targetReference>
+                                <sourceReference>CreateCustomer.Script_0</sourceReference>
+                                <startPoint Id="169">
+                                    <x>-3.1870736206126963E1</x>
+                                    <y>1.2227418915086552E1</y>
+                                </startPoint>
+                                <endPoint Id="170">
+                                    <x>-3.8707362061269635E0</x>
+                                    <y>1.2227418915086552E1</y>
+                                </endPoint>
+                            </sequenceElement>
+                            <sequenceElement Id="171">
+                                <elementId>CreateCustomer.SequenceFlow_2</elementId>
+                                <type>SequenceFlow</type>
+                                <name>SequenceFlow_2</name>
+                                <lanes Id="172">
+                                    <lane Id="161">
+                                        <laneId>CreateCustomer.Lane_0</laneId>
+                                        <name>Create Customer</name>
+                                    </lane>
+                                </lanes>
+                                <uniqueId>0</uniqueId>
+                                <isImmediate>true</isImmediate>
+                                <targetReference>CreateCustomer.Message_End_0</targetReference>
+                                <sourceReference>CreateCustomer.Script_1</sourceReference>
+                                <startPoint Id="173">
+                                    <x>6.612926379387304E1</x>
+                                    <y>1.2227418915086439E1</y>
+                                </startPoint>
+                                <endPoint Id="174">
+                                    <x>9.412926379387304E1</x>
+                                    <y>1.2227418915086439E1</y>
+                                </endPoint>
+                            </sequenceElement>
+                        </sequenceFlows>
+                        <creationDate>Wed Jun 20 03:30:00 IST 2012</creationDate>
+                        <lastModificationDate>Mon Apr 22 12:29:42 IST 2013</lastModificationDate>
+                    </process>

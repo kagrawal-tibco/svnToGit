@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<channel:Channel xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:channel="http:///com/tibco/cep/designtime/core/model/service/channel" xmlns:designtime="http:///com/tibco/cep/designtime/core/model/designtime_ontology.ecore" namespace="/Channels/" folder="/Channels/" name="hawkChannel" description="" GUID="F59E9444-F6DD-37FF-4759-FBF34E841379" ownerProjectName="HawkChannel">
+  <driver configMethod="REFERENCE" reference="/SharedResources/hawkConn.hawk" label="HAWK" channel="/">
+    <properties>
+      <properties xsi:type="designtime:SimpleProperty" name="Domain" value="default"/>
+      <properties xsi:type="designtime:SimpleProperty" name="Transport" value="RendezVous"/>
+      <properties xsi:type="designtime:SimpleProperty" name="RV_Service" value="7474"/>
+      <properties xsi:type="designtime:SimpleProperty" name="RV_Network" value=""/>
+      <properties xsi:type="designtime:SimpleProperty" name="RV_Daemon" value="tcp:7474"/>
+      <properties xsi:type="designtime:SimpleProperty" name="EMS_ServerURL" value="tcp://localhost:7222"/>
+      <properties xsi:type="designtime:SimpleProperty" name="EMS_UserName" value=""/>
+      <properties xsi:type="designtime:SimpleProperty" name="EMS_Password" value=""/>
+    </properties>
+    <destinations folder="/Channels/hawkChannel/" name="alertMonitor" description="" GUID="A4177EED-1595-E391-1E35-76642FA09FDC" ownerProjectName="HawkChannel" eventURI="/Events/alertEvent" serializerDeserializerClass="com.tibco.cep.driver.hawk.serializer.HawkSerializer" driverConfig="//@driver">
+      <properties>
+        <properties xsi:type="designtime:SimpleProperty" name="MonitorType" value="AlertMonitor"/>
+        <properties xsi:type="designtime:SimpleProperty" name="SubscriptionMethodURI" value=""/>
+        <properties xsi:type="designtime:SimpleProperty" name="TimeInterval" value="10"/>
+        <properties xsi:type="designtime:SimpleProperty" name="Arguments" value=""/>
+      </properties>
+    </destinations>
+    <destinations folder="/Channels/hawkChannel/" name="ruleBaseMonitor" description="" GUID="878530C8-5D8B-6E35-20FB-13388E6B1073" ownerProjectName="HawkChannel" eventURI="/Events/ruleBaseEvent" serializerDeserializerClass="com.tibco.cep.driver.hawk.serializer.HawkSerializer" driverConfig="//@driver">
+      <properties>
+        <properties xsi:type="designtime:SimpleProperty" name="MonitorType" value="RuleBaseListMonitor"/>
+        <properties xsi:type="designtime:SimpleProperty" name="SubscriptionMethodURI" value=""/>
+        <properties xsi:type="designtime:SimpleProperty" name="TimeInterval" value="10"/>
+        <properties xsi:type="designtime:SimpleProperty" name="Arguments" value=""/>
+      </properties>
+    </destinations>
+    <destinations folder="/Channels/hawkChannel/" name="subscriptionDest" description="" ownerProjectName="HawkChannel" eventURI="/Events/subscriptionEvent" serializerDeserializerClass="com.tibco.cep.driver.hawk.serializer.HawkSerializer" driverConfig="//@driver">
+      <properties>
+        <properties xsi:type="designtime:SimpleProperty" name="TimeInterval" value="10"/>
+        <properties xsi:type="designtime:SimpleProperty" name="MonitorType" value="MicroAgent Method Subscription"/>
+        <properties xsi:type="designtime:SimpleProperty" name="Arguments" value=""/>
+        <properties xsi:type="designtime:SimpleProperty" name="SubscriptionMethodURI" value="/%%agentName%%/%%microAgentName%%/%%methodName%%"/>
+      </properties>
+    </destinations>
+    <driverType xsi:type="channel:DriverTypeInfo" driverTypeName="Hawk"/>
+  </driver>
+</channel:Channel>

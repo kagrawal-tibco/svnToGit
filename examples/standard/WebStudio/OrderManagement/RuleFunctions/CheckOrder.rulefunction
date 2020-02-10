@@ -1,0 +1,40 @@
+/**
+ * @description This function is used to validate the order details.
+ */
+boolean  rulefunction RuleFunctions.CheckOrder {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String orderItemName;
+		int orderItemQuantity;
+	}
+	body {
+		
+			System.debugOut("#### Checking Order...");						
+			
+			boolean isOrderValid=false;
+			
+			//Get the existing item from the inventory.
+			Concepts.Item existingItem=RuleFunctions.OM_GetExistingInventoryItem(orderItemName);
+						
+			//Valid the order
+			if(null!=existingItem)
+			{	
+				int itemQuantity =existingItem.quantity;
+				
+				if(orderItemQuantity<= 0 || itemQuantity < orderItemQuantity)
+				{
+					System.debugOut("Invalid quantity of an item is ordered.");
+				}
+				else 
+				{
+					isOrderValid=true;
+				}
+			}else{
+				System.debugOut("Ordered item does not exit in the inventory.");
+			}		
+				
+			return isOrderValid;
+		}	
+}

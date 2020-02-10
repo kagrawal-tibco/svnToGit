@@ -1,0 +1,659 @@
+/*
+ * <XDtI18n:getString resource="do_not_edit"/>
+ *
+ */
+package <XDtPackage:packageOf><XDtJavaBean:beanClass/></XDtPackage:packageOf>;
+
+import java.util.*;
+
+import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.ecore.EClass;
+
+
+//import com.tibco.cep.dashboard.logging.LoggingService;
+import com.tibco.cep.dashboard.psvr.mal.MALElementsCollector;
+import com.tibco.cep.dashboard.psvr.mal.MALException;
+import com.tibco.cep.dashboard.psvr.mal.MALElementManagerFactory;
+import com.tibco.cep.dashboard.psvr.mal.model.*;
+import com.tibco.cep.dashboard.psvr.mal.store.PersistentStore;
+import com.tibco.cep.designtime.core.model.beviewsconfig.*;
+<XDtSyn:ifHasNotSuperClass>
+import com.tibco.cep.dashboard.psvr.mal.managers.MALElementManager;
+</XDtSyn:ifHasNotSuperClass>
+import com.tibco.cep.kernel.service.logging.Level;
+import com.tibco.cep.kernel.service.logging.Logger;
+
+
+<XDtSyn:ifHasSuperClass>
+public class <XDtClass:className/>Manager extends <XDtClass:classOf><XDtClass:fullSuperclassName/></XDtClass:classOf>Manager {
+</XDtSyn:ifHasSuperClass>
+<XDtSyn:ifHasNotSuperClass>
+public class <XDtClass:className/>Manager extends MALElementManager {
+</XDtSyn:ifHasNotSuperClass>
+
+    public static final String DEFINITION_TYPE = "<XDtClass:className/>".substring(3);
+
+    public <XDtClass:className/>Manager(Logger logger)  {
+    	super(logger);
+    	setDefinitionType(DEFINITION_TYPE);
+    }
+
+    protected MALElement doCreateElement() {
+        return new <XDtClass:className/>();
+    }
+
+    protected MALElement setDefaultProperties(MALElement element) throws MALException {
+        <XDtClass:className/> castedElement = (<XDtClass:className/>)element;
+        //castedElement.setDefinitionType(DEFINITION_TYPE);
+        EClass eClass = (EClass) BEViewsConfigurationFactory.eINSTANCE.getEPackage().getEClassifier(DEFINITION_TYPE);
+
+        <XDtMethod:forAllMethods superclasses="false" sort="false">
+            <XDtMethod:ifIsSetter>
+                <XDtParameter:forAllMethodParams>
+                    <XDtSyn:ifIsNotNameAttribute value="<XDtMethod:propertyName/>">
+                        <XDtSyn:ifIsNotArray value="<XDtParameter:methodParamType/>">
+                            <XDtType:ifIsPrimitiveOrString value="<XDtParameter:methodParamType/>">
+
+        castedElement.<XDtMethod:methodName/>(getDefault<XDtSyn:className><XDtParameter:methodParamType/></XDtSyn:className>(eClass, "<XDtMethod:propertyName/>"));
+
+                            </XDtType:ifIsPrimitiveOrString>
+                            <XDtSyn:ifIsEnum value="<XDtParameter:methodParamType/>">
+
+        String <XDtMethod:propertyName/>Def = getDefaultString(eClass, "<XDtMethod:propertyName/>");
+        if (<XDtMethod:propertyName/>Def != null && <XDtMethod:propertyName/>Def.trim().length() != 0){
+            com.tibco.cep.dashboard.psvr.mal.model.types.<XDtSyn:className><XDtParameter:methodParamType/></XDtSyn:className> <XDtMethod:propertyName/> = com.tibco.cep.dashboard.psvr.mal.model.types.<XDtSyn:className><XDtParameter:methodParamType/></XDtSyn:className>.valueOf(<XDtMethod:propertyName/>Def);
+            castedElement.<XDtMethod:methodName/>(<XDtMethod:propertyName/>);
+        }
+
+                            </XDtSyn:ifIsEnum>
+                        </XDtSyn:ifIsNotArray>
+                    </XDtSyn:ifIsNotNameAttribute>
+                </XDtParameter:forAllMethodParams>
+            </XDtMethod:ifIsSetter>
+        </XDtMethod:forAllMethods>
+        return castedElement;
+    }
+
+    protected void doUpdateName(MALElement element, String oldNameSection, String newNameSection) throws MALException {
+        <XDtSyn:ifHasSuperClass>
+
+        super.doUpdateName(element,oldNameSection, newNameSection);
+
+        </XDtSyn:ifHasSuperClass>
+        <XDtSyn:ifHasNotSuperClass>
+
+        element.setName(element.getName().replaceAll(oldNameSection, newNameSection));
+
+        </XDtSyn:ifHasNotSuperClass>
+        <XDtClass:className/> castedElement = (<XDtClass:className/>)element;
+
+        <XDtMethod:forAllMethods superclasses="false" sort="false">
+            <XDtMethod:ifIsSetter>
+                <XDtParameter:forAllMethodParams>
+                    <XDtSyn:ifIsNotNameAttribute value="<XDtMethod:propertyName/>">
+                        <XDtSyn:ifIsNotArray value="<XDtParameter:methodParamType/>">
+                            <XDtSyn:ifIsStructure value="<XDtParameter:methodParamType/>">
+                                <XDtSyn:ifCompare lhs="<XDtParameter:methodParamType/>" rhs="java.lang.Object" op="neq">
+
+        <XDtSyn:className><XDtParameter:methodParamType/></XDtSyn:className> existing<XDtMethod:methodNameWithoutPrefix/> = castedElement.get<XDtMethod:methodNameWithoutPrefix/>();
+        if (existing<XDtMethod:methodNameWithoutPrefix/> != null) {
+            MALElementManager manager = MALElementManagerFactory.getInstance().getManager(existing<XDtMethod:methodNameWithoutPrefix/>.getDefinitionType());
+            manager.updateName(existing<XDtMethod:methodNameWithoutPrefix/>,oldNameSection,newNameSection);
+        }
+
+                                </XDtSyn:ifCompare>
+                                <XDtSyn:ifCompare lhs="<XDtParameter:methodParamType/>" rhs="java.lang.Object" op="eq">
+		/*
+        Object existing<XDtMethod:methodNameWithoutPrefix/> = castedElement.get<XDtMethod:methodNameWithoutPrefix/>();
+        if (existing<XDtMethod:methodNameWithoutPrefix/> != null) {
+            if (existing<XDtMethod:methodNameWithoutPrefix/> instanceof MALExternalReference){
+                MALObject malObject = (MALObject)existing<XDtMethod:methodNameWithoutPrefix/>;
+                malObject.setName(malObject.getName().replaceAll(oldNameSection, newNameSection));
+            }
+        }
+        */
+                                </XDtSyn:ifCompare>
+                            </XDtSyn:ifIsStructure>
+                        </XDtSyn:ifIsNotArray>
+                        <XDtSyn:ifIsArray value="<XDtParameter:methodParamType/>">
+                            <XDtSyn:ifIsNotPrimitiveOrStringArray value="<XDtParameter:methodParamType/>">
+                                <XDtSyn:ifCompare lhs="<XDtParameter:methodParamType/>" rhs="java.lang.Object[]" op="eq">
+		/*
+	    Object[] existing<XDtMethod:methodNameWithoutPrefix/>Array = castedElement.get<XDtMethod:methodNameWithoutPrefix/>();
+        if (existing<XDtMethod:methodNameWithoutPrefix/>Array != null){
+            for (int i = 0 ; i < existing<XDtMethod:methodNameWithoutPrefix/>Array.length ; i++){
+                if (existing<XDtMethod:methodNameWithoutPrefix/>Array[i] instanceof MALExternalReference){
+                    MALObject malObject = (MALObject)existing<XDtMethod:methodNameWithoutPrefix/>Array[i];
+                    malObject.setName(malObject.getName().replaceAll(oldNameSection, newNameSection));
+                }
+            }
+        }
+		*/
+                                </XDtSyn:ifCompare>
+                                <XDtSyn:ifCompare lhs="<XDtParameter:methodParamType/>" rhs="java.lang.Object[]" op="neq">
+
+        <XDtSyn:className><XDtParameter:methodParamType/></XDtSyn:className>[] existing<XDtMethod:methodNameWithoutPrefix/>Array = castedElement.get<XDtMethod:methodNameWithoutPrefix/>();
+        if (existing<XDtMethod:methodNameWithoutPrefix/>Array != null){
+            for (int i = 0 ; i < existing<XDtMethod:methodNameWithoutPrefix/>Array.length ; i++){
+                MALElementManager manager = MALElementManagerFactory.getInstance().getManager(existing<XDtMethod:methodNameWithoutPrefix/>Array[i].getDefinitionType());
+                manager.updateName(existing<XDtMethod:methodNameWithoutPrefix/>Array[i],oldNameSection,newNameSection);
+            }
+        }
+
+                                </XDtSyn:ifCompare>
+                            </XDtSyn:ifIsNotPrimitiveOrStringArray>
+                        </XDtSyn:ifIsArray>
+                    </XDtSyn:ifIsNotNameAttribute>
+                </XDtParameter:forAllMethodParams>
+            </XDtMethod:ifIsSetter>
+        </XDtMethod:forAllMethods>
+
+    }
+
+    protected void doLoad(PersistentStore pStore, MALElement malElement, BEViewsElement beElement, MALElementsCollector elementsCollector) throws MALException {
+        <XDtSyn:ifHasSuperClass>
+        super.doLoad(pStore, malElement, beElement, elementsCollector);
+        </XDtSyn:ifHasSuperClass>
+
+        <XDtClass:className/> castedElement = (<XDtClass:className/>) malElement;
+        <XDtSyn:modelClass/> <XDtSyn:modelInstance/> = (<XDtSyn:modelClass/>) beElement;
+
+        <XDtSyn:ifHasNotSuperClass>
+        //castedElement.setTopLevelElement(BEViewsElementNames.isTopLevelElement(castedElement.getDefinitionType()));
+        </XDtSyn:ifHasNotSuperClass>
+
+        <XDtMethod:forAllMethods superclasses="false" sort="false">
+            <XDtMethod:ifIsSetter>
+                <XDtParameter:forAllMethodParams>
+                    <XDtSyn:ifIsNotNameAttribute value="<XDtMethod:propertyName/>">
+                        <XDtSyn:ifIsNotArray value="<XDtParameter:methodParamType/>">
+                            <XDtType:ifIsPrimitiveOrString value="<XDtParameter:methodParamType/>">
+        //<XDtMethod:propertyName/> is primitive or string
+        <XDtParameter:methodParamType/> <XDtMethod:propertyName/> = <XDtSyn:modelInstance/>.<XDtSyn:methodGet/>();
+        /*if (logger.isEnabledFor(Level.DEBUG)) {
+            logger.log(Level.DEBUG, indent + "<XDtMethod:propertyName/>="+<XDtMethod:propertyName/>);
+        }*/
+        castedElement.<XDtMethod:methodName/>(<XDtMethod:propertyName/>);
+                            </XDtType:ifIsPrimitiveOrString>
+                            <XDtSyn:ifIsEnum value="<XDtParameter:methodParamType/>">
+
+        //<XDtMethod:propertyName/> is enum
+        /*if (logger.isEnabledFor(Level.DEBUG)) {
+            logger.log(Level.DEBUG, indent + "<XDtMethod:propertyName/>="+<XDtSyn:modelInstance/>.<XDtSyn:methodGet/>());
+        }*/
+        if (<XDtSyn:modelInstance/>.<XDtSyn:methodGet/>() != null) {
+            com.tibco.cep.dashboard.psvr.mal.model.types.<XDtSyn:className><XDtParameter:methodParamType/></XDtSyn:className> <XDtMethod:propertyName/> = com.tibco.cep.dashboard.psvr.mal.model.types.<XDtSyn:className><XDtParameter:methodParamType/></XDtSyn:className>.valueOf(<XDtSyn:modelInstance/>.<XDtSyn:methodGet/>().toString());
+            castedElement.<XDtMethod:methodName/>(<XDtMethod:propertyName/>);
+        }
+
+                            </XDtSyn:ifIsEnum>
+                            <XDtSyn:ifIsStructure value="<XDtParameter:methodParamType/>">
+
+        //<XDtMethod:propertyName/> is structure
+        EObject e<XDtSyn:propertyName/> = <XDtSyn:modelInstance/>.<XDtSyn:methodGet/>();
+        if (e<XDtSyn:propertyName/> != null) {
+            /*if (logger.isEnabledFor(Level.DEBUG)) {
+                logger.log(Level.DEBUG, indent + "<XDtMethod:propertyName/>=structure");
+                indent += "\t";
+            }*/
+
+                                <XDtSyn:ifCompare lhs="<XDtParameter:methodParamType/>" rhs="java.lang.Object" op="neq">
+
+            //<XDtMethod:propertyName/> is structure not of object type
+            MAL<XDtSyn:propertyType/> mal<XDtSyn:propertyName/> = (MAL<XDtSyn:propertyType/>) loadStructure(pStore, (BEViewsElement)e<XDtSyn:propertyName/>, elementsCollector);
+            castedElement.<XDtMethod:methodName/>(mal<XDtSyn:propertyName/>);
+            <XDtSyn:ifHasSuperClass>
+            //set parent
+            if (mal<XDtSyn:propertyName/>.isTopLevelElement() == true) {
+            	mal<XDtSyn:propertyName/>.addReference(castedElement);
+            }
+            else {
+            	mal<XDtSyn:propertyName/>.setParent(castedElement);
+            }
+            </XDtSyn:ifHasSuperClass>
+
+                                </XDtSyn:ifCompare>
+                                <XDtSyn:ifCompare lhs="<XDtParameter:methodParamType/>" rhs="java.lang.Object" op="eq">
+            //<XDtMethod:propertyName/> is structure of object type
+            MALExternalReference externalReference = new MALExternalReference(pStore.resolve(e<XDtSyn:propertyName/>));
+            castedElement.<XDtMethod:methodName/>(externalReference);
+            externalReference.setParent(castedElement);
+			
+                                </XDtSyn:ifCompare>
+
+            /*if (logger.isEnabledFor(Level.DEBUG)) {
+                indent = indent.substring(0, Math.max(indent.length()-1,0));
+            }*/
+
+        }
+
+                            </XDtSyn:ifIsStructure>
+                        </XDtSyn:ifIsNotArray>
+                        <XDtSyn:ifIsArray value="<XDtParameter:methodParamType/>">
+                            <XDtSyn:ifIsPrimitiveOrStringArray value="<XDtParameter:methodParamType/>">
+
+        //<XDtMethod:propertyName/> is array of primitive or string type
+        org.eclipse.emf.common.util.EList<<XDtSyn:propertyType/>> e<XDtSyn:propertyName/>s = <XDtSyn:modelInstance/>.<XDtSyn:methodGet/>();
+        /*if (logger.isEnabledFor(Level.DEBUG)) {
+            logger.log(Level.DEBUG, indent + "<XDtMethod:propertyName/>=structure array[" + e<XDtSyn:propertyName/>s.size() + "]");
+        }*/
+        if (e<XDtSyn:propertyName/>s.size() != 0) {
+            /*if (logger.isEnabledFor(Level.DEBUG)) {
+                indent += "\t";
+            }*/
+            <XDtSyn:propertyType/>[] <XDtMethod:propertyName/>s = new <XDtSyn:propertyType/>[e<XDtSyn:propertyName/>s.size()];
+            for (int i = 0; i < e<XDtSyn:propertyName/>s.size(); i++) {
+                <XDtMethod:propertyName/>s[i] = e<XDtSyn:propertyName/>s.get(i);
+            }
+            castedElement.<XDtMethod:methodName/>(<XDtMethod:propertyName/>s);
+            /*if (logger.isEnabledFor(Level.DEBUG)) {
+                indent = indent.substring(0, Math.max(indent.length()-1,0));
+            }*/
+        }
+
+                            </XDtSyn:ifIsPrimitiveOrStringArray>
+                            <XDtSyn:ifIsNotPrimitiveOrStringArray value="<XDtParameter:methodParamType/>">
+                                <XDtSyn:ifCompare lhs="<XDtParameter:methodParamType/>" rhs="java.lang.Object[]" op="eq">
+
+        //<XDtMethod:propertyName/> is array of Object type
+        org.eclipse.emf.common.util.EList<?> e<XDtSyn:propertyName/>s = <XDtSyn:modelInstance/>.<XDtSyn:methodGet/>();
+        /*if (logger.isEnabledFor(Level.DEBUG)) {
+            logger.log(Level.DEBUG, indent + "<XDtMethod:propertyName/>=structure array[" + e<XDtSyn:propertyName/>s.size() + "]");
+        }*/
+
+        if (e<XDtSyn:propertyName/>s.size() != 0) {
+            /*if (logger.isEnabledFor(Level.DEBUG)) {
+                indent += "\t";
+            }*/
+            MALExternalReference[] mal<XDtSyn:propertyName/>s = new MALExternalReference[e<XDtSyn:propertyName/>s.size()];
+            for (int i = 0; i < e<XDtSyn:propertyName/>s.size(); i++) {
+				mal<XDtSyn:propertyName/>s[i] = new MALExternalReference(pStore.resolve(e<XDtSyn:propertyName/>s.get(i)));
+            	mal<XDtSyn:propertyName/>s[i].setParent(castedElement);
+            }
+            castedElement.<XDtMethod:methodName/>(mal<XDtSyn:propertyName/>s);
+            /*if (logger.isEnabledFor(Level.DEBUG)) {
+                indent = indent.substring(0, Math.max(indent.length()-1,0));
+            }*/
+        }
+
+                                </XDtSyn:ifCompare>
+                                <XDtSyn:ifCompare lhs="<XDtParameter:methodParamType/>" rhs="java.lang.Object[]" op="neq">
+
+        //<XDtMethod:propertyName/> is array not of Object type
+        org.eclipse.emf.common.util.EList<<XDtSyn:propertyType/>> e<XDtSyn:propertyName/>s = <XDtSyn:modelInstance/>.<XDtSyn:methodGet/>();
+        /*if (logger.isEnabledFor(Level.DEBUG)) {
+            logger.log(Level.DEBUG, indent + "<XDtMethod:propertyName/>=structure array[" + e<XDtSyn:propertyName/>s + "]");
+        }*/
+
+        if (e<XDtSyn:propertyName/>s != null) {
+            /*if (logger.isEnabledFor(Level.DEBUG)) {
+                indent += "\t";
+            }*/
+            MAL<XDtSyn:propertyType/>[] mal<XDtSyn:propertyName/>s = new MAL<XDtSyn:propertyType/>[e<XDtSyn:propertyName/>s.size()];
+            for (int i = 0; i < e<XDtSyn:propertyName/>s.size(); i++) {
+                mal<XDtSyn:propertyName/>s[i] = (MAL<XDtSyn:propertyType/>) loadStructure(pStore, e<XDtSyn:propertyName/>s.get(i), elementsCollector);
+                <XDtSyn:ifHasSuperClass>
+                //set parent
+	            if (mal<XDtSyn:propertyName/>s[i].isTopLevelElement() == true) {
+	            	mal<XDtSyn:propertyName/>s[i].addReference(castedElement);
+	            }
+	            else {
+	            	mal<XDtSyn:propertyName/>s[i].setParent(castedElement);
+	            }                
+                </XDtSyn:ifHasSuperClass>
+            }
+            castedElement.<XDtMethod:methodName/>(mal<XDtSyn:propertyName/>s);
+            /*if (logger.isEnabledFor(Level.DEBUG)) {
+                indent = indent.substring(0, Math.max(indent.length()-1,0));
+            }*/
+        }
+                                </XDtSyn:ifCompare>
+                            </XDtSyn:ifIsNotPrimitiveOrStringArray>
+                        </XDtSyn:ifIsArray>
+                    </XDtSyn:ifIsNotNameAttribute>
+                </XDtParameter:forAllMethodParams>
+            </XDtMethod:ifIsSetter>
+        </XDtMethod:forAllMethods>
+    }
+    
+    protected void doApplyPersonalizations(PersistentStore pStore, MALElement element, MALElementsCollector elementsCollector) throws MALException {
+        <XDtSyn:ifHasSuperClass>
+        super.doApplyPersonalizations(pStore, element, elementsCollector);
+        </XDtSyn:ifHasSuperClass>
+        <XDtSyn:ifCompare lhs="<XDtClass:className/>" rhs="MALBEViewsElement" op="neq">
+	    <XDtClass:className/> castedElement = (<XDtClass:className/>)element;
+	        <XDtMethod:forAllMethods superclasses="false" sort="false">
+	            <XDtMethod:ifIsSetter>
+	                <XDtParameter:forAllMethodParams>
+	                    <XDtSyn:ifIsNotNameAttribute value="<XDtMethod:propertyName/>">
+	    //<XDtMethod:propertyName/> is of type <XDtParameter:methodParamType/>
+	                        <XDtSyn:ifIsNotArray value="<XDtParameter:methodParamType/>">
+	                            <XDtSyn:ifIsStructure value="<XDtParameter:methodParamType/>">
+	                                <XDtSyn:ifCompare lhs="<XDtParameter:methodParamType/>" rhs="java.lang.Object" op="neq">
+	    <XDtSyn:className><XDtParameter:methodParamType/></XDtSyn:className> orig<XDtMethod:methodNameWithoutPrefix/> = castedElement.get<XDtMethod:methodNameWithoutPrefix/>();
+        if (orig<XDtMethod:methodNameWithoutPrefix/> != null) {
+//        	if (orig<XDtMethod:methodNameWithoutPrefix/>.isTopLevelElement() == true) {
+				//<XDtSyn:className><XDtParameter:methodParamType/></XDtSyn:className> resolved<XDtMethod:methodNameWithoutPrefix/> = (<XDtSyn:className><XDtParameter:methodParamType/></XDtSyn:className>)elementsCollector.resolve(pStore,orig<XDtMethod:methodNameWithoutPrefix/>);        	
+				MALElement resolved<XDtMethod:methodNameWithoutPrefix/> = elementsCollector.resolve(pStore,orig<XDtMethod:methodNameWithoutPrefix/>);
+            	MALElementManager manager = MALElementManagerFactory.getInstance().getManager(resolved<XDtMethod:methodNameWithoutPrefix/>.getDefinitionType());
+            	manager.applyPersonalizations(pStore, resolved<XDtMethod:methodNameWithoutPrefix/>,elementsCollector);
+            	if (resolved<XDtMethod:methodNameWithoutPrefix/> != orig<XDtMethod:methodNameWithoutPrefix/>) {
+            		castedElement.set<XDtMethod:methodNameWithoutPrefix/>((<XDtSyn:className><XDtParameter:methodParamType/></XDtSyn:className>)resolved<XDtMethod:methodNameWithoutPrefix/>);
+            		resolved<XDtMethod:methodNameWithoutPrefix/>.addReference(castedElement);
+            	}
+//            }
+        }
+	                                </XDtSyn:ifCompare>
+	                                <XDtSyn:ifCompare lhs="<XDtParameter:methodParamType/>" rhs="java.lang.Object" op="eq">
+	    //TODO Do we worry about object elements?
+	                                </XDtSyn:ifCompare>
+	                            </XDtSyn:ifIsStructure>
+	                        </XDtSyn:ifIsNotArray>
+	                        <XDtSyn:ifIsArray value="<XDtParameter:methodParamType/>">
+	                            <XDtSyn:ifIsNotPrimitiveOrStringArray value="<XDtParameter:methodParamType/>">
+	                                <XDtSyn:ifCompare lhs="<XDtParameter:methodParamType/>" rhs="java.lang.Object[]" op="eq">
+	    //TODO Do we worry about object elements?                        
+	                                </XDtSyn:ifCompare>
+	                                <XDtSyn:ifCompare lhs="<XDtParameter:methodParamType/>" rhs="java.lang.Object[]" op="neq">
+        <XDtSyn:className><XDtParameter:methodParamType/></XDtSyn:className>[] orig<XDtMethod:methodNameWithoutPrefix/>Array = castedElement.get<XDtMethod:methodNameWithoutPrefix/>();
+        if (orig<XDtMethod:methodNameWithoutPrefix/>Array != null){
+        	boolean personalizationApplied = false;
+            for (int i = 0 ; i < orig<XDtMethod:methodNameWithoutPrefix/>Array.length ; i++){
+//            	if (orig<XDtMethod:methodNameWithoutPrefix/>Array[i].isTopLevelElement() == true) {
+            		MALElement resolved<XDtMethod:methodNameWithoutPrefix/> = elementsCollector.resolve(pStore,orig<XDtMethod:methodNameWithoutPrefix/>Array[i]);
+	            	MALElementManager manager = MALElementManagerFactory.getInstance().getManager(resolved<XDtMethod:methodNameWithoutPrefix/>.getDefinitionType());
+	            	manager.applyPersonalizations(pStore, resolved<XDtMethod:methodNameWithoutPrefix/>,elementsCollector);
+            		if (resolved<XDtMethod:methodNameWithoutPrefix/> != orig<XDtMethod:methodNameWithoutPrefix/>Array[i]) {
+            			resolved<XDtMethod:methodNameWithoutPrefix/>.addReference(castedElement);
+            			orig<XDtMethod:methodNameWithoutPrefix/>Array[i] = (<XDtSyn:className><XDtParameter:methodParamType/></XDtSyn:className>)resolved<XDtMethod:methodNameWithoutPrefix/>;
+            			personalizationApplied = true;
+            		}
+//            	}
+            }
+            if (personalizationApplied == true){
+            	castedElement.<XDtMethod:methodName/>(orig<XDtMethod:methodNameWithoutPrefix/>Array);
+            }
+        }
+	                                </XDtSyn:ifCompare>
+	                            </XDtSyn:ifIsNotPrimitiveOrStringArray>
+	                        </XDtSyn:ifIsArray>
+	                    </XDtSyn:ifIsNotNameAttribute>
+	                </XDtParameter:forAllMethodParams>
+	            </XDtMethod:ifIsSetter>
+	        </XDtMethod:forAllMethods>
+	   </XDtSyn:ifCompare>
+	   <XDtSyn:ifCompare lhs="<XDtClass:className/>" rhs="MALBEViewsElement" op="eq">
+	   	//PORT not very happy with the way we avoid resolving original element
+	   </XDtSyn:ifCompare>
+    }    
+
+    protected void doSave(PersistentStore pStore, MALElement malElement, BEViewsElement beElement, MALElementsCollector elementsCollector) throws MALException {
+        <XDtSyn:ifHasSuperClass>
+        super.doSave(pStore, malElement, beElement, elementsCollector);
+        </XDtSyn:ifHasSuperClass>
+
+        <XDtClass:className/> malSource = (<XDtClass:className/>) malElement;
+        <XDtSyn:modelClass/> beTarget = (<XDtSyn:modelClass/>) beElement;
+
+        <XDtMethod:forAllMethods superclasses="false" sort="false">
+            <XDtMethod:ifIsSetter>
+                <XDtParameter:forAllMethodParams>
+                    <XDtSyn:ifIsNotNameAttribute value="<XDtMethod:propertyName/>">
+                        <XDtSyn:ifIsNotArray value="<XDtParameter:methodParamType/>">
+                            <XDtType:ifIsPrimitiveOrString value="<XDtParameter:methodParamType/>">
+        //<XDtMethod:propertyName/> is primitive or string
+        beTarget.<XDtMethod:methodName/>(malSource.get<XDtSyn:propertyName/>());
+                            </XDtType:ifIsPrimitiveOrString>
+                            <XDtSyn:ifIsEnum value="<XDtParameter:methodParamType/>">
+        //<XDtMethod:propertyName/> is enum
+        if (malSource.<XDtSyn:methodGet/>() != null) {
+            beTarget.<XDtMethod:methodName/>(com.tibco.cep.designtime.core.model.beviewsconfig.<XDtSyn:enumType/>.get(malSource.<XDtSyn:methodGet/>().toString()));
+        }
+                            </XDtSyn:ifIsEnum>
+                            <XDtSyn:ifIsStructure value="<XDtParameter:methodParamType/>">
+                                <XDtSyn:ifCompare lhs="<XDtParameter:methodParamType/>" rhs="java.lang.Object" op="eq">
+        //<XDtMethod:propertyName/> is structure of object type
+        MALExternalReference mal<XDtSyn:propertyName/> = (MALExternalReference)malSource.<XDtSyn:methodGet/>();
+        if (mal<XDtSyn:propertyName/> == null) {
+            beTarget.<XDtMethod:methodName/>(null);
+        }
+        else {
+            Object raw<XDtSyn:propertyName/> = mal<XDtSyn:propertyName/>.getExternalReference();
+            beTarget.<XDtMethod:methodName/>((EObject)raw<XDtSyn:propertyName/>);
+        }
+                                </XDtSyn:ifCompare>
+                                <XDtSyn:ifCompare lhs="<XDtParameter:methodParamType/>" rhs="java.lang.Object" op="neq">
+        //<XDtMethod:propertyName/> is structure of non-object type
+        MAL<XDtSyn:propertyType/> mal<XDtSyn:propertyName/> = malSource.<XDtSyn:methodGet/>();
+        if (mal<XDtSyn:propertyName/> == null) {
+            beTarget.<XDtMethod:methodName/>(null);
+        }
+        else {
+        	//we check if  mal<XDtSyn:propertyName/> is auto-generated or not
+        	if (mal<XDtSyn:propertyName/>.isAutoGenerated() == false){
+        		//we only save/update mal<XDtSyn:propertyName/> is it is not auto-generated
+	            <XDtSyn:propertyType/> e<XDtSyn:propertyName/> = (<XDtSyn:propertyType/>) mal<XDtSyn:propertyName/>.getPersistedObject();
+	            if (e<XDtSyn:propertyName/> == null) {
+	                String name = mal<XDtSyn:propertyName/>.getName();
+	                if (name == null || name.trim().length() == 0){
+	                    name = "<XDtMethod:propertyName/>";
+	                }
+	                e<XDtSyn:propertyName/> = (<XDtSyn:propertyType/>) createStructure(pStore, mal<XDtSyn:propertyName/>, name);
+	            }
+	            saveStructure(pStore, mal<XDtSyn:propertyName/>, elementsCollector);
+	            beTarget.<XDtMethod:methodName/>(e<XDtSyn:propertyName/>);
+	        }
+        }
+                                </XDtSyn:ifCompare>
+                            </XDtSyn:ifIsStructure>
+                        </XDtSyn:ifIsNotArray>
+                        <XDtSyn:ifIsArray value="<XDtParameter:methodParamType/>">
+                            <XDtSyn:ifIsPrimitiveOrStringArray value="<XDtParameter:methodParamType/>">
+        //<XDtMethod:propertyName/> is array of primitive or string type
+        beTarget.get<XDtSyn:propertyName/>().clear();
+        beTarget.get<XDtSyn:propertyName/>().addAll(Arrays.asList(malSource.get<XDtSyn:propertyName/>()));
+                            </XDtSyn:ifIsPrimitiveOrStringArray>
+                            <XDtSyn:ifIsNotPrimitiveOrStringArray value="<XDtParameter:methodParamType/>">
+                                <XDtSyn:ifCompare lhs="<XDtParameter:methodParamType/>" rhs="java.lang.Object[]" op="eq">
+        //<XDtMethod:propertyName/> is array of Object type
+        Object[] mal<XDtSyn:propertyName/>s = malSource.get<XDtSyn:propertyName/>();
+        org.eclipse.emf.common.util.EList e<XDtSyn:propertyName/>s = beTarget.get<XDtSyn:propertyName/>();
+        e<XDtSyn:propertyName/>s.clear();
+        for (int i = 0; i < mal<XDtSyn:propertyName/>s.length; i++) {
+            MALExternalReference mal<XDtSyn:propertyName/> = (MALExternalReference)mal<XDtSyn:propertyName/>s[i];
+            e<XDtSyn:propertyName/>s.add(mal<XDtSyn:propertyName/>.getExternalReference());
+        }
+                                </XDtSyn:ifCompare>
+                                <XDtSyn:ifCompare lhs="<XDtParameter:methodParamType/>" rhs="java.lang.Object[]" op="neq">
+        //<XDtMethod:propertyName/> is array not of Object type
+        MAL<XDtSyn:propertyType/>[] mal<XDtSyn:propertyName/>s = malSource.get<XDtSyn:propertyName/>();
+        org.eclipse.emf.common.util.EList<<XDtSyn:propertyType/>> e<XDtSyn:propertyName/>s = beTarget.get<XDtSyn:propertyName/>();
+        e<XDtSyn:propertyName/>s.clear();
+
+        for (int i = 0; i < mal<XDtSyn:propertyName/>s.length; i++) {
+            MAL<XDtSyn:propertyType/> mal<XDtSyn:propertyName/> = mal<XDtSyn:propertyName/>s[i];
+        	//we check if  mal<XDtSyn:propertyName/> is auto-generated or not
+        	if (mal<XDtSyn:propertyName/>.isAutoGenerated() == false){
+        		//we only save/update mal<XDtSyn:propertyName/> is it is not auto-generated            
+            	<XDtSyn:propertyType/> e<XDtSyn:propertyName/> = (<XDtSyn:propertyType/>) mal<XDtSyn:propertyName/>.getPersistedObject();
+	            if (e<XDtSyn:propertyName/> == null) {
+	                String name = mal<XDtSyn:propertyName/>.getName();
+	                if (name == null || name.trim().length() == 0){
+	                    name = "<XDtMethod:propertyName/>#"+i;
+	                }
+	                e<XDtSyn:propertyName/> = (<XDtSyn:propertyType/>) createStructure(pStore, mal<XDtSyn:propertyName/>, name);
+	            }
+	            saveStructure(pStore, mal<XDtSyn:propertyName/>, elementsCollector);
+	            e<XDtSyn:propertyName/>s.add(e<XDtSyn:propertyName/>);
+	        }
+        }
+                                </XDtSyn:ifCompare>
+                            </XDtSyn:ifIsNotPrimitiveOrStringArray>
+                        </XDtSyn:ifIsArray>
+                    </XDtSyn:ifIsNotNameAttribute>
+                </XDtParameter:forAllMethodParams>
+            </XDtMethod:ifIsSetter>
+        </XDtMethod:forAllMethods>
+    }
+    
+    protected void doReset(MALElement malElement, BEViewsElement beElement,  MALElementsCollector elementsCollector) throws MALException {
+        <XDtSyn:ifHasSuperClass>
+        super.doReset(malElement, beElement, elementsCollector);
+        </XDtSyn:ifHasSuperClass>
+
+		<XDtSyn:ifCompare lhs="<XDtClass:className/>" rhs="MALBEViewsElement" op="neq">
+        <XDtClass:className/> castedElement = (<XDtClass:className/>) malElement;
+        <XDtSyn:modelClass/> <XDtSyn:modelInstance/> = (<XDtSyn:modelClass/>) beElement;
+
+	        <XDtMethod:forAllMethods superclasses="false" sort="false">
+	            <XDtMethod:ifIsSetter>
+	                <XDtParameter:forAllMethodParams>
+	                    <XDtSyn:ifIsNotNameAttribute value="<XDtMethod:propertyName/>">
+	                        <XDtSyn:ifIsNotArray value="<XDtParameter:methodParamType/>">
+	                            <XDtSyn:ifIsStructure value="<XDtParameter:methodParamType/>">
+	                            	<XDtSyn:ifCompare lhs="<XDtParameter:methodParamType/>" rhs="java.lang.Object" op="neq">
+        //<XDtMethod:propertyName/> is <XDtParameter:methodParamType/>
+        MAL<XDtSyn:propertyType/> mal<XDtSyn:propertyName/> = castedElement.get<XDtMethod:methodNameWithoutPrefix/>();
+        if (mal<XDtSyn:propertyName/> != null && mal<XDtSyn:propertyName/>.isTopLevelElement() == false) {
+	        EObject e<XDtSyn:propertyName/> = <XDtSyn:modelInstance/>.<XDtSyn:methodGet/>();
+	        if (e<XDtSyn:propertyName/> != null && mal<XDtSyn:propertyName/> != null) {
+	        	MALElementManagerFactory.getInstance().getManager(mal<XDtSyn:propertyName/>.getDefinitionType()).reset(mal<XDtSyn:propertyName/>,(BEViewsElement)e<XDtSyn:propertyName/>,elementsCollector);
+	        }
+	        else if (e<XDtSyn:propertyName/> == null){
+	        	//DOUBT should I log a message here and move on
+	        }
+	    }
+	         						</XDtSyn:ifCompare>
+	                            </XDtSyn:ifIsStructure>
+	                        </XDtSyn:ifIsNotArray>
+	                        <XDtSyn:ifIsArray value="<XDtParameter:methodParamType/>">
+	                            <XDtSyn:ifIsNotPrimitiveOrStringArray value="<XDtParameter:methodParamType/>">
+	                                <XDtSyn:ifCompare lhs="<XDtParameter:methodParamType/>" rhs="java.lang.Object[]" op="neq">
+        //<XDtMethod:propertyName/> is <XDtParameter:methodParamType/>[]
+        org.eclipse.emf.common.util.EList<<XDtSyn:propertyType/>> e<XDtSyn:propertyName/>s = <XDtSyn:modelInstance/>.<XDtSyn:methodGet/>();
+        MAL<XDtSyn:propertyType/>[] mal<XDtSyn:propertyName/>s = castedElement.get<XDtMethod:methodNameWithoutPrefix/>();
+        if (e<XDtSyn:propertyName/>s != null && mal<XDtSyn:propertyName/>s != null){
+        	int i = 0;
+			for (MAL<XDtSyn:propertyType/> mal<XDtSyn:propertyName/> : mal<XDtSyn:propertyName/>s) {
+				if (mal<XDtSyn:propertyName/>.isAutoGenerated() == false && mal<XDtSyn:propertyName/>.isTopLevelElement() == false) {
+					MALElementManagerFactory.getInstance().getManager(mal<XDtSyn:propertyName/>.getDefinitionType()).reset(mal<XDtSyn:propertyName/>,(BEViewsElement)e<XDtSyn:propertyName/>s.get(i),elementsCollector);
+					i++;					
+				}
+			}
+        }
+        else if (e<XDtSyn:propertyName/>s.size() != mal<XDtSyn:propertyName/>s.length){
+        	//DOUBT should I log a message here and move on
+        } 
+        else if (e<XDtSyn:propertyName/>s == null){
+        	//DOUBT should I log a message here and move on
+        }        
+	                                </XDtSyn:ifCompare>
+	                            </XDtSyn:ifIsNotPrimitiveOrStringArray>
+	                        </XDtSyn:ifIsArray>
+	                    </XDtSyn:ifIsNotNameAttribute>
+	                </XDtParameter:forAllMethodParams>
+	            </XDtMethod:ifIsSetter>
+	        </XDtMethod:forAllMethods>
+	   </XDtSyn:ifCompare>     
+	   <XDtSyn:ifCompare lhs="<XDtClass:className/>" rhs="MALBEViewsElement" op="eq">
+	   	//PORT not very happy with the way we avoid resetting original element
+	   </XDtSyn:ifCompare>	        
+    }
+    
+
+    protected MALElement copyProperties(MALElement originalElement, MALElement copiedElement, MALElementsCollector copiedElements, boolean resetPrimaryProps) throws MALException{
+        <XDtSyn:ifHasSuperClass>
+        super.copyProperties(originalElement, copiedElement, copiedElements,resetPrimaryProps);
+        </XDtSyn:ifHasSuperClass>
+        <XDtClass:className/> castedOriginalElement = (<XDtClass:className/>)originalElement;
+        <XDtClass:className/> castedCopiedElement = (<XDtClass:className/>)copiedElement;
+
+        <XDtMethod:forAllMethods superclasses="false" sort="false">
+            <XDtMethod:ifIsSetter>
+                <XDtParameter:forAllMethodParams>
+                    <XDtSyn:ifIsNotNameAttribute value="<XDtMethod:propertyName/>">
+        //<XDtMethod:propertyName/> is of type <XDtParameter:methodParamType/>
+                        <XDtSyn:ifIsNotArray value="<XDtParameter:methodParamType/>">
+                            <XDtType:ifIsPrimitiveOrString value="<XDtParameter:methodParamType/>">
+        castedCopiedElement.<XDtMethod:methodName/>(castedOriginalElement.get<XDtMethod:methodNameWithoutPrefix/>());
+                            </XDtType:ifIsPrimitiveOrString>
+                            <XDtSyn:ifIsEnum value="<XDtParameter:methodParamType/>">
+        Object orig<XDtMethod:methodNameWithoutPrefix/>EnumValue = castedOriginalElement.get<XDtMethod:methodNameWithoutPrefix/>();
+        if (orig<XDtMethod:methodNameWithoutPrefix/>EnumValue != null){
+            <XDtParameter:methodParamType/> copied<XDtMethod:methodNameWithoutPrefix/>Enum = <XDtParameter:methodParamType/>.valueOf(orig<XDtMethod:methodNameWithoutPrefix/>EnumValue.toString());
+            castedCopiedElement.<XDtMethod:methodName/>(copied<XDtMethod:methodNameWithoutPrefix/>Enum);
+        }
+                            </XDtSyn:ifIsEnum>
+                            <XDtSyn:ifIsStructure value="<XDtParameter:methodParamType/>">
+                                <XDtSyn:ifCompare lhs="<XDtParameter:methodParamType/>" rhs="java.lang.Object" op="neq">
+        <XDtSyn:className><XDtParameter:methodParamType/></XDtSyn:className> orig<XDtMethod:methodNameWithoutPrefix/> = castedOriginalElement.get<XDtMethod:methodNameWithoutPrefix/>();
+        if (orig<XDtMethod:methodNameWithoutPrefix/> != null) {
+        	<XDtSyn:className><XDtParameter:methodParamType/></XDtSyn:className> copied<XDtMethod:methodNameWithoutPrefix/> = orig<XDtMethod:methodNameWithoutPrefix/>;
+        	if (orig<XDtMethod:methodNameWithoutPrefix/>.isTopLevelElement() == false) {
+            	MALElementManager manager = MALElementManagerFactory.getInstance().getManager(orig<XDtMethod:methodNameWithoutPrefix/>.getDefinitionType());
+            	copied<XDtMethod:methodNameWithoutPrefix/> = (<XDtSyn:className><XDtParameter:methodParamType/></XDtSyn:className>)manager.doCopy(orig<XDtMethod:methodNameWithoutPrefix/>, copiedElements,resetPrimaryProps);
+            	copied<XDtMethod:methodNameWithoutPrefix/>.setParent(castedCopiedElement);
+            }
+            castedCopiedElement.<XDtMethod:methodName/>(copied<XDtMethod:methodNameWithoutPrefix/>);
+        }
+                                </XDtSyn:ifCompare>
+                                <XDtSyn:ifCompare lhs="<XDtParameter:methodParamType/>" rhs="java.lang.Object" op="eq">
+        Object orig<XDtMethod:methodNameWithoutPrefix/> = castedOriginalElement.get<XDtMethod:methodNameWithoutPrefix/>();
+        Object copied<XDtMethod:methodNameWithoutPrefix/> = orig<XDtMethod:methodNameWithoutPrefix/>;
+        if (orig<XDtMethod:methodNameWithoutPrefix/> instanceof MALExternalReference) {
+        	copied<XDtMethod:methodNameWithoutPrefix/> = ((MALExternalReference)orig<XDtMethod:methodNameWithoutPrefix/>).createCopy(resetPrimaryProps);
+        }
+        castedCopiedElement.<XDtMethod:methodName/>(copied<XDtMethod:methodNameWithoutPrefix/>);
+                                </XDtSyn:ifCompare>
+                            </XDtSyn:ifIsStructure>
+                        </XDtSyn:ifIsNotArray>
+                        <XDtSyn:ifIsArray value="<XDtParameter:methodParamType/>">
+                            <XDtSyn:ifIsPrimitiveOrStringArray value="<XDtParameter:methodParamType/>">
+        String[] orig<XDtMethod:methodNameWithoutPrefix/>Array = castedOriginalElement.get<XDtMethod:methodNameWithoutPrefix/>();
+        if (orig<XDtMethod:methodNameWithoutPrefix/>Array != null){
+            String[] copied<XDtMethod:methodNameWithoutPrefix/>Array = new String[orig<XDtMethod:methodNameWithoutPrefix/>Array.length];
+            System.arraycopy(orig<XDtMethod:methodNameWithoutPrefix/>Array,0,copied<XDtMethod:methodNameWithoutPrefix/>Array,0,orig<XDtMethod:methodNameWithoutPrefix/>Array.length);
+            castedCopiedElement.<XDtMethod:methodName/>(copied<XDtMethod:methodNameWithoutPrefix/>Array);
+        }
+                            </XDtSyn:ifIsPrimitiveOrStringArray>
+                            <XDtSyn:ifIsNotPrimitiveOrStringArray value="<XDtParameter:methodParamType/>">
+                                <XDtSyn:ifCompare lhs="<XDtParameter:methodParamType/>" rhs="java.lang.Object[]" op="eq">
+        Object[] orig<XDtMethod:methodNameWithoutPrefix/>Array = castedOriginalElement.get<XDtMethod:methodNameWithoutPrefix/>();
+        if (orig<XDtMethod:methodNameWithoutPrefix/>Array != null){
+            Object[] copied<XDtMethod:methodNameWithoutPrefix/>Array = new Object[orig<XDtMethod:methodNameWithoutPrefix/>Array.length];
+            for (int i = 0 ; i < orig<XDtMethod:methodNameWithoutPrefix/>Array.length ; i++){
+                copied<XDtMethod:methodNameWithoutPrefix/>Array[i] = orig<XDtMethod:methodNameWithoutPrefix/>Array[i];
+                if (orig<XDtMethod:methodNameWithoutPrefix/>Array[i] instanceof MALExternalReference){
+                    copied<XDtMethod:methodNameWithoutPrefix/>Array[i] = ((MALExternalReference)orig<XDtMethod:methodNameWithoutPrefix/>Array[i]).createCopy(resetPrimaryProps);
+                }
+            }
+            castedCopiedElement.<XDtMethod:methodName/>(copied<XDtMethod:methodNameWithoutPrefix/>Array);
+        }
+
+        castedCopiedElement.<XDtMethod:methodName/>(castedOriginalElement.get<XDtMethod:methodNameWithoutPrefix/>());
+                                </XDtSyn:ifCompare>
+                                <XDtSyn:ifCompare lhs="<XDtParameter:methodParamType/>" rhs="java.lang.Object[]" op="neq">
+        <XDtSyn:className><XDtParameter:methodParamType/></XDtSyn:className>[] orig<XDtMethod:methodNameWithoutPrefix/>Array = castedOriginalElement.get<XDtMethod:methodNameWithoutPrefix/>();
+        if (orig<XDtMethod:methodNameWithoutPrefix/>Array != null){
+            <XDtSyn:className><XDtParameter:methodParamType/></XDtSyn:className>[] copied<XDtMethod:methodNameWithoutPrefix/>Array = new <XDtSyn:className><XDtParameter:methodParamType/></XDtSyn:className>[orig<XDtMethod:methodNameWithoutPrefix/>Array.length];
+            for (int i = 0 ; i < orig<XDtMethod:methodNameWithoutPrefix/>Array.length ; i++){
+            	copied<XDtMethod:methodNameWithoutPrefix/>Array[i] = orig<XDtMethod:methodNameWithoutPrefix/>Array[i];
+            	if (orig<XDtMethod:methodNameWithoutPrefix/>Array[i].isTopLevelElement() == false) {
+                	MALElementManager manager = MALElementManagerFactory.getInstance().getManager(orig<XDtMethod:methodNameWithoutPrefix/>Array[i].getDefinitionType());
+                	copied<XDtMethod:methodNameWithoutPrefix/>Array[i] = (<XDtSyn:className><XDtParameter:methodParamType/></XDtSyn:className>)manager.doCopy(orig<XDtMethod:methodNameWithoutPrefix/>Array[i],copiedElements,resetPrimaryProps);
+                	copied<XDtMethod:methodNameWithoutPrefix/>Array[i].setParent(castedCopiedElement);
+                }
+            }
+            castedCopiedElement.<XDtMethod:methodName/>(copied<XDtMethod:methodNameWithoutPrefix/>Array);
+        }
+                                </XDtSyn:ifCompare>
+                            </XDtSyn:ifIsNotPrimitiveOrStringArray>
+                        </XDtSyn:ifIsArray>
+                    </XDtSyn:ifIsNotNameAttribute>
+                </XDtParameter:forAllMethodParams>
+            </XDtMethod:ifIsSetter>
+        </XDtMethod:forAllMethods>
+        return copiedElement;
+    }
+
+}

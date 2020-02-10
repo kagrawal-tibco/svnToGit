@@ -1,0 +1,364 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+	<!--
+		Author : Aditya Athalye. Simple schema for tester results
+	-->
+
+<schema
+	ecore:documentRoot="TesterRoot" 
+	ecore:nsPrefix="test"
+	ecore:package="com.tibco.cep.studio.tester.emf.model"
+	xml:lang="en" 
+	xmlns="http://www.w3.org/2001/XMLSchema" 
+	targetNamespace="www.tibco.com/be/studio/tester"
+	xmlns:tns="www.tibco.com/be/studio/tester"
+	xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore"
+	xmlns:xsd="http://www.w3.org/2001/XMLSchema" 
+	elementFormDefault="qualified"
+	attributeFormDefault="unqualified">
+	
+	<xsd:import namespace="http://www.eclipse.org/emf/2002/Ecore"
+		schemaLocation="platform:/plugin/org.eclipse.emf.ecore/model/Ecore.xsd" />
+		
+	<xsd:element ecore:name="oldValue" name="oldValue" type="tns:ValueType"/>
+    <xsd:element ecore:name="newValue" name="newValue" type="tns:ValueType"/>
+    <xsd:element ecore:name="TesterResults" name="TesterResults" type="tns:TesterResultsType" />
+	<xsd:element ecore:name="ExecutionObject" name="ExecutionObject" type="tns:ExecutionObjectType" />
+	<xsd:element ecore:name="ReteObject" name="ReteObject" type="tns:ReteObjectType" />
+	<xsd:element ecore:name="Concept" name="Concept" type="tns:ConceptType" />
+	<xsd:element ecore:name="Event" name="Event" type="tns:EventType" />
+	<xsd:element ecore:name="OperationObject" name="OperationObject" type="tns:OperationObjectType" />
+	
+	<xsd:complexType ecore:name="TesterResultsDatatype" name="TesterResultsDatatype">
+		<xsd:annotation>
+			<xsd:documentation>
+				Root of the tester results XML sorted by DataType.
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element ecore:name="RunName"  name="RunName" type="string" maxOccurs="1">
+				<xsd:annotation>
+					<xsd:documentation>
+						Represents the name of the run for which the
+						results
+						are generated.
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element ecore:name="OntologyObject" name="OntologyObject" type="tns:OntologyObjectType"
+				maxOccurs="unbounded" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						Represents a list of object that have passed through same operation.
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute ecore:name="project" name="project" type="string" form="qualified" />
+	</xsd:complexType>
+	
+	<xsd:complexType ecore:name="OntologyObjectType" name="OntologyObjectType">
+		<xsd:sequence>
+			<xsd:element ecore:name="OperationObject" name="OperationObject" type="tns:OperationObjectType"
+				maxOccurs="unbounded" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						Represents a list of object that have passed through same operation.
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute ecore:name="dataType" name="dataType" type="string" />
+	</xsd:complexType>
+	
+	<xsd:complexType ecore:name="TesterResultsOperation" name="TesterResultsOperation">
+		<xsd:annotation>
+			<xsd:documentation>
+				Root of the tester results XML sorted by operations.
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element ecore:name="RunName"  name="RunName" type="string" maxOccurs="1">
+				<xsd:annotation>
+					<xsd:documentation>
+						Represents the name of the run for which the
+						results
+						are generated.
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element ecore:name="OperationObject" name="OperationObject" type="tns:OperationObjectType"
+				maxOccurs="unbounded" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						Represents a list of object that have passed through same operation.
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute ecore:name="project" name="project" type="string" form="qualified" />
+	</xsd:complexType>
+	
+	<xsd:simpleType ecore:name="OperationType" name="OperationType">
+		<xsd:restriction base="string">
+			<xsd:enumeration value="CREATED" />
+			<xsd:enumeration value="MODIFIED" />
+			<xsd:enumeration value="DELETED" />
+		</xsd:restriction>
+	</xsd:simpleType>
+	
+	<xsd:complexType ecore:name="OperationObjectType" name="OperationObjectType">
+		<xsd:sequence>
+			<xsd:element ecore:name="ExecutionObject" name="ExecutionObject" type="tns:ExecutionObjectType"
+				maxOccurs="unbounded" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						Represents a result object based upon input
+						data.
+						This will typically contain
+						asserted/modified/retracted entity.
+						This will
+						also contain references to invocation object and
+						causal
+						objects.
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute ecore:name="operation" name="operation" type="tns:OperationType" />
+	</xsd:complexType>
+	
+			
+			
+
+	<xsd:complexType ecore:name="TesterResultsType" name="TesterResultsType">
+		<xsd:annotation>
+			<xsd:documentation>
+				Root of the tester results XML.
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element ecore:name="RunName"  name="RunName" type="string" maxOccurs="1">
+				<xsd:annotation>
+					<xsd:documentation>
+						Represents the name of the run for which the
+						results
+						are generated.
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element ecore:name="ExecutionObject" name="ExecutionObject" type="tns:ExecutionObjectType"
+				maxOccurs="unbounded" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						Represents a result object based upon input
+						data.
+						This will typically contain
+						asserted/modified/retracted entity.
+						This will
+						also contain references to invocation object and
+						causal
+						objects.
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute ecore:name="project" name="project" type="string" form="qualified" />
+	</xsd:complexType>
+
+	<xsd:complexType ecore:name="ExecutionObjectType" name="ExecutionObjectType">
+		<xsd:sequence>
+			<xsd:element ecore:name="ReteObject" name="ReteObject" type="tns:ReteObjectType" />
+			<xsd:element ecore:name="InvocationObject" name="InvocationObject" type="tns:InvocationObjectType"/>
+			<xsd:element ecore:name="CasualObjects" name="CausalObjects" type="tns:CausalObjectsType">
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+
+	<xsd:complexType ecore:name="ReteObjectType" name="ReteObjectType">
+		<xsd:annotation>
+			<xsd:documentation>
+				Represents the actual execution object. This wraps
+				over
+				the BE entity.
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element ecore:name="ChangeType" name="ChangeType">
+				<xsd:simpleType>
+					<xsd:restriction base="string">
+						<xsd:enumeration value="ASSERT" />
+						<xsd:enumeration value="MODIFY" />
+						<xsd:enumeration value="RETRACT" />
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:element>
+			<choice minOccurs="1" maxOccurs="1">
+				<xsd:element ref="tns:Concept" />
+				<xsd:element ref="tns:Event" />
+			</choice>
+		</xsd:sequence>
+	</xsd:complexType>
+
+	<xsd:complexType ecore:name="InvocationObjectType" name="InvocationObjectType">
+		<xsd:annotation>
+			<xsd:documentation>
+				The rule/rule function resulting in the reteobject.
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element ecore:name="Namespace" name="Namespace">
+				<xsd:annotation>
+					<xsd:documentation>
+						The full ExpandedName of the BE entity.
+					</xsd:documentation>
+				</xsd:annotation>
+				<xsd:complexType>
+					<xsd:simpleContent>
+						<xsd:extension base="string" />
+					</xsd:simpleContent>
+				</xsd:complexType>
+			</xsd:element>
+			<xsd:element ecore:name="Type" name="Type">
+				<xsd:simpleType>
+					<xsd:restriction base="string">
+						<xsd:enumeration value="RULE" />
+						<xsd:enumeration value="RULEFUNCTION" />
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+
+	<xsd:complexType ecore:name="CasualObjectsType" name="CausalObjectsType">
+		<xsd:sequence>
+			<xsd:element ref="tns:Concept" minOccurs="0" maxOccurs="unbounded" />
+			<xsd:element ref="tns:Event" minOccurs="0" maxOccurs="unbounded" />
+		</xsd:sequence>
+	</xsd:complexType>
+
+	<xsd:complexType ecore:name="EntityType" name="EntityType">
+		<xsd:annotation>
+			<xsd:documentation>
+				The base entity type representing the BE entity.
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element ecore:name="property" name="property" type="tns:PropertyType" minOccurs="0"
+				maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						The property of the BE entity with its name and
+						value.
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element ecore:name="modifiedProperty" name="modifiedProperty" type="tns:PropertyModificationType" minOccurs="0"
+				maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						The modified property of the BE entity with its name and
+						old and new values
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute ecore:name="Id" name="Id" type="long" />
+		<xsd:attribute ecore:name="extId" name="extId" type="string" />
+		<xsd:attribute ecore:name="name" name="name" type="string" />
+		<xsd:attribute ecore:name="namespace" name="namespace" type="string" />
+	</xsd:complexType>
+	
+	<xsd:complexType ecore:name="PropertyAttrsType" name="PropertyAttrsType">
+		<xsd:annotation>
+			<xsd:documentation>
+				Basic Attributes on the property element.
+			</xsd:documentation>
+		</xsd:annotation>
+	    <xsd:simpleContent>
+		    <xsd:extension base="string">
+				<xsd:attribute ecore:name="name" name="name" type="string" />
+				<xsd:attribute ecore:name="dataType" name="dataType">
+					<xsd:simpleType>
+						<xsd:restriction base="string">
+							<xsd:enumeration value="STRING" />
+							<xsd:enumeration value="INTEGER" />
+							<xsd:enumeration value="LONG" />
+							<xsd:enumeration value="DOUBLE" />
+							<xsd:enumeration value="BOOLEAN" />
+							<xsd:enumeration value="DATETIME" />
+							<xsd:enumeration value="CONTAINED_CONCEPT" />
+							<xsd:enumeration value="CONCEPT_REFERENCE" />
+						</xsd:restriction>
+					</xsd:simpleType>
+				</xsd:attribute>
+				<xsd:attribute ecore:name="multiple" name="multiple" type="boolean" use="optional" default="false" />
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+	
+	<xsd:complexType ecore:name="PropertyType" name="PropertyType">
+		<xsd:simpleContent>
+			<xsd:restriction base="tns:PropertyAttrsType"/>
+		</xsd:simpleContent>
+	</xsd:complexType>
+
+	<xsd:complexType ecore:name="ConceptType" name="ConceptType">
+		<complexContent>
+			<xsd:extension base="tns:EntityType">
+				<xsd:attribute ecore:name="isScorecard" name="isScorecard" type="boolean" use="optional"
+					default="false" />
+			</xsd:extension>
+		</complexContent>
+	</xsd:complexType>
+
+	<xsd:complexType ecore:name="EventType" name="EventType">
+		<complexContent>
+			<xsd:extension base="tns:EntityType">
+				<xsd:sequence>
+					<xsd:element ecore:name="Payload" name="Payload" type="string" maxOccurs="1"
+						minOccurs="0" />
+				</xsd:sequence>
+			</xsd:extension>
+		</complexContent>
+	</xsd:complexType>
+
+	
+
+
+    <xsd:complexType name="ValueType">
+	    <xsd:simpleContent>
+			<xsd:extension base="string"/>
+		</xsd:simpleContent>
+    </xsd:complexType>
+	
+	<xsd:complexType name="PropertyModificationType">
+		<xsd:annotation>
+			<xsd:documentation>
+				Representation of a modified property.
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element ref="tns:oldValue" minOccurs="1" maxOccurs="1"/>
+			<xsd:element ref="tns:newValue" minOccurs="1" maxOccurs="1"/>
+		</xsd:sequence>
+		<xsd:attribute name="name" type="string" />
+		<xsd:attribute name="dataType">
+			<xsd:simpleType>
+				<xsd:restriction base="string">
+					<xsd:enumeration value="STRING" />
+					<xsd:enumeration value="INTEGER" />
+					<xsd:enumeration value="LONG" />
+					<xsd:enumeration value="DOUBLE" />
+					<xsd:enumeration value="BOOLEAN" />
+					<xsd:enumeration value="DATETIME" />
+					<xsd:enumeration value="CONTAINED_CONCEPT" />
+					<xsd:enumeration value="CONCEPT_REFERENCE" />
+				</xsd:restriction>
+			</xsd:simpleType>
+		</xsd:attribute>
+		<xsd:attribute name="multiple" type="boolean" use="optional" default="false" />
+    </xsd:complexType>
+    
+
+</schema>

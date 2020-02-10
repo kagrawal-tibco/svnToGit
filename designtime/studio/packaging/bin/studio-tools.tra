@@ -1,0 +1,100 @@
+#
+# Copyright (c) 2004-2019 TIBCO Software Inc.
+# All Rights Reserved.
+#
+# This software is the confidential and proprietary information of
+# TIBCO Software Inc.
+#
+#==========================================================
+# Common variables.
+#==========================================================
+#
+tibco.env.PSP=%PS%
+tibco.env.TIB_HOME=%TIBCO_HOME_ESC%
+tibco.env.BE_HOME=%TIBCO_BE_HOME_ESC%
+tibco.env.AS_HOME=%TIBCO_AS_HOME_ESC%
+tibco.env.BE_STUDIO_HOME=%BE_HOME%/studio
+tibco.env.BE_RMS_HOME=%BE_HOME%/rms
+tibco.env.ECLIPSE_PATH=%TIBCO_ECLIPSE_PATH_ESC%
+tibco.env.BE_ECLIPSE_HOME=%BE_HOME%/eclipse-platform/%ECLIPSE_PATH%
+ECLIPSE_HOME=%TIBCO_CUSTOMER_ECLIPSE_DIR%
+
+#==========================================================
+# JVM related settings. Choose your options carefully.
+#==========================================================
+
+tibco.env.TIB_JAVA_HOME=%TIBCO_JAVA_HOME_ESC%
+#
+# Ensure that the JVM_LIB_PATH points to the appropriate JVM Server DLL or SO.
+#
+# Example:
+#    64 bit Sun JVM for Intel or AMD on Linux should use JVM_LIB_PATH =
+#    %TIB_JAVA_HOME%/lib/amd64/server/libjvm.so
+#
+#    64 bit Sun JVM for Intel or AMD on Windows should use JVM_LIB_PATH =
+#    %TIB_JAVA_HOME%/lib/amd64/server/libjvm.dll
+#
+#    32 bit Sun JVM for Intel or AMD on Windows should use JVM_LIB_PATH =
+#    %TIB_JAVA_HOME%/lib/i386/server/libjvm.dll
+#
+#
+tibco.env.JVM_LIB_PATH=%TIBCO_JVM_LIB_SERVER_ESC%
+tibco.env.JVM_LIB_DIR=%TIBCO_JVM_LIB_DIR_ESC%
+tibco.env.JDK_LIB=%TIB_JAVA_HOME%/lib
+
+# Java VM parameters
+#
+#java.extended.properties=-Xms256m -XX:+UseParallelGC -XX:+UseAdaptiveSizePolicy
+#java.extended.properties=-Xms256m -verbose:gc
+
+java.extended.properties=-server -Xms1024m -Xmx1024m -Xss2m -javaagent:%BE_HOME%/lib/cep-base.jar -XX:MaxMetaspaceSize=256m
+# java.extended.properties=-server -d64 -Xms2048m -Xmx2048m -javaagent:%BE_HOME%/lib/cep-base.jar -XX:MaxMetaspaceSize=256m
+
+# TIBCO Standard Classpath
+#
+tibco.env.STD_EXT_CP %BE_STUDIO_HOME%/eclipse/plugins%PSP%%BE_STUDIO_HOME%/bin%PSP%%ECLIPSE_HOME%/plugins/org.eclipse.equinox.launcher_1.5.400.v20190515-0925%PSP%%BE_ECLIPSE_HOME%/plugins/org.eclipse.equinox.launcher_1.5.400.v20190515-0925.jar
+
+# TIBCO Standard Path (Applicable to all Platforms)
+#
+tibco.env.PATH %BE_HOME%/hotfix/bin%PSP%%BE_HOME%/bin%PSP%%AS_HOME%/lib%PSP%%TIB_JAVA_HOME%/bin%PSP%%PATH%
+
+tibco.env.LIBPATH %TIBCO_JVM_LIB_DIR_ESC%
+
+# Specifies the classpath with expansion on
+#
+tibco.class.path.extended %CUSTOM_EXT_PREPEND_CP%%PSP%%STD_EXT_CP%%PSP%%CUSTOM_EXT_APPEND_CP%%PSP%
+
+# Specifies the JVM to be used to launch this application
+#
+java.library %JVM_LIB_PATH%
+
+# Installation details
+#
+java.property.tibco_home %TIB_HOME%
+java.property.BE_HOME=%TIBCO_BE_HOME_ESC%
+java.property.studio.wrapper.tra.file=%BE_STUDIO_HOME%/eclipse/configuration/studio.tra
+java.property.studio.console=true
+
+# Sets the SAX and DOM JAXP factories to use
+#
+#java.property.javax.xml.parsers.SAXParserFactory org.apache.xerces.jaxp.SAXParserFactoryImpl
+#java.property.javax.xml.parsers.DocumentBuilderFactory org.apache.xerces.jaxp.DocumentBuilderFactoryImpl
+
+# Specifies the JVM to be used to launch this application
+#
+java.start.class org.eclipse.equinox.launcher.Main
+
+# Specifies the main function in invoke
+#
+java.start.method main
+
+# Arguments to pass to the application
+#
+application.args %APP_ARGS% -application com.tibco.cep.studio.cli.studio-tools -data %BE_STUDIO_HOME%/workspace
+
+# Other arguments to application
+tibco.env.HEAP_SIZE=1024M
+
+# Specifies the initial Java heap size to allocate
+#
+java.heap.size.max %HEAP_SIZE%

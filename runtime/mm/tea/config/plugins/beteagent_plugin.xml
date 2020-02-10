@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<AccumulatorPlugin 
+ xmlns="http://www.tibco.com/cep/bemm/monitoring/metric/config/collectorconfig" 
+ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+ xsi:schemaLocation="http://www.tibco.com/cep/bemm/monitoring/metric/config/collectorconfig ../xsds/AccumulatorPluginConfig.xsd "
+ name="JMXAdapter" 
+ className="com.tibco.cep.bemm.monitoring.metric.probe.accumulator.jmx.BETeaAgentJmxAccumulator" 
+ spm_schema="BETEA">
+ 
+	<config>
+		<property name="poll-interval" value="15000" />
+		<property name="system-plugin" value="true" />
+	</config>
+	
+	<map-entry >
+		 <!-- MEMORY -->
+	     <mapping source="java.lang:type=Memory" type="attribute"  >
+	     	<target-mapping source="HeapMemoryUsage.max"       target="maxmemsize"       datatype="DOUBLE" defaultValue="0" />
+	     	<target-mapping source="HeapMemoryUsage.used"      target="usedmemsize"      datatype="DOUBLE" defaultValue="0"  /> 
+	     </mapping>
+	     <!-- CPU -->
+	     <mapping source="java.lang:type=OperatingSystem" type="attribute" >
+			<target-mapping source="ProcessCpuLoad" 		target="cpuusage" 	datatype="DOUBLE"   defaultValue="0" />
+		 </mapping>
+		 <!-- THREADING -->
+	      <mapping source="java.lang:type=Threading" type="attribute">
+	         <target-mapping source="ThreadCount" target="threadcount" datatype="LONG" defaultValue="0" />
+	      </mapping>
+	      <mapping source="java.lang:type=Threading" type="operation">
+	         <target-mapping source="findDeadlockedThreads" target="deadlockedthreadcount" datatype="LONG" defaultValue="0" />
+	      </mapping>
+		 
+		<!-- RULES -->
+		<!-- <multi-mapping source="be.teagent.service.rules:type=RuleService" type="attribute" name="RuleStatistics">
+			<target-mapping source="RuleName" 		target="statRuleName" 	datatype="STRING"       defaultValue="na" interceptorName="com.tibco.cep.bemm.monitoring.metric.interceptor.impl.RuleNameJmxInterceptor" />
+			<target-mapping source="RuleName" 		target="ruleEntity" 	datatype="STRING"       defaultValue="na" interceptorName="com.tibco.cep.bemm.monitoring.metric.interceptor.impl.RuleNameJmxInterceptor" />
+			<target-mapping source="RuleName" 		target="ruleApp" 	    datatype="STRING"       defaultValue="na" interceptorName="com.tibco.cep.bemm.monitoring.metric.interceptor.impl.RuleNameJmxInterceptor" />
+			<target-mapping source="TotalTime" 		target="totalTime" 	    datatype="LONG"         defaultValue="0" />
+			<target-mapping source="TotalEval" 		target="evalCount" 	    datatype="LONG"         defaultValue="0" />
+			<target-mapping source="AvgTime" 		target="avgTime" 	    datatype="DOUBLE"       defaultValue="0" />
+		</multi-mapping> -->
+     	
+     </map-entry>
+
+</AccumulatorPlugin>

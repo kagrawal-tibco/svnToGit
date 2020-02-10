@@ -1,0 +1,40 @@
+<!doctype html public "-//w3c//dtd html 3.2 final//en">
+<html>
+<head>
+<title>DrillDown Error</title>
+	<link rel="stylesheet" type="text/css" href="/drilldown/css/tabletree.css" />
+	<link rel="stylesheet" type="text/css" href="/drilldown/css/popupmenu.css"/>
+	<link rel="stylesheet" type="text/css" href="/drilldown/css/page.css"/>
+	<script language="javascript" src="/drilldown/js/popupmenu.js"></script>
+	<script language="javascript" src="/drilldown/js/querystring.js"></script>
+	<script language="javascript" src="/drilldown/js/tabletree.js"></script>
+	<script language="javascript" src="/drilldown/js/sortTableTree.js"></script>
+	<script language="javascript" src="/drilldown/js/drilldownmenu.js"></script>
+	<script language="javascript" src="/scripts/servercomm.js"></script>
+	
+	<script language="javascript">
+	
+    	function showmsgandresetcursor(message,tabletreename,tabletreepath,rowindex){
+            alert(message);
+	        //this api is in tabletree.js
+	        var anchorRow = window.parent.document.getElementById(computeId2(NODE_ROW_PREFIX, tabletreename, tabletreepath, rowindex));
+	        if (anchorRow!=undefined)
+	        {
+	            noChildrenFound(window.parent.document, tabletreename, tabletreepath, rowindex);
+	            anchorRow.c_loaded = "true";
+	        }
+	        loadOver(window.parent.document);
+    	}
+
+</script>
+</head>
+<body class="pageletbackground" $bodyOnLoad>
+<table align="center" cellspacing="0" cellpadding="0" border="0" width="100%">
+    <tr>
+        <td align="center">
+            <font class="pageleterrortext">$errormessage</font>
+        </td>
+    </tr>
+</table>
+</body>
+</html>

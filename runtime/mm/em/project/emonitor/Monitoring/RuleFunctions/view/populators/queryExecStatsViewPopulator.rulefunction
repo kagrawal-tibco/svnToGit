@@ -1,0 +1,64 @@
+/**
+ * @description 
+ */
+void rulefunction Monitoring.RuleFunctions.view.populators.queryExecStatsViewPopulator {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object	eventArrayObj;
+	}
+	body {
+		if (eventArrayObj == null){
+		    return;
+		}
+		Object[] eventArray = eventArrayObj;
+		if (eventArray@length == 0){
+		    return;
+		}
+		String listID = null;
+		String componentConfigMapId = null;
+		Shared.Concepts.AbstractMonitorView view = null;
+		Shared.Concepts.SeriesData series = null;
+		try{
+		    for (int i = 0 ; i < eventArray@length ; i = i + 1){
+		        QueryExecutionMetricEvent metricevent = eventArray[i];
+		        if (i == 0) {
+		            view = Instance.getByExtId(metricevent.name);
+		            if (view == null) {
+		               throw Exception.newException("Warning","No View found matching "+metricevent.name,null);
+		            }
+		            componentConfigMapId = getComponentConfigMapId(view.monitorable,view.type);
+		            if (componentConfigMapId == null) {
+		                throw Exception.newException("Warning","Invalid component definition found for "+view.type+" using "+metricevent.name,null);
+		            }
+		            String[] seriesNames = Util.HashMap.getObject(componentConfigMapId,"seriesnames");
+		            listID = metricevent.name+":"+seriesNames[0];
+		            BEMMUtil.LinkedList.createList(listID);
+		        }
+		        BEMMUtil.LinkedList.add(listID,i,metricevent);
+		    }
+		    String[] sortSpec = Util.HashMap.getObject(componentConfigMapId,"sortspec");
+		    if (sortSpec != null && sortSpec@length > 0){
+		        BEMM.util.sortList(BEMMUtil.LinkedList.getList(listID),sortSpec);
+		    }
+		    long threshold = Util.HashMap.getObject(componentConfigMapId,"threshold");
+		    threshold = Math.minInt(threshold,BEMMUtil.LinkedList.size(listID));
+		    for (int i = 0 ; i < threshold ; i = i + 1){
+		        QueryExecutionMetricEvent metricevent = BEMMUtil.LinkedList.get(listID,i);
+		        if (series == null) {
+		            series = Instance.getByExtId(listID);
+		        }
+		        int idx = Instance.PropertyArray.indexOfString(series.categories,metricevent.queryName);
+		        if (idx == -1){
+		            idx = series.categories@length;
+		        }
+		        series.categories[idx] = metricevent.queryName;
+		        series.values[idx] = metricevent.accumulatedEntityCountDuringSS+"#"+metricevent.pendingEntityCount;
+		        series.rawValues[idx] = metricevent.accumulatedEntityCountDuringSS+"#"+metricevent.pendingEntityCount;
+		    }
+		} finally {
+		    BEMMUtil.LinkedList.deleteList(listID);
+		}
+	}
+}

@@ -1,0 +1,39 @@
+/**
+ * @description Preprocessor for refreshing artifacts status after status change.
+ */
+void rulefunction Approval.Rules.RuleFunctions.Preprocessors.AMS_RFP_RefreshCommittedArtifactsPP {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Approval.Events.ArtifactEvents.Worklist.AMS_E_RefreshCommittedArtifactDetailsRequestEvent ams_e_refreshcommittedartifactdetailsrequestevent;
+	}
+	body {
+		boolean isUserLoggedIn = 
+			Approval.CommonServices.AMS_RF_ValidateUsername(ams_e_refreshcommittedartifactdetailsrequestevent) != null;
+		if (!isUserLoggedIn) {
+			AMS_E_ErrorEvent errorEvent = 
+				Approval.CommonServices.AMS_RF_CreateErrorEvent("STATUS_CHANGE_REFRESH_ERROR", "The user " + ams_e_refreshcommittedartifactdetailsrequestevent.loggedInUserName + " is not logged in", null);
+			Event.replyEvent(ams_e_refreshcommittedartifactdetailsrequestevent, errorEvent);
+			//Consume the event so that RTC is not triggered
+			Event.consumeEvent(ams_e_refreshcommittedartifactdetailsrequestevent);
+			throw Exception.newException("STATUS_CHANGE_REFRESH_ERROR", 
+										 "The user " + ams_e_refreshcommittedartifactdetailsrequestevent.loggedInUserName + " is not logged in", null);	
+		}		
+		
+		String revisionId = ams_e_refreshcommittedartifactdetailsrequestevent.revisionid;
+		//Lock concept for this
+		Cluster.DataGrid.Lock("" + revisionId, -1, false);
+		//Find out the task for this rev id
+		//It is ok not to load using cacheLoadConceptByExtId, since we do not
+		//want to modify the concept.
+		AMS_C_ReviewTask reviewTask = Instance.getByExtIdByUri(revisionId, "/Approval/Concepts/ArtifactsConcepts/AMS_C_ReviewTask");
+		
+		if (reviewTask != null) {
+			//Lock this concept for modification
+			if (Cluster.DataGrid.Lock("" + reviewTask.referencedCheckinId, -1, false)) {
+				AMS_C_Checkin referencedCheckin = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(reviewTask.referencedCheckinId, false, "/Approval/Concepts/ArtifactsConcepts/AMS_C_Checkin");
+			}
+		}
+	}
+}

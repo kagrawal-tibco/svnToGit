@@ -1,0 +1,156 @@
+/**
+ * @description 
+ */
+WebStudio.Core.Concepts.DataSources.WS_C_TemporaryReturnData rulefunction WebStudio.Core.RuleFunctions.Actions.Dashboard.WS_RF_FetchUserGroupArtifacts {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object servletRequest;
+		WebStudio.Security.Authn.Concepts.WS_C_LoggedInUser loggedInUser;
+		String groupName;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.Dashboard.WS_RF_FetchUserGroupArtifacts");
+		
+		WS_C_ResponseData responseData = null;
+		int responseStatus = 0;
+		int recordCount = 0;
+		String errorCode = null;
+		String responseMessage = null;
+		
+		if (!WS_RF_CheckHTTPMethod(servletRequest, "GET")) {
+			responseStatus = -1;
+			recordCount = 0;
+			errorCode = "ERR_5101";
+			responseMessage = "Invalid HTTP Method, expect method is [GET].";
+		} else {
+			//Lock and load User Dashboard concept
+			String userDashboardExtId = WS_RF_CreateUserArtifactExtId("DASHBOARD", null, null, loggedInUser.username, null, null);
+			boolean userDashboardLock = Cluster.DataGrid.Lock(userDashboardExtId, 1000, false);
+			Log.log(LOGGER, "Debug", "User Dashboard space locked state - %s", userDashboardLock);
+			
+			if (userDashboardLock) {
+				WS_C_UserDashboard userDashboard = Instance.getByExtIdByUri(userDashboardExtId, "/WebStudio/Core/Concepts/Dashboard/WS_C_UserDashboard");
+				
+				if (userDashboard != null) {
+					Log.log(LOGGER, "Debug", "User Dashboard instance id %s", userDashboard@id);
+					
+					String groupType = HTTP.Servlet.Request.getRequestParameter(servletRequest, "groupType");
+					String projectName = HTTP.Servlet.Request.getRequestParameter(servletRequest, "projectName");
+					String ignoreDeleteStatusValue = HTTP.Servlet.Request.getRequestParameter(servletRequest, "ignoreDeleteStatus");
+					boolean ignoreDeleteStatus = false;
+					if (ignoreDeleteStatusValue != null && String.equals(ignoreDeleteStatusValue, "true")) {
+						ignoreDeleteStatus = true;
+					}
+					
+					Log.log(LOGGER, "Debug", "Request Parameters, groupName - %s, groupType - %s & projectName - %s", groupName, groupType, projectName);
+					
+					responseData = Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/WS_C_ResponseData");
+					
+					String[] matchingArtifacts = null;
+					String groupExtId = WS_RF_CreateUserArtifactExtId(userDashboardExtId, null, null, null, null, String.replaceAll(groupName, " ", ""));
+					Log.log(LOGGER, "Debug", "Acquiring lock for group (%s) with extId - %s", groupName, groupExtId);
+					boolean groupLock = Cluster.DataGrid.Lock(groupExtId, -1, false);
+						
+					Log.log(LOGGER, "Debug", "Lock acquired on group (%s) - %s", groupName, groupLock);
+					if (groupLock) {
+						WS_C_Group group = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(groupExtId, false, "/WebStudio/Core/Concepts/Dashboard/WS_C_Group");
+						Log.log(LOGGER, "Debug", "Fetched the said group - %s", group);
+						if (group != null) {
+													 	
+						   // Case for a system groups (project explorer/business rule/decision tables)
+						   if (group.systemGroup) {
+						 		// case for System Groups (business rules & decision tables)
+								Log.log(LOGGER, "Debug", "Fetching artifacts for System Group - %s", groupName);
+								
+								boolean isSystemProjectGroup = group.systemGroup && group.fileType == null && String.equals(group.name, "Projects");
+								
+								// Fetch artifacts for system group by type
+								matchingArtifacts = WS_RF_GetGroupArtifactsByType(loggedInUser.username, groupType, projectName, isSystemProjectGroup, ignoreDeleteStatus);
+							
+							// case for custom groups
+						 	} else { 
+						 	    Log.log(LOGGER, "Debug", "Processing Custom Group - %s", groupName);
+						 	    
+						 	    String stackID = "groupArtifacts_" + System.nanoTime();
+						 	    Object artifactStack = WS.Common.Stack.create(stackID);
+						 		Log.log(LOGGER, "Debug", "Created artifactStack object - %s", artifactStack);
+						 		
+						 		Log.log(LOGGER, "Debug", "Total artifacts in this group - %s", group.artifactIds@length);
+							 	for (int i = 0; i < group.artifactIds@length; i++) {
+							 		WS_C_GroupArtifact groupArtifact = Instance.getByExtIdByUri(group.artifactIds[i], "/WebStudio/Core/Concepts/Dashboard/WS_C_GroupArtifact");
+						 			if (groupArtifact != null) {
+							 			WS_C_UserArtifact artifact = WS_RF_IsUserArtifact(groupArtifact.artifactExtId, groupArtifact.artifactType);
+							 		
+								 		Log.log(LOGGER, "Debug", "User Artifact fetched - %s", artifact);
+										if (!artifact.softDelete) {
+											WS_C_UserProject project = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(artifact.parentProjectId, false, "/WebStudio/Core/Concepts/WS_C_UserProject");
+											
+											String artifactPath = project.name + artifact.artifactPath + "." + artifact.artifactFileExtn;
+											
+											String artifactData = artifactPath;
+											if (artifact.baseArtifactPath != null && !String.equals(artifact.baseArtifactPath, "")) {
+		   										artifactData = artifactData + ":" + artifact.baseArtifactPath;
+		   									}
+											WS.Common.Stack.push(artifactStack, artifactData);
+										}
+									}
+							 	}
+							 	
+							 	matchingArtifacts = WS.Common.Stack.toArray(artifactStack, "java.lang.String", null);
+								WS.Common.Stack.clear(artifactStack);
+								WS.Common.Stack.delete(stackID);	 	
+						 	}
+						}
+					}
+
+					int artifactsWithAccess = 0;
+					Log.log(LOGGER, "Debug", "Total Matching artifacts found - %s", matchingArtifacts@length);
+					
+					String artifactPath, baseArtifactPath;
+					for (int i = 0; i < matchingArtifacts@length; i++) {				
+						if (String.indexOfString(matchingArtifacts[i], 0, ":") != -1) {
+							String[] artifactData = String.split(matchingArtifacts[i], ":");
+							artifactPath = artifactData[0];
+							baseArtifactPath = artifactData[1];
+						} else {
+							artifactPath = matchingArtifacts[i];
+							baseArtifactPath = null;
+						}
+						Log.log(LOGGER, "Debug", "[ArtifactPath] - %s, [Base Artifact Path] - %s", artifactPath, baseArtifactPath);
+						
+						boolean hasAccess = WS_RF_CheckUserAccess(loggedInUser, artifactPath, "read");												
+						if (hasAccess) {
+					 		WS_C_AbstractDataSourceRecord userGroupArtifactsDataSourceRecord = 
+					 			Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/Records/WS_C_UserGroupArtifactsDataSourceRecord");
+					 		WS_C_UserGroupArtifactsDataSourceRecord userGroupArtifactsDSRecord = userGroupArtifactsDataSourceRecord;
+					 		userGroupArtifactsDSRecord.artifactPath = artifactPath;
+					 		userGroupArtifactsDSRecord.baseArtifactPath = baseArtifactPath;
+							WS_C_CheckArtifactLockResponse artifactLockStatus 
+									= WebStudio.Core.RuleFunctions.Actions.Lifecycle.Lock.WS_RF_CheckArtifactLock(artifactPath, loggedInUser.username);
+					 		userGroupArtifactsDSRecord.locked = artifactLockStatus.holdsLock;
+					 		
+					 		Instance.PropertyArray.appendContainedConcept(responseData.record, userGroupArtifactsDataSourceRecord, 1L);
+					 		artifactsWithAccess++;
+						}
+				 	}
+				 	Log.log(LOGGER, "Debug", "Total artifacts with read access to user - %s", artifactsWithAccess);
+				 	recordCount = responseData.record@length;
+				} else {
+					responseStatus = -1;
+					recordCount = 0;
+					errorCode = "ERR_1106";
+					responseMessage = "User Dashboard space not created";
+				}
+			} else {
+				responseStatus = -1;
+				recordCount = 0;
+				errorCode = "ERR_1105";
+				responseMessage = "User Dashboard space locked";
+			}
+		}
+		
+		return WS_RF_CreateTemporaryReturnData(responseStatus, recordCount, errorCode, responseMessage, responseData);
+	}
+}

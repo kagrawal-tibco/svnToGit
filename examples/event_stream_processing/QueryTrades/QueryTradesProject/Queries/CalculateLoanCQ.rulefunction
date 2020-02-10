@@ -1,0 +1,26 @@
+/**
+ * @description 
+ */
+void rulefunction Queries.CalculateLoanCQ {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String	uniqueId;
+	}
+	body {
+		String queryName = "CalculateLoanCQ";
+		String statementName = queryName + "-CQ-" + uniqueId;
+		String listenerName = queryName + "-CQ-L" + uniqueId;
+		
+		Query.Statement.open(queryName, statementName);
+		//Securities need snapshot.
+		Query.Statement.setSnapshotRequired(statementName, "s", true);
+		//Trades do not need snapshot.
+		Query.Statement.setSnapshotRequired(statementName, "t", false);
+		Query.Statement.executeWithCallback(statementName, listenerName, 
+		                                    "/Queries/CalculateLoanCQCallback", true, uniqueId);
+		
+		System.debugOut("Started query: " + statementName);
+	}
+}

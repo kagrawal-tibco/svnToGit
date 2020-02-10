@@ -1,0 +1,54 @@
+/**
+ * @description Convert a multi filter concept to equivalent EMF for persistence.
+ */
+void rulefunction WebStudio.Core.RuleFunctions.Utils.RT.Builder.Ops.Save.WS_RF_ConvertMultiFilterToEMF {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		//The EModel object which will contain this multi filter.
+		Object containerEObject;
+		WebStudio.Core.Concepts.RuleTemplateInstance.Builder.WS_C_AbstractConditionsFilter multiFilterConcept;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.RT.Builder.Ops.Save.WS_RF_ConvertMultiFilterToEMF");
+		
+		String matchType = multiFilterConcept.matchType;
+		Log.log(LOGGER, "Debug", "Match type for multi filter %s", matchType);
+		//Explicitly assert this.
+		WS.Common.assertInstance(multiFilterConcept, false);
+		
+		Object multiFilterEModel = WS.RTI.createRuleTemplateInstanceConditionsMultiFilter(matchType);
+		String filterId = multiFilterConcept.filterId;
+		if (filterId == null || String.equals(filterId, "")) {
+			// make call to create a unique Id for filter
+			filterId = WS.Common.getUniqueId();
+		}
+		Log.log(LOGGER, "Debug", "Filter Id used %s", filterId);
+		WS.RTI.setFilterId(multiFilterEModel, filterId);
+		
+		WS.RTI.addChildMultiFilter(containerEObject, multiFilterEModel);
+		//Process children
+		WS_C_AbstractConditionsFilter[] filterChildrenConcepts = Instance.PropertyArray.toArrayConcept(multiFilterConcept.filter);
+		
+		for (int loop = 0; loop < filterChildrenConcepts@length; loop++) {
+			WS_C_AbstractConditionsFilter filterChildConcept = filterChildrenConcepts[loop];
+			//Process each
+			//Check if this has child filters. If yes, this is multifilter else single filter.
+			WS_C_AbstractConditionsFilter[] filterChildConceptChildrenConcepts = Instance.PropertyArray.toArrayConcept(filterChildConcept.filter);
+			if (filterChildConceptChildrenConcepts@length > 0) {
+				WebStudio.
+					Core.
+						RuleFunctions.
+							Utils.RT.Builder.Ops.Save.
+								WS_RF_ConvertMultiFilterToEMF(multiFilterEModel, filterChildConcept);
+			} else {
+				WebStudio.
+					Core.
+						RuleFunctions.
+							Utils.RT.Builder.Ops.Save.
+								WS_RF_ConvertSingleFilterToEMF(multiFilterEModel, filterChildConcept);
+			}
+		}
+	}
+}

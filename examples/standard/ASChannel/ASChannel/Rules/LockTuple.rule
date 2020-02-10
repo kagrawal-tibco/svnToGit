@@ -1,0 +1,27 @@
+/**
+ * @description 
+ * @author huabin-lt
+ */
+rule Rules.LockTuple {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		
+		Events.MyspaceDefEvent myspacedefevent;
+	}
+	when {
+		
+	}
+	then {
+
+		String lockingTestCase = System.getGlobalVariableAsString("aschannel.myspace.eventlistener.locking", "/Channels/aschannel/LockingTestCase");
+
+		System.debugOut("Lock Tuple Rule: Lock the tuple with id " + myspacedefevent.eid);
+		SimpleEvent[] lockedEvents = {myspacedefevent};
+		AS.lockEvents(lockingTestCase, lockedEvents);
+//		AS.lockEvent(lockingTestCase, myspacedefevent);
+		System.debugOut("Lock Tuple Rule: The tuple with id " + myspacedefevent.eid + " is locked.");
+	}
+}

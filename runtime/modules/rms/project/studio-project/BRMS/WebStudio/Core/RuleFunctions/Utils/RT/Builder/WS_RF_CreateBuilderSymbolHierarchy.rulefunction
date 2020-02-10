@@ -1,0 +1,41 @@
+/**
+ * @description Create symbol hierarchy for the Builder model.
+ */
+void rulefunction WebStudio.Core.RuleFunctions.Utils.RT.Builder.WS_RF_CreateBuilderSymbolHierarchy {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String scsIntegrationType;
+		String scsRootURL;
+		String projectName;
+		Object ruleTemplateObject;
+		WebStudio.Core.Concepts.RuleTemplateInstance.Builder.WS_C_RuleTemplateInstanceBuilder ruleTemplateInstanceBuilder;
+		String username;
+		String[] roles;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.RT.Builder.WS_RF_CreateBuilderSymbolHierarchy");
+		//Get symbols
+		Object[] ruleTemplateSymbols = WS.RT.Builder.getRuleTemplateBaseSymbols(ruleTemplateObject);
+		//Create base symbols
+		WS_C_Symbols symbols = 
+			Instance.newInstance("/WebStudio/Core/Concepts/RuleTemplateInstance/Builder/WS_C_Symbols", null);
+		
+		Instance.PropertyAtom.setConceptReference(ruleTemplateInstanceBuilder.symbols, symbols, 1L);
+		
+		String subscriptionId = WS_RF_GetSubscriptionId(username);
+		
+		String lockKey = "SYMBOL_IDS";
+		if (subscriptionId != null) lockKey += ("_" + subscriptionId);
+		//Acquire lock since hashmap is not thread-safe.
+		boolean locked = Cluster.DataGrid.Lock(lockKey, -1, false);
+		
+		if (locked) {
+			for (int symbolsLoop = 0; symbolsLoop < ruleTemplateSymbols@length; symbolsLoop++) {
+				Object ruleTemplateSymbol = ruleTemplateSymbols[symbolsLoop];
+				WS_RF_TraverseAndBuildSymbolHierarchy(scsIntegrationType, scsRootURL, projectName, ruleTemplateSymbol, ruleTemplateObject, symbols, false, username, roles, subscriptionId);
+			}
+		}
+	}
+}

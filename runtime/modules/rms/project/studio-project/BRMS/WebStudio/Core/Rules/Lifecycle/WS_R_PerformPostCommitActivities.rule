@@ -1,0 +1,80 @@
+/**
+ * @description Perform activities post commit completion.
+ * @author aathalye-T410
+ */
+rule WebStudio.Core.Rules.Lifecycle.WS_R_PerformPostCommitActivities {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		WebStudio.Core.Events.Lifecycle.WS_E_CommitOpCompletionEvent commitOpCompletionEvent;
+		WebStudio.Core.Concepts.Lifecycle.WS_C_UserCheckin userCheckin;
+	}
+	when {
+		//Join to 2 so that correlation between the checkin and its event is achieved. 
+		commitOpCompletionEvent.userCheckinExtId == userCheckin@extId;
+	}
+	then {
+		Object LOGGER = Log.getLogger("WebStudio.Core.Rules.Lifecycle.WS_R_PerformPostCommitActivities");
+		
+		boolean isCommitSuccessful = commitOpCompletionEvent.isCommitSuccessful;
+		String userWorkspaceExtId = commitOpCompletionEvent.userWorkspaceExtId;
+		long newRevisionId = commitOpCompletionEvent.newRevisionId;
+		
+		if (isCommitSuccessful) {
+			//Set revisionid
+			String revNumberExtId = WS_RF_CreateUserArtifactExtId("REV_NUMBER", null, null, null, commitOpCompletionEvent.subscriptionId, null);
+			AMS_C_RevisionNumber revisionNumberC = 
+				Cluster.DataGrid.CacheLoadConceptByExtIdByUri(revNumberExtId, false, "/Approval/Scorecards/AMS_C_RevisionNumber");
+	        userCheckin.revisionId = newRevisionId;
+			//Increment 	 
+	        revisionNumberC.revisionNumber = newRevisionId + 1;
+	        
+	        WS_C_ReviewTask reviewTask = null;
+	        String reviewTaskExtId = WS_RF_CreateUserArtifactExtId(String.valueOfLong(newRevisionId), null, null, null, commitOpCompletionEvent.subscriptionId, null);
+	        WS_C_AbstractReviewTask abstractReviewTask = Instance.newInstance("/WebStudio/Core/Concepts/Lifecycle/WS_C_ReviewTask", reviewTaskExtId);
+			abstractReviewTask.creationDate = DateTime.now();
+			abstractReviewTask.referencedCheckinId = userCheckin@extId;
+			reviewTask = abstractReviewTask;						
+			
+			WS_RF_AddReviewTaskToSink(reviewTask@extId, userCheckin.managedProjectName, commitOpCompletionEvent.subscriptionId);
+			
+	        Log.log(LOGGER, "Debug", "Revision Number for checkin [%s]", userCheckin.revisionId);
+			Log.log(LOGGER, "Debug", "User workspace ExtId [%s]", userWorkspaceExtId);
+			//No need to lock workspace again
+			WS_C_UserWorkspace userWorkspace = Instance.getByExtIdByUri(userWorkspaceExtId, "/WebStudio/Core/Concepts/WS_C_UserWorkspace");
+			
+			WS_C_WorkspaceCommittableDelta workspaceCommittableDelta = Instance.PropertyAtom.getContainedConcept(userWorkspace.committableDelta, 1L);
+			WS_C_CommittableDeltaEntry[] workspaceCommittableDeltaEntries = Instance.PropertyArray.toArrayConcept(workspaceCommittableDelta.deltaEntry);
+			
+			if (workspaceCommittableDelta != null) {
+				WS_C_CommittableDeltaEntry[] committableDeltaEntries = Instance.PropertyArray.toArrayConcept(userCheckin.committables);
+				for (int loop = 0; loop < committableDeltaEntries@length; loop++) {
+					WS_C_CommittableDeltaEntry committableDeltaEntry = committableDeltaEntries[loop];
+					WS_C_UserArtifactRevision checkinUserArtifactRevision = Instance.PropertyAtom.getConceptReference(committableDeltaEntry.userArtifactRevision, 1L);
+					
+					//Find one in workspace delta which has same revision id since this is a clone.
+					for (int innerLoop = 0; innerLoop < workspaceCommittableDeltaEntries@length; innerLoop++) {
+						WS_C_CommittableDeltaEntry workspaceCommittableDeltaEntry = workspaceCommittableDeltaEntries[innerLoop];
+						WS_C_UserArtifactRevision workspaceUserArtifactRevision = Instance.PropertyAtom.getConceptReference(workspaceCommittableDeltaEntry.userArtifactRevision, 1L);
+						if (workspaceUserArtifactRevision == checkinUserArtifactRevision) {
+							Log.log(LOGGER, "Debug", "Removing from workspace committables, committable entry for artifact revision [%s]", workspaceUserArtifactRevision);
+							//Remove this from ws committable delta
+							Instance.PropertyArray.removeConceptReference(workspaceCommittableDelta.deltaEntry, workspaceCommittableDeltaEntry);
+							break;
+						}
+					}
+					WS_RF_SetCheckpointRevisionForArtifact(userCheckin.managedProjectName, committableDeltaEntry, commitOpCompletionEvent.subscriptionId);
+					//Set stages applicable
+					WS_RF_SetApplicableStagesForCommittable(committableDeltaEntry, null);
+					//Maintain history and other book-keeping info as well as create Master Artifact
+					WS_RF_MaintainArtifactCheckinBookkeepingInfo(committableDeltaEntry, userCheckin, commitOpCompletionEvent.subscriptionId);
+				}
+			}
+		} else {
+			//Handle failure case.
+		}
+		//TODO send notification post commit.
+	}
+}

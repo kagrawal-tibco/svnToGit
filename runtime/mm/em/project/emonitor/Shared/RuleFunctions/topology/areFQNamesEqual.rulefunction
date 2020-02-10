@@ -1,0 +1,31 @@
+/**
+ * @description 
+ */
+boolean rulefunction Shared.RuleFunctions.topology.areFQNamesEqual {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String	fqName1;
+		String	fqName2;
+	}
+	body {
+		String[] nameComponents1 = String.split(fqName1,":");
+		String[] nameComponents2 = String.split(fqName2,":");
+		if (nameComponents1@length != nameComponents2@length){
+		    return false;
+		}
+		for (int i = 0 ; i < nameComponents1@length ; i = i + 1){
+		    String name1 = nameComponents1[i];
+		    String name2 = nameComponents2[i];
+		    if (String.equals(name1,name2) == false){
+		        if ((String.startsWith(name1,"%") && String.endsWith(name1,"%")) == false){
+		            if ((String.startsWith(name2,"%") && String.endsWith(name2,"%")) == false){
+		                return false;
+		            }
+		        }
+		    }
+		}
+		return true;
+	}
+}

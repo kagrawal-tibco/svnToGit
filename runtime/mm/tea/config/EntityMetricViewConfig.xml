@@ -1,0 +1,513 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<MetricsViewConfig xmlns="http://www.tibco.com/cep/bemm/monitoring/metric/view/config" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.tibco.com/cep/bemm/monitoring/metric/view/config ../xsds/EntityMetricsVisualizationConfig.xsd ">
+   <!-- EVERY CHART MUST HAVE A UNIQUE CHART ID -->
+   <section sectionId="1" displayName="Five Minute Statistics">
+      <chart>
+         <id>1</id>
+         <chartType>spline</chartType>
+         <entity>instance</entity>
+         <name>avgmemusagechart</name>
+         <description>chart which displays used Memory versus minute</description>
+         <displayName>Average Used Memory</displayName>
+         <isBucketed>true</isBucketed>
+         <threshold>7200</threshold>
+         <timeDimension>minutes</timeDimension>
+         <xConfig>
+            <type>time</type>
+            <title>Time</title>
+            <precision>0</precision>
+         </xConfig>
+         <yConfig>
+            <type>percent</type>
+            <title>%</title>
+            <precision>2</precision>
+         </yConfig>
+         <series>
+            <name>AvgMemUsageSeries</name>
+            <displayName>Average Used Memory</displayName>
+            <cube>BEMMCube</cube>
+            <hierarchy>instancehealthhierarchy</hierarchy>
+            <dimLevel>minutes</dimLevel>
+            <filters />
+            <xAttribute>timestamp</xAttribute>
+            <yAttribute>avgmemusage</yAttribute>
+         </series>
+         <poller>
+            <pollingInterval>300</pollingInterval>
+            <maxPolls>5</maxPolls>
+         </poller>
+      </chart>
+      <chart>
+         <id>2</id>
+         <chartType>spline</chartType>
+         <entity>instance</entity>
+         <name>avgmemusagechart</name>
+         <description>chart which displays CPU usage versus minute</description>
+         <displayName>Average CPU</displayName>
+         <isBucketed>true</isBucketed>
+         <threshold>7200</threshold>
+         <timeDimension>minutes</timeDimension>
+         <xConfig>
+            <type>time</type>
+            <title>Time</title>
+            <precision>0</precision>
+         </xConfig>
+         <yConfig>
+            <type>percent</type>
+            <title>%</title>
+            <precision>2</precision>
+         </yConfig>
+         <series>
+            <name>AvgCpuUsageSeries</name>
+            <displayName>Average CPU</displayName>
+            <cube>BEMMCube</cube>
+            <hierarchy>instancehealthhierarchy</hierarchy>
+            <dimLevel>minutes</dimLevel>
+            <filters />
+            <xAttribute>timestamp</xAttribute>
+            <yAttribute>avgcpuusage</yAttribute>
+         </series>
+         <poller>
+            <pollingInterval>300</pollingInterval>
+            <maxPolls>5</maxPolls>
+         </poller>
+      </chart>
+      <chart>
+         <id>3</id>
+         <chartType>spline</chartType>
+         <entity>agent</entity>
+         <name>avgtimepertxnschart</name>
+         <description>chart which displays avg time/txns</description>
+         <displayName>RTC Transactions: Latency</displayName>
+         <isBucketed>true</isBucketed>
+         <threshold>7200</threshold>
+         <timeDimension>minutes</timeDimension>
+         <xConfig>
+            <type>time</type>
+            <title>Time</title>
+            <precision>0</precision>
+         </xConfig>
+         <yConfig>
+            <type>number</type>
+            <title>Latency(millis)</title>
+            <precision>2</precision>
+         </yConfig>
+         <series>
+            <name>TxnSeries</name>
+            <displayName>RTC Transactions: Latency</displayName>
+            <cube>BEMMCube</cube>
+            <hierarchy>inferencehealthhierarchy</hierarchy>
+            <dimLevel>minutes</dimLevel>
+            <filters />
+            <xAttribute>timestamp</xAttribute>
+            <yAttribute>avgtimepertxn</yAttribute>
+         </series>
+         <poller>
+            <pollingInterval>300</pollingInterval>
+            <maxPolls>5</maxPolls>
+         </poller>
+      </chart>
+      <chart>
+         <id>4</id>
+         <chartType>spline</chartType>
+         <entity>agent</entity>
+         <name>txnschart</name>
+         <description>chart which displays txn count</description>
+         <displayName>RTC Transactions :Throughput</displayName>
+         <isBucketed>true</isBucketed>
+         <threshold>7200</threshold>
+         <timeDimension>minutes</timeDimension>
+         <xConfig>
+            <type>time</type>
+            <title>Time</title>
+            <precision>0</precision>
+         </xConfig>
+         <yConfig>
+            <type>number</type>
+            <title>Txns</title>
+            <precision>2</precision>
+         </yConfig>
+         <series>
+            <name>AvgTxnSeries</name>
+            <displayName>RTC Transactions: Throughput</displayName>
+            <cube>BEMMCube</cube>
+            <hierarchy>inferencehealthhierarchy</hierarchy>
+            <dimLevel>minutes</dimLevel>
+            <filters />
+            <xAttribute>timestamp</xAttribute>
+            <yAttribute>successfultxn</yAttribute>
+         </series>
+         <poller>
+            <pollingInterval>300</pollingInterval>
+            <maxPolls>5</maxPolls>
+         </poller>
+      </chart>
+      <chart>
+         <id>5</id>
+         <chartType>spline</chartType>
+         <entity>agent</entity>
+         <name>locksheldchart</name>
+         <description>chart which displays Locks held count</description>
+         <displayName>Locks Held</displayName>
+         <isBucketed>true</isBucketed>
+         <threshold>7200</threshold>
+         <timeDimension>minutes</timeDimension>
+         <xConfig>
+            <type>time</type>
+            <title>Time</title>
+            <precision>0</precision>
+         </xConfig>
+         <yConfig>
+            <type>number</type>
+            <title>Locks</title>
+            <precision>2</precision>
+         </yConfig>
+         <series>
+            <name>LocksHeldSeries</name>
+            <displayName>Total Locks</displayName>
+            <cube>BEMMCube</cube>
+            <hierarchy>inferencehealthhierarchy</hierarchy>
+            <dimLevel>minutes</dimLevel>
+            <filters />
+            <xAttribute>timestamp</xAttribute>
+            <yAttribute>totallocksheld</yAttribute>
+            <color>#79B1BB</color>
+         </series>
+         <series>
+            <name>LocalLocksSeries</name>
+            <displayName>Local Locks</displayName>
+            <cube>BEMMCube</cube>
+            <hierarchy>inferencehealthhierarchy</hierarchy>
+            <dimLevel>minutes</dimLevel>
+            <filters />
+            <xAttribute>timestamp</xAttribute>
+            <yAttribute>locallocksheld</yAttribute>
+            <color>#1D1B1B</color>
+         </series>
+         <series>
+            <name>ClusterLocksSeries</name>
+            <displayName>Cluster Locks</displayName>
+            <cube>BEMMCube</cube>
+            <hierarchy>inferencehealthhierarchy</hierarchy>
+            <dimLevel>minutes</dimLevel>
+            <filters />
+            <xAttribute>timestamp</xAttribute>
+            <yAttribute>clusterwidelocksheld</yAttribute>
+            <color>#DE3636</color>
+         </series>
+         <poller>
+            <pollingInterval>300</pollingInterval>
+            <maxPolls>5</maxPolls>
+         </poller>
+      </chart>
+      <chart>
+         <id>6</id>
+         <chartType>spline</chartType>
+         <entity>agent</entity>
+         <name>destEventChart</name>
+         <description>chart which displays event rate on a destination</description>
+         <displayName>Event Throughput</displayName>
+         <isBucketed>true</isBucketed>
+         <threshold>7200</threshold>
+         <timeDimension>minutes</timeDimension>
+         <xConfig>
+            <type>time</type>
+            <title>Time</title>
+            <precision>0</precision>
+         </xConfig>
+         <yConfig>
+            <type>number</type>
+            <title>Events</title>
+            <precision>2</precision>
+         </yConfig>
+         <series type="multiple" dim="destination">
+            <name>EventThroughputSeries</name>
+            <displayName>Event Throughput</displayName>
+            <cube>BEMMCube</cube>
+            <hierarchy>eventhealthhierarchy</hierarchy>
+            <dimLevel>minutes</dimLevel>
+            <filters />
+            <xAttribute>timestamp</xAttribute>
+            <yAttribute>eventreceiverate</yAttribute>
+         </series>
+         <poller>
+            <pollingInterval>300</pollingInterval>
+            <maxPolls>5</maxPolls>
+         </poller>
+      </chart>
+   </section>
+   <section sectionId="2" displayName="Hourly Statistics">
+      <chart>
+         <id>7</id>
+         <chartType>spline</chartType>
+         <entity>instance</entity>
+         <name>avgmemusagechart</name>
+         <description>chart which displays used memory versus minute</description>
+         <displayName>Average Used Memory</displayName>
+         <isBucketed>true</isBucketed>
+         <threshold>86400</threshold>
+         <timeDimension>hours</timeDimension>
+         <xConfig>
+            <type>time</type>
+            <title>Time</title>
+            <precision>0</precision>
+         </xConfig>
+         <yConfig>
+            <type>percent</type>
+            <title>%</title>
+            <precision>2</precision>
+         </yConfig>
+         <series>
+            <name>AvgMemUsageSeries</name>
+            <displayName>Average Used Memory</displayName>
+            <cube>BEMMCube</cube>
+            <hierarchy>instancehealthhierarchy</hierarchy>
+            <dimLevel>hours</dimLevel>
+            <filters />
+            <xAttribute>timestamp</xAttribute>
+            <yAttribute>avgmemusage</yAttribute>
+         </series>
+         <poller>
+            <pollingInterval>300</pollingInterval>
+            <maxPolls>5</maxPolls>
+         </poller>
+      </chart>
+      <chart>
+         <id>8</id>
+         <chartType>spline</chartType>
+         <entity>instance</entity>
+         <name>avgcpuusagechart</name>
+         <description>chart which displays CPU usage versus minute</description>
+         <displayName>Average CPU</displayName>
+         <isBucketed>true</isBucketed>
+         <threshold>86400</threshold>
+         <timeDimension>hours</timeDimension>
+         <xConfig>
+            <type>time</type>
+            <title>Time</title>
+            <precision>0</precision>
+         </xConfig>
+         <yConfig>
+            <type>percent</type>
+            <title>%</title>
+            <precision>2</precision>
+         </yConfig>
+         <series>
+            <name>AvgCpuUsageSeries</name>
+            <displayName>Average CPU</displayName>
+            <cube>BEMMCube</cube>
+            <hierarchy>instancehealthhierarchy</hierarchy>
+            <dimLevel>hours</dimLevel>
+            <filters />
+            <xAttribute>timestamp</xAttribute>
+            <yAttribute>avgcpuusage</yAttribute>
+         </series>
+         <poller>
+            <pollingInterval>300</pollingInterval>
+            <maxPolls>5</maxPolls>
+         </poller>
+      </chart>
+      <chart>
+         <id>9</id>
+         <chartType>spline</chartType>
+         <entity>agent</entity>
+         <name>avgtimepertxnschart</name>
+         <description>chart which displays avg time/txns</description>
+         <displayName>RTC Transactions: Latency</displayName>
+         <isBucketed>true</isBucketed>
+         <threshold>86400</threshold>
+         <timeDimension>hours</timeDimension>
+         <xConfig>
+            <type>time</type>
+            <title>Time</title>
+            <precision>0</precision>
+         </xConfig>
+         <yConfig>
+            <type>number</type>
+            <title>Latency(millis)</title>
+            <precision>2</precision>
+         </yConfig>
+         <series>
+            <name>TxnSeries</name>
+            <displayName>RTC Transactions: Latency</displayName>
+            <cube>BEMMCube</cube>
+            <hierarchy>inferencehealthhierarchy</hierarchy>
+            <dimLevel>hours</dimLevel>
+            <filters />
+            <xAttribute>timestamp</xAttribute>
+            <yAttribute>avgtimepertxn</yAttribute>
+         </series>
+         <poller>
+            <pollingInterval>300</pollingInterval>
+            <maxPolls>5</maxPolls>
+         </poller>
+      </chart>
+      <chart>
+         <id>10</id>
+         <chartType>spline</chartType>
+         <entity>agent</entity>
+         <name>txnschart</name>
+         <description>chart which displays txn count</description>
+         <displayName>RTC Transactions: Throughput</displayName>
+         <isBucketed>true</isBucketed>
+         <threshold>86400</threshold>
+         <timeDimension>hours</timeDimension>
+         <xConfig>
+            <type>time</type>
+            <title>Time</title>
+            <precision>0</precision>
+         </xConfig>
+         <yConfig>
+            <type>number</type>
+            <title>Txns</title>
+            <precision>2</precision>
+         </yConfig>
+         <series>
+            <name>AvgTxnSeries</name>
+            <displayName>RTC Transactions: Throughput</displayName>
+            <cube>BEMMCube</cube>
+            <hierarchy>inferencehealthhierarchy</hierarchy>
+            <dimLevel>hours</dimLevel>
+            <filters />
+            <xAttribute>timestamp</xAttribute>
+            <yAttribute>successfultxn</yAttribute>
+         </series>
+         <poller>
+            <pollingInterval>300</pollingInterval>
+            <maxPolls>5</maxPolls>
+         </poller>
+      </chart>
+      <chart>
+         <id>11</id>
+         <chartType>spline</chartType>
+         <entity>agent</entity>
+         <name>locksheldchart</name>
+         <description>chart which displays Locks held count</description>
+         <displayName>Locks Held</displayName>
+         <isBucketed>true</isBucketed>
+         <threshold>86400</threshold>
+         <timeDimension>hours</timeDimension>
+         <xConfig>
+            <type>time</type>
+            <title>Time</title>
+            <precision>0</precision>
+         </xConfig>
+         <yConfig>
+            <type>number</type>
+            <title>Locks</title>
+            <precision>2</precision>
+         </yConfig>
+         <series>
+            <name>LocksHeldSeries</name>
+            <displayName>Total Locks</displayName>
+            <cube>BEMMCube</cube>
+            <hierarchy>inferencehealthhierarchy</hierarchy>
+            <dimLevel>hours</dimLevel>
+            <filters />
+            <xAttribute>timestamp</xAttribute>
+            <yAttribute>totallocksheld</yAttribute>
+            <color>#79B1BB</color>
+         </series>
+         <series>
+            <name>LocalLocksSeries</name>
+            <displayName>Local Locks</displayName>
+            <cube>BEMMCube</cube>
+            <hierarchy>inferencehealthhierarchy</hierarchy>
+            <dimLevel>minutes</dimLevel>
+            <filters />
+            <xAttribute>timestamp</xAttribute>
+            <yAttribute>locallocksheld</yAttribute>
+            <color>#1D1B1B</color>
+         </series>
+         <series>
+            <name>ClusterLocksSeries</name>
+            <displayName>Cluster Locks</displayName>
+            <cube>BEMMCube</cube>
+            <hierarchy>inferencehealthhierarchy</hierarchy>
+            <dimLevel>hours</dimLevel>
+            <filters />
+            <xAttribute>timestamp</xAttribute>
+            <yAttribute>clusterwidelocksheld</yAttribute>
+            <color>#DE3636</color>
+         </series>
+         <poller>
+            <pollingInterval>300</pollingInterval>
+            <maxPolls>5</maxPolls>
+         </poller>
+      </chart>
+      <chart>
+         <id>12</id>
+         <chartType>spline</chartType>
+         <entity>agent</entity>
+         <name>destEventChart</name>
+         <description>chart which displays event rate on a destination</description>
+         <displayName>Event Throughput</displayName>
+         <isBucketed>true</isBucketed>
+         <threshold>86400</threshold>
+         <timeDimension>hours</timeDimension>
+         <xConfig>
+            <type>time</type>
+            <title>Time</title>
+            <precision>0</precision>
+         </xConfig>
+         <yConfig>
+            <type>number</type>
+            <title>Events</title>
+            <precision>2</precision>
+         </yConfig>
+         <series type="multiple" dim="destination">
+            <name>EventRateSeries</name>
+            <displayName>Event Throughput</displayName>
+            <cube>BEMMCube</cube>
+            <hierarchy>eventhealthhierarchy</hierarchy>
+            <dimLevel>hours</dimLevel>
+            <filters />
+            <xAttribute>timestamp</xAttribute>
+            <yAttribute>eventreceiverate</yAttribute>
+         </series>
+         <poller>
+            <pollingInterval>300</pollingInterval>
+            <maxPolls>5</maxPolls>
+         </poller>
+      </chart>
+   </section>
+   <section sectionId="3" displayName="Rule Statistics">
+      <chart>
+         <id>13</id>
+         <chartType>column</chartType>
+         <entity>agent</entity>
+         <name>executionTimeChart</name>
+         <description>chart which avg rule execution time per rule</description>
+         <displayName>Rule Execution Time</displayName>
+         <isBucketed>false</isBucketed>
+         <threshold>0</threshold>
+         <xConfig>
+            <type />
+            <title>Rule Name</title>
+            <precision>0</precision>
+         </xConfig>
+         <yConfig>
+            <type>number</type>
+            <title>Average Execution Time(millis)</title>
+            <precision>2</precision>
+         </yConfig>
+         <series>
+            <name>execTimeSeries</name>
+            <displayName>Rule Execution Time</displayName>
+            <cube>BEMMCube</cube>
+            <hierarchy>rulehealthhierarchy</hierarchy>
+            <dimLevel>rule</dimLevel>
+            <filters />
+            <xAttribute>rule</xAttribute>
+            <yAttribute>avgexecutiontime</yAttribute>
+            <orderBy>avgexecutiontime</orderBy>
+            <sortOrder>DESCENDING</sortOrder>
+            <!--  [ASCENDING,DESCENDING ,ascending,descending] defaults to ascending -->
+         </series>
+         <poller>
+            <pollingInterval>300</pollingInterval>
+            <maxPolls>5</maxPolls>
+         </poller>
+      </chart>
+   </section>
+</MetricsViewConfig>

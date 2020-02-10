@@ -1,0 +1,100 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>Ticker Tracker - TIBCO BusinessEvents&reg; Examples</title>
+<meta http-equiv="Content-type" content="text/html; charset=iso-8859-1" />
+<meta http-equiv="Content-Language" content="en-us" />
+<link rel="Shortcut Icon" href="../../../../../../examples/_resources/icon.gif" type="image/gif" />
+<style type="text/css" media="all">@import "../../../../../../examples/_resources/examples.css";</style>
+<script type="text/javascript" src="../../../../../../examples/_resources/examples.js" /></script>
+<script type="text/javascript">
+function buildForms() {
+ var form;
+
+ SendEventForm.setServer("http://localhost:8010");
+
+ form = SendEventForm.get("createDemographicsForm");
+ form.setDestinationPath("/Channels/HTTP/AllOps");
+ form.setEventPath("/Events/E_Demographics");
+ form.addProperty("Country", "USA");
+ form.addProperty("Region", "WEST");
+ form.addProperty("Sex", "MALE");
+ form.addProperty("Population", "55000000");
+ form.addProperty("AverageAge", "47.8");
+ form.addProperty("GDP", "1000000000");
+ form.build();
+
+ form = SendEventForm.get("createGDPForm");
+ form.setDestinationPath("/Channels/HTTP/AllOps");
+ form.setEventPath("/Events/E_GDP");
+ form.addProperty("Country", "USA");
+ form.addProperty("GDP", "1000000000");
+ form.build();
+
+
+}
+</script>
+</head>
+<body onLoad="buildForms()">
+
+
+<h1>Demogrphics Dashboard</h1>
+
+<p><strong>Note</strong>&nbsp; &nbsp;The TIBCO BusinessEvents&reg; Express edition does not support use of the TIBCO BusinessEvents&reg; Views add-on.</p>
+
+<h2>Purpose of This Example</h2>
+
+<p>This example shows a simple dashboard which show tickers with thier price and volume</p>
+
+<h2>Prerequisites</h2>
+<ul>
+<li><p>A JDBC backing store configured database instance. See the <i>TIBCO BusinessEvents Administration</i> guide for details.</p></li>
+</ul>
+
+<h2>How to Run the Example</h2>
+<ol>
+<li><p>Copy the database JDBC driver libraries to <code>c:/tibco/be/5.0/lib/ext/tpcl</code>.</p>
+<li><p>Import the TickerTracker project in TIBCO BusinessEvents&reg; Studio.</p>
+<li><p>Update the <code>SharedResources/JDBCConfig.sharedjdbc</code>. Update the  Database URL to point to your JDBC database. Also update the username and password to the login used for TIBCO BusinessEvents.</p>
+<li><p>Build the EAR file. Update the file location to <i>BEStudioWorkspace</i><code>/TickerTracker.ear</code>.</p>
+<li><p>Open a command window and at the command prompt, generate the database creation scripts using the following command.</p>
+<pre class="commands">
+cd <i>BEStudioWorkspace</i>
+c:/tibco/be/5.0/bin/be-jdbcdeploy --propFile c:/tibco/be/5.0/bin/be-jdbcdeploy.tra -o TickerTracker <i>BEStudioWorkspace</i><code>/TickerTracker.ear</code>
+</pre>
+<p>Adapt the command as needed, for example, if you have customized the example project, or are running it from a different directory.</p>
+<li><p>Populate the database using the generated SQL script<i>BEStudioWorkspace</i><code>/TickerTracker.sql</code>.</p>
+<li><p>Open a command window and at the command prompt, start the TIBCO BusinessEvents engine using the following command.</p>
+<pre class="commands">
+cd c:/tibco/be/5.0/views/bin
+be-views -u default -c <code><i>BEStudioWorkspace</i>/TickerTracker/TickerTracker/tickertrackerdb.cdd <code><i>BEStudioWorkspace</i>/TickerTracker.ear</code>
+</pre>
+<p>Adapt the command as needed, for example, if you have customized the example project, or are running it from a different directory.</p>
+</li>
+
+<li><p>Launch the URL <code>http://localhost:8080</code> using Internet Explorer.</p>
+<li><p>Login in to the dashboard using <code>admin</code> as Username and <code>admin</code> as Password.</p>
+
+<li><p>Create an ticker event and give it a price and volume. Repeat this step to generate ticker history, as desired.</p>
+<form id="createDemographicsForm"></form>
+
+<form id="createGDPForm"></form>
+<p>In the dashboard you should see the charts change to reflect the changes.</p>
+</li>
+
+<li><p> To reset the data do the following:
+            <p>Run the generated SQL script <code>c:/tibco/be/5.0/bin/tickertracker_cleanup.sql</code>.</p>
+            <p>Restart the engine at the command line.</p>
+        </p>
+</li>
+
+</ol>
+
+<div class="footer">
+<p>TIBCO BusinessEvents&trade; 5.0 <br />
+Copyright&copy; 2004-2011 TIBCO Software Inc. All rights reserved.</p>
+</div>
+</body>
+</html>

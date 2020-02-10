@@ -1,0 +1,42 @@
+/**
+ * @description Execute this RF before fetching names of artifacts to checkout/update.
+ */
+void rulefunction Approval.Rules.RuleFunctions.Preprocessors.AMS_RFP_GetArtifactNamesPP {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Approval.Events.ArtifactEvents.Checkout.AMS_E_RetrieveArtifactNamesRequestEvent ams_e_retrieveartifactnamesrequestevent;
+	}
+	body {
+		Object LOGGER = Log.getLogger("Approval.Rules.RuleFunctions.Preprocessors.AMS_RFP_GetArtifactNamesPP");
+		AAA.Concepts.AMS_C_LoggedInUser loggedInUser =  
+			Approval.CommonServices.AMS_RF_ValidateUsername(ams_e_retrieveartifactnamesrequestevent);
+		
+		boolean isUserLoggedIn = loggedInUser != null;
+		if (!isUserLoggedIn) {
+			AMS_E_ErrorEvent errorEvent = 
+				Approval.CommonServices.AMS_RF_CreateErrorEvent("PROJECTS_LIST_FETCH_ERROR", "The user " + ams_e_retrieveartifactnamesrequestevent.loggedInUserName + " is not logged in", null);
+			Event.replyEvent(ams_e_retrieveartifactnamesrequestevent, errorEvent);
+			//Consume the event so that RTC is not triggered
+			Event.consumeEvent(ams_e_retrieveartifactnamesrequestevent);
+			throw Exception.newException("PROJECT_ARTIFACTNAMES_FETCH_ERROR", 
+										 "The user " + ams_e_retrieveartifactnamesrequestevent.loggedInUserName + " is not logged in", null);	
+		}	
+		Log.log(LOGGER, "Debug", "User %s is already logged in", ams_e_retrieveartifactnamesrequestevent.loggedInUserName);
+		
+		String projectName = ams_e_retrieveartifactnamesrequestevent.projectname;
+		String scsRootURL = WS_RF_GetSCSRootURL(projectName, null);
+		if (scsRootURL == null) {
+			throw Exception.newException(null, "Source control repository location not present. Set ws.scs.rootURL property", null);
+		}
+		String scsIntegrationType = System.getSystemPropertyAsString("ws.scs.impl.type", null);
+		//Check if a filter class is specified
+		//TODO document this property.
+		String filterClass = System.getSystemPropertyAsString("ws.scs.fetch.artifacts.filter", null);
+		
+		ams_e_retrieveartifactnamesrequestevent.scsRootURL = scsRootURL;
+		ams_e_retrieveartifactnamesrequestevent.scsIntegrationClass = scsIntegrationType;
+		ams_e_retrieveartifactnamesrequestevent.filterClass = filterClass;
+	}
+}

@@ -1,0 +1,125 @@
+<div class="card panel-sm">
+   <div class="card-header">
+      <div class="{{ isRtl() ? 'pull-right' : 'pull-left' }}">
+      <ng-container i18n>{{i18n('Add Column to Decision Table ')}}</ng-container>{{table.name}}
+   </div>
+   </div>
+   <div class="custom">
+         <mat-slide-toggle [(ngModel)]="customBased" color="primary">
+               {{i18n('Custom Type')}}
+           </mat-slide-toggle> 
+        <!-- <label for="columnType" class='control-label control-label-normal' i18n>{{i18n('Custom Type')}}</label>
+        <toggle-switch [size]='"mini"' [value]='isCustomBased()' (valueChange)='setCustomBased($event)'></toggle-switch>   -->
+   </div>
+   <hr *ngIf="isCustomBased()" class="cSeprator">
+   <hr *ngIf="!isCustomBased()" class="vSeprator">
+   <div *ngIf="!isCustomBased()" class="custom">
+      <label class="control-label control-label-normal {{ isRtl() ? 'pull-right' : 'pull-left' }}" i18n>{{i18n('Select Columns')}}</label>
+   </div>
+   <div class="card-body">
+      <div  *ngIf="!isCustomBased()" class="tableDiv {{ isRtl() ? 'pull-right' : '' }}">
+         <table>
+            <tr *ngFor="let argument of this.entryArray">
+               <div [style.margin-left]="getStyle(argument.displayValue)">
+                  <div class="{{ isRtl() ? 'expandCollapse-rtl' : 'expandCollapse' }}" *ngIf="isSelectable(argument)"><input type="checkbox" [checked]="isItemSelected(argument)" (change)="updateFinalList(argument)"></div>
+                  <div class="{{ isRtl() ? 'expandCollapse-rtl' : 'expandCollapse' }}" *ngIf="!isSelectable(argument)">
+                     <i *ngIf="!isExpanded(argument)" class="fa fa-sm fa-plus" (click)="setExpanded(argument)"></i>
+                     <i *ngIf="isExpanded(argument)" class="fa fa-sm fa-minus" (click)="setCollapsed(argument)"></i>
+                  </div>
+                  <div class="{{ isRtl() ? 'test-rtl' : 'test' }}"><img [src]="getIcons(argument)"></div>
+                  <div class="{{ isRtl() ? 'test-rtl' : 'test' }}" *ngIf="isSelectable(argument)">{{argument.value}}</div>
+                  <div class="{{ isRtl() ? 'test-rtl' : 'test' }}" *ngIf="!isSelectable(argument)"><font color="#337ab7">{{argument.value}}</font></div>
+               </div>
+            </tr>
+         </table>
+      </div>
+      <div *ngIf="isCustomBased()" class='row'>
+         <div class='col-sm-12'>
+            <form #newColumn="ngForm">
+               <div class="form-group">
+                  <label for="columnName" class='control-label control-label-normal' i18n>{{i18n('Column Name')}}</label>
+                  <input type="text" name="columnName" 
+                  #columnNameInput
+                  required
+                  class='form-control'
+                  autocomplete="false"
+                  [(ngModel)]="form.columnName"
+                  #columnName="ngModel"
+                  >
+                  <div 
+                     class="alert alert-warning"
+                     *ngIf="columnNameDuplicate"
+                  [innerHTML]="getMessage()"  
+                  >
+                  </div>
+               </div>
+               <div class="form-group">
+                  <label for="columnType" class='control-label control-label-normal' i18n>{{i18n('Column Type')}}</label>
+                  <select
+                  id='column-type'
+                  class='form-control'
+                  name='columnType'
+                  [(ngModel)]="form.columnType"
+                  #columnType='ngModel'
+                  >
+                  <option 
+                  *ngFor='let ct of columnTypes'
+                  [value]='ct.value'
+                  >{{ct.name}}</option>
+                  </select>
+               </div>
+               <div class="form-group">
+                  <label for="propertyType" class='control-label control-label-normal' i18n>{{i18n('Property Type')}}</label>
+                  <select
+                  id='property-type'
+                  class='form-control'
+                  name='propertyType'
+                  [(ngModel)]="form.propertyType"
+                  #propertyType='ngModel'
+                  disabled
+                  >
+                  <option 
+                  *ngFor='let pt of propertyTypes'
+                  [value]='pt.value'
+                  >{{pt.name}}</option>
+                  </select>
+               </div>
+            </form>
+         </div>
+      </div>
+   </div>
+</div>
+<div *ngIf="!isCustomBased()" class="vrfColumn">
+   <div class="form-group">
+      <label for="columnType" class="control-label control-label-normal {{ isRtl() ? 'pull-right' : 'pull-left' }}" i18n>{{i18n('Column Type')}}</label>
+      <select
+      id='column-type'
+      class='form-control'
+      name='columnType'
+      [(ngModel)]="selectedColType"
+      #columnType='ngModel'
+      [style.direction]="isRtl() ? 'rtl' : 'ltr'"
+      >
+      <option 
+      *ngFor='let ct of beColumnTypes'
+      [value]='ct.value'
+      >{{ct.name}}</option>
+      </select>
+   </div>
+</div>
+<hr *ngIf="!isCustomBased()">
+<div *ngIf="isCustomBased()"><br>
+</div>
+<div class="row left-pad right-pad bottom-pad top-pad">
+   <div class="col-sm-12">
+      <button
+         type="button"
+         class="btn btn-outline-primary btn-sm btn-narrow {{ isRtl() ? 'pull-right' : 'pull-left' }}"
+         (click)='onCancel()' i18n
+         >{{i18n('Cancel')}}</button>
+      <button
+         class="btn btn-primary btn-sm btn-narrow {{ isRtl() ? 'pull-left' : 'pull-right' }}"
+         (click)='onSubmit()' i18n
+         >{{i18n('Confirm')}}</button>
+   </div>
+</div>

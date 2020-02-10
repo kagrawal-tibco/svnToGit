@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Table:Table xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:Table="http:///com/tibco/cep/decision/table/model/DecisionTable.ecore" name="OrderDiscountDT" folder="/Virtual_RF/" implements="/Virtual_RF/OrderDiscount" since="BE 4.0">
+  <md>
+    <prop name="EffectiveDate" type="DateTime" value=""/>
+    <prop name="ExpiryDate" type="DateTime" value=""/>
+    <prop name="SingleRowExecution" type="Boolean" value="false"/>
+  </md>
+  <decisionTable>
+    <rule id="1">
+      <cond id="1_2" colId="2" expr="&quot;Pencil&quot;"/>
+      <cond id="1_1" colId="1" expr=">200"/>
+      <act id="1_3" colId="3" expr="10.0"/>
+      <act id="1_4" colId="4" expr="System.debugOut(customerName+&quot; received &quot;+discount.value +&quot; % discount&quot;)"/>
+    </rule>
+    <rule id="2">
+      <cond id="2_2" colId="2" expr="&quot;Pen&quot;"/>
+      <cond id="2_1" colId="1" expr=">=400"/>
+      <act id="2_3" colId="3" expr="20.0"/>
+      <act id="2_4" colId="4" expr="System.debugOut(customerName+&quot; received &quot;+discount.value +&quot; % discount&quot;)"/>
+    </rule>
+    <rule id="3">
+      <cond id="3_2" colId="2" expr="&quot;NoteBook&quot;"/>
+      <cond id="3_1" colId="1" expr=">100"/>
+      <act id="3_3" colId="3" expr="5.0"/>
+      <act id="3_4" colId="4" expr="System.debugOut(customerName+&quot; received &quot;+discount.value +&quot; % discount&quot;)"/>
+    </rule>
+    <columns>
+      <column id="2" name="orderItemName" propertyPath="orderItemName" columnType="CONDITION"/>
+      <column id="1" name="orderQuantity" propertyPath="orderQuantity" propertyType="1" columnType="CONDITION"/>
+      <column id="3" name="discount.value" propertyPath="/Concepts/Discount/value" propertyType="3" columnType="ACTION"/>
+      <column id="4" name="Custom Action 1" propertyPath="" columnType="CUSTOM_ACTION"/>
+    </columns>
+  </decisionTable>
+  <exceptionTable/>
+  <argument direction="BOTH">
+    <property path="/Concepts/Discount" alias="discount" resourceType="CONCEPT"/>
+  </argument>
+  <argument direction="BOTH">
+    <property path="String" alias="orderItemName"/>
+  </argument>
+  <argument direction="BOTH">
+    <property path="String" alias="customerName"/>
+  </argument>
+  <argument direction="BOTH">
+    <property path="int" alias="orderQuantity"/>
+  </argument>
+</Table:Table>

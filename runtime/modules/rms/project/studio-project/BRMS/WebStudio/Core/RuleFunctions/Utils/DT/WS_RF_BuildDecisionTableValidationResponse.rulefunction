@@ -1,0 +1,49 @@
+/**
+ * @description 
+ */
+WebStudio.Core.Concepts.DataSources.Problems.WS_C_TableAnalyzerProblemsResponse rulefunction WebStudio.Core.RuleFunctions.Utils.DT.WS_RF_BuildDecisionTableValidationResponse {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String projectName;
+		String artifactPath;
+		String errors;
+		Object decisionTableEMFObject;
+		Object ruleToPageMap;		
+	}
+	body {
+
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.DT.WS_RF_BuildDecisionTableValidationResponse");
+		
+		WebStudio.Core.Concepts.DataSources.Problems.WS_C_TableAnalyzerProblemsResponse validationProblemsResponse = 
+													Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/Problems/WS_C_TableAnalyzerProblemsResponse");
+		validationProblemsResponse.projectName = projectName;
+		validationProblemsResponse.artifactPath = artifactPath;
+		validationProblemsResponse.artifactType = "rulefunctionimpl";
+
+		//XPath for fetch roles
+		String errorCountXPath = "count($var//ruleerror)";
+		String errorCountString = XPath.execute(errorCountXPath, errors, "");
+		double countErrors = Number.doubleValue(errorCountString);
+
+		Log.log(LOGGER, "Debug", "Building Decision Table %s Validation response with %s errors", artifactPath, errors);
+		
+		for (int loop = 1; loop <= countErrors; loop++) {		
+			WebStudio.Core.Concepts.DataSources.Problems.WS_C_TableAnalyzerProblem errorRecord = Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/Problems/WS_C_TableAnalyzerRangeProblem");
+			errorRecord.errorMessage = XPath.execute("string($var//ruleerror[" + loop + "]/attribute::message)", errors, "");
+			String ruleId = XPath.execute("string($var//ruleerror[" + loop + "]/attribute::rowId)", errors, "");
+			if (String.length(ruleId) > 0) {
+				errorRecord.location = Number.valueOfString(ruleId, 10) + "";
+			}	
+			errorRecord.columnName = XPath.execute("string($var//ruleerror[" + loop + "]/attribute::colId)", errors, "");	
+			String colName = WS.Decision.TableModel.getColumnName(decisionTableEMFObject,errorRecord.columnName);
+			errorRecord.columnUIName = colName;
+			errorRecord.problemType = XPath.execute("string($var//ruleerror[" + loop + "]/attribute::type)", errors, "");	
+					
+			errorRecord.pageNum = Collections.Map.get(ruleToPageMap, ruleId);
+			Instance.PropertyArray.appendContainedConcept(validationProblemsResponse.problem, errorRecord, 1L);
+		}		
+		return validationProblemsResponse;	
+	}
+}

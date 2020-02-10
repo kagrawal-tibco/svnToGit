@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cdd:cluster xmlns:cdd="http://tibco.com/businessevents/configuration/5.1">
+    <cdd:revision>
+        <!-- <cdd:name>11-import</cdd:name> -->
+        <cdd:version>1</cdd:version>
+        <cdd:author>tnguyen</cdd:author>
+        <cdd:date>2010-02-08 11:00:55</cdd:date>
+        <cdd:comment>Automatic import of version 11 at 2010-02-08 11:00:55. EAR file location was set to: %%TSI_REPO_DIR%%/simpleStateMachine.ear</cdd:comment>
+    </cdd:revision>
+    <cdd:name>simpleStateMachine</cdd:name>
+    <!-- <cdd:multi-engine>false</cdd:multi-engine> -->
+    <cdd:object-management>
+        <cdd:memory-manager/>
+    </cdd:object-management>
+    <cdd:rulesets/>
+    <cdd:function-groups/>
+    <cdd:destination-groups/>
+    <cdd:log-configs>
+        <cdd:log-config id="logConfig">
+            <cdd:enabled>true</cdd:enabled>
+            <cdd:roles>*:info</cdd:roles>
+            <cdd:files>
+                <cdd:enabled>true</cdd:enabled>
+                <cdd:dir>logs</cdd:dir>
+                <cdd:max-number>10</cdd:max-number>
+                <cdd:max-size>10000000</cdd:max-size>
+                <cdd:append>true</cdd:append>
+            </cdd:files>
+        </cdd:log-config>
+    </cdd:log-configs>
+    <cdd:agent-classes>
+        <cdd:inference-agent-class id="BE_Archive">
+            <cdd:rules>
+                <cdd:uri>/</cdd:uri>
+            </cdd:rules>
+            <cdd:destinations>
+                <cdd:destination id="JMS_0-N851972">
+                    <cdd:uri>/Channel/JMS_0</cdd:uri>
+                    <cdd:pre-processor/>
+                    <cdd:threading-model>workers</cdd:threading-model>
+                    <cdd:thread-count>1</cdd:thread-count>
+                </cdd:destination>
+            </cdd:destinations>
+            <cdd:startup>
+                <cdd:uri>/RuleFunction</cdd:uri>
+            </cdd:startup>
+            <cdd:shutdown/>
+            <cdd:concurrent-rtc>false</cdd:concurrent-rtc>
+        </cdd:inference-agent-class>
+    </cdd:agent-classes>
+    <cdd:processing-units>
+        <cdd:processing-unit id="default">
+            <cdd:agents>
+                <cdd:agent>
+                    <cdd:ref>BE_Archive</cdd:ref>
+                </cdd:agent>
+            </cdd:agents>
+            <cdd:logs>logConfig</cdd:logs>
+        </cdd:processing-unit>
+    </cdd:processing-units>
+    <cdd:property-group name="misc"/>
+</cdd:cluster>

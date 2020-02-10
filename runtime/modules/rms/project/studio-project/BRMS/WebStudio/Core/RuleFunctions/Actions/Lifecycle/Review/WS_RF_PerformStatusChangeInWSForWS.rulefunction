@@ -1,0 +1,184 @@
+/**
+ * @description Perform status change activity for checkin made from WS in WS.
+ */
+void rulefunction WebStudio.Core.RuleFunctions.Actions.Lifecycle.Review.WS_RF_PerformStatusChangeInWSForWS {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String loggedInUsername;
+		WebStudio.Core.Concepts.Lifecycle.WS_C_UserCheckin referencedCheckin;
+		WebStudio.Core.Concepts.Request.Usecases.Lifecycle.Review.WS_C_StatusChangeWorklist worklistData;
+		Object stateChangeItemsStack;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.Lifecycle.Review.WS_RF_PerformStatusChangeInWSForWS");
+		
+		long revisionId = referencedCheckin.revisionId;
+		
+		//TODO Get actual project name in WS and not managed one. Get project name.
+		String userProjectExtId = WS_RF_CreateUserArtifactExtId(null, null, referencedCheckin.managedProjectName, referencedCheckin.username, null, null);
+		WS_C_UserProject userProject = Instance.getByExtIdByUri(userProjectExtId, "/WebStudio/Core/Concepts/WS_C_UserProject");
+		
+		if (userProject == null) {
+			//Studio case where WS project checkout not performed, create a transient instance to use
+			userProject = Instance.newTransientInstance("/WebStudio/Core/Concepts/WS_C_UserProject");
+			userProject.name = referencedCheckin.managedProjectName;
+		}
+		WS_C_CommittableDeltaEntry[] committables = Instance.PropertyArray.toArrayConcept(referencedCheckin.committables);
+		//Get associated data items
+		WS_C_StatusChangeRequestDataItem[] requestDataItems = Instance.PropertyArray.toArrayContainedConcept(worklistData.worklistItem);
+		
+		Log.log(LOGGER, "Debug", "Number of data items in revision [%s] are [%s]", revisionId, requestDataItems@length);
+		
+		// fetch the preferences for SCS userName/password details
+		String[] scsCredentials = WS_RF_GetSCSCredentials(referencedCheckin.username);
+		
+		String subscriptionId = WS_RF_GetSubscriptionId(loggedInUsername);
+		
+		for (int requestDataItemLoop = 0; requestDataItemLoop < requestDataItems@length; requestDataItemLoop++) {
+			WS_C_StatusChangeRequestDataItem requestDataItem = requestDataItems[requestDataItemLoop];
+			String reviewStatus = requestDataItem.reviewStatus;
+			String reviewComments = requestDataItem.reviewComments;
+			String managedProjectName = requestDataItem.managedProjectName;
+			
+			Log.log(LOGGER, "Debug", "Requested status change for data item [%s] is [%s] and managed projectName [%s]", requestDataItem, reviewStatus, managedProjectName);
+			//Find the right committable for this dataitem
+			WS_C_CommittableDeltaEntry matchingDeltaEntry = WS_RF_GetMatchingCommittableEntry(requestDataItem, committables);
+			if (matchingDeltaEntry != null) {
+				// before processing the status change, check if the last artifact opertion and the worklist operation are identical
+				WS_C_AbstractOperation workItemOperation = matchingDeltaEntry.operation;
+				WS_C_UserArtifactRevision referencedRevision = Instance.PropertyAtom.getConceptReference(matchingDeltaEntry.userArtifactRevision, 1L);
+				WS_C_LifecycleMetadata lifecycleMetadata = Instance.PropertyAtom.getContainedConcept(referencedRevision.lifecycleMetadata, 1L);
+				WS_C_AbstractOperation lastOperationPerformed = Instance.PropertyAtom.getConceptReference(lifecycleMetadata.lastOperation, 1L);
+				
+				Log.log(LOGGER, "Debug", "referencedRevision - id[%s], version[%s] & extId[%s]", referencedRevision@id, referencedRevision.version, referencedRevision@extId);
+				
+				WS_C_UserArtifact parentUserArtifact = WS_RF_IsUserArtifact(referencedRevision.parentArtifactId, referencedRevision.parentArtifactType);
+				String artifactPath = parentUserArtifact.artifactPath;
+				Log.log(LOGGER, "Debug", "Last artifact operation [%s] and current worklist item operation [%s].", lastOperationPerformed.opName, workItemOperation.opName);
+				
+				if ((lastOperationPerformed instanceof WS_C_DeleteOperation) && !(workItemOperation instanceof WS_C_DeleteOperation)) {
+					// clear any applicable stages associated with commitable entry
+					AMS_C_ApplicableStages applicableStages = Instance.getByExtIdByUri(matchingDeltaEntry.applicableStagesConceptId, "/Approval/Concepts/ArtifactsConcepts/AMS_C_ApplicableStages");
+					Instance.PropertyArray.clear(applicableStages.stages);
+					
+					String errorMessage = String.format("This artifact [%s] is already deleted.", artifactPath);
+					Log.log(LOGGER, "Debug", errorMessage);
+					throw Exception.newException("WORKLIST_OPERATION_MISMATCH_ERROR", errorMessage, null);
+				}
+		
+				WS_C_ArtifactBaseState currentCommitLifeCycleState = Instance.PropertyAtom.getConceptReference(matchingDeltaEntry.commitLifeCycleState, 1L);				
+				// set the reviewer name and the comments
+				if (String.equals(reviewStatus, "BuildAndDeploy")) {
+					matchingDeltaEntry.deployComments = reviewComments;
+					matchingDeltaEntry.deployerName = loggedInUsername;
+				} else {
+					matchingDeltaEntry.reviewComments = reviewComments;
+					matchingDeltaEntry.reviewerName = loggedInUsername;
+				}
+												
+				// add the current deployment details
+				Log.log(LOGGER, "Debug", "requestDataItem.deployEnvironments - %s", requestDataItem.deployEnvironments);
+				if (requestDataItem.deployEnvironments != null && !String.equals(requestDataItem.deployEnvironments, "")) {
+					// clear existing deploy environments and add new set
+					Instance.PropertyArray.clear(matchingDeltaEntry.deployEnvironments);
+					
+					if (String.indexOfString(requestDataItem.deployEnvironments, 0, ",") != -1) {
+						String[] environments = String.split(requestDataItem.deployEnvironments, ",");
+						for (int i=0; i<environments@length; i++) {
+							Log.log(LOGGER, "Debug", "Setting Deployment Environment[%s] in matchingDelta Entry", environments[i]);
+							Instance.PropertyArray.appendString(matchingDeltaEntry.deployEnvironments, environments[i], 1L);
+						}
+					} else {
+						Instance.PropertyArray.appendString(matchingDeltaEntry.deployEnvironments, requestDataItem.deployEnvironments, 1L);
+					}
+				}
+				Log.log(LOGGER, "Debug", "Total Deploy Environments set in matchingDeltaEntry - %s", matchingDeltaEntry.deployEnvironments@length);
+				
+				Log.log(LOGGER, "Debug", "Existing artifact status [%s] & review comments [%s]", currentCommitLifeCycleState.stateName, matchingDeltaEntry.reviewComments);
+				try {
+					WS_RF_PerformStateChangeValidation(matchingDeltaEntry, currentCommitLifeCycleState, reviewStatus, artifactPath, managedProjectName, subscriptionId);
+					WS_RF_UpdateProjectSummary(managedProjectName, loggedInUsername, String.toUpperCase(reviewStatus));
+				} catch (Exception e) {
+					Log.logException(LOGGER, "Error", "Error changing status", e);
+					throw e;
+				}
+
+				//Perform post status change activities
+				WS_RF_PerformPostStatusChangeActivities(loggedInUsername, userProject, matchingDeltaEntry, requestDataItem.deployEnvironments);
+				//Add the matching entry
+				WS.Common.Stack.push(stateChangeItemsStack, matchingDeltaEntry);
+				
+				String comment = matchingDeltaEntry.reviewComments;
+				if (String.equals(reviewStatus, "BuildAndDeploy")) comment = "[" + requestDataItem.deployEnvironments + "]";
+				if (matchingDeltaEntry.deployComments != null && !String.equals(matchingDeltaEntry.deployComments, "")) comment += " " + matchingDeltaEntry.deployComments;
+				WS_RF_AddAuditTrailEntry(loggedInUsername, managedProjectName, artifactPath, parentUserArtifact.artifactType, String.toUpperCase(reviewStatus), comment);
+			}
+		}
+		
+		// flush changes for the revision once all items are updated
+		String scsIntegrationType = System.getSystemPropertyAsString("ws.scs.impl.type", null);
+		String scsRootURL = WS_RF_GetSCSRootURL(userProject.name, subscriptionId);
+		
+		if (!String.equals(scsIntegrationType, "file")) { 
+			try {
+				Log.log(LOGGER, "Info", "User Name - [%s] being used", scsCredentials[0]);
+				String scsCommitRevision = WS.SCS.flushContentsToSCS(scsIntegrationType, scsRootURL, revisionId, scsCredentials[0], scsCredentials[1]);
+				// if scsCommitRevision != null, indicates a commit to repository like svn/cvs. Maintaing the actual revision number will help later for history related operations.
+				if (scsCommitRevision != null) {
+					Log.log(LOGGER, "Info", "SCS Commit Revision - [%s]", scsCommitRevision);
+					Instance.PropertyArray.appendString(referencedCheckin.scsCommitRevisions, scsCommitRevision, 1L);
+				}
+			} catch (Exception e) {
+				Log.logException(LOGGER, "Error", "Exception encountered while interacting with SVN.", e);
+				
+				// revert all the commit items from approve to commit and all actions associated
+				for (int requestDataItemLoop = 0; requestDataItemLoop < requestDataItems@length; requestDataItemLoop++) {
+					WS_C_StatusChangeRequestDataItem requestDataItem = requestDataItems[requestDataItemLoop];
+					
+					//Find the right committable for this dataitem
+					WS_C_CommittableDeltaEntry matchingDeltaEntry = WS_RF_GetMatchingCommittableEntry(requestDataItem, committables);
+					if (matchingDeltaEntry != null) {
+						WS_C_ArtifactBaseState currentCommitLifeCycleState = Instance.PropertyAtom.getConceptReference(matchingDeltaEntry.commitLifeCycleState, 1L);
+						if (currentCommitLifeCycleState instanceof WS_C_ArtifactApprovedState || currentCommitLifeCycleState instanceof WS_C_ArtifactRejectedState) {
+							WS_C_UserArtifactRevision referencedRevision = Instance.PropertyAtom.getConceptReference(matchingDeltaEntry.userArtifactRevision, 1L);
+							WS_C_UserArtifact parentUserArtifact = WS_RF_IsUserArtifact(referencedRevision.parentArtifactId, referencedRevision.parentArtifactType);
+							
+							Log.log(LOGGER, "Debug", "Reverting status for artifact[%s]", parentUserArtifact.artifactPath);
+							
+							// delete existing commitstate
+							Instance.deleteInstance(currentCommitLifeCycleState);
+							
+							// set the status back to commit from Approve/Reject
+							WS_RF_ChangeCommittableStatus(matchingDeltaEntry, "Committed");
+							
+							// set checkpoint revision
+							WS_RF_SetCheckpointRevisionForArtifact(referencedCheckin.managedProjectName, matchingDeltaEntry, subscriptionId);
+							
+							// reset the comments
+							matchingDeltaEntry.deployComments = "";
+							matchingDeltaEntry.deployerName = "";
+							matchingDeltaEntry.reviewComments = "";
+							matchingDeltaEntry.reviewerName = "";
+							
+							// set applicale staages
+							WS_RF_SetApplicableStagesForCommittable(matchingDeltaEntry, null);
+						}
+					}
+				}
+				
+				// we use the default scs credentials to revert (considering credentials from preferences are bad)
+				String userName = System.getSystemPropertyAsString("ws.scs.default.username", null);
+				String password = System.getSystemPropertyAsString("ws.scs.default.password", null);
+				
+				// finally revert all file system changes
+				WS.SCS.revertChangesFromSCS(scsIntegrationType, scsRootURL, revisionId, userName, password);
+				
+				// finally throw the previous exception so UI can show it
+				Log.log(LOGGER, "Debug", "Finally throwing the original exception !!");
+				throw e;
+			}
+		}
+	}
+}

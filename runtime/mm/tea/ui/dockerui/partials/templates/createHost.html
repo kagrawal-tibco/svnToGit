@@ -1,0 +1,41 @@
+
+<div class="modal fade box-sizing" id="createHost"  style="height:220px !important">
+	<div class="modal-header box-sizing"  style="height:30% !important">
+		<button type="button" class="close" data-dismiss="modal"
+			aria-hidden="true">x</button>
+		<span class="lead"><h4>{{$parent.newHostObj.operation}} :
+				{{$parent.newHostObj.hostName}}</h4></span>
+	</div>
+
+	<div class="modal-body box-sizing"  style="height:45% !important">
+		<div class="form-horizontal">
+			<div class="control-group">
+				<label class="control-label">Machine Name:</label>
+				<div class="controls">
+					<input name="hostNameInput" type="text" placeholder="HostName"
+						id="hostNameTextField" ng-model="$parent.newHostObj.hostName"
+						ng-change="!$parent.isCreate && !$parent.isSaveEnabled ? $parent.changesInMachineDetails() :null"
+						required autofocus>
+				</div>
+				<label class="control-label">IP Address: </label>
+				<div class="controls">
+					<input type="text" ng-model="$parent.newHostObj.ipAdress"
+						placeholder="IP Address"
+						ng-change="!$parent.isCreate && !$parent.isSaveEnabled ? $parent.changesInMachineDetails() :null">
+				</div>						
+			</div>
+		</div>
+	</div>
+	<div class="modal-footer box-sizing" style="border-top: 1px solid #e5e5e5;">
+		<div ng-show="$parent.isError" class="pull-left">
+			<span class="fileuploadError">*{{$parent.errorMessage}}</span>
+		</div>
+		<button type="button"
+			ng-disabled="!$parent.isCreate && !$parent.isSaveEnabled"
+			ng-click="$parent.saveOrEditHost()"
+			ng-class="{'tbt-btn':true, 'primary-btn':true,'button_disabled':!$parent.isCreate && !$parent.isSaveEnabled}">Save</button>
+		<button type="button" data-dismiss="modal" aria-hidden="true"
+			class="btn tbt-btn secondary-btn" ng-click="closeModal()">
+			Cancel</button>
+	</div>
+</div>

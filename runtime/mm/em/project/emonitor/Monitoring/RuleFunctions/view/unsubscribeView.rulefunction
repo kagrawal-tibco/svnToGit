@@ -1,0 +1,25 @@
+/**
+ * @description 
+ */
+void rulefunction Monitoring.RuleFunctions.view.unsubscribeView {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Shared.Concepts.AbstractMonitorView	view;
+	}
+	body {
+		Shared.RuleFunctions.log("unsubscribeView","DEBUG","Attempting to unsubscribe "+view@extId+"...");
+		String componentConfigMapId = getComponentConfigMapId(view.monitorable,view.type);
+		String dataRetrievalType = Util.HashMap.getObject(componentConfigMapId,"dataretrievaltype");
+		if (Util.HashMap.getObject(componentConfigMapId,"subscribable") == true) {
+		    String name = getFQName(view.monitorable);
+		    String type = getTypePath(view.monitorable)+"/"+view.type;
+		    BEMM.metrics.unsubscribe(name,type);
+		    Shared.RuleFunctions.log("unsubscribeView","DEBUG",view@extId+" successfully unsubscribed...");
+		}
+		else {
+		    Shared.RuleFunctions.log("unsubscribeView","DEBUG",view@extId+" is not subscribable...");
+		}
+	}
+}

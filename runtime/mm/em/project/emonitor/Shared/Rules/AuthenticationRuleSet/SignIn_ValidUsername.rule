@@ -1,0 +1,43 @@
+/**
+ * @description 
+ * @author 
+ */
+rule Shared.Rules.AuthenticationRuleSet.SignIn_ValidUsername {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Shared.Events.reqres.authentication.LoginRequestEvent	requestevent;
+		
+	}
+	when {
+		requestevent.username != null && String.length(requestevent.username) > 0;
+	}
+	then {
+		String username = requestevent.username;
+		String password = requestevent.password;
+		String eCoreUserXML = BEMM.Authentication.authenticate(username,password);
+		if (eCoreUserXML == null) {
+			Shared.RuleFunctions.log("SignIn_ValidUsername","INFO","User [" + requestevent.username + "] FAILED to login");
+		    Shared.Events.reqres.FailureResponseEvent responseevent = Shared.Events.reqres.FailureResponseEvent.FailureResponseEvent(null,null,"002","Invalid username and/or password");
+		    Event.replyEvent(requestevent,responseevent);
+		}
+		else {
+		    long count = Shared.Concepts.GlobalScoreCard.totalUsers;
+		    Shared.RuleFunctions.log("SignIn_ValidUsername","DEBUG","Current Logged In Users Count Is "+count);
+		    String token = "USR:" + count;
+		    Shared.RuleFunctions.log("SignIn_ValidUsername","INFO","Token Is "+token);
+		    Shared.RuleFunctions.log("SignIn_ValidUsername","INFO",eCoreUserXML);
+		    Shared.Concepts.LoggedInUser user = Instance.newInstance("/Shared/Concepts/LoggedInUser", token);
+		    user.lastAccessTime = System.currentTimeMillis();
+		    user.userName = username;
+		    count = count + 1;
+		    Shared.Concepts.GlobalScoreCard.totalUsers = count;
+		    Shared.RuleFunctions.log("SignIn_ValidUsername","DEBUG","Current Logged In Users Count Is "+count);
+		    Shared.Events.reqres.SuccessSimpleResponseEvent responseevent = Shared.Events.reqres.SuccessSimpleResponseEvent.SuccessSimpleResponseEvent(null,null,"Login Successful",token);
+		    Event.replyEvent(requestevent,responseevent);
+		}
+		Event.consumeEvent(requestevent);
+	}
+}

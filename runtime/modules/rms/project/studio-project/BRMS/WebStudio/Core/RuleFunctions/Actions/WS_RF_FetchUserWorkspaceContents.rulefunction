@@ -1,0 +1,75 @@
+/**
+ * @description Fetch user workspace contents (all projects) after login.
+ */
+WebStudio.Core.Concepts.DataSources.WS_C_TemporaryReturnData rulefunction WebStudio.Core.RuleFunctions.Actions.WS_RF_FetchUserWorkspaceContents {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object servletRequest;
+		WebStudio.Security.Authn.Concepts.WS_C_LoggedInUser loggedInUser;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.WS_RF_FetchUserWorkspaceContents");
+		
+		int totalRowsCounter = 0;
+		String responseMessage = null;
+		int responseStatusCode = 1;
+		String errorCode = null;
+		WS_C_ResponseData responseData = null;
+		
+		String method = HTTP.Servlet.Request.getMethod(servletRequest);
+		
+		if (!String.equals(method, "GET")) {
+			responseMessage = "Only GET HTTP method supported for this API";
+			errorCode = "ERR_1006";
+		} else {
+		    Log.log(LOGGER, "Debug", "Username obtained %s", loggedInUser.username);
+		    
+			String workspaceExtId = WS_RF_CreateUserArtifactExtId("WORKSPACE", null, null, loggedInUser.username, null, null);
+			//Look for a workspace for this username. Will be non null if at least one checkout has been performed.
+			boolean workspaceLock = Cluster.DataGrid.Lock(workspaceExtId, 1000, false);
+			if (workspaceLock) {
+				WS_C_UserWorkspace userWorkspace = 
+					Cluster.DataGrid.CacheLoadConceptByExtIdByUri(workspaceExtId, true, "/WebStudio/Core/Concepts/WS_C_UserWorkspace");
+				
+				if (userWorkspace != null) {
+					responseData = 
+						Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/WS_C_ResponseData");
+					
+					WS_C_UserProject[] userProjects = Instance.PropertyArray.toArrayContainedConcept(userWorkspace.userProjects);
+					
+					Log.log(LOGGER, "Debug", "Number of user projects [%s]", userProjects@length);
+					int projectsCounter = 0;
+					
+					WS_C_ManagedProjectsDataSourceRecord managedProjectDataSourceRecord = null;
+					for (int loop = 0; loop < userProjects@length; loop++) {
+						WS_C_UserProject userProject = userProjects[loop];
+						if (userProject != null) {
+							if (!userProject.softDelete) {
+								String projectName = userProject.name;
+								WS_C_AbstractDataSourceRecord projectsDataSourceRecord = 
+									Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/Records/WS_C_ManagedProjectsDataSourceRecord");
+								managedProjectDataSourceRecord = projectsDataSourceRecord;
+								managedProjectDataSourceRecord.projectName = projectName;
+								managedProjectDataSourceRecord.no = "" + projectsCounter;
+								Instance.PropertyArray.appendContainedConcept(responseData.record, projectsDataSourceRecord, 1L);
+								projectsCounter = projectsCounter + 1;
+							}
+						}
+					}
+					totalRowsCounter = projectsCounter;
+					responseStatusCode = 0;
+				} else {
+					responseMessage = String.format("Workspace does not exist for user %s", loggedInUser.username);
+					errorCode = "ERR_1005";
+				}
+			} else {
+				responseMessage = "Workspace locked already";
+				errorCode = "ERR_1002";
+			}
+		}
+		
+		return WS_RF_CreateTemporaryReturnData(responseStatusCode, totalRowsCounter, errorCode, responseMessage, responseData);
+	}
+}

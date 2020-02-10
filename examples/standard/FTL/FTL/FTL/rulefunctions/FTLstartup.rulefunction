@@ -1,0 +1,50 @@
+void rulefunction FTL.rulefunctions.FTLstartup {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		
+	}
+	body {
+		Util.HashMap.createMap("hashmap");
+		
+		String REALM_SERVER = System.getGlobalVariableAsString("FTL/REALM_SERVER_HOST","http://localhost");
+		String REALM_SERVER_PORT = System.getGlobalVariableAsString("FTL/REALM_SERVER_PORT","8080");
+		String REALM_APP_NAME = System.getGlobalVariableAsString("FTL/REALM_APP_NAME","FTL-EXAMPLE");
+		String REALM_END_POINT = System.getGlobalVariableAsString("FTL/REALM_END_POINT","ftl-example-publisher");
+		String PUB_APP_INSTANCE_ID = System.getGlobalVariableAsString("FTL/PUB_APP_INSTANCE_ID","FTL-Example-Publisher");
+		String SUB_APP_INSTANCE_ID = System.getGlobalVariableAsString("FTL/SUB_APP_INSTANCE_ID","HOM-Subscriber");
+		String MESSAGE_FORMAT = System.getGlobalVariableAsString("FTL/MESSAGE_FORMAT","FTL-Message");
+		Object realm = FTL.Realm.connectToRealmServer(REALM_SERVER+":"+REALM_SERVER_PORT, REALM_APP_NAME,null, null, null);
+		
+		if(realm != null){
+			Util.HashMap.putObject("hashmap","realm",realm);
+		}
+		
+		Object propSub = FTL.Property.create();
+		Object propPub = FTL.Property.create();
+		
+		Object subscriber =  FTL.Realm.getSubscriber(realm,REALM_END_POINT,SUB_APP_INSTANCE_ID,propSub);
+		Object publisher =  FTL.Realm.getPublisher(realm,REALM_END_POINT,PUB_APP_INSTANCE_ID,propPub);
+		
+		FTL.Subscriber.setRuleFunction(subscriber,"/FTL/rulefunctions/FTLSubscriber");
+		FTL.Subscriber.setExecuteRules(subscriber,true);
+		FTL.Subscriber.setNumThreads(subscriber,1);
+		Util.HashMap.createMap("contentMatcher");
+		Util.HashMap.putObject("contentMatcher","type",2);
+		Util.HashMap.putObject("contentMatcher","toBaseStation","ABC123");
+		//FTL.Subscriber.bind(subscriber,"/Events/FTLResponseEvent",MESSAGE_FORMAT, Util.HashMap.getMap("contentMatcher"));
+		FTL.Subscriber.bind(subscriber,"/Events/FTLResponseEvent",MESSAGE_FORMAT,null);
+		FTL.Subscriber.startListening(subscriber);
+		if(subscriber != null){
+			Util.HashMap.putObject("hashmap","subscriber",subscriber);	
+		}
+		
+		
+		FTL.Publisher.bind(publisher,"/Events/FTLRequestEvent",MESSAGE_FORMAT);
+		if(publisher != null){
+			Util.HashMap.putObject("hashmap","publisher",publisher);	
+		}	
+		
+	}
+}

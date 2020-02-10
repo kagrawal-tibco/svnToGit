@@ -1,0 +1,35 @@
+/**
+ * @description 
+ */
+WebStudio.Core.Concepts.Lifecycle.Lock.WS_C_CheckArtifactLockResponse rulefunction WebStudio.Core.RuleFunctions.Actions.Lifecycle.Lock.WS_RF_CheckArtifactLock {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String artifactFullPath;
+		String username;		
+	}
+	body {
+		
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.Lifecycle.Lock.WS_RF_CheckArtifactLock");
+		
+		Log.log(LOGGER, "Debug", "Request to check lock on artifact %s for User %s.", artifactFullPath, username);
+		
+		WS_C_CheckArtifactLockResponse checkArtifactLockResponse  = Instance.newTransientInstance("/WebStudio/Core/Concepts/Lifecycle/Lock/WS_C_CheckArtifactLockResponse");
+		
+		String artifactPath = artifactFullPath;
+		int prjIndx = String.indexOfString(artifactFullPath, 0, "/");
+		if (prjIndx < 0)
+			prjIndx = 0;		
+		int extnIndx = String.lastIndexOfString(artifactFullPath, 0, ".");
+		if (extnIndx < 0)
+			extnIndx = artifactFullPath@length;
+		String projectName = String.substring(artifactFullPath, 0, prjIndx);			
+		artifactPath = String.substring(artifactFullPath, prjIndx, extnIndx);
+		
+		WS_C_CheckArtifactLockResponse artifactLockStatus
+										= WebStudio.Core.RuleFunctions.Actions.Lifecycle.Lock.WS_RF_CheckMasterArtifactLock(projectName, artifactPath, username);
+	
+		return artifactLockStatus;
+	}
+}

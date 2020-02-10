@@ -1,0 +1,221 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>     Fraud Detection Backing Store - TIBCO BusinessEvents&reg; Examples</title>
+<meta http-equiv="Content-type" content="text/html; charset=iso-8859-1" />
+<meta http-equiv="Content-Language" content="en-us" />
+<link rel="Shortcut Icon" href="../../_resources/icon.gif" type="image/gif" />
+<style type="text/css" media="all">@import "../../_resources/examples.css";</style>
+<script type="text/javascript" src="../../_resources/examples.js" /></script>
+<script type="text/javascript">
+function buildForms() {
+ var form;
+
+ SendEventForm.setServer("http://localhost:8209");
+
+ form = SendEventForm.get("createAccountForm");
+ form.setDestinationPath("/Channels/HTTP/AllOps");
+ form.setEventPath("/Events/CreateAccount");
+ form.addProperty("AccountId", "Bob");
+ form.addProperty("Balance", "20000");
+ form.addProperty("AvgMonthlyBalance", "11000");
+ form.build();
+
+
+ form = SendEventForm.get("debitAccountForm");
+ form.setDestinationPath("/Channels/HTTP/AllOps");
+ form.setEventPath("/Events/Debit");
+ form.addProperty("AccountId", "Bob");
+ form.addProperty("Amount", "2000");
+ form.build();
+
+
+}
+</script>
+</head>
+<body onLoad="buildForms()">
+
+
+<h1>Fraud Detection Backing Store</h1>
+
+<h1>Persistence option : Shared All</h1>
+
+<h2>Purpose of This Example</h2>
+
+<p>This example builds on the Fraud Detection Cache example, which in turn builds on the Fraud Detection example. The Fraud Detection Cache example adds caching and multi-engine features. The Fraud Detection Backing Store example using Shared All persistence mode adds a backing store. These examples are documented in the <i>TIBCO BusinessEvents Getting Started</i> guide, with step-by-step instructions and learning points.</p>
+<p>
+Fraud Detection is a commonly used scenario for highlighting what's different about CEP because it shows how the CEP engine correlates different events using a time window or other criteria. In this example, fraud is suspected when either of the following occurs:</p>
+<ul>
+<li>The account incurs more than three debit transactions in a two minute period.</li>
+<li>The sum of the debits that occurs in a two minute period totals more than 80% of the average monthly balance of the account. </li>
+</ul>
+
+<h2>Prerequisites</h2>
+<p>A supported RDBMS product to use for the JDBC backing store. See the TIBCO BusinessEvents readme file for supported products and versions.</p>
+
+
+<h2>Preparing to Run the Example</h2>
+
+<p><strong>Note</strong>&nbsp; &nbsp;This example requires additional configuration before it can be run. You must first configure the project, rebuild the EAR file, set up the backing store schema for the example project in a supported DBMS product, and ensure that the database is running.</p>
+
+<h3>Configure the Project</h3>
+<ol>
+<li>In TIBCO BusinessEvents Studio, import the FraudDetectionStore project.
+<li>Open the JDBC Connection shared resource and update the Database URL to point to your JDBC database. Also update the username and password to the login used for the TIBCO BusinessEvents user (by default BE_USER/BE_USER).
+<li><p>Update the EAR file location to your installed example location. By default the location is as follows:</p>
+<p> <code><i>BE_HOME</i>/examples/standard/FraudDetectionStore/FraudDetectionStore.ear</code>.</p></li>
+<li><p>Build the EAR file.</p>
+</ol>
+
+<h3>Copy JDBC Driver Libraries</h3>
+<p>Copy the database JDBC driver libraries to <code><i>BE_HOME</i>/lib/ext/tpcl</code>.</p>
+
+<H3>Generate the Schema for the Tutorial</H3>
+<p>Full instructions are provided in the <i>TIBCO BusinessEvents Getting Started</i> guide. Below are brief steps. They assume Oracle Database Express Edition. Adapt for your database if different:</p>
+
+ <ol>
+<li>Open a command window in <code><i>BE_HOME</i>/bin</code> and initialize the database by executing the following commands:
+<pre class commands>
+sqlplus <i>sys_user/sys_user_password</i> @initialize_database_oracle.sql
+exit
+sqlplus BE_USER/BE_USER @create_tables_oracle.sql
+exit</pre>
+<li>Populate the schema with the project specific details as follows. In TIBCO BusinessEvents Studio Explorer, right-click the FraudDetectionStore project name and select Export > TIBCO BusinessEvents > JDBC Deployment. Click <b>Next</b>. You see the Generate JDBC Deployment Scripts wizard.
+<li>In the Database Type field, select <b>oracle</b>.
+<li>In the Cluster Deployment Descriptor field, browse to and select the <b>fdstore</b> CDD.
+<li>In the Output Directory field, browse to and select the directory where the scripts will be generated.
+<li>In the Output Script Name Prefix field, type <b>fdstore</b>.
+<li>Click <b>Finish</b>. The scripts are generated in the specified directory.
+<li>Run the table creation script. Open a command window in <code><i>BE_HOME</i>/bin</code> and execute the following command:
+<pre class commands>sqlplus BE_USER/BE_USER @fdstore.sql</pre>
+</ol>
+<p>The backing store is now ready for use.
+
+
+
+<h2>How to Run the Example</h2>
+<ol>
+<li>
+<p>Open a command window and at the command prompt, start the TIBCO BusinessEvents engine using the following command, to run the cache agent. Substitute your actual value for <i>BE_HOME</i>.</p>
+
+<pre class="commands">
+cd <i>BE_HOME</i>/examples/standard/FraudDetectionStore
+<i>BE_HOME</i>/bin/be-engine --propFile <i>BE_HOME</i>\bin\be-engine.tra -u cache -c FraudDetectionStore/fdstore.cdd fdstore.ear
+</pre>
+
+<p>Adapt these commands as needed, for example, if you have customized the example project, or are running it from a different directory. </p>
+
+<p>If you are  running the provided example in its default location, you can use this command line to start the cache agent:</p>
+<pre class="commands">
+<i>BE_HOME</i>/bin/be-engine --propFile <i>BE_HOME</i>/bin/be-engine.tra -u cache -c FraudDetectionStore/fdstore.cdd fdstore.ear
+</pre>
+</li>
+<li>
+<p>Open a second command window and at the command prompt, start the TIBCO BusinessEvents engine using the following command, to run the inference agent. Substitute your actual value for <i>BE_HOME</i>.</p>
+
+<pre class="commands">
+cd <i>BE_HOME</i>/examples/standard/FraudDetectionStore
+<i>BE_HOME</i>/bin/be-engine --propFile <i>BE_HOME</i>\bin\be-engine.tra -u default -c FraudDetectionStore/fdstore.cdd fdstore.ear
+</pre>
+<p>If you are  running the provided example in its default location, you can use this command line to start the inference agent:</p>
+<pre class="commands">
+<i>BE_HOME</i>/bin/be-engine --propFile <i>BE_HOME</i>/bin/be-engine.tra -u default -c FraudDetectionStore/fdstore.cdd fdstore.ear
+</pre>
+</li>
+<li>
+<p>Create an account and give it a balance and an average monthly balance. Enter a name in the Account ID field. Enter, for example, 10000 in the Balance, and 20000 in the AvgMonthlyBalance fields. Repeat this step to create multiple accounts, as desired.</p>
+
+<form id="createAccountForm"></form>
+
+<p>In the command window you see a message like this:
+<span class="logs">#### Created account Bob.</span></p>
+</li>
+<li>You can also check in your database to see that the account is created there.</li>
+
+<li>
+<p>Now debit the account. In the AccountId field, enter one of the account names you specified above. Enter the amount of the debit in the Amount field. Then click Send.</p>
+
+<form id="debitAccountForm"></form>
+</ol>
+<p>In the command window you see messages like this
+(the actual message depends on the account balance, the average monthly balance, and other events that happened in the two minute window):
+<span class="logs">#### Debiting account Bob by $1000.0</span></p>
+</li>
+
+
+<p>Rules in the project react to various inputs depending on current facts in the Rete network. You can try the following.</p>
+<p><Strong>To Demonstrate Backing Store Functionality</strong> Send some events such that one more debit could cause an account to be suspended. Stop all engines. Then start them up again. Send one or more events such that the threshold for account suspension is crossed. You'll see that the account is suspended, based on data that was retrieved from the backing store as well as data you just entered.</p>
+
+<table>
+<tr>
+<th>Action</th>
+<th>Message</th>
+</tr>
+<tr>
+<td>In the /Events/CreateAccount form, enter the same account name two times.</td>
+<td><pre class="logs">#### Account already exists: Bob</pre></td>
+</tr>
+<tr>
+<td>In the /Events/Debit form, enter a debit amount greater than the account balance.</td>
+<td><pre class="logs">#### Account ID Bob STATUS set to Suspended. <br>Balance -1000.0 is less than zero</pre></td>
+</tr>
+<tr>
+<td>In the Events/Debit form, debit an account that was set to Suspended.</td>
+<td><pre class="logs">#### Cannot debit the suspended account Bob</pre></td>
+</tr>
+<tr>
+<td>In the Events/Debit form, match the fraud detection criteria to meet both of the following conditions:
+<ul>
+<li>Make 3 debits within 2 minutes</li>
+<li>Make debits such that the sum of the debits occurring in a two minute period totals more than 80% of the average monthly balance of the account.</li>
+</ul></td>
+<td><pre class="logs">#### Account ID Bob STATUS set to Suspended. <br>Fraud suspected</pre></td>
+</tr>
+</table>
+</li>
+</ol>
+
+<h3>Resetting the Tutorial</h3>
+<p>To remove the data (that is, truncate the tables), run the following:</p>
+<pre class commands><i>BE_HOME</i>/bin/FDStore_cleanup.sql</pre>
+<p>To remove the database schema and reset the project, run the following:
+<pre class commands><i>BE_HOME</i>/bin/FDStore_remove.sql</pre>
+
+
+<h1>Persistence option : Shared Nothing</h1>
+<p>This example builds on the Fraud Detection Store example .The Fraud Detection Backing Store example using Shared Nothing persistence mode uses file based storage and not the traditional backing store based storage as described in the above example. These examples are documented in the <i>TIBCO BusinessEvents Getting Started</i> guide, with step-by-step instructions and learning points.</p>
+<p>Fraud Detection is a commonly used scenario for highlighting what's different about CEP because it shows how the CEP engine correlates different events using a time window or other criteria. In this example, fraud is suspected when either of the following occurs:</p>
+
+<h2>Preparing to Run the Example</h2>
+
+<p><strong>Note</strong>&nbsp; &nbsp;This example requires additional configuration before it can be run. You must first configure the Cluster Deployment Descriptor(CDD) with the backing store persistence option as Shared Nothing and add the path to the folder where data has to be persisted . </p>
+
+<h3>Configure the Project</h3>
+<p>Full instructions are provided in the <i>TIBCO BusinessEvents Getting Started</i> guide. Below are brief steps.</p>
+<ol>
+<li>In TIBCO BusinessEvents Studio, import the FraudDetectionStore project.
+<li>Open the Cluster Deployment Descriptor(CDD) file and go to the Cluster tab .
+<li>Click on the Object Management -> BackingStore node. 
+<li>Select "Shared Nothing" from the drop down input in the Persistence Option
+<li>In the input of the Persistence Path specify the folder where you want to persist the data .
+<li>The other options of Persistence Policy and Parallel Recovery are optional in the context of this example and can be left with default values .
+<li>Save the Cluster Deployment Descriptor(CDD) file .
+</ol>
+
+<p>The Shared Nothing backing store is now ready for use.
+
+<li>Follow the same steps as outlined above in the <strong>How to Run the Example</strong> section to run the example in Shared Nothing mode
+
+<li>Also make sure to provide engine name with "-n" parameter which is mandatory for Shared Nothing persistence.
+
+<h3>Resetting the Tutorial</h3>
+<p>To remove the data delete the Shared Nothing persistence folder from Step 5 in the above section <strong>Configure the Project</strong></p>
+
+<div class="footer">
+<p>TIBCO BusinessEvents&reg; 5.6<br />
+Copyright&copy; 2004-2019 TIBCO Software Inc. All rights reserved.</p>
+</div>
+</body>
+</html>

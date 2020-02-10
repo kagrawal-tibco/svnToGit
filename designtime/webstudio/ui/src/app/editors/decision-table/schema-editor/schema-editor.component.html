@@ -1,0 +1,20 @@
+<span>
+    <div class="btn-group">
+            <button type="button" class="btn btn-primary btn-xs dropdown-toggle pull-right" data-toggle="dropdown" aria-haspopup="true"
+                aria-expanded="false" i18n>
+                {{i18n('Add field')}}
+                </button>
+            <div class="dropdown-menu">
+                <a (click)='addField(false)' class="dropdown-item" href="#" i18n>{{i18n('Simple')}}</a>
+                <br>
+                <a (click)='addField(true)' class="dropdown-item" href="#" i18n>{{i18n('Expression')}}</a>
+                <br>
+            </div>
+        </div>
+
+	<button type="button" class="btn btn-danger btn-xs btn-wide" (click)='removeField()' [disabled]='gridOptions.api ? gridOptions.api.getSelectedRows().length === 0 : true' i18n>{{i18n('Remove field')}}</button>
+</span>
+<ag-grid-angular #schemaEditor style="padding-top: 5px; width: 100%; height: calc(100% - 25px)" class="ag-theme-balham" [gridOptions]="gridOptions" enableRtl="{{isRtl() ? 'true' : 'false'}}"
+    [columnDefs]="columnDefs" [sideBar]="false" [rowData]="rowData" 
+     rowSelection="multiple" singleClickEdit="false" (gridReady)="onGridReady($event)">
+</ag-grid-angular>

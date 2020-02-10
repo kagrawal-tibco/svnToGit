@@ -1,0 +1,8 @@
+package com.tibco.cep.loadbalancer.server.core;
+
+/*
+* Author: Ashwin Jayaprakash / Date: 2/13/12 / Time: 4:22 PM
+*/
+public interface KernelMBean {
+    void printReport();
+}

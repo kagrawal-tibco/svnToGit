@@ -1,0 +1,30 @@
+/**
+ * @description 
+ * @author 
+ */
+rule Rules.RuleSet.Applicant_Rule {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Events.ApplicationReceived	applicationReceived;
+		Concepts.Applicant        	applicant;
+	}
+	when {
+		applicant.Name == applicationReceived.ApplicantName;
+	}
+	then {
+		Object[] arguments = {applicant, applicationReceived};
+		VRF.invokeVRFImplByName("/Virtual_RF/Applicant_VirtualRuleFunction", "Applicant_Simple", arguments);
+		
+		// Virtual Rule Functions can also be invoked via Virtual_RF.<vrf_name> as demonstrated below. The technique
+		// mainly exists for backwards compatibility, however, and can cause confusion when there are multiple
+		// implementations of the VRF. For example, Applicant and Applicant_Simple are both implementations of
+		// Applicant_VirtualRuleFunction. Using the Virtual_RF.<vrf_name> mechanism in this case may cause confusion
+		// regaring which implementation will be invoked. 
+//		Virtual_RF.Applicant_VirtualRuleFunction(applicant, applicationReceived);
+		
+		Event.consumeEvent(applicationReceived);
+	}
+}

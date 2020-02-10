@@ -1,0 +1,45 @@
+/**
+ * @description 
+ * @author 
+ */
+rule Shared.Rules.TopologyRuleSet.onRangeCheck {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Shared.Events.topology.RangeCheckEvent	rangecheckevent;
+		
+	}
+	when {
+		rangecheckevent.entityID != null && String.length(String.trim(rangecheckevent.entityID)) != 0 &&
+		rangecheckevent.propertyName != null && String.length(String.trim(rangecheckevent.propertyName)) != 0 &&
+		rangecheckevent.propertyValue != null && String.length(String.trim(rangecheckevent.propertyValue)) != 0 &&
+		rangecheckevent.bucketKey != null && String.length(String.trim(rangecheckevent.bucketKey)) != 0 &&
+		rangecheckevent.filterMapID != null && String.length(String.trim(rangecheckevent.filterMapID)) != 0 ;
+	}
+	then {
+		Shared.Concepts.MonitorableEntity entity = Instance.getByExtId(rangecheckevent.entityID);
+		String fqName = getFQName(entity);
+		Shared.RuleFunctions.log("onRangeCheck","DEBUG","Received range check event for "+fqName);
+		String bucketmapid = fqName+"/alertsrangebucket";
+		int cnt = Util.HashMap.getObject(bucketmapid,rangecheckevent.bucketKey);
+		int tolerance = Util.HashMap.getObject(rangecheckevent.filterMapID,"tolerance");
+		Shared.RuleFunctions.log("onRangeCheck","DEBUG","Checking "+cnt+" alerts for "+rangecheckevent.bucketKey+" against "+tolerance+" in "+rangecheckevent.filterMapID);
+		if (cnt >= tolerance){
+		    if (rangecheckevent.propertyName == "active"){
+		        entity.previousActiveState = String.valueOfBoolean(entity.active);
+		        entity.active = rangecheckevent.propertyValue == "true";
+		        Shared.RuleFunctions.log("onRangeCheck","DEBUG","Updated active to "+entity.active+" in "+fqName);
+		    }
+		    else if (rangecheckevent.propertyName == "healthLevel"){
+		        entity.previousHealthLevel = entity.healthLevel;
+		        entity.healthLevel = rangecheckevent.propertyValue;
+		        Shared.RuleFunctions.log("onRangeCheck","DEBUG","Updated healthLevel to "+entity.healthLevel+" in "+fqName);
+		    }
+		}
+		Util.HashMap.deleteMap(bucketmapid);
+		Cluster.removeSchedule("mm.scheduler",fqName);
+		Event.consumeEvent(rangecheckevent);
+	}
+}

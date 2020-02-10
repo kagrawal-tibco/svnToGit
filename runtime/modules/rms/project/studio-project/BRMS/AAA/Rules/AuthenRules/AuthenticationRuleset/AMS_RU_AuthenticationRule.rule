@@ -1,0 +1,59 @@
+/**
+ * @description Handle authentication.
+ * @author aathalye-lt
+ */
+rule AAA.Rules.AuthenRules.AuthenticationRuleset.AMS_RU_AuthenticationRule {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		AAA.Events.AuthenEvents.AMS_E_LoginRequestEvent ams_e_loginrequestevent;
+	}
+	when {
+		ams_e_loginrequestevent.username != null;
+	}
+	then {
+		Object LOGGER = Log.getLogger("AAA.Rules.AuthenRules.AuthenticationRuleset.AMS_RU_AuthenticationRule");		
+		String username = ams_e_loginrequestevent.username;
+		String password = ams_e_loginrequestevent.password;
+		String loginToken = ams_e_loginrequestevent.loginToken;
+		
+		AMS_C_LoggedInUser loggedInUser = Instance.getByExtIdByUri(username, "/AAA/Concepts/AMS_C_LoggedInUser");
+
+		if (loginToken != null) {
+			Log.log(LOGGER, "Info", "Login for user %s successful", username);
+			//Set the loginToken in Concept
+			loggedInUser.loginToken = loginToken;
+			//Clear previous roles if any
+			Instance.PropertyArray.clear(loggedInUser.roles);
+			//XPath for fetch roles
+			String roleCountXPath = "count($var//role)";
+			//This usually comes to a double
+			String roleCountString = XPath.execute(roleCountXPath, loginToken, "");
+			double countRoles = Number.doubleValue(roleCountString);
+			Log.log(LOGGER, "Debug", "Number of applicable roles for this user %s - %s", username, countRoles);
+			
+			for (int loop = 1; loop <= countRoles; loop++) {
+				//Fetch each role info
+				String roleXPath = "string($var//role[" + loop + "]/attribute::name)";
+				String roleName = XPath.execute(roleXPath, loginToken, "");
+				
+				if (roleName != null) {
+					Log.log(LOGGER, "Debug", "Role name obtained %s", roleName);
+					//Set this as reference
+					Instance.PropertyArray.appendString(loggedInUser.roles, roleName, 1L);
+				}
+			}
+					
+			AMS_E_LoginSuccessEvent successResponse = 
+				AAA.Events.AuthenEvents.AMS_E_LoginSuccessEvent.AMS_E_LoginSuccessEvent(null, loginToken);
+			Event.replyEvent(ams_e_loginrequestevent, successResponse);	
+		} else {
+			Log.log(LOGGER, "Error", "Login for user %s failed", username);
+			AMS_E_ErrorEvent errorEvent = 
+				Event.createEvent("xslt://{{/Approval/Events/ArtifactEvents/AMS_E_ErrorEvent}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:ns=\"www.tibco.com/be/ontology/Approval/Events/ArtifactEvents/AMS_E_ErrorEvent\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"1.0\" exclude-result-prefixes=\"xsd\">\n    <xsl:output method=\"xml\"/>\n    <xsl:param name=\"username\"/>\n    <xsl:template match=\"/\">\n        <createEvent>\n            <event>\n                <payload>\n                    <ns:error>\n                        <errorString>\n                            <xsl:value-of select=\"concat(&quot;Authentication for user name &quot; , concat($username, &quot; Failed&quot;))\"/>\n                        </errorString>\n                        <errorCode>\n                            <xsl:value-of select=\"&quot;AUTHENTICATION_FAILURE&quot;\"/>\n                        </errorCode>\n                    </ns:error>\n                </payload>\n            </event>\n        </createEvent>\n    </xsl:template>\n</xsl:stylesheet>");
+			Event.replyEvent(ams_e_loginrequestevent, errorEvent);		
+		}
+	}
+}

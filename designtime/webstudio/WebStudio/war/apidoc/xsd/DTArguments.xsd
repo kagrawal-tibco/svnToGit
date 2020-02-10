@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:element name="response">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element type="xs:int" name="status"/>
+        <xs:element type="xs:int" name="startRow"/>
+        <xs:element type="xs:int" name="endRow"/>
+        <xs:element type="xs:int" name="totalRows"/>
+	<xs:element type="xs:string" name="errorCode" maxOccurs="1" minOccurs="0"/>
+        <xs:element name="data" maxOccurs="1" minOccurs="0"> 
+          <xs:complexType  mixed="true">
+            <xs:sequence>
+               <xs:element name="record" maxOccurs="unbounded" minOccurs="0">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="artifactDetails">
+                      <xs:complexType>
+                        <xs:complexContent>
+							<xs:extension base="DecisionTableArguments"/>
+						</xs:complexContent>
+                      </xs:complexType>
+                    </xs:element>
+                  </xs:sequence>
+                  <xs:attribute type="xs:int" name="Id" use="optional"/>
+                  <xs:attribute type="xs:string" name="type" use="optional"/>
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+            <xs:attribute type="xs:int" name="Id" use="optional"/>
+            <xs:attribute type="xs:string" name="type" use="optional"/>
+          </xs:complexType>
+        </xs:element>
+      </xs:sequence>
+      <xs:attribute type="xs:int" name="Id" use="optional"/>
+      <xs:attribute type="xs:string" name="type" use="optional"/>
+    </xs:complexType>
+  </xs:element>
+
+	<xs:complexType name="DecisionTableArguments">
+		<xs:sequence>
+			<xs:element type="ArgumentType" name="argument" maxOccurs="unbounded" minOccurs="0"/>
+		</xs:sequence>
+		<xs:attribute type="xs:int" name="Id"/>
+        <xs:attribute type="xs:string" name="type" use="optional"/>
+	</xs:complexType>
+	
+	
+	<xs:complexType name="ArgumentType">
+		<xs:sequence>
+			<xs:element type="xs:string" name="direction" maxOccurs="1" minOccurs="1"/>
+			<xs:element type="xs:string" name="path" maxOccurs="1" minOccurs="1"/>
+			<xs:element type="xs:string" name="argumentAlias" maxOccurs="1" minOccurs="0"/>
+			<xs:element type="xs:string" name="resourceType" maxOccurs="1" minOccurs="1"/>
+			<xs:element type="xs:boolean" name="isArray" maxOccurs="1" minOccurs="1"/>
+			<xs:element type="ArgumentProperty" name="property" maxOccurs="unbounded" minOccurs="0"/>
+		</xs:sequence>
+		<xs:attribute type="xs:int" name="Id"/>
+        <xs:attribute type="xs:string" name="type" use="optional"/>
+	</xs:complexType>
+	
+	<xs:complexType name="ArgumentProperty">
+		<xs:sequence>
+			<xs:element type="xs:string" name="name" maxOccurs="1" minOccurs="0"/>
+			<xs:element type="xs:string" name="type" maxOccurs="1" minOccurs="0"/>
+			<xs:element type="xs:string" name="ownerPath" maxOccurs="1" minOccurs="0"/>
+			<xs:element type="xs:boolean" name="isArray" maxOccurs="1" minOccurs="1"/>
+			<xs:element type="xs:boolean" name="associatedDomain" maxOccurs="1" minOccurs="1"/>
+			<xs:element type="xs:string" name="conceptTypePath" maxOccurs="1" minOccurs="0"/>
+		</xs:sequence>
+		<xs:attribute type="xs:int" name="Id" use="optional"/>
+    	<xs:attribute type="xs:string" name="type" use="optional"/>
+	</xs:complexType>
+</xs:schema>

@@ -1,0 +1,40 @@
+/**
+ * @description 
+ */
+void rulefunction Monitoring.RuleFunctions.view.populators.delegateViewPopulation {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String	type;
+		Object	eventArrayObj;
+	}
+	body {
+		String LOG_NAME = "delegateViewPopulation";
+		Shared.RuleFunctions.log(LOG_NAME,"DEBUG","Called RF for: " + 
+			"\n entity type = " + type + 
+			"\n eventArrayObj = " + eventArrayObj);
+		
+		if (String.indexOfString(type,0,"memory") != -1) {
+		    memoryViewPopulator(eventArrayObj);
+		}
+		else if (String.indexOfString(type,0,"rthreads") != -1 || String.indexOfString(type,0,"dthreads") != -1) {
+		    threadViewsPopulator(eventArrayObj);
+		}
+		else if (String.indexOfString(type,0,"gc") != -1) {
+		    gcViewPopulator(eventArrayObj);
+		}
+		else if (String.indexOfString(type,0,"cpustats") != -1) {
+		    cpustatsViewPopulator(eventArrayObj);
+		}
+		else if (String.indexOfString(type,0,"lcachestats") != -1) {
+		    lCacheStatsViewPopulator(eventArrayObj);
+		}
+		else if (String.indexOfString(type,0,"swap") != -1) {
+		    swapViewPopulator(eventArrayObj);
+		}
+		else if (String.indexOfString(type,0,"mcacheobjectstats") != -1){
+		    cacheObjectStatsViewPopulator(eventArrayObj);
+		}
+	}
+}

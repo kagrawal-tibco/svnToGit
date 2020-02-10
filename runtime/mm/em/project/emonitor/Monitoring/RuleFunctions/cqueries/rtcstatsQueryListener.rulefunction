@@ -1,0 +1,36 @@
+/**
+ * @description 
+ */
+void rulefunction Monitoring.RuleFunctions.cqueries.rtcstatsQueryListener {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String	resultName;
+		boolean	isBatchEnd;
+		boolean	hasEnded;
+		Object	row;
+		Object	closure;
+	}
+	body {
+		if (isBatchEnd) {
+		    return;
+		} else if (hasEnded) {
+		    return;
+		} else {
+		    Object[] columns = row;
+		    if(columns == null) return;
+		    String host = columns[0];
+		    String metricname = columns[1];
+		    long startTime = columns[2];
+		    long endTime = columns[3];
+		    long count = columns[4];
+		    double average = columns[5];
+		    boolean newOrUpdate = columns[6];
+		    Monitoring.Events.bemetrics.PostRTCMetricEvent event = Monitoring.Events.bemetrics.PostRTCMetricEvent.PostRTCMetricEvent(
+		        null,null,-1,false,false,-1,"",host,metricname,startTime,endTime,count,average,newOrUpdate);
+		    Shared.RuleFunctions.log("rtcstatsQueryListener","DEBUG","Firing ["+BEMM.util.join(columns,",")+"]...");
+		    Event.sendEvent(event);
+		}
+	}
+}

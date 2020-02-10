@@ -1,0 +1,187 @@
+/**
+ * @description Rule function to decide whether an artifact should be shown in sync list based on whether it is present in workspace, or its chkpoint revision in workspace != current master revision.
+ */
+ WebStudio.Core.Concepts.DataSources.Records.WS_C_SynchronizableArtifactNamesDataSourceRecord rulefunction WebStudio.Core.RuleFunctions.Actions.Lifecycle.Update.WS_RF_AddSyncArtifactRecord {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object[] workspaceQueryResults;
+		String projectName;
+		//The path of the artifact from SCS.
+		String externalArtifactPath;
+		String artifactType;
+		String fileExtension;
+		String userName;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.Lifecycle.Update.WS_RF_AddSyncArtifactRecord");
+		
+		String subscriptionId = WS_RF_GetSubscriptionId(userName);
+		
+		String scsRootURL = WS_RF_GetSCSRootURL(projectName, subscriptionId);
+		if (scsRootURL == null) {
+			throw Exception.newException(null, "Source control repository location not present. Set ws.scs.rootURL property", null);
+		}
+		
+		WS_C_SynchronizableArtifactNamesDataSourceRecord syncNameDataSourceRecord = null;
+		String masterArtifactExtId = WS_RF_CreateUserArtifactExtId(null, externalArtifactPath, projectName, null, subscriptionId, null);
+		//See if master artifact exists
+		WS_C_MasterArtifact masterArtifact = Instance.getByExtIdByUri(masterArtifactExtId, "/WebStudio/Core/Concepts/Lifecycle/WS_C_MasterArtifact");
+		Log.log(LOGGER, "Debug", "MasterArtifactExtId - [%s] & MasterArtifact - [%s]", masterArtifactExtId, masterArtifact);
+
+		//Check if this artifact path entry exists in ws results
+		for (int loop = 0; loop < workspaceQueryResults@length; loop++) {
+			Object workspaceQueryResult = workspaceQueryResults[loop];
+			
+			if (workspaceQueryResult instanceof WS_C_UserArtifact) {
+				WS_C_UserArtifact userArtifact = workspaceQueryResult;
+				//If path is same check for revision
+				String userArtifactPath = userArtifact.artifactPath;
+				if (externalArtifactPath == userArtifactPath) {
+					//This means it exists in WS, but its contents may not be in sync with master
+					if (masterArtifact != null) {
+						WS_C_UserArtifactRevision currentMasterRevision = Instance.PropertyAtom.getConceptReference(masterArtifact.currentMasterRevision, 1L);
+						WS_C_UserArtifactRevision checkpointRevision = Instance.PropertyAtom.getConceptReference(userArtifact.checkpointRevision, 1L);
+						Log.log(LOGGER, "Debug", "currentMasterRevision - %s", currentMasterRevision);
+						
+						//If these 2 do not match it is a sync case
+						if (currentMasterRevision == null) {
+							if (checkpointRevision != null) {
+								Log.log(LOGGER, "Debug", "currentMasterRevision == null && checkpointRevision != null");
+								WS_C_LifecycleMetadata lifecycleMetadata = Instance.PropertyAtom.getContainedConcept(checkpointRevision.lifecycleMetadata, 1L);
+								WS_C_ArtifactBaseState artifactCurrentState = Instance.PropertyAtom.getConceptReference(lifecycleMetadata.currentState, 1L);
+								//Local fix to Scenario - Rejected artifact that has never been approved (No master revision)
+								//should appear in the Sync list. The sync operation will set the latest revision as the base user revision.
+								WS_C_AbstractOperation lastOperationPerformed = Instance.PropertyAtom.getConceptReference(lifecycleMetadata.lastOperation, 1L);
+								
+								Log.log(LOGGER, "Debug", "artifactCurrentState - %s & lastOperationPerformed - %s", artifactCurrentState.stateName, lastOperationPerformed.opName);
+								
+								if (artifactCurrentState instanceof WS_C_ArtifactRejectedState && !(lastOperationPerformed instanceof WS_C_DeleteOperation)) {
+									syncNameDataSourceRecord = 
+										Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/Records/WS_C_SynchronizableArtifactNamesDataSourceRecord");
+									syncNameDataSourceRecord.artifactPath = externalArtifactPath;
+									syncNameDataSourceRecord.artifactType = userArtifact.artifactType;
+									syncNameDataSourceRecord.fileExtension = userArtifact.artifactFileExtn;
+									syncNameDataSourceRecord.changeType = "Modified";
+									return syncNameDataSourceRecord;									
+								} else {	
+									//artifact is not committed/rejected, so no need to sync.
+									Log.log(LOGGER, "Debug", "Artifact is not committed/rejected, so no need to sync.");
+									return null;
+								}	
+							} else {	
+								//No checkpoint revision, so no need to sync.
+								Log.log(LOGGER, "Debug", "No checkpoint revision, so no need to sync.");
+								return null;
+							}
+						}
+						if (currentMasterRevision != checkpointRevision) {
+							Log.log(LOGGER, "Debug", "currentMasterRevision != checkpointRevision");
+							
+							boolean addToSyncList = false;
+							if (checkpointRevision != null) {
+								WS_C_LifecycleMetadata lifecycleMetadata = Instance.PropertyAtom.getContainedConcept(checkpointRevision.lifecycleMetadata, 1L);
+								WS_C_ArtifactBaseState artifactCurrentState = Instance.PropertyAtom.getConceptReference(lifecycleMetadata.currentState, 1L);
+								Log.log(LOGGER, "Debug", "artifactCurrentState - %s", artifactCurrentState.stateName);
+								
+								if (artifactCurrentState instanceof WS_C_ArtifactApprovedState || artifactCurrentState instanceof WS_C_ArtifactRejectedState
+									|| artifactCurrentState instanceof WS_C_ArtifactBorrowedState) {
+									Log.log(LOGGER, "Debug", "WS_C_ArtifactApprovedState/WS_C_ArtifactRejectedState");
+									addToSyncList = true;
+								}
+							} else {
+								// case for no checkpoint available for this artifact under this user
+								Log.log(LOGGER, "Debug", "Case for no checkpoint available for this artifact under this user.");
+								addToSyncList = true;
+							}
+							
+							Log.log(LOGGER, "Debug", "addToSyncList - %s", addToSyncList);
+							if (addToSyncList) {
+								//This means master and WS version are out of sync.
+								syncNameDataSourceRecord = 
+									Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/Records/WS_C_SynchronizableArtifactNamesDataSourceRecord");
+								syncNameDataSourceRecord.artifactPath = externalArtifactPath;
+								syncNameDataSourceRecord.artifactType = userArtifact.artifactType;
+								syncNameDataSourceRecord.fileExtension = userArtifact.artifactFileExtn;
+								syncNameDataSourceRecord.imageSrc = Util.HashMap.get("ARTIFACT_TYPE_IMAGES", userArtifact.artifactType);
+								syncNameDataSourceRecord.changeType = "Modified";
+								syncNameDataSourceRecord.hasConflict = WebStudio.Core.RuleFunctions.Utils.Lifecycle.WS_RF_CheckArtifactForConflicts(projectName, userArtifact);								
+								return syncNameDataSourceRecord;
+							} else {
+								return null;
+							}
+						} else {
+							//If revisions are same, it means this local version of artifact is
+							//already in sync with master. Return null
+							Log.log(LOGGER, "Debug", "If revisions are same, it means this local version of artifact is already in sync with master. Return null");
+							return null;
+						} 
+					} else {
+						//There is no master. Still send an add case.
+						//Do not send it. Since workspace has it already.
+						Log.log(LOGGER, "Debug", "Here is no master. Still send an add case.Do not send it. Since workspace has it already");
+						return null;
+					}
+				} 
+			}
+		}
+		
+		//No match in WS
+		Log.log(LOGGER, "Debug", "Artifact not in user workspace");
+		
+		WS_C_UserArtifact userArtifact = null;
+		String userArtifactExtId = WS_RF_CreateUserArtifactExtId(null, externalArtifactPath, projectName, userName, null, null);
+		Log.log(LOGGER, "Debug", "userArtifactExtId - %s", userArtifactExtId);
+		if (artifactType == "ruletemplateinstance") {
+			userArtifact = Instance.getByExtIdByUri(userArtifactExtId, "/WebStudio/Core/Concepts/RuleTemplateInstance/WS_C_RuleTemplateInstanceUserArtifact");
+		} else if (artifactType == "rulefunctionimpl") {
+			userArtifact = Instance.getByExtIdByUri(userArtifactExtId, "/WebStudio/Core/Concepts/Decision/WS_C_UserDTableArtifact");
+		} else if (artifactType == "beprocess") {
+			userArtifact = Instance.getByExtIdByUri(userArtifactExtId, "/WebStudio/Core/Concepts/Process/WS_C_ProcessUserArtifact");
+		}
+		boolean addToSyncList = false;
+		Log.log(LOGGER, "Debug", "userArtifact - %s", userArtifact); 
+		if (userArtifact != null) {
+			WS_C_UserArtifactRevision checkpointRevision = Instance.PropertyAtom.getConceptReference(userArtifact.checkpointRevision, 1L);
+			if (checkpointRevision != null) {
+				WS_C_LifecycleMetadata lifecycleMetadata = Instance.PropertyAtom.getContainedConcept(checkpointRevision.lifecycleMetadata, 1L);
+				WS_C_ArtifactBaseState artifactCurrentState = Instance.PropertyAtom.getConceptReference(lifecycleMetadata.currentState, 1L);
+				Log.log(LOGGER, "Debug", "artifactCurrentState - %s", artifactCurrentState);
+				WS_C_AbstractOperation lastOperationPerformed = Instance.PropertyAtom.getConceptReference(lifecycleMetadata.lastOperation, 1L);
+				Log.log(LOGGER, "Debug", "artifactCurrentState - %s & lastOperationPerformed - %s", artifactCurrentState.stateName, lastOperationPerformed.opName);
+	
+				if (artifactCurrentState instanceof WS_C_ArtifactApprovedState || artifactCurrentState instanceof WS_C_ArtifactRejectedState) {
+					addToSyncList = true;
+				} else if(lastOperationPerformed instanceof WS_C_DeleteOperation &&  !(artifactCurrentState instanceof WS_C_ArtifactCommittedState || artifactCurrentState instanceof WS_C_ArtifactRejectedState|| artifactCurrentState instanceof WS_C_ArtifactApprovedState) ) {
+					addToSyncList = true;
+				}
+			}
+		} else {
+			// Consider case for new artifact addition
+			addToSyncList = true;
+		}
+		
+		Log.log(LOGGER, "Debug", "addToSyncList - %s", addToSyncList);
+		if (addToSyncList) {
+			syncNameDataSourceRecord = 
+					Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/Records/WS_C_SynchronizableArtifactNamesDataSourceRecord");
+			syncNameDataSourceRecord.artifactPath = externalArtifactPath;
+			syncNameDataSourceRecord.artifactType = artifactType;
+			syncNameDataSourceRecord.fileExtension = fileExtension;
+			if (String.equals(fileExtension, "rulefunctionimpl") || String.equals(fileExtension, "ruletemplateinstance")) {
+				String baseArtifactPath = WebStudio.Core.RuleFunctions.Utils.WS_RF_GetImplementsPath(userName, projectName, externalArtifactPath, fileExtension, scsRootURL);
+				String baseArtifactExtn = "rulefunction";
+				if (String.equals(fileExtension, "ruletemplateinstance")) {
+					baseArtifactExtn = "ruletemplate";
+				}
+				syncNameDataSourceRecord.baseArtifactPath = baseArtifactPath + "." + baseArtifactExtn;
+			}	
+			syncNameDataSourceRecord.imageSrc = Util.HashMap.get("ARTIFACT_TYPE_IMAGES", artifactType);
+			syncNameDataSourceRecord.changeType = "Added";
+			return syncNameDataSourceRecord;
+		}
+		
+		return null;
+	}
+}

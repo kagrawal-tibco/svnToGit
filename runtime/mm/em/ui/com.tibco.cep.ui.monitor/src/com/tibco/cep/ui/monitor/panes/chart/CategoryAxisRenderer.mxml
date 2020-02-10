@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:AxisRenderer xmlns:mx="http://www.adobe.com/2006/mxml" canDropLabels="false">
+<mx:axisStroke>
+	<mx:Stroke id="axisStroke" 
+        color="#515e7f" 
+        weight="1" 
+        alpha="1"
+        caps="none"
+    />		
+</mx:axisStroke>
+<mx:minorTickStroke>
+	<mx:Stroke id="tickStroke" 
+        color="#515e7f" 
+        weight="1" 
+        alpha="1"
+        caps="none"
+    />		
+</mx:minorTickStroke>
+    <mx:labelRenderer>
+        <mx:Component>
+            <mx:Label toolTip="{this._myTip}">
+                <mx:Script><![CDATA[
+                    [Bindable]
+                    private var _myTip:String;
+                    private var _tipLength:int = 7;
+                    
+                    public function set tipLength(length:int):void{ _tipLength = length; }
+
+                    override public function set data(value:Object):void{
+                        if(value == null) return;
+                        var length:int = value.text.toString().length;
+                        if(length > _tipLength){
+                            text = value.text.toString().substr(0, _tipLength) + "...";
+                            _myTip = value.text;
+                        }
+                        else{
+                        	_myTip = null;
+                            text = value.text;
+                        }
+                    }
+                ]]></mx:Script>
+            </mx:Label>
+        </mx:Component>
+    </mx:labelRenderer>
+</mx:AxisRenderer>

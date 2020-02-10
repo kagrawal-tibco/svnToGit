@@ -1,0 +1,100 @@
+/**
+ * @description 
+ */
+void rulefunction WebStudio.Core.RuleFunctions.Utils.Process.WS_RF_LoadAndParseAnnotationsAndAssociations {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		WebStudio.Core.Concepts.Process.WS_C_Process process;
+		Object processEMFWrapper;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.Process.WS_RF_LoadAndParseAnnotationsAndAssociations");
+		
+		String PROP_ID = "id";
+		String PROP_UNIQUEID = "uniqueId";
+		String PROP_LABEL = "label";
+		String PROP_REFERENCEIDS = "referenceIds";
+		String PROP_POINT_X = "X";
+		String PROP_POINT_Y = "Y";
+		
+		// fetch associations flows
+		Log.log(LOGGER, "Debug", "Started Loading and parsing Associations");
+				
+		WS_C_AssociationFlows ws_c_associationFlows = Instance.newInstance("/WebStudio/Core/Concepts/Process/FlowElements/WS_C_AssociationFlows", null);
+		Instance.PropertyAtom.setContainedConcept(process.associations, ws_c_associationFlows, 1L);
+		
+		Object[] associationFlows = WS.Process.SequenceFlow.getAllAssociations(processEMFWrapper);
+		if (associationFlows != null) {
+			for (int i = 0; i < associationFlows@length; i++) {
+				WS_C_AssociationElement associationElement = Instance.newInstance("/WebStudio/Core/Concepts/Process/FlowElements/WS_C_AssociationElement", null);
+				
+				String associationType = WS.Process.FlowNode.getFlowNodeType(associationFlows[i]);
+				associationElement.elementType = associationType;
+				
+				Object sequenceDetails = WS.Process.SequenceFlow.getSequenceDetails(associationFlows[i]);
+				if (Collections.Map.size(sequenceDetails) > 0) {
+					associationElement.elementId = Collections.Map.get(sequenceDetails, PROP_ID);
+					associationElement.uniqueId = Collections.Map.get(sequenceDetails, PROP_UNIQUEID);
+					associationElement.elementLabel=Collections.Map.get(sequenceDetails, PROP_LABEL);
+				}
+				
+				Object sourceReference = WS.Process.SequenceFlow.getSourceReferences(associationFlows[i]);
+				if (Collections.Map.size(sourceReference) > 0) {
+					String sourceReferenceIds = Collections.Map.get(sourceReference, PROP_REFERENCEIDS);
+					Instance.PropertyAtom.setString(associationElement.sourceReference, sourceReferenceIds, 1L);
+				}
+				
+				Object targetReference = WS.Process.SequenceFlow.getTargetReferences(associationFlows[i]);
+				if (Collections.Map.size(targetReference) > 0) {
+					String targetReferenceIds = Collections.Map.get(targetReference, PROP_REFERENCEIDS);
+					Instance.PropertyAtom.setString(associationElement.targetReference, targetReferenceIds, 1L);
+				}
+				
+				Instance.PropertyArray.appendContainedConcept(ws_c_associationFlows.associationElement, associationElement, 1L);
+			}
+		}
+		
+		// fetch text annotations
+		Log.log(LOGGER, "Debug", "Started Loading and parsing text annotation");
+		
+		// fetch text annotations
+		WS_C_AnnotationNodes ws_c_annotationNodes = Instance.newInstance("/WebStudio/Core/Concepts/Process/FlowElements/WS_C_AnnotationNodes", null);
+		Instance.PropertyAtom.setContainedConcept(process.annotations, ws_c_annotationNodes, 1L);
+		
+		Object[] annotationFlows = WS.Process.FlowNode.getAllTextAnnotations(processEMFWrapper);
+		if (annotationFlows != null) {
+			for (int i = 0; i < annotationFlows@length; i++) {
+				WS_C_TaskElement flowElement = WS_RF_FlowNodeCreationFactory(annotationFlows[i]);
+				
+				if (flowElement instanceof WS_C_AnnotationElement) {
+					WS_C_AnnotationElement annotationElement = flowElement;
+					
+					Object flowElementDetails = WS.Process.FlowNode.getFlowNodeDetails(annotationFlows[i]);
+					if (Collections.Map.size(flowElementDetails) > 0) {
+						annotationElement.elementId = Collections.Map.get(flowElementDetails, PROP_ID);
+						annotationElement.uniqueId = Collections.Map.get(flowElementDetails, PROP_UNIQUEID);
+					}
+					
+					String elementLabel = WS.Process.FlowNode.getFlowNodeLabel(annotationFlows[i]);
+					if (elementLabel != null) annotationElement.elementLabel = elementLabel;
+					
+					Object nodePointDetails = WS.Process.FlowNode.getFlowNodePoints(annotationFlows[i]);
+					if (Collections.Map.size(nodePointDetails) > 0) {
+						WS_C_NodePoint nodePoint = Instance.newInstance("/WebStudio/Core/Concepts/Process/Common/WS_C_NodePoint", null);
+						nodePoint.x = Collections.Map.get(nodePointDetails, PROP_POINT_X);
+						nodePoint.y = Collections.Map.get(nodePointDetails, PROP_POINT_Y);
+						
+						Instance.PropertyAtom.setContainedConcept(annotationElement.nodePoint, nodePoint, 1L);
+					}
+					
+					String annotationText = WS.Process.FlowNode.getTextAnnotationValue(annotationFlows[i]);
+					annotationElement.textValue = annotationText;
+				}
+				
+				Instance.PropertyArray.appendContainedConcept(ws_c_annotationNodes.annotationElement, flowElement, 1L);
+			}
+		}
+	}
+}

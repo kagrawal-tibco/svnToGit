@@ -1,0 +1,28 @@
+/**
+ * @description 
+ */
+boolean rulefunction WebStudio.Core.RuleFunctions.Utils.Lifecycle.WS_RF_CheckArtifactForConflicts {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String projectName;
+		WebStudio.Core.Concepts.WS_C_UserArtifact userArtifact;
+	}
+	body {
+		boolean hasConflicts = false;
+		String[] revisionIds = Instance.PropertyArray.toArrayString(userArtifact.artifactRevisionIds);
+		if (revisionIds != null && revisionIds@length > 0) {
+			//Load instance with this latest revision id
+			String latestRevisionId = revisionIds[revisionIds@length - 1];
+			WS_C_UserArtifactRevision userArtifactRevision = Instance.getByExtIdByUri(latestRevisionId, "/WebStudio/Core/Concepts/WS_C_UserArtifactRevision");
+			WS_C_LifecycleMetadata lifecycleMetadata = Instance.PropertyAtom.getContainedConcept(userArtifactRevision.lifecycleMetadata, 1L);
+			WS_C_ArtifactBaseState artifactState = Instance.PropertyAtom.getConceptReference(lifecycleMetadata.currentState, 1L);
+			if (artifactState instanceof WS_C_ArtifactSaveState) {
+				hasConflicts = true;	
+			}	 
+		}
+		
+		return hasConflicts;		
+	}
+}

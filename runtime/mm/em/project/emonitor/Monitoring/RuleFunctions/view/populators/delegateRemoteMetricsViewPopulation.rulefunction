@@ -1,0 +1,53 @@
+/**
+ * @description 
+ */
+void rulefunction Monitoring.RuleFunctions.view.populators.delegateRemoteMetricsViewPopulation {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String	type;
+		Object	eventArrayObj;
+	}
+	body {
+		try{
+			String LOG_NAME = "delegateRemoteMetricsViewPopulation";
+			Shared.RuleFunctions.log(LOG_NAME,"DEBUG","RF called for: " +
+				"\n entity type = " + type + 
+				"\n eventArrayObj = " + eventArrayObj);
+			
+			if (String.indexOfString(type,0,"memory") != -1) {
+			    memoryViewPopulator(eventArrayObj);
+			}
+			else if (String.indexOfString(type,0,"rthreads") != -1 || String.indexOfString(type,0,"dthreads") != -1) {
+			    threadViewsPopulator(eventArrayObj);
+			}
+			else if (String.indexOfString(type,0,"gc") != -1) {
+			    gcViewPopulator(eventArrayObj);
+			}
+			else if (String.indexOfString(type,0,"cpustats") != -1) {
+			    cpustatsViewPopulator(eventArrayObj);
+			}
+			else if (String.indexOfString(type,0,"lcachestats") != -1) {
+			    lCacheStatsViewPopulator(eventArrayObj);
+			}
+			else if (String.indexOfString(type,0,"swap") != -1) {
+			    swapViewPopulator(eventArrayObj);
+			}
+			else if (String.indexOfString(type,0,"mcacheobjectstats") != -1){
+			    cacheObjectStatsViewPopulator(eventArrayObj);
+			}
+			else if (String.indexOfString(type,0,"entitystats") != -1){
+			    EntityStatsViewPopulator(eventArrayObj);
+			}
+			else if (String.indexOfString(type,0,"ssqestats") != -1){
+			    queryExecStatsViewPopulator(eventArrayObj);
+			}
+			else if (String.indexOfString(type,0,"cqestats") != -1){
+			    queryExecStatsViewPopulator(eventArrayObj);
+			}
+		} catch (Exception e) {
+			Shared.RuleFunctions.log("onAbstractRemoteMetricEvent","DEBUG",e@message + "\\n" + e@stackTrace);
+		}
+	}
+}

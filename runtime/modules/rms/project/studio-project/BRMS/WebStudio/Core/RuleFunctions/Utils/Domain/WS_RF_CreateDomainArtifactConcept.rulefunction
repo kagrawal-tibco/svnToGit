@@ -1,0 +1,50 @@
+/**
+ * @description 
+ */
+WebStudio.Core.Concepts.Domain.WS_C_Domain rulefunction WebStudio.Core.RuleFunctions.Utils.Domain.WS_RF_CreateDomainArtifactConcept {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object domainEMFObject;		
+	}
+	body {
+
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.Domain.WS_RF_CreateDomainConcept");
+		
+		WebStudio.Core.Concepts.Domain.WS_C_Domain domain = Instance.newInstance("/WebStudio/Core/Concepts/Domain/WS_C_Domain", "DOMAIN_" + WS.Common.generateUUID());
+		domain.namespace = WS.Domain.getNamespace(domainEMFObject);
+		domain.name = WS.Domain.getName(domainEMFObject);
+		domain.folder = WS.Domain.getFolder(domainEMFObject);
+		domain.dataType = WS.Domain.getDomainDataType(domainEMFObject);
+		domain.description = WS.Domain.getDescription(domainEMFObject);		
+		domain.superDomainPath = WS.Domain.getSuperDomainPath(domainEMFObject);
+		domain.ownerProjectName = WS.Domain.getOwnerProjectName(domainEMFObject);
+		
+		Object[] domainEntries = WS.Domain.getDomainEntries(domainEMFObject);
+		for (int i = 0; i < domainEntries@length; i++) {
+			WebStudio.Core.Concepts.Domain.WS_C_DomainEntry domainEntry = null;
+			String type = WS.Domain.getDomainEntryType(domainEntries[i]);
+			if (String.equals("Range", type)) {
+				WebStudio.Core.Concepts.Domain.WS_C_RangeEntry rangeEntry = Instance.newInstance("/WebStudio/Core/Concepts/Domain/WS_C_RangeEntry", null);
+				rangeEntry.lower = WS.Domain.getDomainRangeLowerValue(domainEntries[i]);
+				rangeEntry.upper = WS.Domain.getDomainRangeUpperValue(domainEntries[i]);
+				rangeEntry.lowerInclusive = WS.Domain.isDomainRangeLowerInclusive(domainEntries[i]);
+				rangeEntry.upperInclusive = WS.Domain.isDomainRangeUpperInclusive(domainEntries[i]);
+				domainEntry = rangeEntry;
+				//domainEntry.isRange = true;
+				Instance.PropertyArray.appendContainedConcept(domain.rangeEntry, rangeEntry, 1L);
+			} else {
+				WebStudio.Core.Concepts.Domain.WS_C_DomainEntry singleEntry = Instance.newInstance("/WebStudio/Core/Concepts/Domain/WS_C_DomainEntry", null);
+				singleEntry.value = WS.Domain.getDomainEntryValue(domainEntries[i]);
+				domainEntry = singleEntry;
+				//domainEntry.isRange = false;
+				Instance.PropertyArray.appendContainedConcept(domain.singleEntry, singleEntry, 1L);
+			}			
+			domainEntry.description = WS.Domain.getDomainEntryDescription(domainEntries[i]);
+
+		}
+		
+		return domain;	
+	}
+}

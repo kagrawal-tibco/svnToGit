@@ -1,0 +1,86 @@
+/**
+ * @description 
+ */
+WebStudio.Core.Concepts.DataSources.WS_C_TemporaryReturnData rulefunction WebStudio.Core.RuleFunctions.Actions.Dashboard.WS_RF_FetchRecentlyOpenedArtifacts {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object servletRequest;
+		WebStudio.Security.Authn.Concepts.WS_C_LoggedInUser loggedInUser;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.Dashboard.WS_RF_FetchRecentlyOpenedArtifacts");
+		
+		WS_C_ResponseData responseData = null;
+		int responseStatus = 0;
+		int recordCount = 0;
+		String errorCode = null;
+		String responseMessage = null;
+		
+		if (!WS_RF_CheckHTTPMethod(servletRequest, "GET")) {
+			responseStatus = -1;
+			recordCount = 0;
+			errorCode = "ERR_5101";
+			responseMessage = "Invalid HTTP Method, expect method is [GET].";
+		} else {
+			String userDashboardExtId = WS_RF_CreateUserArtifactExtId("DASHBOARD", null, null, loggedInUser.username, null, null);
+			Log.log(LOGGER, "Debug", "Trying to acquire lock on Dashboard space with ExtId - %s", userDashboardExtId);
+			boolean userDashboardLock = Cluster.DataGrid.Lock(userDashboardExtId, -1, false);
+			if (userDashboardLock) {
+				Log.log(LOGGER, "Debug", "Lock acquired for Dashboard space.");
+				WS_C_UserDashboard userDashboard = Instance.getByExtIdByUri(userDashboardExtId, "/WebStudio/Core/Concepts/Dashboard/WS_C_UserDashboard");
+				
+				if (userDashboard == null) {
+					Log.log(LOGGER, "DEBUG", "Dashboard Space not created yet for this user.");
+					
+					responseStatus = -1;
+					recordCount = 0;
+					errorCode = "ERR_1106";
+					responseMessage = "User Dashboard space does not exist";
+				} else {
+					Log.log(LOGGER, "Debug", "User Dashboard instance id %s", userDashboard@id);
+					
+					responseData = 
+						Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/WS_C_ResponseData");
+					
+					WS_C_RecentlyOpenedArtifacts[] recentlyOpenedArtifacts = Instance.PropertyArray.toArrayContainedConcept(userDashboard.recentlyOpenedArtifacts);
+					for (int i = recentlyOpenedArtifacts@length-1; i >= 0; i--) {
+						WS_C_AbstractDataSourceRecord dashboardArtifactDataSourceRecord = Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/Records/WS_C_DashboardArtifactDataSourceRecord");
+						WS_C_DashboardArtifactDataSourceRecord recentlyOpenedArtifactDSRecord = dashboardArtifactDataSourceRecord;
+						
+						WS_C_UserArtifact artifact = WS_RF_IsUserArtifact(recentlyOpenedArtifacts[i].artifactId, recentlyOpenedArtifacts[i].artifactType);
+						if (artifact != null && !artifact.softDelete) {
+							WS_C_UserProject project = Instance.getByExtIdByUri(artifact.parentProjectId, "/WebStudio/Core/Concepts/WS_C_UserProject");
+							
+							if (!project.softDelete) {
+								recentlyOpenedArtifactDSRecord.projectName =  project.name;
+								recentlyOpenedArtifactDSRecord.artifactPath = artifact.artifactPath + "." + artifact.artifactFileExtn;
+							
+								Instance.PropertyArray.appendContainedConcept(responseData.record, dashboardArtifactDataSourceRecord, 1L);
+								recordCount++;
+							}
+						}
+					}
+				}
+			} else {
+				responseStatus = -1;
+				recordCount = 0;
+				errorCode = "ERR_1105";
+				responseMessage = "User Dashboard space locked";
+			}
+		}
+
+		return WS_RF_CreateTemporaryReturnData(responseStatus, recordCount, errorCode, responseMessage, responseData);
+		
+//		String responseDSXML = WebStudio.
+//	    							Core.
+//	    								RuleFunctions.
+//	    									Utils.
+//	    										WS_RF_CreateAndSerializeResponseDataSource(responseStatus, recordCount, errorCode, responseMessage, responseData);
+//		
+//		Log.log(LOGGER, "Debug", "Response DS XML %s", responseDSXML);
+//		HTTP.Servlet.Response.setResponseHeader(servletResponse, "Content-type", "text/xml;charset=utf-8");	    										
+//		HTTP.Servlet.Response.setResponseContent(asyncContextObject, responseDSXML, true);
+	}
+}

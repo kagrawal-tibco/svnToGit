@@ -1,0 +1,77 @@
+/**
+ * @description 
+ */
+Object[] rulefunction WebStudio.Core.RuleFunctions.Utils.Lifecycle.WS_RF_GetReviewSinkExtId {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String[] roles;
+		String subscriptionId;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.Lifecycle.WS_RF_GetReviewSinkExtId");
+		
+		int reviewSinkExtIdCnt = 0;
+		Object reviewSinkExtIdList = Collections.List.createArrayList();
+		
+		String adminRoleExtId = WS_RF_CreateUserArtifactExtId("ADMIN_ROLES", null, null, null, null, null);
+		WS_C_AdminRoles adminRolesEntity = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(adminRoleExtId, false, "/WebStudio/Core/Concepts/WS_C_AdminRoles");
+		
+		if (adminRolesEntity != null) {
+			WS_C_RoleMap[] roleMap = Instance.PropertyArray.toArrayContainedConcept(adminRolesEntity.entry);
+			
+			String tempReviewSinkExtId = null;
+			boolean isAdminRole = false;
+			for (int i=0; i < roles@length; i++) {
+				Log.log(LOGGER, "Debug", "User Role being checked - %s", roles[i]);
+				
+				isAdminRole = false;
+				
+				for (int j=0; j < roleMap@length; j++) {
+					Log.log(LOGGER, "Debug", "Admin Role[%s] & Coverage[%s] is being checked", WS.Common.joinStringArray(Instance.PropertyArray.toArrayString(roleMap[j].role), ","), roleMap[j].coverage);
+					
+					tempReviewSinkExtId = null;
+					
+					if (Instance.PropertyArray.indexOfString(roleMap[j].role, roles[i]) != -1) {
+						// check for all i.e. super role
+						if (String.equals(roleMap[j].coverage, "All")) {
+							tempReviewSinkExtId = WS_RF_CreateUserArtifactExtId("COMMON_REVIEW_SINK", null, null, null, null, null);
+
+						// check for subscription match
+						} else if (subscriptionId != null && String.equals(roleMap[j].coverage, subscriptionId)) {
+							tempReviewSinkExtId = WS_RF_CreateUserArtifactExtId(null, null, null, null, roleMap[j].coverage, "REVIEW_SINK");
+
+						// final check for project specific admin
+						} else {
+							boolean hasAccess = RMS.Authorization.ensureAccess(roleMap[j].coverage, subscriptionId, roles, null, "PROJECT", "approval");
+							if (hasAccess) {
+								tempReviewSinkExtId = WS_RF_CreateUserArtifactExtId(null, null, roleMap[j].coverage, null, subscriptionId, "REVIEW_SINK");
+							}
+						}
+						
+						if (tempReviewSinkExtId != null) {
+							if (!Collections.contains(reviewSinkExtIdList, tempReviewSinkExtId)) {
+								Collections.List.add(reviewSinkExtIdList, reviewSinkExtIdCnt, tempReviewSinkExtId);
+								reviewSinkExtIdCnt++;
+								isAdminRole = true;
+							}
+						}
+					}
+				}
+				
+				if (!isAdminRole) {
+					tempReviewSinkExtId = WS_RF_CreateUserArtifactExtId(roles[i], null, null, null, null, "REVIEW_SINK");
+					if (!Collections.contains(reviewSinkExtIdList, tempReviewSinkExtId)) {
+						Collections.List.add(reviewSinkExtIdList, reviewSinkExtIdCnt, tempReviewSinkExtId);
+						reviewSinkExtIdCnt++;
+					}
+				}
+			}
+		}
+		
+		Log.log(LOGGER, "Debug", "Total Review Sink ExtIds - %s", Collections.size(reviewSinkExtIdList));
+		
+		return Collections.toArray(reviewSinkExtIdList); 
+	}
+}

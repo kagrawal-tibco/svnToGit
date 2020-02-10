@@ -1,0 +1,189 @@
+/**
+ * @description Send a list of committable workspace artifacts.
+ */
+WebStudio.Core.Concepts.DataSources.WS_C_TemporaryReturnData rulefunction WebStudio.Core.RuleFunctions.Actions.Lifecycle.Commit.WS_RF_ShowWorkspaceCommittables {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object servletRequest;
+		WebStudio.Security.Authn.Concepts.WS_C_LoggedInUser loggedInUser;
+		String contentType;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.Lifecycle.Commit.WS_RF_ShowWorkspaceCommittables");
+
+		String responseMessage = null;
+		String errorCode = null;
+		int recordCount = 0;
+		int responseStatus = 0;
+		
+		WS_C_ResponseData responseData = 
+		Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/WS_C_ResponseData");
+		
+		if (!WS_RF_CheckHTTPMethod(servletRequest, "POST")) {
+			responseStatus = -1;
+			recordCount = 0;
+			errorCode = "ERR_5101";
+			responseMessage = "Invalid HTTP Method, expect method is [POST].";
+		} else {
+			String username = loggedInUser.username;
+			//Get the User roles
+			String[] roles = Instance.PropertyArray.toArrayString(loggedInUser.roles);
+			
+			String requestPostParam = System.getGlobalVariableAsString("WebStudio/requestPostParameter", "data");
+			String requestData = HTTP.Servlet.Request.getRequestParameter(servletRequest, requestPostParam);
+			
+			Log.log(LOGGER, "Debug", "Request Post Data Received %s", requestData);
+			if (requestData == null) {
+				Object requestDataBytes = HTTP.Servlet.Request.getRequestContent(servletRequest);
+				requestData = String.convertByteArrayToString(requestDataBytes, "UTF-8");
+				requestData = WS.Common.cleanupRequestData(requestData);
+				Log.log(LOGGER, "Debug", "Request Post Data Received %s", requestData);
+			}
+			//Convert to concept model
+			WS_C_CheckoutRequest committablesRequest = null;
+			if (String.equals(contentType, System.getGlobalVariableAsString("WebStudio/CONTENT_TYPE/XML", "application/xml"))) {
+				committablesRequest = Instance.createTransientInstanceFromXML("/WebStudio/Core/Concepts/Request/Usecases/Checkout/WS_C_CheckoutRequest", requestData);
+			} else {
+				committablesRequest = Instance.createTransientInstanceFromJSON("/WebStudio/Core/Concepts/Request/Usecases/Checkout/WS_C_CheckoutRequest", requestData);
+			}
+			
+			WS_C_CheckoutRequestData requestContainedData = committablesRequest.data;
+			WS_C_CheckoutRequestProject project = Instance.PropertyArray.toArrayContainedConcept(requestContainedData.project)[0];
+			String projectName = project.name;
+			String operationName = project.operation;
+			
+			Log.log(LOGGER, "Debug", "Project Name [%s] and Operation Name [%s] received", projectName, operationName);
+
+			String subscriptionId = null;
+			if (loggedInUser.jwtToken != null) subscriptionId = loggedInUser.jwtToken.sbsc;
+			boolean hasAccess = RMS.Authorization.ensureAccess(projectName, subscriptionId, roles, null, "PROJECT", "commit");	
+			if (!hasAccess) {
+				Log.log(LOGGER, "Debug", "Access Denied to user %s to commit changes in project %s.", username, projectName);
+				responseMessage = String.format("Access Denied to Commit changes in project %s.", projectName);
+				errorCode = "ERR_1103";
+				responseStatus = -1;
+			} else {				
+				WS_C_ArtifactCheckoutDataItem[] artifactItems = Instance.PropertyArray.toArrayContainedConcept(project.artifactItem);
+				//If this is empty assume it is entire project sync case.
+				if (artifactItems@length == 0) {
+					Log.log(LOGGER, "Info", "No artifacts found for commit for project [%s]. Defaulting to entire project commit.", projectName);
+					WS_C_ArtifactCheckoutDataItem artifactItem = 
+						Instance.newTransientInstance("/WebStudio/Core/Concepts/Request/Usecases/Checkout/WS_C_ArtifactCheckoutDataItem");
+					artifactItem.artifactPath = "/";	
+					artifactItems = WS_C_ArtifactCheckoutDataItem[]{artifactItem};
+				}
+				int numberOfArtifacts = artifactItems@length;
+				Log.log(LOGGER, "Debug", "Number of artifacts %s", numberOfArtifacts);
+				
+				String userProjectExtId = WS_RF_CreateUserArtifactExtId(null, null, projectName, username, null, null);
+				boolean projectLock = Cluster.DataGrid.Lock(userProjectExtId, -1, false);
+				if (projectLock) {
+					WS_C_UserProject userProject = Instance.getByExtIdByUri(userProjectExtId, "/WebStudio/Core/Concepts/WS_C_UserProject");
+					if (userProject == null) {
+						errorCode = "ERR_1110";
+						responseMessage = String.format("No project found with name [%s]", projectName); 
+					} else {
+						String workspaceExtId = WS_RF_CreateUserArtifactExtId("WORKSPACE", null, null, username, null, null);
+						boolean userWorkspaceLock = Cluster.DataGrid.Lock(workspaceExtId, -1, false);
+						if (userWorkspaceLock) {
+							WS_C_UserWorkspace userWorkspace = Instance.getByExtIdByUri(workspaceExtId, "/WebStudio/Core/Concepts/WS_C_UserWorkspace");
+							Log.log(LOGGER, "Debug", "Existing workspace concept id %s", userWorkspace@id);
+							if (userWorkspace != null) {
+								//Get committable delta
+								WS_C_WorkspaceCommittableDelta committableDelta = Instance.PropertyAtom.getContainedConcept(userWorkspace.committableDelta, 1L);
+								if (committableDelta != null) {
+									WS_C_CommittableDeltaEntry[] artifactRevisionsCommittableEntries = Instance.PropertyArray.toArrayConcept(committableDelta.deltaEntry);
+							
+									for (int loop = 0; loop < numberOfArtifacts; loop++) {
+										WS_C_ArtifactCheckoutDataItem artifactDataItem = artifactItems[loop];
+										String commitPath = artifactDataItem.artifactPath;
+										//If specific artifact is selected this would be non-null.
+										String commitArtifactType = artifactDataItem.artifactType; 
+										Log.log(LOGGER, "Debug", "Commit Path requested [%s]", commitPath);
+										Log.log(LOGGER, "Debug", "Artifact Type for requested commit op [%s]", commitArtifactType);
+										
+										WS_C_CommittableArtifactNamesDataSourceRecord committableArtifactNamesDataSourceRecord = null;
+										WS_C_UserArtifact matchingUserArtifact = WS_RF_IsUserArtifact(WS_RF_CreateUserArtifactExtId(null, commitPath, projectName, username, null, null), commitArtifactType);
+										if (matchingUserArtifact != null) {
+											Log.log(LOGGER, "Info", "Search Path for commit matches artifact [%s]", commitPath);
+											//Get matching committable delta entry
+											WS_C_CommittableDeltaEntry matchingCommittableDeltaEntry = WS_RF_GetMatchingCommittableDeltaEntry(matchingUserArtifact.artifactPath, artifactRevisionsCommittableEntries);
+											//This could be null if no committable exists.
+											if (matchingCommittableDeltaEntry != null) {
+												WS_C_AbstractOperation operation = Instance.PropertyAtom.getConceptReference(matchingCommittableDeltaEntry.operation, 1L);
+												
+												boolean addToCommittable = true;
+												if (operationName != null && !String.equals(operation.opName, "Modify")) {
+													addToCommittable = false;
+												}
+												
+												if (addToCommittable) {
+													committableArtifactNamesDataSourceRecord = WS_RF_CreateCommittableDataRecord(matchingUserArtifact, responseData);
+													committableArtifactNamesDataSourceRecord.changeType = operation.opName;
+												}
+											}
+										} else {
+											Log.log(LOGGER, "Debug", "Number of committable delta entries in this workspace [%s]", artifactRevisionsCommittableEntries@length);
+											for (int innerLoop = 0, length = artifactRevisionsCommittableEntries@length; innerLoop < length; innerLoop++) {
+												WS_C_CommittableDeltaEntry committableDeltaEntry = artifactRevisionsCommittableEntries[innerLoop];
+												WS_C_UserArtifactRevision userArtifactRevision = Instance.PropertyAtom.getConceptReference(committableDeltaEntry.userArtifactRevision, 1l);
+												//Get associated parent user artifact
+												WS_C_UserArtifact userArtifact = WS_RF_IsUserArtifact(userArtifactRevision.parentArtifactId, userArtifactRevision.parentArtifactType);
+												
+												if (userArtifact != null && String.equals(userArtifact.parentProjectId, userProject@extId)) {
+													String artifactPath = userArtifact.artifactPath;
+													if (String.regionMatches(false, artifactPath, 0, commitPath, 0, String.length(commitPath))) {
+														WS_C_AbstractOperation operation = Instance.PropertyAtom.getConceptReference(committableDeltaEntry.operation, 1L);
+														
+														boolean addToCommittable = true;
+														Log.log(LOGGER,"Debug","Operation Name : %s",operation.opName);
+														if (operationName != null && !(String.equals(operation.opName, "Modify") || String.equals(operation.opName, "Delete")) ){
+															addToCommittable = false;
+														}
+														
+														String scsRootURL = WS_RF_GetSCSRootURL(projectName, subscriptionId);
+														if (scsRootURL == null) {
+															throw Exception.newException(null, "Source control repository location not present. Set ws.scs.rootURL property", null);
+														}
+														
+														if (addToCommittable) {
+															committableArtifactNamesDataSourceRecord = WS_RF_CreateCommittableDataRecord(userArtifact, responseData);
+															committableArtifactNamesDataSourceRecord.changeType = operation.opName;
+															if(String.equals(operation.opName, "Delete") && operationName != null && String.equals(operationName,"Revert")) {
+																committableArtifactNamesDataSourceRecord.changeType = "Added";
+																if (String.equals(userArtifact.artifactType, "rulefunctionimpl") || String.equals(userArtifact.artifactType, "ruletemplateinstance")) {
+																	String baseArtifactPath = WebStudio.Core.RuleFunctions.Utils.WS_RF_GetImplementsPath(username, projectName, userArtifact.artifactPath, userArtifact.artifactType, scsRootURL);
+																	String baseArtifactExtn = "rulefunction";
+																	if (String.equals(userArtifact.artifactType, "ruletemplateinstance")) {
+																		baseArtifactExtn = "ruletemplate";
+																	}
+																	committableArtifactNamesDataSourceRecord.baseArtifactPath = baseArtifactPath + "." + baseArtifactExtn;
+																	Log.log(LOGGER,"debug","Base ArtifactPath %s",committableArtifactNamesDataSourceRecord.baseArtifactPath);
+																}	
+															}
+															
+														}
+													}
+												}
+											}
+										}
+									}
+								} 
+							} else {
+								responseMessage = "User workspace not created yet. Please checkout first.";		
+			    				errorCode = "ERR_1105";
+			    				responseStatus = -1;
+							}
+						}
+					}
+				}
+			}	
+		}
+		Concept[] containedConceptArray = Instance.PropertyArray.toArrayContainedConcept(responseData.record);
+		recordCount = containedConceptArray@length;
+		
+		return WS_RF_CreateTemporaryReturnData(responseStatus, recordCount, errorCode, responseMessage, responseData);
+	}
+}

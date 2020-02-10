@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<cdd:cluster xmlns:cdd="http://tibco.com/businessevents/configuration/5.0">
+    <cdd:revision>
+        <cdd:date>2010/02/04 14:48:15</cdd:date>
+        <cdd:version>BEViews</cdd:version>
+        <cdd:author>TIBCO Software Inc.</cdd:author>
+        <cdd:comment>A dashboard agent configuration to run the sample dashboard</cdd:comment>
+    </cdd:revision>
+    <cdd:name>BEViews</cdd:name>
+    <cdd:object-management>
+        <cdd:memory-manager/>
+    </cdd:object-management>
+    <cdd:rulesets>
+        <cdd:rules id="allRules">
+            <cdd:uri>/</cdd:uri>
+        </cdd:rules>
+    </cdd:rulesets>
+    <cdd:function-groups>
+        <cdd:functions id="dashboard-startup">
+            <cdd:uri>/RuleFunctions/startTCPChannel</cdd:uri>
+        </cdd:functions>
+        <cdd:functions id="dashboard-shutdown">
+            <cdd:uri>/RuleFunctions/stopTCPChannel</cdd:uri>
+        </cdd:functions>
+    </cdd:function-groups>
+    <cdd:destination-groups>
+        <cdd:destinations id="dashboard-endpoints">
+            <cdd:destination id="http-destination">
+                <cdd:pre-processor/>
+                <cdd:queue-size/>
+                <cdd:thread-count>-1</cdd:thread-count>
+                <cdd:threading-model>caller</cdd:threading-model>
+                <cdd:uri>/dashboard/controller</cdd:uri>
+            </cdd:destination>
+        </cdd:destinations>
+    </cdd:destination-groups>
+    <cdd:log-configs>
+        <cdd:log-config id="logConfig">
+            <cdd:enabled>true</cdd:enabled>
+            <cdd:roles>*:info</cdd:roles>
+            <cdd:files>
+                <cdd:enabled>true</cdd:enabled>
+                <cdd:dir>logs</cdd:dir>
+                <cdd:name/>
+                <cdd:max-number>10</cdd:max-number>
+                <cdd:max-size>10000000</cdd:max-size>
+                <cdd:append>true</cdd:append>
+            </cdd:files>
+            <cdd:terminal>
+                <cdd:enabled/>
+                <cdd:sys-err-redirect/>
+                <cdd:sys-out-redirect/>
+            </cdd:terminal>
+            <cdd:line-layout>
+                <cdd:enabled>false</cdd:enabled>
+                <cdd:class/>
+                <cdd:arg/>
+            </cdd:line-layout>
+        </cdd:log-config>
+    </cdd:log-configs>
+    <cdd:agent-classes>
+        <cdd:dashboard-agent-class id="dashboard-agent">
+            <cdd:rules>
+                <cdd:ref>allRules</cdd:ref>
+            </cdd:rules>
+            <cdd:destinations>
+                <cdd:ref>dashboard-endpoints</cdd:ref>
+            </cdd:destinations>
+            <cdd:startup>
+                <cdd:ref>dashboard-startup</cdd:ref>
+            </cdd:startup>
+            <cdd:shutdown>
+                <cdd:ref>dashboard-shutdown</cdd:ref>
+            </cdd:shutdown>
+            <cdd:property-group>
+            	<cdd:property name="be.agent.dashboard.auto.channelscreation.enable" type="boolean" value="false"/>
+                <cdd:property name="be.auth.type" type="string" value="file"/>
+                <cdd:property name="be.auth.file.location" type="string" value="%TIBCO_BE_HOME_ESC%/views/sample/config/users.pwd"/>
+                <cdd:property name="be.http.docRoot" type="string" value="%TIBCO_BE_HOME_ESC%/views/web-root"/>
+                <cdd:property name="be.http.docPage" type="string" value="index.html"/>
+                <cdd:property name="java.security.auth.login.config" type="string" value="%TIBCO_BE_HOME_ESC%/views/config/jaas-config.config"/>
+                <cdd:property name="be.agent.dashboard.push.subscription.destination" type="string" value="subscriptions"/>
+                <cdd:property name="be.agent.dashboard.push.payload.destination" type="string" value="updates"/>
+                <cdd:property name="be.agent.dashboard.mal.storage.file.root" type="string" value="%TIBCO_BE_HOME_ESC%/views/sample/personalizeddata"/>
+                <cdd:property name="be.agent.dashboard.hostname" type="string" value="localhost"/>
+                <cdd:property name="be.agent.dashboard.pullrequestport" type="integer" value="8080"/>
+                <cdd:property name="be.agent.dashboard.pullrequestbaseurl" type="string" value="/dashboard/controller"/>
+                <cdd:property name="be.agent.dashboard.streamingport" type="integer" value="8787"/>
+            </cdd:property-group>
+        </cdd:dashboard-agent-class>
+    </cdd:agent-classes>
+    <cdd:processing-units>
+        <cdd:processing-unit id="default">
+            <cdd:agents>
+                <cdd:agent>
+                    <cdd:ref>dashboard-agent</cdd:ref>
+                    <cdd:key>dashboard-agent#1</cdd:key>
+                    <cdd:priority/>
+                </cdd:agent>
+            </cdd:agents>
+            <cdd:logs>logConfig</cdd:logs>
+            <cdd:property-group/>
+        </cdd:processing-unit>
+    </cdd:processing-units>
+    <cdd:property-group/>
+</cdd:cluster>

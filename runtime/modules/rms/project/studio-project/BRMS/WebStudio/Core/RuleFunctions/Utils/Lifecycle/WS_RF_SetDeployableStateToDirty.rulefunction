@@ -1,0 +1,44 @@
+/**
+ * @description Set the project deployable state to dirty
+ */
+void rulefunction WebStudio.Core.RuleFunctions.Utils.Lifecycle.WS_RF_SetDeployableStateToDirty {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String username;
+		WebStudio.Core.Concepts.Lifecycle.WS_C_CommittableDeltaEntry[] commitables;		
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.Lifecycle.WS_RF_UpdateDeployableState");
+
+		String mapId = username + "@PROJECT_DEPLOY_DIRTY_" + System.nanoTime(); 		
+		
+		boolean mapLock = Cluster.DataGrid.Lock(mapId, -1, false);
+		if (mapLock) {
+			Util.HashMap.createMap(mapId);		
+				
+			for (int loop = 0; loop < commitables@length; loop++) {					
+				WS_C_CommittableDeltaEntry commitable = commitables[loop];	
+				WS_C_ArtifactBaseState currentCommitLifeCycleState = Instance.PropertyAtom.getConceptReference(commitable.commitLifeCycleState, 1L);
+	
+				if (currentCommitLifeCycleState instanceof WS_C_ArtifactApprovedState) {				
+					WS_C_UserArtifactRevision referencedRevision = Instance.PropertyAtom.getConceptReference(commitable.userArtifactRevision, 1L);
+					WS_C_UserArtifact parentUserArtifact = WS_RF_IsUserArtifact(referencedRevision.parentArtifactId, referencedRevision.parentArtifactType);
+					WS_C_UserProject userProject = Instance.getByExtIdByUri(parentUserArtifact.parentProjectId, "/WebStudio/Core/Concepts/WS_C_UserProject");
+					
+					Util.HashMap.put(mapId, userProject.name, null);									
+				}		
+			}		
+				
+			String[] projectNames = Util.HashMap.getMapKeys(mapId);
+			
+			for (int loop = 0; loop < projectNames@length; loop++) {
+				String projectName = projectNames[loop];			
+				WS_RF_UpdateDeployableState(projectName, true, username);			
+			}
+		
+			Util.HashMap.deleteMap(mapId);
+		}			
+	}
+}

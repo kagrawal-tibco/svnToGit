@@ -1,0 +1,29 @@
+/**
+ * @description 
+ * @author 
+ */
+rule Rules.MonitoringRuleSet.DisableBoiler {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Concepts.Boiler	boiler;
+		
+	}
+	when {
+		boiler.Status=="Operating";
+		Rules.CalcTimeToThreshold(boiler)<=0.0;
+	}
+	then {
+		boiler.Status="Disabled";
+		System.debugOut("##### Boiler reached threshold temperature; status is now <Disabled>");
+		
+		Events.General.TempWarning warning = Events.General.TempWarning.TempWarning(null 	/*extId String */,
+																					null		/*payload String */,
+																					boiler.Id	/*BoilerId String */,
+																					boiler.CurrentTemp	/*Temp double */,
+																					String.concat("Boiler staus is ", boiler.Status)/*Remarks String */);
+		Event.sendEvent(warning);
+	}
+}

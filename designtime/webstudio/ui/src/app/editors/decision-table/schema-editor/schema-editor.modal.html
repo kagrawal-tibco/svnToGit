@@ -1,0 +1,30 @@
+<div class="card panel-sm">
+    <div class="card-header">
+	   	<button (click)='toggleMaximize()' class="float-right btn-outline-primary">
+	    	<i
+		     	class="fa"
+		     	[class.fa-window-restore]="maximized"
+		     	[class.fa-expand]="!maximized"
+		     	>
+	    	</i>
+	   	</button>
+        <ng-container i18n>{{i18n('Edit schema: ')}}</ng-container>{{context.title}}
+    </div>
+    <div class="card-body page row">
+	    <schema-editor *ngFor='let schema of schemas;' class="col-sm-6"
+	        [baseSchema]='schema' (schema)="handleChangedSchema($event)">
+	    </schema-editor>
+    </div>
+    <div class="row left-pad right-pad bottom-pad top-pad">
+        <div class="col-sm-12">
+            <button type="button"
+                class="btn btn-outline-primary btn-sm btn-narrow"
+                (click)="onSubmit(false)" i18n
+                >{{i18n('Cancel')}}</button>
+            <button type="button"
+                class="btn btn-primary btn-sm btn-narrow"
+                (click)="onSubmit(true)" i18n
+                >{{i18n('Save')}}</button>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,53 @@
+BE->BE-Startup: Start BE
+BE-Startup->BE-TCPServer: Start TCP server on 31900
+activate BE-TCPServer
+
+
+TestProgram->BE-TCPServer: Connect to BE on 31900
+activate TestProgram
+BE-TCPServer->BE-NewSessionListener: New session information (Session A)
+BE-NewSessionListener-->BE-LocalChannel: Send TCPTalkerEvent
+
+alt TestProgram to BE
+BE-LocalChannel->BE-TCPTalkerPreProc: Begin talking (Session A)
+activate BE-TCPTalkerPreProc
+
+TestProgram-->BE-TCPTalkerPreProc: Send message
+BE-TCPTalkerPreProc-->TestProgram: Send response message
+
+BE-TCPTalkerPreProc-->TestProgram: Close
+TestProgram-->BE-TCPTalkerPreProc: Agree close
+
+TestProgram->TestProgram: End client connection
+deactivate TestProgram
+
+BE-TCPTalkerPreProc->BE-TCPTalkerPreProc: End Session A
+deactivate BE-TCPTalkerPreProc
+end
+
+alt BE to TestProgram
+TestProgram->TestProgram: Start TCP server on 37000
+activate TestProgram
+BE-TCPTalkerPreProc-->TestProgram: Connect to Java program on 37000 (Session X)
+activate BE-TCPTalkerPreProc
+BE-TCPTalkerPreProc-->TestProgram: Send message
+TestProgram-->BE-TCPTalkerPreProc: Send response
+TestProgram-->BE-TCPTalkerPreProc: Close
+BE-TCPTalkerPreProc-->TestProgram: Agree close
+
+BE-TCPTalkerPreProc->BE-TCPTalkerPreProc: End client connection
+deactivate BE-TCPTalkerPreProc
+
+TestProgram->TestProgram: End Session X
+deactivate TestProgram
+end
+
+TestProgram->TestProgram: Stop TCP server
+destroy TestProgram
+
+BE-Shutdown->BE-TCPServer: Stop TCP server
+deactivate BE-TCPServer
+destroy BE-TCPServer
+
+BE-Shutdown->BE: Shutdown BE
+destroy BE

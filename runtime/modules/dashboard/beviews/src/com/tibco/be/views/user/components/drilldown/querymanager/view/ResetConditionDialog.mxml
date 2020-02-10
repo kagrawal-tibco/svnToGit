@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml" 
+	layout="vertical" width="400" height="200"
+	title="Reset Condition"
+	showCloseButton="true"
+	dropShadowEnabled="false"
+	close="titleWindow_close(event)"
+    backgroundAlpha="1.0"
+    borderColor="gray"
+    roundedBottomCorners="false"
+    cornerRadius="0"
+    borderAlpha="1.0"
+>
+
+	<mx:Script>
+		<![CDATA[
+			import mx.controls.Alert;
+            import mx.events.CloseEvent;
+            import mx.managers.PopUpManager;
+			
+			[Bindable]public var headerObj:HeaderRenderer = null;
+			private function titleWindow_close(evt:CloseEvent):void{
+                PopUpManager.removePopUp(this)
+            }
+            
+            private function okPressed():void{
+            	trace("Ok button pressed");
+            	if(defaultCondition.selected == true){
+            		headerObj.editorPanel.resetConditionToDefault();
+            	}
+            	else{ // reset to any
+            		headerObj.editorPanel.resetConditionToAny();
+            	}
+            	trace("after calling reset...");
+                PopUpManager.removePopUp(this);
+            }
+            
+            private function close():void{        	
+                PopUpManager.removePopUp(this);
+            }
+            
+		]]>
+	</mx:Script>
+	
+	<mx:Text text="Reset the condition to: " width="100%"/>
+	<mx:HBox>
+		<mx:RadioButton groupName="resetoptions"
+			id="defaultCondition"
+			label="Default"
+			selected="true"/>
+		<mx:RadioButton groupName="resetoptions"
+			id="any"
+			label="Any"/>
+	</mx:HBox>
+	
+	<mx:HBox horizontalAlign="right" width="350">
+		<mx:Button id="okButton" label="Ok" click="okPressed()" width="80"/>
+		<mx:Button id="cancelButton" label="Cancel" click="close()" width="80"/>
+	</mx:HBox>
+</mx:TitleWindow>

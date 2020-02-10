@@ -1,0 +1,84 @@
+ <div class="modal fade box-sizing" id="groupSystemVariables">
+       <div class="modal-header box-sizing">
+       	 	<button type="button" class="close" data-dismiss="modal" aria-hidden="true">x</button>
+			<span class="lead"><h4>{{$parent.groupType}}</h4></span>
+	   </div>
+	   
+	   <div class="modal-body box-sizing">
+			<div class="be_VariablesContainer">
+				<section>
+       				<ul class="navTable">
+            			<li ng-click="$parent.showEqualInstances()" ng-class="{active:$parent.isSetVariablesValueType('equals')}"><a>{{$parent.equalTabTitle}}</a></li>
+           				<li  ng-click="$parent.showDifferentInstances()" ng-class="{active:$parent.isSetVariablesValueType('different')}"><a>{{$parent.differentTabTitle}}</a></li>            		
+        			</ul>
+        		</section>				
+				<div ng-show="$parent.isSetVariablesValueType('equals')" class="be_groupVariablesPanel">
+					<table ng-show="$parent.equalVariables!=null && $parent.equalVariables.length > 0" class="be-table">
+                		<thead>
+   		 					<tr>
+      							<th>Name</th>
+      							<th>Effective/Deployed Value</th>
+      							<th>Value</th>
+    						</tr>
+  						</thead>
+  						<tbody>
+    						<tr ng-show="!gv.deleted" ng-repeat = "gv in $parent.equalVariables">
+      							<td>
+                               		<div ng-if="gv.isNew"> <input class = "inputStyle" name="name" type="text" placeholder="name"
+                               			ng-model="gv.name"></div>
+                               	  	<div title="{{gv.name}}" ng-if="!gv.isNew">{{gv.name}}</div>
+								</td>      						
+      							<td title="{{gv.effectiveValue}}">{{gv.effectiveValue}}</td>
+        					    <td>
+        					       <input class = "inputStyle" name="newValue" type="text" placeholder="value"
+                               			ng-model="gv.value" ng-change="$parent.configurationChangesFlags.isSystemVariableChanged=true">
+                               		<div ng-click="removeSystemVariable($index,true);$parent.configurationChangesFlags.isSystemVariableChanged=true" class="operation" style="width: 10px;display: inline-block;">    
+        		 				 		<i class="fa fa-minus-circle"></i>
+                			  		</div>
+								</td>
+    						</tr>
+  					   </tbody>
+        		    </table>					
+				</div>
+				<div ng-show="$parent.isSetVariablesValueType('different')" class="be_groupVariablesPanel">
+					<table ng-show="$parent.diffVariables!=null && $parent.diffVariables.length > 0" class="be-table">
+                		<thead>
+   		 					<tr>
+      							<th>Name</th>
+      							<th>Value</th>
+      							<th>Change Value</th>
+    						</tr>
+  						</thead>
+  						<tbody>
+    						<tr ng-show="!gv.deleted" ng-repeat = "gv in $parent.diffVariables">
+      							<td title="{{gv.name}}">{{gv.name}}</td>
+        					    <td>
+        					       <input ng-disabled="!gv.hasEqualValue" class = "inputStyle" name="newValue" type="text" placeholder="value"
+                               			ng-model="gv.value">
+								</td>
+								<td>
+									<input type="checkbox" ng-model="gv.hasEqualValue" ng-change="$parent.configurationChangesFlags.isSystemVariableChanged=true">
+									<div ng-click="removeSystemVariable($index,false);$parent.configurationChangesFlags.isSystemVariableChanged=true" class="operation pull-right" style="width: 10px;display: inline-block;margin-top:3px;margin-right:10px;">    
+        		 				 		<i class="fa fa-minus-circle"></i>
+                			  		</div>
+								</td>   
+    						</tr>
+  					   </tbody>
+        		    </table>					
+				</div>
+			</div>
+			<div ng-show="$parent.isSetVariablesValueType('equals')">
+				<div  ng-click="$parent.addNewSystemVariable();$parent.configurationChangesFlags.isSystemVariableChanged=true" class="operation pull-left">    
+        			<i  class="fa fa-plus-circle"></i>
+				   <span>Add New</span>             
+                </div>
+			</div>
+	  	</div>	
+	  	<div class="modal-footer box-sizing">
+	    	<button type="button" ng-click="$parent.configurationChangesFlags.isSystemVariableChanged?$parent.saveGroupSystemVariables():null"               
+                ng-class="{'tbt-btn':true, 'primary-btn':true,'button_disabled':!$parent.configurationChangesFlags.isSystemVariableChanged}"  ng-if="$parent.hasPermission(14)">Save</button>
+	    	<button type="button" data-dismiss="modal" aria-hidden="true" class="btn tbt-btn secondary-btn" ng-click="close()">
+		   		 Cancel
+	    	</button>
+    	</div>
+ </div>

@@ -1,0 +1,140 @@
+#
+# Copyright (c) 2004-2019 TIBCO Software Inc.
+# All Rights Reserved.
+#
+# This software is the confidential and proprietary information of
+# TIBCO Software Inc.
+#
+#==========================================================
+# Common environment variables.
+#==========================================================
+#
+
+tibco.env.PSP=%PS%
+tibco.env.TIB_HOME=%TIBCO_HOME_ESC%
+tibco.env.BE_HOME=%TIBCO_BE_HOME_ESC%
+tibco.env.AS_HOME=%TIBCO_AS_HOME_ESC%
+tibco.env.BE_TEAAGENT_HOME=%TIBCO_BE_HOME_ESC%/teagent
+
+#
+# Customizable Classpath information...
+#    e.g g:/a1/b1;d:/a2/b2/c.jar
+#    All classes and jars in these directories will be automatically picked
+#    up. You can also specify individual files. Use forward slashes only.
+#
+tibco.env.CUSTOM_EXT_PREPEND_CP=
+tibco.env.CUSTOM_EXT_APPEND_CP=
+
+
+#==========================================================
+# JVM related settings. Choose your options carefully.
+#==========================================================
+
+tibco.env.TIB_JAVA_HOME=%TIBCO_JAVA_HOME_ESC%
+#
+# Ensure that the JVM_LIB_PATH points to the appropriate JVM Server DLL or SO.
+#
+# Example:
+#    64 bit Sun JVM for Intel or AMD on Linux should use JVM_LIB_PATH =
+#    %TIB_JAVA_HOME%/lib/amd64/server/libjvm.so
+#
+#    64 bit Sun JVM for Intel or AMD on Windows should use JVM_LIB_PATH =
+#    %TIB_JAVA_HOME%/lib/amd64/server/libjvm.dll
+#
+#    32 bit Sun JVM for Intel or AMD on Windows should use JVM_LIB_PATH =
+#    %TIB_JAVA_HOME%/lib/i386/server/libjvm.dll
+#
+#
+tibco.env.JVM_LIB_PATH=%TIBCO_JVM_LIB_SERVER_ESC%
+tibco.env.JVM_LIB_DIR=%TIBCO_JVM_LIB_DIR_ESC%
+
+
+
+#
+# 64 bit JVM parameters for production. Increase heap size and tune other
+# parameters as needed.
+# Note: On some platforms the "-d64" switch might not work. Please
+#       consult the JVM's documentation to ensure that the correct
+#       switch is set to enable the 64bit JVM mode.
+# Note: Additional options for Sun JVMs. Consult the appropriate JVM
+#       manual for high performance options.
+#       Ex: -XX:MaxGCPauseMillis=150 -XX:+DisableExplicitGC -XX:+UseTLAB
+#
+java.extended.properties=-server -Xms1024m -Xmx1024m -Xss2m -XX:MaxMetaspaceSize=256m
+
+#==========================================================
+# Classpath and other environment settings. You do not have
+# to modify these.
+#==========================================================
+#
+# TIBCO standard classpath
+#
+tibco.env.STD_EXT_CP %TIB_JAVA_HOME%/lib%PSP%%TIB_JAVA_HOME%/lib/ext%PSP%%BE_TEAAGENT_HOME%/hotfix/lib%PSP%%BE_TEAAGENT_HOME%/hotfix/lib/teasdk%PSP%%BE_TEAAGENT_HOME%/hotfix/lib/ext%PSP%%BE_TEAAGENT_HOME%/config/operations%PSP%%BE_TEAAGENT_HOME%/lib%PSP%%BE_TEAAGENT_HOME%/lib/teasdk%PSP%%BE_TEAAGENT_HOME%/lib/ext%PSP%%BE_HOME%/hotfix/lib%PSP%%BE_HOME%/lib%PSP%%BE_HOME%/hotfix/lib/ext/tpcl%PSP%%BE_HOME%/lib/ext/tpcl%PSP%%BE_HOME%/hotfix/lib/ext/tpcl/emf%PSP%%BE_HOME%/lib/ext/tpcl/emf%PSP%%BE_HOME%/hotfix/lib/ext/tpcl/apache%PSP%%BE_HOME%/lib/ext/tpcl/apache%PSP%%BE_HOME%/hotfix/lib/ext/tibco%PSP%%BE_HOME%/lib/ext/tibco%PSP%%BE_HOME%/hotfix/lib/ext%PSP%%BE_HOME%/lib/ext%PSP%%AS_HOME%/lib
+
+
+#
+# TIBCO Standard Path (Applicable to all Platforms)
+#
+tibco.env.PATH %BE_TEAAGENT_HOME%/hotfix/bin%PSP%%BE_TEAAGENT_HOME%/bin%PSP%%AS_HOME%/lib%PSP%%TIB_JAVA_HOME%/bin%PSP%%JVM_LIB_DIR%/server%PSP%%JVM_LIB_DIR%%PSP%%PATH%
+
+#
+# TIBCO Load Library Path
+# Load Library Path (LD_LIBRARY_PATH, SHLIB_PATH, LIBPATH) are ignored
+# on Windows environments.
+#
+tibco.env.DYLD_LIBRARY_PATH %BE_TEAAGENT_HOME%/hotfix/bin%PSP%%BE_TEAAGENT_HOME%/bin%PSP%%AS_HOME%/lib%PSP%%TIB_JAVA_HOME%/bin%PSP%%DYLD_LIBRARY_PATH%
+
+#tibco.env.LD_PRELOAD %JVM_LIB_DIR%/server%PSP%%FTL_HOME%/bin
+
+tibco.env.LD_LIBRARY_PATH %BE_TEAAGENT_HOME%/hotfix/bin%PSP%%BE_TEAAGENT_HOME%/bin%PSP%%AS_HOME%/lib%PSP%%TIB_JAVA_HOME%/bin%PSP%%JVM_LIB_DIR%/server%PSP%%JVM_LIB_DIR%%PSP%%LD_LIBRARY_PATH%
+
+tibco.env.SHLIB_PATH %BE_TEAAGENT_HOME%/hotfix/bin%PSP%%BE_TEAAGENT_HOME%/bin%PSP%%AS_HOME%/lib%PSP%%TIB_JAVA_HOME%/bin%PSP%%JVM_LIB_DIR%/server%PSP%%JVM_LIB_DIR%%PSP%%SHLIB_PATH%
+
+tibco.env.LIBPATH %BE_TEAAGENT_HOME%/hotfix/bin%PSP%%BE_TEAAGENT_HOME%/bin%PSP%%AS_HOME%/lib%PSP%%TIB_JAVA_HOME%/bin%PSP%%JVM_LIB_DIR%/server%PSP%%JVM_LIB_DIR%%PSP%%LIBPATH%
+
+#
+# Specifies the JVM to be used to launch this application
+#
+java.library %JVM_LIB_PATH%
+
+#
+# Specifies the JVM to be used to launch this application
+#
+java.start.class com.tibco.tea.agent.be.launcher.BETeaAgentLauncher
+
+#
+# Specifies the main function in invoke
+#
+java.start.method main
+
+#
+# Arguments to pass to the application
+#
+application.args -propFile "%TIBCO_BE_HOME_ESC%/teagent/config/be-teagent.props"
+
+#
+# Specifies the function to shutdown
+#
+java.stop.method
+
+#
+# Installation details
+#
+java.property.tibco_home %TIB_HOME%
+java.property.tibco_tra_version %TRA_APPEND_VERSION%
+java.property.BE_HOME %TIBCO_BE_HOME_ESC%
+
+#
+# Specifies the classpath with expansion on
+#
+tibco.class.path.extended %CUSTOM_EXT_PREPEND_CP%%PSP%%STD_EXT_CP%%PSP%%CUSTOM_EXT_APPEND_CP%%PSP%
+
+#
+# log4j configuration file to use
+#
+java.property.log4j.configuration=%TIBCO_BE_HOME_ESC%/teagent/config/log4j.properties
+
+#
+# File encoding for this application
+#
+java.property.file.encoding=UTF-8

@@ -1,0 +1,90 @@
+/**
+ * @description 
+ * @author 
+ */
+rule Monitoring.Rules.EntityMonitoringRuleSet.onNewEntity {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Shared.Concepts.MonitorableEntity	newentity;
+		
+	}
+	when {
+		newentity.aggregated == false;
+	}
+	then {
+		Shared.RuleFunctions.log("onNewEntity","DEBUG",getFQName(newentity) + " of type " + newentity.type + " has been aggregated");
+
+        String clustName = getClustName(newentity);
+		Shared.RuleFunctions.log("onNewEntity","DEBUG","clustName = " + clustName);
+
+        String extId = Monitoring.RuleFunctions.getClustHealthConcptExtId(clustName);
+		Shared.RuleFunctions.log("onNewEntity","DEBUG","extId = " + extId);
+
+        Monitoring.Concepts.ClustHealthOverview cho = Instance.getByExtId(extId);
+
+//		Monitoring.Concepts.ClustHealthOverview cho = 
+//			Instance.getByExtId(
+//				Monitoring.RuleFunctions.getClustHealthConcptExtId(
+//					Shared.RuleFunctions.topology.getClustName(newentity) ) );
+		
+		int idx = -1;
+		
+		if (cho != null) 
+			idx = Instance.PropertyArray.indexOfString(cho.entityTypes,newentity.type);
+			
+		Shared.RuleFunctions.log("onNewEntity","DEBUG", "idx = " + idx + 
+								 " newentity.active = " + newentity.active + 
+								 " newentity.healthLevel =  " + newentity.healthLevel +
+								 " newentity.previousHealthLevel =  " + newentity.previousHealthLevel);	
+		
+		if (idx != -1){
+		    cho.entityCount[idx] = cho.entityCount[idx] + 1;
+		    
+		    if (newentity.active == true){
+		        cho.entityActiveCount[idx] = cho.entityActiveCount[idx] + 1;
+		    }
+		    else {
+		        cho.entityInActiveCount[idx] = cho.entityInActiveCount[idx] + 1;
+		    }
+		    
+		    if (newentity.healthLevel == "normal"){
+		        cho.entityNormalHealthLevelCount[idx] = cho.entityNormalHealthLevelCount[idx] + 1;
+		    }
+		    else if (newentity.healthLevel == "warning"){
+		        cho.entityWarningHealthLevelCount[idx] = cho.entityWarningHealthLevelCount[idx] + 1;
+		    }
+		    else if (newentity.healthLevel == "critical"){
+		        cho.entityCriticalHealthLevelCount[idx] = cho.entityCriticalHealthLevelCount[idx] + 1;
+		    }
+		}
+		
+		Shared.RuleFunctions.log("onNewEntity","DEBUG", ClusterHealthConcptToString(cho));
+		
+		newentity.aggregated = true;
+		if(newentity.active == true && newentity.initialized == false) 
+			configureAlerts(newentity);
+		
+		//added by Nick Xu to recheck parent health. 09/22/2009
+		Shared.Concepts.MonitorableEntity parent = newentity.parent;
+		while (parent != null){
+		    String parentFQName = getFQName(parent);
+		    Shared.RuleFunctions.log("onNewEntity","DEBUG","Triggering "+parentFQName+" health check...");
+		    String newParentHealthLevel = determinePropertyValue(parent,"healthLevel",null);
+		    if (parent.healthLevel != newParentHealthLevel) {
+		        //store current value of health as previous
+		        parent.previousHealthLevel = parent.healthLevel;
+		        parent.healthLevel = newParentHealthLevel;
+		        Shared.RuleFunctions.log("onNewEntity","DEBUG","Marked "+getFQName(parent)+"'s health level as "+parent.healthLevel);
+		    }
+		    parent = parent.parent;
+		}
+		
+		if(newentity.type != "cluster" && newentity.type != "site"){
+			Monitoring.Events.cmetrics.ComputedMetricEvent event = Monitoring.Events.cmetrics.ComputedMetricEvent.ComputedMetricEvent(null,null,newentity@extId,"cluster","cstats");
+			Event.assertEvent(event);
+		}	
+	}
+}

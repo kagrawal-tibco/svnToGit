@@ -1,0 +1,30 @@
+/**
+ * @description 
+ */
+Shared.Concepts.SeriesData rulefunction Monitoring.RuleFunctions.view.findSeries {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Shared.Concepts.AbstractMonitorView	view;
+		String	seriesname;
+	}
+	body {
+		if (seriesname == null){
+		    return null;
+		}
+		int cnt = view.seriesdata@length;
+		if (cnt == 0){
+		    return null;
+		}
+		if (cnt == 1 && String.compareToIgnoreCase(seriesname,"$default") == 0){
+		    return view.seriesdata[0];
+		}
+		for (int i = 0 ; i < cnt ; i = i + 1){
+		    if (String.compareToIgnoreCase(seriesname,view.seriesdata[i].name) == 0){
+		        return view.seriesdata[i];
+		    }
+		}
+		return null;
+	}
+}

@@ -1,0 +1,25 @@
+/**
+ * @description This fucntion adds the deposit in Customer's account.
+ */
+String rulefunction RuleFunctions.AddDeposit {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Concepts.Customer customer;	
+	}
+	body {
+		String message="Failed to add the applicant";
+		
+		 	if(null!=customer)
+		 	{
+				System.debugOut("#### Adding deposit to account: "+customer.name +" for  $1000");
+		
+				customer.balance+=1000.0;
+		
+				System.debugOut("#### Deposit added to account:"+customer.name+" Balance:"+customer.balance);
+				message="Applicant is added successfully.";
+	  		 }	 
+	  		return message;  	
+		}
+}

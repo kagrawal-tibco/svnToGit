@@ -1,0 +1,80 @@
+/**
+ * @description 
+ */
+WebStudio.Core.Concepts.DataSources.WS_C_TemporaryReturnData rulefunction WebStudio.Core.RuleFunctions.Actions.Dashboard.WS_RF_AddToFavoriteArtifacts {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object servletRequest;
+		WebStudio.Security.Authn.Concepts.WS_C_LoggedInUser loggedInUser;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.Dashboard.WS_RF_AddToFavoriteArtifacts");
+		
+		WS_C_ResponseData responseData = null;
+		int responseStatus = 0;
+		int recordCount = 0;
+		String errorCode = null;
+		String responseMessage = null;
+		
+		if (!WS_RF_CheckHTTPMethod(servletRequest, "PUT")) {
+			responseStatus = -1;
+			recordCount = 0;
+			errorCode = "ERR_5101";
+			responseMessage = "Invalid HTTP Method, expect method is [PUT].";
+		} else {
+			//Lock and load User Dashboard concept
+			String userDashboardExtId = WS_RF_CreateUserArtifactExtId("DASHBOARD", null, null, loggedInUser.username, null, null);
+			boolean userDashboardLock = Cluster.DataGrid.Lock(userDashboardExtId, 1000, false);
+			Log.log(LOGGER, "Debug", "User Dashboard space locked state - %s", userDashboardLock);
+			
+			if (userDashboardLock) {
+				String projectName = HTTP.Servlet.Request.getRequestParameter(servletRequest, "projectName");
+				String artifactPath = HTTP.Servlet.Request.getRequestParameter(servletRequest, "artifactPath");
+				Log.log(LOGGER, "Debug", "Adding Favorite artifacts");
+				
+				WS_C_UserDashboard userDashboard = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(userDashboardExtId, false, "/WebStudio/Security/Authn/Concepts/WS_C_LoggedInUser");
+				boolean artifactExists = false;
+				if (userDashboard != null) {
+					WS_C_FavoriteArtifacts favortieArtifact  = null;
+					for (int i=0; i < userDashboard.favoriteArtifacts@length; i++) {
+						favortieArtifact  = userDashboard.favoriteArtifacts[i];
+						WS_C_UserArtifact artifact = WS_RF_IsUserArtifact(favortieArtifact.artifactId, favortieArtifact.artifactType);
+						WS_C_UserProject project = Instance.getByExtIdByUri(artifact.parentProjectId, "/WebStudio/Core/Concepts/WS_C_UserProject");
+						
+						String path = artifact.artifactPath + "." + artifact.artifactFileExtn;	
+						if (String.equals(project.name, projectName) && String.equals(path, artifactPath)) {
+							artifactExists = true;
+							break;
+						}
+					}
+				}
+				
+				if (!artifactExists) {
+					WS_E_AddDashboardArtifactEvent addDashboardArtifactEvent = 
+								Event.createEvent("xslt://{{/WebStudio/Core/Events/WS_E_AddDashboardArtifactEvent}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"1.0\" exclude-result-prefixes=\"xsl xsd\">\n    <xsl:output method=\"xml\"/>\n    <xsl:param name=\"projectName\"/>\n    <xsl:template match=\"/\">\n        <createEvent>\n            <event>\n                <projectName>\n                    <xsl:value-of select=\"$projectName\"/>\n                </projectName>\n            </event>\n        </createEvent>\n    </xsl:template>\n</xsl:stylesheet>");
+					addDashboardArtifactEvent.artifactPath = artifactPath;
+					addDashboardArtifactEvent.userName = loggedInUser.username;
+					addDashboardArtifactEvent.dashboardArtifactType = "FAVORITES";
+					
+					Event.assertEvent(addDashboardArtifactEvent);
+					
+					responseMessage = "Add to Favorite Artifacts successful";
+				} else {
+					responseStatus = -1;
+					recordCount = 0;
+					errorCode = "ERR_1112";
+					responseMessage = "This artifact already existed";
+				}
+			} else {
+				responseStatus = -1;
+				recordCount = 0;
+				errorCode = "ERR_1105";
+				responseMessage = "User Dashboard space locked";
+			}
+		}
+		
+		return WS_RF_CreateTemporaryReturnData(responseStatus, recordCount, errorCode, responseMessage, responseData);
+	}
+}

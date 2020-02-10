@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:UIComponent
+	xmlns:mx="http://www.adobe.com/2006/mxml"
+	creationComplete="init()"
+>
+	<mx:Script>
+		<![CDATA[
+			
+			public static const SIZE:int = 9; //keep it odd so +/- drawn in center
+			
+			/**
+			 * use this instead of having listeners listening directly for the button press so
+			 * there's not a race condition between this class's toggle function and the
+			 * listener's event callback function
+			*/
+			public static const EXPANSION_TOGGLE_EVENT:String = "expansiontoggleevent";
+		
+			private var _expanded:Boolean
+			
+			private function init():void{
+				width = SIZE;
+				height = SIZE;
+				_expanded = false;
+				toolTip = null;
+				
+				//Having a custom hit area improves this button's responsiveness
+				var clickArea:Sprite = new Sprite();
+				clickArea.visible = false;
+				clickArea.mouseEnabled = false;
+				clickArea.graphics.clear();
+				clickArea.graphics.beginFill(0x0, 1);
+				clickArea.graphics.drawRect(0, 0, SIZE-1, SIZE-1);
+				clickArea.graphics.endFill();
+				addChild(clickArea);
+				hitArea = clickArea;
+				validateDisplayList();
+				
+				addEventListener(MouseEvent.CLICK, clickHandler);
+			}
+			
+			/** expanded reflects the state of the expansion button _after_ being clicked */
+			public function get expanded():Boolean{ return _expanded; }
+			
+			public function set expanded(value:Boolean):void{ 
+				if(value == _expanded){ return; }
+				_expanded = value;
+				invalidateDisplayList();
+			}
+			
+			//Disallow changing of dimensions
+			override public function set width(value:Number):void{ super.width = SIZE; }
+			override public function set height(value:Number):void{ super.height = SIZE; }
+			
+			protected function clickHandler(event:MouseEvent):void{
+				expanded = !_expanded;
+				dispatchEvent(new MouseEvent(EXPANSION_TOGGLE_EVENT));
+			}
+			
+			override protected function updateDisplayList(unscaledWidth:Number, unscaledHeight:Number):void{
+				super.updateDisplayList(unscaledWidth, unscaledHeight);
+				graphics.clear();
+				graphics.lineStyle(1, 0x696969, 1, false, LineScaleMode.NONE, CapsStyle.NONE, JointStyle.BEVEL);
+				graphics.drawRect(0, 0, SIZE-1, SIZE-1);
+				
+				if(_expanded){ drawMinus(); }
+				else{ drawPlus(); }
+			}
+			
+			private function drawMinus():void{
+				graphics.moveTo(2, (SIZE-1)/2);
+				graphics.lineTo(SIZE-2, (SIZE-1)/2);
+			}
+			
+			private function drawPlus():void{
+				drawMinus();
+				graphics.moveTo((SIZE-1)/2, 2);
+				graphics.lineTo((SIZE-1)/2, SIZE-2);
+			}
+			
+		]]>
+	</mx:Script>
+			
+</mx:UIComponent>

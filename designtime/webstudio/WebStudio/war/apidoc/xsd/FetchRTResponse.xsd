@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:element name="response">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element type="xs:int" name="status"/>
+        <xs:element type="xs:int" name="startRow"/>
+        <xs:element type="xs:int" name="endRow"/>
+        <xs:element type="xs:int" name="totalRows"/>
+		<xs:element type="xs:string" name="errorCode" maxOccurs="1" minOccurs="0"/>
+        <xs:element name="data" maxOccurs="1" minOccurs="0"> 
+          <xs:complexType  mixed="true">
+            <xs:sequence>
+               <xs:element name="record" maxOccurs="unbounded" minOccurs="0">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="artifactDetails">
+                      <xs:complexType>
+                        <xs:complexContent>
+							<xs:extension base="RTIResponse"/>
+						</xs:complexContent>
+                      </xs:complexType>
+                    </xs:element>
+                  </xs:sequence>
+                  <xs:attribute type="xs:int" name="Id"/>
+                  <xs:attribute type="xs:string" name="type" use="optional"/>
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+            <xs:attribute type="xs:int" name="Id"/>
+            <xs:attribute type="xs:string" name="type" use="optional"/>
+          </xs:complexType>
+        </xs:element>
+      </xs:sequence>
+      <xs:attribute type="xs:int" name="Id"/>
+      <xs:attribute type="xs:string" name="type" use="optional"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:complexType name="RTIResponse" mixed="true">
+	<xs:sequence>
+		<xs:element name="artifactContent">
+			<xs:complexType>
+				<xs:sequence>
+					<xs:element type="xs:string" name="implementsPath"/>
+					<xs:element type="xs:string" name="description" maxOccurs="1" minOccurs="0"/>
+                    <xs:element type="xs:byte" name="rulePriority" maxOccurs="1" minOccurs="0"/>
+					<xs:element name="conditions">
+						<xs:complexType>
+							<xs:sequence>
+								<xs:element type="filterType" name="filter" maxOccurs="unbounded"/>
+								<xs:element type="xs:string" name="filterId" minOccurs="1" maxOccurs="1"/>
+							</xs:sequence>
+							<xs:attribute type="xs:int" name="Id"/>
+							<xs:attribute type="xs:string" name="type" use="optional"/>
+						</xs:complexType>
+					</xs:element>
+					<xs:element name="commands">
+						<xs:complexType>
+							<xs:sequence>
+								<xs:element name="commandInfo">
+									<xs:complexType>
+										<xs:sequence>
+											<xs:element type="filterType" name="filter" maxOccurs="unbounded" minOccurs="0"/>
+											<xs:element type="xs:string" name="commandAlias"/>
+											<xs:element type="xs:string" name="type"/>
+											<xs:element type="xs:string" name="actionType"/>
+										</xs:sequence>
+										<xs:attribute type="xs:int" name="Id"/>
+										<xs:attribute type="xs:string" name="type" use="optional"/>
+									</xs:complexType>
+								</xs:element>
+							</xs:sequence>
+							<xs:attribute type="xs:int" name="Id"/>
+							<xs:attribute type="xs:string" name="type" use="optional"/>
+						</xs:complexType>
+					</xs:element>
+					<xs:element name="symbols">
+						<xs:complexType>
+							<xs:sequence>
+								<xs:element type="symbolInfoType" name="symbolInfo" maxOccurs="unbounded" minOccurs="1"/>
+							</xs:sequence>
+							<xs:attribute type="xs:int" name="Id"/>
+							<xs:attribute type="xs:string" name="type" use="optional"/>
+						</xs:complexType>
+					</xs:element>
+				</xs:sequence>
+				<xs:attribute type="xs:int" name="Id"/>
+				<xs:attribute type="xs:string" name="type" use="optional"/>
+			</xs:complexType>
+		</xs:element>
+		<xs:element type="xs:string" name="artifactPath"/>
+		<xs:element type="xs:string" name="artifactType"/>
+	</xs:sequence>
+	<xs:attribute type="xs:int" name="Id"/>
+	<xs:attribute type="xs:string" name="type" use="optional"/>
+</xs:complexType>
+<xs:complexType name="filterType" mixed="true">
+	<xs:sequence>
+		<xs:element name="filter" type="filterType"  maxOccurs="unbounded"  minOccurs="0"/>
+		<xs:element name="link" type="linkType"  maxOccurs="unbounded" minOccurs="0"/>
+		<xs:element name="value" type="valueType"  maxOccurs="unbounded" minOccurs="0"/>
+		<xs:choice>
+			<xs:element type="xs:string" name="operator"/>
+			<xs:element type="xs:string" name="matchType"/>
+		</xs:choice>
+		<xs:element type="xs:string" name="filterId" minOccurs="1" maxOccurs="1"/>
+	</xs:sequence>
+	<xs:attribute type="xs:int" name="Id"/>
+	<xs:attribute type="xs:string" name="type" use="optional"/>
+</xs:complexType>
+<xs:complexType name="linkType" mixed="true">
+	<xs:sequence>
+		<xs:element type="xs:string" name="name"/>
+		<xs:element type="xs:string" name="type"/>
+	</xs:sequence>
+	<xs:attribute type="xs:int" name="Id"/>
+	<xs:attribute type="xs:string" name="type" use="optional"/>
+</xs:complexType>
+<xs:complexType name="valueType" mixed="true">
+	<xs:sequence>
+		<xs:choice>
+			<xs:element type="xs:string" name="simple"/>
+			<xs:element type="linkType" name="link" maxOccurs="unbounded"/>
+		</xs:choice>
+	</xs:sequence>
+	<xs:attribute type="xs:int" name="Id"/>
+	<xs:attribute type="xs:string" name="type" use="optional"/>
+</xs:complexType>
+<xs:complexType name="symbolInfoType" mixed="true">
+	<xs:sequence>
+		<xs:element type="xs:boolean" name="visited"/>
+		<xs:element type="xs:string" name="type"/>
+		<xs:element type="xs:string" name="symbolAlias"/>
+		<xs:element type="domianInfoType" name="domainInfo" maxOccurs="1" minOccurs="0"/>
+		<xs:element  name="symbolInfo" type="symbolInfoType" maxOccurs="unbounded" minOccurs="0"/>
+	</xs:sequence>
+	<xs:attribute type="xs:int" name="Id"/>
+	<xs:attribute type="xs:string" name="extId" use="optional"/>
+	<xs:attribute type="xs:string" name="type" use="optional"/>
+</xs:complexType>
+<xs:complexType name="domianInfoType">
+  	<xs:sequence>
+		<xs:element type="xs:string" name="name"/>
+		<xs:element type="xs:string" name="folder"/>
+		<xs:element type="xs:string" name="description"/>
+		<xs:element type="xs:string" name="ownerProjectName"/>
+		<xs:element type="xs:string" name="dataType"/>
+		<xs:element type="singleEntryType" name="singleEntry" maxOccurs="unbounded" minOccurs="1"/>
+	</xs:sequence>
+	<xs:attribute type="xs:int" name="Id"/>
+	<xs:attribute type="xs:string" name="type" use="optional"/>
+  </xs:complexType>
+  
+  <xs:complexType name="singleEntryType">
+  	<xs:sequence>
+  		<xs:element type="xs:string" name="value"/>
+  		<xs:element type="xs:string" name="description"/>
+  	</xs:sequence>
+  	<xs:attribute type="xs:int" name="Id"/>
+	<xs:attribute type="xs:string" name="type" use="optional"/>
+  </xs:complexType>
+
+</xs:schema>

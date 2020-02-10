@@ -1,0 +1,22 @@
+/**
+ * @description 
+ * @author Ryans-MacBook-Pro.local
+ */
+rule Rules.PromotionalRule {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Events.PromotionalEvent pe;
+		Concepts.InventoryItem p;
+	}
+	when {
+		p.SKU == pe.SKU;
+	}
+	then {
+		System.debugOut("Received a promotional event for SKU: '"+p.SKU+"' Creating salary action event");
+		Event evt = Event.createEvent("xslt://{{/Events/PriceAdjustmentEvent}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"1.0\"><xsl:param name=\"pe\"/><xsl:template name=\"Function\" match=\"/\"><createEvent><event><xsl:if test=\"$pe/SKU\"><SKU><xsl:value-of select=\"$pe/SKU\"/></SKU></xsl:if><xsl:if test=\"$pe/PriceAdjustment\"><AdjustmentAmount><xsl:value-of select=\"$pe/PriceAdjustment\"/></AdjustmentAmount></xsl:if></event></createEvent></xsl:template></xsl:stylesheet>");
+		Event.assertEvent(evt);
+	}
+}

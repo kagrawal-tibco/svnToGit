@@ -1,0 +1,20 @@
+<div class="row">
+  <div class="col-sm-12">
+    <div *ngIf='needContentEditor; then editor; else resolver;'></div>
+    <ng-template #editor>
+      <div *ngIf="editorUIDiff()">
+        <synchronize-decision-table-editor [mergeBase]='context.base' [mergeLhs]='context.lhs' [mergeRhs]='context.rhs' (done)='onClose($event)'></synchronize-decision-table-editor>
+      </div>
+      <div *ngIf="!editorUIDiff()">
+        <synchronize [base]='context.base' [lhs]='context.lhs' [rhs]='context.rhs' (done)='onClose($event)'></synchronize>
+      </div>
+    </ng-template>
+    <ng-template #resolver>
+      <status-resolver
+        [lhs]='context.lhs'
+        [rhs]='context.rhs'
+        (done)='onClose($event)'
+      ></status-resolver>
+    </ng-template>
+  </div>
+</div>

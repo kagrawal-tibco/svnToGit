@@ -1,0 +1,53 @@
+/**
+ * @description Validates a Decision Table and report the errors if any
+ */
+String rulefunction WebStudio.Core.RuleFunctions.Actions.WS_RF_ValidateDecisionTable {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String projectName;
+		String artifactPath;
+		String artifactExtn;
+		WebStudio.Security.Authn.Concepts.WS_C_LoggedInUser loggedInUser;
+		String archivePath;
+		String scsRootURL;
+		String[] roles;
+		String contentType;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.WS_RF_ValidateDecisionTable");
+		
+		WebStudio.Core.Concepts.DataSources.Problems.WS_C_TableAnalyzerProblemsResponse validationProblemsResponse = null;
+		String responseMessage = null;
+		String errorCode = null;
+		int recordCount = 0;
+		int responseStatus = 0;
+		
+		String userName = loggedInUser.username;
+		
+		String subscriptionId = null;
+		if (loggedInUser.jwtToken != null) subscriptionId = loggedInUser.jwtToken.sbsc;
+		
+		//Get DT contents										
+		WS_C_ResponseTransferObjectData fetchedResponseData = WebStudio.Core.RuleFunctions.Utils.WS_RF_GetArtifactContentsFromStore(userName, roles, projectName, artifactPath, artifactExtn);			
+		WS_C_DecisionTable dtContents = fetchedResponseData.artifactContents;
+		Instance.PropertyAtom.setConceptReference(fetchedResponseData.artifactContents, null, 1L);
+
+		if (fetchedResponseData.errorCode != null) {
+			responseStatus = -1;
+			errorCode = fetchedResponseData.errorCode;
+			responseMessage = fetchedResponseData.errorMessage;
+		} else {					
+			validationProblemsResponse = WebStudio.Core.RuleFunctions.Utils.DT.Analyzer.WS_RF_ValidateDecisionTableUtil(artifactPath, artifactExtn, projectName, userName, scsRootURL, archivePath, dtContents);
+			recordCount = 1;				 								
+		}
+				
+		responseMessage = WebStudio.
+								Core.
+									RuleFunctions.
+										Utils.DT.Analyzer.
+											WS_RF_BuildDecisionTableAnalyzerResponseDSXML(validationProblemsResponse, responseStatus, recordCount, errorCode, responseMessage, contentType);		
+		return responseMessage;
+	}
+}

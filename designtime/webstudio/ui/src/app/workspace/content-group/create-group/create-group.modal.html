@@ -1,0 +1,34 @@
+<div class='card panel-sm'>
+  <div class='card-header' i18n>
+    {{i18n('Create New Artifact Group')}} 
+  </div>
+  <div class='card-body'>
+    <div>
+      <form>
+        <mat-form-field>
+            <input matInput 
+                  placeholder="{{i18n('New Group Name')}}"
+                  i18n-placeholder 
+                  [formControl]="groupNameFormControl" 
+                  [errorStateMatcher]="matcher"
+                  [(ngModel)]="groupName">
+        </mat-form-field>
+        <mat-error *ngIf="groupNameFormControl.hasError('required')" [innerHTML]="getMessage()">
+            
+        </mat-error>
+        <mat-error *ngIf="groupNameFormControl.hasError('name')">
+          <ng-container i18n>{{i18n('Group name can only consists of alphabets, numbers, underscore and space between words.
+            Leading and trailing spaces will be neglected.')}}</ng-container> 
+        </mat-error>
+      </form>
+    </div><br>
+      <div *ngIf='showFilter'><ng-container i18n>{{i18n('File type/name filter (optional): ')}}</ng-container><input [(ngModel)]="filter" class="form-control"></div>
+    <!--       (keyup.enter)="onCreateGroup(groupName.value)"
+          (blur)="onCreateGroup(groupName.value); groupName.value='' ">
+    -->
+  </div>
+</div>
+<div class='left-pad right-pad bottom-pad top-pad'>
+  <button type="button" class='btn btn-primary btn-sm' [disabled]='disableCreateGroup' (click)='onCreateGroup()' i18n>{{i18n('OK')}}</button>
+  <button type="button" class='btn btn-outline-primary btn-sm' (click)='onCancel()' i18n>{{i18n('Cancel')}}</button>
+</div>

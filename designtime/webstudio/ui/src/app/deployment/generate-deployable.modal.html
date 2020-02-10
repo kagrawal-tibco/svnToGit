@@ -1,0 +1,44 @@
+<div class="row">
+  <div class="col-sm-12">
+    <div class="card">
+      <div class="card-header card-header-sm">
+        <strong i18n>{{i18n('Generate Deployable ')}}</strong> '{{project}}'
+      </div>
+      <div class="card-body">
+        <div class="form-group">
+          <label class='control-label control-label-normal' i18n>{{i18n(' Project Selected ')}}</label>
+          <select
+                id='proj-options'
+                name='projectOptions'
+                class='form-control'
+                [(ngModel)] = "project">
+              <option *ngFor='let proj of projectList()' [value]='proj'>{{proj}}</option>
+          </select>
+        </div>
+        <div *ngIf='!enableTCEUI' class="form-group">
+            <mat-slide-toggle [(ngModel)]="generateClasses" color="primary">
+                {{i18n(' Generate Classes Only ')}}
+            </mat-slide-toggle> 
+          <!-- <label class='control-label control-label-normal' i18n>{{i18n(' Generate Classes Only ')}}</label>
+          <br/>
+          <toggle-switch [size]='"mini"' [(value)]='generateClasses'></toggle-switch> -->
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="row left-pad right-pad bottom-pad top-pad">
+  <div class="col-sm-12">
+    <button type="button" class='btn btn-outline-primary btn-sm' (click)='onClose()' i18n>{{i18n('Close')}}</button>
+    <button 
+      type="button" 
+      class='btn btn-primary btn-sm pull-right' 
+      (click)='onConfirm()'
+      [disabled]='!canConfirm()' i18n
+    >{{i18n('Confirm')}}</button>
+    <a *ngIf="apiInProgress" class='animated no-divider pull-right right-pad'
+      [class.infinite]='apiInProgress'>
+          <small><i class='fa fa-refresh fa-spin'></i></small>
+    </a>
+  </div>
+</div>

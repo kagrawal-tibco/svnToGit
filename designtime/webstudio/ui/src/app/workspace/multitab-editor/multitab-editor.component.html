@@ -1,0 +1,93 @@
+<split *ngIf='getTabs().length > 0 && this.isBEUI' direction='vertical' gutterSize='2'>
+  <split-area [size]='this.multiTabEditorHeight'>
+    <div class='multitab-editor' >
+      <mat-tab-group   (selectChange)="onTabSelected($event)" #tabgroup>
+        <mat-tab *ngFor="let t of getTabs()"
+            (removed)="onTabDirectiveRemoved(t)"
+          >
+          <ng-template mat-tab-label>
+            <span class="fa-stack fa-stack-small">
+              <i class="{{t.payload.type.defaultIcon}} fa-stack-2x overlayIconBase"></i>
+              <i class="{{iconOverlay(t)}} fa-stack-1x overlayIcon-noshadow topRight"></i>
+            </span>
+            <span style="padding: 3px;">{{displayName(t)}}
+              <i class="fa fa-close" (click)="onTabDirectiveRemoved(t)"></i>
+            </span>
+          </ng-template>
+          <div class="edit-area" >
+            <artifact-editor
+              [input]='t.payload'
+              [editorInterface]='t.editorInterface'>
+            </artifact-editor>
+          </div>
+        </mat-tab>
+      </mat-tab-group>
+    </div>
+  </split-area>
+
+  <split-area [size]='this.problemsPanelHeight'>
+    <div class='problems'>
+      <div *ngIf='this.panelOpen' class="panel1">
+        <artifact-panel  #artifactPanel [supportVerify]='false' [verifyConfig]='false' (close)='onStatusBarClick()'></artifact-panel>
+      </div>
+      <div *ngIf='this.showStatusBar()'>
+        <artifact-status-bar (toggle)='onStatusBarClick()'></artifact-status-bar>
+      </div>
+    </div>
+  </split-area>
+</split>
+
+<div *ngIf='!this.isBEUI'>
+  <div class='multitab-editor' *ngIf='getTabs().length > 1'>
+    <mat-tab-group #tabgroup>
+      <mat-tab *ngFor="let t of getTabs()"
+          (removed)="onTabDirectiveRemoved(t)"
+          (select)="onTabSelected(t)">
+        <ng-template mat-tab-label>
+          <span class="fa-stack fa-stack-small">
+            <i class="{{t.payload.type.defaultIcon}} fa-stack-2x overlayIconBase"></i>
+            <i class="{{iconOverlay(t)}} fa-stack-1x overlayIcon-noshadow topRight"></i>
+          </span>
+          <span>{{displayName(t)}}
+            <i class="fa fa-close" (click)="onTabDirectiveRemoved(t)"></i>
+          </span>
+        </ng-template>
+        <div class="edit-area" >
+          <artifact-editor
+            [input]='t.payload' 
+            [editorInterface]='t.editorInterface'>
+          </artifact-editor>
+        </div>
+      </mat-tab>
+    </mat-tab-group>
+  </div>
+</div>
+
+<div *ngIf='getTabs().length === 0'>
+    <div class="arrow {{ isRtl() ? 'sidebar-arrow-rtl bounceright' : 'sidebar-arrow bounceleft' }}"></div>
+    <div class="ams-welcome editor-empty-msg round-background">
+        <div style="margin-left: -2em" class='app-empty-space container-fluid'>
+            <div class="welcome-app-create"></div>
+            <br>
+            <div class="app-empty-label" i18n>{{i18n('Select an artifact from the Artifact Explorer')}}</div>
+            <p class="app-empty-message"><ng-container i18n>{{i18n('To begin, select an artifact from the Artifact Explorer or check out additional artifacts by clicking the button below.')}}</ng-container>              
+            </p>
+            <div class="tropos-create-buttons">
+                <div>
+                    <button name="upload" id="tropos-push-app-empty" class="tc-buttons ams-button-primary-call" (click)='onCheckoutArtifacts()'>
+                        <i class="fa fa-plus"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+  <div *ngIf='getTabs().length === 0' class="problems">
+    <div *ngIf='this.panelOpen' class="panel">
+      <artifact-panel  #artifactPanel [supportVerify]='false' [verifyConfig]='false' (close)='onStatusBarClick()'></artifact-panel>
+    </div>
+      <div *ngIf='this.showStatusBar()'>
+      <artifact-status-bar (toggle)='onStatusBarClick()'></artifact-status-bar>
+    </div>
+  </div>  

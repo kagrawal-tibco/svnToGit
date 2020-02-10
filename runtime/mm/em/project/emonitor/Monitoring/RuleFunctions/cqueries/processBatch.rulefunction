@@ -1,0 +1,143 @@
+/**
+ * @description 
+ */
+Object rulefunction Monitoring.RuleFunctions.cqueries.processBatch {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String	configMapId;
+	}
+	body {
+		String cType = Util.HashMap.getObject(configMapId,"ctype");
+		String mergedListIDs = null;
+		int hostCount = BEMMUtil.LinkedList.size(cType);
+		//find the common data set list - we will assume it is %....%
+		String datasetids = null;
+		String datasetcnts = null;
+		int finalCommonDataSetCnt = 0;
+		for (int i = 0 ; i < hostCount ; i = i + 1){
+		    String listID = BEMMUtil.LinkedList.get(cType,i);
+		    if (String.endsWith(listID,"%")){
+		       if (datasetids == null){
+		           datasetids = listID;
+		           datasetcnts = String.valueOfInt(BEMMUtil.LinkedList.size(listID));
+		       }
+		       else {
+		           datasetids = datasetids + "," + listID;
+		           datasetcnts = datasetcnts + "," + BEMMUtil.LinkedList.size(listID);
+		       }
+		       finalCommonDataSetCnt = finalCommonDataSetCnt + BEMMUtil.LinkedList.size(listID);
+		    }
+		}
+		String[] commonDataSetIDs = String.split(datasetids,",");
+		String[] commonDataSetCnts = String.split(datasetcnts,",");
+		Shared.RuleFunctions.log("processBatch","DEBUG","["+cType+"]::Found ["+datasetids+"] as common data set with ["+datasetcnts+"] event(s)...");
+		//start going thru the entire host list , add common data set
+		for (int i = 0 ; i < hostCount ; i = i + 1){
+		    String listID = BEMMUtil.LinkedList.get(cType,i);
+		    if (listID != null && String.indexOfString(datasetids,0,listID) == -1){
+		        //get host name
+		        String hostName = String.split(listID,"::")[1];
+		        //create a temp merged list, listid already has ctype and host name
+		        String mergedListID = listID+"::merged";
+		        BEMMUtil.LinkedList.createList(mergedListID);
+		        //get the data set count of current list
+		        int dataSetCnt = BEMMUtil.LinkedList.size(listID);
+		        Shared.RuleFunctions.log("processBatch","DEBUG","["+cType+"]::Found "+listID+" with "+dataSetCnt+" event(s)...");
+		        //add common data if available
+		        int finalIdx = 0;
+		        if (commonDataSetIDs != null && commonDataSetIDs@length != 0) {
+		            for (int k = 0 ; k < commonDataSetIDs@length ; k = k + 1){
+		                String commonDataSetID = commonDataSetIDs[k];
+		                String commonHostName = String.split(commonDataSetID,"::")[1];
+		                if (areFQNamesEqual(commonHostName,hostName) == true) {
+		                    int commonDataSetCnt = Number.intValue(commonDataSetCnts[k],10);
+		                    for (int l = 0 ; l < commonDataSetCnt ; l = l + 1){
+		                        Object[] data = BEMMUtil.LinkedList.get(commonDataSetID,l);
+		                        //data[0] = hostName;
+		                        if(data != null) {
+			                        BEMMUtil.LinkedList.add(mergedListID,finalIdx,data);
+			                        finalIdx = finalIdx + 1;
+		                        }
+		                    }
+		                }
+		            }
+		        }
+		        //add the actual data set
+		        for (int k = 0 ; k < dataSetCnt ; k = k + 1){
+		            Object[] data = BEMMUtil.LinkedList.get(listID,k);
+		            if(data != null) {
+			            BEMMUtil.LinkedList.add(mergedListID,finalIdx,data);
+			            finalIdx = finalIdx + 1;
+		            }
+		        }
+//		        int finalCnt = BEMMUtil.LinkedList.size(mergedListID);
+//		        for (int zz = 0 ; zz < finalCnt ; zz = zz + 1){
+//		            Object[] nullTestData = BEMMUtil.LinkedList.get(mergedListID,zz);
+//		            if (nullTestData == null){
+//		                Shared.RuleFunctions.log("processBatch","DEBUG","["+cType+"]::Found a null value in "+mergedListID+" at "+zz);
+//		                Shared.RuleFunctions.log("processBatch","DEBUG","["+cType+"]::Dumping data...");
+//		                int hostCnt = BEMMUtil.LinkedList.size(cType);
+//		                for (int aa = 0 ; aa < hostCnt ; aa = aa + 1){
+//		                    String hostWithCTypeId = BEMMUtil.LinkedList.get(cType,aa);
+//		                    int dataCnt = BEMMUtil.LinkedList.size(hostWithCTypeId);
+//		                    for (int bb = 0 ; bb < dataCnt ; bb = bb + 1){
+//		                        Object[] debugData = BEMMUtil.LinkedList.get(hostWithCTypeId,bb);
+//		                        if (debugData != null) {
+//		                            Shared.RuleFunctions.log("processBatch","DEBUG","["+cType+"]::"+cType+"["+aa+"]="+hostWithCTypeId+"["+bb+"]="+BEMM.util.join(debugData,","));
+//		                        }
+//		                        else {
+//		                            Shared.RuleFunctions.log("processBatch","DEBUG","["+cType+"]::"+cType+"["+aa+"]="+hostWithCTypeId+"["+bb+"]=NULL");
+//		                        }
+//		                    }
+//		                }
+//		                for (int aa = 0 ; aa < finalCnt ; aa = aa + 1){
+//		                    Object[] debugData = BEMMUtil.LinkedList.get(mergedListID,aa);
+//		                    if (debugData != null) {
+//		                        Shared.RuleFunctions.log("processBatch","DEBUG","["+cType+"]::"+mergedListID+"["+aa+"]="+BEMM.util.join(debugData,","));
+//		                    }
+//		                    else {
+//		                        Shared.RuleFunctions.log("processBatch","DEBUG","["+cType+"]::"+mergedListID+"["+aa+"]=NULL");
+//		                    }
+//		                }
+//		                break;
+//		            }
+//		        }
+		        //sort the merged events
+		        String[] sortSpec = Util.HashMap.getObject(configMapId,"sortspec");
+		        if (sortSpec != null && sortSpec@length != 0){
+		            BEMM.util.sortList(BEMMUtil.LinkedList.getList(mergedListID),sortSpec);
+		        }
+		        //clear the list
+		        Shared.RuleFunctions.log("processBatch","DEBUG","["+cType+"]::Clearing "+listID+" which has "+BEMMUtil.LinkedList.size(listID));
+		        BEMMUtil.LinkedList.clear(listID);
+		        Shared.RuleFunctions.log("processBatch","DEBUG","["+cType+"]::Cleared "+listID+" and has "+BEMMUtil.LinkedList.size(listID));
+		        if (mergedListIDs == null) {
+		            mergedListIDs = mergedListID;
+		        }
+		        else {
+		            mergedListIDs = mergedListIDs + "," + mergedListID;
+		        }
+		    }
+		    else {
+		        Shared.RuleFunctions.log("processBatch","DEBUG","["+cType+"]::Skipping "+listID+"...");
+		    }
+		}
+		//clear common data set list
+		if (commonDataSetIDs != null && commonDataSetIDs@length != 0){
+		    for (int i = 0 ; i < commonDataSetIDs@length ; i = i + 1){
+		        Shared.RuleFunctions.log("processBatch","DEBUG","["+cType+"]::Clearing "+commonDataSetIDs[i]+" which has "+BEMMUtil.LinkedList.size(commonDataSetIDs[i]));
+		        BEMMUtil.LinkedList.clear(commonDataSetIDs[i]);
+		        Shared.RuleFunctions.log("processBatch","DEBUG","["+cType+"]::Clearing "+commonDataSetIDs[i]+" and has "+BEMMUtil.LinkedList.size(commonDataSetIDs[i]));
+		
+		    }
+		}
+		if (mergedListIDs == null){
+		    Object emptyArray = String[0]{};
+		    return emptyArray;
+		}
+		Object mergedListIDsArray = String.split(mergedListIDs,",");
+		return mergedListIDsArray;
+	}
+}

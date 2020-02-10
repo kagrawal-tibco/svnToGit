@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<ruleFunction icon="" name="dumpCustomerData" description="" guid="1210990850406-1963461461" bindings="" namespace="" folder="/RuleFunction/" virtual="false">
+    <lastModified>2008-05-16T19:26:22.512-07:00</lastModified>
+    <extendedProperties/>
+    <hiddenProperties/>
+    <validity>ACTION</validity>
+    <arguments>
+        <argument identifier="customer" entity="/Concepts/Customer" entityType="concept">
+            <domain>
+                <entries/>
+            </domain>
+        </argument>
+    </arguments>
+    <body>if( customer == null) {
+   System.debugOut("NULL CUSTOMER PASSED AS PARAMETER");
+   return;
+}
+System.debugOut("CUSTOMER ID:"+customer.customerId 
+        + "Customer Name:"+customer.name
+        +" Age:"+customer.age
+        +" Sex:"+customer.gender
+        +" Business:"+customer.business
+        );
+
+for(int i=0; i &lt; customer.aliases@length; i=i+1) {
+       System.debugOut("CUSTOMER ALIAS["+i+"]:"+customer.aliases[i]);
+}
+System.debugOut("Customer has :"+customer.addresses@length+" addresses");
+for(int j=0; j &lt; customer.addresses@length; j=j+1) {
+     Address address = customer.addresses[j];
+     if(address == null) {
+          continue;
+     }
+     System.debugOut("ADDRESS ID:"+ address.addressId
+        +" Stree:"+ address.street
+        +" City:"+address.city
+        +" State:"+address.state
+        +" Country:"+address.country
+        +" customer:"+address@parent);
+}
+System.debugOut("Customer has :"+customer.orders@length+" orders");
+for(int k=0;k &lt; customer.orders@length; k=k+1){
+     Order order = customer.orders[k];
+     if(order == null) {
+          System.debugOut("Order is null");
+          continue;
+     }
+     System.debugOut("Order ID:"+ order.orderId
+        +" Items:"+order.items
+        +" Value:"+order.value
+        +" Customer:"+order.customerId
+        );
+}</body>
+</ruleFunction>

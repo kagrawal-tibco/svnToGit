@@ -1,0 +1,93 @@
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" 
+		   xmlns:jxb="http://java.sun.com/xml/ns/jaxb" 
+		   jxb:version="2.0" 
+		   xmlns="http://www.tibco.com/cep/bemm/monitoring/metric/config/collectorconfig"  
+		   targetNamespace="http://www.tibco.com/cep/bemm/monitoring/metric/config/collectorconfig"  
+		   xmlns:tns="http://www.tibco.com/cep/bemm/monitoring/metric/config/collectorconfig"
+		   elementFormDefault="qualified">
+
+	 <xsd:element name="AccumulatorPlugin">
+       <xsd:complexType>	
+         <xsd:sequence>
+		   <xsd:element   name="classpath" type="Classpath" />
+		   <xsd:element   name="config" type="PluginConfig" />		   
+		  <!--  <xsd:element   name="mappings" type="Mappings" /> -->
+		   <xsd:element   name="map-entry" type="MapEntry" minOccurs="0" maxOccurs="unbounded" />
+         </xsd:sequence>
+		 <xsd:attribute   name="name" type="xsd:string" use="required"/>
+		 <xsd:attribute   name="className" type="xsd:string" use="required"/>
+		 <xsd:attribute   name="spm_schema" type="xsd:string" use="required"/>
+       </xsd:complexType>
+     </xsd:element>
+	 
+	 <xsd:complexType name="Classpath">
+		<xsd:sequence>
+        	<xsd:element name="path" type="xsd:string" minOccurs="0" maxOccurs="unbounded"/>		
+        </xsd:sequence>
+     </xsd:complexType>
+	
+	 <xsd:complexType name="PluginConfig">
+		<xsd:sequence>
+        	<xsd:element name="property" type="Property" minOccurs="0" maxOccurs="unbounded"/>		
+        </xsd:sequence>
+     </xsd:complexType>
+	 
+	 <xsd:complexType name="Property">
+        	<xsd:attribute name="name" type="xsd:string"/>
+			<xsd:attribute name="value" type="xsd:string"/>
+			<xsd:attribute name="type" type="xsd:string"/>
+     </xsd:complexType>
+     
+     <xsd:complexType name="MapEntry">
+		<xsd:sequence>
+        	<xsd:element name="mapping" type="Mapping" minOccurs="0" maxOccurs="unbounded"/>
+        	<xsd:element name="multi-mapping" type="MultiMapping" minOccurs="0" maxOccurs="unbounded"/>		
+        </xsd:sequence>
+     </xsd:complexType>
+	 
+	 <xsd:complexType name="Mappings">
+		<xsd:sequence>
+        	<xsd:element name="mapping" type="Mapping" minOccurs="0" maxOccurs="unbounded"/>		
+        	<xsd:element name="multi-mapping" type="MultiMapping" minOccurs="0" maxOccurs="unbounded"/>
+        </xsd:sequence>
+     </xsd:complexType> 
+     
+     <xsd:complexType name="MultiMapping">
+		<xsd:sequence>
+			<xsd:element name="arg" type="Property" minOccurs="0" maxOccurs="unbounded" />
+			<xsd:element name="target-mapping" type="TargetMapping" minOccurs="0" maxOccurs="unbounded"/>
+       	</xsd:sequence>
+       	<xsd:attribute   name="type" type="xsd:string" use="required"/>	
+       	<xsd:attribute   name="source" type="xsd:string" use="required"/>
+		<xsd:attribute   name="name" type="xsd:string" use="required"/>
+		<xsd:attribute   name="datatype" type="xsd:string" use="required"/>
+		<xsd:attribute   name="entity" type="xsd:string" />
+     </xsd:complexType>
+	
+	 <xsd:complexType name="Mapping">
+		<xsd:sequence>
+			<xsd:element name="arg" type="Property" minOccurs="0" maxOccurs="unbounded" />	
+			<xsd:element name="target-mapping" type="TargetMapping" minOccurs="0" maxOccurs="unbounded"/>	
+        </xsd:sequence>
+		<xsd:attribute   name="source" type="xsd:string" use="required"/>
+		<xsd:attribute   name="target" type="xsd:string" use="required"/>
+		<xsd:attribute   name="datatype" type="xsd:string" use="required"/>
+		<xsd:attribute   name="type" type="xsd:string" use="required"/>		   
+		<xsd:attribute   name="defaultValue" type="xsd:string" />
+		<xsd:attribute   name="entity" type="xsd:string" />
+		<xsd:attribute   name="beentity" type="xsd:string" />
+		<xsd:attribute   name="isMultiple" type="xsd:boolean" />
+     </xsd:complexType>
+	
+	<xsd:complexType name="TargetMapping">
+		<xsd:sequence>
+			<xsd:element name="arg" type="Property" minOccurs="0" maxOccurs="unbounded" />	
+		</xsd:sequence>	
+	    <xsd:attribute   name="source" type="xsd:string" use="required"/>
+		<xsd:attribute   name="target" type="xsd:string" use="required"/>
+		<xsd:attribute   name="datatype" type="xsd:string" use="required"/>
+		<xsd:attribute   name="defaultValue" type="xsd:string" />
+		<xsd:attribute   name="interceptorName" type="xsd:string"/>
+	</xsd:complexType>
+     
+</xsd:schema>

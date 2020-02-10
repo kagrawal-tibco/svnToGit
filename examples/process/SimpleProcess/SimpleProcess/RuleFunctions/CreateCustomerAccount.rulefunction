@@ -1,0 +1,18 @@
+/**
+ * @description 
+ */
+Concepts.Customer rulefunction RuleFunctions.CreateCustomerAccount {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String accountName;
+		double balance;
+	}
+	body {
+		Concepts.Customer customer = Instance.createInstance("xslt://{{/Concepts/Customer}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" version=\"1.0\" exclude-result-prefixes=\"xsl xsd\">\n    <xsl:output method=\"xml\"/>\n    <xsl:param name=\"accountName\"/>\n    <xsl:param name=\"balance\"/>\n    <xsl:template match=\"/\">\n        <createObject>\n            <object>\n                <xsl:attribute name=\"extId\">\n                    <xsl:value-of select=\"$accountName\"/>\n                </xsl:attribute>\n                <name>\n                    <xsl:value-of select=\"$accountName\"/>\n                </name>\n                <account>\n                    <xsl:attribute name=\"extId\">\n                        <xsl:value-of select=\"concat(\'ACT-\', $accountName)\"/>\n                    </xsl:attribute>\n                    <balance>\n                        <xsl:value-of select=\"$balance\"/>\n                    </balance>\n                </account>\n            </object>\n        </createObject>\n    </xsl:template>\n</xsl:stylesheet>");
+		System.debugOut("#### Created customer: " + accountName + " with balance: " + balance);
+	    return customer;
+			
+		}
+}

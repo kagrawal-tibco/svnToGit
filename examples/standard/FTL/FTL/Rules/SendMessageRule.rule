@@ -1,0 +1,31 @@
+/**
+ * @description 
+ * @author abhave-w510
+ */
+rule Rules.SendMessageRule {
+	attribute {
+		priority = 10;
+		forwardChain = true;
+	}
+	declare {
+		Events.FTLRequestEvent ftlrequestenv;
+	}
+	when {
+		
+	}
+	then {
+		Event.replyEvent(ftlrequestenv,ftlrequestenv);
+		System.debugOut("Received a FTLRequestEvent, publishing the message to FTL Channel ...");
+		Object publisher = Util.HashMap.getObject("hashmap","publisher");
+		System.debugOut("#### PUBLISHER will send the following message ####");
+		System.debugOut("ts: " + ftlrequestenv.ts);
+		System.debugOut("callerId : " + ftlrequestenv.callerId);
+		System.debugOut("fromBaseStation : " + ftlrequestenv.fromBaseStation);
+		System.debugOut("toBaseStation : " + ftlrequestenv.toBaseStation);
+		System.debugOut("type : " + ftlrequestenv.type);
+		System.debugOut("eventdate : " + ftlrequestenv.eventdate);
+		System.debugOut("#### PUBLISHER publishing the message ...");
+		FTL.Publisher.publishMessage(publisher, ftlrequestenv);
+		Event.consumeEvent(ftlrequestenv);
+	}
+}

@@ -1,0 +1,145 @@
+/**
+ * @description Performs updates on Login session as per the operation type
+ * @author vdhumal
+ */
+rule WebStudio.Security.Authn.Rules.WS_R_UpdateLoginUserSession {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		WebStudio.Security.Authn.Events.WS_E_UpdateLoginUserSessionEvent updateLoginUserSessionEvent;
+	}
+	when {
+		updateLoginUserSessionEvent.operationType != null;
+	}
+	then {
+		Object LOGGER = Log.getLogger("WebStudio.Security.Authn.Rules.WS_R_UpdateLoginUserSession");
+
+		String operationType = updateLoginUserSessionEvent.operationType;
+		String username = updateLoginUserSessionEvent.username;
+		DateTime loginTime = updateLoginUserSessionEvent.loginTime;
+		
+		String qUsername = WS_RF_CreateUserArtifactExtId("webstudio", null, null, updateLoginUserSessionEvent.username, null, null);	
+		WS_C_LoggedInUser loggedInUser = Instance.getByExtIdByUri(qUsername, "/WebStudio/Security/Authn/Concepts/WS_C_LoggedInUser");
+		 		  
+		if (String.equals("LOGIN_SUCCESS", operationType)) {
+			if (loggedInUser != null) {
+				loggedInUser.loginToken = updateLoginUserSessionEvent.loginToken;
+	
+				if (loginTime != null) {
+					loggedInUser.loginTime = loginTime;	
+					loggedInUser.accessTimeStamp = loginTime;
+				}	
+										
+				//Update Scorecard
+				boolean loggedInUsersLock = Cluster.DataGrid.Lock("LOGGEDIN_USERS", -1, false);
+				AMS_C_LoggedInUsers loggedInUserList = null;
+				if (loggedInUsersLock) {
+					Log.log(LOGGER, "Debug", "Getting the logged in users from LOGGEDIN_USERS");
+					loggedInUserList = Instance.getByExtIdByUri("LOGGEDIN_USERS", "/Approval/Scorecards/AMS_C_LoggedInUsers");
+					if (loggedInUserList == null) {
+						//Create one
+						Log.log(LOGGER, "Debug", "No instance of LoggedInUsers found. Creating a Instance");
+						loggedInUserList = Instance.createInstance("xslt://{{/Approval/Scorecards/AMS_C_LoggedInUsers}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"1.0\" exclude-result-prefixes=\"xsl xsd\">\n    <xsl:output method=\"xml\"/>\n    <xsl:template match=\"/\">\n        <createObject>\n            <object>\n                <xsl:attribute name=\"extId\">\n                    <xsl:value-of select=\"&quot;LOGGEDIN_USERS&quot;\"/>\n                </xsl:attribute>\n            </object>\n        </createObject>\n    </xsl:template>\n</xsl:stylesheet>");
+					}
+	
+					AMS_C_LoggedInUserEntry loggedInUserExists = WS_RF_CheckIfUserLoggedIn(Instance.PropertyArray.toArrayContainedConcept(loggedInUserList.loggedInUsers), loggedInUser@extId, null);
+					if (loggedInUserExists == null) {
+						Log.log(LOGGER, "Debug", "Adding the logged in user %s entry in LOGGEDIN_USERS", loggedInUser.username);
+						AMS_C_LoggedInUserEntry newLoggedInUserEntry = Instance.createInstance("xslt://{{/Approval/Scorecards/AMS_C_LoggedInUserEntry}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" version=\"1.0\" exclude-result-prefixes=\"xsl xsd\">\n    <xsl:output method=\"xml\"/>\n    <xsl:param name=\"loggedInUser\"/>\n    <xsl:param name=\"updateLoginUserSessionEvent\"/>\n    <xsl:template match=\"/\">\n        <createObject>\n            <object>\n                <xsl:if test=\"$loggedInUser/@extId\">\n                    <userExtId>\n                        <xsl:value-of select=\"$loggedInUser/@extId\"/>\n                    </userExtId>\n                </xsl:if>\n                <xsl:if test=\"$updateLoginUserSessionEvent/apiToken\">\n                    <apiToken>\n                        <xsl:value-of select=\"$updateLoginUserSessionEvent/apiToken\"/>\n                    </apiToken>\n                </xsl:if>\n            </object>\n        </createObject>\n    </xsl:template>\n</xsl:stylesheet>");
+						Instance.PropertyArray.appendContainedConcept(loggedInUserList.loggedInUsers, newLoggedInUserEntry, 1L);
+					} else {
+						//Case - Some earlier user entry present, but its session has timed-out so update with the new Login API token
+						Instance.PropertyAtom.setString(loggedInUserExists.apiToken, updateLoginUserSessionEvent.apiToken, 1L);
+					}
+				}
+				//Populate User roles
+				if (updateLoginUserSessionEvent.subscriptionId == null) {
+					WS_RF_PopulateLoggedInUserRoles(loggedInUser@extId);
+				} else {
+					Log.log(LOGGER, "Debug", "Adding JWT token with subscriptionId[%s] to user[%s]", updateLoginUserSessionEvent.subscriptionId, loggedInUser.username);
+					WS_C_JWTToken jwtToken = Instance.getByExtIdByUri(updateLoginUserSessionEvent.subscriptionId, "/WebStudio/Security/Authn/Concepts/WS_C_JWTToken");
+					if (jwtToken != null) {
+						Instance.PropertyAtom.setContainedConcept(loggedInUser.jwtToken, jwtToken, -1L);
+						if (updateLoginUserSessionEvent.userRoles != null) {
+							Log.log(LOGGER, "Debug", "Adding roles to user [%s]", loggedInUser.username);
+							String[] roles = String.split(updateLoginUserSessionEvent.userRoles, ",");
+							for (int i=0 ;i<roles@length; i++) {
+								Instance.PropertyArray.appendString(loggedInUser.roles, roles[i], -1L);
+								Log.log(LOGGER, "Debug", "Added role[%s] to user[%s]",roles[i], loggedInUser.username);
+							}
+						}
+					} else {
+						Log.log(LOGGER, "Debug", "JWT token with subscriptionId [%s] not found.", updateLoginUserSessionEvent.subscriptionId);
+					}
+				}								
+			} else {
+				Log.log(LOGGER, "Error", "The loggedin user Concept not found for user %s", username);
+			}
+			
+		} else if (String.equals("VALIDATE_SUCCESS", operationType)) { //Update Last access timestamp
+			Log.log(LOGGER, "Debug", "Updating access timestamp of user [%s] to current time", username);
+			if (loggedInUser != null) {
+				loggedInUser.accessTimeStamp = DateTime.now();
+			} else {
+				Log.log(LOGGER, "Debug", "The loggedin user Concept not found for user %s", username);
+			}
+					
+		} else if (String.equals("SESSION_TIMEDOUT", operationType) || String.equals("LOGOUT", operationType)) { //Clean up the user session		
+			Log.log(LOGGER, "Info", "Cleaning up the User Session for user [%s].", username);
+			if (loggedInUser != null) {
+				boolean loggedInUsersLock = Cluster.DataGrid.Lock("LOGGEDIN_USERS", -1, false);
+				AMS_C_LoggedInUsers loggedInUserList = null;
+				if (loggedInUsersLock) {
+					Log.log(LOGGER, "Debug", "Getting the logged in users from LOGGEDIN_USERS");
+					loggedInUserList = Instance.getByExtIdByUri("LOGGEDIN_USERS", "/Approval/Scorecards/AMS_C_LoggedInUsers");
+					if (loggedInUserList != null) {
+						AMS_C_LoggedInUserEntry loggedInUserExists = WS_RF_CheckIfUserLoggedIn(Instance.PropertyArray.toArrayContainedConcept(loggedInUserList.loggedInUsers), loggedInUser@extId, null);
+						
+						if (loggedInUserExists != null) {
+							Log.log(LOGGER, "Debug", "Removing the logged in user %s entry from LOGGEDIN_USERS", loggedInUser.username);
+							Instance.PropertyArray.removeContainedConcept(loggedInUserList.loggedInUsers, loggedInUserExists);
+							
+							// finally close any websocket connection
+							String uName = loggedInUser.username;
+							if (loggedInUser.jwtToken != null) uName = loggedInUser.jwtToken.uname;
+							String contextMapID = "WS_CONTEXT_MAP";
+							Object context = Util.HashMap.getObject(contextMapID, uName);
+							if (context != null) {
+								try {
+									// just an additional check, in most cases this will already be closed via client
+									if (HTTP.WebSocket.isConnectionOpen(context)) {
+										Log.log(LOGGER, "Debug", "Closing WebSocket connection associated to user[%s]", uName);
+										HTTP.WebSocket.closeConnection(context, 1000, "UserName[" + uName + "] logged out", false);
+									}
+								} catch (Exception e) {
+									if (String.contains(e@message, "Session associated to this websocket endpoint is no longer open")) {
+										Log.log(LOGGER, "debug", "Session associated to this websocket endpoint for user[%s] is already clsoed", uName);
+									}
+								}
+								Util.HashMap.removeObject(contextMapID, uName);
+							} else {
+								Log.log(LOGGER, "Debug", "There is no WebSocket connection associated with username[%s]", uName);
+							}
+							
+						} else {
+							Log.log(LOGGER, "Error", "User entry for [%s] not found in the LOGGEDIN USERS.", loggedInUser.username);
+						}	
+					} else {
+						Log.log(LOGGER, "Error", "The LOGGEDIN USERS Concept not found.");
+					}
+				}
+				
+				//Delete the user concept	
+				Instance.deleteInstance(loggedInUser);
+				
+				String comment = null;
+				if (String.equals("SESSION_TIMEDOUT", operationType)) comment = "Session Timeout";
+				WS_RF_AddAuditTrailEntry(loggedInUser.username, null, null, null, "LOGOUT", comment);
+			} else {
+				Log.log(LOGGER, "Error", "The loggedin user Concept not found for user %s",username);
+			}																								
+		}			
+	}
+}

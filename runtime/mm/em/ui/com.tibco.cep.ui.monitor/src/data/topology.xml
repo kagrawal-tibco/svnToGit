@@ -1,0 +1,208 @@
+<sites>
+    <?xml version = "1.0" encoding = "UTF-8"?>
+    <site name="Site Name" xmlns = "http://www.tibco.com/businessevents/BEMM/2009/09/BEMMTopology.xsd">
+         <clusters>
+            <cluster name="BE Application Cluster 1">
+                <master-files>
+                    <cdd-master>C:\Software\DEV\BE\5.1\EMM\debugging_testing\be51Studio\test\myBEtest.cdd</cdd-master>
+                    <ear-master>C:\Software\DEV\BE\5.0\EMM\debugging_testing\be51Studio\test\myBEtest.ear</ear-master>
+                </master-files>
+
+                <run-version>
+                    <be-runtime version="5.0.1" />
+                </run-version>
+
+                <deployment-units>
+                    <deployment-unit id="m1-du" name="m1-du-name">
+                        <deployed-files>
+                            <cdd-deployed>C:\Software\DEV\BE\5.0\EMM\debugging_testing\be51Studio\test\myBEtest.cdd</cdd-deployed>
+                            <ear-deployed>C:\Software\DEV\BE\5.0\EMM\debugging_testing\be51Studio\test\myBEtest.ear</ear-deployed>
+                        </deployed-files>
+                        <processing-units-config>
+                               <processing-unit-config id="processA" puid="default" jmxport="5561" />
+                        </processing-units-config>
+                    </deployment-unit>
+                    <deployment-unit id="m2-du" name="m2-du-name">
+                        <deployed-files>
+                            <cdd-deployed>C:\shared\bemm\myBEtest.cdd</cdd-deployed>
+                            <ear-deployed>C:\shared\bemm\myBEtest.ear</ear-deployed>
+                        </deployed-files>
+                        <processing-units-config>
+                            <processing-unit-config id="processD" puid="default" jmxport="5561" />                 
+                            <processing-unit-config id="processE" puid="cache" jmxport="5562" />                  
+                        </processing-units-config>
+                    </deployment-unit>
+                    <deployment-unit id="m3-du" name="m3-du-name">
+                        <deployed-files>
+                            <cdd-deployed>C:\temp\bemm\myBEtest.cdd</cdd-deployed>
+                            <ear-deployed>C:\temp\bemm\myBEtest.ear</ear-deployed>
+                        </deployed-files>
+                        <processing-units-config>
+                            <processing-unit-config id="processB" puid="default" jmxport="5561" />                   
+                        </processing-units-config>
+                    </deployment-unit>           
+                 </deployment-units>
+
+                 <deployment-mappings>
+                    <deployment-mapping deployment-unit-ref="m1-du" host-ref="m1" />
+                    <deployment-mapping deployment-unit-ref="m2-du" host-ref="m1" />
+                    <deployment-mapping deployment-unit-ref="m3-du" host-ref="m1" /> 
+                    <deployment-mapping deployment-unit-ref="m2-du" host-ref="m2" />
+                    <deployment-mapping deployment-unit-ref="m3-du" host-ref="m3" />
+                 </deployment-mappings>
+            </cluster>
+        </clusters>	
+
+        <host-resources>
+            <host-resource id="m1">
+                <hostname>HLOURO-lt-T61</hostname>
+                <ip>10.105.38.25</ip>
+                <user-credentials password = "#!RckGRa9tRJyVpS0qkl/Z3wzYT2djviHsUwCs8jP7CBMnytZ94galtw==" username = "TSI-PA\hlouro"/>
+                <!-- <user-credentials password = "Ough12_Ough12" username = "TSI-PA\hlouro"/> -->
+                <os-type>Windows</os-type>
+                <software>
+                    <be version="5.0.1">
+                        <tra>c:\be51\be\5.0\bin\be-engine.tra</tra>
+                        <home>c:/be51/be/5.0</home>
+                    </be>
+                </software>
+                <start-pu-method>
+                    <pstools path="c:\be51\be\5.0\mm\bin\pstools" />
+                </start-pu-method>         
+            </host-resource>
+            <host-resource id="m2">
+                <hostname>Mirage</hostname>
+                <ip>10.107.2.195</ip>
+                <user-credentials password = "Tibco1234" username = "Administrator"/>
+                <os-type>Windows</os-type>
+                <software>
+                    <be version="5.0.1">
+                        <tra>c:\tibco\be\5.0\bin\be-engine.tra</tra>
+                        <home>c:\tibco\be\5.0</home>
+                    </be>
+                </software>
+                <start-pu-method>
+                    <ssh port="22"/>
+                </start-pu-method>
+            </host-resource>
+            <host-resource id="m3">
+                 <hostname>ql-labsvr1-2k3</hostname>
+                 <ip>10.107.2.60</ip>
+                 <user-credentials password = "tibco123" username = "administrator"/>
+                 <os-type>Windows</os-type>
+                 <software>
+                     <be version="5.0.1">
+                        <tra>c:\tibco\be\5.0\bin\be-engine.tra</tra>
+                        <home>c:\tibco\be\5.0</home>
+                    </be>
+                 </software>
+                 <start-pu-method>
+                     <pstools path="c:\be51\be\5.0\mm\bin\pstools" />
+                 </start-pu-method>
+            </host-resource>        
+        </host-resources>
+    </site>
+    <?xml version = "1.0" encoding = "UTF-8"?>
+    <site name="site" xmlns = "http://www.tibco.com/businessevents/BEMM/2009/09/BEMMTopology.xsd">
+         <clusters>
+            <cluster name="BE Application Cluster 2">
+                <master-files>
+                    <cdd-master>C:\Software\DEV\BE\5.1\EMM\debugging_testing\be51Studio\test\myBEtest.cdd</cdd-master>
+                    <ear-master>C:\Software\DEV\BE\5.0\EMM\debugging_testing\be51Studio\test\myBEtest.ear</ear-master>
+                </master-files>
+
+                <run-version>
+                    <be-runtime version="5.0.1" />
+                </run-version>
+
+                <deployment-units>
+                    <deployment-unit id="m1-du" name="m1-du-name">
+                        <deployed-files>
+                            <cdd-deployed>C:\Software\DEV\BE\5.0\EMM\debugging_testing\be51Studio\test\myBEtest.cdd</cdd-deployed>
+                            <ear-deployed>C:\Software\DEV\BE\5.0\EMM\debugging_testing\be51Studio\test\myBEtest.ear</ear-deployed>
+                        </deployed-files>
+                        <processing-units-config>
+                               <processing-unit-config id="processA" puid="default" jmxport="5561" />
+                        </processing-units-config>
+                    </deployment-unit>
+                    <deployment-unit id="m2-du" name="m2-du-name">
+                        <deployed-files>
+                            <cdd-deployed>C:\shared\bemm\myBEtest.cdd</cdd-deployed>
+                            <ear-deployed>C:\shared\bemm\myBEtest.ear</ear-deployed>
+                        </deployed-files>
+                        <processing-units-config>
+                            <processing-unit-config id="processD" puid="default" jmxport="5561" />                 
+                            <processing-unit-config id="processE" puid="cache" jmxport="5562" />                  
+                        </processing-units-config>
+                    </deployment-unit>
+                    <deployment-unit id="m3-du" name="m3-du-name">
+                        <deployed-files>
+                            <cdd-deployed>C:\temp\bemm\myBEtest.cdd</cdd-deployed>
+                            <ear-deployed>C:\temp\bemm\myBEtest.ear</ear-deployed>
+                        </deployed-files>
+                        <processing-units-config>
+                            <processing-unit-config id="processB" puid="default" jmxport="5561" />                   
+                        </processing-units-config>
+                    </deployment-unit>           
+                 </deployment-units>
+
+                 <deployment-mappings>
+                    <deployment-mapping deployment-unit-ref="m1-du" host-ref="m1" />
+                    <deployment-mapping deployment-unit-ref="m2-du" host-ref="m1" />
+                    <deployment-mapping deployment-unit-ref="m3-du" host-ref="m1" /> 
+                    <deployment-mapping deployment-unit-ref="m2-du" host-ref="m2" />
+                    <deployment-mapping deployment-unit-ref="m3-du" host-ref="m3" />
+                 </deployment-mappings>
+            </cluster>
+        </clusters>	
+
+        <host-resources>
+            <host-resource id="m1">
+                <hostname>HLOURO-lt-T61</hostname>
+                <ip>10.105.38.25</ip>
+                <user-credentials password = "#!RckGRa9tRJyVpS0qkl/Z3wzYT2djviHsUwCs8jP7CBMnytZ94galtw==" username = "TSI-PA\hlouro"/>
+                <!-- <user-credentials password = "Ough12_Ough12" username = "TSI-PA\hlouro"/> -->
+                <os-type>Windows</os-type>
+                <software>
+                    <be version="5.0.1">
+                        <tra>c:\be51\be\5.0\bin\be-engine.tra</tra>
+                        <home>c:/be51/be/5.0</home>
+                    </be>
+                </software>
+                <start-pu-method>
+                    <pstools path="c:\be51\be\5.0\mm\bin\pstools" />
+                </start-pu-method>         
+            </host-resource>
+            <host-resource id="m2">
+                <hostname>Mirage-2</hostname>
+                <ip>10.107.2.195</ip>
+                <user-credentials password = "Tibco1234" username = "Administrator"/>
+                <os-type>Windows</os-type>
+                <software>
+                    <be version="5.0.1">
+                        <tra>c:\tibco\be\5.0\bin\be-engine.tra</tra>
+                        <home>c:\tibco\be\5.0</home>
+                    </be>
+                </software>
+                <start-pu-method>
+                    <ssh port="22"/>
+                </start-pu-method>
+            </host-resource>
+            <host-resource id="m3">
+                 <hostname>ql-labsvr1-2k3-2</hostname>
+                 <ip>10.107.2.60</ip>
+                 <user-credentials password = "tibco123" username = "administrator"/>
+                 <os-type>Windows</os-type>
+                 <software>
+                     <be version="5.0.1">
+                        <tra>c:\tibco\be\5.0\bin\be-engine.tra</tra>
+                        <home>c:\tibco\be\5.0</home>
+                    </be>
+                 </software>
+                 <start-pu-method>
+                     <pstools path="c:\be51\be\5.0\mm\bin\pstools" />
+                 </start-pu-method>
+            </host-resource>        
+        </host-resources>
+    </site>
+</sites>

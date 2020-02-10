@@ -1,0 +1,29 @@
+/**
+ * @description Return true if server manages life cycle for this type of artifact for the specified operation.
+ */
+boolean rulefunction WebStudio.Core.RuleFunctions.Utils.Lifecycle.WS_RF_IsManagedArtifactType {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String artifactType;
+		String operation;
+	}
+	body {
+		boolean isManaged = false;
+		if (operation == "Fetch") {
+			isManaged = (artifactType == "ruletemplateinstance") || (artifactType == "rulefunctionimpl") || (artifactType == "beprocess") || (artifactType == "domain") 
+																					|| (artifactType == "ruletemplate") || (artifactType == "rulefunction"); 		
+		} else if (operation == "Add" || operation == "Create" || operation == "Created") {
+			isManaged = (artifactType == "ruletemplateinstance") || (artifactType == "rulefunctionimpl") || (artifactType == "beprocess") || (artifactType == "domain");
+		} else if (operation == "Delete") {
+			isManaged = (artifactType == "ruletemplateinstance") || (artifactType == "rulefunctionimpl") || (artifactType == "beprocess") || (artifactType == "domain");
+		} else if (operation == "Deploy") {
+			isManaged = (artifactType == "ruletemplateinstance") || (artifactType == "rulefunctionimpl");
+		} else {
+			isManaged = (artifactType == "ruletemplateinstance") || (artifactType == "rulefunctionimpl") || (artifactType == "beprocess") || (artifactType == "domain");
+		}
+		
+		return isManaged;
+	}
+}

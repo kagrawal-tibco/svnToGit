@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Application xmlns:mx="http://www.adobe.com/2006/mxml" layout="vertical" creationComplete="handleCreationComplete(event)" xmlns:shapes="com.tibco.be.views.ui.shapes.*">
+	<mx:Script>
+		<![CDATA[
+			import mx.events.FlexEvent;
+			import mx.collections.ArrayCollection;
+			
+			[Bindable]
+			private var endpointPositions:ArrayCollection;
+			
+			private function handleCreationComplete(event:FlexEvent):void{
+				endpointPositions = new ArrayCollection([ArrowHeadShape.APEX_PIVOT, ArrowHeadShape.BASELINE_PIVOT, ArrowHeadShape.CENTER_PIVOT]);
+				setArrowHeadProperties();
+			}
+			
+			private function handleArrowHeadPropertiesSet(event:MouseEvent):void{
+				setArrowHeadProperties(
+					parseInt(arrowHeadSize.text),
+					parseInt(arrowHeadColor.text, 16),
+					arrowHeadFill.selected,
+					arrowHeadEndpointPosition.selectedItem.toString(),
+					parseFloat(arrowHeadRotation.text) * Math.PI
+				);
+			}
+			
+			private function handleArrowBoxPropertiesSet(event:MouseEvent):void{
+				setArrowBoxProperties(
+					parseInt(arrowBoxWidth.text),
+					parseInt(arrowBoxHeight.text),
+					parseInt(arrowBoxColor.text, 16),
+					arrowBoxFill.selected,
+					checkArrowBoxBorder.selected,
+					parseFloat(arrowBoxRotation.text) * Math.PI
+				);
+			}
+			
+			private function setArrowHeadProperties(size:int=8, color:uint=0x0, fill:Boolean=true, apexPosition:String=ArrowHeadShape.APEX_PIVOT, rotation:Number=0):void{
+				arrowShape.size = size;
+				arrowShape.color = color;
+				arrowShape.fillArrow = fill;
+				arrowShape.piviotPoint = apexPosition;
+				arrowShape.rotate(rotation, true);
+				arrowShape.invalidateDisplayList();
+			}
+			
+			private function setArrowBoxProperties(boxWidth:int=8, boxHeight:int=8, color:uint=0x0, fill:Boolean=true, showBox:Boolean=true, rotation:Number=0):void{
+				boxedArrow.width = boxWidth;
+				boxedArrow.height = boxHeight;
+				boxedArrow.color = color;
+				boxedArrow.fillArrow = fill;
+				boxedArrow.arrowRotation = rotation;
+				boxedArrow.showBox = showBox;
+				boxedArrow.invalidateDisplayList();
+			}
+		]]>
+	</mx:Script>
+	<mx:HBox horizontalGap="20">
+		<mx:VBox borderStyle="inset" horizontalAlign="center" paddingBottom="20">
+			<mx:Form>
+				<mx:FormItem label="Size">
+					<mx:TextInput id="arrowHeadSize" width="50" text="8" />
+				</mx:FormItem>
+				<mx:FormItem label="Color">
+					<mx:TextInput id="arrowHeadColor" width="75" text="0x0" />
+				</mx:FormItem>
+				<mx:FormItem label="Rotation">
+					<mx:TextInput id="arrowHeadRotation" width="75" text="0" />
+				</mx:FormItem>
+				<mx:FormItem label="Fill">
+					<mx:CheckBox id="arrowHeadFill" selected="true"/>
+				</mx:FormItem>
+				<mx:FormItem label="Endpoint Posistion">
+					<mx:ComboBox id="arrowHeadEndpointPosition" dataProvider="{endpointPositions}" width="200" />
+				</mx:FormItem>
+				<mx:FormItem>
+					<mx:Button label="Set Properties" click="handleArrowHeadPropertiesSet(event)" />
+				</mx:FormItem>
+			</mx:Form>
+			<mx:HBox borderStyle="solid" borderColor="black" borderThickness="1" width="10" height="10">
+				<shapes:ArrowHeadShape id="arrowShape" />
+			</mx:HBox>
+		</mx:VBox>
+		<mx:VBox borderStyle="inset" horizontalAlign="center" paddingBottom="20">
+			<mx:Form>
+				<mx:FormItem label="Width">
+					<mx:TextInput id="arrowBoxWidth" width="50" text="10" />
+				</mx:FormItem>
+				<mx:FormItem label="Height">
+					<mx:TextInput id="arrowBoxHeight" width="50" text="10" />
+				</mx:FormItem>
+				<mx:FormItem label="Color">
+					<mx:TextInput id="arrowBoxColor" width="75" text="0x0" />
+				</mx:FormItem>
+				<mx:FormItem label="Rotation">
+					<mx:TextInput id="arrowBoxRotation" width="75" text="0" />
+				</mx:FormItem>
+				<mx:FormItem label="Fill">
+					<mx:CheckBox id="arrowBoxFill" selected="true"/>
+				</mx:FormItem>
+				<mx:FormItem label="Box Border">
+					<mx:CheckBox id="checkArrowBoxBorder" selected="true" />
+				</mx:FormItem>
+				<mx:FormItem>
+					<mx:Button label="Set Properties" click="handleArrowBoxPropertiesSet(event)" />
+				</mx:FormItem>
+			</mx:Form>
+			<shapes:BoxedArrow id="boxedArrow" width="10" height="10" />
+		</mx:VBox>
+	</mx:HBox>
+	
+	
+</mx:Application>

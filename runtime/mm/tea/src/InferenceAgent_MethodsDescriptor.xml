@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<agent type="Inference" xmlns:xsi="http://www.w3c.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="InferenceAgentMethods.xsd">
+    <methods>
+        <methodgroup group="Agent">
+            <method name="GetNumberOfEvents">
+                <annotation>Gets the total number of events existing in this session</annotation>
+            </method>
+            <method name="GetNumberOfInstances">
+                <annotation>Gets the total number of instances existing in this session</annotation>
+            </method>
+            <method name="Resume">
+                <annotation>Resumes the execution of this agent</annotation>
+               
+            </method>
+            <method name="Suspend">
+                <annotation>Suspends the execution of this agent</annotation>
+               
+            </method>
+        </methodgroup>
+
+        <methodgroup group="Channels">
+            <method name="GetSessionInputDestinations">
+                <annotation>Retrieves the destinations enabled for input in this session</annotation>
+               
+            </method>
+        </methodgroup>
+
+        <methodgroup group="Execute Methods">
+            <method name="ExecuteMethod">
+                <annotation>Executes the method whose name is specified in the first argument</annotation>
+                <arg name="Method Name" type="string" desc="Name of the method to invoke (case sensitive)" defaultvalue="" required="true"/>
+                <arg name="Arguments" type="string" desc="Arguments to pass to the method (Optional)" defaultvalue=""/>
+            </method>
+        </methodgroup>
+
+        <methodgroup group="Object Management">
+            <!--<method name="forceOMCheckpoint">
+                <annotation>Forces an Object Store checkpoint of a Session</annotation>
+                <arg name="Session" type="string" desc="Name of the session" defaultvalue=""/>
+            </method>-->
+            <method name="GetEvent">
+                <annotation>Retrieves the event with the specified Id from this session</annotation>
+                <arg name="Id" type="string" desc="Id of the Event" defaultvalue="" required="true"/>
+                <arg name="isExternal" type="boolean" desc="String representing Boolean. True to use the event's external Id. False to use the internal Id. (Optional)" defaultvalue="false"/>
+            </method>
+            <method name="GetInstance">
+                <annotation>Retrieves the instance with the specified Id from this session</annotation>
+                <arg name="Id" type="string" desc="Id of the Instance" defaultvalue="" required="true"/>
+                <arg name="isExternal" type="boolean" desc="String representing Boolean: 'true' to use the event's external Id, 'false' to use the internal Id. (Optional)" defaultvalue="false"/>
+            </method>
+            <method name="GetScorecards">
+                <annotation>No URI provided: Returns a table with of all of the scorecards in this session. URI provided: retrieves the session's scorecard information.</annotation>
+                <arg name="Scorecard URI" type="string" desc="URI of the scorecard to retrieve information. Returns a table with of all of the scorecards if no argument is provided. (Optional)" defaultvalue=""/>
+            </method>
+        </methodgroup>
+
+        <methodgroup group="Profiler">
+            <method name="StartFileBasedProfiler">
+                <annotation>Turns On BusinessEvents profiler and starts collecting data for the specified duration. When time is complete or the Profiler is turned Off, profiling data will be saved to a file in comma separated format</annotation>
+                <arg name="FileName" type="string" desc="Absolute path of the file to where the profiling data is to be saved." defaultvalue="" required="true"/>
+                <arg name="Level" type="int" desc="Level of depth profiling data will be collected. Pick -1 for all levels, 1 for RTC level only" defaultvalue="-1" required="true"/>
+                <arg name="Duration" type="long" desc="Time interval, in seconds, the profiling data will be collected. If a negative value is specified the profiler will be On until explicitly turned Off." defaultvalue="-1" required="true"/>
+            </method>
+            <method name="StopFileBasedProfiler">
+                <annotation>Turns Off BusinessEvents profiler and stops collecting data. Profiling data is stored in a file in comma separated format</annotation>
+               
+            </method>
+        </methodgroup>
+
+        <!--<methodgroup group="Recorder">
+            <method name="StartFileBasedRecorder">
+                <annotation>Starts the File Based Recorder. It records agent activity to the files in the specified directory.</annotation>
+                <arg name="Output Directory" type="string" desc="Directory location of the recorded file" defaultvalue="" required="true"/>
+                <arg name="Mode" type="string" desc="Recording modes. Any space separated combination of 'c' 'u' 'd' 's' 'r' 'a' 'x' 'f' 'e'" defaultvalue="" required="true"/>
+            </method>
+            <method name="StopFileBasedRecorder">
+                <annotation>Stops the File Based Recorder. It flushes the agent activity to the files in the specified directory.</annotation>
+               
+            </method>
+        </methodgroup>-->
+        
+        <methodgroup group="Working Memory">
+            <method name="ActivateRule">
+                <annotation>Activates the specified rule in this session</annotation>
+                <arg name="URI" type="string" desc="URI of the Rule" defaultvalue="" required="true"/>
+            </method>
+            <method name="DeactivateRule">
+                <annotation>Deactivates the specified rule in this session</annotation>
+                <arg name="URI" type="string" desc="URI of the Rule" defaultvalue="" required="true"/>
+            </method>
+            <method name="ResetTotalNumberRulesFired">
+                <annotation>Resets to zero the total number of rules fired in this session</annotation>
+               
+            </method>
+            <!--<method name="GetWorkingMemoryDump">
+                <annotation>Gets the working memory dump of this session</annotation>
+               
+            </method>-->
+            <method name="GetRule">
+                <annotation>Gets info about the rule with the specified URI in this session</annotation>
+                <arg name="Rule URI" type="string" desc="URI of the Rule" defaultvalue="" required="true"/>
+            </method>
+            <method name="GetRules">
+                <annotation>Gets a table listing the rules deployed in this session</annotation>
+               
+            </method>
+            <method name="GetTotalNumberRulesFired">
+                <annotation>Gets a table listing the total number of rules fired in this session</annotation>
+               
+            </method>
+            <method name="GetRuleSession">
+                <annotation>Gets a table with the name of this session</annotation>
+               
+            </method>
+        </methodgroup>
+    </methods>
+</agent>

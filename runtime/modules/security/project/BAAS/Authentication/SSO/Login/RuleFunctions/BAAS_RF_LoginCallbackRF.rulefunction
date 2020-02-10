@@ -1,0 +1,95 @@
+/**
+ * @description Using a pageflow function for basic login verification
+ * so as to allow for easy manipulation of request/response headers.
+ */
+void rulefunction Authentication.SSO.Login.RuleFunctions.BAAS_RF_LoginCallbackRF {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object asyncContextObject;
+		Concept sessionConcept;
+	}
+	body {
+		String assertionIssuerUrl = "http://tibco.com/be/baas/idp";
+				
+		Object servletRequest = HTTP.Servlet.getServletRequest(asyncContextObject);
+		Object servletResponse = HTTP.Servlet.getServletResponse(asyncContextObject);
+		
+		//Look for authnReqId param
+		String authnAssnReqId = 
+			HTTP.Servlet.Request.getRequestParameter(servletRequest, "AuthReqId");
+			
+		//Look for authnReqId param
+		String audience = 
+			HTTP.Servlet.Request.getRequestParameter(servletRequest, "Audience");
+					
+		//Keep relaying relay state param
+		String relayState = 
+			HTTP.Servlet.Request.getRequestParameter(servletRequest, "RelayState");
+		
+		String username = HTTP.Servlet.Request.getRequestParameter(servletRequest, "username");
+		String password = HTTP.Servlet.Request.getRequestParameter(servletRequest, "password");
+		
+		System.debugOut("Attempting login for user " + username);
+		
+		// Also embedded in cookie.
+		String ssoToken = Authentication.ssoAuthenticate(assertionIssuerUrl, username, password);
+		ssoToken = String.replaceAll(ssoToken, "\r", "");
+		ssoToken = String.replaceAll(ssoToken, "\n", "");
+		
+		//Load concept from cache if any after taking lock on this key.
+		if (ssoToken != null) {
+			//Set token in the event
+			boolean locked = Cluster.DataGrid.Lock(username, -1, false);
+			if (locked) {
+				//This is a cache-only concept, and needs to be loaded in this PP.
+				BAAS_C_LoggedInUser loggedInUser = Cluster.DataGrid.CacheLoadConceptByExtId(username, false);
+				if (loggedInUser == null) {
+					//Create a logged in user entry
+					System.debugOut("Creating new loggedin user entry for username " + username);
+					loggedInUser = 
+						Instance.createInstance("xslt://{{/Authentication/SSO/Concepts/BAAS_C_LoggedInUser}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"1.0\" exclude-result-prefixes=\"xsl xsd\">\n    <xsl:output method=\"xml\"/>\n    <xsl:param name=\"username\"/>\n    <xsl:template match=\"/\">\n        <createObject>\n            <object>\n                <xsl:attribute name=\"extId\">\n                    <xsl:value-of select=\"$username\"/>\n                </xsl:attribute>\n                <username>\n                    <xsl:value-of select=\"$username\"/>\n                </username>\n            </object>\n        </createObject>\n    </xsl:template>\n</xsl:stylesheet>");
+					//Create user session
+					String sessionId = Authentication.createUUID();
+					BAAS_C_UserSession userSession = 
+						Authentication.
+							SSO.
+								Concepts.
+									BAAS_C_UserSession.
+										BAAS_C_UserSession(sessionId, null, null, null);
+										
+					userSession.creationTime = DateTime.now();	
+					//Both times will be same at creation.
+					userSession.lastAccessedTime = DateTime.now();
+					
+					//Create assertion
+					String[] audiences = {audience};
+					String samlAssertionResponse = 
+						Authentication.
+							SSO.
+								Common.
+									BAAS_RF_CreateSAMLAssertionResponse(authnAssnReqId, Authentication.createUUID(), assertionIssuerUrl, audiences, loggedInUser);
+					
+					
+					Authentication.
+						SSO.
+							Common.
+								BAAS_RF_SetSAMLHTTPResponseHeadersAndCookies(ssoToken, relayState, samlAssertionResponse, asyncContextObject);
+					//Update Scorecard
+//					Instance.PropertyArray.appendString(Approval.Scorecards.AMS_SC_LoggedInUsers.loggedInUsers, username, 1L);	
+				} else {
+					System.debugOut("User session already exists");
+					//TODO send the cached assertion back. 
+					//Already exists. Update accesstimestamp
+					BAAS_C_UserSession userSession = loggedInUser.userSession;
+					//Get concept reference for assertion
+					int assertionId = userSession.associatedAssertion@id;
+					//Lookup concept matching assertion.
+//					BAAS_C_Assertion cachedAssertion = 
+					userSession.lastAccessedTime = DateTime.now();
+				}
+			}
+		}
+	}
+}

@@ -1,0 +1,61 @@
+<div ng-controller='IndexCtrl' class="appManagementPage tea-theme wrapper row-offcanvas row-offcanvas-left">   
+	<div class="header">
+        <nav class="tbt-top-nav navbar-static-top">
+            <span class="dropdown" dropdown on-toggle="toggled(open)">
+      			<a href class="title dropdown-toggle ng-binding" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+      				<i class="tibcoAbb24x24LogoIcon"></i>
+      				 TIBCO BusinessEvents
+      			</a>
+      			<ul class="dropdown-menu">
+      				<li>        			
+          				<a ng-click="openHelpPageForBETea()">Help</a>
+        			</li>
+      				<li>        			
+          				<a ng-click="showAboutWindowForBETea()">About TIBCO BusinessEvents Enterprise Administrator Agent</a>
+        			</li>
+      			</ul>
+    		</span>
+            <ul class="topNav">
+				<li title="Application" ng-click="showDashboardApplications()" >	
+					<i class="fa fa-cube"></i>					
+					<span>Application Deployments</span>  
+				</li>
+				<li title="Machines" ng-click="showDashboardHosts()">
+					<i class="fa fa-desktop"></i>							
+					<span >Machines</span>
+				</li>
+				<li title="Moitoring" ng-click="showAgentStats()"  ng-class="{active:true}">
+					<i class="fa fa-line-chart"></i>							
+					<span >Monitoring</span>
+				</li>
+			</ul>
+        </nav>
+    </div> 
+    <div ng-controller="selfMonitoringCtrl">
+    	<div class="adminView row main-frame box-sizing" >
+     		<div ng-show="notification.show">
+      			<div ng-include="'partials/templates/directive/showNotification.html'"></div>
+    		</div>
+    		<div id="loaderdiv" style="display: none;">
+				<img src="images/icons/loader.gif" class="ajax-loader" />
+			</div>
+			<div class="instanceViewPanel1">
+				<h3>BE Tea Agent Monitoring</h3>
+				<div class="row">
+         			<ul class="appBox clearfix"> 
+         				<li class="button pull-right"> 
+            				<div class="operation" ng-click="reloadPage()">
+      	  		  				<i class="fa fa-refresh"></i>
+				  				<span>Refresh</span> 
+				  			</div>
+            			</li> 
+         			</ul>    
+         		</div>
+			</div>
+			<div ng-include="'partials/templates/aboutBETeaView.html'"></div> 
+        	<div>
+        		<chart-nav-block chart-sections="chartSections" entity="entity"  is-refreshed="isChartRefreshed" is-self="true" class="container" ></chart-nav-block>
+        	</div>
+		</div>
+    </div> 
+</div>    

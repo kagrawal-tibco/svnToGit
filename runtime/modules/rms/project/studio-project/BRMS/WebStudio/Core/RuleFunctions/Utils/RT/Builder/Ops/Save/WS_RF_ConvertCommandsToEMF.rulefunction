@@ -1,0 +1,52 @@
+/**
+ * @description Convert actions used in the RTI to EMF.
+ */
+void rulefunction WebStudio.Core.RuleFunctions.Utils.RT.Builder.Ops.Save.WS_RF_ConvertCommandsToEMF {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object ruleTemplateInstanceEObject;
+		WebStudio.Core.Concepts.RuleTemplateInstance.Builder.WS_C_Commands commands;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.RT.Builder.Ops.Save.WS_RF_ConvertCommandsToEMF");
+		WS_C_CommandInfo[] commandInfos = Instance.PropertyArray.toArrayConcept(commands.commandInfo);
+		
+		Log.log(LOGGER, "Debug", "Number of commands in this RTI %s", commandInfos@length);
+		for (int loop = 0; loop < commandInfos@length; loop++) {
+			WS_C_CommandInfo commandInfo = commandInfos[loop];
+			String commandAlias = commandInfo.commandAlias;
+			String commandType = commandInfo.type;
+			String commandActionType = commandInfo.actionType;
+			Log.log(LOGGER, "Debug", "Command Details : Alias - %s, Type - %s, Action Type - %s", commandAlias, commandType, commandActionType);
+			
+			Object commandEModel = WS.RTI.createRuleTemplateInstanceCommand(commandAlias, commandType, commandActionType);
+			//Get all filters in it
+			WS_C_AbstractConditionsFilter[] filterConcepts = Instance.PropertyArray.toArrayConcept(commandInfo.filter);
+			Log.log(LOGGER, "Debug", "Number of filters in this command %s", filterConcepts@length);
+			for (int filterLoop = 0; filterLoop < filterConcepts@length; filterLoop++) {
+				WS_C_AbstractConditionsFilter commandChildFilterConcept = filterConcepts[filterLoop];
+				//Check if this has child filters. If yes, this is multifilter else single filter.
+				WS_C_AbstractConditionsFilter[] filterChildConceptChildrenConcepts = Instance.PropertyArray.toArrayConcept(commandChildFilterConcept.filter);
+				
+				if (filterChildConceptChildrenConcepts@length > 0) {
+					WebStudio.
+						Core.
+							RuleFunctions.
+								Utils.RT.Builder.Ops.Save.
+									WS_RF_ConvertMultiFilterToEMF(commandEModel, commandChildFilterConcept);
+				} else {
+					WebStudio.
+						Core.
+							RuleFunctions.
+								Utils.RT.Builder.Ops.Save.
+									WS_RF_ConvertSingleFilterToEMF(commandEModel, commandChildFilterConcept);
+				}	
+			}											
+			
+			//Add to RTI
+			WS.RTI.addRuleTemplateInstanceCommand(ruleTemplateInstanceEObject, commandEModel);
+		}
+	}
+}

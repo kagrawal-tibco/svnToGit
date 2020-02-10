@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Label xmlns:mx="http://www.adobe.com/2006/mxml" xmlns="com.tibco.be.views.ui.*"
+	textAlign="left"
+    selectable="false"
+    styleName="axisLabel"
+    truncateToFit="true"
+>
+    <mx:Script>
+        <![CDATA[
+        	import mx.charts.AxisRenderer;
+        	import com.tibco.be.views.user.components.chart.BEVHorizontalBarChart;
+        	import com.tibco.be.views.user.components.chart.BEVCartesianChart;
+        	
+        	private var _parentChart:BEVCartesianChart;
+        	private var _fontSize:Number;
+        	private var _isStyled:Boolean = false;
+			
+			override public function set data(value:Object):void{
+        		text = (value is String ? value:value.text) + (_isStyled ? " ":""); //label is cut off for stylized fonts, space pad as workaround
+        	}
+			
+        	public function configure(parentChart:BEVCartesianChart, numChartLabels:Number, fontSize:int, fontColor:uint, fontStyles:String, placement:String, rotation:Number, skipFactor:Number):void{
+        		_parentChart = parentChart;
+        		_fontSize = fontSize;
+        		        		
+        		var fontStyle:String = fontStyles.indexOf("italic") >= 0 ? "italic":"normal";
+				var fontWeight:String = fontStyles.indexOf("bold") >= 0 ? "bold":"normal";
+				
+				_isStyled = fontStyle != "normal" || fontWeight != "normal";
+				
+        		setStyle("fontSize", _fontSize);
+        		setStyle("color", fontColor);
+        		setStyle("fontStyle", fontStyle);
+        		setStyle("fontWeight", fontWeight);
+        	}
+        	        	
+        	override protected function updateDisplayList(unscaledWidth:Number, unscaledHeight:Number):void{
+        		if(parent == null){ return; } //bug https://bugs.adobe.com/jira/browse/FLEXDMV-1695
+        		super.updateDisplayList(unscaledWidth, unscaledHeight);
+        	}
+        	
+        ]]>
+    </mx:Script>
+</mx:Label>

@@ -1,0 +1,131 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>     Custom Functions Example
+
+- TIBCO BusinessEvents&reg; Examples
+</title>
+<meta http-equiv="Content-type" content="text/html; charset=iso-8859-1" />
+<meta http-equiv="Content-Language" content="en-us" />
+<link rel="Shortcut Icon" href="../../_resources/icon.gif" type="image/gif" />
+<style type="text/css" media="all">@import "../../_resources/examples.css";</style>
+<script type="text/javascript" src="../../_resources/examples.js"></script>
+<script type="text/javascript">
+function buildForms() {
+ var form;
+
+
+ SendEventForm.setServer("http://localhost:8108");
+
+
+ form = SendEventForm.get("addCustomerForm");
+ form.setDestinationPath("/Channels/customer/addCustomer");
+ form.setEventPath("/Events/addCustomer");
+ form.addProperty("name", "Bob");
+ form.addProperty("age", "31");
+ form.build();
+
+
+ form = SendEventForm.get("getCustomerForm");
+ form.setDestinationPath("/Channels/customer/getCustomer");
+ form.setEventPath("/Events/getCustomer");
+ form.addProperty("name", "Bob");
+ form.build();
+
+
+}
+</script>
+</head>
+<body onLoad="buildForms()">
+
+
+<h1>Custom Functions Example</h1>
+
+
+<h2>Purpose of This Example</h2>
+
+<p>The purpose of this example is show how to use a custom function in TIBCO BusinessEvents:</p>
+<ul>
+<li>The first event addCustomer creates a customer which causes a customer concept to get created in a rule.</li>
+<li>The second event getCustomer retrieves the serialized concept in xml form. The serialization is done inside a custom function.</li>
+</ul>
+
+<p>This example is used in the <i>TIBCO BusinessEvents&reg; Getting Started</i> guide. If you are new to TIBCO BusinessEvents, follow the tutorials in this guide to learn the basics by building up this example from scratch.
+</p>
+
+<h2>How to Run the Example</h2>
+<ol>
+
+
+<li>
+<p>Open a command window and at the command prompt, start the TIBCO BusinessEvents engine using the following command. </p>
+
+<pre class="commands">
+cd <i>BE_HOME</i>/examples/standard/CustomFunctionsExample
+<i>BE_HOME</i>/bin/be-engine --propFile <i>BE_HOME</i>/bin/be-engine.tra -u default -c CustomFunctionsExample/Deployments/customfunctions.cdd customfunctions.ear
+</pre>
+
+<p>Adapt the command as needed, for example, if you have customized the example project, or are running it from a different directory.</p>
+</li>
+
+
+<li>
+<p>Create a customer and give a name and age.</p>
+
+<form id="addCustomerForm"></form>
+
+<p>In the command window you see a message like this:
+<span class="logs">#### Created customer Bob.</span></p>
+</li>
+
+
+<li>
+<p>Now get the customer xml. In the Id field, enter the one of the customer names you specified above.  Then click Send.</p>
+
+<form id="getCustomerForm"></form>
+
+<p>In the command window you see messages like this<br><br>
+<span class="logs">Received a getCustomer with ID:Bob<br>
+Customer XML:<?xml version="1.0" encoding="UTF-8"?><br>
+&lt;ns0:customer xmlns:ns0="http://www.tibco.com/be/person" Id="4" extId="Bob"&gt;<br>
+    &lt;name&gt;Bob&lt;/name&gt;<br>
+    &lt;age&gt;31&lt;/age&gt;<br>
+&lt;/ns0:customer&gt;<br></span></p>
+</li>
+
+
+<li>
+<p>Rules in the project react to various inputs depending on current facts in the Rete network. You can try the following.</p>
+
+<table>
+<tr>
+<th>Action</th>
+<th>Message</th>
+</tr>
+<tr>
+<td>In the /Events/addCustomer form, enter the same name two times.</td>
+<td><pre class="logs">#### Customer for this ID already exists.</pre></td>
+</tr>
+<tr>
+<td>In the /Events/getCustomer form, enter a different customer name which has not been added above.</td>
+<td><pre class="logs">#### Customer ID is not valid</pre></td>
+</tr>
+</table>
+</li>
+
+<li>
+<p> To reset the data, restart the engine at the command line.</p>
+</li>
+
+</ol>
+
+
+
+<div class="footer">
+<p>TIBCO BusinessEvents&reg; 5.6<br />
+Copyright&copy; 2004-2019 TIBCO Software Inc. All rights reserved.</p>
+</div>
+</body>
+</html>

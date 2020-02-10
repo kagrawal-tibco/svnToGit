@@ -1,0 +1,218 @@
+/**
+ * @description 
+ */
+WebStudio.Core.Concepts.DataSources.WS_C_TemporaryReturnData rulefunction WebStudio.Core.RuleFunctions.Actions.Lifecycle.AuditTrail.WS_RF_FetchAuditTrail {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object servletRequest;
+		WebStudio.Security.Authn.Concepts.WS_C_LoggedInUser loggedInUser;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.Lifecycle.AuditTrail.WS_RF_FetchAuditTrail");
+		
+		String responseMessage = null;
+		String errorCode = null;
+		int recordCount = 0;
+		int responseStatus = 0;
+		WS_C_ResponseData responseData = null;
+		Object logContent = null;
+		boolean isLogFile = false;
+
+		if (!WS_RF_CheckHTTPMethod(servletRequest, "GET")) {
+			responseStatus = -1;
+			errorCode = "ERR_5101";
+			responseMessage = "Invalid HTTP Method, expect method is [GET].";
+		} else {
+			String userName = HTTP.Servlet.Request.getRequestParameter(servletRequest, "userName");
+			String projectName = HTTP.Servlet.Request.getRequestParameter(servletRequest, "projectName");
+			String artifactPath = HTTP.Servlet.Request.getRequestParameter(servletRequest, "artifactPath");
+			String afterDate = HTTP.Servlet.Request.getRequestParameter(servletRequest, "afterDate");
+			String beforeDate = HTTP.Servlet.Request.getRequestParameter(servletRequest, "beforeDate");
+			String artifactType = HTTP.Servlet.Request.getRequestParameter(servletRequest, "artifactType");
+			String actionType = HTTP.Servlet.Request.getRequestParameter(servletRequest, "actionType");
+			String logFile = HTTP.Servlet.Request.getRequestParameter(servletRequest, "logFile");
+			if (logFile != null && String.equals(logFile, "true")) {
+				isLogFile = true;
+			}
+			
+			if (!WS_RF_IsAdminRole(loggedInUser)) {
+				Log.log(LOGGER, "Debug", "User does not have admin role to view all audit trail. So filtering by user name [%s]", loggedInUser.username);
+				userName = loggedInUser.username;
+			}
+		
+			boolean hasAccess = true;
+			if (projectName != null) {
+				String[] roles = Instance.PropertyArray.toArrayString(loggedInUser.roles);
+				String subscriptionId = null;
+				if (loggedInUser.jwtToken != null) subscriptionId = loggedInUser.jwtToken.sbsc;
+				hasAccess = RMS.Authorization.ensureAccess(projectName, subscriptionId, roles, null, "PROJECT", "checkout");
+			}
+			
+			if (!hasAccess) {
+				Log.log(LOGGER, "Debug", "Access Denied to user %s to fetch audit trail for project %s.", loggedInUser.username, projectName);
+				responseStatus = -1;
+				responseMessage = String.format("Access Denied to fetch audit trail for project [%s].", projectName);
+				errorCode = "ERR_3191";
+			} else {
+				boolean hasFilter = false;
+				if (userName != null || projectName != null || artifactPath != null || afterDate != null || beforeDate != null || actionType != null) {
+					hasFilter = true;
+				}
+			
+				boolean isProjectDeleted = false;
+				if (projectName != null) {
+					String userProjectExtId = WS_RF_CreateUserArtifactExtId(null, null, projectName, userName, null, null);
+					WebStudio.Core.Concepts.WS_C_UserProject userProject = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(userProjectExtId, false, "/WebStudio/Core/Concepts/WS_C_UserProject");
+					if (userProject != null) isProjectDeleted = userProject.softDelete;
+				}
+				Object[] auditTrailResults = {};
+				
+				if (!isProjectDeleted) {
+					// form the query based on the available filters
+					Object auditTrailQueryBuffer = String.createBuffer(0);
+					Object queryParameters = String.createBuffer(0);
+					
+					String queryArgsKey = "Query_Args_AuditTrail_" + System.nanoTime();
+					Util.HashMap.createMap(queryArgsKey);
+					
+					String.append(auditTrailQueryBuffer, "select at from /WebStudio/Core/Concepts/WS_C_AuditTrail at");
+					if (hasFilter) String.append(auditTrailQueryBuffer, " where");
+					if (userName != null && !String.equals(userName, "")) {
+						String.append(auditTrailQueryBuffer, " userName = $userName");
+						Util.HashMap.putObject(queryArgsKey, "userName", userName);
+						String.append(queryParameters, "userName="+userName);
+					}
+					if (projectName != null && !String.equals(projectName, "")) {
+						if (!String.endsWith(String.convertBufferToString(auditTrailQueryBuffer), "where")) String.append(auditTrailQueryBuffer, " and");
+						String.append(auditTrailQueryBuffer, " projectName = $projectName");
+						Util.HashMap.putObject(queryArgsKey, "projectName", projectName);
+						String.append(queryParameters, "projectName="+projectName);
+					}
+					if (artifactPath != null && !String.equals(artifactPath, "")) {
+						if (!String.endsWith(String.convertBufferToString(auditTrailQueryBuffer), "where")) String.append(auditTrailQueryBuffer, " and");
+						String.append(auditTrailQueryBuffer, " artifactPath = $artifactPath");
+						Util.HashMap.putObject(queryArgsKey, "artifactPath", artifactPath);
+						String.append(queryParameters, "artifactPath="+artifactPath);
+					}
+					if (artifactType != null && !String.equals(artifactType, "")) {
+						if (!String.endsWith(String.convertBufferToString(auditTrailQueryBuffer), "where")) String.append(auditTrailQueryBuffer, " and");
+						String.append(auditTrailQueryBuffer, " artifactType = $artifactType");
+						Util.HashMap.putObject(queryArgsKey, "artifactType", artifactType);
+						String.append(queryParameters, "artifactType="+artifactType);
+					}
+					if (afterDate != null && !String.equals(afterDate, "")) {
+						long afterDateLong = Number.longValue(afterDate, 10);
+						DateTime afterDateTime = DateTime.parseLong(afterDateLong);
+						
+						if (!String.endsWith(String.convertBufferToString(auditTrailQueryBuffer), "where")) String.append(auditTrailQueryBuffer, " and");
+						String.append(auditTrailQueryBuffer, " actionTime >= $afterDateTime");
+						Util.HashMap.putObject(queryArgsKey, "afterDateTime", afterDateTime);
+						String.append(queryParameters, "afterDateTime="+afterDateTime);
+					}
+					if (beforeDate != null && !String.equals(beforeDate, "")) {
+						long beforeDateLong = Number.longValue(beforeDate, 10);
+						DateTime beforeDateTime = DateTime.parseLong(beforeDateLong);
+						
+						if (!String.endsWith(String.convertBufferToString(auditTrailQueryBuffer), "where")) String.append(auditTrailQueryBuffer, " and");
+						String.append(auditTrailQueryBuffer, " actionTime <= $beforeDateTime");
+						Util.HashMap.putObject(queryArgsKey, "beforeDateTime", beforeDateTime);
+						String.append(queryParameters, "beforeDateTime="+beforeDateTime);
+					}
+					if (actionType != null && !String.equals(actionType, "")) {
+						if (!String.endsWith(String.convertBufferToString(auditTrailQueryBuffer), "where")) String.append(auditTrailQueryBuffer, " and");
+						String[] actionTypes = {actionType};
+						if (String.indexOfString(actionType, 0, ",") != -1) {
+							actionTypes = String.split(actionType, ",");
+						}
+						Log.log(LOGGER, "Debug", "ActionType[%s] and ActionTypes Count[%s]", actionType, actionTypes@length);
+						
+						String.append(auditTrailQueryBuffer, " (");
+						String.append(queryParameters, " (");
+						for (int i=0; i<actionTypes@length; i++) {
+							String.append(auditTrailQueryBuffer, "actionType = \"" + actionTypes[i] + "\"");
+							String.append(queryParameters, "actionType = \"" + actionTypes[i] + "\"");
+							if (i+1 < actionTypes@length) {
+								String.append(auditTrailQueryBuffer, " or ");
+								String.append(queryParameters, " or ");
+							}
+						}
+						String.append(auditTrailQueryBuffer, " )");
+						String.append(queryParameters, " )");
+					}
+					
+					String.append(auditTrailQueryBuffer, " order by actionTime desc");
+					
+					String auditTrailQuery = String.convertBufferToString(auditTrailQueryBuffer);
+					Log.log(LOGGER, "Debug", "Executing Audit Trail Query[%s] with parameters[%s]", auditTrailQuery, String.convertBufferToString(queryParameters));
+					
+					Object auditTrailResultList = WS.Common.Query.executeQuery("WS-Enquiry", auditTrailQuery, Util.HashMap.getMap(queryArgsKey), false);
+					auditTrailResults = WS.Common.Query.listToArray(auditTrailResultList);
+					
+					// finally cleanup
+					Util.HashMap.deleteMap(queryArgsKey);
+					String.clearBuffer(auditTrailQueryBuffer);
+					String.clearBuffer(queryParameters);
+				}
+			    
+			    if (!isLogFile) responseData = Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/WS_C_ResponseData");
+			    
+			    Object logBuffer = String.createBuffer(0);
+			    if (auditTrailResults != null) {
+			    		Log.log(LOGGER, "Debug", "Total items in Audit Trail - %s", auditTrailResults@length);
+			    		if (auditTrailResults@length > 0) {
+			    			for (int i=0; i<auditTrailResults@length; i++) {
+			    				if (auditTrailResults[i] instanceof WS_C_AuditTrail) {
+			    					WS_C_AuditTrail auditTrail = auditTrailResults[i];
+			    					
+			    					isProjectDeleted = false;
+			    					if (auditTrail.projectName != null && !String.equals(auditTrail.projectName, "")) {
+				    					String userProjectExtId = WS_RF_CreateUserArtifactExtId(null, null, auditTrail.projectName, userName, null, null);
+									WebStudio.Core.Concepts.WS_C_UserProject userProject = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(userProjectExtId, false, "/WebStudio/Core/Concepts/WS_C_UserProject");
+									if (userProject != null) isProjectDeleted = userProject.softDelete;
+			    					}
+			    					
+			    					if (!isProjectDeleted) {
+				    					if (isLogFile) {
+				    						String.append(logBuffer, DateTime.format(auditTrail.actionTime, "yyyy MMM dd HH:mm:ss.SSS z") + " ");
+				    						String.append(logBuffer, "[" + auditTrail.userName +"] ");
+				    						String.append(logBuffer, "[" + auditTrail.actionType +"] ");
+				    						if (auditTrail.projectName != null) String.append(logBuffer, "[" + auditTrail.projectName +"] ");
+				    						if (auditTrail.artifactPath != null) String.append(logBuffer, "[" + auditTrail.artifactPath + "." + auditTrail.artifactType +"] ");
+				    						if (auditTrail.comment != null) String.append(logBuffer, auditTrail.comment);
+				    						String.append(logBuffer, "\n");
+				    					} else {
+				    						recordCount++;
+					    					long actionTime = DateTime.getTimeInMillis(auditTrail.actionTime);
+						    				WS_C_AuditTrailDataSourceRecord auditTrailDSR = Instance.createInstance("xslt://{{/WebStudio/Core/Concepts/DataSources/Records/WS_C_AuditTrailDataSourceRecord}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"2.0\"><xsl:param name=\"auditTrail\"/><xsl:param name=\"actionTime\"/><xsl:template name=\"Function\" match=\"/\"><createObject><object><xsl:if test=\"$auditTrail/userName\"><userName><xsl:value-of select=\"$auditTrail/userName\"/></userName></xsl:if><xsl:if test=\"$auditTrail/projectName\"><projectName><xsl:value-of select=\"$auditTrail/projectName\"/></projectName></xsl:if><xsl:if test=\"$auditTrail/artifactPath\"><artifactPath><xsl:value-of select=\"$auditTrail/artifactPath\"/></artifactPath></xsl:if><xsl:if test=\"$auditTrail/actionType\"><actionType><xsl:value-of select=\"$auditTrail/actionType\"/></actionType></xsl:if><actionTime><xsl:value-of select=\"$actionTime\"/></actionTime><xsl:if test=\"$auditTrail/comment\"><comment><xsl:value-of select=\"$auditTrail/comment\"/></comment></xsl:if><xsl:if test=\"$auditTrail/artifactType\"><artifactType><xsl:value-of select=\"$auditTrail/artifactType\"/></artifactType></xsl:if></object></createObject></xsl:template></xsl:stylesheet>");
+						    				WS_C_AbstractDataSourceRecord abstractDSRecord = auditTrailDSR;
+										Instance.PropertyArray.appendContainedConcept(responseData.record, abstractDSRecord, 1L);
+				    					}
+			    					}
+			    				}
+			    			}
+					} else {
+						//TODO - Commented for now, check audittrail list on UI explicitly
+//						responseMessage = "No audit trail entries found.";
+						if (responseData == null) responseData = Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/WS_C_ResponseData");
+					}
+			    }
+			    
+			    logContent = String.getBytes(String.convertBufferToString(logBuffer), "utf-8");
+			    
+			    String.clearBuffer(logBuffer);
+			}
+		}
+		
+		WS_C_TemporaryReturnData tempReturnData =  WS_RF_CreateTemporaryReturnData(responseStatus, recordCount, errorCode, responseMessage, responseData);
+		if (isLogFile && logContent != null) {
+			tempReturnData.contentType = "application/octet-stream";
+			tempReturnData.contentSize = WS.Common.byteArrayLength(logContent);
+			tempReturnData.contentDisposition = "attachment;filename*=utf-8''" + HTTP.encodeURL("audit-trail.log", "utf-8");
+			tempReturnData.serializedData = RMS.Util.encodeBase64(logContent);
+		}
+		
+		return tempReturnData;
+	}
+}

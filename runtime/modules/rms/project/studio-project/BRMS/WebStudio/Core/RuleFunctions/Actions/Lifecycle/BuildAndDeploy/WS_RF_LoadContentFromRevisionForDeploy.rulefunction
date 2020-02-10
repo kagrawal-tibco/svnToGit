@@ -1,0 +1,157 @@
+/**
+ * @description 
+ */
+void rulefunction WebStudio.Core.RuleFunctions.Actions.Lifecycle.BuildAndDeploy.WS_RF_LoadContentFromRevisionForDeploy {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		WebStudio.Core.Concepts.WS_C_UserArtifactRevision referencedRevision;
+		String projectName;
+		String sharedLocation;
+		String scsRootURL;
+		String userName;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.Lifecycle.BuildAndDeploy.WS_RF_LoadContentFromRevisionForDeploy");
+		
+		WS_C_UserArtifact parentUserArtifact = WS_RF_IsUserArtifact(referencedRevision.parentArtifactId, referencedRevision.parentArtifactType);
+		if (parentUserArtifact != null) {
+			String artifactPath = parentUserArtifact.artifactPath;
+			String artifactExtn = parentUserArtifact.artifactFileExtn;
+			
+			Concept artifactContentsConcept = WS_RF_GetArtifactContentInstance(referencedRevision.artifactContentsId, referencedRevision.parentArtifactType);
+			Object artifactEModel = WS_RF_CreateEMFObjectForArtifact(artifactContentsConcept, parentUserArtifact, userName);
+			
+			Object reusableBuffer = String.createBuffer(0);
+			String pathSeparator = "/";
+			
+			String projectPath = null;
+			boolean removeFolders = true;
+			
+			String destinationFilePath = null;
+			Object serializedByteData = null;
+			if (String.equals(artifactExtn, "ruletemplate") || String.equals(artifactExtn, "ruletemplateinstance")) {
+				serializedByteData = WS.RTI.serializeRuleTemplateInstance(artifactEModel);
+				
+				// Shared location path
+				reusableBuffer = String.append(reusableBuffer, sharedLocation);
+				reusableBuffer = String.append(reusableBuffer, pathSeparator);
+				reusableBuffer = String.append(reusableBuffer, projectName);	
+				reusableBuffer = String.append(reusableBuffer, artifactPath);	
+				reusableBuffer = String.append(reusableBuffer, ".");	
+				reusableBuffer = String.append(reusableBuffer, artifactExtn);	
+				
+				destinationFilePath = String.convertBufferToString(reusableBuffer);
+				String.clearBuffer(reusableBuffer);
+				
+			} else if (String.equals(artifactExtn, "rulefunctionimpl")) {
+				serializedByteData = WS.Decision.serializeDecisionTableEMFObject(artifactEModel);
+				
+				reusableBuffer = String.append(reusableBuffer, scsRootURL);
+				reusableBuffer = String.append(reusableBuffer, pathSeparator);
+				reusableBuffer = String.append(reusableBuffer, projectName);
+				projectPath = String.convertBufferToString(reusableBuffer);
+				
+				reusableBuffer = String.append(reusableBuffer, artifactPath);	
+				reusableBuffer = String.append(reusableBuffer, ".");	
+				reusableBuffer = String.append(reusableBuffer, artifactExtn);		
+				
+				destinationFilePath = String.convertBufferToString(reusableBuffer);
+				String.clearBuffer(reusableBuffer);
+				
+				removeFolders = false;
+			}
+			
+			if (serializedByteData == null) {
+				Log.log(LOGGER, "Debug", "Content Data for artifact[%s] could not be retrieved.", artifactPath);
+			} else {
+				Log.log(LOGGER, "Debug", "Destination path for artifact[%s] is [%s]", artifactPath, destinationFilePath);
+				
+				if (File.createFolders(sharedLocation, projectName + artifactPath)) {
+					Log.log(LOGGER, "Debug", "Destination file path created");
+					
+					Object fileWriter = File.openFile(destinationFilePath, "rw");
+					try {
+						File.fileWriteBytes(fileWriter, serializedByteData);
+						Log.log(LOGGER, "Info", "Artifact [%s] successfully copied to location [%s]", artifactPath, destinationFilePath);
+					} catch (Exception e) {
+						Log.logException(LOGGER, "Error", "Copying artifact [%s] to location [%s] failed.", e , {e@stackTrace}, artifactPath, destinationFilePath);
+					} finally {
+						File.fileClose(fileWriter);
+					}
+				}
+			}
+			
+			if (String.equals(artifactExtn, "rulefunctionimpl")) {
+				//Extended class path
+				String customLibsPath = System.getSystemPropertyAsString("ws.projects.customLib.location", null);	
+				reusableBuffer = String.append(reusableBuffer, customLibsPath);
+				reusableBuffer = String.append(reusableBuffer, pathSeparator);
+				reusableBuffer = String.append(reusableBuffer, projectName);
+				String libPath = String.convertBufferToString(reusableBuffer);
+				String.clearBuffer(reusableBuffer);				
+				Log.log(LOGGER, "Debug", "Libray path in lib dir %s", libPath);
+				String extendedClasspath = 
+					Approval.Rules.RuleFunctions.ArtifactRuleFunctions.AMS_RF_CreateClasspath(libPath);					
+				//Only used in dev setup
+				if (extendedClasspath == null || String.length(extendedClasspath) == 0) {
+					extendedClasspath = System.getSystemPropertyAsString("build.extended.classpath", "");
+				}	
+				Log.log(LOGGER, "Debug", "Extended Classpath - %s ", extendedClasspath);
+				//Output directory					
+				String.append(reusableBuffer, sharedLocation);
+				String.append(reusableBuffer, pathSeparator);
+				String.append(reusableBuffer, projectName);
+				String outputDirectory = String.convertBufferToString(reusableBuffer);
+				//Classes output directory
+				String.append(reusableBuffer, pathSeparator);
+				String.append(reusableBuffer, "Decision_Tables");					
+				String classesOutputDirectory = String.convertBufferToString(reusableBuffer);		
+				String.clearBuffer(reusableBuffer);
+				//Ear path	
+				reusableBuffer = String.append(reusableBuffer, outputDirectory);
+				reusableBuffer = String.append(reusableBuffer, pathSeparator);
+				reusableBuffer = String.append(reusableBuffer, projectName);
+				reusableBuffer = String.append(reusableBuffer, ".ear");					
+				String earPath = String.convertBufferToString(reusableBuffer);
+				String.clearBuffer(reusableBuffer);
+				//Project Library Path
+				String projectLibsPath = System.getSystemPropertyAsString("ws.projects.projectLib.location", null);	
+				reusableBuffer = String.append(reusableBuffer, projectLibsPath);
+				reusableBuffer = String.append(reusableBuffer, pathSeparator);
+				reusableBuffer = String.append(reusableBuffer, projectName);
+				String plPath = String.convertBufferToString(reusableBuffer);
+				String.clearBuffer(reusableBuffer);					
+				Log.log(LOGGER, "Debug", "Project Libray path dir %s", plPath);
+				
+				String projectLibraryPath = WS_RF_CreateProjectLibraryPaths(plPath);					
+				Log.log(LOGGER, "Debug", "Project Library Path %s", projectLibraryPath);
+	
+				// if to use legacy compilation
+				boolean useLegacyCompilation = System.getSystemPropertyAsBoolean("be.codegen.useLegacyCompilation", false);				
+				try {
+					//Generate class
+					String classesBuiltMsg = RMS.CodeGeneration.generateClass(projectPath, earPath, classesOutputDirectory, artifactPath + "." + artifactExtn, extendedClasspath, useLegacyCompilation, projectLibraryPath);
+					if (classesBuiltMsg == null) {
+						Log.log(LOGGER, "Debug", "Class generation for Artifact [%s] successfully to shared location", artifactPath);
+					} else {
+						Log.log(LOGGER, "Error", "Class generation for Artifact [%s] failed with error [%s]. Please check log for errors.", artifactPath, classesBuiltMsg);
+					}
+				} catch (Exception e) {
+					Log.logException(LOGGER, "Error", "Deployment for artifact [%s] failed", e, artifactPath);
+				}
+				
+				// finally clean up the DT file added
+				if (File.fileExists(destinationFilePath)) {
+					File.fileRemove(destinationFilePath);
+					Log.log(LOGGER, "Debug", "Deleting the temporary file[%s] created for class generation.", destinationFilePath);
+				} else {
+					Log.log(LOGGER, "Debug", "File[%s] does not exist.", destinationFilePath);
+				}
+			}
+		} else {
+			Log.log(LOGGER, "Debug", "Parent Artifact associated to revision[%s] not found.", referencedRevision@extId); 
+		}
+	}
+}

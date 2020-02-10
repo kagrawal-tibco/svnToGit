@@ -1,0 +1,940 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.2"?>
+<plugin>  
+	<extension-point id="tableAnalyzerExtension" name="Decision Table Analyzer Extension" schema="schema/tableAnalyzerExtension.exsd"/>
+    <extension
+         point="org.eclipse.ui.views.properties.tabbed.propertyTabs">
+      <propertyTabs
+            contributorId="com.tibco.cep.studio.decision.table.propertyContributor">
+         <propertyTab
+               category="default"
+               id="decision.table.propertyTab.General"
+               label="General">
+         </propertyTab>
+         <propertyTab
+               afterTab="decision.table.propertyTab.General"
+               category="default"
+               id="decision.table.propertyTab.Rule"
+               label="Rule">
+         </propertyTab>
+         <propertyTab
+               afterTab="decision.table.propertyTab.Rule"
+               category="default"
+               id="decision.table.propertyTab.Cell"
+               label="Cell">
+         </propertyTab>
+      </propertyTabs>
+   </extension>
+   <!-- Move these declarations to the cep.studio.decision.table.ui plugin to avoid conflict with shared SB/BE plugin
+   <extension
+         point="org.eclipse.ui.preferencePages">
+      <page
+            category="com.tibco.cep.studio.ui.preference.page.designer"
+            class="com.tibco.cep.studio.decision.table.preferences.DTPreferencePage"
+            id="com.tibco.cep.decision.table.dtPreferencePage"
+            name="Decision Table">
+      </page>
+      <page
+            category="com.tibco.cep.decision.table.dtPreferencePage"
+            class="com.tibco.cep.studio.decision.table.preferences.DTAppearancePreferencePage"
+            id="com.tibco.cep.decision.table.dtAppearancePage"
+            name="Appearance">
+      </page>
+       <page
+            category="com.tibco.cep.decision.table.dtPreferencePage"
+            class="com.tibco.cep.studio.decision.table.preferences.DTAnalyzerPreferencePage"
+            id="com.tibco.cep.decision.table.dtAnalyzer"
+             name="Analyzer">
+      </page>
+       <page
+             category="com.tibco.cep.decision.table.dtPreferencePage"
+             class="com.tibco.cep.studio.decision.table.preferences.DTDomainPreferencePage"
+             id="com.tibco.cep.decision.table.dtdomain"
+             name="Domain Model">
+       </page>
+   </extension>
+   -->
+   <extension
+         point="org.eclipse.core.runtime.preferences">
+      <initializer
+            class="com.tibco.cep.studio.decision.table.preferences.DTPreferenceInitializer">
+      </initializer>
+   </extension>
+
+    
+    
+     <extension
+        point="org.eclipse.ui.ide.markerResolution">
+      <markerResolutionGenerator
+           class="com.tibco.cep.studio.decision.table.constraintpane.DecisionTableAnalysisProblemResolutionProvider"
+           markerType="com.tibco.cep.decision.table.ui.analyzeProblem">
+      </markerResolutionGenerator>
+   </extension>
+   <extension
+        id="analyzeProblem"
+        name="Decision table Analyze Problems"
+        point="org.eclipse.core.resources.markers">
+      <super
+           type="org.eclipse.core.resources.problemmarker">
+      </super>
+      <persistent
+           value="false">
+      </persistent>
+   </extension>
+    <extension
+         id="syntaxProblem"
+         name="Decision table Syntax Errors"
+         point="org.eclipse.core.resources.markers">
+       <super
+            type="com.tibco.cep.studio.core.validationProblem">
+       </super>
+       <persistent
+            value="true">
+       </persistent>
+       <attribute
+            name="com.tibco.cep.decision.table.trs">
+       </attribute>
+       <attribute
+            name="com.tibco.cep.decision.table.trv">
+       </attribute>
+    </extension> 
+     <extension
+        id="analyzeCombinationProblem"
+        name="Decision table Rule Combination Problem"
+        point="org.eclipse.core.resources.markers">
+      <super
+           type="com.tibco.cep.decision.table.ui.analyzeProblem">
+      </super>
+      <persistent
+           value="false">
+      </persistent>
+   </extension>
+     <extension
+        id="analyzeGeneralProblem"
+        name="Decision table Rule Problem"
+        point="org.eclipse.core.resources.markers">
+      <super
+           type="com.tibco.cep.decision.table.ui.analyzeProblem">
+      </super>
+      <persistent
+           value="false">
+      </persistent>
+   </extension>
+      <extension
+         point="com.tibco.cep.studio.core.projectResourceValidator">
+      <validator
+            Validator="com.tibco.cep.decision.table.validators.DecisionTableResourceSyntaxValidator"
+            extensions="rulefunctionimpl">
+      </validator>
+   </extension>
+   <extension
+         point="org.eclipse.ui.views.properties.tabbed.propertyContributor">
+      <propertyContributor
+            contributorId="com.tibco.cep.studio.decision.table.propertyContributor"
+            labelProvider="com.tibco.cep.studio.decision.table.ui.properties.DecisionTablePropertiesLabelProvider">
+         <propertyCategory
+               category="default"></propertyCategory>
+      </propertyContributor>
+   </extension>
+   <extension
+         point="org.eclipse.ui.views.properties.tabbed.propertySections">
+      <propertySections
+            contributorId="com.tibco.cep.studio.decision.table.propertyContributor">
+         <propertySection
+               class="com.tibco.cep.studio.decision.table.ui.properties.DTGeneralPropertySection"
+               filter="com.tibco.cep.studio.decision.table.ui.properties.DTGeneralPropertyFilter"
+               id="decision.table.general.propertySection"
+               tab="decision.table.propertyTab.General">
+            <input
+                  type="com.tibco.cep.decisionproject.ontology.AccessControlCandidate">
+            </input>
+         </propertySection>
+         <propertySection
+               afterSection="decision.table.general.propertySection"
+               class="com.tibco.cep.studio.decision.table.ui.properties.DTRulePropertySection"
+               filter="com.tibco.cep.studio.decision.table.ui.properties.DTRulePropertyFilter"
+               id="decision.table.rule.propertySection"
+               tab="decision.table.propertyTab.Rule">
+            <input
+                  type="com.tibco.cep.decisionproject.ontology.AccessControlCandidate">
+            </input>
+         </propertySection>
+         <propertySection
+               afterSection="decision.table.rule.propertySection"
+               class="com.tibco.cep.studio.decision.table.ui.properties.DTCellPropertySection"
+               filter="com.tibco.cep.studio.decision.table.ui.properties.DTRulePropertyFilter"
+               id="decision.table.cell.propertySection"
+               tab="decision.table.propertyTab.Cell">
+            <input
+                  type="com.tibco.cep.decisionproject.ontology.AccessControlCandidate">
+            </input>
+         </propertySection>
+      </propertySections>
+   </extension>
+ <extension
+         point="org.eclipse.ui.contexts">
+      <context
+            description="Decision Table editor scope"
+            id="com.tibco.cep.decision.table.ui.dteditorcontext"
+            name="Decision Table editor scope"
+            parentId="org.eclipse.ui.contexts.window">
+      </context>
+   </extension>
+      <extension
+   		point="org.eclipse.ui.bindings">
+   		<key
+            sequence="M1+="
+            contextId="com.tibco.cep.decision.table.ui.dteditorcontext"
+            commandId="com.tibco.cep.decision.table.ui.zoomin"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration">
+        </key>
+   		<key
+            sequence="M1+-"
+            contextId="com.tibco.cep.decision.table.ui.dteditorcontext"
+            commandId="com.tibco.cep.decision.table.ui.zoomout"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration">
+        </key>
+   </extension>
+   <extension
+         point="org.eclipse.ui.commands">
+	   <command
+	         name="Increase Size"
+	         categoryId="org.eclipse.ui.category.navigate"
+	         description="Increase Size of Decision Table Editor"
+	         id="com.tibco.cep.decision.table.ui.zoomin">
+	   </command>
+	   <command
+	         name="Decrease Size"
+	         categoryId="org.eclipse.ui.category.navigate"
+	         description="Decrease Size of Decision Table Editor"
+	         id="com.tibco.cep.decision.table.ui.zoomout">
+	   </command>
+   </extension>
+	<!--
+   <extension-point id="tableAnalyzerExtension" name="Decision Table Analyzer Extension" schema="schema/tableAnalyzerExtension.exsd"/>
+   <extension
+         point="org.eclipse.ui.editors">
+      <editor
+            class="com.tibco.cep.decision.table.editors.DecisionTableEditor"
+            contributorClass="com.tibco.cep.decision.table.editors.DecisionTableEditorContributor"
+            default="true"
+            extensions="rulefunctionimpl"
+            icon="icons/decisiontablerulefunctions_16x16.png"
+            id="com.tibco.cep.studio.ui.editors.decisiontableeditor"
+            name="Decision Table Editor">
+      </editor>
+   </extension>
+   <extension
+         point="org.eclipse.ui.views">
+        <view
+              category="com.tibco.cep.studio.ui.category"
+              class="com.tibco.cep.decision.table.constraintpane.DecisionTableAnalyzerView"
+              icon="icons/analyzer16x16.png"
+              id="com.tibco.cep.decision.table.constraintpane.decisionTableAnalyzerView"
+              name="Table Analyzer">
+        </view>
+   </extension>
+   <extension
+         point="org.eclipse.ui.perspectives">
+      <perspective
+            class="com.tibco.cep.decision.table.perspective.DecisionTablePerspective"
+            icon="icons/deploy_decision_table_16x16.png"
+            id="com.tibco.cep.decision.table.perspective"
+            name="BusinessEvents Studio Decision Table">
+      </perspective>
+   </extension>
+   <extension
+         point="org.eclipse.ui.popupMenus">
+      <objectContribution
+            id="com.tibco.cep.projectexplorer.navigation.dtObjectContribution"
+            objectClass="com.tibco.cep.decisionproject.ontology.Implementation">
+         <action
+               class="com.tibco.cep.decision.table.actions.ExportActionDelegate"
+               enablesFor="1"
+               icon="icons/export_16x16.png"
+               id="com.tibco.cep.projectexplorer.navigation.exportdtaction"
+               label="Export..."
+               menubarPath="group.edit"
+               style="push">
+         </action>
+         <!action
+               class="com.tibco.cep.decision.table.actions.DeleteImplementationActionDelegate"
+               icon="icons/delete.gif"
+               id="com.tibco.cep.projectexplorer.navigation.newdtaction"
+               label="Delete"
+               menubarPath="group.edit"
+               style="push">
+         </action-->
+         <!--action
+               class="com.tibco.cep.decision.table.actions.RenameImplementation"
+               enablesFor="1"
+               icon="icons/rename.gif"
+               id="com.tibco.cep.decision.table.implementation.rename"
+               label="Rename..."
+               menubarPath="group.edit"
+               style="push">
+         </action-->
+         <!--action
+               class="com.tibco.cep.decision.table.actions.DeployDTActionDelegate"
+               enablesFor="1"
+               icon="icons/deploy_decision_table_16x16.png"
+               id="com.tibco.cep.decision.table.deploytableaction"
+               label="Deploy"
+               menubarPath="group.actions"
+               style="push">
+         </action-->
+         <!--action
+               class="com.tibco.cep.decision.table.actions.ValidateTableActionDelegate"
+               enablesFor="1"
+               icon="icons/validation_16x16.png"
+               id="com.tibco.cep.decision.table.validatetableaction"
+               label="Validate"
+               menubarPath="group.actions"
+               style="push">
+         </action-->
+         <!--action
+               class="com.tibco.cep.decision.table.actions.UnlockAction"
+               enablesFor="1"
+               icon="icons/unlockedstate.gif"
+               id="com.tibco.cep.decision.table.unlockAction"
+               label="Release Lock"
+               menubarPath="group.team">
+         </action-->
+         <!--action
+               class="com.tibco.cep.decision.table.actions.LockAction"
+               enablesFor="1"
+               icon="icons/lockedstate.gif"
+               id="com.tibco.cep.decision.table.lockAction"
+               label="Lock"
+               menubarPath="group.team">
+         </action>
+	  </objectContribution>
+   </extension>
+   
+   <extension
+         point="org.eclipse.ui.commands">
+      <category
+            id="com.tibco.cep.decision.table.category"
+            name="Business User Interface">
+      </category>
+      <command
+            categoryId="com.tibco.cep.decision.table.category"
+            description="Show Open"
+            id="com.tibco.cep.decision.table.dt.open"
+            name="Open">
+      </command>
+      <!
+      <command
+            categoryId="com.tibco.cep.decision.table.category"
+            description="Show Save"
+            id="com.tibco.cep.decision.table.dt.save"
+            name="Save">
+      </command>
+      <command
+            categoryId="com.tibco.cep.decision.table.category"
+            id="com.tibco.cep.decision.table.file.save.all"
+            name="Save All">
+      </command>
+      >
+      <command
+            categoryId="com.tibco.cep.decision.table.category"
+            description="Show New"
+            id="com.tibco.cep.decision.table.dt.new"
+            name="New">
+      </command>
+      <command
+            categoryId="com.tibco.cep.decision.table.category"
+            description="Show Save As"
+            id="com.tibco.cep.decision.table.dt.saveas"
+            name="Save As">
+      </command>
+      <command
+            categoryId="com.tibco.cep.decision.table.category"
+            description="Show Import Excel"
+            id="com.tibco.cep.decision.table.import.excel"
+            name="Import Excel">
+      </command>
+      <command
+            categoryId="com.tibco.cep.decision.table.category"
+            description="Show Export Excel"
+            id="com.tibco.cep.decision.table.export.excel"
+            name="Export Excel">
+      </command>
+      <command
+            id="com.tibco.cep.decision.table.file.close"
+            name="Close">
+      </command>
+      <command
+            id="com.tibco.cep.decision.table.file.close.all"
+            name="Close All">
+      </command>
+      <command
+            categoryId="com.tibco.cep.decision.table.category"
+            id="com.tibco.cep.decision.table.dt.showall"
+            name="Show Text">
+      </command>
+      <command
+            categoryId="com.tibco.cep.decision.table.category"
+            id="com.tibco.cep.decision.table.dt.merge.rows"
+            name="Merge Rows">
+      </command>
+      <!
+      <command
+            categoryId="com.tibco.cep.decision.table.category"
+            id="com.tibco.cep.decision.table.file.convert.delimiters"
+            name="Convert Line Delimiters">
+      </command>
+      >
+      <command
+            categoryId="com.tibco.cep.decision.table.category"
+            description="Validate Project"
+            id="com.tibco.cep.decision.table.validate"
+            name="Validate">
+      </command>
+      <command
+            categoryId="com.tibco.cep.decision.table.category"
+            id="com.tibco.cep.decision.table.previous.editor"
+            name="Previous Editor">
+      </command>
+      <command
+            categoryId="com.tibco.cep.decision.table.category"
+            id="com.tibco.cep.decision.table.next.editor"
+            name="Next Editor">
+      </command>
+      <command
+            categoryId="com.tibco.cep.decision.table.category"
+            id="com.tibco.cep.decision.table.activate.editor"
+            name="Activate Editor">
+      </command>
+      <command
+            categoryId="com.tibco.cep.decision.table.category"
+            id="com.tibco.cep.decision.table.maximize.editor"
+            name="Maximize Active View or Editor">
+      </command>
+      <command
+            categoryId="com.tibco.cep.decision.table.category"
+            id="com.tibco.cep.decision.table.minimize.editor"
+            name="Minimize Active View or Editor">
+      </command>
+      <command
+            categoryId="com.tibco.cep.decision.table.category"
+            id="com.tibco.cep.decision.table.switch.editor"
+            name="Switch to Editor...">
+      </command>
+      <command
+            categoryId="com.tibco.cep.decision.table.category"
+            id="com.tibco.cep.decision.table.dt.deploy"
+            name="Deploy">
+      </command>
+      <command
+            categoryId="com.tibco.cep.decision.table.category"
+            description="Show WorkList"
+            id="com.tibco.cep.decision.table.dt.worklist"
+            name="Show WorkList">
+      </command>
+      <command
+            categoryId="com.tibco.cep.decision.table.category"
+            description="Server URl &amp; Project Location Information"
+            id="com.tibco.cep.decision.table.decision.table.checkout.project"
+            name="Checkout Project">
+      </command>
+      <command
+            categoryId="com.tibco.cep.decision.table.category"
+            description="Show Test Data"
+            id="com.tibco.cep.decision.table.dt.testdata"
+            name="Show Test Data">
+      </command>
+      <command
+            categoryId="com.tibco.cep.decision.table.category"
+            description="Show Request Task"
+            id="com.tibco.cep.decision.table.dt.myrequest"
+            name="Show Request Task">
+      </command>
+      <command
+            categoryId="com.tibco.cep.decision.table.category"
+            id="com.tibco.cep.decision.table.dt.deployall"
+            name="Deploy All">
+      </command>
+      <command
+            categoryId="com.tibco.cep.decision.table.category"
+            id="com.tibco.cep.decision.table.dt.genClass"
+            name="Generate Class">
+      </command>
+      <command
+            description="Delete Decision Table"
+            id="com.tibco.cep.decision.table.dt.delete"
+            name="Delete">
+      </command>
+      <command
+            categoryId="com.tibco.cep.decision.table.category"
+            description="Validate Table"
+            id="com.tibco.cep.decision.table.validate.table"
+            name="Validate">
+      </command>
+      <command
+            categoryId="com.tibco.cep.decision.table.category"
+            id="com.tibco.cep.decision.table.dt.undeployall"
+            name="Undeploy All">
+      </command>
+      <command
+            categoryId="com.tibco.cep.decision.table.category"
+            id="com.tibco.cep.decision.table.property"
+            name="Show Property">
+      </command>
+      <command
+            categoryId="com.tibco.cep.decision.table.category"
+            id="com.tibco.cep.decision.table.application.domainview"
+            name="Show Domain">
+      </command>
+      <command
+            categoryId="com.tibco.cep.decision.table.category"
+            id="com.tibco.cep.decision.table.application.propertyview"
+            name="Show Propertyview">
+      </command>
+      <command
+            categoryId="com.tibco.cep.decision.table.category"
+            id="com.tibco.cep.decision.table.dt.emptyworklist"
+            name="Empty RoleList">
+      </command>
+      <command
+            categoryId="com.tibco.cep.decision.table.category"
+            id="com.tibco.cep.decision.table.dt.rename"
+            name="Rename">
+      </command>
+      <command
+            categoryId="com.tibco.cep.decision.table.category"
+            id="com.tibco.cep.decision.table.analyze.table"
+            name="Analyze ">
+      </command>
+      <!keyConfiguration
+            description="Keys for Decision Manager"
+            id="com.tibco.cep.decision.table.keyConfiguration"
+            name="Decision Manager">
+      </keyConfiguration-->
+<!--
+      <keyBinding
+            commandId="com.tibco.cep.decision.table.dt.save"
+            keyConfigurationId="com.tibco.cep.decision.table.keyConfiguration"
+            keySequence="M1+S">
+      </keyBinding>
+      <keyBinding
+            commandId="com.tibco.cep.decision.table.file.save.all"
+            keyConfigurationId="com.tibco.cep.decision.table.keyConfiguration"
+            keySequence="M1+M2+S">
+      </keyBinding>
+-->
+      <!--keyBinding
+            commandId="org.eclipse.ui.file.save"
+            keyConfigurationId="com.tibco.cep.decision.table.keyConfiguration"
+            keySequence="M1+S">
+      </keyBinding>
+      <keyBinding
+            commandId="org.eclipse.ui.file.saveAll"
+            keyConfigurationId="com.tibco.cep.decision.table.keyConfiguration"
+            keySequence="M1+M2+S">
+      </keyBinding>
+      <keyBinding
+            commandId="com.tibco.cep.decision.table.dt.new"
+            keyConfigurationId="com.tibco.cep.decision.table.keyConfiguration"
+            keySequence="M3+M2+N">
+      </keyBinding>
+      <keyBinding
+            commandId="com.tibco.cep.decision.table.dt.open"
+            keyConfigurationId="com.tibco.cep.decision.table.keyConfiguration"
+            keySequence="M1+O">
+      </keyBinding>
+      <keyBinding
+            commandId="org.eclipse.ui.file.close"
+            keyConfigurationId="com.tibco.cep.decision.table.keyConfiguration"
+            keySequence="M1+W">
+      </keyBinding>
+      <keyBinding
+            commandId="org.eclipse.ui.file.closeAll"
+            keyConfigurationId="com.tibco.cep.decision.table.keyConfiguration"
+            keySequence="M1+M2+W">
+      </keyBinding>
+      <keyBinding
+            commandId="com.tibco.cep.decision.table.decision.table.checkout.project"
+            keyConfigurationId="com.tibco.cep.decision.table.keyConfiguration"
+            keySequence="M1+M2+K">
+      </keyBinding>
+      <keyBinding
+            commandId="com.tibco.cep.decision.table.dt.deploy"
+            keyConfigurationId="com.tibco.cep.decision.table.keyConfiguration"
+            keySequence="M1+D">
+      </keyBinding>
+      <keyBinding
+            commandId="com.tibco.cep.decision.table.dt.deployall"
+            keyConfigurationId="com.tibco.cep.decision.table.keyConfiguration"
+            keySequence="M1+M2+D">
+      </keyBinding>
+      <keyBinding
+            commandId="com.tibco.cep.decision.table.dt.undeployall"
+            keyConfigurationId="com.tibco.cep.decision.table.keyConfiguration"
+            keySequence="M1+P">
+      </keyBinding>
+      <keyBinding
+            commandId="com.tibco.cep.decision.table.validate.table"
+            keyConfigurationId="com.tibco.cep.decision.table.keyConfiguration"
+            keySequence="M3+V">
+      </keyBinding>
+      <keyBinding
+            commandId="com.tibco.cep.decision.table.validate"
+            keyConfigurationId="com.tibco.cep.decision.table.keyConfiguration"
+            keySequence="M3+M2+V">
+      </keyBinding>
+      <keyBinding
+            commandId="com.tibco.cep.decision.table.dt.testdata"
+            keyConfigurationId="com.tibco.cep.decision.table.keyConfiguration"
+            keySequence="M1+T">
+      </keyBinding>
+      <keyBinding
+            commandId="com.tibco.cep.decision.table.dt.myrequest"
+            keyConfigurationId="com.tibco.cep.decision.table.keyConfiguration"
+            keySequence="M3+R">
+      </keyBinding>
+      <keyBinding
+            commandId="org.eclipse.ui.edit.delete"
+            keyConfigurationId="com.tibco.cep.decision.table.keyConfiguration"
+            keySequence="DEL">
+      </keyBinding>
+      <keyBinding
+            commandId="org.eclipse.ui.edit.copy"
+            keyConfigurationId="com.tibco.cep.decision.table.keyConfiguration"
+            keySequence="M1+C">
+      </keyBinding>
+      <keyBinding
+            commandId="org.eclipse.ui.edit.paste"
+            keyConfigurationId="com.tibco.cep.decision.table.keyConfiguration"
+            keySequence="M1+V">
+      </keyBinding>
+      <keyBinding
+            commandId="org.eclipse.ui.edit.cut"
+            keyConfigurationId="com.tibco.cep.decision.table.keyConfiguration"
+            keySequence="M1+X">
+      </keyBinding>
+      <keyBinding
+            commandId="org.eclipse.ui.edit.findReplace"
+            keyConfigurationId="com.tibco.cep.decision.table.keyConfiguration"
+            keySequence="M1+F">
+      </keyBinding>
+      <keyBinding
+            commandId="org.eclipse.ui.edit.selectAll"
+            keyConfigurationId="com.tibco.cep.decision.table.keyConfiguration"
+            keySequence="M1+A">
+      </keyBinding>
+   </extension>
+   <extension
+         point="org.eclipse.core.runtime.preferences">
+      <initializer
+            class="com.tibco.cep.decision.table.preferences.DTPreferenceInitializer">
+      </initializer>
+   </extension>
+   <!extension
+         point="com.tibco.cep.studio.util.appender">
+      <appender
+            appenderClass="com.tibco.cep.decision.table.EclipseConsoleAppender">
+      </appender>
+   </extension->
+   <extension
+         id="com.tibco.cep.decision.table.application.preferencePages"
+         name="Preference Pages"
+         point="org.eclipse.ui.preferencePages">
+      <page
+            category="com.tibco.cep.studio.ui.preference.page.designer"
+            class="com.tibco.cep.decision.table.preferences.DTPreferencePage"
+            id="com.tibco.cep.decision.table.dtPreferencePage"
+            name="Decision Table">
+      </page>
+      <page
+            category="com.tibco.cep.decision.table.dtPreferencePage"
+            class="com.tibco.cep.decision.table.preferences.DTAnalyzerPreferencePage"
+            id="com.tibco.cep.decision.table.dtAnalyzer"
+            name="Analyzer">
+      </page>
+      <page
+            category="com.tibco.cep.decision.table.dtPreferencePage"
+            class="com.tibco.cep.decision.table.preferences.DTAppearancePreferencePage"
+            id="com.tibco.cep.decision.table.dtAppearancePage"
+            name="Appearance">
+      </page>
+   </extension>
+   <extension
+         point="org.eclipse.ui.newWizards">
+         <wizard
+            category="com.tibco.cep.studio.ui.category"
+            class="com.tibco.cep.decision.table.migration.NewDecisionTableWizard"
+            finalPerspective="com.tibco.cep.studio.application.perspective"
+            icon="icons/decisiontablerulefunctions_16x16.png"
+            id="com.tibco.cep.studio.ui.newDecisionTableWizard"
+            name="Decision Table">
+         <description>
+            Create a new Decision Table
+         </description>
+      </wizard>
+   </extension>
+   <extension
+         point="org.eclipse.ui.importWizards">
+         <wizard
+            category="com.tibco.cep.studio.ui.category"
+            class="com.tibco.cep.decision.table.wizard.ImportDecisionTableWizard"
+            icon="icons/import_DT.png"
+            id="com.tibco.cep.studio.ui.wizards.ImportExcelWizard"
+            name="Decision Table">
+            <description>
+               Create a new TIBCO BusinessEvents Decision Table from an excel file
+            </description>
+      </wizard>
+      <wizard
+            category="com.tibco.cep.studio.ui.category"
+            class="com.tibco.cep.decision.table.wizard.DecisionProjectImportWizard"
+            icon="icons/designer_project.gif"
+            id="com.tibco.cep.studio.ui.wizards.DecisionProjectImportWizard"
+            name="TIBCO BusinessEvents Decision Manager">
+         <description>
+            Import a TIBCO BusinessEvents decision project into TIBCO BusinessEvents Studio
+         </description>
+      </wizard>
+   </extension>
+<!- # Uncomment if we decide to use a decision table menu with decision table editor only
+   	extension
+         point="org.eclipse.ui.editorActions">
+      <editorContribution
+            id="com.tibco.cep.decision.table.decisionTableEditorContribution"
+            targetID="com.tibco.cep.studio.ui.editors.decisiontableeditor">
+         <menu
+               id="com.tibco.cep.decision.table.menu"
+               label="Table"
+               path="additions">
+            <separator
+                  name="TableSeparator1">
+            </separator>
+            <separator
+                  name="TableSeparator2">
+            </separator>
+            <separator
+                  name="TableSeparator3">
+            </separator>
+         </menu>
+         <action
+               class="com.tibco.cep.decision.table.actions.MergeRowsActionDelegate"
+               icon="icons/merge_16x16.png"
+               id="com.tibco.cep.decision.table.merge.rows"
+               label="MergeRows"
+               menubarPath="com.tibco.cep.decision.table.menu/TableSeparator3"
+               tooltip="Merges rows of decision table">
+         </action>
+         <action
+               class="com.tibco.cep.decision.table.actions.ShowTextActionDelegate"
+               icon="icons/string_16x16.png"
+               id="com.tibco.cep.decision.table.show.text"
+               label="Show Text"
+               menubarPath="com.tibco.cep.decision.table.menu/TableSeparator3"
+               tooltip="Show Text ">
+         </action>
+         <action
+               class="com.tibco.cep.decision.table.actions.DeployTableActionDelegate"
+               icon="icons/deploy_decision_table_16x16.png"
+               id="com.tibco.cep.decision.table.deploy.table"
+               label="Deploy"
+               menubarPath="com.tibco.cep.decision.table.menu/TableSeparator2"
+               tooltip="Deploys a decision table">
+         </action>
+         <action
+               class="com.tibco.cep.decision.table.editors.AnalyzeTableActionDelegate"
+               icon="icons/analyze_table16x16.gif"
+               id="com.tibco.cep.decision.table.analyze"
+               label="Analyze"
+               menubarPath="com.tibco.cep.decision.table.menu/TableSeparator1"
+               tooltip="Analyzes a decision table">
+         </action>
+      </editorContribution>
+   </extension 
+->
+   <extension
+         point="org.eclipse.ui.exportWizards">
+      <wizard
+            category="com.tibco.cep.studio.ui.export.category"
+            class="com.tibco.cep.decision.table.wizard.DecisionTableExcelExportWizard"
+            icon="icons/import_excel19x19.png"
+            id="com.tibco.cep.studio.ui.wizards.DTExportExcelWizard"
+            name="Export Decision Table To Excel">
+         <description>
+            Export Decision Table to a Microsoft Excel File
+         </description>
+      </wizard>
+   </extension>
+   <extension
+         point="org.eclipse.ui.ide.markerResolution">
+      <markerResolutionGenerator
+            class="com.tibco.cep.decision.table.constraintpane.DecisionTableAnalysisProblemResolutionProvider"
+            markerType="com.tibco.cep.decision.table.ui.analyzeProblem">
+      </markerResolutionGenerator>
+   </extension>
+   <extension
+         id="analyzeProblem"
+         name="Decision table Analyze Problems"
+         point="org.eclipse.core.resources.markers">
+      <super
+            type="org.eclipse.core.resources.problemmarker">
+      </super>
+      <persistent
+            value="false">
+      </persistent>
+   </extension>
+    <extension
+          id="syntaxProblem"
+          name="Decision table Syntax Errors"
+          point="org.eclipse.core.resources.markers">
+       <super
+             type="com.tibco.cep.studio.core.validationProblem">
+       </super>
+       <persistent
+             value="true">
+       </persistent>
+       <attribute
+             name="com.tibco.cep.decision.table.trs">
+       </attribute>
+       <attribute
+             name="com.tibco.cep.decision.table.trv">
+       </attribute>
+    </extension>
+    
+   <extension
+         point="com.tibco.cep.studio.core.projectResourceValidator">
+      <validator
+            Validator="com.tibco.cep.decision.table.validators.DecisionTableResourceSyntaxValidator"
+            extensions="rulefunctionimpl">
+      </validator>
+   </extension>
+   
+   <!- # Uncomment if we decide to use a decision table tree view (like an Outline View for a decision table)
+      <extension
+         point="org.eclipse.ui.views">
+      <category
+            id="decisiontable"
+            name="DecisionTable">
+      </category>
+      <view
+            category="decisiontable"
+            class="com.tibco.cep.decision.table.views.DecisionTableView"
+            icon="icons/sample.gif"
+            id="com.tibco.cep.decision.table.views.DecisionTableView"
+            name="Decision Table View">
+      </view>
+   </extension>
+   ->
+   <extension
+         point="org.eclipse.ui.views.properties.tabbed.propertyContributor">
+      <propertyContributor
+            contributorId="com.tibco.cep.decision.table.editors.propertyContributor"
+            labelProvider="com.tibco.cep.decision.table.properties.DecisionTablePropertyLabelProvider">
+         <propertyCategory
+               category="default"></propertyCategory>
+      </propertyContributor>
+   </extension>
+   <extension
+         point="org.eclipse.ui.views.properties.tabbed.propertyTabs">
+      <propertyTabs
+            contributorId="com.tibco.cep.decision.table.editors.propertyContributor">
+         <propertyTab
+               category="default"
+               id="decision.table.propertyTab.general"
+               label="General">
+         </propertyTab>
+         <propertyTab
+               afterTab="decision.table.propertyTab.general"
+               category="default"
+               id="decision.table.propertyTab.Rule"
+               label="Rule">
+         </propertyTab>
+         <propertyTab
+               afterTab="decision.table.propertyTab.Rule"
+               category="default"
+               id="decision.table.propertyTab.Cell"
+               label="Cell">
+         </propertyTab>
+      </propertyTabs>
+   </extension>
+   <extension
+         point="org.eclipse.ui.views.properties.tabbed.propertySections">
+      <propertySections
+            contributorId="com.tibco.cep.decision.table.editors.propertyContributor">
+         <propertySection
+               class="com.tibco.cep.decision.table.properties.DecisionTableGeneralPropertySection"
+               filter="com.tibco.cep.decision.table.properties.DecisionTableGeneralPropertyFilter"
+               id="decision.table.general.propertySection"
+               tab="decision.table.propertyTab.general">
+            <input
+                  type="com.tibco.cep.decisionproject.ontology.AccessControlCandidate">
+            </input>
+         </propertySection>
+         <propertySection
+               afterSection="decision.table.general.propertySection"
+               class="com.tibco.cep.decision.table.properties.DecisionTableRulePropertySection"
+               filter="com.tibco.cep.decision.table.properties.DecisionTableRulePropertyFilter"
+               id="decision.table.rule.propertySection"
+               tab="decision.table.propertyTab.Rule">
+            <input
+                  type="com.tibco.cep.decisionproject.ontology.AccessControlCandidate">
+            </input>
+         </propertySection>
+         <propertySection
+               afterSection="decision.table.rule.propertySection"
+               class="com.tibco.cep.decision.table.properties.DecisionTableCellPropertySection"
+               filter="com.tibco.cep.decision.table.properties.DecisionTableRulePropertyFilter"
+               id="decision.table.cell.propertySection"
+               tab="decision.table.propertyTab.Cell">
+            <input
+                  type="com.tibco.cep.decisionproject.ontology.AccessControlCandidate">
+            </input>
+         </propertySection>
+      </propertySections>
+   </extension>
+   <extension
+         point="org.eclipse.ui.navigator.navigatorContent">
+                <navigatorContent
+                      activeByDefault="true"
+                      contentProvider="com.tibco.cep.decision.table.navigation.DecisionTableNavigatorContentProvider"
+                      id="com.tibco.cep.decision.table.navigator.content"
+                      labelProvider="com.tibco.cep.decision.table.navigation.DecisionTableNavigatorLabelProvider"
+                      name="Decision Table Arguments"
+                      priority="normal">
+         <triggerPoints>
+              <instanceof
+                  value="org.eclipse.core.resources.IFile">
+            </instanceof>
+            <test
+                  forcePluginActivation="true"
+                  property="org.eclipse.core.resources.extension"
+                  value="rulefunctionimpl">
+            </test>
+         </triggerPoints>
+      </navigatorContent>
+                <navigatorContent
+                      activeByDefault="true"
+                      contentProvider="com.tibco.cep.decision.table.navigation.ArgumentsContentProvider"
+                      id="com.tibco.cep.decision.table.arguments.navigator.content"
+                      labelProvider="com.tibco.cep.decision.table.navigation.ArgumentsLabelProvider"
+                      name="Arguments Contets"
+                      priority="normal">
+                   <triggerPoints>
+                      <instanceof
+                            value="com.tibco.cep.decisionproject.ontology.AbstractResource">
+                      </instanceof>
+                   </triggerPoints>
+                </navigatorContent>
+   </extension>
+   <extension
+         id="analyzeCombinationProblem"
+         name="Decision table Rule Combination Problem"
+         point="org.eclipse.core.resources.markers">
+      <super
+            type="com.tibco.cep.decision.table.ui.analyzeProblem">
+      </super>
+      <persistent
+            value="false">
+      </persistent>
+   </extension>
+   -->
+</plugin>

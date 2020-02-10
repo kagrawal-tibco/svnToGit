@@ -1,0 +1,245 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<title>Credit Card Application - TIBCO BusinessEvents&reg; Examples</title>
+		<meta http-equiv="Content-type" content="text/html; charset=iso-8859-1" />
+		<meta http-equiv="Content-Language" content="en-us" />
+		<link rel="Shortcut Icon" href="../../_resources/icon.gif" type="image/gif" />
+		<style type="text/css" media="all">@import "../../_resources/examples.css";</style>
+		<script type="text/javascript" src="../../_resources/examples.js" /></script>
+	</head>
+	<body>
+		<h1>Credit Card Application</h1>
+		<h2>Purpose of This Example</h2>
+		<p>This example demonstrates the basic use of Virtual Rule Functions and Decision Tables. Using an existing TIBCO BusinessEvents&reg; Studio project, users are walked through the steps required to run and test a project that utilizes Virtual Rule Functions and Decision Tables to make business decisions.</p>
+		<p>Specifically, this example demonstrates how a basic credit card application approval system might utilize Virtual Rule Functions and Decision Tables to determine an applicant's credit worthiness, approved credit level, and interest rate.</p>
+		<h2>How To Run This Example in Tester</h2>
+		<ol>
+			<li>
+				<p>Create a run configuration for the example BusinessEvents application. The detailed steps for this are explained in the <i>TIBCO BusinessEvents&reg; Developer's Guide</i>.</p>
+				<p><image src="images/launchConfig.png"/></p>
+			</li>
+			<li>
+				<p>Start the engine using the run configuration. You should see a message in the "Console" View indicating that the BE Engine started successfully. Exact console output will vary.
+					<span class="logs">
+2012 Aug 20 17:16:26:478 GMT -7 my.machine.name Info [main] - [runtime.session] Loading the project from: C:\tibco\be\5.6\examples\decision_manager\CreditCardApplication\CreditCardApplication.ear
+2012 Aug 20 17:16:29:811 GMT -7 my.machine.name Info [main] - [runtime.session] Loaded the project successfully
+2012 Aug 20 17:16:29:814 GMT -7 my.machine.name Info [main] - [runtime.session] Registering Ontology Classes...
+2012 Aug 20 17:16:30:224 GMT -7 my.machine.name Info [main] - [runtime.session] Registered Ontology Classes
+2012 Aug 20 17:16:30:579 GMT -7 my.machine.name Info [main] - [runtime.session] Starting BE engine in PRIMARY mode
+2012 Aug 20 17:16:30:580 GMT -7 my.machine.name Info [main] - [runtime.channel] Initialized Channel Manager
+2012 Aug 20 17:16:30:615 GMT -7 my.machine.name Info [main] - [runtime.session] EAR generated with:
+2012 Aug 20 17:16:30:616 GMT -7 my.machine.name Info [main] - [runtime.session]  C:/tibco/be/5.6/lib/be-functions.jar
+2012 Aug 20 17:16:30:617 GMT -7 my.machine.name Info [main] - [runtime.session]  C:/tibco/be/5.6/lib/be-q.jar
+2012 Aug 20 17:16:30:617 GMT -7 my.machine.name Info [main] - [runtime.session]  C:/tibco/be/5.6/lib/be-studiofunctions.jar
+2012 Aug 20 17:16:30:617 GMT -7 my.machine.name Info [main] - [runtime.session]  C:/tibco/be/5.6/lib/cep-as-channel.jar
+2012 Aug 20 17:16:30:618 GMT -7 my.machine.name Info [main] - [runtime.session]  C:/tibco/be/5.6/lib/cep-backingstore.jar
+2012 Aug 20 17:16:30:618 GMT -7 my.machine.name Info [main] - [runtime.session]  C:/tibco/be/5.6/lib/cep-base.jar
+2012 Aug 20 17:16:30:618 GMT -7 my.machine.name Info [main] - [runtime.session]  C:/tibco/be/5.6/lib/cep-common.jar
+2012 Aug 20 17:16:30:619 GMT -7 my.machine.name Info [main] - [runtime.session]  C:/tibco/be/5.6/lib/cep-container.jar
+2012 Aug 20 17:16:30:619 GMT -7 my.machine.name Info [main] - [runtime.session]  C:/tibco/be/5.6/lib/cep-datagrid-oracle.jar
+2012 Aug 20 17:16:30:619 GMT -7 my.machine.name Info [main] - [runtime.session]  C:/tibco/be/5.6/lib/cep-drivers.jar
+2012 Aug 20 17:16:30:620 GMT -7 my.machine.name Info [main] - [runtime.session]  C:/tibco/be/5.6/lib/cep-hawk-channel.jar
+2012 Aug 20 17:16:30:620 GMT -7 my.machine.name Info [main] - [runtime.session]  C:/tibco/be/5.6/lib/cep-interpreter.jar
+2012 Aug 20 17:16:30:620 GMT -7 my.machine.name Info [main] - [runtime.session]  C:/tibco/be/5.6/lib/cep-kernel.jar
+2012 Aug 20 17:16:30:621 GMT -7 my.machine.name Info [main] - [runtime.session]  C:/tibco/be/5.6/lib/cep-loadbalancer.jar
+2012 Aug 20 17:16:30:621 GMT -7 my.machine.name Info [main] - [runtime.session]  C:/tibco/be/5.6/lib/cep-security.jar
+2012 Aug 20 17:16:30:621 GMT -7 my.machine.name Info [main] - [runtime.session]  C:/tibco/be/5.6/lib/palettes/be-bw.jar
+2012 Aug 20 17:16:30:703 GMT -7 my.machine.name Info [main] - [runtime.scheduler] [inference-class] Initialized thread pool [$default.be.mt$] with max [10] threads and max [1024] job queue size.
+2012 Aug 20 17:16:31:911 GMT -7 my.machine.name Info [main] - [runtime.service] Registering all BE-Agent level Group MBeans for BE-Agent with ID: 0
+2012 Aug 20 17:16:31:991 GMT -7 my.machine.name Info [main] - [runtime.service] All BE-Agent level Group MBeans SUCCESSFULLY registered for BE-Agent with ID: 0
+2012 Aug 20 17:16:32:058 GMT -7 my.machine.name Info [main] - [user] [inference-class] *************  Welcome to the Credit Card Application  *************
+2012 Aug 20 17:16:32:068 GMT -7 my.machine.name Info [main] - [studio.core] Hot Deployment enabled, using Java Instrumentation: sun.instrument.InstrumentationImpl
+2012 Aug 20 17:16:32:077 GMT -7 my.machine.name Info [main] - [studio.core] Started Hot Deployer
+2012 Aug 20 17:16:32:100 GMT -7 my.machine.name Info [main] - [runtime.service] Registering all BE-Engine level Group MBeans...
+2012 Aug 20 17:16:32:103 GMT -7 my.machine.name Info [main] - [runtime.service] All BE-Engine level Group MBeans SUCCESSFULLY registered
+2012 Aug 20 17:16:32:103 GMT -7 my.machine.name Info [main] - [runtime.session] BE Engine my.machine.name started
+2012 Aug 20 17:16:32:106 GMT -7 my.machine.name Info [main] - [container.standalone] Starting debugger service...
+					</span>
+				</p>
+			</li>
+			<li>
+				<p>After the engine starts successfully, open the "Rule Input" View. If this is not already open in the workbench, open it using menu path:<br /> Window -> Show View -> Other -> TIBCO BusinessEvents -> Rule Input.</p>
+				<p><image src="images/ruleinputview.png"/></p>
+			</li>
+			<li>
+				<p>In the "Select Test Data" section of the "Rule Input" View, locate the test data file entries for the Applicant Concept and the ApplicationReceived Event. Select both entries.</p>
+			</li>
+			<li>
+				<p>Select the engine configuration (started in step 1) from the "Launch Target" drop-down in the "Input" section of the "Rule Input" View. Also select the "Rule Session" name ("inference-class" by default). Click "Start Test". **Note: If the engine is not running, these input controls will not be enabled.</p>
+			</li>
+			<li>
+				<p>The test data is asserted into the running engine. A join is performed on the Concept and Event, which triggers the rule Applicant_Rule.
+					<pre class="commands">
+						<code>
+rule Rules.RuleSet.Applicant_Rule {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Events.ApplicationReceived	applicationreceived;
+		Concepts.Applicant        	applicant;
+	}
+	when {
+		applicant.Name == applicationreceived.ApplicantName;
+	}
+	then {
+		Object[] arguments = {applicant, applicationreceived};
+		VRF.invokeVRFImplByName("/Virtual_RF/Applicant_VirtualRuleFunction", "Applicant_Simple", arguments);
+
+		// Virtual Rule Functions can also be invoked via Virtual_RF.&lt;vrf_name&gt; as demonstrated below. The technique
+		// mainly exists for backwards compatibility, however, and can cause confusion when there are multiple
+		// implementations of the VRF. For example, Applicant and Applicant_Simple are both implementations of
+		// Applicant_VirtualRuleFunction. Using the Virtual_RF.&lt;vrf_name&gt; mechanism in this case may cause confusion
+		// regaring which implementation will be invoked.
+//		Virtual_RF.Applicant_VirtualRuleFunction(applicant, applicationreceived);
+
+		Event.consumeEvent(applicationreceived);
+	}
+}
+						</code>
+					</pre>
+				</p>
+			</li>
+			<li>
+				<p>The example Decision Table <code>Applicant_Simple</code> is invoked explicitly by the Applicant_Rule code. The Decision Table prints out names of applicants and also modifies their eligibility and credit limit.
+					<span class="logs">
+2012 Aug 20 17:17:02:373 GMT -7 my.machine.name Info [com.tibco.cep.runtime.service.debug.DebuggerService] - [runtime.service] Create new Test Data Task
+2012 Aug 20 17:17:02:381 GMT -7 my.machine.name Info [com.tibco.cep.runtime.service.debug.DebuggerService] - [runtime.service] Creating test task with RuleSession inference-class
+2012 Aug 20 17:17:02:480 GMT -7 my.machine.name Info [com.tibco.cep.runtime.service.debug.DebuggerService] - [user] [inference-class] Applicant Name &gt;&gt;&gt; John Doe
+2012 Aug 20 17:17:02:489 GMT -7 my.machine.name Info [com.tibco.cep.runtime.service.debug.DebuggerService] - [runtime.service] [inference-class] Calling queue object for &gt;&gt;&gt; be.gen.Concepts.Applicant@id=4&amp;v=0
+2012 Aug 20 17:17:02:492 GMT -7 my.machine.name Info [com.tibco.cep.runtime.service.debug.DebuggerService] - [runtime.service] [inference-class] Calling queue object for &gt;&gt;&gt; be.gen.Events.ApplicationReceived@id=8
+2012 Aug 20 17:17:02:500 GMT -7 my.machine.name Info [com.tibco.cep.runtime.service.debug.DebuggerService] - [user] [inference-class] Applicant Name &gt;&gt;&gt; Sandra Wang
+2012 Aug 20 17:17:02:501 GMT -7 my.machine.name Info [com.tibco.cep.runtime.service.debug.DebuggerService] - [runtime.service] [inference-class] Calling queue object for &gt;&gt;&gt; be.gen.Concepts.Applicant@id=5&amp;v=0
+2012 Aug 20 17:17:02:502 GMT -7 my.machine.name Info [com.tibco.cep.runtime.service.debug.DebuggerService] - [runtime.service] [inference-class] Calling queue object for &gt;&gt;&gt; be.gen.Events.ApplicationReceived@id=9
+2012 Aug 20 17:17:02:508 GMT -7 my.machine.name Info [com.tibco.cep.runtime.service.debug.DebuggerService] - [user] [inference-class] Applicant Name &gt;&gt;&gt; Prakash Yamuna
+2012 Aug 20 17:17:02:508 GMT -7 my.machine.name Info [com.tibco.cep.runtime.service.debug.DebuggerService] - [runtime.service] [inference-class] Calling queue object for &gt;&gt;&gt; be.gen.Concepts.Applicant@id=6&amp;v=0
+2012 Aug 20 17:17:02:509 GMT -7 my.machine.name Info [com.tibco.cep.runtime.service.debug.DebuggerService] - [runtime.service] [inference-class] Calling queue object for &gt;&gt;&gt; be.gen.Events.ApplicationReceived@id=10
+2012 Aug 20 17:17:02:517 GMT -7 my.machine.name Info [com.tibco.cep.runtime.service.debug.DebuggerService] - [user] [inference-class] Applicant Name &gt;&gt;&gt; Jane Doe
+2012 Aug 20 17:17:02:518 GMT -7 my.machine.name Info [com.tibco.cep.runtime.service.debug.DebuggerService] - [runtime.service] [inference-class] Calling queue object for &gt;&gt;&gt; be.gen.Concepts.Applicant@id=7&amp;v=0
+2012 Aug 20 17:17:02:518 GMT -7 my.machine.name Info [com.tibco.cep.runtime.service.debug.DebuggerService] - [runtime.service] [inference-class] Calling queue object for &gt;&gt;&gt; be.gen.Events.ApplicationReceived@id=11
+2012 Aug 20 17:17:03:520 GMT -7 my.machine.name Info [com.tibco.cep.runtime.service.debug.DebuggerService] - [runtime.service] Debug task response sent.
+					</span>
+				</p>
+			</li>
+			<li>
+				<p>The results file (TestData/inference-class/default/Run-1.resultdata) shows the modifications/retractions/assertions resulting with the above test data.</p>
+				<p><image src="images/results.png"/></p>
+			</li>
+			<li>
+				<p>
+					For a more complete example, we will now examine the ProcessApplication_Rule and ProcessApplication Decision Table.  Re-run the tester and navigate back to the "Rule Input" View after the engine has restarted.
+					The tester must be restarted to avoid duplicate extIds from being asserted into the engine.
+					In the "Select Test Data" section of the "Rule Input" View, locate the three test data file entries: Applicant Concept, CreditCardApplication Concept, and ProcessApplication Event. Select these entries then
+					select the running engine configuration in the "Launch Target" drop-down in the "Input" section of the "Rule Input" View. Also select the "Rule Session" name ("inference-class" by default). Click "Start Test".
+				</p>
+				<image src="images/ruleinputview2.png"/></p>
+			</li>
+			<li>
+				<p>The test data is asserted into the running engine. A join is performed on the Concept and Event, which triggers the rule ProcessApplication_Rule.
+					<pre class="commands">
+						<code>
+rule Rules.RuleSet.ProcessApplication_Rule {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Events.ProcessApplication	processApplication;
+		Concepts.CreditCardApplication	creditCardApplication;
+		Concepts.Applicant applicant;
+
+	}
+	when {
+		processApplication.start == true;  // true when the event to process application is received
+		processApplication.SSN == applicant.SSN; // make sure we process the proper applicant
+		creditCardApplication.Name == applicant.Name; // make sure we process the proper credit card application
+	}
+	then {
+		System.debugOut("*************** Invoking ProcessApplication_VirtualRuleFunction ***************");
+		Event.consumeEvent(processApplication);  //remove event from working memory
+
+		// first set the credit limit of the applicant
+		Object[] applicantArguments = {applicant, null};
+		VRF.invokeVRFImplByName("/Virtual_RF/Applicant_VirtualRuleFunction", "Applicant_Simple", applicantArguments);
+
+		// if the applicant is eligible, create a new CreditCard and attach it to the CreditCardApplication Concept
+		if (applicant.CreditLimit == 0) {
+		    System.debugOut("Credit application " + applicant.Status + ". At this time you are only eligible for a debit card.");
+		} else {
+			creditCardApplication.CardIssued = Instance.createInstance("xslt://{{/Concepts/CreditCard}}&lt;?xml version=\"1.0\" encoding=\"UTF-8\"?&gt;&lt;xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"1.0\" exclude-result-prefixes=\"xsl xsd\"&gt;&lt;xsl:output method=\"xml\"/&gt;&lt;xsl:template match=\"/\"&gt;&lt;createObject/&gt;&lt;/xsl:template&gt;&lt;/xsl:stylesheet&gt;");
+			Object[] creditcardArguments = {applicant, creditCardApplication};
+			VRF.invokeVRFImplByName("/Virtual_RF/ProcessApplication_VirtualRuleFunction", "ProcessApplication", creditcardArguments);
+		    System.debugOut("Credit application " + applicant.Status +
+		    	". You are eligible for a " + creditCardApplication.CardIssued.Id +
+		    	" card with a credit limit of $" + applicant.CreditLimit );
+		    System.debugOut(creditCardApplication.CreditType + ": Minumum Rate of " + creditCardApplication.CardIssued.DefaultRate +
+		    	"%, current interest rate of " + creditCardApplication.CardIssued.InterestRate + "%");
+		}
+	}
+}
+						</code>
+					</pre>
+				</p>
+			</li>
+			<li>
+				<p>
+					First, the <code>Applicant_Simple</code> Decision Table is invoked to set the eligibility and credit limit for the applicant. Next,
+					if the applicant's credit limit is greater than zero, the <code>ProcessApplication</code> Decision Table is invoked.
+					The <code>ProcessApplication</code> Decision Table checks the credit limit of the applicant and sets the appropriate credit card information.
+					In this example, three applicants are issued credit cards and one applicant is rejected.
+					<span class="logs">
+2012 Aug 20 17:18:01:093 GMT -7 my.machine.name Info [com.tibco.cep.runtime.service.debug.DebuggerService] - [runtime.service] Create new Test Data Task
+2012 Aug 20 17:18:01:101 GMT -7 my.machine.name Info [com.tibco.cep.runtime.service.debug.DebuggerService] - [runtime.service] Creating test task with RuleSession inference-class
+2012 Aug 20 17:18:01:217 GMT -7 my.machine.name Info [com.tibco.cep.runtime.service.debug.DebuggerService] - [user] [inference-class] *************** Invoking ProcessApplication_VirtualRuleFunction ***************
+2012 Aug 20 17:18:01:218 GMT -7 my.machine.name Info [com.tibco.cep.runtime.service.debug.DebuggerService] - [user] [inference-class] Applicant Name &gt;&gt;&gt; John Doe
+2012 Aug 20 17:18:01:925 GMT -7 my.machine.name Info [com.tibco.cep.runtime.service.debug.DebuggerService] - [user] [inference-class] Credit application VISA Granted. You are eligible for a Visa card with a credit limit of $2500.0
+2012 Aug 20 17:18:01:925 GMT -7 my.machine.name Info [com.tibco.cep.runtime.service.debug.DebuggerService] - [user] [inference-class] Prepaid: Minumum Rate of 10.0%, current interest rate of 12.0%
+2012 Aug 20 17:18:01:932 GMT -7 my.machine.name Info [com.tibco.cep.runtime.service.debug.DebuggerService] - [runtime.service] [inference-class] Calling queue object for &gt;&gt;&gt; be.gen.Concepts.Applicant@id=8&amp;v=0
+2012 Aug 20 17:18:01:936 GMT -7 my.machine.name Info [com.tibco.cep.runtime.service.debug.DebuggerService] - [runtime.service] [inference-class] Calling queue object for &gt;&gt;&gt; be.gen.Concepts.CreditCard@id=13&amp;v=0
+2012 Aug 20 17:18:01:937 GMT -7 my.machine.name Info [com.tibco.cep.runtime.service.debug.DebuggerService] - [runtime.service] [inference-class] Calling queue object for &gt;&gt;&gt; be.gen.Concepts.CreditCardApplication@id=4&amp;v=0
+2012 Aug 20 17:18:01:937 GMT -7 my.machine.name Info [com.tibco.cep.runtime.service.debug.DebuggerService] - [runtime.service] [inference-class] Calling queue object for &gt;&gt;&gt; be.gen.Concepts.CreditCard@id=13&amp;v=0
+2012 Aug 20 17:18:01:944 GMT -7 my.machine.name Info [com.tibco.cep.runtime.service.debug.DebuggerService] - [user] [inference-class] *************** Invoking ProcessApplication_VirtualRuleFunction ***************
+2012 Aug 20 17:18:01:944 GMT -7 my.machine.name Info [com.tibco.cep.runtime.service.debug.DebuggerService] - [user] [inference-class] Applicant Name &gt;&gt;&gt; Sandra Wang
+2012 Aug 20 17:18:01:944 GMT -7 my.machine.name Info [com.tibco.cep.runtime.service.debug.DebuggerService] - [user] [inference-class] Credit application Loan Rejected. At this time you are only eligible for a debit card.
+2012 Aug 20 17:18:01:945 GMT -7 my.machine.name Info [com.tibco.cep.runtime.service.debug.DebuggerService] - [runtime.service] [inference-class] Calling queue object for &gt;&gt;&gt; be.gen.Concepts.Applicant@id=9&amp;v=0
+2012 Aug 20 17:18:01:949 GMT -7 my.machine.name Info [com.tibco.cep.runtime.service.debug.DebuggerService] - [user] [inference-class] *************** Invoking ProcessApplication_VirtualRuleFunction ***************
+2012 Aug 20 17:18:01:949 GMT -7 my.machine.name Info [com.tibco.cep.runtime.service.debug.DebuggerService] - [user] [inference-class] Applicant Name &gt;&gt;&gt; Prakash Yamuna
+2012 Aug 20 17:18:01:951 GMT -7 my.machine.name Info [com.tibco.cep.runtime.service.debug.DebuggerService] - [user] [inference-class] Credit application Pending. You are eligible for a Mastercard card with a credit limit of $7500.0
+2012 Aug 20 17:18:01:951 GMT -7 my.machine.name Info [com.tibco.cep.runtime.service.debug.DebuggerService] - [user] [inference-class] Standard: Minumum Rate of 9.0%, current interest rate of 11.0%
+2012 Aug 20 17:18:01:952 GMT -7 my.machine.name Info [com.tibco.cep.runtime.service.debug.DebuggerService] - [runtime.service] [inference-class] Calling queue object for &gt;&gt;&gt; be.gen.Concepts.Applicant@id=10&amp;v=0
+2012 Aug 20 17:18:01:952 GMT -7 my.machine.name Info [com.tibco.cep.runtime.service.debug.DebuggerService] - [runtime.service] [inference-class] Calling queue object for &gt;&gt;&gt; be.gen.Concepts.CreditCard@id=16&amp;v=0
+2012 Aug 20 17:18:01:952 GMT -7 my.machine.name Info [com.tibco.cep.runtime.service.debug.DebuggerService] - [runtime.service] [inference-class] Calling queue object for &gt;&gt;&gt; be.gen.Concepts.CreditCardApplication@id=6&amp;v=0
+2012 Aug 20 17:18:01:953 GMT -7 my.machine.name Info [com.tibco.cep.runtime.service.debug.DebuggerService] - [runtime.service] [inference-class] Calling queue object for &gt;&gt;&gt; be.gen.Concepts.CreditCard@id=16&amp;v=0
+2012 Aug 20 17:18:01:957 GMT -7 my.machine.name Info [com.tibco.cep.runtime.service.debug.DebuggerService] - [user] [inference-class] *************** Invoking ProcessApplication_VirtualRuleFunction ***************
+2012 Aug 20 17:18:01:958 GMT -7 my.machine.name Info [com.tibco.cep.runtime.service.debug.DebuggerService] - [user] [inference-class] Applicant Name &gt;&gt;&gt; Jane Doe
+2012 Aug 20 17:18:01:958 GMT -7 my.machine.name Info [com.tibco.cep.runtime.service.debug.DebuggerService] - [user] [inference-class] Credit application Platinum Status. You are eligible for a American Express card with a credit limit of $25000.0
+2012 Aug 20 17:18:01:959 GMT -7 my.machine.name Info [com.tibco.cep.runtime.service.debug.DebuggerService] - [user] [inference-class] Premium: Minumum Rate of 7.0%, current interest rate of 9.0%
+2012 Aug 20 17:18:01:959 GMT -7 my.machine.name Info [com.tibco.cep.runtime.service.debug.DebuggerService] - [runtime.service] [inference-class] Calling queue object for &gt;&gt;&gt; be.gen.Concepts.Applicant@id=11&amp;v=0
+2012 Aug 20 17:18:01:960 GMT -7 my.machine.name Info [com.tibco.cep.runtime.service.debug.DebuggerService] - [runtime.service] [inference-class] Calling queue object for &gt;&gt;&gt; be.gen.Concepts.CreditCard@id=18&amp;v=0
+2012 Aug 20 17:18:01:960 GMT -7 my.machine.name Info [com.tibco.cep.runtime.service.debug.DebuggerService] - [runtime.service] [inference-class] Calling queue object for &gt;&gt;&gt; be.gen.Concepts.CreditCardApplication@id=7&amp;v=0
+2012 Aug 20 17:18:01:961 GMT -7 my.machine.name Info [com.tibco.cep.runtime.service.debug.DebuggerService] - [runtime.service] [inference-class] Calling queue object for &gt;&gt;&gt; be.gen.Concepts.CreditCard@id=18&amp;v=0
+2012 Aug 20 17:18:02:000 GMT -7 my.machine.name Info [com.tibco.cep.runtime.service.debug.DebuggerService] - [runtime.service] Debug task response sent.
+				</p>
+			</li>
+			<li>
+				<p>
+					The results file shows the modifications/retractions/assertions resulting with the above test data.
+					You will see that three CreditCard objects were created, and the corresponding Applicants and CreditCardApplications were modified based on the test data.
+				</p>
+				<p><image src="images/results2.png"/></p>
+			</li>
+			<li>
+				<p>
+					To test a more complex Decision Table, create a new Decision Table by importing the excel file located at <b>examples/decision_manager/CreditCardApplication/ExcelFiles/Applicant.xls</b>.
+					Examine the rules in the table, and re-run the tester to see how this decision table modifies the data based on the test data.
+				</p>
+			</li>
+		</ol>
+		<div class="footer">
+			<p>TIBCO BusinessEvents&reg; 5.6<br />
+			Copyright&copy; 2004-2019 TIBCO Software Inc. All rights reserved.</p>
+		</div>
+	</body>
+</html>

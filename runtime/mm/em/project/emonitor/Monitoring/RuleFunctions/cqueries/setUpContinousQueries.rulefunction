@@ -1,0 +1,100 @@
+/**
+ * @description 
+ */
+void rulefunction Monitoring.RuleFunctions.cqueries.setUpContinousQueries {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		
+	}
+	body {
+		boolean setupQueries  = System.getGlobalVariableAsBoolean("setupqueries",true);
+		if (setupQueries == false){
+		    return;
+		}
+		Shared.RuleFunctions.log("setUpContinousQueries","INFO","Starting up continous queries...");
+		String[] cTypesWithPath = BEMM.dashboard.getAllSupportedComponentTypes();
+		String alreadyProcessedTypes = "";
+		for (int i = 0 ; i < cTypesWithPath@length ; i = i + 1) {
+		    //set the current cTypeWithPath
+		    String cTypeWithPath = cTypesWithPath[i];
+		    //get the component definition map id
+		    String configMapId = BEMM.dashboard.getConfigMapID(cTypeWithPath);
+		    if (configMapId != null) {
+		        //valid component definition, lets check if it is a query
+		        String dataRetrievalType = Util.HashMap.getObject(configMapId,"dataretrievaltype");
+		        if (dataRetrievalType == "query") {
+		            //we have a query based definition, lets find out if it is a reference
+		            String dataRetrievalTypeConfig = Util.HashMap.getObject(configMapId,"retrievalconfig1");
+		            //attempt reference resolution , we will give it 10 tries
+		            int j = 10;
+		            while (dataRetrievalTypeConfig == "reference" && j > 0){
+		                cTypeWithPath = Util.HashMap.getObject(configMapId,"retrievalconfig2");
+		                configMapId = BEMM.dashboard.getConfigMapID(cTypeWithPath);
+		                if (configMapId != null){
+		                    dataRetrievalType = Util.HashMap.getObject(configMapId,"dataretrievaltype");
+		                }
+		                if (configMapId == null || dataRetrievalType != "query") {
+		                    j = 0;
+		                    dataRetrievalType = null;
+		                    configMapId = null;
+		                    cTypeWithPath = cTypesWithPath[i];
+		                    break;
+		                }
+		                dataRetrievalTypeConfig = Util.HashMap.getObject(configMapId,"retrievalconfig1");
+		                j = j - 1;
+		            }
+		            if (String.equals(cTypeWithPath,cTypesWithPath[i]) == false){
+		                Shared.RuleFunctions.log("setUpContinousQueries","INFO",cTypesWithPath[i]+"'s has been resolved to "+cTypeWithPath+"...");
+		            }
+		            if (configMapId == null || j == 0) {
+		                //could not resolve the reference after 10 tries , log a warning and continue
+		                Shared.RuleFunctions.log("setUpContinousQueries","WARNING",cTypeWithPath+"'s definition could not resolved...");
+		            }
+		            else if (String.indexOfString(alreadyProcessedTypes,0,cTypeWithPath) != -1) {
+		                //the reference has already been proccessed, log a message and continue
+		                Shared.RuleFunctions.log("setUpContinousQueries","INFO",cTypeWithPath+"'s definition has already been processed...");
+		            }
+		            else if (String.length(String.trim(dataRetrievalTypeConfig)) != 0) {
+		                //we have a genuine new query
+		                String queryStr = dataRetrievalTypeConfig;
+		                String queryName = cTypeWithPath + ".query";
+		                Shared.RuleFunctions.log("setUpContinousQueries","DEBUG","Creating query with name as " + queryName + " and text as " + queryStr);
+		                Query.create(queryName, queryStr);
+		                String statementName = queryName + ".statement";
+		                Query.Statement.open(queryName, statementName);
+		                //extract the component type
+		                String cType = Util.HashMap.getObject(configMapId,"ctype");
+		                String callBackURI =  "/Monitoring/RuleFunctions/cqueries/"+cType+"QueryListener";
+		                String closure = queryName;
+		                //get additional params (can be nothing or callbackhandler only or callbackhandler with sort spec
+		                String additionalQueryParam = Util.HashMap.getObject(configMapId,"retrievalconfig2");
+		                if (additionalQueryParam != null){
+		                    //we have additional params , extract callbackhandler name and sort spec (if any)
+		                    callBackURI = "/Monitoring/RuleFunctions/cqueries/"+additionalQueryParam;
+		                    closure = configMapId;
+		                }
+		                String listenerName = statementName + ".callback";
+		                Query.Statement.executeWithCallback(statementName, listenerName, callBackURI , true, closure);
+		                Shared.RuleFunctions.log("setUpContinousQueries","INFO","Started query with name as " + queryName + ", listener URI as "+callBackURI);
+		             }
+		             else {
+		                 //we have a query based component, but no query. log a warning and continue
+		                 Shared.RuleFunctions.log("setUpContinousQueries","WARNING","No query specified for "+cTypeWithPath+"...");
+		            }
+		        }
+		        else {
+		            //we have a non query based component definition, log a message and continue
+		            Shared.RuleFunctions.log("setUpContinousQueries","INFO",cTypeWithPath+" is not query based...");
+		        }
+		    } else {
+		        //we have a empty component definition, log a warning and continue
+		        Shared.RuleFunctions.log("setUpContinousQueries","WARNING","No definition found for "+cTypeWithPath+"...");
+		    }
+		    //add the current component type to already alreadyProcessedTypes
+		    alreadyProcessedTypes = alreadyProcessedTypes + ":" + cTypesWithPath[i];
+		}
+		Shared.RuleFunctions.log("setUpContinousQueries","INFO","Starting up of continous queries is complete...");
+	}
+}

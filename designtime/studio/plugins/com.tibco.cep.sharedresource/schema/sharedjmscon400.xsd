@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+
+<xsd:schema
+        targetNamespace="http://tibco.com/be/shared/jmscon400"
+        xmlns:aems="http://www.tibco.com/xmlns/aemeta/services/2002"
+        xmlns:bt="http://tibco.com/be/shared/basetypes"
+        xmlns:tns="http://tibco.com/be/shared/jmscon400"
+        xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+    <xsd:import schemaLocation="basetypes.xsd"
+                namespace="http://tibco.com/be/shared/basetypes"/>
+    <xsd:import schemaLocation="aemeta-services-2002.xsd"
+                namespace="http://www.tibco.com/xmlns/aemeta/services/2002"/>
+
+	<xsd:element name="AutoGenClientID" type="xsd:boolean"/>	
+	<xsd:element name="ClientID" type="xsd:string"/>	
+    <xsd:element name="Configuration" type="tns:Configuration-type"/>
+	<xsd:element name="ConnectionAttributes" type="tns:ConnectionAttributes-type"/>
+    <xsd:element name="Description" type="xsd:string"/>
+    <xsd:element name="General" type="tns:General-type"/>
+    <xsd:element name="JmsCon" type="tns:JmsCon-type"/>
+    <xsd:element name="Name" type="xsd:string"/>
+	<xsd:element name="NamingCredential" type="xsd:string"/>
+    <xsd:element name="NamingEnvironment" type="tns:NamingEnvironment-type"/>
+	<xsd:element name="NamingInitialContextFactory" type="xsd:string"/>
+	<xsd:element name="NamingPrincipal" type="xsd:string"/>
+	<xsd:element name="NamingURL" type="xsd:string"/>	
+	<xsd:element name="Password" type="xsd:string"/>	
+	<xsd:element name="ProviderURL" type="xsd:string"/>
+	<xsd:element name="QueueFactoryName" type="xsd:string"/>
+	<xsd:element name="ResourceType" type="xsd:string"/>
+	<xsd:element name="TopicFactoryName" type="xsd:string"/>
+	<xsd:element name="UseJNDI" type="xsd:boolean"/>
+	<xsd:element name="Username" type="xsd:string"/>
+	<xsd:element name="UseSsl" type="bt:booleanOrGVs"/>
+	<xsd:element name="UseXACF" type="xsd:boolean"/>
+	
+    <xsd:complexType name="JmsCon-type">
+        <xsd:sequence>
+            <xsd:element ref="tns:General"/>
+            <xsd:element ref="tns:NamingEnvironment"/>
+            <xsd:element ref="tns:ConnectionAttributes"/>                        
+            <xsd:element ref="tns:Configuration"/>
+        </xsd:sequence>
+    </xsd:complexType>
+
+    <xsd:complexType name="General-type">
+        <xsd:sequence>
+            <xsd:element ref="tns:Name"/>
+            <xsd:element ref="tns:Description"/>
+            <xsd:element ref="tns:ResourceType"/>
+        </xsd:sequence>
+    </xsd:complexType>
+
+	<xsd:complexType name="NamingEnvironment-type">
+        <xsd:sequence>
+            <xsd:element ref="tns:UseJNDI"/>
+            <xsd:element ref="tns:ProviderURL"/>
+            <xsd:element ref="tns:NamingURL"/>            
+            <xsd:element ref="tns:NamingInitialContextFactory"/>
+            <xsd:element ref="tns:TopicFactoryName"/>
+            <xsd:element ref="tns:QueueFactoryName"/>
+            <xsd:element ref="tns:NamingPrincipal"/>
+            <xsd:element ref="tns:NamingCredential"/>            
+		</xsd:sequence>			        
+    </xsd:complexType>
+
+	<xsd:complexType name="ConnectionAttributes-type">
+        <xsd:sequence>
+            <xsd:element ref="tns:Username"/>
+            <xsd:element ref="tns:Password"/>
+            <xsd:element ref="tns:AutoGenClientID"/>
+            <xsd:element ref="tns:ClientID"/>
+		</xsd:sequence>			        
+    </xsd:complexType>
+
+	<xsd:complexType name="Configuration-type">
+        <xsd:sequence>
+            <xsd:element ref="tns:UseXACF"/>
+			<xsd:element ref="aems:ssl" minOccurs="0"/>
+		</xsd:sequence>			        
+    </xsd:complexType>
+
+</xsd:schema>
+

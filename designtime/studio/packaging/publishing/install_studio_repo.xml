@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<project name="package" default="install-all">
+ <property name="behome" value="%TIBCO_BE_HOME_ESC%"/>
+ <property name="jdklib" value="%TIBCO_JAVA_HOME_ESC%/lib"/>
+ <target name="install-all">
+	 
+	<!--standard-->
+	<available file="${behome}/studio/repo/standard" type="dir" property="presentstandard"/>
+	<antcall target="install-repo-by-name">
+		<param name="reponame" value="standard" />
+	</antcall>
+	
+	<!--datamodeling-->
+	<available file="${behome}/studio/repo/datamodeling" type="dir" property="presentdatamodeling"/>
+	<antcall target="install-repo-by-name">
+		<param name="reponame" value="datamodeling" />
+	</antcall>
+	
+	<!--decisionmanager-->
+	<available file="${behome}/studio/repo/decisionmanager" type="dir" property="presentdecisionmanager"/>
+	<antcall target="install-repo-by-name">
+		<param name="reponame" value="decisionmanager" />
+	</antcall>
+	
+	<!--eventstreamprocessing-->
+	<available file="${behome}/studio/repo/eventstreamprocessing" type="dir" property="presenteventstreamprocessing"/>
+	<antcall target="install-repo-by-name">
+		<param name="reponame" value="eventstreamprocessing" />
+	</antcall>
+	
+	<!--process-->
+	<available file="${behome}/studio/repo/process" type="dir" property="presentprocess"/>
+	<antcall target="install-repo-by-name">
+		<param name="reponame" value="process" />
+	</antcall>
+	
+	<!--views-->
+	<available file="${behome}/studio/repo/views" type="dir" property="presentviews"/>
+	<antcall target="install-repo-by-name">
+		<param name="reponame" value="views" />
+	</antcall>
+	
+	<!--update config file-->
+	<antcall target="udpdate-config-file"/>
+	
+	<antcall target="initialize-application"/>
+		
+ </target>
+ 
+ <target name="install-repo-by-name" if="present${reponame}">
+	<echo message="Installing ${reponame}" />
+    <exec executable="${appBinary}" failonerror="true">
+      <arg value="-noSplash"/>
+	  <arg value="-application"/>
+      <arg value="org.eclipse.equinox.p2.director"/>
+      <arg value="-repository"/>
+      <arg value="file:${behome}/studio/repo/be-epf,file:${behome}/studio/repo/be-bw,file:${behome}/studio/repo/${reponame},http://download.eclipse.org/releases/mars/"/>
+      <arg value="-installIU"/>
+      <arg value="com.tibco.cep.${reponame}.feature.feature.group"/>
+    </exec>
+  </target>
+  
+  <target name="udpdate-config-file">
+	<condition property="vmargsexists">
+		<resourcecontains resource="${appIni}" substring="-vmargs"/>
+	</condition>
+	<antcall target="udpdate-config-with-vmargs"/>
+	<antcall target="udpdate-config-without-vmargs"/>
+  </target>
+  
+  
+  <target name="udpdate-config-with-vmargs" unless="vmargsexists">
+  <echo file="${appIni}" append="true">
+-vmargs
+-DBE_HOME=${behome}
+-Dstudio.wrapper.tra.file=${behome}/studio/eclipse/configuration/studio.tra
+-DJDK_LIB=${jdklib}
+</echo>
+  </target>
+  
+  <target name="udpdate-config-without-vmargs" if="vmargsexists">
+	<antcall target="set-be-home"/>
+	<antcall target="set-be-studio-tra"/>
+  	<antcall target="set-jdk-lib"/>
+  </target>
+  
+  <!-- Task for writing BE_HOME to ini files-->
+  <target name="set-be-home">
+	<condition property="behomeexists">
+		<resourcecontains resource="${appIni}" substring="-DBE_HOME"/>
+	</condition>
+	<antcall target="update-be-home"/>
+	<antcall target="add-be-home"/>
+  </target>
+  <target name="update-be-home" if="behomeexists">
+	<echo message="Updating BE_HOME"/>
+	<replaceregexp  file="${appIni}" match="-DBE_HOME=(.*)" replace="-DBE_HOME=${behome}"/>
+  </target>
+  <target name="add-be-home" unless="behomeexists">
+	<echo message="Adding BE_HOME"/>
+<echo file="${appIni}" append="true">
+-DBE_HOME=${behome}
+</echo>
+  </target>
+  
+    <!-- Task for writing -Dstudio.wrapper.tra.file to ini files-->
+  <target name="set-be-studio-tra">
+	<condition property="studiotraexists">
+		<resourcecontains resource="${appIni}" substring="-Dstudio.wrapper.tra.file"/>
+	</condition>
+	<antcall target="update-be-studio-tra"/>
+	<antcall target="add-be-studio-tra"/>
+  </target>
+  <target name="update-be-studio-tra" if="studiotraexists">
+	<echo message="Updating BE tra path"/>
+	<property name="studiotra.replacement" value="-Dstudio.wrapper.tra.file=${behome}/studio/eclipse/configuration/studio.tra"/>
+	<replaceregexp  file="${appIni}" match="-Dstudio.wrapper.tra.file=(.*)" replace="${studiotra.replacement}"/>
+  </target>
+  <target name="add-be-studio-tra" unless="studiotraexists">
+	<echo message="Adding BE tra path"/>
+<echo file="${appIni}" append="true">
+-Dstudio.wrapper.tra.file=${behome}/studio/eclipse/configuration/studio.tra
+</echo>
+  </target>
+	
+    <!-- Task for writing -Dstudio.wrapper.tra.file to ini files-->
+  <target name="set-jdk-lib">
+	<condition property="jdklibexists">
+		<resourcecontains resource="${appIni}" substring="-DJDK_LIB"/>
+	</condition>
+	<antcall target="update-jdk-lib"/>
+	<antcall target="add-jdk-lib"/>
+  </target>
+  <target name="update-jdk-lib" if="jdklibexists">
+	<echo message="Updating JDK Lib path"/>
+	<replaceregexp  file="${appIni}" match="-DJDK_LIB=(.*)" replace="-DJDK_LIB=${jdklib}"/>
+  </target>
+  <target name="add-jdk-lib" unless="jdklibexists">
+	<echo message="Adding JDK Lib path"/>
+<echo file="${appIni}" append="true">
+-DJDK_LIB=${jdklib}
+</echo>
+  </target>
+  
+ <target name="initialize-application">
+	<echo message="Initializing aplication" />
+    <exec executable="${appBinary}" failonerror="true">
+      <arg value="-noSplash"/>
+	  <arg value="-clean"/>
+	  <arg value="-initialize"/>
+	</exec>
+ </target>  
+</project>

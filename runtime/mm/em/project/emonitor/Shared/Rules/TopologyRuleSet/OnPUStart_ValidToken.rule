@@ -1,0 +1,77 @@
+/**
+ * @description 
+ * @author 
+ */
+rule Shared.Rules.TopologyRuleSet.OnPUStart_ValidToken {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Shared.Events.topology.PuStartEvent	pustartevent;
+		
+	}
+	when {
+		pustartevent.token != null && String.length(pustartevent.token) != 0;
+	}
+	then {
+		String family = "OnPUStartEvent";
+		String methodFQName ="";
+		String entityType="";
+		String monitoredEntityName ="";
+		try {
+			Shared.RuleFunctions.log(family,"DEBUG","Rule " + family + " fired");
+            Shared.RuleFunctions.log(family,"DEBUG","TOKEN: " + pustartevent.token);
+			
+			Shared.Concepts.LoggedInUser user = Instance.getByExtId(pustartevent.token);
+			if (user == null) {
+			    Shared.Events.reqres.FailureResponseEvent event = Shared.Events.reqres.FailureResponseEvent.FailureResponseEvent(null,null,"001","Invalid token: " + pustartevent.token);
+			    Event.replyEvent(pustartevent, event);
+			    Event.consumeEvent(pustartevent);
+			    return;
+			}
+			
+			String p_extid = pustartevent.monitorableid;
+			Shared.Concepts.MonitorableEntity PU = Instance.getByExtId(p_extid);
+
+			if (PU == null) {
+				String warnMsg = "Monitorable object associated with PU with monitorable id '" + p_extid + "' is NULL. PU NOT FOUND!";
+			    Shared.RuleFunctions.log(family,"WARN",warnMsg);
+			    Shared.Events.reqres.FailureResponseEvent event = Shared.Events.reqres.FailureResponseEvent.FailureResponseEvent(null,null,"001",warnMsg);
+			    Event.replyEvent(pustartevent, event);
+			    Event.consumeEvent(pustartevent);
+			    return;
+			}
+			else {
+				entityType = PU.type;
+				methodFQName = "/"+entityType + "/startPU";
+				monitoredEntityName = getFQName(PU);
+				Shared.RuleFunctions.log(family,"DEBUG","MonitorableEntity ID: " + p_extid);
+
+            if(PU.predefined == false) {
+                String warnMsg = "Remote Start of PU's is only available for PU's that are predefined in a site topology file" + PU.name + " is not predefined.";
+                Shared.RuleFunctions.log(family,"WARN",warnMsg);
+                Shared.Events.reqres.FailureResponseEvent event = Shared.Events.reqres.FailureResponseEvent.FailureResponseEvent(null,null,"001",warnMsg);
+                Event.replyEvent(pustartevent, event);
+                Event.consumeEvent(pustartevent);
+                return;
+            }
+
+				String machine_name = PU.parent.topologyProps[1];
+				
+				Shared.RuleFunctions.log(family,"DEBUG","Starting processing unit: " + monitoredEntityName);
+				
+				String result = BEMM.topology.startProcessUnit(machine_name,PU.topologyProps[1],pustartevent.username,
+												pustartevent.password,pustartevent.uiUserName,pustartevent.uiPwd);
+				
+				Shared.Events.reqres.SuccessXMLResponseEvent event = Shared.Events.reqres.SuccessXMLResponseEvent.SuccessXMLResponseEvent(null,result);
+				Event.replyEvent(pustartevent, event);
+			} //PU NOT NULL
+		} catch (Exception e) {
+		    Management.RuleFunctions.Exceptions.printAndSendException(e /*Except Object */,
+									family/*family String */,methodFQName/*methodFQName String */,
+									monitoredEntityName /*monitoredEntityName String */,pustartevent/*requestevent Event */);
+		}
+		Event.consumeEvent(pustartevent);
+	}
+}

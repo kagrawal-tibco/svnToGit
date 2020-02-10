@@ -1,0 +1,56 @@
+/**
+ * @description 
+ * @author 
+ */
+rule Monitoring.Rules.DashboardRuleSet.SubscribeComponent_ValidToken {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Monitoring.Events.request.ComponentSubscribeRequestEvent	requestevent;
+		
+	}
+	when {
+		requestevent.token != null && String.length(requestevent.token) != 0;
+	}
+	then {
+		Shared.Concepts.LoggedInUser user = Instance.getByExtId(requestevent.token);
+		if (user == null) {
+		    Shared.Events.reqres.FailureResponseEvent event = Shared.Events.reqres.FailureResponseEvent.FailureResponseEvent(null,null,"001","Invalid token");
+		    Event.replyEvent(requestevent, event);
+		}
+		else {
+		    user.lastAccessTime = System.currentTimeMillis();
+		    Shared.RuleFunctions.log("SubscribeComponent_ValidToken","DEBUG","Found User[username="+user.userName+"] matching "+requestevent.token);
+		    String mId = requestevent.monitorableid;
+		    Shared.Concepts.MonitorableEntity monitorable = Instance.getByExtId(mId);
+		    if (monitorable == null) {
+		        Shared.Events.reqres.FailureResponseEvent event = Shared.Events.reqres.FailureResponseEvent.FailureResponseEvent(null,null,"010","Invalid monitor id");
+		        Event.replyEvent(requestevent, event);
+		    }
+		    else {
+		        Shared.RuleFunctions.log("SubscribeComponent_ValidToken","DEBUG","Found MonitorableEntity[name="+monitorable.name+",type="+monitorable.type+"] matching "+requestevent.monitorableid);
+		        String fqName = getFQName(monitorable);
+		        Shared.RuleFunctions.log("SubscribeComponent_ValidToken","DEBUG","Derived fqname as "+fqName+" from MonitorableEntity[name="+monitorable.name+",type="+monitorable.type+"]");
+		        String compName = fqName + ":" + requestevent.type;
+		        Shared.RuleFunctions.log("SubscribeComponent_ValidToken","DEBUG","Searching for component with extid as "+compName+"...");
+		        Shared.Concepts.AbstractMonitorView view = Instance.getByExtId(compName);
+		        if (view == null) {
+		            Shared.Events.reqres.FailureResponseEvent event = Shared.Events.reqres.FailureResponseEvent.FailureResponseEvent(null,null,"010","Invalid component type");
+		            Event.replyEvent(requestevent, event);
+		            return;
+		        }
+		        view.monitorable = monitorable; //for CR 1-AO6MN6
+		        view.lastAccessTime = System.currentTimeMillis();
+		        Shared.RuleFunctions.log("SubscribeComponent_ValidToken","DEBUG","Total number of subscribed views on "+user@extId+" is "+user.monitorView@length);
+		        subscribeView(view);
+		        String msg = compName+" successfully subscribed...";
+		        Shared.RuleFunctions.log("SubscribeComponent_ValidToken","DEBUG",msg);
+		        Shared.Events.reqres.SuccessSimpleResponseEvent event = Shared.Events.reqres.SuccessSimpleResponseEvent.SuccessSimpleResponseEvent(null,null,msg,null);
+		        Event.replyEvent(requestevent, event);
+		    }
+		}
+		Event.consumeEvent(requestevent);
+	}
+}

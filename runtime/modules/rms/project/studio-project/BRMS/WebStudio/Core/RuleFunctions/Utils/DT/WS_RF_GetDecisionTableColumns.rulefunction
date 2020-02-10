@@ -1,0 +1,82 @@
+/**
+ * @description 
+ */
+WebStudio.Core.Concepts.Decision.Pagination.WS_C_TableColumns rulefunction WebStudio.Core.RuleFunctions.Utils.DT.WS_RF_GetDecisionTableColumns {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String projectName;
+		String userName;
+		String scsRootURL;
+		String scsIntegrationType;
+		Object[] argumentObjects;
+		Object[] tableColumnObjects;	
+		String[] roles;
+		boolean isTransient;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.DT.WS_RF_GetDecisionTableColumns");
+
+		WS_C_TableColumns tableColumns = null;
+		if (!isTransient) {
+			tableColumns = Instance.newInstance("/WebStudio/Core/Concepts/Decision/Pagination/WS_C_TableColumns", null);
+		} else {
+			tableColumns = Instance.newTransientInstance("/WebStudio/Core/Concepts/Decision/Pagination/WS_C_TableColumns");
+		}
+		for (int i = 0; i < tableColumnObjects@length; i++) {
+			WS_C_TableColumn tableColumn = null;
+			if (!isTransient) {				
+				tableColumn = Instance.newInstance("/WebStudio/Core/Concepts/Decision/Pagination/WS_C_TableColumn", null);
+			} else {
+				tableColumn = Instance.newTransientInstance("/WebStudio/Core/Concepts/Decision/Pagination/WS_C_TableColumn");
+			}
+			tableColumn.columnId = 	WS.Decision.TableModel.Columns.getID(tableColumnObjects[i]);
+			tableColumn.name = WS.Decision.TableModel.Columns.getName(tableColumnObjects[i]);
+			tableColumn.columnAlias = WS.Decision.TableModel.Columns.getAlias(tableColumnObjects[i]);
+			tableColumn.columnType = WS.Decision.TableModel.Columns.getColumnType(tableColumnObjects[i]);
+			
+			tableColumn.property = WS.Decision.TableModel.Columns.getPropertyPath(tableColumnObjects[i]);
+			tableColumn.propertyType = WS.Decision.TableModel.Columns.getPropertyType(tableColumnObjects[i]);
+			tableColumn.isArrayProperty = WS.Decision.TableModel.Columns.isArrayProperty(tableColumnObjects[i]);
+			tableColumn.isSubstitution = WS.Decision.TableModel.Columns.isSubstitution(tableColumnObjects[i]);
+			tableColumn.defaultCellText = WS.Decision.TableModel.Columns.getDefaultCellText(tableColumnObjects[i]);
+			String columnEntityPath = WS.Decision.TableModel.Columns.getPropertyEntityPath(tableColumnObjects[i]); 
+			if (columnEntityPath != null) {
+				String entityType = null;			
+				for (int j = 0; j < argumentObjects@length; j++) {
+					String argAlias = WS.Decision.TableModel.Arguments.getAlias(argumentObjects[j]);
+					String[] splits = String.split(tableColumn.name, "\\.");
+					String columnAlias = splits[0];
+					if (String.contains(columnAlias, "[]")) {
+						columnAlias = String.replaceAll(columnAlias, "\\[\\]", "");
+					}
+					if (String.equals(columnAlias, argAlias)) {
+						entityType = WS.Decision.TableModel.Arguments.getResourceType(argumentObjects[j]);
+						break;						
+					}	
+				}
+				
+				String propertyName = WS.Decision.TableModel.Columns.getPropertyName(tableColumnObjects[i]);
+				
+				if (String.equals(columnEntityPath, "undefined")) {
+					Log.log(LOGGER, "Debug", "Setting ColumnEntityPath to null");
+					columnEntityPath = null;
+				}
+				
+				Object argumentProperties = WebStudio.Core.RuleFunctions.Utils.DT.WS_RF_FetchDTArgumentProperties(projectName, columnEntityPath, 
+																														entityType, String.toLowerCase(entityType), userName, roles, true);
+				String[] domainPaths = WS.Decision.getDomainPathsForProperty(argumentProperties, propertyName, scsIntegrationType, scsRootURL, projectName);
+				if (domainPaths@length > 0) {
+					tableColumn.associatedDM = true;
+				} else {
+					tableColumn.associatedDM = false;
+				}
+			}
+						
+			Instance.PropertyArray.appendContainedConcept(tableColumns.column, tableColumn, 1L);
+		}
+		
+		return tableColumns;		
+	}
+}

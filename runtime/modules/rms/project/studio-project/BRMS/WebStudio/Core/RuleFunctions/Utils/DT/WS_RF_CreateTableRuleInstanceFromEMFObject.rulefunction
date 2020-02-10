@@ -1,0 +1,80 @@
+/**
+ * @description 
+ */
+WebStudio.Core.Concepts.Decision.Pagination.WS_C_TableRule rulefunction WebStudio.Core.RuleFunctions.Utils.DT.WS_RF_CreateTableRuleInstanceFromEMFObject {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object tableRuleObj;
+		boolean createTransientInstance;
+	}
+	body {
+
+    	WebStudio.Core.Concepts.Decision.Pagination.WS_C_TableRule tableRule = null;
+    	WebStudio.Core.Concepts.Decision.Pagination.WS_C_TableRuleMetadata metadata = null;
+    	if (createTransientInstance) {
+    		tableRule = Instance.newTransientInstance("/WebStudio/Core/Concepts/Decision/Pagination/WS_C_TableRule");
+    		metadata = Instance.newTransientInstance("/WebStudio/Core/Concepts/Decision/Pagination/WS_C_TableRuleMetadata");
+    	}	
+    	else {
+    		tableRule = Instance.newInstance("/WebStudio/Core/Concepts/Decision/Pagination/WS_C_TableRule", null);
+    		metadata =  Instance.newInstance("/WebStudio/Core/Concepts/Decision/Pagination/WS_C_TableRuleMetadata", null);
+    	}	 	
+    	tableRule.ruleId = WS.Decision.TableModel.Rules.getID(tableRuleObj);
+
+		Object[] metadataPropObjects = WS.Decision.TableModel.Rules.MetaData.getProperties(tableRuleObj);
+		 		
+    	for (int indx = 0; indx < metadataPropObjects@length; indx++) {
+			WebStudio.Core.Concepts.Decision.Pagination.WS_C_MetadataProperty property = null;
+			if (createTransientInstance) { 
+				property = Instance.newTransientInstance("/WebStudio/Core/Concepts/Decision/Pagination/WS_C_MetadataProperty");
+			} else {
+				property = Instance.newInstance("/WebStudio/Core/Concepts/Decision/Pagination/WS_C_MetadataProperty", null);
+			}		
+			property.name = WS.Decision.TableModel.Rules.MetaData.getPropertyName(metadataPropObjects[indx]);
+			property.value = WS.Decision.TableModel.Rules.MetaData.getPropertyValue(metadataPropObjects[indx]);
+			property.type = WS.Decision.TableModel.Rules.MetaData.getPropertyType(metadataPropObjects[indx]);
+			Instance.PropertyArray.appendContainedConcept(metadata.property, property, 1);									    		
+    	}
+    	Instance.PropertyAtom.setContainedConcept(tableRule.metadata, metadata, 1L);	 			
+		 		
+		Object[] conditionObjects = WS.Decision.TableModel.Rules.getTableRuleConditions(tableRuleObj);
+    	for (int condCount = 0; condCount < conditionObjects@length; condCount++) { 
+			WebStudio.Core.Concepts.Decision.Pagination.WS_C_TableRuleCondition condition = null;
+			if (createTransientInstance) {
+				condition = Instance.newTransientInstance("/WebStudio/Core/Concepts/Decision/Pagination/WS_C_TableRuleCondition");
+			} else {
+				condition = Instance.newInstance("/WebStudio/Core/Concepts/Decision/Pagination/WS_C_TableRuleCondition", null);
+			}	 					 
+			condition.ruleId = tableRule.ruleId;
+			condition.varId = WS.Decision.TableModel.Rules.Variables.getID(conditionObjects[condCount]);
+			condition.columnId = WS.Decision.TableModel.Rules.Variables.getColumnID(conditionObjects[condCount]);
+			condition.expression = WS.Decision.TableModel.Rules.Variables.getExpression(conditionObjects[condCount]);
+			condition.displayValue = WS.Decision.TableModel.Rules.Variables.getDisplayValue(conditionObjects[condCount]);
+			condition.isEnabled = WS.Decision.TableModel.Rules.Variables.isEnabled(conditionObjects[condCount]);			
+			condition.comment = WS.Decision.TableModel.Rules.Variables.getComment(conditionObjects[condCount]);
+    		Instance.PropertyArray.appendContainedConcept(tableRule.condition, condition, 1L);	    		
+    	}	    			
+
+		Object[] actionObjects = WS.Decision.TableModel.Rules.getTableRuleActions(tableRuleObj);
+    	for (int actionCount = 0; actionCount < actionObjects@length; actionCount++) { 
+			WebStudio.Core.Concepts.Decision.Pagination.WS_C_TableRuleAction action = null;
+			if (createTransientInstance) {
+				action = Instance.newTransientInstance("/WebStudio/Core/Concepts/Decision/Pagination/WS_C_TableRuleAction");
+			} else {
+				action = Instance.newInstance("/WebStudio/Core/Concepts/Decision/Pagination/WS_C_TableRuleAction", null);
+			}						 
+			action.ruleId = tableRule.ruleId;
+			action.varId = WS.Decision.TableModel.Rules.Variables.getID(actionObjects[actionCount]);
+			action.columnId = WS.Decision.TableModel.Rules.Variables.getColumnID(actionObjects[actionCount]);			
+			action.expression = WS.Decision.TableModel.Rules.Variables.getExpression(actionObjects[actionCount]);
+			action.displayValue = WS.Decision.TableModel.Rules.Variables.getDisplayValue(actionObjects[actionCount]);				
+			action.isEnabled = WS.Decision.TableModel.Rules.Variables.isEnabled(actionObjects[actionCount]); 
+			action.comment = WS.Decision.TableModel.Rules.Variables.getComment(actionObjects[actionCount]);								
+    		Instance.PropertyArray.appendContainedConcept(tableRule.action, action, 1L);	    		
+    	}
+    	
+    	return tableRule;		
+	}
+}

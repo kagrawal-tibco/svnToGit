@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<cluster xmlns="http://tibco.com/businessevents/configuration/5.1">
+    <revision>
+        <version>13</version>
+        <author>TIBCO Software Inc.</author>
+        <date>2012/03/21 11:06:33</date>
+        <comment/>
+    </revision>
+    <name>tickertracker</name>
+    <message-encoding>UTF-8</message-encoding>
+    <object-management>
+        <cache-manager>
+            <provider>
+                <name>TIBCO</name>
+            </provider>
+            <cache-agent-quorum/>
+            <backup-copies>1</backup-copies>
+            <entity-cache-size>10000</entity-cache-size>
+            <object-table>
+                <max-size>100000</max-size>
+            </object-table>
+            <backing-store>
+                <cache-aside>true</cache-aside>
+                <cache-loader-class/>
+                <enabled>true</enabled>
+                <enforce-pools>true</enforce-pools>
+                <strategy>jdbc</strategy>
+                <type>oracle</type>
+                <primary-connection>
+                    <uri>/SharedResources/JDBCConfig.sharedjdbc</uri>
+                    <initial-size>4</initial-size>
+                    <max-size>8</max-size>
+                    <min-size>1</min-size>
+                </primary-connection>
+            </backing-store>
+            <domain-objects>
+                <default-mode>cache</default-mode>
+                <check-for-version>true</check-for-version>
+                <constant>false</constant>
+                <enable-tracking>true</enable-tracking>
+                <evict-on-update>false</evict-on-update>
+                <cache-limited>false</cache-limited>
+                <subscribe>true</subscribe>
+                <pre-load-enabled>true</pre-load-enabled>
+                <pre-load-fetch-size>0</pre-load-fetch-size>
+                <pre-load-handles>true</pre-load-handles>
+                <domain-object>
+                    <cache-limited>true</cache-limited>
+                    <evict-on-update>true</evict-on-update>
+                    <mode>cache</mode>
+                    <uri>/Events/Ticker</uri>
+                    <backing-store>
+                        <enabled>false</enabled>
+                        <table-name/>
+                        <properties>
+                            <property>
+                                <name>ticker</name>
+                            </property>
+                            <property>
+                                <name>price</name>
+                            </property>
+                            <property>
+                                <name>volume</name>
+                            </property>
+                        </properties>
+                    </backing-store>
+                    <indexes>
+                        <index/>
+                    </indexes>
+                </domain-object>
+            </domain-objects>
+        </cache-manager>
+        <db-concepts>
+            <db-uris/>
+            <check-interval>60</check-interval>
+            <inactivity-timeout>0</inactivity-timeout>
+            <initial-size>5</initial-size>
+            <max-size>5</max-size>
+            <min-size>5</min-size>
+            <property-check-interval>900</property-check-interval>
+            <retry-count>-1</retry-count>
+            <wait-timeout>1</wait-timeout>
+        </db-concepts>
+    </object-management>
+    <rulesets>
+        <rules id="all-rules">
+            <uri>/</uri>
+        </rules>
+    </rulesets>
+    <function-groups>
+        <functions id="all-functions">
+            <uri>/</uri>
+        </functions>
+    </function-groups>
+    <destination-groups>
+        <destinations id="Http">
+            <destination id="AllOperations">
+                <pre-processor>/RuleFunctions/PreProcessor</pre-processor>
+                <queue-size>0</queue-size>
+                <thread-count/>
+                <threading-model>caller</threading-model>
+                <uri>/Channels/HTTP/AllOps</uri>
+            </destination>
+        </destinations>
+    </destination-groups>
+    <log-configs>
+        <log-config id="logConfig">
+            <enabled>true</enabled>
+            <roles>*:info</roles>
+            <files>
+                <enabled>true</enabled>
+                <dir>logs</dir>
+                <name/>
+                <max-number>10</max-number>
+                <max-size>5000000</max-size>
+                <append>true</append>
+            </files>
+            <terminal>
+                <enabled/>
+                <sys-out-redirect/>
+                <sys-err-redirect/>
+                <encoding/>
+            </terminal>
+            <line-layout>
+                <enabled>false</enabled>
+                <class/>
+                <arg/>
+            </line-layout>
+        </log-config>
+    </log-configs>
+    <agent-classes>
+        <inference-agent-class id="inference-agent">
+            <rules>
+                <ref>all-rules</ref>
+            </rules>
+            <destinations>
+                <ref>Http</ref>
+            </destinations>
+            <startup/>
+            <shutdown/>
+            <local-cache>
+                <eviction>
+                    <max-size/>
+                    <max-time/>
+                </eviction>
+            </local-cache>
+            <shared-queue>
+                <size>1024</size>
+                <workers>10</workers>
+            </shared-queue>
+            <load>
+                <max-active/>
+            </load>
+            <concurrent-rtc>false</concurrent-rtc>
+            <check-for-duplicates>false</check-for-duplicates>
+            <businessworks>
+                <uri/>
+            </businessworks>
+            <property-group/>
+        </inference-agent-class>
+        <dashboard-agent-class id="dashboard-agent">
+            <rules/>
+            <destinations/>
+            <startup/>
+            <shutdown/>
+            <property-group>
+                <property name="be.auth.type" type="string" value="file"/>
+                <property name="be.auth.file.location" type="string" value="%TIBCO_BE_HOME_ESC%/examples/views/TickerTracker/config/users.pwd"/>
+                <property name="be.agent.dashboard.hostname" type="string" value="localhost"/>
+                <property name="be.agent.dashboard.mal.storage.file.root" type="string" value="%TIBCO_BE_HOME_ESC%/examples/views/TickerTracker/personalizeddata"/>
+                <property name="be.agent.dashboard.*.force.stacktrace" value="true"/>
+            </property-group>
+        </dashboard-agent-class>
+    </agent-classes>
+    <processing-units>
+        <processing-unit id="default">
+            <agents>
+                <agent>
+                    <ref>inference-agent</ref>
+                    <key>infagent</key>
+                    <priority/>
+                </agent>
+                <agent>
+                    <ref>dashboard-agent</ref>
+                    <key>dashboardagent</key>
+                    <priority/>
+                </agent>
+            </agents>
+            <logs>logConfig</logs>
+            <hot-deploy>false</hot-deploy>
+            <cache-storage-enabled>true</cache-storage-enabled>
+            <db-concepts>false</db-concepts>
+            <property-group/>
+        </processing-unit>
+    </processing-units>
+    <property-group>
+        <property-group comment="" name="auth">
+            <property name="be.mm.auth.type" value="file"/>
+            <property name="be.mm.auth.file.location" value="%TIBCO_BE_HOME_ESC%/mm/config/users.pwd"/>
+        </property-group>
+        <property-group comment="" name="database">
+            <property name="tibco.clientVar.DB_URL" value="jdbc:oracle:thin:@&lt;hostname&gt;:&lt;port&gt;:&lt;db_instance&gt;"/>
+            <property name="tibco.clientVar.DB_USERNAME" value="be_user"/>
+            <property name="tibco.clientVar.DB_PASSWORD" value="be_user"/>
+        </property-group>
+    </property-group>
+</cluster>

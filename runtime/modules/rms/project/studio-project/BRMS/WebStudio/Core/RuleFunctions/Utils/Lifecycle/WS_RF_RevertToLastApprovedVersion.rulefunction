@@ -1,0 +1,142 @@
+/**
+ * @description 
+ */
+void rulefunction WebStudio.Core.RuleFunctions.Utils.Lifecycle.WS_RF_RevertToLastApprovedVersion {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		WebStudio.Core.Concepts.WS_C_UserArtifact userArtifact;
+		String projectName;
+		String username;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.Lifecycle.WS_RF_RevertToLastApprovedVersion");
+		
+		Log.log(LOGGER, "Debug", "User Artifact Version - [%s]", userArtifact.currentArtifactVersion);
+		if (userArtifact.checkpointRevision != null) {
+			Log.log(LOGGER, "Debug", "Check point revision Id - [%s] & version - [%s] ",userArtifact.checkpointRevision@id, userArtifact.checkpointRevision.version);
+		}
+		
+		String[] artifactRevisionIds = Instance.PropertyArray.toArrayString(userArtifact.artifactRevisionIds);
+		Log.log(LOGGER, "Debug", "Total Revisions [%s]", artifactRevisionIds@length);
+		
+		String subscriptionId = WS_RF_GetSubscriptionId(username);
+		
+		// case for delete->revert
+		if (userArtifact.softDelete) WS_RF_FlipSoftDeleteState(userArtifact);
+		
+		//Removing any matching committable items		
+		String workspaceExtId = WS_RF_CreateUserArtifactExtId("WORKSPACE", null, null, username, subscriptionId, null);
+		boolean userWorkspaceLock = Cluster.DataGrid.Lock(workspaceExtId, -1, false);
+		if (userWorkspaceLock) {
+			WS_C_UserWorkspace userWorkspace = Instance.getByExtIdByUri(workspaceExtId, "/WebStudio/Core/Concepts/WS_C_UserWorkspace");
+			Log.log(LOGGER, "Debug", "Existing workspace concept id %s", userWorkspace@id);
+			if (userWorkspace != null) {
+				//Get committable delta
+				WS_C_WorkspaceCommittableDelta committableDelta = Instance.PropertyAtom.getContainedConcept(userWorkspace.committableDelta, 1L);
+				if (committableDelta != null) {
+					WS_C_CommittableDeltaEntry[] artifactRevisionsCommittableEntries = Instance.PropertyArray.toArrayConcept(committableDelta.deltaEntry);
+					Log.log(LOGGER, "Debug", "Total artifacts in committable %s", artifactRevisionsCommittableEntries@length);
+					
+					if (artifactRevisionsCommittableEntries != null && artifactRevisionsCommittableEntries@length > 0) {
+						//Get matching committable delta entry
+						WS_C_CommittableDeltaEntry matchingCommittableDeltaEntry = WS_RF_GetMatchingCommittableDeltaEntry(userArtifact.artifactPath, artifactRevisionsCommittableEntries);
+						if (matchingCommittableDeltaEntry != null) {
+							Log.log(LOGGER, "Debug", "Matching Committable Delta Entry - %s", matchingCommittableDeltaEntry@id);
+							Instance.PropertyArray.removeConceptReference(committableDelta.deltaEntry, matchingCommittableDeltaEntry);
+						} else {
+							Log.log(LOGGER, "Debug", "Matching Committable Delta Entry not found");
+						}
+					}
+				}
+				
+				Log.log(LOGGER, "Debug", "Total artifacts in committable %s after removing for revert.", committableDelta.deltaEntry@length);
+			}
+		}
+		Cluster.DataGrid.UnLock(workspaceExtId, false);
+		
+		String masterArtifactExtId = WS_RF_CreateUserArtifactExtId(null, userArtifact.artifactPath, projectName, null, subscriptionId, null);
+		WS_C_MasterArtifact masterArtifact = Instance.getByExtIdByUri(masterArtifactExtId, "/WebStudio/Core/Concepts/Lifecycle/WS_C_MasterArtifact");		
+		if (masterArtifact != null) {
+			
+			Log.log(LOGGER, "Debug", "Master Artifact - %s", masterArtifact@id);
+			boolean addToArtifactRevisions = false;
+			
+			//check for artifact version under Master artifact and see if it exists under the list if revisions for artifact			
+			int artifactRevisionIndex = -1;
+			WS_C_UserArtifactRevision masterArtifactRevision = masterArtifact.currentMasterRevision;
+			if (masterArtifactRevision != null) {
+				Log.log(LOGGER, "Debug", "Master Artifact Revision - %s", masterArtifactRevision@id);
+				artifactRevisionIndex = Instance.PropertyArray.indexOfString(userArtifact.artifactRevisionIds, masterArtifactRevision@extId);
+				if (artifactRevisionIndex == -1) {
+					addToArtifactRevisions = true;
+				}
+			} 
+			
+			//if master artifact version is null or does not exist in the list of artifact versions, then get checkpoint version			
+			if (artifactRevisionIndex == -1 || masterArtifactRevision == null) {
+				WS_C_UserArtifactRevision checkPointArtifactRevision = userArtifact.checkpointRevision;
+				artifactRevisionIndex = Instance.PropertyArray.indexOfString(userArtifact.artifactRevisionIds, checkPointArtifactRevision@extId);
+			}
+			
+			Log.log(LOGGER, "Debug", "Starting index - %s and total artifact revisions - %s", artifactRevisionIndex+1, artifactRevisionIds@length);
+			for(int i=artifactRevisionIndex+1; i < artifactRevisionIds@length; i++) {
+				WS_C_UserArtifactRevision userArtifactRevision = Instance.getByExtIdByUri(artifactRevisionIds[i], "/WebStudio/Core/Concepts/WS_C_UserArtifactRevision");
+				Instance.PropertyArray.removeString(userArtifact.artifactRevisionIds, artifactRevisionIds[i]);
+				userArtifact.currentArtifactVersion = userArtifact.currentArtifactVersion - 1;
+
+				if (userArtifactRevision != null) {
+					Instance.deleteInstance(userArtifactRevision);					
+				}
+			}
+			
+			//add the master artifact revision only if it does not exist in the revision list for this artifact
+			if (addToArtifactRevisions) {
+				//Add the latest artifact revision
+				Instance.PropertyArray.appendString(userArtifact.artifactRevisionIds, masterArtifactRevision@extId, 1L);
+				userArtifact.currentArtifactVersion = userArtifact.currentArtifactVersion + 1;
+				
+				WS_RF_SetCheckpointRevisionConceptReference(userArtifact, masterArtifactRevision);
+			}
+			
+		} else {
+			Log.log(LOGGER, "Debug", "Master Artifact not found");
+			if (userArtifact.softDelete) {
+				WS_RF_FlipSoftDeleteState(userArtifact);
+				String nextRevisionExtId = userArtifact@extId + "@" + userArtifact.currentArtifactVersion;
+				WS_C_UserArtifactRevision nextRevision = Instance.getByExtId(nextRevisionExtId);
+				if(nextRevision == null) {
+					double nextVersion = userArtifact.currentArtifactVersion + 1;
+					nextRevision = 
+						Instance.newInstance("/WebStudio/Core/Concepts/WS_C_UserArtifactRevision", nextRevisionExtId);
+					userArtifact.currentArtifactVersion = nextVersion;
+					//Set parent artifact id
+					nextRevision.parentArtifactId = userArtifact@extId;
+					nextRevision.parentArtifactType = userArtifact.artifactType;		
+					nextRevision.version = nextVersion;
+					nextRevision.creationTime = DateTime.now();
+				}
+				//Also make this the checkpoint revision
+				WS_RF_SetCheckpointRevisionConceptReference(userArtifact, nextRevision);
+				Instance.PropertyArray.appendString(userArtifact.artifactRevisionIds, nextRevision@extId, 1L);
+				
+				Log.log(LOGGER, "Debug", "Next Revision Id[%s], Version[%s] & ExtId[%s]", nextRevision@id, nextRevision.version, nextRevision@extId);
+				
+				WS_RF_PerformLifecycleStateOps(null, projectName, username, "Fetch", userArtifact, nextRevision);
+			} else {
+				for(int i=1; i<artifactRevisionIds@length; i++) {
+					WS_C_UserArtifactRevision userArtifactRevision = Instance.getByExtIdByUri(artifactRevisionIds[i], "/WebStudio/Core/Concepts/WS_C_UserArtifactRevision");
+					Instance.PropertyArray.removeString(userArtifact.artifactRevisionIds, artifactRevisionIds[i]);
+					if (userArtifactRevision != null) {
+						Instance.deleteInstance(userArtifactRevision);
+						userArtifact.currentArtifactVersion = userArtifact.currentArtifactVersion - 1;
+					}
+				}
+			}
+		}
+		
+		Log.log(LOGGER, "Debug", "Total Revisions after processing [%s]", userArtifact.artifactRevisionIds@length);
+		Log.log(LOGGER, "Debug", "Current User Artifact Revision [%s]", userArtifact.currentArtifactVersion);
+	}
+}

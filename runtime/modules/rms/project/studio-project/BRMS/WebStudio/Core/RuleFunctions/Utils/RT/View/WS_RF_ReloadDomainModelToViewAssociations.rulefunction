@@ -1,0 +1,58 @@
+/**
+ * @description 
+ */
+void rulefunction WebStudio.Core.RuleFunctions.Utils.RT.View.WS_RF_ReloadDomainModelToViewAssociations {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String projectName;
+		String username;
+		String[] roles;	
+		
+		WebStudio.Core.Concepts.RuleTemplateInstance.View.WS_C_BindingInfo[] bindingInfoList;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.RT.View.WS_RF_ReloadDomainModelToViewAssociation");
+		
+		WS_C_Domain domainToReload = null;
+		for (int i = 0; i < bindingInfoList@length; i++) {
+			WS_C_BindingInfo bindingInfo = bindingInfoList[i];
+			
+			Log.log(LOGGER, "Debug", "Bindings name[%s], value[%s], domain[%s]", bindingInfo.bindingId, bindingInfo.value, bindingInfo.domainInfo);
+			if (bindingInfo.domainInfo != null) {
+				WS_C_Domain[] domainInfoList = Instance.PropertyArray.toArrayConcept(bindingInfo.domainInfo);
+				if (domainInfoList != null && domainInfoList@length > 0) {
+					for (int j=0; j<domainInfoList@length; j++) {
+						domainToReload = domainInfoList[j];
+						break;
+					}
+				} else {
+					Log.log(LOGGER, "Debug", "Either domainInfoList == null or domainInfoList@length == 0");
+					if (domainInfoList != null) {
+						Log.log(LOGGER, "Debug", "domainInfoList@length = [%s]", domainInfoList@length);
+					}
+				}
+			
+				if (domainToReload != null) {
+					String domainPath = domainToReload.folder + domainToReload.name;
+					Log.log(LOGGER, "Debug", "Reloading the domain model [%s] containing [%s] single & [%s] range domain entries.", domainPath, domainToReload.singleEntry@length, domainToReload.rangeEntry@length);
+					long existingId = bindingInfo.domainInfo[0]@id;
+					
+					Instance.PropertyArray.removeConceptReference(bindingInfo.domainInfo, domainToReload);
+					Instance.deleteInstance(domainToReload);
+					domainToReload = null;
+										
+					WS_C_Domain newDomain = WS_RF_FetchDomainEntries(username, roles, projectName, domainPath, "domain", true);
+					Instance.PropertyArray.appendConceptReference(bindingInfo.domainInfo, newDomain, 1L); 
+					WS.Common.assertInstance(newDomain, false);
+					
+					Log.log(LOGGER, "Debug", "Existing Domain Id [%s] and Updated Id [%s]", existingId, bindingInfo.domainInfo[0]@id);
+					
+					Log.log(LOGGER, "Debug", "Domain model [%s] reloaded, now new set containing [%s] single & [%s] range domain entries.", domainPath, newDomain.singleEntry@length, newDomain.rangeEntry@length);
+					Log.log(LOGGER, "Debug", "Total Domain Models in BindingInfo after processing [%s].", bindingInfo.domainInfo@length);
+				}
+			}
+		}
+	}
+}

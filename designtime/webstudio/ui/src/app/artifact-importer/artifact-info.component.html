@@ -1,0 +1,117 @@
+<div>
+  <form #artifactForm='ngForm'>
+    <fieldset [disabled]='!edit'>
+      <div class="form-group" *ngIf='edit'>
+      <label for="proj-name" class='control-label control-label-normal' i18n>{{i18n('Project Name')}}</label>
+     <select
+         id='proj-name'
+         [required]='edit'
+         [disabled]='!projectEditable'
+         class="form-control form-control-sm"
+         [(ngModel)] = "projectName"
+         (change)='setProjectId()'
+         name='proj-name'
+       >
+         <option *ngIf='!projectEditable; else projectOptions'
+           [value]='projectName'
+           >{{projectName}}
+         </option>
+		<ng-template #projectOptions>
+         <option
+           *ngFor="let p of getProjectNames()"
+           [value]='p'
+           >{{p}}
+         </option>
+         </ng-template>
+       </select>
+        <br>
+        <label for="path" class='control-label control-label-normal' i18n>{{i18n('Artifact Path')}}</label>
+        <div class='input-group monospace'>
+          <div *ngIf='pathPrefix' class='input-group-addon'>
+            <small>{{pathPrefix}}</small>
+          </div>
+          <input
+            #pathInput
+            type="text"
+            class="form-control form-control-sm"
+            id='path'
+            name="path"
+            [(ngModel)]='inputPath'
+            [noDuplicate]='existingPaths'
+            [validPath]='pathValidator'
+            required
+            autocomplete="off"
+            #path='ngModel'
+            >
+        </div>
+        <div
+          *ngIf ='path.errors && path.errors["duplicate"]'
+          class='alert alert-warning'
+        >
+          <span class='monospace'>{{input.path}} </span><ng-container i18n>Already exists in project</ng-container> {{projectName}}.
+        </div>
+        <div
+          *ngIf ='path.errors && path.errors["invalidPath"]'
+          class='alert alert-warning'
+        >
+          <span class='monospace'>[{{input.path}}]</span> is invalid.
+          {{path.errors['invalidPath']}}
+        </div>
+
+      </div>
+      <div class="form-group" *ngIf='!edit'>
+        <label for="path" class='control-label control-label-normal' i18n>{{i18n('Artifact Path')}}</label>
+        <div class='input-group monospace'>
+          <div *ngIf='pathPrefix' class='input-group-addon'>
+            <small>{{pathPrefix}}</small>
+          </div>
+          <input
+            #pathInput
+            type="text"
+            class="form-control form-control-sm"
+            id='path'
+            name="path"
+            [value]='input.path'
+            >
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label
+          for="artifact-type"
+          class='control-label control-label-normal' i18n
+          >{{i18n('Artifact Type')}}</label>
+        <br>
+        <select
+          id='artifact-type'
+          [required]='edit'
+          class="form-control form-control-sm"
+          [(ngModel)] = "artifactExtension"
+          name='artifact-type'
+        >
+          <option
+            *ngFor="let t of (input.imported ? artifactTypes : (artifactTypes | filter: checkEditable))"
+            [value]='t.defaultExtension'
+            >{{t.displayString}}</option>
+        </select>
+      </div>
+    </fieldset>
+    <div *ngIf='showSBSchemaImporter'>
+      <decision-table-filler
+        [name]='inputPath'
+        [basePath]='inputPath'
+        [startingTable]='baseDT(input)'
+        (fullTable)='fillArtifactContent($event)'>
+      </decision-table-filler>
+    </div>
+    <div class='form-group' *ngIf='showMetadata()'>
+      <div class='metadata-editor'>
+        <label for='metadata' class='control-label control-label-normal' i18n>{{i18n('Metadata')}}</label>
+        <metadata-editor
+          [params]='metadataEditorParams'
+          (edit)='onMetadataEdit()'
+        ></metadata-editor>
+      </div>
+    </div>
+  </form>
+</div>

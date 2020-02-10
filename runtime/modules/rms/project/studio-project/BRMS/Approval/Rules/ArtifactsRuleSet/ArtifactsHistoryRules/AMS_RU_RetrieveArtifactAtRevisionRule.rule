@@ -1,0 +1,64 @@
+/**
+ * @description Retrive contents of an artifact at certain revision.
+ * @author aathalye-lt
+ */
+rule Approval.Rules.ArtifactsRuleSet.ArtifactsHistoryRules.AMS_RU_RetrieveArtifactAtRevisionRule {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Approval.Events.ArtifactEvents.History.AMS_E_ArtifactContentsAtRevisionRequestEvent ams_e_artifactcontentsatrevisionrequestevent;
+	}
+	when {
+		ams_e_artifactcontentsatrevisionrequestevent@payload != null;
+	}
+	then {
+		Object LOGGER = Log.getLogger("Approval.Rules.ArtifactsRuleSet.ArtifactsHistoryRules.AMS_RU_RetrieveArtifactAtRevisionRule");
+		AMS_C_ArtifactCommited transientCommittedArtifact = 
+			Instance.createTransientInstanceFromEvent("/Approval/Concepts/ArtifactsConcepts/AMS_C_ArtifactCommited", ams_e_artifactcontentsatrevisionrequestevent);
+		
+		long revisionId =  transientCommittedArtifact.revisionId;	
+		boolean taskLock = Cluster.DataGrid.Lock("" + revisionId, -1, false);
+		
+		if (taskLock) {
+			WS_C_ReviewTask reviewTask = Instance.getByExtIdByUri("" + revisionId, "/WebStudio/Core/Concepts/Lifecycle/WS_C_ReviewTask");
+			if (reviewTask != null) {
+				boolean checkinLock = Cluster.DataGrid.Lock("" + reviewTask.referencedCheckinId, -1, false);
+				if (checkinLock) {
+					WS_C_UserCheckin referencedCheckin = Instance.getByExtIdByUri(reviewTask.referencedCheckinId, "/WebStudio/Core/Concepts/Lifecycle/WS_C_UserCheckin");
+					
+					if (referencedCheckin != null) {
+						//Created concept out of it
+						String patternId = referencedCheckin.checkinCorrelationId;
+						String artifactPath = transientCommittedArtifact.artifactPath;
+						
+						//Retrieve appropriate concept
+						String extId = patternId + "@" + artifactPath;
+						boolean committedArtifactLock = Cluster.DataGrid.Lock(extId, -1, false);
+						if (committedArtifactLock) {
+							AMS_C_ArtifactCommited actualCommittedArtifact = Instance.getByExtIdByUri(extId, "/Approval/Concepts/ArtifactsConcepts/AMS_C_ArtifactCommited");
+							Log.log(LOGGER, "Debug", "Committed artifact %s", actualCommittedArtifact);
+							if (actualCommittedArtifact != null) {
+								//Read the artifacts contents and set them
+		//						Approval.Rules.
+		//							RuleFunctions.
+		//								ArtifactRuleFunctions.
+		//									AMS_RF_RetrieveRevisionCopyContents(actualCommittedArtifact);
+								
+								//Set this back in event payload
+								AMS_E_ArtifactContentsAtRevisionResponseEvent ams_e_artifactContentsAtRevisionResponseEvent = 
+									Event.createEvent("xslt://{{/Approval/Events/ArtifactEvents/History/AMS_E_ArtifactContentsAtRevisionResponseEvent}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" xmlns:ns=\"www.tibco.com/be/ontology/Approval/Concepts/ArtifactsConcepts/AMS_C_ArtifactCommited\" version=\"1.0\" exclude-result-prefixes=\"xsl ns xsd\">\n    <xsl:output method=\"xml\"/>\n    <xsl:param name=\"actualCommittedArtifact\"/>\n    <xsl:template match=\"/\">\n        <createEvent>\n            <event>\n                <payload>\n                    <ns:AMS_C_ArtifactCommited>\n                        <xsl:if test=\"$actualCommittedArtifact/artifactPath\">\n                            <artifactPath>\n                                <xsl:value-of select=\"$actualCommittedArtifact/artifactPath\"/>\n                            </artifactPath>\n                        </xsl:if>\n                        <xsl:if test=\"$actualCommittedArtifact/artifactType\">\n                            <artifactType>\n                                <xsl:value-of select=\"$actualCommittedArtifact/artifactType\"/>\n                            </artifactType>\n                        </xsl:if>\n                        <xsl:if test=\"$actualCommittedArtifact/artifactContent\">\n                            <artifactContent>\n                                <xsl:value-of select=\"$actualCommittedArtifact/artifactContent\"/>\n                            </artifactContent>\n                        </xsl:if>\n                        <xsl:if test=\"$actualCommittedArtifact/revisionId\">\n                            <revisionId>\n                                <xsl:value-of select=\"$actualCommittedArtifact/revisionId\"/>\n                            </revisionId>\n                        </xsl:if>\n                        <xsl:if test=\"$actualCommittedArtifact/notCompressed\">\n                            <notCompressed>\n                                <xsl:value-of select=\"$actualCommittedArtifact/notCompressed\"/>\n                            </notCompressed>\n                        </xsl:if>\n                    </ns:AMS_C_ArtifactCommited>\n                </payload>\n            </event>\n        </createEvent>\n    </xsl:template>\n</xsl:stylesheet>");
+									
+								Event.consumeEvent(ams_e_artifactcontentsatrevisionrequestevent);
+								Instance.deleteInstance(transientCommittedArtifact);
+								Event.replyEvent(ams_e_artifactcontentsatrevisionrequestevent, 
+													 ams_e_artifactContentsAtRevisionResponseEvent);	
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}

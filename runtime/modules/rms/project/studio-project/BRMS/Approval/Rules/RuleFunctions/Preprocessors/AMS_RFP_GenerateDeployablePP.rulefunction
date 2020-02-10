@@ -1,0 +1,40 @@
+/**
+ * @description Preprocessor for generate deployable request.
+ */
+void rulefunction Approval.Rules.RuleFunctions.Preprocessors.AMS_RFP_GenerateDeployablePP {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Approval.Events.ArtifactEvents.Deployable.AMS_E_GenerateDeployableRequestEvent ams_e_gneratedeployablerequestevent;
+	}
+	body {
+		Object LOGGER = Log.getLogger("Approval.Rules.RuleFunctions.Preprocessors.AMS_RFP_GenerateDeployablePP");
+		AAA.Concepts.AMS_C_LoggedInUser loggedInUser =  
+			Approval.CommonServices.AMS_RF_ValidateUsername(ams_e_gneratedeployablerequestevent);
+		String projectName = ams_e_gneratedeployablerequestevent.projectname;
+		
+		boolean isUserLoggedIn = loggedInUser != null;
+		if (!isUserLoggedIn) {
+			AMS_E_ErrorEvent errorEvent = 
+				Approval.CommonServices.AMS_RF_CreateErrorEvent("GENERATE_DEPLOYABLE_ERROR", "The user " + ams_e_gneratedeployablerequestevent.loggedInUserName + " is not logged in", null);
+			Event.replyEvent(ams_e_gneratedeployablerequestevent, errorEvent);
+			//Consume the event so that RTC is not triggered
+			Event.consumeEvent(ams_e_gneratedeployablerequestevent);
+			throw Exception.newException("GENERATE_DEPLOYABLE_ERROR", 
+										 "The user " + ams_e_gneratedeployablerequestevent.loggedInUserName + " is not logged in", null);	
+		}
+		
+		String extId = "Deploy@" + projectName;	
+		//Lock this concept
+		boolean deployLock = Cluster.DataGrid.Lock(extId, -1, false);
+		if (deployLock) {
+			AMS_C_DeployableState deployableState = Instance.getByExtIdByUri(extId, "/Approval/Concepts/ArtifactsConcepts/AMS_C_DeployableState");
+			if (deployableState == null) {
+				//Create one since none is present in cache
+				deployableState = Instance.createInstance("xslt://{{/Approval/Concepts/ArtifactsConcepts/AMS_C_DeployableState}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"1.0\" exclude-result-prefixes=\"xsl xsd\">\n    <xsl:output method=\"xml\"/>\n    <xsl:param name=\"projectName\"/>\n    <xsl:template match=\"/\">\n        <createObject>\n            <object>\n                <xsl:attribute name=\"extId\">\n                    <xsl:value-of select=\"concat(&quot;Deploy&quot;, concat(&quot;@&quot;, $projectName))\"/>\n                </xsl:attribute>\n            </object>\n        </createObject>\n    </xsl:template>\n</xsl:stylesheet>");
+			}
+			Log.log(LOGGER, "Debug", "Deployable Details, ExtId - %s & Dirty State - %s", extId, deployableState.dirty);
+		}
+	}
+}

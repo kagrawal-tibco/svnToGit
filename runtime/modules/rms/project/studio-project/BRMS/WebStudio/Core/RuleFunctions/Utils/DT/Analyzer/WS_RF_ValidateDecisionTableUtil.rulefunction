@@ -1,0 +1,70 @@
+/**
+ * @description Utility class to validate decision table and report error if any.
+ */
+WebStudio.Core.Concepts.DataSources.Problems.WS_C_TableAnalyzerProblemsResponse rulefunction WebStudio.Core.RuleFunctions.Utils.DT.Analyzer.WS_RF_ValidateDecisionTableUtil {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String artifactPath;
+		String artifactExtn;
+		String projectName;
+		String username;
+		String scsRootURL;
+		String archivePath;
+		WebStudio.Core.Concepts.Decision.Pagination.WS_C_DecisionTable dtContents;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.DT.Analyzer.WS_RF_ValidateDecisionTableUtil.rulefunction");
+		String pathSeparator = "/";		
+		Object reusableBuffer = String.createBuffer(0);
+		//DT Temp location
+		String tempLocation = System.getSystemPropertyAsString("ws.validateDT.temp.dir", null);
+		String dtPath = String.replaceAll(artifactPath, pathSeparator, "_");
+		reusableBuffer = String.append(reusableBuffer, tempLocation);
+		reusableBuffer = String.append(reusableBuffer, pathSeparator);
+		reusableBuffer = String.append(reusableBuffer, projectName);
+		reusableBuffer = String.append(reusableBuffer, "_");
+		reusableBuffer = String.append(reusableBuffer, dtPath);
+		reusableBuffer = String.append(reusableBuffer, "_");
+		reusableBuffer = String.append(reusableBuffer, username);						
+		reusableBuffer = String.append(reusableBuffer, ".tmp");
+		String tempFilePath = String.convertBufferToString(reusableBuffer);
+		String.clearBuffer(reusableBuffer);
+		//Write DT contents to Temp location
+	//	String contents = WS_RF_GetDecisionTableContents(dtContents);
+	
+	
+		Object decisionTableEMFObject = WS_RF_CreateEMFObjectForDecisionTable(dtContents);		 	
+		Object xmlBytes = WS.Decision.serializeDecisionTableEMFObject(decisionTableEMFObject);
+		String contents = String.convertByteArrayToString(xmlBytes, "UTF-8");
+	
+		WS.Decision.writeDTContentsToTempFile(tempFilePath, contents);
+		//Project libraries dir										
+		String customLibsPath = System.getSystemPropertyAsString("ws.projects.customLib.location", null);	
+		reusableBuffer = String.append(reusableBuffer, customLibsPath);
+		reusableBuffer = String.append(reusableBuffer, pathSeparator);
+		reusableBuffer = String.append(reusableBuffer, projectName);
+		String libPath = String.convertBufferToString(reusableBuffer);
+		String.clearBuffer(reusableBuffer);					
+		Log.log(LOGGER, "Debug", "Libray path in lib dir %s", libPath);
+		//Extended classpath					
+		String extendedClasspath = Approval.Rules.RuleFunctions.ArtifactRuleFunctions.AMS_RF_CreateClasspath(libPath);						
+		//Only used in dev setup
+		if (extendedClasspath == null || String.length(extendedClasspath) == 0) {
+			//Look for property with any external classpath
+			extendedClasspath = System.getSystemPropertyAsString("build.extended.classpath", "");
+		}	
+		Log.log(LOGGER, "Debug", "Extended Classpath - %s ", extendedClasspath);				
+		//Validate DT
+		String validationResponseStr = WS.Decision.validateDecisionTable(scsRootURL, projectName, archivePath, extendedClasspath, tempFilePath, contents);
+		//Get the TableRule-Page mappings
+		Object ruleToPageMap = WebStudio.Core.RuleFunctions.Utils.DT.Analyzer.WS_RF_GetDecisionTableRuleToPageMapping(dtContents);
+		//Build the TableAnalyzer response concept
+		WebStudio.Core.Concepts.DataSources.Problems.WS_C_TableAnalyzerProblemsResponse validationProblemsResponse = WebStudio.Core.RuleFunctions.Utils.DT.WS_RF_BuildDecisionTableValidationResponse(projectName, artifactPath, validationResponseStr, decisionTableEMFObject, ruleToPageMap);
+		//Clear the ruleToPageMap 
+		Collections.Map.clear(ruleToPageMap);				
+		
+		return validationProblemsResponse;
+	}
+}

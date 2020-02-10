@@ -1,0 +1,122 @@
+/**
+ * @description Rule function to get artifact contents from underlying store or user's workspace.
+ */
+String rulefunction WebStudio.Core.RuleFunctions.Actions.Lifecycle.Fetch.WS_RF_FetchDTArtifactContentsFromStore {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		boolean loadContentsFromSCS;
+		WebStudio.Core.Concepts.WS_C_UserArtifact userArtifact;
+		WebStudio.Core.Concepts.DataSources.WS_C_AnyArtifactDetails artifactContents;
+		String userName;
+		String projectName;
+		Object asyncContextObject;
+		String contentType;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.Lifecycle.Fetch.WS_RF_FetchDTArtifactContentsFromStore");
+
+		String responseMessage = null;
+		String errorCode = null;
+		int recordCount = 1;
+		int responseStatus = 0;
+		
+		if (String.equals("rulefunctionimpl", userArtifact.artifactFileExtn)) {
+
+			Object servletRequest = HTTP.Servlet.getServletRequest(asyncContextObject);
+			String pageNumParam = HTTP.Servlet.Request.getRequestParameter(servletRequest, "pageNum");
+			int pageNum = 0; 
+			if (pageNumParam != null) {
+				pageNum = Number.valueOfString(pageNumParam, 10);
+			}	
+	
+			Log.log(LOGGER, "Debug", "Project Name %s, Artifact Path %s, PageNum %s", projectName, userArtifact.artifactPath, pageNum);
+			boolean assertedDTReOrgEvent = false;
+			WS_C_DecisionTable decisionTable = artifactContents;
+			if (pageNum == 0) { //Open DT
+				boolean singlePageView;
+				if (loadContentsFromSCS == false) {
+					if (userArtifact instanceof WS_C_UserDTableArtifact) {
+						WS_C_UserDTableArtifact dtUserArtifact = userArtifact;
+						singlePageView = dtUserArtifact.singlePageView;
+					}
+					Log.log(LOGGER, "Debug", "Show Single Page View - %s", singlePageView);
+					boolean isDTReOrgRequired = WS_RF_IsDTPaginationReOrgRequired(userName, decisionTable, singlePageView);
+					Log.log(LOGGER, "Debug", "is Decision Table ReOrg Required - %s", isDTReOrgRequired);
+					if (isDTReOrgRequired) {
+						String asyncContextId = WS.Common.generateUUID();
+						String mapLockKey = "REORG_DT_WS_ASYNC_CONTEXT_MAP_" + System.nanoTime();
+						boolean mapLocked = Cluster.DataGrid.Lock(mapLockKey, -1, true);
+						if (mapLocked) { 
+							Util.HashMap.createMap(mapLockKey);
+							Util.HashMap.putObject(mapLockKey, asyncContextId, asyncContextObject);
+						}
+						WS_E_ReOrgDecisionTableArtifactPagesEvent reOrgDTPagesEvent = 
+									Event.createEvent("xslt://{{/WebStudio/Core/Events/WS_E_ReOrgDecisionTableArtifactPagesEvent}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" version=\"2.0\" exclude-result-prefixes=\"xsl xsd\"><xsl:output method=\"xml\"/><xsl:param name=\"decisionTable\"/><xsl:param name=\"mapLockKey\"/><xsl:param name=\"asyncContextId\"/><xsl:param name=\"projectName\"/><xsl:param name=\"userArtifact\"/><xsl:param name=\"singlePageView\"/><xsl:param name=\"userName\"/><xsl:param name=\"contentType\"/><xsl:template name=\"Function\" match=\"/\"><createEvent><event><xsl:if test=\"$decisionTable/@Id\"><artifactContentId><xsl:value-of select=\"$decisionTable/@Id\"/></artifactContentId></xsl:if><mapLockKey><xsl:value-of select=\"$mapLockKey\"/></mapLockKey><asyncContextId><xsl:value-of select=\"$asyncContextId\"/></asyncContextId><projectName><xsl:value-of select=\"$projectName\"/></projectName><xsl:if test=\"$userArtifact/artifactPath\"><artifactPath><xsl:value-of select=\"$userArtifact/artifactPath\"/></artifactPath></xsl:if><xsl:if test=\"$userArtifact/artifactFileExtn\"><artifactExtn><xsl:value-of select=\"$userArtifact/artifactFileExtn\"/></artifactExtn></xsl:if><singlePageView><xsl:value-of select=\"$singlePageView\"/></singlePageView><userName><xsl:value-of select=\"$userName\"/></userName><contentType><xsl:value-of select=\"$contentType\"/></contentType></event></createEvent></xsl:template></xsl:stylesheet>");
+						Event.assertEvent(reOrgDTPagesEvent);
+						Log.log(LOGGER, "Debug", "Asserted Decision Table Reorg event");
+						assertedDTReOrgEvent = true;																										
+					}
+				}												
+			} else { //Page request		
+				String showCoverageParam = HTTP.Servlet.Request.getRequestParameter(servletRequest, "showCoverage");
+				String showAllParam = HTTP.Servlet.Request.getRequestParameter(servletRequest, "showAll");
+				boolean showCoverage = false;
+				if (String.equals("true", showCoverageParam)) {
+					showCoverage = true;
+				}	
+			
+				WebStudio.Core.Concepts.Decision.Pagination.WS_C_TableRuleSet tableRuleSet = Instance.PropertyAtom.getContainedConcept(decisionTable.decisionTable, 1L); 
+				if (pageNum < 1 || pageNum > tableRuleSet.totalPages) {
+					responseStatus = -1;	
+					errorCode = "ERR_1010";
+					responseMessage = String.format("Decision table page - %s not valid for Decision table - %s", pageNum, userArtifact.artifactPath);							
+				}	
+	
+				if (showAllParam != null) {
+					boolean showAll = false;
+					if (String.equals("true", showAllParam)) {
+						showAll = true;
+					}	
+					String asyncContextId = WS.Common.generateUUID();
+					String mapLockKey = "REORG_DT_WS_ASYNC_CONTEXT_MAP_" + System.nanoTime();
+					boolean mapLocked = Cluster.DataGrid.Lock(mapLockKey, -1, true);
+					if (mapLocked) { 
+						Util.HashMap.createMap(mapLockKey);
+						Util.HashMap.putObject(mapLockKey, asyncContextId, asyncContextObject);
+					}
+	
+					WS_E_ReOrgDecisionTableArtifactPagesEvent reOrgDTPagesEvent = 
+								Event.createEvent("xslt://{{/WebStudio/Core/Events/WS_E_ReOrgDecisionTableArtifactPagesEvent}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" version=\"2.0\" exclude-result-prefixes=\"xsl xsd\"><xsl:output method=\"xml\"/><xsl:param name=\"decisionTable\"/><xsl:param name=\"mapLockKey\"/><xsl:param name=\"asyncContextId\"/><xsl:param name=\"projectName\"/><xsl:param name=\"userArtifact\"/><xsl:param name=\"showAll\"/><xsl:param name=\"userName\"/><xsl:param name=\"contentType\"/><xsl:template name=\"Function\" match=\"/\"><createEvent><event><xsl:if test=\"$decisionTable/@Id\"><artifactContentId><xsl:value-of select=\"$decisionTable/@Id\"/></artifactContentId></xsl:if><mapLockKey><xsl:value-of select=\"$mapLockKey\"/></mapLockKey><asyncContextId><xsl:value-of select=\"$asyncContextId\"/></asyncContextId><projectName><xsl:value-of select=\"$projectName\"/></projectName><xsl:if test=\"$userArtifact/artifactPath\"><artifactPath><xsl:value-of select=\"$userArtifact/artifactPath\"/></artifactPath></xsl:if><xsl:if test=\"$userArtifact/artifactFileExtn\"><artifactExtn><xsl:value-of select=\"$userArtifact/artifactFileExtn\"/></artifactExtn></xsl:if><singlePageView><xsl:value-of select=\"$showAll\"/></singlePageView><userName><xsl:value-of select=\"$userName\"/></userName><contentType><xsl:value-of select=\"$contentType\"/></contentType></event></createEvent></xsl:template></xsl:stylesheet>");
+					Event.assertEvent(reOrgDTPagesEvent);
+					assertedDTReOrgEvent = true;
+				}
+			}		
+				        
+	        if (!assertedDTReOrgEvent) {        	
+		        	WS_C_ResponseData responseData = WS_RF_BuildDecisionTableResponse(projectName, userArtifact.artifactPath, userArtifact.artifactFileExtn, decisionTable, errorCode, userName, pageNum);
+		        	String responseDSXML = WS_RF_CreateAndSerializeResponseDataSource(responseStatus, 1, errorCode, responseMessage, responseData, contentType);
+				responseMessage = responseDSXML;
+	        }
+
+		} else { //Response with serialized state of VRF for create New DT usecase
+			WS_C_AnyArtifactDetails artifactDetails = artifactContents;
+			WS_C_ResponseData responseData = Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/WS_C_ResponseData");
+			WS_C_AbstractDataSourceRecord abstractDataSourceRecord = 
+											Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/Records/WS_C_ArtifactContentsDataSourceRecord");	
+			WS_C_ArtifactContentsDataSourceRecord artifactContentsDataSourceRecord = abstractDataSourceRecord;
+			Instance.PropertyAtom.setContainedConcept(artifactContentsDataSourceRecord.artifactDetails, artifactDetails, 1L);	
+			Instance.PropertyArray.appendContainedConcept(responseData.record, abstractDataSourceRecord, 1L);		
+			responseMessage = WebStudio.
+	    							Core.
+	    								RuleFunctions.
+		    								Utils.
+		    									WS_RF_CreateAndSerializeResponseDataSource(responseStatus, recordCount, errorCode, responseMessage, responseData, contentType);
+
+			Instance.PropertyAtom.setContainedConcept(artifactContentsDataSourceRecord.artifactDetails, null, 1L);
+		}	 
+		
+        return responseMessage;
+	}
+}

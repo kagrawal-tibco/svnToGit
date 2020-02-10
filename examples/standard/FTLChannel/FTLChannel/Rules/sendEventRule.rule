@@ -1,0 +1,22 @@
+rule Rules.sendEventRule {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Events.timerSE timerSE;
+	}
+	when {
+		
+	}
+	then {
+		System.debugOut("\n==============================start sendEvent Rule==============================");
+		
+		Events.tibsend sendEvent = Events.tibsend.tibsend("","","Tibco",1000);
+		
+		Event.sendEvent(sendEvent);
+		Event.consumeEvent(sendEvent);
+	   
+	   System.debugOut("\n================================end sendEvent Rule===============================");
+	}
+}

@@ -1,0 +1,36 @@
+/**
+ * @description 
+ * @author pdhar-w510
+ */
+rule Rules.addCustomer {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		
+		Events.addCustomer addcustomerevent;
+	}
+	when {
+		addcustomerevent.name != null;
+	}
+	then {
+		System.debugOut("*******************************");
+		String custid = addcustomerevent.name;
+
+		Concepts.Customer customer = Instance.getByExtId(custid);
+		if(customer == null) {
+			customer = Instance.createInstance("xslt://{{/Concepts/Customer}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"1.0\" exclude-result-prefixes=\"xsl xsd\">\n    <xsl:output method=\"xml\"/>\n    <xsl:param name=\"addcustomerevent\"/>\n    <xsl:template match=\"/\">\n        <createObject>\n            <object>\n                <xsl:if test=\"$addcustomerevent/name\">\n                    <xsl:attribute name=\"extId\">\n                        <xsl:value-of select=\"$addcustomerevent/name\"/>\n                    </xsl:attribute>\n                </xsl:if>\n                <xsl:if test=\"$addcustomerevent/name\">\n                    <name>\n                        <xsl:value-of select=\"$addcustomerevent/name\"/>\n                    </name>\n                </xsl:if>\n                <xsl:if test=\"$addcustomerevent/age\">\n                    <age>\n                        <xsl:value-of select=\"$addcustomerevent/age\"/>\n                    </age>\n                </xsl:if>\n            </object>\n        </createObject>\n    </xsl:template>\n</xsl:stylesheet>");
+			System.debugOut(" #### Created customer " + customer.name); 
+			//System.debugOut(" #### Created Customer : " + customer);
+			//System.debugOut(" #### Name: " + customer.name);
+			//System.debugOut(" #### Age: " + customer.age);
+		} else {
+			System.debugOut(" #### Customer for this ID already exists.");
+		}
+		Events.addCustomerResponse response = Event.createEvent("xslt://{{/Events/addCustomerResponse}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"1.0\" exclude-result-prefixes=\"xsl xsd\">\n    <xsl:output method=\"xml\"/>\n    <xsl:param name=\"customer\"/>\n    <xsl:template match=\"/\">\n        <createEvent>\n            <event>\n                <xsl:if test=\"$customer/@extId\">\n                    <xsl:attribute name=\"extId\">\n                        <xsl:value-of select=\"$customer/@extId\"/>\n                    </xsl:attribute>\n                </xsl:if>\n            </event>\n        </createEvent>\n    </xsl:template>\n</xsl:stylesheet>");
+		Event.replyEvent (addcustomerevent, response);
+		Event.consumeEvent(addcustomerevent);
+	
+	}
+}

@@ -1,0 +1,55 @@
+/**
+ * @description Creates a new checkin log entry for this artifact.
+ */
+void rulefunction Approval.Rules.RuleFunctions.ArtifactRuleFunctions.AMS_RF_CreateCheckinLogEntry {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String projectName;
+		String checkinArtifactPath;
+		long revisionId;
+	}
+	body {
+		//Look for master artifact with this path and project name
+		String masterArtifactExtId = checkinArtifactPath + "@" + projectName;
+		
+		/**
+		This is a cache-only concept, hence needs to be loaded from cache after locking
+		However we are locking inside a rule but this should be ok as the order is known.
+		**/
+		boolean masterArtifactLock = Cluster.DataGrid.Lock(masterArtifactExtId, -1, false);
+		if (masterArtifactLock) {
+			//Load contained concept(s) also but not in WM since it is not required to fire any rules yet.
+			WS_C_MasterArtifact masterArtifact = Instance.getByExtIdByUri(masterArtifactExtId, "/WebStudio/Core/Concepts/Lifecycle/WS_C_MasterArtifact");
+			
+			Object artifactCheckinHistoryExtIdBuffer = String.createBuffer(0);
+			String[] joinStrings = {"History", "@", projectName, "@", checkinArtifactPath};
+			artifactCheckinHistoryExtIdBuffer = 
+				Approval.CommonServices.AMS_RF_JoinStringsToBuffer(joinStrings, artifactCheckinHistoryExtIdBuffer);
+			String artifactCheckinHistoryExtId = String.convertBufferToString(artifactCheckinHistoryExtIdBuffer);
+			String.clearBuffer(artifactCheckinHistoryExtIdBuffer);
+			
+			//Lock and load this concept.
+			//Its been set as concept reference to avoid ringing entire object graph into
+			//memory of previous checkins for a resource each time a checkin is made on it.
+			boolean checkinHistoryLock = Cluster.DataGrid.Lock(artifactCheckinHistoryExtId, -1, false); 
+			if (checkinHistoryLock) {
+				//Not required to load into WM yet.
+				AMS_C_ArtifactCheckinHistory artifactCheckinHistory = Instance.getByExtIdByUri(artifactCheckinHistoryExtId, "/Approval/Concepts/ArtifactsConcepts/AMS_C_ArtifactCheckinHistory");
+				
+				if (artifactCheckinHistory == null) {
+					artifactCheckinHistory = 
+						Instance.createInstance("xslt://{{/Approval/Concepts/ArtifactsConcepts/AMS_C_ArtifactCheckinHistory}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"1.0\" exclude-result-prefixes=\"xsl xsd\">\n    <xsl:output method=\"xml\"/>\n    <xsl:param name=\"projectName\"/>\n    <xsl:param name=\"checkinArtifactPath\"/>\n    <xsl:template match=\"/\">\n        <createObject>\n            <object>\n                <xsl:attribute name=\"extId\">\n                    <xsl:value-of select=\"concat(&quot;History&quot;, &quot;@&quot;, $projectName, &quot;@&quot;, $checkinArtifactPath)\"/>\n                </xsl:attribute>\n            </object>\n        </createObject>\n    </xsl:template>\n</xsl:stylesheet>");
+					Instance.PropertyAtom.setContainedConcept(masterArtifact.checkinHistory, artifactCheckinHistory, 1);	
+				}
+				//Create new history entry with this revision id;
+				AMS_C_ArtifactCheckinHistoryEntry historyEntry = 
+					Instance.createInstance("xslt://{{/Approval/Concepts/ArtifactsConcepts/AMS_C_ArtifactCheckinHistoryEntry}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"1.0\" exclude-result-prefixes=\"xsl xsd\">\n    <xsl:output method=\"xml\"/>\n    <xsl:param name=\"revisionId\"/>\n    <xsl:template match=\"/\">\n        <createObject>\n            <object>\n                <revisionId>\n                    <xsl:value-of select=\"$revisionId\"/>\n                </revisionId>\n            </object>\n        </createObject>\n    </xsl:template>\n</xsl:stylesheet>");
+				Instance.
+					PropertyArray.
+						appendContainedConcept(artifactCheckinHistory.checkinEntries, historyEntry, 1);
+			}
+		}	
+	}
+}

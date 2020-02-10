@@ -1,0 +1,129 @@
+/**
+ * @description Fetch worklist items for a particular role.
+ */
+WebStudio.Core.Concepts.DataSources.WS_C_TemporaryReturnData rulefunction WebStudio.Core.RuleFunctions.Actions.Lifecycle.Review.WS_RF_FetchReviewWorklist {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object servletRequest;
+		WebStudio.Security.Authn.Concepts.WS_C_LoggedInUser loggedInUser;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.Lifecycle.Review.WS_RF_FetchReviewWorklist");
+		
+		String responseMessage = null;
+		String errorCode = null;
+		int recordCount = 0;
+		int responseStatus = 0;
+		
+		WS_C_ResponseData responseData = 
+			Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/WS_C_ResponseData");
+			
+		if (!WS_RF_CheckHTTPMethod(servletRequest, "GET")) {
+			responseStatus = -1;
+			errorCode = "ERR_5101";
+			responseMessage = "Invalid HTTP Method, expect method is [GET].";
+		} else {
+			//Get user roles
+			String[] roles = Instance.PropertyArray.toArrayString(loggedInUser.roles);
+			
+			String subscriptionId = null;
+			if (loggedInUser.jwtToken != null) subscriptionId = loggedInUser.jwtToken.sbsc;
+			
+			Object[] reviewSinkExtId = WS_RF_GetReviewSinkExtId(roles, subscriptionId);
+			for (int i = 0; i < reviewSinkExtId@length; i++) {
+				Log.log(LOGGER, "Debug", "Current role being proceessed [%s]", reviewSinkExtId[i]);
+				//Check if common review sink exists
+				boolean reviewSinkLock = Cluster.DataGrid.Lock(reviewSinkExtId[i], -1, false);
+				if (reviewSinkLock) {
+					WS_C_CommonReviewSink commonReviewSink = 
+					Cluster.DataGrid.CacheLoadConceptByExtIdByUri(reviewSinkExtId[i], false, "/WebStudio/Core/Concepts/Lifecycle/WS_C_CommonReviewSink");
+					if (commonReviewSink != null) {
+						//Get task extIds
+						String[] reviewTaskExtIds = Instance.PropertyArray.toArrayString(commonReviewSink.reviewTaskExtIds);
+						Log.log(LOGGER, "Debug", "Number of worklist items [%s]", reviewTaskExtIds@length);
+						
+						String reviewTaskExtId = null;
+						for (int taskLoop = reviewTaskExtIds@length - 1; taskLoop >= 0; taskLoop--) {
+							reviewTaskExtId = reviewTaskExtIds[taskLoop];
+							Log.log(LOGGER, "Debug", "Review task item ExtId [%s]", reviewTaskExtId);
+							//Lock and load this
+							boolean reviewTaskLock = Cluster.DataGrid.Lock(reviewTaskExtId, -1, false);
+							if (reviewTaskLock) {
+							
+								WS_C_AbstractReviewTask reviewTask = Instance.getByExtIdByUri(reviewTaskExtId, "/WebStudio/Core/Concepts/Lifecycle/WS_C_ReviewTask");
+								if (reviewTask != null) {
+									WS_C_ReviewTaskAttributesDataSourceRecord taskAttributesDataSourceRecord = null;
+									
+									//Get referenced checkin id
+									Log.log(LOGGER, "Debug", "Referenced Checkin Id [%s]", reviewTask.referencedCheckinId);
+									Concept referencedUserCheckinC = Instance.getByExtIdByUri(reviewTask.referencedCheckinId, "/Approval/Concepts/ArtifactsConcepts/AMS_C_Checkin");
+									if (referencedUserCheckinC == null) referencedUserCheckinC = Instance.getByExtIdByUri(reviewTask.referencedCheckinId, "/WebStudio/Core/Concepts/Lifecycle/WS_C_UserCheckin");
+									
+									String username, managedProjectName, checkinComments;
+									DateTime checkinTime;
+									if (referencedUserCheckinC instanceof WS_C_UserCheckin) {
+										WS_C_UserCheckin referencedUserCheckin = referencedUserCheckinC;
+										String userProjectExtId = WS_RF_CreateUserArtifactExtId(null, null, referencedUserCheckin.managedProjectName, loggedInUser.username, subscriptionId, null);
+										WebStudio.Core.Concepts.WS_C_UserProject userProject = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(userProjectExtId, false, "/WebStudio/Core/Concepts/WS_C_UserProject");
+										if (userProject != null && userProject.softDelete) {
+											Log.log(LOGGER, "Debug", "Project [%s] is marked deleted. So ignoring the checking id[%s]", referencedUserCheckin.managedProjectName, reviewTask.referencedCheckinId);
+											continue;
+										}
+										managedProjectName = referencedUserCheckin.managedProjectName;
+										username = referencedUserCheckin.username;
+										checkinTime = referencedUserCheckin.checkinTime;
+										checkinComments = referencedUserCheckin.checkinComments;
+									} else if (referencedUserCheckinC instanceof AMS_C_Checkin) {
+										AMS_C_Checkin referencedUserCheckin = referencedUserCheckinC;
+										managedProjectName = referencedUserCheckin.projectName;
+										username = referencedUserCheckin.username;
+										checkinTime = referencedUserCheckin.checkinTime;
+										checkinComments = referencedUserCheckin.checkinComments;
+									}
+									
+									boolean hasAccess = RMS.Authorization.ensureAccess(managedProjectName, subscriptionId, roles, null, "PROJECT", "approval");
+									if (hasAccess) {
+										Log.log(LOGGER, "Debug", "Checkin atributes : Username [%s], Managed Project Name [%s], Checkin Time [%s]", username, managedProjectName, checkinTime);
+										WS_C_AbstractDataSourceRecord abstractDataSourceRecord = Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/Records/WS_C_ReviewTaskAttributesDataSourceRecord");
+										
+										String revisionId = reviewTask@extId;
+										if (subscriptionId != null) {
+											String subscriptionIdSuffix = "@" + subscriptionId;
+											if (String.endsWith(revisionId, subscriptionIdSuffix)) revisionId = String.substringBefore(revisionId, subscriptionIdSuffix);
+										}
+												
+										taskAttributesDataSourceRecord = abstractDataSourceRecord;
+										taskAttributesDataSourceRecord.revisionId = revisionId;
+										taskAttributesDataSourceRecord.username = username;
+										taskAttributesDataSourceRecord.managedProjectName = managedProjectName;
+										taskAttributesDataSourceRecord.checkinTime = checkinTime;
+										taskAttributesDataSourceRecord.checkinComments = checkinComments;
+										
+										int flag = 0;
+										for (int recordLoop = 0; recordLoop < responseData.record@length; recordLoop++) {
+											WS_C_ReviewTaskAttributesDataSourceRecord temp1 = responseData.record[recordLoop];
+											if (String.equals(temp1.revisionId, revisionId) ){
+												flag = 1;
+												break;
+											}
+										}
+										if (flag == 0){
+											Instance.PropertyArray.appendContainedConcept(responseData.record, abstractDataSourceRecord, 1L);
+											recordCount++;	
+										}
+									}
+								}
+							}
+							Cluster.DataGrid.UnLock(reviewTaskExtId, false);
+						}
+					}
+				}
+				Cluster.DataGrid.UnLock(reviewSinkExtId[i], false);
+			}
+		}
+		
+		return WS_RF_CreateTemporaryReturnData(responseStatus, recordCount, errorCode, responseMessage, responseData);
+	}
+}

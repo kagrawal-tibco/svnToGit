@@ -1,0 +1,33 @@
+<div class="row">
+  <div class="col-sm-12 ">
+    <div class="panel panel-danger">
+      <div class="card-header">
+        <ng-container i18n>{{i18n('Are you ABSOLUTELY sure you want to delete project ')}}</ng-container>{{input}}?
+      </div>
+      <div class="card-body card-body-sm">
+        <div [innerHTML]="getMessage()">
+            
+        </div>
+        <br>
+        <div class="form-group">
+          <input #typedInput type="text" class="form-control"[(ngModel)]='typed'>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="row left-pad bottom-pad top-pad right-pad">
+  <div class="col-sm-12">
+    <button
+      type="button"
+      class="btn btn-sm btn-outline-primary btn-narrow"
+      (click)='onCancel()' i18n
+      >{{i18n('Cancel')}}</button>
+    <button
+      type="button"
+      class="btn btn-sm btn-danger btn-narrow pull-right"
+      [disabled]='!canConfirm()'
+      (click)='onConfirm()' i18n
+      >{{i18n('Delete')}}</button>
+  </div>
+</div>

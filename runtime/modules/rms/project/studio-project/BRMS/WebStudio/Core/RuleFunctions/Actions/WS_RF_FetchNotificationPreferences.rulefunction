@@ -1,0 +1,84 @@
+/**
+ * @description 
+ */
+WebStudio.Core.Concepts.DataSources.WS_C_TemporaryReturnData rulefunction WebStudio.Core.RuleFunctions.Actions.WS_RF_FetchNotificationPreferences {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object servletRequest;
+		WebStudio.Security.Authn.Concepts.WS_C_LoggedInUser loggedInUser;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.WS_RF_FetchNotificationPreferences");
+	
+		WS_C_ResponseData responseData = null;
+		int responseStatus = 0;
+		int recordCount = 0;
+		String errorCode = null;
+		String responseMessage = null;
+		
+		if (!WS_RF_CheckHTTPMethod(servletRequest, "GET")) {
+			responseStatus = -1;
+			recordCount = 0;
+			errorCode = "ERR_5101";
+			responseMessage = "Invalid HTTP Method, expect method is [GET].";
+		} else {
+			//Lock and load Notification Preferences concept
+			String subscriptionId = WS_RF_GetSubscriptionId(loggedInUser.username);
+			String notificationPreferencesExtId = WS_RF_CreateUserArtifactExtId("NOTIFY_PREFERENCES", null, null, null, subscriptionId, null);
+			Log.log(LOGGER, "Debug", "Trying to acquire lock on Notification Preference space with ExtId - %s", notificationPreferencesExtId);
+			
+			boolean notificationPreferencesLock = Cluster.DataGrid.Lock(notificationPreferencesExtId, -1, false);
+			if (notificationPreferencesLock) {
+				Log.log(LOGGER, "Debug", "Lock acquired for Notification Preference space.");
+				WS_C_NotificationPreferences notificationPreferences = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(notificationPreferencesExtId, true, "/WebStudio/Core/Concepts/WS_C_NotificationPreferences");
+				
+				if (notificationPreferences == null) {
+					Log.log(LOGGER, "Debug", "Notification Preference Space not created yet for this user. Creating one.");
+					notificationPreferences = Instance.newInstance("/WebStudio/Core/Concepts/WS_C_NotificationPreferences", notificationPreferencesExtId);
+				    
+				    WS_C_ManagedProjects managedProjects = WS_RF_LoadProjectsFromSCS(loggedInUser.username, false, subscriptionId);
+                    WS_C_ProjectEntry[] managedProjectEntries = Instance.PropertyArray.toArrayContainedConcept(managedProjects.managedProjectNames);
+                    for (int loop = 0; loop < managedProjectEntries@length; loop++) {
+						WS_C_ProjectEntry projectEntry = managedProjectEntries[loop];
+						String projectName = projectEntry.name;
+						if (String.contains(projectName, ".")) {
+							continue;
+			            }
+			          
+			         	if (RMS.Authorization.isValidProjectName(projectName, subscriptionId)) {
+							WS_C_AbstractEmailPreference emailPreference = Instance.newInstance("/WebStudio/Core/Concepts/WS_C_AbstractEmailPreference",null);
+							emailPreference.project = projectName;
+							emailPreference.actions = "commit,approve,reject,deploy";
+							emailPreference.emailIds = System.getSystemPropertyAsString("ws.notify.mail.receiver.cc.emails", null);
+							
+							Instance.PropertyArray.appendContainedConcept(notificationPreferences.emailPreference, emailPreference, 1L);
+			            }
+					}
+					
+				}
+				
+				responseData = Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/WS_C_ResponseData");
+				
+				WS_C_AbstractDataSourceRecord notificationPreferencesDataSourceRecord = 
+					Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/Records/WS_C_NotificationPreferenceDataSourceRecord");
+				WS_C_NotificationPreferenceDataSourceRecord notificationPreferencesDSRecord = notificationPreferencesDataSourceRecord;
+				for (int count = 0 ; count < notificationPreferences.emailPreference@length; count++) {
+					WS_C_EmailPreference Ep = Instance.newTransientInstance("/WebStudio/Core/Concepts/WS_C_EmailPreference");
+				    WS_C_AbstractEmailPreference emailPreference  =  notificationPreferences.emailPreference[count];
+				    Ep.project = emailPreference.project;
+				    Ep.actions = emailPreference.actions;
+				    Ep.emailIds =emailPreference.emailIds;
+				    
+				    Instance.PropertyArray.appendContainedConcept(notificationPreferencesDSRecord.emailPreference,Ep,1L);
+				}	
+				
+			    Instance.PropertyArray.appendContainedConcept(responseData.record, notificationPreferencesDataSourceRecord, 1L);
+				recordCount = 1;
+			}
+		}
+
+		return WS_RF_CreateTemporaryReturnData(responseStatus, recordCount, errorCode, responseMessage, responseData);
+	}
+}

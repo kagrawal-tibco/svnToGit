@@ -1,0 +1,45 @@
+/**
+ * @description 
+ */
+String rulefunction Shared.RuleFunctions.topology.parseFQName {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String	name;
+	}
+	body {
+		Shared.RuleFunctions.log("parseFQName","DEBUG","Going to attempt to parse "+name);
+		//FedEx:AsyncWorkerDataPublisher:2140@anpatil-T61
+		String[] parts = String.split(name,":");
+		Shared.Concepts.MonitorableEntity site = Instance.getByExtId(Shared.Concepts.GlobalScoreCard.siteID);
+		String fqName = site.name;
+		//cluster name
+		fqName = fqName + ":" + parts[0];
+		String[] machineAndProc = String.split(parts[2],"@");
+		//machine name
+		fqName = fqName + ":"+ machineAndProc[1];
+		//process id
+		fqName = fqName + ":"+ machineAndProc[0];
+		for (int i = 0 ; i < site.children@length ; i = i + 1) {
+		    Shared.Concepts.MonitorableEntity cluster = site.children[i];
+		    if (cluster.name == parts[0]) {
+		        for (int j = 0 ; j < cluster.children@length ; j = j + 1) {
+		            Shared.Concepts.MonitorableEntity machine = cluster.children[j];
+		            if (machine.type == "machine" && machine.name == machineAndProc[1]) {
+		                for (int k = 0 ; k < machine.children@length; k = k + 1) {
+		                    Shared.Concepts.MonitorableEntity process = machine.children[k];
+		                    if (process.name == machineAndProc[0]) {
+		                        if (process.children@length == 1) {
+		                            fqName = fqName + ":" + process.children[0].name;
+		                        }
+		                    }
+		                }
+		            }
+		        }
+		    }
+		}
+		Shared.RuleFunctions.log("parseFQName","DEBUG","Converted "+name+" to "+fqName);
+		return fqName;
+	}
+}

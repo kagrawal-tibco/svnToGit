@@ -1,0 +1,30 @@
+<div *ngIf='this.showLoginPage' class='login-page' [style.height.px]='pageHeight'>
+  <div class="{{isRtl() ? 'left-rtl' : 'left'}}">
+    <div class='login-form'>
+      <h3 class="content-head text-center" i18n>{{i18n('Sign In')}}</h3>
+        <login-form (formSubmit)='onLogin($event)'></login-form>
+        <div class='row justify-content-center' *ngIf='idProviders?.length > 0'>
+          <div class='col-sm-6'>
+            <div class='divider-bottom social-divider text-center'>
+              <span>or</span>
+            </div>
+            <div *ngFor='let provider of idProviders' class='text-center social-button'>
+                <a class="btn btn-block btn-social btn-{{getSocialClass(provider)}}" (click)='signInWith(provider)'>
+                  <span class="fa fa-{{getSocialClass(provider)}}"></span><ng-container i18n>{{i18n(' Sign in with ')}}</ng-container>{{provider}}
+                </a>
+            </div>
+          </div>
+        </div>
+    </div>
+  </div>
+  <div class="{{isRtl() ? 'right-rtl' : 'right'}}">
+    <div class='greetings'>
+     <ng-container i18n>{{i18n('Welcome to')}}</ng-container>
+    </div>
+    <img src="assets/img/tibco.svg" [style.width.px]='logoWidth' alt="TIBCO">
+    <img src="{{productImage}}" class='ams-logo' [style.width.px]='logoWidth * 0.9' alt="{{productName}}">
+    <div class='build-info'>
+    <ng-container i18n>{{i18n('VERSION ')}}</ng-container>{{ buildInfo }}
+    </div>
+  </div>
+</div>

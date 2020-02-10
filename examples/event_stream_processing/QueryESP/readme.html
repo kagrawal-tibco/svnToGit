@@ -1,0 +1,175 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>     Query Trades
+
+- TIBCO BusinessEvents&reg; Examples
+</title>
+<meta http-equiv="Content-type" content="text/html; charset=iso-8859-1" />
+<meta http-equiv="Content-Language" content="en-us" />
+<link rel="Shortcut Icon" href="../../_resources/icon.gif" type="image/gif" />
+<style type="text/css" media="all">@import "../../_resources/examples.css";</style>
+<script type="text/javascript" src="../../_resources/examples.js" /></script>
+</head>
+<body onLoad="buildForms()">
+
+<h1>Query ESP</h1>
+
+<h2>Purpose of This Example</h2>
+
+<p>This example demonstrates the use of a query agent for event stream processing (ESP). This example assumes familiarity with TIBCO BusinessEvents software.</p>
+
+<p>The remainder of this document explains the key points about the example project, and shows you how to run it.</p>
+
+<h2>Project Description</h2>
+
+<p>Query agents configured to perform event stream processing are not deployed as part of a regular BusinessEvents cache cluster. All the events and concepts are configured to use Memory Only, even though object management is set to Cache. Cache OM is required only for the query agent to function. None of the concepts and events are written to the cache.</p>
+<p>Optionally, the processing unit containing the query agent can also contain an inference agent to process query results. The inference agent can be configured to use Cache OM.</p>
+<p>When an inference agent is used, the query agent sends results to the inference agent over a local channel. The inference agent sends data back to the query agent in a similar way.</p>
+<p>The inference agent in the QueryESP example, however, is only used to generate a stream of messages for demonstration purposes. The Query ESP example illustrates this configuration.
+
+</p>
+
+<h3>Query Lifecycle Management-Startup Rule Function</h3>
+
+<p>At engine startup, the query agent executes two startup rule functions: </p>
+
+<pre class="commands">
+QueryCode.Function.DirectToQueryCQ.Setup()
+QueryCode.Function.Level2QueryCQ.Setup()
+</pre>
+
+<p>Each startup function executes the Query.create(), Query.statement.open() and query.Statement.executeWithCallback() functions for their respective queries.</p>
+
+<h3>Inference Agent</h3>
+
+<p>For demonstration purposes, an inference agent increments a counter and sends out a stream of simple events to a Local channel. In the real world, such a stream of events might arrive over JMS or Rendezvous channels, for example. The query agent listens to these events on the CrossAgentRemoteChannel.</p>
+
+<h4>Timer Event Fires Every Second</h4>
+
+<p>In the inference agent the following time event generates an event every second:
+InferenceOntology/DirectToQuerySenderTimeEvent</p>
+
+<h4>DirectToQuerySenderRule Increments and Resets a Scorecard, Creates and Sends an Event</h4>
+
+<p>The inference agent rule InferenceCode/RuleSet/DirectToQuerySenderRule executes when the DirectToQuerySenderTimeEvent time event is asserted.</p>
+
+<pre class="commands">
+InferenceOntology.DirectToQueryTrackerSC.count = (InferenceOntology.DirectToQueryTrackerSC.count + 1) % 20;
+
+if(InferenceOntology.DirectToQueryTrackerSC.count < 10){
+    InferenceOntology.DirectToQueryEvent e =
+        InferenceOntology.DirectToQueryEvent.DirectToQueryEvent(null, null);
+    Event.sendEvent(e);
+
+    System.debugOut("Event sent directly to Query");
+}
+</pre>
+
+<p>The rule increments the DirectToQueryTrackerSC scorecard's count property. When the scorecard count is less than 10, the rule creates and sends out a DirectToQueryEvent event using Rendezvous. Thus an event is sent every second for 10 seconds, then no events are sent for 10 seconds (because of the "% 20" in the rule).</p>
+
+<p>The event is sent to its default destination using Event.sendEvent(). Its default destination is /InferenceEndpoint/CrossAgentRemoteChannel.channel/Destination. The destination sends the event out using subject be.internal.channeltoquery.rv.crossagent. The query agent input destination listens on this subject.
+</p>
+
+<h3>Query Agent</h3>
+
+<p>The first level query, DirectToQueryCQ, counts the number of events of type DirectToQueryEvent that arrived at that event's default destination during the prior 10 seconds.</p>
+
+<p>As explained above, one event is sent every second for ten seconds, then no events are sent for 10 seconds. So when you run the project you see the number increment and decrement accordingly.</p>
+
+<p>The callback rule function for the DirectToQueryCQ query creates an event, Level2QueryEvent, passes the count to it, and asserts it locally.</p>
+
+<p>A second level query responds directly to the Level2QueryEvent event. It sums each of the counts that arrived in the prior 25 seconds, and the callback rule function simply prints the results to the console. This simulates condensation of events by second-level queries in a real world scenario. (You see these larger numbers interspersed with the count from one to ten and back to one.)</p>
+
+<p>Local assertion of events is a key aspect of ESP processing. It enables you to create multiple levels of queries to condense quantities of low level data into higher value information. You can perform local assertion in different ways as explained in TIBCO BusinessEvents Developer's Guide.</p>
+
+<h4>DirectToQueryCQ Query</h4>
+
+<p>The QueryCode.Function.DirectToQueryCQ.Setup() function sets up  the DirectToQueryCQ query.  The source of data for the query is the event named in the query's from clause. The query text is as follows:</p>
+
+<pre class="commands">
+select count(*) as theCount
+from inferenceOntology/DirectToQueryEvent
+     {policy: maintain last 10 seconds; accept: new} as dtq
+group by 1;
+</pre>
+
+<p>
+Count(*) is an aggregate function, so it requires a group by clause - in this case we group by 1 (a dummy group), so as to simply keep track of the count of events in the window during the prior 10 second period.</p>
+
+<p>At runtime, as each event of type DirectToQueryEvent arrives in the Rendezvous channel, the Query.Statement.executeWithCallback() function executes and calls the Callback rule function
+</p>
+
+<pre class="commands">
+Query.Statement.executeWithCallback(statementName, listenerName,
+     "/QueryCode/Function/DirectToQueryCQ/Callback", true, queryName);
+</pre>
+
+<h4>Callback Rule Function</h4>
+
+<p>The query result is provided to the Callback rule function as an object with the alias row. The rule function creates an int variable called count to hold the value of row.
+When the value of count is 9, the callback rule function creates a Level2QueryEvent event and passes the value of count to the event's currentCount property:</p>
+
+<pre class="commands">
+    if(count  == 9){
+        QueryOntology.Level2QueryEvent l2 =
+            QueryOntology.Level2QueryEvent.Level2QueryEvent(null, null, count);
+</pre>
+
+<p>Note that for local event assertions you don't have to use a channel or destination.</p>
+
+<p>In a different scenario, the callback rule function for a query could send the results to a co-deployed inference agent using a local channel. The inference agent would process the results and send an event back to the query agent with enriched or condensed data, where another query would use that data.</p>
+
+<h4>Level2QueryCQ Query</h4>
+
+<p>The QueryCode.Function.Level2QueryCQ.Setup() sets up the Level2QueryCQ query. The query text is as follows:</p>
+
+<pre class="commands">
+select sum(currentCount) as theSum
+from /QueryOntology/Level2QueryEvent
+        {policy: maintain last 25 seconds; accept: new} as l2q
+group by 1;
+</pre>
+
+<p>sum(*) is an aggregate function, so it requires a group by clause - again we group by 1 (a dummy group) so as to report the sum of the count of events that arrived in the window during the prior 25 second period-9, 18, 27, and so on. (In a real-world scenario, of course, some more interesting processing would occur.)</p>
+
+<p>At runtime, as each event of type Level2QueryEvent is asserted, the Query.Statement.executeWithCallback() function executes. It calls the Callback rule function, and passes the sum to it:</p>
+
+<pre class="commands">
+Query.Statement.executeWithCallback(statementName, listenerName,
+      "/QueryCode/Function/Level2QueryCQ/Callback", true, queryName);
+</pre>
+
+<p>The query result is provided to the Callback rule function as an object with the alias row. The rule function creates a double variable called sum to hold the value of row and simply displays the value do the console, using debugOut.</p>
+
+<h3>Query Lifecycle Management-Shutdown Rule Function</h3>
+
+<p>Just as the Setup rule functions are used in the Startup rule function, so two Teardown rule functions delete the queries during engine shut-down.</p>
+
+
+<h2>How to Run the Example</h2>
+
+<p>The "default" processing unit is configured to run both query and inference agents.</p>
+
+<ol><li>Open a command window and change to the following directory.
+<pre class="commands">
+cd BE_HOME/examples/event_stream_processing/QueryESP/QueryESPProject
+</pre></li>
+
+<li>Start the engine.
+
+<pre class="commands">
+BE_HOME/bin/be-engine --propFile BE_HOME/bin/be-engine.tra -c Deployment/QueryESP.cdd -u default ../QueryESP.ear
+</pre></li>
+</ol>
+
+
+
+<div class="footer">
+<p>TIBCO BusinessEvents&reg; 5.6<br />
+Copyright&copy; 2004-2019 TIBCO Software Inc. All rights reserved.</p>
+</div>
+</body>
+</html>

@@ -1,0 +1,27 @@
+<div class='card panel-sm'>
+  <div class='card-header'>
+   	<button (click)='toggleMaximize()' class="float-right btn-outline-primary">
+    	<i
+	     	class="fa"
+	     	[class.fa-window-restore]="maximized"
+	     	[class.fa-expand]="!maximized"
+	     	>
+    	</i>
+   	</button>
+    {{title}} 
+  </div>
+  <div class='card-body'>
+    <artifacts-export
+      [(input)]='form'
+    ></artifacts-export> 
+  </div>
+</div>
+<div class='left-pad right-pad bottom-pad top-pad'>
+  <button type="button" class='btn btn-outline-primary btn-sm' (click)='onClose()' i18n>{{i18n('Cancel')}}</button>
+  <button 
+    type="button" 
+    class='btn btn-primary btn-sm pull-right' 
+    (click)='onConfirm()'
+    [disabled]='!form || form.artifacts.length === 0' i18n
+  >{{i18n('Export')}}</button>
+</div>

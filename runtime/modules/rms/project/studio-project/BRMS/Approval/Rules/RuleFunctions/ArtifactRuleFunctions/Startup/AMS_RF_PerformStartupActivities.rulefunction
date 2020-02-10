@@ -1,0 +1,44 @@
+/**
+ * @description 
+ */
+void rulefunction Approval.Rules.RuleFunctions.ArtifactRuleFunctions.Startup.AMS_RF_PerformStartupActivities {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		
+	}
+	body {
+		Object LOGGER = Log.getLogger("Approval.Rules.RuleFunctions.ArtifactRuleFunctions.Startup.AMS_RF_PerformStartupActivities");
+		double threshold = System.getSystemPropertyAsDouble("be.engine.memory.warning.threshold", 0.75);
+		RMS.Startup.setMemoryThreshold(threshold);
+		RMS.Startup.registerMBean("com.tibco.rms:service=Admin,name=AdminOps", "com.tibco.be.rms.tools.RMSAdminOps");
+
+
+		AMS_C_SupportedArtifactTypesConfig supportedArtifactTypes = 
+			Instance.createInstance("xslt://{{/Approval/Scorecards/AMS_C_SupportedArtifactTypesConfig}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"1.0\" exclude-result-prefixes=\"xsl xsd\">\n    <xsl:output method=\"xml\"/>\n    <xsl:template match=\"/\">\n        <createObject>\n            <object>\n                <xsl:attribute name=\"extId\">\n                    <xsl:value-of select=\"&quot;RMS_SUPP_ARTIFACTS_CFG&quot;\"/>\n                </xsl:attribute>\n            </object>\n        </createObject>\n    </xsl:template>\n</xsl:stylesheet>");
+		Instance.PropertyArray.appendString(supportedArtifactTypes.artifactTypes, "CONCEPT", 1L);
+		Instance.PropertyArray.appendString(supportedArtifactTypes.artifactTypes, "EVENT", 1L);
+		Instance.PropertyArray.appendString(supportedArtifactTypes.artifactTypes, "TIME", 1L);
+		Instance.PropertyArray.appendString(supportedArtifactTypes.artifactTypes, "RULE", 1L);
+		Instance.PropertyArray.appendString(supportedArtifactTypes.artifactTypes, "RULEFUNCTION", 1L);
+		Instance.PropertyArray.appendString(supportedArtifactTypes.artifactTypes, "RULEFUNCTIONIMPL", 1L);
+		Instance.PropertyArray.appendString(supportedArtifactTypes.artifactTypes, "SCORECARD", 1L);
+		Instance.PropertyArray.appendString(supportedArtifactTypes.artifactTypes, "CHANNEL", 1L);
+		Instance.PropertyArray.appendString(supportedArtifactTypes.artifactTypes, "DOMAIN", 1L);
+		Instance.PropertyArray.appendString(supportedArtifactTypes.artifactTypes, "STATEMACHINE", 1L);
+		Instance.PropertyArray.appendString(supportedArtifactTypes.artifactTypes, "RULETEMPLATE", 1L);
+		Instance.PropertyArray.appendString(supportedArtifactTypes.artifactTypes, "RULETEMPLATEINSTANCE", 1L);
+		Instance.PropertyArray.appendString(supportedArtifactTypes.artifactTypes, "METRIC", 1L);
+		Instance.PropertyArray.appendString(supportedArtifactTypes.artifactTypes, "BEPROCESS", 1L);
+		//Shared resources
+		Instance.PropertyArray.appendString(supportedArtifactTypes.artifactTypes, "RVTRANSPORT", 1L);
+		Instance.PropertyArray.appendString(supportedArtifactTypes.artifactTypes, "SHAREDHTTP", 1L);
+		Instance.PropertyArray.appendString(supportedArtifactTypes.artifactTypes, "SHAREDJDBC", 1L);
+		Instance.PropertyArray.appendString(supportedArtifactTypes.artifactTypes, "SHAREDJNDICONFIG", 1L);
+		Instance.PropertyArray.appendString(supportedArtifactTypes.artifactTypes, "ID", 1L);
+		Instance.PropertyArray.appendString(supportedArtifactTypes.artifactTypes, "SHAREDJMSCON", 1L);
+		Instance.PropertyArray.appendString(supportedArtifactTypes.artifactTypes, "SUBSTVAR", 1L);
+		Instance.PropertyArray.appendString(supportedArtifactTypes.artifactTypes, "CDD", 1L);
+	}
+}

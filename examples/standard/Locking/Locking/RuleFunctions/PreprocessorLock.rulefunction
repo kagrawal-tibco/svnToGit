@@ -1,0 +1,27 @@
+/**
+ * @description 
+ */
+void rulefunction RuleFunctions.PreprocessorLock {
+	
+	attribute {
+		validity = ACTION;
+	}
+	
+	scope {
+		Events.Withdraw w;
+	}
+	
+	body {
+		RuleFunctions.CloseHttpRequest(w);
+		
+		// Attempts to lock.
+		// -1 = no timeout, wait until the lock is acquired.
+		boolean locked = Cluster.DataGrid.Lock(w.accountNumber, -1, false);
+		
+		if (locked) {
+			// Loads the concept that the rules will work on.
+			Cluster.DataGrid.CacheLoadConceptByExtId(w.accountNumber, false);
+		}			
+	}
+	
+}

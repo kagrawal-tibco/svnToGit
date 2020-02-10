@@ -1,0 +1,22 @@
+/**
+ * @description 
+ * @author 
+ */
+rule RulesForFirstArchives.Routing.RouteSmallOrder {
+	attribute {
+		priority = 3;
+		forwardChain = true;
+	}
+	declare {
+		Events.OrderEvent	order;
+		
+	}
+	when {
+		order.Amount < 1000;
+	}
+	then {
+		System.debugOut("Routing to 'toSmall' destination in Local channel. ");
+		Event.routeTo(order, "/Channels/Local/toSmall", "");
+		Event.consumeEvent(order);
+	}
+}

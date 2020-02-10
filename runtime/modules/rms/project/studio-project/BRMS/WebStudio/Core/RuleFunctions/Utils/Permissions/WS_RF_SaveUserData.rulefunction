@@ -1,0 +1,86 @@
+/**
+ * @description 
+ */
+void rulefunction WebStudio.Core.RuleFunctions.Utils.Permissions.WS_RF_SaveUserData {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String loggedInUserName;
+		WebStudio.Core.Concepts.Permissions.WS_C_UserData userData;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.Permissions.WS_RF_SaveUserData");
+		
+		WS.Acl.clearUserEntryArray();
+		
+		WebStudio.Core.Concepts.Permissions.WS_C_User[] userArray = Instance.PropertyArray.toArrayContainedConcept(userData.authEntry);
+		
+		for (int i = 0; i < userArray@length; i++) {
+			String userName = userArray[i].userName;
+			String userPwd = userArray[i].userPassword;
+			String userRoles = userArray[i].roleName;
+			String subscriptionId = userArray[i].subscriptionId;
+			String adminRole = userArray[i].adminRole;
+			
+			String actionType = "NA";
+			if (userArray[i].actionType != null) {
+			   actionType = userArray[i].actionType;
+			}
+			
+			if (subscriptionId!= null && userPwd == null) userPwd = "";
+			
+			WS.Acl.addUserEntryToList(userName, userPwd, userRoles, subscriptionId, actionType);
+			
+			Log.log(LOGGER, "Debug", "Adding User [%s]", userName);
+			
+			if (adminRole != null) {
+				Log.log(LOGGER, "Debug", "User [%s] to add has an admin role [%s]", userArray[i].userName, adminRole);
+				
+				String adminRoleExtId = WS_RF_CreateUserArtifactExtId("ADMIN_ROLES", null, null, null, null, null);
+				boolean locked = Cluster.DataGrid.Lock(adminRoleExtId, -1, false);
+				
+				if (locked) {
+					WS_C_AdminRoles adminRolesEntity = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(adminRoleExtId, false, "/WebStudio/Core/Concepts/WS_C_AdminRoles");
+					
+					if (adminRolesEntity != null) {
+						WS_C_RoleMap[] roleMap = Instance.PropertyArray.toArrayContainedConcept(adminRolesEntity.entry);
+						String coverage = "All";
+						if (subscriptionId != null) coverage = subscriptionId;
+						
+						boolean coverageExists = false;
+						for (int j=0; j<roleMap@length; j++) {
+							if (String.equals(roleMap[j].coverage, coverage)) {
+								coverageExists = true;
+								Log.log(LOGGER, "Debug", "Matching coverage[%s] found", coverage);
+								if (Instance.PropertyArray.indexOfString(roleMap[j].role, adminRole) == -1) {
+									Instance.PropertyArray.appendString(roleMap[j].role, adminRole, 1L);
+									Log.log(LOGGER, "Debug", "Role [%s] added to coverage [%s]", adminRole, coverage);
+								}
+								break;
+							}
+						}
+						if (!coverageExists) {
+							Log.log(LOGGER, "Debug", "Adding new coverage [%s] with Role [%s]", coverage, adminRole);
+							String roleMapExtId = WS_RF_CreateUserArtifactExtId("ROLE_MAP", null, null, null, coverage, null);
+							WS_C_RoleMap wsRoleMap = Instance.createInstance("xslt://{{/WebStudio/Core/Concepts/WS_C_RoleMap}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"2.0\"><xsl:param name=\"coverage\"/><xsl:param name=\"roleMapExtId\"/><xsl:template name=\"Function\" match=\"/\"><createObject><object><xsl:attribute name=\"extId\"><xsl:value-of select=\"$roleMapExtId\"/></xsl:attribute><coverage><xsl:value-of select=\"$coverage\"/></coverage></object></createObject></xsl:template></xsl:stylesheet>");
+							Instance.PropertyArray.appendString(wsRoleMap.role, adminRole, 1L);
+							Instance.PropertyArray.appendContainedConcept(adminRolesEntity.entry, wsRoleMap, 1L);
+						}
+					}
+				}
+			}
+			
+			if (actionType != null && actionType != "NA") {
+				String comment = "Updated";
+				if (String.equals(actionType, "REMOVE")) comment = "Removed";
+				else if (String.equals(actionType, "ADD")) comment = "Added";
+				WS_RF_AddAuditTrailEntry(loggedInUserName, null, null, null, "USER", comment + " user " + userName);
+			}
+			
+			Log.log(LOGGER, "Debug", "Flushing to file");
+			
+			WS.Acl.saveUserContentToFile();
+		}
+	}
+}

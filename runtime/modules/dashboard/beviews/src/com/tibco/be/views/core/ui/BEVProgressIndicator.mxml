@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Simple custom MXML TitleWindow component.
+     The TitleWindowApp application displays this component. 
+     You cannot run it independently. -->
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" paddingLeft="0" paddingRight="0" paddingTop="0" height="88" width="422" styleName="progressDialogStyle" xmlns:syn="com.syndera.insight.core.ui.*">
+    <mx:Script>
+        <![CDATA[       
+            import mx.managers.PopUpManager;
+            import mx.controls.Text;
+            
+            [Bindable]
+            private var _buttonEnabled:Boolean = false;
+            
+            [Bindable]
+            private var _buttonText:String = "OK";
+            
+            [Bindable]
+            private var _title:String = null;
+            
+            [Bindable]
+            private var _message:String = null;
+            
+	
+	        // Event handler for the OK button.
+                        
+            private function okClicked():void{
+                PopUpManager.removePopUp(this);
+            }
+            
+            [Inspectable]
+            public function set title(value:String):void{ _title = value; }
+            
+            [Inspectable]
+            public function set message(value:String):void{ _message = value; }
+            
+            [Inspectable (defaultValue=false)]
+            public function set buttonEnabled(value:Boolean):void{ _buttonEnabled = value; }
+            
+            [Inspectable (defaultValue="OK")]
+            public function set buttonText(value:String):void{ _buttonText = value; }
+            
+        ]]>
+    </mx:Script>
+    <mx:Canvas width="100%" height="20" left="0" top="0" styleName="progressDialogTitleBarStyle">
+        <mx:Label text="{_title}" left="0" top="0" id="textTitle" width="100%"/>
+        <syn:SynIdentityUI right="0" top="0" version="{BEVIdentityUI.LONG_VERSION}" color="{BEVIdentityUI.WHITE_LOGO}">
+        </syn:SynIdentityUI>
+    </mx:Canvas>
+    <mx:ProgressBar width="100%" indeterminate="true" x="0" y="20" labelPlacement="center" label=" " height="17"/>
+    <mx:Label text="{_message}" width="100%" id="txtMessage" left="10" top="51"/>
+    <mx:Button click="okClicked();" right="10" id="btnOK" visible="{_buttonEnabled}" label="{_buttonText}" top="51"/>
+</mx:Canvas>

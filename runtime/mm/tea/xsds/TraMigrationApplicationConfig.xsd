@@ -1,0 +1,151 @@
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" 
+		   xmlns:jxb="http://java.sun.com/xml/ns/jaxb" 
+		   jxb:version="2.0" 
+		   xmlns="http://www.tibco.com/xmlns/ApplicationManagement"  
+		   targetNamespace="http://www.tibco.com/xmlns/ApplicationManagement"  
+		   xmlns:tns="http://www.tibco.com/xmlns/ApplicationManagement"
+		   
+		   elementFormDefault="qualified">
+
+	 <xsd:element name="application">
+       <xsd:complexType>	
+         <xsd:sequence>
+		   <xsd:element   name="repoInstanceName" type="xsd:string" />
+		   <xsd:element   name="teaUrl" type="xsd:string" />
+		   <xsd:element   name="teaUser" type="xsd:string" />
+		   <xsd:element   name="teaPassowrd" type="xsd:string" />
+		   <xsd:element   name="exportedEarPath" type="xsd:string" />
+		   <xsd:element   name="exportedCddPath" type="xsd:string" />
+		   <xsd:element   name="NVPairs" type="NVPairs" />		
+		   <xsd:element   name="repoInstances" type="RepoInstances" />   
+		   <xsd:element   name="services" type="Services" />
+         </xsd:sequence>
+		 <xsd:attribute   name="name" type="xsd:string" use="required"/>
+       </xsd:complexType>
+     </xsd:element>
+	 
+	 <xsd:complexType name="NVPairs">
+		<xsd:sequence>
+        	<xsd:element name="NameValuePair" type="NameValuePair" minOccurs="0" maxOccurs="unbounded"/>
+        	<xsd:element name="NameValuePairPassword" type="NameValuePairPassword" minOccurs="0" maxOccurs="unbounded"/>
+        	<xsd:element name="NameValuePairBoolean" type="NameValuePairBoolean" minOccurs="0" maxOccurs="unbounded"/>
+        	<xsd:element name="NameValuePairInteger" type="NameValuePairInteger" minOccurs="0" maxOccurs="unbounded"/>		
+        </xsd:sequence>
+        <xsd:attribute   name="name" type="xsd:string" use="required"/>
+     </xsd:complexType>
+	
+	 <xsd:complexType name="NameValuePair">
+		<xsd:sequence>
+        	<xsd:element name="name" type="xsd:string" />	
+        	<xsd:element name="value" type="xsd:string" />	
+        </xsd:sequence>
+     </xsd:complexType>
+     
+     <xsd:complexType name="NameValuePairPassword">
+		<xsd:sequence>
+        	<xsd:element name="name" type="xsd:string" />	
+        	<xsd:element name="value" type="xsd:string" />	
+        </xsd:sequence>
+     </xsd:complexType>
+     
+     <xsd:complexType name="NameValuePairBoolean">
+		<xsd:sequence>
+        	<xsd:element name="name" type="xsd:string" />	
+        	<xsd:element name="value" type="xsd:boolean" />	
+        </xsd:sequence>
+     </xsd:complexType>
+     
+     <xsd:complexType name="NameValuePairInteger">
+		<xsd:sequence>
+        	<xsd:element name="name" type="xsd:string" />	
+        	<xsd:element name="value" type="xsd:int" />	
+        </xsd:sequence>
+     </xsd:complexType>
+     
+     <xsd:complexType name="RepoInstances">
+		<xsd:sequence>
+        	<xsd:element name="localRepoInstance" type="LocalRepoInstance" minOccurs="0" maxOccurs="unbounded"/>		
+        </xsd:sequence>
+         <xsd:attribute   name="selected" type="xsd:string" use="required"/>
+     </xsd:complexType>
+     
+     <xsd:complexType name="LocalRepoInstance">
+		<xsd:sequence>
+        	<xsd:element name="encoding" type="xsd:string" />		
+        </xsd:sequence>
+     </xsd:complexType>
+     
+     <xsd:complexType name="Services">
+		<xsd:sequence>
+        	<xsd:element name="service" type="Service" minOccurs="1" maxOccurs="unbounded"/>		
+        </xsd:sequence>
+     </xsd:complexType>
+     
+     <xsd:complexType name="Service">
+		<xsd:sequence>
+        	<xsd:element name="enabled" type="xsd:boolean" />	
+        	<xsd:element name="bindings" type="Bindings" />	
+        	<xsd:element name="NVPairs" type="NVPairs" minOccurs="0" maxOccurs="unbounded" />	
+        	<xsd:element name="failureCount" type="xsd:int" />
+        	<xsd:element name="failureInterval" type="xsd:int" />
+        	<xsd:element name="isFt" type="xsd:boolean" />
+        </xsd:sequence>
+        <xsd:attribute   name="name" type="xsd:string" use="required"/>
+     </xsd:complexType>
+     
+    <xsd:complexType name="Bindings">
+		<xsd:sequence>
+        	<xsd:element name="binding" type="Binding" minOccurs="0" maxOccurs="unbounded"/>		
+        </xsd:sequence>
+    </xsd:complexType>
+    
+     <xsd:complexType name="Binding">
+		<xsd:sequence>
+        	<xsd:element name="machine" type="xsd:string" />	
+        	<xsd:element name="product" type="Product" />	
+        	<xsd:element name="setting" type="Setting" />
+        	<xsd:element name="NVPairs" type="NVPairs" minOccurs="0" maxOccurs="unbounded" />
+        </xsd:sequence>
+        <xsd:attribute   name="name" type="xsd:string" use="required" />
+    </xsd:complexType>
+    
+    <xsd:complexType name="Product">
+		<xsd:sequence>
+        	<xsd:element name="type" type="xsd:string" />
+        	<xsd:element name="version" type="xsd:string" />
+        	<xsd:element name="location" type="xsd:string" />	
+        	<xsd:element name="machineName" type="xsd:string" />
+        	<xsd:element name="ip" type="xsd:string" />
+        	<xsd:element name="os" type="xsd:string"  nillable = "true"/>	
+        	<xsd:element name="deploymentPath" type="xsd:string"  nillable = "true"/>
+        	<xsd:element name="sysUser" type="xsd:string"  nillable = "true"/>
+        	<xsd:element name="sysPass" type="xsd:string"  nillable = "true"/>
+        	<xsd:element name="sshPort" type="xsd:int"  nillable = "true"/>
+        	<xsd:element name="jmxport" type="xsd:int"  nillable = "true"/>
+        </xsd:sequence>
+    </xsd:complexType>
+    
+    <xsd:complexType name="Setting">
+		<xsd:sequence>
+        	<xsd:element name="startOnBoot" type="xsd:boolean" />
+        	<xsd:element name="enableVerbose" type="xsd:boolean" />
+        	<xsd:element name="maxLogFileSize" type="xsd:int" />	
+        	<xsd:element name="maxLogFileCount" type="xsd:int" />	
+        	<xsd:element name="java" type="JAVA" />	
+        </xsd:sequence>
+    </xsd:complexType>
+    
+    <xsd:complexType name="JAVA">
+		<xsd:sequence>
+        	<xsd:element name="initHeapSize" type="xsd:int" />
+        	<xsd:element name="maxHeapSize" type="xsd:int" />
+        	<xsd:element name="threadStackSize" type="xsd:int" />	
+        </xsd:sequence>
+    </xsd:complexType>
+	     
+	     
+	    
+	 
+	 
+     
+</xsd:schema>

@@ -1,0 +1,100 @@
+/**
+ * @description Carry out RTI build/deploy activity.
+ */
+WebStudio.Core.Concepts.Lifecycle.WS_C_ArtifactDeployStatus rulefunction WebStudio.Core.RuleFunctions.Actions.Lifecycle.BuildAndDeploy.WS_RF_DeployRuleTemplateInstance {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String scsRootURL;
+		String sharedLocation;
+		String projectName;
+		WebStudio.Core.Concepts.Lifecycle.Ops.WS_C_AbstractOperation lastOperationPerformed;
+		WebStudio.Core.Concepts.WS_C_UserArtifact userArtifact;
+		String userName;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.Lifecycle.BuildAndDeploy.WS_RF_DeployRuleTemplateInstance");
+		
+		int statusCode = 0;
+		String statusMessage = null;
+		
+		String artifactPath = userArtifact.artifactPath;
+		String artifactType = userArtifact.artifactType;
+		String artifactFileExtn = userArtifact.artifactFileExtn;
+
+		Log.log(LOGGER, "Debug", "[Artifact Path] - %s, [Artifact Type] - %s, [Artifact Extension] - %s", artifactPath, artifactType, artifactFileExtn);
+		
+		Object destinationFilePathBuffer = String.createBuffer(0);
+		String.append(destinationFilePathBuffer, sharedLocation);
+		String.append(destinationFilePathBuffer, "/");
+		String.append(destinationFilePathBuffer, projectName);
+		String.append(destinationFilePathBuffer, artifactPath);
+		String.append(destinationFilePathBuffer, ".");
+		String.append(destinationFilePathBuffer, artifactFileExtn);
+		
+		String destinationFilePath = String.convertBufferToString(destinationFilePathBuffer);
+		String.clearBuffer(destinationFilePathBuffer);
+		Log.log(LOGGER, "Debug", "Destination File Path [%s]", destinationFilePath);
+		
+		if (!(lastOperationPerformed instanceof WS_C_DeleteOperation)) {
+			String fileContents = WS_RF_FetchContentFromSCS(scsRootURL, projectName, artifactPath, artifactFileExtn, userName);
+			Object fileContentsInBytes = String.getBytes(fileContents, "UTF-8");
+			
+			if (File.createFolders(sharedLocation, projectName + artifactPath)) {
+				Log.log(LOGGER, "Debug", "Destination file path created");
+				
+				Object fileWriter = File.openFile(destinationFilePath, "rw");
+				if (File.fileExists(destinationFilePath)) {
+					//Truncate and write new
+					try {
+						//TODO take care of removal if artifact is deleted.
+						File.fileTruncateAndWrite(fileWriter, fileContentsInBytes); 
+						statusMessage = String.format("Artifact [%s] successfully copied to shared location", artifactPath);
+					} catch (Exception e) {
+						statusCode = 1;
+						statusMessage = String.format("Deployment for artifact [%s] failed due to %s", artifactPath, e@message);
+						Log.logException(LOGGER, "Error", "", e , {e@stackTrace});
+					} finally {
+						File.fileClose(fileWriter);
+					}
+				} else {
+					try {
+						File.fileWriteBytes(fileWriter, fileContentsInBytes);
+						statusMessage = String.format("Artifact [%s] successfully copied to shared location", artifactPath);
+						Log.log(LOGGER, "Info", statusMessage, destinationFilePath);
+					} catch (Exception e) {
+						statusCode = 1;
+						statusMessage = String.format("Deployment for artifact [%s] failed due to %s", artifactPath, e@message);
+						Log.logException(LOGGER, "Error", "", e , {e@stackTrace});
+					} finally {
+						File.fileClose(fileWriter);
+					}
+				}
+			}
+		} else {
+			// Remove rule template instance if Deleted -> Approved -> Build&Deploy
+			if (File.fileExists(destinationFilePath)) {
+				while (!String.equals(destinationFilePath, "")) {
+					File.fileRemove(destinationFilePath);
+					Log.log(LOGGER, "Debug", "Deleted file located at - %s", destinationFilePath);
+					
+					destinationFilePath = String.substring(destinationFilePath, 0, String.lastIndexOfString(destinationFilePath, 0, "/"));
+					if (String.indexOfString(destinationFilePath, 0, projectName) != -1) {
+						String[] files = File.listFiles(destinationFilePath, null);
+						if (files@length > 0) {
+							break;
+						}
+					} else {
+						break;
+					}
+				}
+			} 
+		}
+		WS_C_ArtifactDeployStatus deployStatus = 
+			Instance.newTransientInstance("/WebStudio/Core/Concepts/Lifecycle/WS_C_ArtifactDeployStatus");
+		deployStatus.statusCode = statusCode;
+		deployStatus.statusMessage = statusMessage;	
+		return deployStatus;	
+	}
+}

@@ -1,0 +1,68 @@
+/**
+ * @description Perform logout operation.
+ * @author aathalye-lt
+ */
+rule AAA.Rules.AuthenRules.AuthenticationRuleset.AMS_RU_LogoutRule {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		AAA.Events.AuthenEvents.AMS_E_LogoutRequestEvent ams_e_logoutrequestevent;
+	}
+	when {
+		ams_e_logoutrequestevent.loggedInUserName != null;
+	}
+	then {
+		Object LOGGER = Log.getLogger("AAA.Rules.AuthenRules.AuthenticationRuleset.AMS_RU_LogoutRule");
+		String loggedInUserName = null;
+		if (ams_e_logoutrequestevent.loggedInUserName != null) {
+			loggedInUserName = HTTP.decodeURL(ams_e_logoutrequestevent.loggedInUserName, "UTF-8");
+		}
+		
+		//Check whether this loggedin user exists
+		AMS_C_LoggedInUser loggedInUser = Instance.getByExtIdByUri(loggedInUserName, "/AAA/Concepts/AMS_C_LoggedInUser");
+		
+		if (loggedInUser != null) {
+			//Clean up
+			boolean loggedInUsersLock = Cluster.DataGrid.Lock("LOGGEDIN_USERS", -1, false);
+			AMS_C_LoggedInUsers loggedInUsers = null;
+			if (loggedInUsersLock) {
+				loggedInUsers = Cluster.DataGrid.CacheLoadConceptByExtIdByUri("LOGGEDIN_USERS", false, "/Approval/Scorecards/AMS_C_LoggedInUsers");
+				if (loggedInUsers == null) {
+					Approval.Events.ArtifactEvents.AMS_E_ErrorEvent errorEvent = 
+						Approval.CommonServices.AMS_RF_CreateErrorEvent("LOGOUT_ERROR", "No logged in users present", null);
+			
+					Event.replyEvent(ams_e_logoutrequestevent, errorEvent);
+				} else {
+//					int index = Instance.
+//									PropertyArray.
+//										indexOfString(loggedInUsers.loggedInUsers, 
+//										              ams_e_logoutrequestevent.loggedInUserName);
+					AMS_C_LoggedInUserEntry loggedInUserExists = WS_RF_CheckIfUserLoggedIn(Instance.PropertyArray.toArrayContainedConcept(loggedInUsers.loggedInUsers), loggedInUserName, null);
+				
+					if (loggedInUserExists != null) {
+						Log.log(LOGGER, "Info", "Cleaning up logged in user %s", loggedInUserName);
+//						Instance.
+//							PropertyArray.
+//								removeString(loggedInUsers.loggedInUsers,
+//								             ams_e_logoutrequestevent.loggedInUserName);
+						Instance.PropertyArray.removeContainedConcept(loggedInUsers.loggedInUsers, loggedInUserExists);
+					}	
+					Instance.deleteInstance(loggedInUser);
+					
+					String encodedLoggedInUserName = HTTP.encodeURL(loggedInUser.username, "UTF-8");
+					AAA.Events.AuthenEvents.AMS_E_LogoutResponseEvent responseEvent = 
+						Event.createEvent("xslt://{{/AAA/Events/AuthenEvents/AMS_E_LogoutResponseEvent}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" version=\"1.0\" exclude-result-prefixes=\"xsl xsd\">\n    <xsl:output method=\"xml\"/>\n    <xsl:param name=\"encodedLoggedInUserName\"/>\n    <xsl:template match=\"/\">\n        <createEvent>\n            <event>\n                <loggedInUserName>\n                    <xsl:value-of select=\"$encodedLoggedInUserName\"/>\n                </loggedInUserName>\n            </event>\n        </createEvent>\n    </xsl:template>\n</xsl:stylesheet>");
+					
+					Event.replyEvent(ams_e_logoutrequestevent, responseEvent);	
+				}
+			}			
+		} else {
+			Approval.Events.ArtifactEvents.AMS_E_ErrorEvent errorEvent = 
+				Approval.CommonServices.AMS_RF_CreateErrorEvent("LOGOUT_ERROR", "Username " + loggedInUserName + " is not logged in", null);
+			
+			Event.replyEvent(ams_e_logoutrequestevent, errorEvent);	
+		}
+	}
+}

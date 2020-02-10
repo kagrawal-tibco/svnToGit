@@ -1,0 +1,37 @@
+/**
+ * @description 
+ */
+void rulefunction QueryCode.Function.DirectToQueryCQ.Callback {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String	resultName;
+		boolean	isBatchEnd;
+		boolean	hasEnded;
+		Object	row;
+		Object	closure;
+	}
+	body {
+		if (isBatchEnd) {
+		    return;
+		} else if (hasEnded) {
+		    return;
+		} else {
+		    Object[] columns = row;
+		
+		    int count = columns[0];
+		
+		    System.debugOut("Query [" + resultName + " ~ count-directtoquery-event-over-last-10-seconds] result : " + count);
+		
+		    if(count  == 9){
+		        QueryOntology.Level2QueryEvent l2 = 
+		            QueryOntology.Level2QueryEvent.Level2QueryEvent(null, null, count);
+		
+		        System.debugOut("Query [" + resultName + "] is asserting Level2QueryEvent.");
+		
+		        Event.assertEvent(l2);
+		    }
+		}
+	}
+}

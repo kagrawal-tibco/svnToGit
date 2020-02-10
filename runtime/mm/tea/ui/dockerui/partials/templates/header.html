@@ -1,0 +1,46 @@
+<div class="header">
+    <nav class="tbt-top-nav navbar-static-top">        
+        <span class="dropdown" dropdown on-toggle="toggled(open)">
+      		<a href class="title dropdown-toggle ng-binding" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+      			<i class="tibcoAbb24x24LogoIcon"></i>
+      			 TIBCO BusinessEvents
+      		</a>
+      		<ul class="dropdown-menu">
+      			<li>        			
+          			<a ng-click="openHelpPageForBETea()">Help</a>
+        		</li>
+      			<li>        			
+          			<a ng-click="showAboutWindowForBETea()">About BusinessEvents TEA Agent</a>
+        		</li>
+      		</ul>
+    	</span>
+        <span >        	
+             <select ng-model="selectedAppName" ng-change="reloadPage(selectedAppName)">
+                <option ng-repeat="app in appObject" value="{{app.name}}" ng-selected = "app.name == selectedAppName">{{app.name}}</option>
+            </select> 
+        </span>
+        <ul class="topNav">
+			<li title="Application" ng-click="showDashboardApplications()" ng-class="{active:true}" >	
+				<i class="fa fa-cube"></i>					
+				<span>Application Deployments</span>  
+			</li>
+			<li title="Machines" ng-click="showDashboardHosts()">
+				<i class="fa fa-desktop"></i>							
+				<span >Machines</span>
+			</li>
+			<li title="Moitoring" ng-click="showAgentStats()">
+				<i class="fa fa-line-chart"></i>							
+				<span >Monitoring</span>
+			</li>
+		</ul>
+    </nav>
+    <div ng-show="notification.show">
+      		<div ng-include="'partials/templates/directive/showNotification.html'"></div>
+    </div>
+    <!-- <nav ng-show="mainNotification.show" ng-class="mainNotification.severity">        
+        <div class="in">
+    		<i class="fa fa-error"></i>{{mainNotification.msg}}
+    		<a class="dismiss" ng-click="dismiss()" style="cursor:pointer">Dismiss</a>
+		</div>
+    </nav> -->
+</div>

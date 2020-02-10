@@ -1,0 +1,77 @@
+<div class="center-container container">
+  <div class="">
+    <div class="">
+      <!-- <div class='heading text-center'>
+        Notifications
+      </div> -->
+    </div>
+  </div>
+  <div class="body">
+    <div
+      class="empty-msg text-center"
+      *ngIf='notifications.length === 0'
+      >
+      <div class="message" i18n>{{i18n('
+        There are no unread notifications.
+        ')}}</div>
+    </div>
+    <div
+      class="inbox"
+      *ngIf='notifications.length > 0'
+    >
+      <div class="row">
+        <div class="col-sm-12">
+          <div class="pull-right">
+            <a
+              class="clickable"
+              (click)='markAllAsRead()'
+            >mark all as read</a>
+          </div>
+        </div>
+      </div>
+      <div class='messages'>
+        <div
+          class=""
+          *ngFor='let item of notifications'
+        >
+            <div class="row message-container {{item.severity ? 'alert alert-' + item.severity : ''}}">
+              <div class="notification-icon">
+                  <small class='{{item.icon}}'></small>
+              </div>
+              <div class="col-sm-12">
+		         <small>{{item.timestamp | date : 'short'}}</small>
+              </div>
+              <div class="col-sm-9">
+                <div class="message">
+                  <span class="clickable"
+                    (click)="openDetails(item)"
+                  >
+                    {{item.content}}
+                  </span>
+                </div>
+              </div>
+              <div class="clickable col-sm-1">
+                  <i tooltip="{{i18n('Additional details')}}" i18n-tooltip
+                class='fa fa-info-circle' placement="top" container="body" containerClass="animated fadeIn"
+                (click)='openDetails(item)'
+                ></i>
+              </div>
+              <div class="clickable col-sm-1">
+                  <i tooltip="Jump to {{item.link}}" 
+                class='fa fa-external-link-square' placement="top" container="body" containerClass="animated fadeIn"
+                (click)='handleClick(item.link)'
+                ></i>
+              </div>
+              <div class="col-sm-1">
+                 <i tooltip="{{i18n('Mark notification as read')}}" i18n-tooltip
+                  class='clickable fa fa-check' placement="left" container="body" containerClass="animated fadeIn"
+                  (click)='remove(item)'
+                 ></i>
+              </div>
+            </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>

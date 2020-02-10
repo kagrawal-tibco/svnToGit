@@ -1,0 +1,32 @@
+/**
+ * @description 
+ * @author 
+ */
+rule Rules.SimulatorRuleSet.SimulateBoilerTempReadings {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Events.Time.PublishBoilerTemp	publishboilertemptimeevent;
+		MonitoringMetrics.Criteria1	mmetrics;
+		
+	}
+	when {
+		publishboilertemptimeevent@extId==null;
+	}
+	then {
+		if (MonitoringMetrics.SimulatorCriteria.value>MonitoringMetrics.SimulatorCriteria.upper_bound) {
+		    MonitoringMetrics.SimulatorCriteria.value=1;
+		} else {
+		    MonitoringMetrics.SimulatorCriteria.value=MonitoringMetrics.SimulatorCriteria.value+0.1;
+		}
+		
+		Event.sendEvent(Events.General.BoilerTemp.BoilerTemp(null/*extId String */,
+		                                                     null/*payload String */,
+		                                                     "B1MOL"/*BoilerId String */,
+		                                                     50 * MonitoringMetrics.SimulatorCriteria.value
+		                                                            /*Temp double */,
+		                                                     "Nothing"/*Remarks String */));
+	}
+}

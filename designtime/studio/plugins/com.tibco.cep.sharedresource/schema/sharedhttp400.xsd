@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+
+<xsd:schema
+        targetNamespace="http://tibco.com/be/shared/http400"
+        xmlns:aems="http://www.tibco.com/xmlns/aemeta/services/2002"
+        xmlns:bt="http://tibco.com/be/shared/basetypes"
+        xmlns:tns="http://tibco.com/be/shared/http400"
+        xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+    <xsd:import schemaLocation="basetypes.xsd"
+                namespace="http://tibco.com/be/shared/basetypes"/>
+    <xsd:import schemaLocation="aemeta-services-2002.xsd"
+                namespace="http://www.tibco.com/xmlns/aemeta/services/2002"/>
+
+    <xsd:element name="Configuration" type="tns:Configuration-type"/>
+    <xsd:element name="Description" type="xsd:string"/>
+    <xsd:element name="EnableLookups" type="xsd:boolean"/>            
+    <xsd:element name="General" type="tns:General-type"/>
+    <xsd:element name="Http" type="tns:Http-type"/>
+    <xsd:element name="Host" type="xsd:string"/>
+    <xsd:element name="Port" type="xsd:string"/>
+
+    <xsd:complexType name="Http-type">
+        <xsd:sequence>
+            <xsd:element ref="tns:General"/>
+            <xsd:element ref="tns:Configuration"/>
+        </xsd:sequence>
+    </xsd:complexType>
+
+    <xsd:complexType name="General-type">
+        <xsd:sequence>
+            <xsd:element ref="tns:Description"/>
+        </xsd:sequence>
+    </xsd:complexType>
+    
+	<xsd:complexType name="Configuration-type">
+        <xsd:sequence>
+            <xsd:element ref="tns:Host"/>
+            <xsd:element ref="tns:Port"/>
+            <xsd:element ref="tns:EnableLookups"/>
+			<xsd:element ref="aems:ssl" minOccurs="0"/>
+		</xsd:sequence>			        
+    </xsd:complexType>
+</xsd:schema>
+

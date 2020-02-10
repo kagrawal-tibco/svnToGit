@@ -1,0 +1,47 @@
+/**
+ * @description 
+ */
+void rulefunction Monitoring.RuleFunctions.view.populators.cacheObjectStatsViewPopulator {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object	eventArrayObj;
+	}
+	body {
+		if (eventArrayObj == null){
+		    return;
+		}
+		Object[] eventArray = eventArrayObj;
+		if (eventArray@length == 0){
+		    return;
+		}
+		Shared.Concepts.SeriesData series = null;
+		for (int i = 0 ; i < eventArray@length ; i = i + 1){
+		    CacheObjectMetricEvent metricevent = eventArray[i];
+		    if (series == null) {
+		        Shared.Concepts.AbstractMonitorView view = Instance.getByExtId(metricevent.name);
+		        if (view == null) {
+		           throw Exception.newException("Warning","No View found matching "+metricevent.name,null);
+		        }
+		        String componentConfigMapId = getComponentConfigMapId(view.monitorable,view.type);
+		        if (componentConfigMapId == null) {
+		            throw Exception.newException("Warning","Invalid component definition found for "+view.type+" using "+metricevent.name,null);
+		        }
+		        String[] seriesNames = Util.HashMap.getObject(componentConfigMapId,"seriesnames");
+		        series = Instance.getByExtId(metricevent.name+":"+seriesNames[0]);
+		    }
+		    int idx = Instance.PropertyArray.indexOfString(series.categories,metricevent.cObjectName);
+		    if (idx == -1){
+		        idx = series.categories@length;
+		    }
+		    series.categories[idx] = metricevent.cObjectName;
+		    series.values[idx] = metricevent.size+"#"+metricevent.numberOfGets+"#"+metricevent.numberofPuts+"#"
+		                            +metricevent.avgGetTimeMillis+"#"+metricevent.avgPutTimeMillis+"#"+(metricevent.hitRatio*100)
+		                            +"#"+metricevent.maxSize+"#"+metricevent.minSize+"#"+metricevent.expiryDelayMillis;
+		    series.rawValues[idx] = metricevent.size+"#"+metricevent.numberOfGets+"#"+metricevent.numberofPuts+"#"
+		                            +metricevent.avgGetTimeMillis+"#"+metricevent.avgPutTimeMillis+"#"+(metricevent.hitRatio*100)
+		                            +"#"+metricevent.maxSize+"#"+metricevent.minSize+"#"+metricevent.expiryDelayMillis;
+		}
+	}
+}

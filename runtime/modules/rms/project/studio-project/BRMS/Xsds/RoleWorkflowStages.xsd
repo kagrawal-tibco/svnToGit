@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema xmlns="http://www.w3.org/2001/XMLSchema" 
+targetNamespace="www.tibco.com/be/rms/RoleWorkflowStages" 
+xmlns:tns="www.tibco.com/be/rms/RoleWorkflowStages" 
+elementFormDefault="qualified">
+
+    <complexType name="Roles">
+    	<sequence>
+    		<element name="role" type="tns:Role" maxOccurs="unbounded" minOccurs="0"/>
+    	</sequence>
+    </complexType>
+    
+    <complexType name="Role"> 
+    	<sequence>
+    		<element ref="tns:stage" maxOccurs="unbounded" minOccurs="0" />
+    	</sequence>
+    	<attribute name="name" type="string" form="qualified" use="required"/>
+    </complexType>
+    
+    <complexType name="WorkflowStages">
+    	<sequence>
+    		<element ref="tns:stage" maxOccurs="unbounded" minOccurs="0"/>
+    	</sequence>
+    </complexType>
+
+    <complexType name="Stage">
+    	<attribute name="id" type="string" form="qualified"
+    		use="required" />
+    	<attribute name="name" type="string" form="qualified"
+    		use="required" />
+    </complexType>
+
+
+    <element name="Roles" type="tns:Roles"/>
+    <element name="stage" type="tns:Stage"/>
+    <element name="stages" type="tns:WorkflowStages"/>
+
+    <complexType name="WorkflowInfo">
+    	<sequence>
+    		<element name="roles" type="tns:Roles"/>
+    		<element name="workflowStages" type="tns:WorkflowStages"/>
+    	</sequence>
+    </complexType>
+
+    <element name="WorkflowInfo" type="tns:WorkflowInfo"/>
+
+</schema>

@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas
+	xmlns:mx="http://www.adobe.com/2006/mxml"
+	width="100%"
+	height="54"
+	creationComplete="onCreationComplete()"
+	horizontalScrollPolicy="off"
+>
+	<mx:Script>
+		<![CDATA[
+			import mx.binding.utils.BindingUtils;
+			import mx.collections.IList;
+			
+			public static const SINGLE_ROW_WITH_IMAGE_STATE:String = "singleRoleWithImageState";
+			public static const MULTI_ROW_WITH_IMAGE_STATE:String = "multiRoleWithImageState";
+			public static const MULTI_ROW_NO_IMAGE_STATE:String = "multiRoleNoImageState";
+			
+			[Embed(source='assets/images/dashboard/header_bar.jpg')]
+			[Bindable]
+			private var BGImage:Class;
+			
+			[Bindable] 
+			public var logoURL:String;
+			
+			[Bindable]
+			public var title:String = "TIBCO BusinessEvents® Views";
+			
+			[Bindable]
+			public var links:IList;
+			
+			[Bindable]
+			public var username:String;
+			
+			[Bindable]
+			public var userrole:String;
+			
+			[Bindable]
+			public var userroles:IList;
+			
+			[Bindable]
+			private var _isRightContentVisible:Boolean = true;
+			
+			private var controller:BEVHeaderController;
+			
+			public function get rightContentVisible():Boolean{ return _isRightContentVisible; }
+			
+			public function set rightContentVisible(value:Boolean):void{ _isRightContentVisible = value; }
+			
+			private function onCreationComplete():void{
+				controller = new BEVHeaderController(this);
+				controller.init();
+			}
+			
+			override protected function updateDisplayList(unscaleWidth:Number, unscaledHeight:Number):void{
+				super.updateDisplayList(unscaleWidth, unscaledHeight);
+				
+				var maxTitleWidth:Number = width - (logoImage != null ? logoImage.width:0) - rightContentBox.measuredWidth - 35; //35 = 20 from header content x + 15 for spacing
+				if(maxTitleWidth < titleLabel.measuredWidth){ 
+					titleLabel.maxWidth = maxTitleWidth;
+				} 
+				
+				var startEndFill:int = backgroundImage == null ? 0:backgroundImage.width;
+				if(startEndFill > unscaledWidth){ return; }
+				
+				//Draw background to extend beyond the end of the background image
+			 	graphics.clear();
+			 	graphics.beginFill(0x120F54, 1);
+			 	graphics.drawRect(startEndFill, 0, unscaledWidth-startEndFill, 48);
+			 	graphics.endFill();
+			 	
+			 	graphics.moveTo(startEndFill, 48);
+			 	graphics.lineStyle(1, 0xACACB8);
+			 	graphics.lineTo(unscaledWidth, 48)
+			 	
+			 	graphics.moveTo(startEndFill, 50);
+			 	graphics.lineStyle(3, 0xDEDEDE);
+			 	graphics.lineTo(unscaledWidth, 50)
+			 	
+			 	graphics.moveTo(startEndFill, 52);
+			 	graphics.lineStyle(1, 0xFFFFFF);
+			 	graphics.lineTo(unscaledWidth, 52)
+			 	
+			 	graphics.moveTo(startEndFill, 53);
+			 	graphics.lineStyle(1, 0xADADAD);
+			 	graphics.lineTo(unscaledWidth, 53)
+			}		
+		]]>
+	</mx:Script>
+	<mx:states>
+		<mx:State name="{SINGLE_ROW_WITH_IMAGE_STATE}">
+			<mx:AddChild relativeTo="{titleLabel}" position="before">
+				<mx:Image id="logoImage" source="{logoURL}" scaleContent="false" maintainAspectRatio="false" autoLoad="true" maxHeight="30"/>
+			</mx:AddChild>
+		</mx:State>
+		<mx:State name="{MULTI_ROW_WITH_IMAGE_STATE}" basedOn="{SINGLE_ROW_WITH_IMAGE_STATE}">
+			<mx:RemoveChild target="{roleInfo}"/>
+			<mx:AddChild relativeTo="{logOutSeparator}" position="before">
+				<mx:HBox paddingRight="5" horizontalGap="2">
+					<mx:Label text=" '{username}' logged in as" styleName="BEVHeaderLabel"/>
+					<mx:ComboBox id="userRolesCombo" dataProvider="{userroles}" editable="false" height="20"/>
+				</mx:HBox>
+			</mx:AddChild>
+		</mx:State>
+		<mx:State name="{MULTI_ROW_NO_IMAGE_STATE}" basedOn="{MULTI_ROW_WITH_IMAGE_STATE}">
+			<mx:RemoveChild target="{logoImage}"/>
+		</mx:State>
+	</mx:states>
+	<mx:Image id="backgroundImage" x="0" y="0" source="{BGImage}" />
+	<mx:HBox x="20" y="0" width="100%" height="90%" styleName="BEVHeader">
+		<mx:Label id="titleLabel" text="{title}" truncateToFit="true" styleName="BEVHeaderTitle"/>
+		<mx:Spacer id="middleSpacer" width="100%" height="100%"/>
+		<mx:HBox id="rightContentBox" height="100%" visible="{_isRightContentVisible}" styleName="BEVHeader">
+			<mx:VRule id="linkBarSeparator" height="16" width="1" styleName="BEVHeaderSeparator"/>
+			<mx:LinkBar id="actionsBar" separatorColor="0xFFFFFF" styleName="BEVHeaderLinkBar" labelField="label" toolTipField="tooltip"/>
+			<mx:VRule id="roleInfoSeparator" height="16" width="1" styleName="BEVHeaderSeparator"/>
+			<mx:Label id="roleInfo" text=" '{username}' logged in as {userrole}" styleName="BEVHeaderLabel"/>
+			<mx:VRule id="logOutSeparator" height="16" width="1" styleName="BEVHeaderSeparator"/>
+			<mx:LinkButton id="logOutButton" label="Log Out" styleName="BEVHeaderLinkBtn"/>
+		</mx:HBox>
+	</mx:HBox>
+</mx:Canvas>

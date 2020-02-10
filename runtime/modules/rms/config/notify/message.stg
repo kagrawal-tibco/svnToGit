@@ -1,0 +1,30 @@
+group email;
+
+approvalEmailSubject() ::= "Review of Worklist revision - $checkIn.revisionId$"
+
+approvalEmailContent() ::=<<
+<p><b>Revision $checkIn.revisionId$</b> committed by user <b><i>$checkIn.userName$</i></b> on $checkIn.time$ with comments "$checkIn.userComments$" for project <b>$checkIn.project$</b> was reviewed by user <b><i>$reviewer$</i></b>.</p>
+$listReviewedArtifacts(artifacts)$
+
+Check <a href="$serverURL$">worklist</a> for more details.
+>>
+
+listReviewedArtifacts(artifacts) ::=<<
+$artifacts: {artifact | <p>Operation type <b>$artifact.operation$</b> on artifact $artifact.project$$artifact.name$.$artifact.fileExtension$ has been $artifact.newStatus$ 
+with review comments "$artifact.reviewComments$"</p>}$
+>>
+
+
+
+commitEmailSubject() ::= "CheckIn of Revision - $checkIn.revisionId$"
+
+commitEmailContent() ::=<<
+Revision <b>$checkIn.revisionId$</b> for project <b>$checkIn.project$</b> was committed by user <b><i>$checkIn.userName$</i></b> on $checkIn.time$ with comments "$checkIn.userComments$".
+$listCommittedArtifacts(artifacts)$
+
+Check <a href="$serverURL$">worklist</a> for more details.
+>>
+
+listCommittedArtifacts(artifacts) ::=<<
+$artifacts: {artifact | <p>Operation type <b>$artifact.operation$</b> on artifact $artifact.project$$artifact.name$.$artifact.fileExtension$</p>}$
+>>

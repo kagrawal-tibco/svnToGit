@@ -1,0 +1,261 @@
+/**
+ * @description 
+ * @author vpatil-t420
+ */
+rule WebStudio.Core.Rules.Lifecycle.WS_R_SyncFromRepository {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		WebStudio.Core.Events.Lifecycle.WS_E_RepositorySyncEvent repositoryEvent;
+	}
+	when {
+		repositoryEvent != null &&
+		repositoryEvent.userName != null &&
+		repositoryEvent.roles != null;
+	}
+	then {
+		Object LOGGER = Log.getLogger("WebStudio.Core.Rules.Lifecycle.WS_R_SyncFromRepository");
+		
+		String subscriptionId = WS_RF_GetSubscriptionId(repositoryEvent.userName);
+		
+		WS_C_CheckoutRequestProject project = Instance.createInstanceFromXML("/WebStudio/Core/Concepts/Request/Usecases/Checkout/WS_C_CheckoutRequestProject", repositoryEvent@payload);
+		if (project != null) {			
+			String projectName = project.name;
+			String[] roles = WS.Common.splitToStringArray(repositoryEvent.roles, ",");
+			WS_C_ArtifactCheckoutDataItem[] artifactItems = Instance.PropertyArray.toArrayContainedConcept(project.artifactItem);
+			
+			String scsRootURL = WS_RF_GetSCSRootURL(projectName, subscriptionId);
+			String scsIntegrationType = System.getSystemPropertyAsString("ws.scs.impl.type", null);
+			
+			String pathSeparator = "/";
+			Object reusableBuffer = String.createBuffer(0);
+			String sharedLocation = System.getSystemPropertyAsString("ws.artifact.deploy.location", null);					
+			String.createBuffer(0);
+			String.append(reusableBuffer, sharedLocation);
+			String.append(reusableBuffer, pathSeparator);
+			if (subscriptionId != null && !String.equals(subscriptionId, "")) {
+				String.append(reusableBuffer, subscriptionId);
+				String.append(reusableBuffer, pathSeparator);
+			}
+			String.append(reusableBuffer, projectName);
+			String.append(reusableBuffer, pathSeparator);
+			String.append(reusableBuffer, projectName);
+			String.append(reusableBuffer, ".ear");			
+			String earPath = String.convertBufferToString(reusableBuffer);
+			String.clearBuffer(reusableBuffer);
+			
+			Object[] symbolInfoResults = null;
+			boolean isEntity = WS_RF_CheckIfEntity(artifactItems);
+			if (isEntity) {
+				// now process RT symbols
+				Object queryBuffer = String.createBuffer(0);
+				String.append(queryBuffer, "select cs from /WebStudio/Core/Concepts/RuleTemplateInstance/Builder/WS_C_ComplexSymbolInfo cs");
+				
+				String projectSymbolQueryString = String.convertBufferToString(queryBuffer);
+				Log.log(LOGGER, "Debug", "Project Symbol query with bind variables [%s]", projectSymbolQueryString);
+				String.clearBuffer(queryBuffer);
+				
+				String queryArgsKey = "Query_Args_" + System.nanoTime();
+				Util.HashMap.createMap(queryArgsKey);
+				
+				symbolInfoResults = WS_RF_QueryWorkspaceForMatches(projectSymbolQueryString, queryArgsKey);
+				if (symbolInfoResults != null) Log.log(LOGGER, "Debug", "Total records found matching the query - [%s]", symbolInfoResults@length);
+				
+				Util.HashMap.clear(queryArgsKey);
+				Util.HashMap.deleteMap(queryArgsKey);
+			}
+            
+            String artifactType = null, entityExtId = null, artifactPath = null;    
+			for (int i=0; i<artifactItems@length; i++) {
+				artifactType = artifactItems[i].artifactType;
+				artifactPath = artifactItems[i].artifactPath;
+				
+				Log.log(LOGGER, "Debug", "Updating Entity[%s] of Type [%s]", artifactPath, artifactType);
+				
+				// Make sure if there are any newly added artifacts, then they get added to the project
+				if (WS_RF_AddArtifactsToProject(artifactPath, artifactType, projectName, repositoryEvent.userName)) {
+					continue;
+				}
+				
+				// Update case for concept and event
+				if (String.equals(artifactType, "concept") || String.equals(artifactType, "event")) {
+					
+					// Updating userArtifact update sync time
+					WS_C_UserArtifact userArtifact = WS_RF_IsUserArtifact(WS_RF_CreateUserArtifactExtId(null, artifactPath, projectName, repositoryEvent.userName, null, null), artifactType);
+					if (userArtifact != null) userArtifact.lastSyncDate = DateTime.now();
+					
+					// first look for existing entities available
+					entityExtId = WS_RF_CreateUserArtifactExtId("SHARED", artifactPath, projectName, null, subscriptionId, null);
+					Log.log(LOGGER, "Debug", "Updating Argument Entity ExtId [%s]", entityExtId);
+					
+					boolean entityLock = Cluster.DataGrid.Lock(entityExtId, -1, false);
+					if (entityLock) {
+						WS_C_EntityArtifact entity = Instance.getByExtIdByUri(entityExtId, "/WebStudio/Core/Concepts/Common/WS_C_EntityArtifact");
+						if (entity != null) {
+							Log.log(LOGGER, "Debug", "Removing Existing entity with id %s", entity@id);						
+							Instance.deleteInstance(entity);
+						} else {
+							Log.log(LOGGER, "Debug", "Argument Entity ExtId [%s] not found", entityExtId);
+						}
+						Cluster.DataGrid.UnLock(entityExtId, false);
+					}
+					
+					// now process RT symbols
+					String extIdPart =  WS_RF_CreateUserArtifactExtId("SHARED_SYMBOL", artifactPath + "." + artifactType, projectName, repositoryEvent.userName, null, null);
+					if (symbolInfoResults != null && symbolInfoResults@length > 0) {
+						Log.log(LOGGER, "Debug", "Total records found matching the query - [%s]", symbolInfoResults@length);
+						
+						WS_C_ComplexSymbolInfo symbolInfo = null, querySymbolInfo = null;
+						for (int resultLoop = 0; resultLoop < symbolInfoResults@length; resultLoop++) {
+							Object result = symbolInfoResults[resultLoop];
+							if (result instanceof WS_C_ComplexSymbolInfo) {
+								querySymbolInfo = result;
+								if (String.contains(querySymbolInfo@extId, extIdPart)) {
+									entityLock = Cluster.DataGrid.Lock(querySymbolInfo@extId, -1, false);
+									if (entityLock) {
+										// load symbolInfo from the current rule session rather from Query one
+										symbolInfo = Instance.getByExtIdByUri(querySymbolInfo@extId, "/WebStudio/Core/Concepts/RuleTemplateInstance/Builder/WS_C_ComplexSymbolInfo");
+										if (symbolInfo != null) {
+											Log.log(LOGGER, "Debug", "Found complex Symbol [%s]", querySymbolInfo@extId);
+																		
+											WS_RF_AddMissingSymbols(artifactPath, artifactType, projectName, roles, repositoryEvent.userName, scsRootURL, scsIntegrationType, symbolInfo);
+										}
+										Cluster.DataGrid.UnLock(querySymbolInfo@extId, false);
+									}
+								}
+							}
+						}
+						
+						Log.log(LOGGER, "Debug", "Checking if this is associated to any parent Symbols");
+						
+						// here we query all the symbols whose extId contains the projectname
+						// then iterate through all the symbols and pass the symbol path and the entity updated to a function
+						// symbol path iterates up the ladder - super path to check for a match
+						// if match found return a list of properties of the updated entity
+						//
+						WS_RF_CheckForMatchingSuperSymbol(artifactPath, artifactType, projectName, roles, repositoryEvent.userName, scsRootURL, scsIntegrationType, symbolInfoResults);
+					}
+					
+				// case for VRF	
+				} else if (String.equals(artifactType, "rulefunction")) {
+					
+					// look for existing VRF artifact and delete them, so that next lookup is fresh
+					entityExtId = WebStudio.Core.RuleFunctions.Utils.WS_RF_CreateUserArtifactExtId(null, artifactPath, projectName, repositoryEvent.userName, null, null);
+					WS_C_UserArtifact userArtifact = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(entityExtId, false, "/WebStudio/Core/Concepts/Decision/WS_C_UserDTableArtifact");
+					if (userArtifact != null) {
+						userArtifact.lastSyncDate = DateTime.now();
+						
+						String[] revisionIds = Instance.PropertyArray.toArrayString(userArtifact.artifactRevisionIds);
+						Log.log(LOGGER, "Debug", "Total Revisions for VRF[%s] - %s", artifactPath, revisionIds@length);
+						
+						if (revisionIds@length > 0) {
+							for (int j=0; j<revisionIds@length; j++) {
+								WS_C_UserArtifactRevision artifactRevision = Instance.getByExtIdByUri(revisionIds[j], "/WebStudio/Core/Concepts/WS_C_UserArtifactRevision");
+								if (artifactRevision != null) {
+									Log.log(LOGGER, "Debug", "Revision ExtId %s", artifactRevision@extId);
+									Concept ruleFunctionContentObject = WS_RF_GetArtifactContentInstance(artifactRevision.artifactContentsId, artifactRevision.parentArtifactType);
+									if (ruleFunctionContentObject != null && ruleFunctionContentObject instanceof WS_C_RuleFunctionArtifact) {
+										Log.log(LOGGER, "Debug", "Found the VRF[id=%s], cleaning it now.", ruleFunctionContentObject@id);
+										Instance.deleteInstance(ruleFunctionContentObject);
+									}
+									Instance.deleteInstance(artifactRevision);
+								}							
+							}
+							Instance.PropertyArray.clear(userArtifact.artifactRevisionIds);
+						}
+					}
+					
+					// second part - Update existing DT's containing old Symbol list
+					String[] decisionTablesToUpdate = WS.Decision.TableModel.getVRFImplementations(scsRootURL, projectName, artifactPath, earPath);
+					
+					Object[] symbols = null;
+					// load the new set of symbols for the the updated VRF
+					if (decisionTablesToUpdate != null && decisionTablesToUpdate@length > 0) {				
+						String artifactContents = WS_RF_FetchContentFromSCS(scsRootURL, projectName, artifactPath, artifactType, repositoryEvent.userName);
+						Log.log(LOGGER, "Debug", "Contents of Rule Function loaded from SCS %s", artifactContents);
+	
+						Object rulefunctionObject = WS.Decision.createRuleFunctionEMFObject(projectName, artifactContents, artifactType, scsIntegrationType, scsRootURL, WS_RF_GetEarPath(projectName, subscriptionId));
+						symbols = WS.Decision.getRuleFunctionSymbols(rulefunctionObject);
+					
+						for (int j=0; j<decisionTablesToUpdate@length; j++) {
+							Log.log(LOGGER, "Debug", "Processing Decision Table [%s]", decisionTablesToUpdate[j]);
+							
+							entityExtId = WebStudio.Core.RuleFunctions.Utils.WS_RF_CreateUserArtifactExtId(null, decisionTablesToUpdate[j], projectName, repositoryEvent.userName, null, null);
+							userArtifact = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(entityExtId, false, "/WebStudio/Core/Concepts/Decision/WS_C_UserDTableArtifact");
+							if (userArtifact != null) {
+								String[] revisionIds = Instance.PropertyArray.toArrayString(userArtifact.artifactRevisionIds);
+								Log.log(LOGGER, "Debug", "Total Revisions for DT[%s] - %s", decisionTablesToUpdate[j], revisionIds@length);
+								
+								// Need to update only if there are any revisions
+								if (revisionIds@length > 0) {
+									String latestRevision = revisionIds[revisionIds@length-1];
+									WS_C_UserArtifactRevision artifactRevision = Instance.getByExtIdByUri(latestRevision, "/WebStudio/Core/Concepts/WS_C_UserArtifactRevision");
+									if (artifactRevision != null) {
+										Log.log(LOGGER, "Debug", "Latest Revision ExtId %s", artifactRevision@extId);
+										WS_C_DecisionTable dtContentObject = WS_RF_GetArtifactContentInstance(artifactRevision.artifactContentsId, artifactRevision.parentArtifactType);
+										if (dtContentObject != null && dtContentObject instanceof WS_C_DecisionTable) {
+											WS_RF_UpdateDTArguments(dtContentObject.arguments, symbols);
+										}								
+									}			
+								}					
+							}
+						}
+					} else {
+						Log.log(LOGGER, "Debug", "No DT's found for update.");
+					}
+					
+				} else if (String.equals(artifactType, "ruletemplate") || String.equals(artifactType, "ruletemplateview") ) {
+					
+					if (String.equals(artifactType, "ruletemplateview")) {
+						String ruleTemplatePath = WS.RT.View.getAssociatedRuleTemplate(scsIntegrationType, scsRootURL, projectName, artifactPath);
+						if (ruleTemplatePath != null) {
+							String rtvExtId = WebStudio.Core.RuleFunctions.Utils.WS_RF_CreateUserArtifactExtId(null, artifactPath, projectName, repositoryEvent.userName, null, null);
+							WS_C_UserArtifact rtvUserArtifact = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(rtvExtId, false, "/WebStudio/Core/Concepts/WS_C_UserArtifact");
+							if (rtvUserArtifact != null) {
+								Log.log(LOGGER, "Debug", "Updating RT[%s] associated to RTV[%s]", ruleTemplatePath, artifactPath);
+								
+								rtvUserArtifact.lastSyncDate = DateTime.now();
+								artifactPath = ruleTemplatePath;
+								artifactType = "ruletemplate";
+							} else {
+								Log.log(LOGGER, "Debug", "Associated RT[%s] associated to RTV[%s] not found !!", ruleTemplatePath, artifactPath);
+							}
+						}
+					}
+					
+					// look for existing RT artifact
+					entityExtId = WebStudio.Core.RuleFunctions.Utils.WS_RF_CreateUserArtifactExtId(null, artifactPath, projectName, repositoryEvent.userName, null, null);
+					WS_C_UserArtifact userArtifact = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(entityExtId, false, "/WebStudio/Core/Concepts/RuleTemplateInstance/WS_C_RuleTemplateInstanceUserArtifact");
+					if (userArtifact != null) {
+						userArtifact.lastSyncDate = DateTime.now();
+						
+						String[] revisionIds = Instance.PropertyArray.toArrayString(userArtifact.artifactRevisionIds);
+						Log.log(LOGGER, "Debug", "Total Revisions for RT[%s] - %s", artifactPath, revisionIds@length);
+						
+						// Need to update only if there are any revisions
+						if (revisionIds@length > 0) {
+							String latestRevision = revisionIds[revisionIds@length-1];
+							WS_C_UserArtifactRevision artifactRevision = Instance.getByExtIdByUri(latestRevision, "/WebStudio/Core/Concepts/WS_C_UserArtifactRevision");
+							if (artifactRevision != null) {								
+								Log.log(LOGGER, "Debug", "Latest Revision ExtId %s", artifactRevision@extId);
+								WS_C_AbstractRuleTemplate ruleTemplate = WS_RF_GetArtifactContentInstance(artifactRevision.artifactContentsId, artifactRevision.parentArtifactType);
+								
+								if (ruleTemplate != null) {
+									WS_RF_SyncRuleTemplateWithRepository(scsIntegrationType, scsRootURL, projectName, artifactPath, artifactType, ruleTemplate, repositoryEvent.userName, roles);
+								} else {
+									Log.log(LOGGER, "Debug", "No Rule Template Instances associated to RT[" + artifactPath + "]");
+								}
+							}
+						}
+					}
+				}
+				WS_RF_AddAuditTrailEntry(repositoryEvent.userName, projectName, artifactPath, artifactType, "EXTERNAL_SYNC", "Synchronization Successful");
+			}			
+		} else {
+			Log.log(LOGGER, "Debug", "Project object itself is null.");
+		}
+		Event.consumeEvent(repositoryEvent);
+	}
+}

@@ -1,0 +1,150 @@
+/**
+ * @description 
+ */
+void rulefunction Shared.RuleFunctions.topology.loadTopologyXML {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		
+	}
+	body {
+		String family = "loadTopologyXML";
+		//create site
+		String[] sites = BEMM.topology.getRoot();
+        for(int s=0;s<sites@length;s=s+1) {
+            String[] nameAndType = String.split(sites[s],",");
+            Shared.Concepts.MonitorableEntity site = Instance.newInstance("/Shared/Concepts/MonitorableEntity",s+"");
+            site.name = nameAndType[0];
+            site.active = true;
+            site.predefined = true;
+            site.healthLevel = "normal";
+            site.previousActiveState = "";
+            site.previousHealthLevel = "";
+            site.parent = null;
+            site.type = "site";
+            site.childIDSeed = 0;
+            Shared.Concepts.GlobalScoreCard.siteID = site@extId;
+            Shared.RuleFunctions.log(family,"DEBUG","Created Monitorable entity! name= " + site.name + " id= " + site.childIDSeed + " type= "+ site.type );
+            
+            String[] clusters = BEMM.topology.getTopologyChildren(site.name);
+            for(int i=0;i<clusters@length;i=i+1){
+                Shared.Concepts.MonitorableEntity cluster = Instance.newInstance("/Shared/Concepts/MonitorableEntity",site@extId+":"+site.childIDSeed);
+                cluster.name = getSimpleName(clusters[i]);
+                cluster.topologyProps[0] = getSimpleName(clusters[i]);
+                cluster.topologyProps[1] = clusters[i];
+                cluster.active = false;
+                cluster.predefined = true;
+                cluster.type = "cluster";
+                cluster.parent = site;
+                cluster.childIDSeed = 0;
+                cluster.healthLevel = determinePropertyValue(cluster,"healthLevel",null);
+                cluster.previousActiveState = "";
+                cluster.previousHealthLevel = "";
+                site.children[site.children@length] = cluster;
+                site.childIDSeed = site.childIDSeed + 1;
+                cluster.aggregated = false;
+                cluster.initialized = false;
+                
+                CreateAndInitClustHealthConcpt(cluster.name);
+                
+                Shared.RuleFunctions.log(family,"DEBUG","Created Monitorable entity! name= " + cluster.name + " id= " + cluster.childIDSeed + " type= "+ cluster.type );
+                
+                //System.debugOut("________________"+clusters[i]);
+                String[] machines = BEMM.topology.getTopologyChildren(clusters[i]);
+                for(int j=0;j<machines@length;j=j+1){
+                    Shared.Concepts.MonitorableEntity machine = Instance.newInstance("/Shared/Concepts/MonitorableEntity",cluster@extId+":"+cluster.childIDSeed);
+                    machine.name = getSimpleName(machines[j]);
+                    machine.topologyProps[0] = getSimpleName(machines[j]);
+                    machine.topologyProps[1] = machines[j];
+                    machine.active = false;
+                    machine.predefined = true;
+                    machine.type = "machine";
+                    machine.parent = cluster;
+                    machine.childIDSeed = 0;
+                    cluster.children[cluster.children@length] = machine;
+                    cluster.childIDSeed = cluster.childIDSeed + 1;
+                    machine.healthLevel = determinePropertyValue(machine,"healthLevel",null);
+                    machine.previousActiveState = "";
+                    machine.previousHealthLevel = "";
+                    machine.aggregated = false;
+                    machine.initialized = false;
+                	Shared.RuleFunctions.log(family,"DEBUG","Created Monitorable entity! name= " + machine.name + " id= " + machine.childIDSeed + " type= "+ machine.type);
+                    
+                    String[] pus = BEMM.topology.getTopologyChildren(machines[j]);
+                    for(int k=0;k<pus@length;k=k+1){
+                        String[] nameWithPort = String.split(pus[k], ",");
+                        Shared.Concepts.MonitorableEntity pu = null;
+                        pu = Instance.newInstance("/Shared/Concepts/MonitorableEntity",machine@extId+":"+machine.childIDSeed);
+                        pu.name = getSimpleName(nameWithPort[0]);
+                        pu.topologyProps[0] = getSimpleName(nameWithPort[0]);    //"PU name" is of the form DU_NAME~PU_ID
+                        pu.topologyProps[1] = nameWithPort[0];
+                        if(nameWithPort@length > 1){
+                            pu.topologyProps[2] = nameWithPort[1];//the jmx port
+                        }
+                        else{
+                            pu.topologyProps[2] = null;
+                        }
+                        pu.active = false;
+                        pu.predefined = true;
+
+                        String deployTime = BEMM.topology.getDeployTime(cluster.name, machine.name, pu.topologyProps[0]);
+
+                        if ( !String.equals(deployTime,"") ) {
+                            pu.deployed = true;
+                            pu.lastDeploy = deployTime;
+                            Shared.RuleFunctions.log(family,"DEBUG","Setting deployment time= " + deployTime + " pu = " + pu.name +  
+                                                     " machine = " + machine.name + " cluster = " + cluster.name);
+                        }
+
+                        pu.type = "process";
+                        pu.parent = machine;
+                        pu.childIDSeed = 0;
+                        machine.children[machine.children@length] = pu;
+                        machine.childIDSeed = machine.childIDSeed + 1;
+                        pu.healthLevel = determinePropertyValue(pu,"healthLevel",null);
+                        pu.previousActiveState = "";
+                        pu.previousHealthLevel = "";
+                        pu.aggregated = false;
+                        pu.initialized = false;
+                		Shared.RuleFunctions.log(family,"DEBUG","Created Monitorable entity! name= " + pu.name + " id= " + pu.childIDSeed + " type= "+ pu.type);
+                        
+                        String[] agents = BEMM.topology.getTopologyChildren(nameWithPort[0]);
+                        for(int n=0;n<agents@length;n=n+1){
+                            String[] nameWithType = String.split(agents[n], ",");
+                            Shared.Concepts.MonitorableEntity agent = null;
+                            agent = Instance.newInstance("/Shared/Concepts/MonitorableEntity",pu@extId+":"+pu.childIDSeed);
+                            agent.name = getSimpleName(nameWithType[0]);
+                            agent.topologyProps[0] = getSimpleName(nameWithType[0]);
+                            agent.topologyProps[1] = nameWithType[0];
+                            agent.active = false;
+                            agent.predefined = true;
+                            agent.type = nameWithType[1];
+                            agent.parent = pu;
+                            agent.childIDSeed = 0;
+                            pu.children[pu.children@length] = agent;
+                            pu.childIDSeed = pu.childIDSeed + 1;
+                            agent.healthLevel = determinePropertyValue(agent,"healthLevel",null);
+                            agent.previousActiveState = "";
+                            agent.previousHealthLevel = "";
+                            agent.aggregated = false;
+                            agent.initialized = false;
+                			Shared.RuleFunctions.log(family,"DEBUG","Created Monitorable entity! name= " + agent.name + " id= " + agent.childIDSeed + " type= "+ agent.type);
+                        }
+                    }
+                }
+                /*Shared.Concepts.MonitorableEntity mcacheobjects = null;
+                mcacheobjects = Instance.newInstance("/Shared/Concepts/MonitorableEntity",cluster@extId+":"+cluster.childIDSeed);
+                mcacheobjects.name = "Monitored Objects";
+                mcacheobjects.active = false;
+                mcacheobjects.healthLevel = cluster.healthLevel;
+                mcacheobjects.type = "mcacheobjects";
+                mcacheobjects.parent = cluster;
+                mcacheobjects.childIDSeed = 0;
+                cluster.children[cluster.children@length] = mcacheobjects;
+                cluster.childIDSeed = cluster.childIDSeed + 1;
+                mcacheobjects.aggregated = false;*/
+            }
+        }
+	}
+}

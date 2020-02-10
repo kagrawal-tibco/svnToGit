@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<project name="post-install" default="post-install" basedir=".">
+	<property file="post-install.properties"/>
+	<import file="common-tasks.xml"/>
+
+	<taskdef resource="net/sf/antcontrib/antcontrib.properties"/>
+
+	<target name="post-install" depends="backup-eclipse-configuration,post-install-bkup,post-install-rename">
+		<echo message="Done eclipse post-installation tasks." />
+	</target>
+	
+	<target name="backup-eclipse-configuration">
+		<echo message="Backing up eclipse configuration" />
+		<if>
+			<available file="${tibco.home}/be/${beVersionShort}/eclipse-platform/eclipse/configuration/org.eclipse.equinox.simpleconfigurator/bundles.info" type="file"/>
+			<then>
+				<mkdir dir="${tibco.home}/be/${beVersionShort}/backup/${beVersion}_pre/eclipse-platform/eclipse/configuration/org.eclipse.equinox.simpleconfigurator" />
+				<move todir="${tibco.home}/be/${beVersionShort}/backup/${beVersion}_pre/eclipse-platform/eclipse/configuration/org.eclipse.equinox.simpleconfigurator">
+					<fileset dir="${tibco.home}/be/${beVersionShort}/eclipse-platform/eclipse/configuration/org.eclipse.equinox.simpleconfigurator">
+						<include name="bundles.info"/>
+					</fileset>
+				</move>
+			</then>
+		</if>
+	</target>
+	
+	<target name="post-install-bkup" depends="backup">
+		<echo message="Done eclipse post-installation backup tasks." />
+	</target>
+
+	<target name="backup" depends="dir.check" if="dir.exists">
+		<echo message="Backing up eclipse-platform directory from be eclipse..." />
+                <echo message="TIBCOHOME = ${tibco.home}"/>
+		<move file="${tibco.home}/be/${beVersionShort}/eclipse-platform/eclipse" todir="${tibco.home}/be/${beVersionShort}/eclipse-platform-bkup"/>
+		<delete dir="${tibco.home}/be/${beVersionShort}/eclipse-platform"/>
+	</target>	
+
+	<target name="post-install-rename" depends="rename">
+		<echo message="Done eclipse post-installation rename tasks." />
+	</target>
+
+	<target name="rename">
+		<echo message="Installing new eclipse..." />
+		<move file="${tibco.home}/be/${beVersionShort}/eclipse-platform-new/eclipse" todir="${tibco.home}/be/${beVersionShort}/eclipse-platform"/>  
+		<delete dir="${tibco.home}/be/${beVersionShort}/eclipse-platform-new"/>
+	</target>	
+
+	<target name="dir.check">
+		<condition property="dir.exists">
+			<available file="${tibco.home}/be/${beVersionShort}/eclipse-platform/eclipse" type="dir"/>
+		</condition>
+	</target>
+
+	<tstamp>
+     		<format property="time.stamp" pattern="yyyy-MM-dd_HH-mm-ss"/>
+	</tstamp>
+</project>

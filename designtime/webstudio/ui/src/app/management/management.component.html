@@ -1,0 +1,76 @@
+<div class="left-pad right-pad top-pad"  *ngIf="!this.showBEUI()">
+  <div class="row">
+    <div class="col-sm-3">
+      <div class="card">
+        <div class="card-header">
+          <b i18n>{{i18n('Permission Management')}}</b>
+        </div>
+        <div class='list-group'>
+          <div *ngIf="!this.showBEUI()">
+            <a
+              class='list-group-item'
+              routerLink='users'
+              routerLinkActive='selected' i18n
+              >{{i18n('
+              Users
+              ')}}</a>
+            <a
+              class='list-group-item'
+              routerLink='roles'
+              routerLinkActive='selected' i18n
+              >{{i18n('
+              Roles
+              ')}}</a>
+          </div>
+        </div>   
+      </div>
+    </div>
+    <i class="material-icons {{ isRtl() ? 'slide-rtl' : 'slide' }}">more_vert</i>
+    <div class="col-sm-9">
+      <router-outlet></router-outlet>
+    </div>
+  </div>
+</div>
+
+<mat-drawer-container style='height: 100%; overflow: hidden;'  *ngIf="this.showBEUI()">
+  <mat-drawer #sidenav mode='side' opened>
+    <div>
+      <h6 mat-subheader>
+        <strong i18n>{{i18n('Permission Management')}}</strong> 
+      </h6>
+      <mat-divider></mat-divider>
+      <mat-nav-list role="navigation">
+        <mat-list-item  *ngIf="!this.isTCEUI()" routerLink='be-users' routerLinkActive='active' i18n> 
+          {{i18n('Users')}}
+        </mat-list-item>
+        <mat-list-item *ngIf="!this.isTCEUI()" routerLink='be-roles'  routerLinkActive='active' i18n>
+          {{i18n('Roles')}}
+          </mat-list-item>
+        <mat-list-item routerLink='be-lock-management' routerLinkActive='active'>
+          <ng-container i18n>{{i18n('Locks')}}</ng-container>
+        </mat-list-item>
+      </mat-nav-list>
+    </div>
+    <mat-divider></mat-divider>
+    <div>
+      <mat-divider></mat-divider>
+      <h6 mat-subheader>
+        <strong i18n>{{i18n('Report Management')}}</strong>
+      </h6>
+      <mat-divider></mat-divider>
+      <mat-nav-list role="navigation">
+        <mat-list-item  routerLink='audit-trail' routerLinkActive='active'>
+          <ng-container i18n>{{i18n('Audit Trail')}}</ng-container>
+        </mat-list-item>
+      </mat-nav-list>
+      <mat-divider></mat-divider>
+    </div>
+  </mat-drawer>
+  <i class="material-icons {{ isRtl() ? 'slide-rtl' : 'slide' }}" (click)="sidenav.toggle()">more_vert</i>
+  <mat-drawer-content>
+    <i class="material-icons {{ isRtl() ? 'slide-rtl' : 'slide' }}" (click)="sidenav.toggle()">more_vert</i>
+    <div class="slide-content">
+        <router-outlet></router-outlet>
+    </div>
+  </mat-drawer-content>
+</mat-drawer-container>

@@ -1,0 +1,96 @@
+ <div class="modal fade box-sizing" id="uploadClassesModal">
+ 	<form  enctype="multipart/form-data" method="post" name="paramForm" novalidate>
+ 		<div id="modalDiv" style="display: none;">
+                <img src="images/icons/loader.gif" class="ajax-loader"/>
+        </div>
+    	<div class="modal-header box-sizing">
+       	 	<button type="button" class="close" data-dismiss="modal" aria-hidden="true">x</button>
+			<span class="lead">
+				<h4>Hot Deploy {{$parent.hotDeployObj.hotDeployType}}</h4>
+				<h3 ng-if="!hotDeployObj.isLoadAndDeploySelected">Step1 : Upload</h3>
+				<h3 ng-if="hotDeployObj.isLoadAndDeploySelected">Step2 : {{$parent.hotDeployObj.step2Title}}</h3>
+			</span>
+	   	</div>
+	   	<div ng-if="!hotDeployObj.isLoadAndDeploySelected">
+	   		<div class="modal-body box-sizing">
+				<div class="form-horizontal">
+                    <div class="control-group">     
+                    	<label class="control-label">Upload Path:</label>
+                    	<div class="controls" style="width: 100%;padding-bottom: 30px;padding-top: 5px;">
+                        	<input disabled="disabled" type="text" value="{{$parent.selectedApp.config.externalClassesPath}}" ng-if="$parent.hotDeployObj.isHotDeployClasses">
+                        	<input disabled="disabled" type="text" value="{{$parent.hotDeployObj.ruleTemplateDeployDir}}" ng-if="!$parent.hotDeployObj.isHotDeployClasses">
+                    	</div> 
+                    </div>
+                    <div class="control-group">                  
+                		<label class="control-label">{{$parent.hotDeployObj.hotDeployType}} Zip/JAR File: </label>
+						<div class="controls">                    	
+							<input type="text" id="classFiles" ng-model="hotDeployObj.zipFileName" disabled="disabled"/>						
+							<button type="button" ng-class="{'tbt-btn':true,'primary-btn':true}" ng-click="$parent.browseFile('selectClassFile')">Browse</button>
+							<span ng-show="$parent.hotDeployObj.isErrorWhileUploading" class="fileuploadError"> *{{$parent.hotDeployObj.errorMessage}}</span>
+							<input type="file" id="selectClassFile" accept=".zip,.jar" file-model="$parent.hotDeployObj.zipFile" onchange="angular.element(this).scope().setPathValue('classFiles','selectClassFile')" style="visibility: hidden;"/>
+						</div>					
+					</div>	
+				</div>
+	  		</div>	
+	  		<div class="modal-footer box-sizing">
+	  			<button type="button" ng-disabled="$parent.instanceInfo['status']!='Running'" ng-if="$parent.hotDeployObj.isHotDeployClasses && $parent.hasPermission(26)?true:$parent.hasPermission(28)?true:false" ng-click="$parent.navigateToLoadAndDeploy()"               
+               	 	class="tbt-btn primary-btn" ng-class="{'button_disabled':instanceInfo['status']!='Running'}">Next
+               	</button>
+	    		<button type="button" ng-disabled="paramForm.$invalid" ng-click="$parent.finishUpload()"               
+               	 	class="tbt-btn primary-btn" ng-class="{'button_disabled':paramForm.$invalid}">Finish
+               	</button>
+	    		<button type="button" data-dismiss="modal" aria-hidden="true" class="btn tbt-btn secondary-btn" ng-click="close()">
+		   		 	Cancel
+	    		</button>
+    		</div>
+	   </div>
+	   <div ng-if="$parent.hotDeployObj.isLoadAndDeploySelected">
+	   		<div class="modal-body box-sizing">
+				<div class="form-horizontal">
+                    <div class="control-group" ng-if="$parent.hotDeployObj.isHotDeployClasses">                   
+                	 	<label class="control-label">VRF Name:</label>
+                    	<div class="controls">
+                        	<input name="vrfName" type="text" placeholder="VRF Name" id="vrfField"
+                               ng-model="$parent.hotDeployObj.vrfURI" >
+                    	</div>                	
+						<label class="control-label">Implementation: </label>
+					 	<div class="controls">
+                        	<input name="implName" type="text" placeholder="Implementation Name" id="implNameField"
+                              	ng-model="$parent.hotDeployObj.implName" >
+                    	</div>    			
+					</div>
+					<div class="control-group" ng-if="!$parent.hotDeployObj.isHotDeployClasses">                   
+                	 	<label class="control-label">Agent Name:</label>
+                    	<div class="controls">
+                        	<input name="agentName" type="text" placeholder="Agent Name" id="agentNameField"
+                               ng-model="$parent.hotDeployObj.agentName"  required>
+                    	</div>                	
+						<label class="control-label">Project Name: </label>
+					 	<div class="controls">
+                        	<input name="projectName" type="text" placeholder="Project Name" id="projectNameField"
+                              	ng-model="$parent.hotDeployObj.projectName">
+                    	</div> 
+                    	<label class="control-label">Rule Template FQN: </label>
+					 	<div class="controls">
+                        	<input name="rtfqn" type="text" placeholder="Rule Template FQN" id="rtfqnField"
+                              	ng-model="$parent.hotDeployObj.rtfqn">
+                    	</div>    			
+					</div>
+				</div>
+	  		</div>	
+	  		<div class="modal-footer box-sizing">
+	  			<div ng-show="$parent.isError" class="pull-left">
+					<span class="fileuploadError">*{{$parent.errorMessage}}</span>
+				</div>
+	  			<button type="button" class="btn tbt-btn secondary-btn" ng-click="$parent.navigateToUploadClassesOrRT()">
+		   		 	Back
+	    		</button>
+	    		<button type="button" ng-disabled="paramForm.$invalid || !$parent.checkForValidForm()" ng-click="$parent.hotDeployObj.isHotDeployClasses?$parent.loadAndDeployClasses():$parent.loadAndDeployRuleTemplates()"               
+                	class="tbt-btn primary-btn" ng-class="paramForm.$invalid || !$parent.checkForValidForm()?'button_disabled':''">OK</button>
+	    		<button type="button" data-dismiss="modal" aria-hidden="true" class="btn tbt-btn secondary-btn" ng-click="close()">
+		   		 	Cancel
+	    		</button>
+    		</div>
+	   </div>
+    </form>
+ </div>

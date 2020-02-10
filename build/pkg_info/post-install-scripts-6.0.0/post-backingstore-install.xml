@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<project name="post-install" default="post-install" basedir=".">
+	<property file="post-install.properties"/>
+	<import file="common-tasks.xml"/>
+	
+	<taskdef resource="net/sf/antcontrib/antcontrib.properties"/>
+	
+	<target name="post-install" depends="import-wrappers, 
+										 set-subst-vars">
+		<echo message="Done post-installation tasks." />
+	</target>
+
+	<target name="import-wrappers">
+		<echo message="Copying be-jdbcdeploy wrapper..." />
+		<copy file="${tibco.home}/tools/wrapper/wrap${tibco.wrapper.extension}"
+			tofile="${tibco.home}/be/${beVersionShort}/bin/be-jdbcdeploy${tibco.wrapper.extension}" />
+		<chmod file="${tibco.home}/be/${beVersionShort}/bin/be-jdbcdeploy${tibco.wrapper.extension}" perm="755" />
+		<echo message="Copying be-migration wrapper..." />
+		<copy file="${tibco.home}/tools/wrapper/wrap${tibco.wrapper.extension}"
+			tofile="${tibco.home}/be/${beVersionShort}/bin/be-migration${tibco.wrapper.extension}" />
+		<chmod file="${tibco.home}/be/${beVersionShort}/bin/be-migration${tibco.wrapper.extension}" perm="755" />		
+	</target>
+	
+	<target name="set-subst-vars">
+		<antcall target="substitute-variables">
+			<param name="out.file" value="${tibco.home}/be/${beVersionShort}/bin/be-jdbcdeploy.tra"/>
+		</antcall>
+		<antcall target="substitute-variables">
+			<param name="out.file" value="${tibco.home}/be/${beVersionShort}/bin/be-migration.tra"/>
+		</antcall>
+		<antcall target="substitute-variables-examples">
+			<param name="examples-path" value="${tibco.home}/be/${beVersionShort}/examples/standard/FraudDetectionCache" />
+		</antcall>
+		<antcall target="substitute-variables-examples">
+			<param name="examples-path" value="${tibco.home}/be/${beVersionShort}/examples/standard/FraudDetectionStore" />
+		</antcall>
+		<antcall target="substitute-variables-examples">
+			<param name="examples-path" value="${tibco.home}/be/${beVersionShort}/examples/standard/Locking" />
+		</antcall>
+	</target>
+		
+</project>	

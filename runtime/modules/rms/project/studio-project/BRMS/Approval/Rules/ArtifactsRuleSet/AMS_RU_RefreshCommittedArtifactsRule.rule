@@ -1,0 +1,56 @@
+/**
+ * @description Rule to handle refresh of artifact details after status changes only.
+ * @author aathalye-lt
+ */
+rule Approval.Rules.ArtifactsRuleSet.AMS_RU_RefreshCommittedArtifactsRule {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Approval.Events.ArtifactEvents.Worklist.AMS_E_RefreshCommittedArtifactDetailsRequestEvent ams_e_refreshcommittedartifactdetailsrequestevent;
+	}
+	when {
+		ams_e_refreshcommittedartifactdetailsrequestevent.artifactPath != null &&
+		ams_e_refreshcommittedartifactdetailsrequestevent.revisionid != null;
+	}
+	then {
+		String revisionId = ams_e_refreshcommittedartifactdetailsrequestevent.revisionid;
+		String artifactPath = ams_e_refreshcommittedartifactdetailsrequestevent.artifactPath;
+		
+		//Find out the task for this rev id
+		//It is ok not to load using cacheLoadConceptByExtId, since we do not
+		//want to modify the concept.
+		AMS_C_ReviewTask reviewTask = Instance.getByExtIdByUri(revisionId, "/Approval/Concepts/ArtifactsConcepts/AMS_C_ReviewTask");
+		
+		if (reviewTask != null) {
+			AMS_C_Checkin referencedCheckin = Instance.getByExtIdByUri(reviewTask.referencedCheckinId, "/Approval/Concepts/ArtifactsConcepts/AMS_C_Checkin");
+			if (reviewTask.referencedCheckinId != null) {
+				String patternId = referencedCheckin.patternId;
+				//Check the index of the artifact path
+				int artifactPathIndex = 
+					Instance.PropertyArray.indexOfString(referencedCheckin.artifactPaths, artifactPath);
+				
+				if (artifactPathIndex != -1) {
+					//Get its details
+					String extId = patternId + "@" + artifactPath;
+					//Look for committed artifact with this extId
+					if (Cluster.DataGrid.Lock(extId, -1, false)) {
+						AMS_C_ArtifactCommited committed = Instance.getByExtIdByUri(extId, "/Approval/Concepts/ArtifactsConcepts/AMS_C_ArtifactCommited");
+						//Get applicable stages
+						AMS_C_ApplicableStages applicableStages = Instance.getByExtIdByUri(committed.applicableStagesConceptId, "/Approval/Concepts/ArtifactsConcepts/AMS_C_ApplicableStages");
+						AMS_C_WorkflowStage[] stages = Instance.PropertyArray.toArrayConcept(applicableStages.stages);
+							
+						Approval.Events.ArtifactEvents.Worklist.AMS_E_RefreshCommittedArtifactDetailsResponseEvent responseEvent = 
+							Event.createEvent("xslt://{{/Approval/Events/ArtifactEvents/Worklist/AMS_E_RefreshCommittedArtifactDetailsResponseEvent}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" xmlns:ns=\"www.tibco.com/be/ontology/Approval/Concepts/ArtifactsConcepts/AMS_C_ArtifactCommited\" xmlns:ns1=\"www.tibco.com/be/rms/RoleWorkflowStages\" xmlns:ns2=\"www.tibco.com/be/rms/CommittedArtifactDetails\" xmlns:ns3=\"www.tibco.com/be/ontology/rms/Approval/Concepts/ArtifactsConcepts/AMS_C_ArtifactCommited\" version=\"2.0\" exclude-result-prefixes=\"ns2 ns1 xsl ns ns3 xsd\"><xsl:output method=\"xml\"/><xsl:param name=\"committed\"/><xsl:param name=\"stages\"/><xsl:template name=\"Function\" match=\"/\"><createEvent><event><payload><ns2:CommittedArtifactDetails><ns2:ArtifactCommitted><xsl:if test=\"$committed/@extId\"><xsl:attribute name=\"extId\"><xsl:value-of select=\"$committed/@extId\"/></xsl:attribute></xsl:if><xsl:attribute name=\"Id\"><xsl:value-of select=\"string($committed/@Id)\"/></xsl:attribute><xsl:if test=\"$committed/artifactPath\"><ns3:artifactPath><xsl:value-of select=\"$committed/artifactPath\"/></ns3:artifactPath></xsl:if><xsl:if test=\"$committed/artifactType\"><ns3:artifactType><xsl:value-of select=\"$committed/artifactType\"/></ns3:artifactType></xsl:if><xsl:if test=\"$committed/artifactFileExtension\"><ns3:artifactFileExtension><xsl:value-of select=\"$committed/artifactFileExtension\"/></ns3:artifactFileExtension></xsl:if><xsl:if test=\"$committed/projectName\"><ns3:projectName><xsl:value-of select=\"$committed/projectName\"/></ns3:projectName></xsl:if><xsl:if test=\"$committed/revisionId\"><ns3:revisionId><xsl:value-of select=\"$committed/revisionId\"/></ns3:revisionId></xsl:if><xsl:if test=\"$committed/operation\"><ns3:operation><xsl:value-of select=\"$committed/operation\"/></ns3:operation></xsl:if><xsl:if test=\"$committed/status\"><ns3:status><xsl:value-of select=\"$committed/status\"/></ns3:status></xsl:if></ns2:ArtifactCommitted><ns2:AMS_C_ApplicableStages><xsl:for-each select=\"$stages/elements\"><ns1:stage><xsl:attribute name=\"ns1:id\"><xsl:value-of select=\"name\"/></xsl:attribute><xsl:attribute name=\"ns1:name\"><xsl:value-of select=\"name\"/></xsl:attribute></ns1:stage></xsl:for-each></ns2:AMS_C_ApplicableStages></ns2:CommittedArtifactDetails></payload></event></createEvent></xsl:template></xsl:stylesheet>");
+						Event.replyEvent(ams_e_refreshcommittedartifactdetailsrequestevent, responseEvent);
+					}		
+				}	
+			}
+		} else {
+			AMS_E_ErrorEvent errorEvent = Approval.CommonServices.AMS_RF_CreateErrorEvent("REVISION_ID_ABSENT", "Revision Id " + revisionId + " not found",
+			                                                "No matching task found for this revision id");
+			Event.replyEvent(ams_e_refreshcommittedartifactdetailsrequestevent, errorEvent);			                                                
+		}
+	}
+}

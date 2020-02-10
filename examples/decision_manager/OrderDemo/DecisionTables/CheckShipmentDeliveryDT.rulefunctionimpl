@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="ASCII"?>
+<Table:Table xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:Table="http:///com/tibco/cep/decision/table/model/DecisionTable.ecore" name="CheckShipmentDeliveryDT" folder="/DecisionTables/" implements="/VirtualRuleFunctions/CheckShipmentDeliverVRF" since="BE 4.0">
+  <md>
+    <prop name="EffectiveDate" type="DateTime" value=""/>
+    <prop name="ExpiryDate" type="DateTime" value=""/>
+    <prop name="SingleRowExecution" type="Boolean" value="false"/>
+  </md>
+  <decisionTable>
+    <md>
+      <prop name="modifiedRuleIndexList" type="String" value=""/>
+    </md>
+    <rule id="1" modified="true">
+      <md>
+        <prop name="modifiedConditionIndexList" type="String" value="0,1,2"/>
+        <prop name="modifiedActionIndexList" type="String" value="0,1"/>
+      </md>
+      <cond id="1_4" colId="4" expr="Silver"/>
+      <cond id="1_5" colId="5" expr="*"/>
+      <cond id="1_6" colId="6" expr="> 25"/>
+      <act id="1_3" colId="3" expr="5"/>
+      <act id="1_7" colId="7" expr="System.debugOut(&quot;Rewarding 5 points for silver customer since delivery period exceeded 25 days&quot;);"/>
+    </rule>
+    <rule id="2" modified="true">
+      <md>
+        <prop name="modifiedConditionIndexList" type="String" value="0"/>
+        <prop name="modifiedActionIndexList" type="String" value="0,1"/>
+      </md>
+      <cond id="2_4" colId="4" expr="Gold"/>
+      <cond id="2_5" colId="5" expr="*"/>
+      <cond id="2_6" colId="6" expr="> 25"/>
+      <act id="2_3" colId="3" expr="15"/>
+      <act id="2_7" colId="7" expr="System.debugOut(&quot;Rewarding 15 points for Gold customer since delivery period exceeded 25 days&quot;);"/>
+    </rule>
+    <rule id="3" modified="true">
+      <md>
+        <prop name="modifiedConditionIndexList" type="String" value="0"/>
+        <prop name="modifiedActionIndexList" type="String" value="0,1"/>
+      </md>
+      <cond id="3_4" colId="4" expr="Platinum"/>
+      <cond id="3_5" colId="5" expr="*"/>
+      <cond id="3_6" colId="6" expr="> 25"/>
+      <act id="3_3" colId="3" expr="25"/>
+      <act id="3_7" colId="7" expr="System.debugOut(&quot;Rewarding 25 points for Platinum customer since delivery period exceeded 25 days&quot;);"/>
+    </rule>
+    <rule id="4" modified="true">
+      <md>
+        <prop name="modifiedConditionIndexList" type="String" value="0,1,2"/>
+        <prop name="modifiedActionIndexList" type="String" value="0,1"/>
+      </md>
+      <cond id="4_4" colId="4" expr="Gold||Platinum"/>
+      <cond id="4_5" colId="5" expr="*"/>
+      <cond id="4_6" colId="6" expr="> 15 &amp;&amp; &lt; 20"/>
+      <act id="4_3" colId="3" expr="10"/>
+      <act id="4_7" colId="7" expr="System.debugOut(&quot;Rewarding 10 points for customer since delivery period between 15 and 20 days&quot;);"/>
+    </rule>
+    <rule id="5" modified="true">
+      <md>
+        <prop name="modifiedConditionIndexList" type="String" value="0,1,2"/>
+        <prop name="modifiedActionIndexList" type="String" value="0,1"/>
+      </md>
+      <cond id="5_4" colId="4" expr="Silver||Gold"/>
+      <cond id="5_6" colId="6" expr="> 5 &amp;&amp; &lt; 15"/>
+      <cond id="5_5" colId="5" expr="*"/>
+      <act id="5_3" colId="3" expr="5"/>
+      <act id="5_7" colId="7" expr="System.debugOut(&quot;Rewarding 5 points for silver customer since delivery period exceeded 25 days&quot;);"/>
+    </rule>
+    <columns>
+      <column id="3" name="customer.billingAccount.rewardPoints" propertyPath="/Concepts/CustomerAccount/rewardPoints" propertyType="2" columnType="ACTION"/>
+      <column id="4" name="customer.category" propertyPath="/Concepts/Customer/category" columnType="CONDITION"/>
+      <column id="5" name="shipment.startDate" propertyPath="/Concepts/Shipment/startDate" propertyType="5" columnType="CONDITION"/>
+      <column id="6" name="shipment.deliveryPeriodDays" propertyPath="/Concepts/Shipment/deliveryPeriodDays" propertyType="1" columnType="CONDITION"/>
+      <column id="7" name="Custom Action 1" columnType="CUSTOM_ACTION"/>
+    </columns>
+  </decisionTable>
+  <exceptionTable/>
+  <argument direction="BOTH">
+    <property path="/Concepts/Shipment" alias="shipment" resourceType="CONCEPT"/>
+  </argument>
+  <argument direction="BOTH">
+    <property path="/Concepts/Customer" alias="customer" resourceType="CONCEPT"/>
+  </argument>
+</Table:Table>

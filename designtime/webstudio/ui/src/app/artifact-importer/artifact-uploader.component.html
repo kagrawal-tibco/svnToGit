@@ -1,0 +1,38 @@
+<div *ngIf='result.length > 0'  >
+  <table class="table">
+    <thead>
+    <tr>
+      <th class='column-lg' i18n>{{i18n('Name')}}</th>
+      <th class='column-sm' i18n>{{i18n('Size')}}</th>
+      <th class='column-sm' i18n>{{i18n('Action')}}</th>
+    </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let item of result">
+        <td class='column-lg'><strong>{{ item.name }}</strong></td>
+        <td class='column-sm' nowrap>{{ size(item) | number:'.2' }} MB</td>
+        <td class='column-sm' nowrap>
+          <button type="button" class="btn btn-danger btn-sm"
+                (click)="remove(item)">
+          <span class="fa fa-trash-o"></span><ng-container i18n>{{i18n('Remove')}}</ng-container>
+          </button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+<div
+  *ngIf='(result.length === 0 || multiple) && !readingFiles'
+>
+  <div 
+    ng2FileDrop 
+    [ngClass]="{'file-over-success': hasBaseDropZoneOver}" 
+    (fileOver)="fileOverBase($event)" 
+    [uploader]="uploader"
+    (click)='onSelect(false)'
+    class="card card-body file-drop-zone clickable">
+    Click to select your file {{multiple?'s':''}} or drag and drop  {{multiple?'them':'it'}} here.
+  </div>
+  <button *ngIf='multiple' (click)='onSelect(true)' style="float: right" class="btn btn-primary" i18n>{{i18n('Import from zip file')}}</button>
+  <input #select style='display:none' type="file" ng2FileSelect [multiple]='multiple' [uploader]="uploader" />
+</div>

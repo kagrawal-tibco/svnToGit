@@ -1,0 +1,28 @@
+/**
+ * @description Callback for checkin completion.
+ */
+void rulefunction Approval.Rules.RuleFunctions.ArtifactRuleFunctions.AMS_RF_PerformCheckinCompletion {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String	resultName;
+		boolean	isBatchEnd;
+		boolean	hasEnded;
+		Object	row;
+		Object	closure;
+	}
+	body {
+		if (isBatchEnd) {
+		    return;
+		} else if (hasEnded) {
+		    return;
+		} else {
+		    Object[] columns = row;
+				
+		    String s = "Query [" + resultName + " ~ sum-level2query-event-over-last-25-seconds] result : " + columns[0];
+		    String queryName = closure;
+		    Object asyncContextObject = Util.HashMap.getObject("SUBSCRIPTIONS", queryName);
+		}
+	}
+}

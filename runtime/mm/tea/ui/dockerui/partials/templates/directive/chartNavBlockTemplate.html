@@ -1,0 +1,71 @@
+<div>
+	<ul class="configNavTable">
+        <li ng-repeat="section in chartSections" ng-click="setSelectedSection(section.displayName)" ng-class="{active:isSet(section.displayName)}"><a ng-class="{active:isSet(section.displayName)}">{{section.displayName}}</a></li>  
+        <li ng-click="setSelectedSection('miscellaneous')" ng-class="{active:isSet('miscellaneous')}" ng-if="isEnableAdditionalCharts" ><a ng-class="{active:isSet('miscellaneous')}">Miscellaneous Statistics</a></li>      
+    </ul>
+	<div ng-repeat="section in chartSections" ng-if="isSet(section.displayName) && !isSelf">
+		<div class="row">
+			<chart-block be-entity-object="entity"  is-refreshed="isRefreshed" section-id="section.sectionId" is-self="isSelf" ></chart-block>
+		</div>
+		<div class="row" ng-repeat="instanceAgent in instanceAgentsWithInfo">
+             <div ng-if="instanceAgent.config.agentType == 'INFERENCE'" class="chartsSection">{{capitalizeFirstLetter(instanceAgent.config.agentType)}} : {{instanceAgent.config.agentName}}#{{instanceAgent.config.agentId}}</div>
+             <div ng-if="instanceAgent.config.agentType == 'INFERENCE'">
+             		<chart-block be-entity-object="instanceAgent" is-refreshed="isRefreshed" section-id="section.sectionId" is-self="isSelf"></chart-block>
+             </div>
+        </div>
+	</div>
+	<div ng-repeat="section in chartSections" ng-if="isSet(section.displayName) && isSelf">
+		<div class="row">
+			<chart-block be-entity-object="entity" is-refreshed="isRefreshed" section-id="section.sectionId" is-self="isSelf" ></chart-block>
+		</div>
+	</div>
+	<div class="row" ng-if="isSet('miscellaneous')&&isEnableAdditionalCharts">
+		<div class="instanceConfigurationItem">
+			<div class="instanceConfigurationItem_title">
+          		GC Details
+        	</div>	
+        	<div id="collapseGCDetails" class="panel-collapse collapse in">
+        		<div class="monitoringPanel">
+        			<table tea-table class="tea-table">
+        				<thead>
+        				  	<tr>
+        				  		 <th ng-repeat="header in gcDetails.headers.header">
+        				  		 	{{header.value}}
+        				  		 </th>
+        				  	</tr>
+        				</thead>
+        				<tbody>
+        				  	<tr ng-repeat="row in gcDetails.rows.row">  
+        						<td ng-repeat = "column in row.columns.column">
+        							{{column.value}}
+        						</td>    
+        				  	</tr>
+        				</tbody>
+        				<tfoot>
+                        	<tr>
+                            	<td colspan="7">- END OF DATA -</td>
+                        	</tr>
+                        </tfoot>
+        			</table>		
+        		</div>
+        	</div>
+		</div>	
+        <div class="instanceConfigurationItem">					  		
+        	<div class="instanceConfigurationItem_title">
+          		Memory Pools
+        	</div>	
+        	<div id="collapseMemoryPools" class="panel-collapse collapse in">
+        		<div class="monitoringPanel">
+        			<label>Select a pool Name : </label>
+        			<select ng-model="memoryPoolName" >
+					   	<option ng-repeat="poolName in memeoryPoolsList"  value="{{poolName}}">
+      						{{poolName}}
+    					</option>
+					</select>  					   				
+					<instance-memory-pool-div be-instance-object="entity" pool-name="memoryPoolName"></instance-memory-pool-div>        							
+        		</div>
+        	</div>
+		</div>
+		
+	</div>
+</div>

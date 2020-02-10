@@ -1,0 +1,27 @@
+<div>
+  <div *ngIf='!this.isBEUI()'>
+    <p class='empty-msg' *ngIf='!hasProblems && !hasWarnings' i18n>{{i18n('No problems/warnings have been detected in this artifact so far.')}}</p>
+    <p class='problem-entry clickable' *ngFor='let problem of problems' (click)='onClick(problem)'>
+      <i [class]='icon(problem)'></i> {{problem.message}}
+      <input class='deleteIcon' type='image' title='Delete' src='assets/img/delete.png' (click)='this.onDelete(problem)'>
+    </p>
+  </div>
+  <div *ngIf='this.isBEUI()'>
+    <ag-grid-angular #agGrid style="height: 135px; width: 100%;" class="ag-theme-balham"
+      [gridOptions]="gridOptions"
+      enableRtl="{{isRtl() ? 'true' : 'false'}}"
+      [columnDefs]="columnDefs"
+      [rowData]="this.rowData"
+      [sideBar]="false"
+      [getContextMenuItems]="getContextMenuItems"
+      [frameworkComponents]="frameWorkComponents"
+      [overlayNoRowsTemplate] = "overlayNoRowsTemplate"
+      enableFilter
+      groupHeaders
+      rowHeight="22"
+      rowSelection='single'
+      (selectionChanged)='onSelectionChanged($event)'
+      (gridReady)='onGridReady($event)'>
+    </ag-grid-angular>
+  </div>
+</div>

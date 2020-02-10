@@ -1,0 +1,23 @@
+/**
+ * @description 
+ */
+boolean rulefunction Functions.notAssigned {
+	attribute {
+		validity = CONDITION;
+	}
+	scope {
+		Model.Seat	lastSeat;
+		Model.Guest	guest;
+	}
+	body {
+		Model.Seat curr = lastSeat;
+		while(curr != null) {
+		    if(curr.guest == guest) {
+		        return false;
+		    }
+		    if(curr.position == 1) return true;
+		    curr = curr.leftSeat;
+		}
+		return true;
+	}
+}

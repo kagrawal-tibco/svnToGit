@@ -1,0 +1,309 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<title>BEViewsTesting - TIBCO BusinessEvents&trade; 4.0 Examples</title>
+		<meta http-equiv="Content-type" content="text/html; charset=iso-8859-1" />
+		<meta http-equiv="Content-Language" content="en-us" />
+		<link rel="Shortcut Icon" href="../../../../examples/_resources/icon.gif" type="image/gif" />
+		<style type="text/css" media="all">@import "../../../../examples/_resources/examples.css";</style>
+		<script type="text/javascript" src="../../../../examples/_resources/examples.js" /></script>
+		<script type="text/javascript">
+
+			var eventServer = "http://localhost:8104";
+
+			var procModelForm;
+			var pmEventTimer;
+			var pmInterval;
+			var pmEventCount = 0;
+			var PM_STATE_FIELD_ID = "pm_state_field_id";
+			var PM_INDICATOR_FIELD_ID = "pm_indicator_field_id";
+			var PM_CONTENT_FIELD_ID = "pm_content_field_id";
+
+			var chartsForm;
+			var chartEventTimer;
+			var chartInterval;
+			var chartEventCount = 0;
+			var CHART_CATEGORY_FIELD_ID = "chart_category_field_id";
+			var CHART_V01_FIELD_ID = "chart_v01_field_id";
+			var CHART_V02_FIELD_ID = "chart_v02_field_id";
+			var CHART_V03_FIELD_ID = "chart_v03_field_id";
+			var CHART_V04_FIELD_ID = "chart_v04_field_id";
+
+
+			function buildForms() {
+				SendEventForm.setServer(eventServer);
+
+				var singleEventForm;
+				//Process Model Single Event Form
+				singleEventForm = SendEventForm.get("pmEventForm");
+				singleEventForm.setDestinationPath("/Channels/HTTP/stateMachine");
+				singleEventForm.setEventPath("/Events/StateEvent");
+				singleEventForm.addProperty("state", "C0");
+				singleEventForm.addProperty("indicator", "50");
+				singleEventForm.addProperty("content", "100");
+				singleEventForm.build();
+
+				//Chart Single Event Form
+				singleEventForm = SendEventForm.get("chartEventForm");
+				singleEventForm.setDestinationPath("/Channels/HTTP/chart");
+				singleEventForm.setEventPath("/Events/ChartEvent");
+				singleEventForm.addProperty("category", "cat_01");
+				singleEventForm.addProperty("v01", "10");
+				singleEventForm.addProperty("v02", "20");
+				singleEventForm.addProperty("v03", "30");
+				singleEventForm.addProperty("v04", "50");
+				singleEventForm.build();
+
+				procModelForm = buildProcModelForm();
+				chartsForm = buildChartsForm();
+				document.body.appendChild(procModelForm);
+				document.body.appendChild(chartsForm);
+			}
+
+			function buildProcModelForm(){
+				var form = buildForm("procModelForm", "/Channels/HTTP/stateMachine", "/Events/StateEvent", "StateEvent");
+				form.appendChild(buildFormInput(PM_STATE_FIELD_ID, "state"));
+				form.appendChild(buildFormInput(PM_INDICATOR_FIELD_ID, "indicator"));
+				form.appendChild(buildFormInput(PM_CONTENT_FIELD_ID, "content"));
+				return form;
+			}
+
+			function buildChartsForm(){
+				var form = buildForm("chartsForm", "/Channels/HTTP/chart", "/Events/ChartEvent", "ChartEvent");
+				form.appendChild(buildFormInput(CHART_CATEGORY_FIELD_ID, "category"));
+				form.appendChild(buildFormInput(CHART_V01_FIELD_ID, "v01"));
+				form.appendChild(buildFormInput(CHART_V02_FIELD_ID, "v02"));
+				form.appendChild(buildFormInput(CHART_V03_FIELD_ID, "v03"));
+				form.appendChild(buildFormInput(CHART_V04_FIELD_ID, "v04"));
+				return form;
+			}
+
+			function buildForm(formName, destinationPath, eventPath, eventName){
+				var form = document.createElement("form");
+				form.setAttribute("action", eventServer + destinationPath);
+				form.setAttribute("method", "post");
+				form.setAttribute("target", "eventSubmitTarget");
+				form.appendChild(buildFormInput("_nm_", eventName));
+				form.appendChild(buildFormInput("_nm_", "www.tibco.com/be/ontology" + eventPath));
+				return form;
+			}
+
+			function buildFormInput(id, name){
+				var input = document.createElement("input");
+				input.setAttribute("id", id);
+				input.setAttribute("name", name);
+				input.setAttribute("type", "hidden");
+				return input;
+			}
+
+			function startPMEvents(){
+				pmInterval = 10000; //document.getElementById("tb_PMInterval").value;
+				if(isNaN(pmInterval)){
+					alert("Invalid PM Interval");
+					return;
+				}
+				alert("Starting PM Events");
+				document.getElementById("btn_StartPMEvents").disabled = true;
+				pmEventCount = 0;
+				sendPMEvents();
+			}
+
+			function sendPMEvents(){
+				parseAndSubmitPMForm();
+				pmEventCount++;
+				document.getElementById("txt_PMEventsMessage").innerHTML = "Events Sent: " + pmEventCount;
+				pmEventTimer = setTimeout("sendPMEvents()", pmInterval);
+			}
+
+			function stopPMEvents(){
+				alert("Stopping PM Events");
+				if(pmInterval < 0){ return; }
+				pmInterval = -1;
+				clearTimeout(pmEventTimer);
+				document.getElementById("btn_StartPMEvents").disabled = false;
+			}
+
+			function startChartEvents(){
+				chartInterval = 10000; //document.getElementById("tb_ChartsInterval").value;
+				if(isNaN(chartInterval)){
+					alert("Invalid Chart Interval");
+					return;
+				}
+				alert("Starting Chart Events");
+				document.getElementById("btn_StartChartEvents").disabled = true;
+				chartEventCount = 0;
+				sendChartEvents();
+			}
+
+			function sendChartEvents(){
+				parseAndSubmitChartForm();
+				chartEventCount++;
+				document.getElementById("txt_ChartEventsMessage").innerHTML = "Events Sent: " + chartEventCount;
+				chartEventTimer = setTimeout("sendChartEvents()", chartInterval);
+			}
+
+			function stopChartEvents(){
+				alert("Stopping Chart Events");
+				if(chartInterval < 0){ return; }
+				chartInterval = -1;
+				clearTimeout(chartEventTimer);
+				document.getElementById("btn_StartChartEvents").disabled = false;
+			}
+
+			function parseAndSubmitPMForm(){
+				var states = document.getElementById("tb_PMFixedCategory").value;
+				var indicatorMin = document.getElementById("tb_IndicatorMin").value;
+				var indicatorMax = document.getElementById("tb_IndicatorMax").value;
+				var contentMin = document.getElementById("tb_ContentMin").value;
+				var contentMax = document.getElementById("tb_ContentMax").value;
+
+				if(states == "" || states == null){ alert("Invalid PM State value.");  return; }
+				if(isNaN(indicatorMin)){ alert("Invalid Indicator min value.");  return;}
+				if(isNaN(indicatorMax)){ alert("Invalid Indicator max value.");  return;}
+				if(isNaN(contentMin)){ alert("Invalid Content min value.");  return;}
+				if(isNaN(contentMax)){ alert("Invalid Content max value.");  return;}
+
+				var stateList = states.split(",");
+				for(var i=0; i < stateList.length; i++){
+					var state = stateList[i].replace(" ", "");
+					var indicator = parseInt(indicatorMin) + Math.ceil(Math.random()*(indicatorMax-indicatorMin));
+
+					setTimeout("submitPMForm('" + state + "', '" + indicator + "', '" + content + "')", (i-1)*1000);
+				}
+			}
+
+			function submitPMForm(state, indicator, content){
+				document.getElementById(PM_STATE_FIELD_ID).value = state;
+				document.getElementById(PM_INDICATOR_FIELD_ID).value = indicator;
+				document.getElementById(PM_CONTENT_FIELD_ID).value = content;
+				procModelForm.submit();
+			}
+
+			function parseAndSubmitChartForm(){
+				var categories = document.getElementById("tb_ChartsFixedCategory").value;
+				var v01Min = document.getElementById("tb_V01Min").value;
+				var v01Max = document.getElementById("tb_V01Max").value;
+				var v02Min = document.getElementById("tb_V02Min").value;
+				var v02Max = document.getElementById("tb_V02Max").value;
+				var v03Min = document.getElementById("tb_V03Min").value;
+				var v03Max = document.getElementById("tb_V03Max").value;
+				var v04Min = document.getElementById("tb_V04Min").value;
+				var v04Max = document.getElementById("tb_V04Max").value;
+
+				if(categories == "" || categories == null){
+					categories = "cat_" + chartEventCount;
+				}
+
+				if(isNaN(v01Min)){ alert("Invalid v01 min value.");  return;}
+				if(isNaN(v01Max)){ alert("Invalid v01 max value.");  return;}
+				if(isNaN(v02Min)){ alert("Invalid v02 min value.");  return;}
+				if(isNaN(v03Max)){ alert("Invalid v02 max value.");  return;}
+				if(isNaN(v03Min)){ alert("Invalid v03 min value.");  return;}
+				if(isNaN(v03Max)){ alert("Invalid v03 max value.");  return;}
+				if(isNaN(v04Min)){ alert("Invalid v04 min value.");  return;}
+				if(isNaN(v04Max)){ alert("Invalid v04 max value.");  return;}
+
+				var categoryList = categories.split(",");
+				for(var i = 0; i < categoryList.length; i++){
+					var category = categoryList[i].replace(" ","");
+					var v01 = parseInt(v01Min) + Math.ceil(Math.random()*(v01Max-v01Min));
+					var v02 = parseInt(v02Min) + Math.ceil(Math.random()*(v02Max-v02Min));
+					var v03 = parseInt(v03Min) + Math.ceil(Math.random()*(v03Max-v03Min));
+					var v04 = parseInt(v04Min) + Math.ceil(Math.random()*(v04Max-v04Min));
+
+					document.getElementById(CHART_CATEGORY_FIELD_ID).value = category;
+					document.getElementById(CHART_V01_FIELD_ID).value = v01;
+					document.getElementById(CHART_V02_FIELD_ID).value = v02;
+					document.getElementById(CHART_V03_FIELD_ID).value = v03;
+					document.getElementById(CHART_V04_FIELD_ID).value = v04;
+
+					setTimeout("chartsForm.submit();", (i-1)*100);
+				}
+			}
+
+			onSubmit = function(form){
+			  // Prevents caching.
+			  var ridName = "_httprequestid_";
+			  var ridNode = form.elements[ridName];
+			  if(ridNode){
+			  } else{
+				ridNode = document.createElement('input');
+				ridNode.setAttribute("type", "hidden");
+				ridNode.setAttribute("name", ridName);
+				form.appendChild(ridNode);
+			  }
+			  ridNode.value = new Date().getTime();
+			}
+		</script>
+		<style>
+			h1{
+				font-size:14px;
+			}
+		</style>
+	</head>
+	<body onLoad="buildForms()">
+		<table border="3">
+			<tr>
+				<td>
+					<h1>Process Model Event</h1>
+					<form id="pmEventForm"></form>
+				</td>
+				<td class="bevTesting">
+					<h1>Process Model Event Automation</h1>
+					<table class="bevTesting">
+						<tr>
+							<th>Fixed State</th><td><input type="text" id="tb_PMFixedCategory" value="C0S0"/></td><td></td>
+						<tr>
+						</tr>
+							<th>Interval</th><td><input type="text" id="tb_PMInterval" value="5000"/>(ms)</td><td></td>
+						</tr>
+						<tr>
+							<th>Indicator</th><td><input type="text" id="tb_IndicatorMin" value="1"/>(min)</td><td><input type="text" id="tb_IndicatorMax" value="100"/>(max)</td>
+						</tr>
+						<tr>
+							<th>Content</th><td><input type="text" id="tb_ContentMin" value="1"/>(min)</td><td><input type="text" id="tb_ContentMax" value="100"/>(max)</td>
+						</tr>
+					</table>
+					<br />
+					<button id="btn_StartPMEvents" onclick="startPMEvents();">Start</button>
+					<button onclick="stopPMEvents();">Stop</button>
+					<span id="txt_PMEventsMessage" style="color:black; font-size:10;"></span>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<h1>Chart Event</h1>
+					<form id="chartEventForm"></form>
+				</td>
+				<td class="bevTesting">
+					<h1>Chart Event Automation</h1>
+					<table class="bevTesting">
+						<tr>
+							<th>Fixed Category</th><td><input type="text" id="tb_ChartsFixedCategory" /></td><td></td>
+						<tr>
+						</tr>
+							<th>Interval</th><td><input type="text" id="tb_ChartsInterval" value="5000"/>(ms)</td><td></td>
+						</tr>
+						<tr>
+							<th>v01</th><td><input type="text" id="tb_V01Min" value="0"/>(min)</td><td><input type="text" id="tb_V01Max" value="100"/>(max)</td>
+						</tr>
+						<tr>
+							<th>v02</th><td><input type="text" id="tb_V02Min" value="0"/>(min)</td><td><input type="text" id="tb_V02Max" value="100"/>(max)</td>
+						</tr>
+						<tr>
+							<th>v03</th><td><input type="text" id="tb_V03Min" value="0"/>(min)</td><td><input type="text" id="tb_V03Max" value="100"/>(max)</td>
+						</tr>
+						<tr>
+							<th>v04</th><td><input type="text" id="tb_V04Min" value="0"/>(min)</td><td><input type="text" id="tb_V04Max" value="100"/>(max)</td>
+						</tr>
+					</table>
+					<br />
+					<button id="btn_StartChartEvents" onclick="startChartEvents();">Start</button>
+					<button onclick="stopChartEvents();">Stop</button>
+					<span id="txt_ChartEventsMessage" style="color:black; font-size:10;"></span>
+				</td>
+			</tr>
+		</table>
+		<iframe id="eventSubmitTarget" name="eventSubmitTarget" style="display:none;"></iframe>
+	</body>
+</html>

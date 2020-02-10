@@ -1,0 +1,53 @@
+/**
+ * @description 
+ */
+Object rulefunction WebStudio.Core.RuleFunctions.Utils.DT.WS_RF_CreateEMFObjectForTableRuleSet {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		WebStudio.Core.Concepts.Decision.Pagination.WS_C_TableRuleSet tableRuleSet;		
+	}
+	body {
+
+		Object tableRuleSetObj = WS.Decision.TableModel.createTableRuleSet();
+		
+		WS_C_TableColumns tableColumns = Instance.PropertyAtom.getPropertyValue(tableRuleSet.columns);
+		WS_C_TableColumn[] columns =  Instance.PropertyArray.toArrayConcept(tableColumns.column);
+		for (int i = 0; i < columns@length; i++) {
+			WS_C_TableColumn column = columns[i];
+			String columnId = columns[i].columnId;
+			String name = columns[i].name;
+			String property = columns[i].property;
+			String columnType = columns[i].columnType;
+			String columnAlias = columns[i].columnAlias;
+			boolean isArray = columns[i].isArrayProperty;
+			int propertyType = columns[i].propertyType;
+			boolean isSubstitution = columns[i].isSubstitution;
+			String defaultCellText = columns[i].defaultCellText;
+			
+			Object tableColumnObj = WS.Decision.TableModel.createTableColumn(columnId, name, property, columnType, columnAlias, isArray, propertyType, isSubstitution, defaultCellText);
+			WS.Decision.TableModel.addColumn(tableRuleSetObj, tableColumnObj);	
+		}	
+
+		Object allNewTableRulesList = Collections.List.createArrayList();		
+		WS_C_TablePage[] tablePages = Instance.PropertyArray.toArrayConcept(tableRuleSet.tablePage);
+		for (int i = 0; i < tablePages@length; i++) {
+			
+			WS_C_TablePage tablePage = tablePages[i];
+			
+			WebStudio.Core.Concepts.Decision.Pagination.WS_C_TableRule[] tableRules = Instance.PropertyArray.toArrayContainedConcept(tablePage.tableRule);
+			Object tableRulesList = WS_RF_CreateEMFObjectForTableRules(tableRules);
+			WS.Decision.TableModel.addTableRules(tableRuleSetObj, tableRulesList);
+
+			WebStudio.Core.Concepts.Decision.Pagination.WS_C_TableRule[] newTableRules = Instance.PropertyArray.toArrayConcept(tablePage.newTableRule);
+			Object newTableRulesList = WS_RF_CreateEMFObjectForTableRules(newTableRules);
+			Collections.addAll(allNewTableRulesList, newTableRulesList);
+		}
+		
+		WS.Decision.TableModel.sortTableRulesById(allNewTableRulesList);
+		WS.Decision.TableModel.addTableRules(tableRuleSetObj, allNewTableRulesList);
+
+		return tableRuleSetObj;		
+	}
+}

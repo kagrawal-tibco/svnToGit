@@ -1,0 +1,385 @@
+#!/bin/csh -f
+
+setenv BE21 /home/build/be-build/branches/2.1/build/engg_build/engg_build_2.1.1_HFx.sh
+setenv BE30 /home/build/be-build/branches/3.0/build/engg_build/engg_build_3.0.sh
+setenv BE30bofa /home/build/be-build/branches/3.0/build/engg_build/engg_build_3.0.2_bofa_hf1.sh
+setenv BE40 /home/build/be-build/branches/4.0/build/engg_build/engg_build_4.0_HFx.sh
+setenv BE50 /home/build/be-build/branches/5.0/build/engg_build/engg_build_5.0.sh
+setenv BE511HFx /home/build/be-build/branches/5.1.1-HFx/build/engg_build/engg_build_5.1.sh
+setenv BE51 /home/build/be-build/branches/5.1/build/engg_build/engg_build_5.1.sh
+setenv BE520 /home/build/be-build/branches/5.2/build/engg_build/engg_build_5.2.sh
+setenv BE520HF /var/lib/jenkins/workspace/BE520_HF_NEW/5.2.0-HF/build/engg_build/engg_build_520HF.sh
+setenv BE521 /var/lib/jenkins/workspace/BE521BuildWith-bebuild_command/5.2/build/engg_build/engg_build_521.sh
+setenv BE521HF /var/lib/jenkins/workspace/BE521_HF/5.2.1-HF/build/engg_build/engg_build_521HF.sh
+setenv BE522 /var/lib/jenkins/workspace/BE522/5.2/build/engg_build/engg_build_522.sh
+setenv BE522HF /var/lib/jenkins/workspace/BE522_HF/5.2.2-HF/build/engg_build/engg_build_522HF.sh
+setenv BE530 /var/lib/jenkins/workspace/BE530/5.3/build/engg_build/engg_build_53.sh
+setenv BE530HF /var/lib/jenkins/workspace/BE530-HF/5.3.0-HF/build/engg_build/engg_build_53HF.sh
+setenv BE540 /var/lib/jenkins/workspace/BE540/5.4/build/engg_build/engg_build_54.sh
+setenv BE540HF /var/lib/jenkins/workspace/BE540-HF/5.4.0-HF/build/engg_build/engg_build_54HF.sh
+setenv BE541 /var/lib/jenkins/workspace/BE540/5.4/build/engg_build/engg_build_541.sh
+setenv BE541HF /var/lib/jenkins/workspace/BE541-HF/5.4.1-HF/build/engg_build/engg_build_541HF.sh
+setenv BE550 /var/lib/jenkins/workspace/BE550/5.5/build/engg_build/engg_build_55.sh
+setenv BE550HF /var/lib/jenkins/workspace/BE550-HF/5.5.0-HF/build/engg_build/engg_build_550HF.sh
+setenv BE600 /var/lib/jenkins/workspace/BE600/6.0/build/engg_build/engg_build_60.sh
+setenv TCE100 /var/lib/jenkins/workspace/TCE100/1.0/build/engg_build/engg_build_tce_100.sh
+setenv BE551 /var/lib/jenkins/workspace/BE550/5.5/build/engg_build/engg_build_551.sh
+setenv BE560 /var/lib/jenkins/workspace/BE560/5.6/build/engg_build/engg_build_56.sh
+setenv TCE110 /var/lib/jenkins/workspace/TCE110/1.1/build/engg_build/engg_build_tce_110.sh
+setenv TCE101 /var/lib/jenkins/workspace/TCE100/1.0/build/engg_build/engg_build_tce_101.sh
+setenv TCE200 /var/lib/jenkins/workspace/TCE200/2.0/build/engg_build/engg_build_tce_200.sh
+setenv TCE201 /var/lib/jenkins/workspace/TCE201/tce/build/engg_build/engg_build_tce_201.sh
+setenv TCE300 /var/lib/jenkins/workspace/TCE300/2.0/build/engg_build/engg_build_tce_200.sh
+
+ps -eaf | grep ant | grep -v grep | grep build | grep -v buildasg > /dev/null
+setenv ret $status
+
+if ($# < 1) then
+    goto usage
+endif
+	
+if ($# == 2) then
+if ($ret == 0) then
+  echo Another build is already running\! Please try again later.
+  goto done
+else
+  # echo No other builds are running.
+  goto run
+endif
+endif
+
+run:
+
+#setenv JAVA15 /usr/share/java-1.5.0
+#setenv JAVA16 /usr/share/java-1.6.0
+setenv JAVA15 /mnt/tsi/root/external/jdk/1.5.0_15/linux24gl23/x86
+setenv JAVA16 /mnt/tsi/root/external/jdk/1.6.0_24/linux24gl23/x86
+setenv JAVA17 /mnt/tsi/root/external/jdk/1.7.0_07/linux26gl25/x86
+setenv JAVA17_45 /mnt/tsi/root/external/jdk/1.7.0_45/linux26gl25/x86
+setenv JAVA18_66 /mnt/tsi/root/external/jdk/1.8.0_66/linux26gl25/x86 
+setenv JAVA18_92 /mnt/tsi/root/external/jdk/1.8.0_92/linux26gl25/x86
+setenv JAVA18_144 /mnt/tsi/root/external/jdk/1.8.0_144/linux26gl25/x86
+setenv JAVA18_192 /mnt/tsi/root/external/jdk/1.8.0_192/linux/x86
+
+  if ($1 == "2.1.1") then
+    echo Executing ${BE211}
+    setenv JAVA_HOME ${JAVA15}
+    setenv PATH ${JAVA_HOME}/bin:${PATH}
+    /bin/sh ${BE211}
+  else if ($1 == "3.0") then
+	if ($# >= 2) then
+		#setenv JAVA_HOME ${JAVA15}
+		setenv JAVA_HOME ${JAVA16}
+		setenv PATH ${JAVA_HOME}/bin:${PATH}
+		echo Executing ~/bin/${BE30}
+		/bin/sh ${BE30} $2
+	else
+		goto usage
+	endif	
+  else if ($1 == "3.0-bofa") then
+	if ($# >= 2) then
+		#setenv JAVA_HOME ${JAVA15}
+		setenv JAVA_HOME ${JAVA16}
+		setenv PATH ${JAVA_HOME}/bin:${PATH}
+		echo Executing ~/bin/${BE30bofa}
+		/bin/sh ${BE30bofa} 
+	else
+		goto usage
+	endif	
+  else if ($1 == "4.0")  then
+    if ($# >= 2) then
+       setenv JAVA_HOME ${JAVA16}
+       setenv PATH ${JAVA_HOME}/bin:${PATH}
+       echo Executing ${BE40}
+       /bin/sh ${BE40} $2
+    else
+        goto usage
+    endif
+  else if ($1 == "5.0")  then
+    if ($# >= 2) then
+       setenv JAVA_HOME ${JAVA16}
+       setenv PATH ${JAVA_HOME}/bin:${PATH}
+       echo Executing ${BE50}
+       /bin/sh ${BE50} $2
+    else
+        goto usage
+    endif
+  else if ($1 == "5.1.1")  then
+	if ($# >= 2)  then
+	  setenv JAVA_HOME ${JAVA17}
+	  setenv PATH ${JAVA_HOME}/bin:${PATH}
+	  echo Executing ${BE511HFx}
+	  /bin/sh ${BE511HFx} $2
+	else
+		goto usage
+  endif
+  else if ($1 == "5.1.2")  then
+    if ($# >= 2)  then
+      setenv JAVA_HOME ${JAVA17_45}
+      setenv PATH ${JAVA_HOME}/bin:${PATH}
+      echo Executing ${BE51}
+      /bin/sh ${BE51} $2
+    else
+        goto usage
+    endif
+  else if ($1 == "5.1.3")  then
+    if ($# >= 2)  then
+      setenv JAVA_HOME ${JAVA17_45}
+      setenv PATH ${JAVA_HOME}/bin:${PATH}
+      echo Executing ${BE51}
+      /bin/sh ${BE51} $2
+    else
+      goto usage
+  endif
+  else if ($1 == "5.1.4")  then
+    if ($# >= 2)  then
+      setenv JAVA_HOME ${JAVA17_45}
+      setenv PATH ${JAVA_HOME}/bin:${PATH}
+      echo Executing ${BE51}
+      /bin/sh ${BE51} $2
+    else
+      goto usage
+  endif
+  else if ($1 == "5.2")  then
+    if ($# >= 2)  then
+      setenv JAVA_HOME ${JAVA17_45}
+      setenv PATH ${JAVA_HOME}/bin:${PATH}
+      echo Executing ${BE520}
+      /bin/sh ${BE520} $2
+    else
+        goto usage
+  endif
+  else if ($1 == "5.2.0HF")  then
+    if ($# >= 2)  then
+      setenv JAVA_HOME ${JAVA17_45}
+      setenv PATH ${JAVA_HOME}/bin:${PATH}
+      echo Executing ${BE520HF}
+      /bin/sh ${BE520HF} $2 $3
+    else
+        goto usage
+  endif
+  else if ($1 == "5.2.1")  then
+    if ($# >= 2)  then
+      setenv JAVA_HOME ${JAVA17_45}
+      setenv PATH ${JAVA_HOME}/bin:${PATH}
+      echo Executing ${BE521}
+      /bin/sh ${BE521} $2 $3 $4 $5
+    else
+        goto usage
+  endif
+  else if ($1 == "5.2.1HF")  then
+    if ($# >= 2)  then
+      setenv JAVA_HOME ${JAVA17_45}
+      setenv PATH ${JAVA_HOME}/bin:${PATH}
+      echo Executing ${BE521HF}
+      /bin/sh ${BE521HF} $2 $3
+    else
+        goto usage
+  endif
+  else if ($1 == "5.2.2")  then
+    if ($# >= 2)  then
+      setenv JAVA_HOME ${JAVA17_45}
+      setenv PATH ${JAVA_HOME}/bin:${PATH}
+      echo Executing ${BE522}
+      /bin/sh ${BE522} $2 $3 $4 $5
+    else
+        goto usage
+  endif
+  else if ($1 == "5.2.2HF")  then
+    if ($# >= 2)  then
+      setenv JAVA_HOME ${JAVA17_45}
+      setenv PATH ${JAVA_HOME}/bin:${PATH}
+      echo Executing ${BE522HF}
+      /bin/sh ${BE522HF} $2 $3
+    else
+        goto usage
+  endif
+  else if ($1 == "5.3.0")  then
+    if ($# >= 2)  then
+      setenv JAVA_HOME ${JAVA18_66}
+      setenv PATH ${JAVA_HOME}/bin:${PATH}
+      echo Executing ${BE530}
+
+      /bin/sh ${BE530} $2 $3 $4 $5
+    else
+        goto usage
+    endif
+  else if ($1 == "5.3.0HF")  then
+    if ($# >= 2)  then
+      setenv JAVA_HOME ${JAVA18_66}
+      setenv PATH ${JAVA_HOME}/bin:${PATH}
+      echo Executing ${BE530HF}
+      /bin/sh ${BE530HF} $2 $3
+    else
+        goto usage
+    endif
+  else if ($1 == "5.4.0")  then
+    if ($# >= 2)  then
+      setenv JAVA_HOME ${JAVA18_66}
+      setenv PATH ${JAVA_HOME}/bin:${PATH}
+      echo Executing ${BE540}
+      /bin/sh ${BE540} $2 $3 $4 $5
+    else
+        goto usage
+    endif
+	else if ($1 == "5.4.0HF")  then
+    if ($# >= 2)  then
+      setenv JAVA_HOME ${JAVA18_66}
+      setenv PATH ${JAVA_HOME}/bin:${PATH}
+      echo Executing ${BE540HF}
+      /bin/sh ${BE540HF} $2 $3
+    else
+        goto usage
+    endif
+  else if ($1 == "5.4.1") then
+    if ($# >= 2)  then
+      setenv JAVA_HOME ${JAVA18_66}
+      setenv PATH ${JAVA_HOME}/bin:${PATH}
+      echo Executing ${BE541}
+      /bin/sh ${BE541} $2 $3 $4 $5
+    else
+        goto usage
+    endif
+  else if ($1 == "5.4.1HF") then
+    if ($# >= 2) then
+      setenv JAVA_HOME ${JAVA18_66}
+      setenv PATH ${JAVA_HOME}/bin:${PATH}
+      echo Executing ${BE541HF}
+      /bin/sh ${BE541HF} $2 $3
+    else
+      goto usage
+    endif
+  else if ($1 == "5.5.0") then
+    if ($# >= 2)  then
+      setenv JAVA_HOME ${JAVA18_92}
+      setenv PATH ${JAVA_HOME}/bin:${PATH}
+      echo JAVA_HOME ${JAVA_HOME}
+      echo PATH $PATH
+      echo Executing ${BE550}
+      /bin/sh ${BE550} $2 $3 $4 $5
+    else
+        goto usage
+    endif
+   else if ($1 == "5.5.0HF") then
+     if ($# >= 2) then
+       setenv JAVA_HOME ${JAVA18_92}
+       setenv PATH ${JAVA_HOME}/bin:${PATH}
+       echo JAVA_HOME ${JAVA_HOME}
+       echo PATH $PATH
+       echo Executing ${BE550HF}
+       /bin/sh ${BE550HF} $2 $3  
+   else
+        goto usage
+   endif
+	else if ($1 == "6.0.0") then
+    if ($# >= 2)  then
+      setenv JAVA_HOME ${JAVA18_144}
+      setenv PATH ${JAVA_HOME}/bin:${PATH}
+      echo JAVA_HOME ${JAVA_HOME}
+      echo PATH $PATH
+      echo Executing ${BE600}
+      /bin/sh ${BE600} $2 $3 $4 $5
+    else
+        goto usage
+    endif
+  else if ($1 == "tce_1.0.0") then
+	if ($# >= 2)  then
+      setenv JAVA_HOME ${JAVA18_144}
+      setenv PATH ${JAVA_HOME}/bin:${PATH}
+      echo JAVA_HOME ${JAVA_HOME}
+      echo PATH $PATH
+      echo Executing ${TCE100}
+      /bin/sh ${TCE100} $2 $3 $4 $5
+    else
+        goto usage
+    endif
+  else if ($1 == "5.5.1") then
+	if ($# >= 2)  then
+      setenv JAVA_HOME ${JAVA18_144}
+      setenv PATH ${JAVA_HOME}/bin:${PATH}
+      echo JAVA_HOME ${JAVA_HOME}
+      echo PATH $PATH
+      echo Executing ${BE551}
+      /bin/sh ${BE551} $2 $3 $4 $5
+    else
+        goto usage
+    endif
+  else if ($1 == "5.6.0") then
+	if ($# >= 2)  then
+      setenv JAVA_HOME ${JAVA18_192}
+      setenv PATH ${JAVA_HOME}/bin:${PATH}
+      echo JAVA_HOME ${JAVA_HOME}
+      echo PATH $PATH
+      echo Executing ${BE560}
+      /bin/sh ${BE560} $2 $3 $4 $5
+    else
+        goto usage
+    endif
+   else if ($1 == "tce_1.1.0") then
+        if ($# >= 2)  then
+      setenv JAVA_HOME ${JAVA18_144}
+      setenv PATH ${JAVA_HOME}/bin:${PATH}
+      echo JAVA_HOME ${JAVA_HOME}
+      echo PATH $PATH
+      echo Executing ${TCE110}
+      /bin/sh ${TCE110} $2 $3 $4 $5
+    else
+        goto usage
+    endif
+    else if ($1 == "tce_1.0.1") then
+        if ($# >= 2)  then
+      setenv JAVA_HOME ${JAVA18_144}
+      setenv PATH ${JAVA_HOME}/bin:${PATH}
+      echo JAVA_HOME ${JAVA_HOME}
+      echo PATH $PATH
+      echo Executing ${TCE101}
+      /bin/sh ${TCE101} $2 $3 $4 $5
+    else
+        goto usage
+    endif
+    else if ($1 == "tce_2.0.0") then
+        if ($# >= 2) then
+      setenv JAVA_HOME ${JAVA18_144}
+      setenv PATH ${JAVA_HOME}/bin:${PATH}
+      echo JAVA_HOME ${JAVA_HOME}
+      echo PATH $PATH
+      echo Executing ${TCE200}
+      /bin/sh ${TCE200} $2 $3 $4 $5
+    else
+      goto usage
+    endif
+    else if ($1 == "tce_2.0.1") then
+        if ($# >= 2) then
+      setenv JAVA_HOME ${JAVA18_192}
+      setenv PATH ${JAVA_HOME}/bin:${PATH}
+      echo JAVA_HOME ${JAVA_HOME}
+      echo PATH $PATH
+      echo Executing ${TCE201}
+      /bin/sh ${TCE201} $2 $3 $4 $5
+    else
+      goto usage
+    endif
+    else if ($1 == "tce_3.0.0") then
+        if ($# >= 2) then
+      setenv JAVA_HOME ${JAVA18_144}
+      setenv PATH ${JAVA_HOME}/bin:${PATH}
+      echo JAVA_HOME ${JAVA_HOME}
+      echo PATH $PATH
+      echo Executing ${TCE300}
+      /bin/sh ${TCE300} $2 $3 $4 $5
+    else
+      goto usage
+    endif
+
+  else
+    goto usage
+  endif
+  goto done
+
+
+usage:
+  echo "Usage: $0 [2.1.1 | 3.0 your-user-id | 3.0-bofa your-user-id | 4.0 your-user-id | 5.0 your-user-id | 5.1.1 your-user-id | 5.1.2 your-user-id | 5.1.3 your-user-id | 5.1.4 your-user-id | 5.2 your-user-id |5.2.0HF your-user-id | 5.2.1 your-user-id | 5.2.1HF your-user-id | 5.2.2 your-user-id | 5.2.2HF your-user-id | 5.3.0 your-user-id | 5.3.0HF your-user-id | 5.4.0 your-user-id | 5.4.0HF your-user-id | 5.4.1 your-user-id | 5.4.1HF your-user-id | 5.5.0 your-user-id | 5.5.0HF your-user-id | 5.5.1 your-user-id | 5.6.0 your-user-id | tce_1.1.0 your-user-id | tce_2.0.0 your-user-id] [Use -force for force build]"
+  exit -1
+
+done:
+  exit 0

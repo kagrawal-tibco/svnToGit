@@ -1,0 +1,70 @@
+/**
+ * @description 
+ * @author 
+ */
+rule Monitoring.Rules.EntityMonitoringRuleSet.onEntityPurged {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Shared.Concepts.MonitorableEntity	purgedentity;
+		
+	}
+	when {
+		purgedentity.purged == true;
+	}
+	then {
+		Monitoring.Concepts.ClustHealthOverview cho = 
+			Instance.getByExtId(
+				Monitoring.RuleFunctions.getClustHealthConcptExtId(
+					Shared.RuleFunctions.topology.getClustName(purgedentity) ) );
+		
+		Shared.RuleFunctions.log("onEntityPurged","DEBUG",getFQName(purgedentity)+" has been purged");
+		Shared.RuleFunctions.log("onEntityPurged","DEBUG",ClusterHealthConcptToString(cho));
+		
+		int idx = -1;
+		
+		if (cho != null)
+			idx = Instance.PropertyArray.indexOfString(cho.entityTypes,purgedentity.type);
+
+		if (idx != -1){
+		    cho.entityCount[idx] = cho.entityCount[idx] - 1;
+		    if (purgedentity.active == true) {
+		        //remove from active count
+		        cho.entityActiveCount[idx] = cho.entityActiveCount[idx] - 1;
+		    }
+		    else {
+		        //remove from inactive count
+		        cho.entityInActiveCount[idx] = cho.entityInActiveCount[idx] - 1;
+		    }
+		    if (purgedentity.healthLevel == "critical"){
+		        //remove from critical
+		        cho.entityCriticalHealthLevelCount[idx] = cho.entityCriticalHealthLevelCount[idx] - 1;
+		    }
+		    else if (purgedentity.healthLevel == "warning"){
+		        //remove from warning
+		        cho.entityWarningHealthLevelCount[idx] = cho.entityWarningHealthLevelCount[idx] - 1;
+		    }
+		    else if (purgedentity.healthLevel == "normal"){
+		        //remove from normal
+		        cho.entityNormalHealthLevelCount[idx] = cho.entityNormalHealthLevelCount[idx] - 1;
+		    }
+		}
+		Shared.Concepts.MonitorableEntity parent = purgedentity.parent;
+		while (parent != null) {
+		    if (parent.purged == false) {
+		        String previousHealthLevel = parent.healthLevel;
+		        String newHealthLevel = determinePropertyValue(parent,"healthLevel",null);
+		        if (newHealthLevel != parent.healthLevel){
+		            parent.previousHealthLevel = parent.healthLevel;
+		            parent.healthLevel = newHealthLevel;
+		            Shared.RuleFunctions.log("onEntityPurged","DEBUG","Updating healthLevel of "+getFQName(parent)+" to "+newHealthLevel);
+		        }
+		    }
+		    parent = parent.parent;
+		}
+		Monitoring.Events.cmetrics.ComputedMetricEvent event = Monitoring.Events.cmetrics.ComputedMetricEvent.ComputedMetricEvent(null,null,purgedentity@extId,"cluster","cstats");
+		Event.assertEvent(event);
+	}
+}

@@ -1,0 +1,157 @@
+/**
+ * @description 
+ */
+WebStudio.Core.Concepts.DataSources.WS_C_ResponseTransferObjectData rulefunction WebStudio.Core.RuleFunctions.Utils.WS_RF_GetArtifactContentsFromStore {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String username;
+		String[] userRoles;
+		String projectName;
+		String artifactPath;
+		String artifactExtn;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.WS_RF_GetArtifactContentsFromStore");
+
+		String subscriptionId = WS_RF_GetSubscriptionId(username);
+		
+		//Fetch it from source control first
+		String scsRootURL = WS_RF_GetSCSRootURL(projectName, subscriptionId);
+		if (scsRootURL == null) {
+			throw Exception.newException(null, "Source control repository location not present. Set ws.scs.rootURL property", null);
+		}
+		
+		Log.log(LOGGER, "Debug", "Artifact Path  - [%s], Artifact Extn %s", artifactPath, artifactExtn);
+
+		WS_C_UserArtifact userArtifact = null;
+		WS_C_AnyArtifactDetails artifactContents = null;
+		WS_C_ResponseTransferObjectData fetchedResponseData = Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/WS_C_ResponseTransferObjectData");
+		
+		String userArtifactExtId = 
+			WebStudio.Core.RuleFunctions.Utils.WS_RF_CreateUserArtifactExtId(null, artifactPath, projectName, username, null, null);
+
+		String userWorkspaceExtId = WS_RF_CreateUserArtifactExtId("WORKSPACE", null, null, username, null, null);		
+			
+		Log.log(LOGGER, "Debug", "Acquiring lock on workspace concept %s", userWorkspaceExtId);
+		boolean userWorkspaceLock = Cluster.DataGrid.Lock(userWorkspaceExtId, -1, false);
+		if (userWorkspaceLock) {
+			WS_C_UserWorkspace userWorkspace = Instance.getByExtIdByUri(userWorkspaceExtId, "/WebStudio/Core/Concepts/WS_C_UserWorkspace");
+			if (userWorkspace != null) {
+				Log.log(LOGGER, "Debug", "Existing workspace concept id %s", userWorkspace@id);
+				//Get project with this name
+				String projectExtId = WS_RF_CreateUserArtifactExtId(null, null, projectName, username, null, null);
+				WS_C_UserProject userProject = Instance.getByExtIdByUri(projectExtId, "/WebStudio/Core/Concepts/WS_C_UserProject");
+				Log.log(LOGGER, "Debug", "User project instance id %s", userProject@id);
+				//Get artifact instance matching this in user project
+				WS_C_UserArtifact[] userArtifacts = Instance.PropertyArray.toArrayContainedConcept(userProject.userArtifacts);
+						
+				for (int innerLoop = 0; innerLoop < userArtifacts@length; innerLoop++) {
+					WS_C_UserArtifact userArtifact2 = userArtifacts[innerLoop];
+					//Check if path is same
+					if (String.equals(userArtifact2.artifactPath, artifactPath)) {
+						Log.log(LOGGER, "Info", "Existing artifact found for %s in project %s", artifactPath, projectName);
+						if (userArtifact2.artifactType == "ruletemplateinstance" || userArtifact2.artifactType == "ruletemplate") {
+							userArtifact = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(userArtifactExtId, false, "/WebStudio/Core/Concepts/RuleTemplateInstance/WS_C_RuleTemplateInstanceUserArtifact");
+						} else if (userArtifact2.artifactType == "rulefunctionimpl" || userArtifact2.artifactType == "rulefunction") {
+							userArtifact = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(userArtifactExtId, false, "/WebStudio/Core/Concepts/Decision/WS_C_UserDTableArtifact");
+						} else if (userArtifact2.artifactType == "beprocess") {
+							userArtifact = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(userArtifactExtId, false, "/WebStudio/Core/Concepts/Process/WS_C_ProcessUserArtifact");
+						} else if (userArtifact2.artifactType == "domain") {
+							userArtifact = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(userArtifactExtId, false, "/WebStudio/Core/Concepts/Domain/WS_C_DomainUserArtifact");
+						} else {
+							userArtifact = userArtifact2;
+						}
+						break;
+					}
+				}
+						
+				boolean loadContentsFromSCS = false;
+						
+				if (userArtifact != null) {
+					
+					// Check if artifact is marked for deletion.
+					if (userArtifact.softDelete) {						
+						Log.log(LOGGER, "Warn", "Artifact %s has been marked for deletion.", artifactPath);
+						fetchedResponseData.errorMessage = String.format("Artifact %s has been marked for deletion.", artifactPath);
+						fetchedResponseData.errorCode = "ERR_1055";
+						
+					} else {																		
+						boolean hasAccess = true;
+						
+						//create RTI/DT operation
+						if (String.equals("rulefunction", artifactExtn)) { 
+							hasAccess = RMS.Authorization.ensureAccess(projectName, subscriptionId, userRoles, artifactPath, String.toUpperCase(artifactExtn), "add_impl");							
+						} else if (String.equals("ruletemplate", artifactExtn)) {
+							hasAccess = RMS.Authorization.ensureAccess(projectName, subscriptionId, userRoles, artifactPath, String.toUpperCase(artifactExtn), "add_inst");							
+						} 
+	
+						if (!hasAccess) {
+							Log.log(LOGGER, "Debug", "Access Denied to create an instance for %s (%s) in project %s.", WS_RF_GetArtifactNameByExtn(artifactExtn), artifactPath, projectName);
+							fetchedResponseData.errorMessage = String.format("Access Denied to create an instance for %s (%s) in project %s.", WS_RF_GetArtifactNameByExtn(artifactExtn), artifactPath, projectName);
+							fetchedResponseData.errorCode = "ERR_1103";											
+						} else {	
+							//Get latest revision id
+							String[] revisionIds = Instance.PropertyArray.toArrayString(userArtifact.artifactRevisionIds);
+							if (revisionIds == null || revisionIds@length == 0) {
+								Log.log(LOGGER, "Info", "No artifact revsision has been created yet for artifact %s", artifactPath);
+								loadContentsFromSCS = true;
+							} else {
+								//Load instance with this latest revision id
+								String latestRevisionId = revisionIds[revisionIds@length - 1];
+								WS_C_UserArtifactRevision userArtifactRevision = Instance.getByExtIdByUri(latestRevisionId, "/WebStudio/Core/Concepts/WS_C_UserArtifactRevision");
+								
+								Log.log(LOGGER, "Debug", "Artifact Content ID for %s", userArtifactRevision.artifactContentsId);
+								//We need to modify this hence need to reload it in WM
+								artifactContents = WS_RF_GetArtifactContentInstance(userArtifactRevision.artifactContentsId, userArtifactRevision.parentArtifactType);
+		
+								Log.log(LOGGER, "Info", "Existing artifact value for %s in project %s", artifactContents, projectName);
+								if (artifactContents == null) {
+									//This means artifact was checked out but contents not yet loaded.
+									loadContentsFromSCS = true;
+								}
+							}
+						}
+						
+						// Add selected Items
+						Instance.PropertyAtom.setConceptReference(fetchedResponseData.userArtifact, userArtifact, 1L);
+						
+						// Apply this to artifact other than RTI/RT 
+						if (!String.equals("ruletemplate", artifactExtn) && !String.equals("ruletemplateinstance", artifactExtn)) {
+							Log.log(LOGGER, "Info", "Artifact being processed -  %s and its UUID - %s", userArtifact.artifactPath, userArtifact.UUID);
+							//Do this only for flag = true.
+							if (loadContentsFromSCS) {
+								artifactContents = WebStudio.Core.RuleFunctions.Utils.WS_RF_FetchArtifactContentsFactory(scsRootURL, username, projectName, artifactPath, artifactExtn, userArtifactExtId, userRoles);
+			
+								//Acquire lock on this artifact's extid
+								boolean userArtifactLock = Cluster.DataGrid.Lock(userArtifact@extId, -1, false);
+								if (userArtifactLock) { 
+									WS_E_RuleTemplateModelInstanceCreationEvent artifactModelInstanceCreationEvent =
+										Event.createEvent("xslt://{{/WebStudio/Core/Events/WS_E_RuleTemplateModelInstanceCreationEvent}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"2.0\" exclude-result-prefixes=\"xsl xsd\"><xsl:output method=\"xml\"/><xsl:param name=\"projectName\"/><xsl:param name=\"artifactPath\"/><xsl:param name=\"artifactContents\"/><xsl:param name=\"username\"/><xsl:param name=\"artifactExtn\"/><xsl:template name=\"Function\" match=\"/\"><createEvent><event><projectName><xsl:value-of select=\"$projectName\"/></projectName><artifactPath><xsl:value-of select=\"$artifactPath\"/></artifactPath><xsl:if test=\"$artifactContents/@extId\"><artifactModelInstanceId><xsl:value-of select=\"$artifactContents/@extId\"/></artifactModelInstanceId></xsl:if><username><xsl:value-of select=\"$username\"/></username><operation><xsl:value-of select=\"&quot;Fetch&quot;\"/></operation><artifactType><xsl:value-of select=\"$artifactExtn\"/></artifactType></event></createEvent></xsl:template></xsl:stylesheet>");
+									artifactModelInstanceCreationEvent.username = username;
+									Event.assertEvent(artifactModelInstanceCreationEvent);
+									Log.log(LOGGER, "Info", "Artifact being processed -  %s and its UUID - %s", userArtifact.artifactPath, artifactModelInstanceCreationEvent.UUID);
+								}
+							}
+						}
+						Instance.PropertyAtom.setConceptReference(fetchedResponseData.artifactContents, artifactContents, 1L);
+					}
+					
+				} else {
+					//Artifact was never checked out. Send error message since it needs to be checked out.
+					Log.log(LOGGER, "Warn", "No user artifact found for %s in project %s. Please checkout from Source control.", artifactPath, projectName);
+					fetchedResponseData.errorMessage = String.format("Artifact %s has not been checked out", artifactPath);
+					fetchedResponseData.errorCode = "ERR_1010";
+				}
+				
+				Instance.PropertyAtom.setBoolean(fetchedResponseData.loadedFromSCS, loadContentsFromSCS, 1L);
+			}
+		} else {
+			fetchedResponseData.errorMessage = String.format("Workspace does not exist for user %s", username);
+			fetchedResponseData.errorCode = "ERR_1005";
+		}
+		Cluster.DataGrid.UnLock(userWorkspaceExtId, false);
+		return fetchedResponseData;	
+	}
+}

@@ -1,0 +1,1722 @@
+Index: query/src/com/tibco/cep/query/stream/impl/rete/integ/CoherenceFilterHelper.java
+===================================================================
+--- query/src/com/tibco/cep/query/stream/impl/rete/integ/CoherenceFilterHelper.java	(revision 29131)
++++ query/src/com/tibco/cep/query/stream/impl/rete/integ/CoherenceFilterHelper.java	Thu May 06 11:13:05 PDT 2010
+@@ -1,12 +1,22 @@
+ package com.tibco.cep.query.stream.impl.rete.integ;
+ 
+ import com.tangosol.util.Filter;
++import com.tangosol.util.ValueExtractor;
++import com.tangosol.util.filter.ExtractorFilter;
++import com.tangosol.util.filter.IndexAwareFilter;
+ import com.tibco.cep.kernel.service.logging.Level;
+ import com.tibco.cep.kernel.service.logging.LogManagerFactory;
+ import com.tibco.cep.kernel.service.logging.Logger;
+ import com.tibco.cep.query.stream.context.GlobalContext;
+ import com.tibco.cep.query.stream.context.QueryContext;
++import com.tibco.cep.query.stream.expression.ExpressionEvaluator;
++import com.tibco.cep.query.stream.expression.TupleValueExtractor;
++import com.tibco.cep.query.stream.impl.expression.EvaluatorToExtractorAdapter;
+ import com.tibco.cep.query.stream.impl.rete.expression.ReteEntityFilter;
++import com.tibco.cep.query.stream.impl.rete.expression.ReteEntityFilterImpl;
++import com.tibco.cep.query.stream.impl.rete.integ.filter.FilterBuilderContext;
++import com.tibco.cep.query.stream.impl.rete.integ.filter.FilterBuilderContextImpl;
++import com.tibco.cep.query.stream.impl.rete.integ.filter.FilterStrategy;
+ import com.tibco.cep.query.stream.impl.rete.integ.standalone.QueryObjectManager;
+ import com.tibco.cep.query.stream.impl.rete.integ.standalone.QueryTypeInfo;
+ import com.tibco.cep.query.stream.impl.rete.integ.standalone.QueryWorkingMemory;
+@@ -17,32 +27,63 @@
+ import java.io.IOException;
+ import java.io.ObjectInput;
+ import java.io.ObjectOutput;
++import java.lang.reflect.Constructor;
++import java.util.Map;
++import java.util.Set;
+ import java.util.concurrent.Future;
+ import java.util.concurrent.ThreadPoolExecutor;
++import java.util.concurrent.atomic.AtomicBoolean;
+ 
+ /*
+ * Author: Ashwin Jayaprakash Date: Jun 16, 2008 Time: 5:29:28 PM
+ */
+ public class CoherenceFilterHelper {
+-    public static Filter convert(GlobalContext globalContext, QueryContext queryContext,
+-                                 ReteEntityFilter entityFilter) {
++
++    private static AtomicBoolean isFilterOptimizerEnabled = new AtomicBoolean(false);
++
++    public static synchronized void setFilterOptimizerEnabled(boolean enabled) {
++        isFilterOptimizerEnabled.set(enabled);
++    }
++    
++    public static synchronized Filter convert(GlobalContext globalContext, QueryContext queryContext,
++                                 ReteEntityFilter entityFilter, FilterStrategy filterStrategy) {
++        if(isFilterOptimizerEnabled.get() == false) {
+-        return new WrapperFilter(entityFilter, globalContext, queryContext);
+-    }
++            return new WrapperFilter(entityFilter, globalContext, queryContext);
++        }
++        if(entityFilter instanceof ReteEntityFilterImpl) {
++            ReteEntityFilterImpl reteEntityFilter = (ReteEntityFilterImpl)entityFilter;
++            TupleValueExtractor extractor = reteEntityFilter.getExtractor();
++            if(extractor instanceof EvaluatorToExtractorAdapter) {
++                EvaluatorToExtractorAdapter evalAdapter = (EvaluatorToExtractorAdapter)extractor;
++                ExpressionEvaluator evaluator = evalAdapter.getEvaluator();
++                // Now process this expression evaluator
++                FilterBuilderContext<Filter> context = new FilterBuilderContextImpl<Filter>(filterStrategy);
++                context.buildFilters(evaluator);
++                return context.getFilter();
++            }
++        }
++        return new WrapperFilter(entityFilter, globalContext, queryContext);
++    }
+ 
+-    public static Filter[] convert(GlobalContext globalContext, QueryContext queryContext,
++    public static synchronized Filter[] convert(FilterStrategy filterStrategy, GlobalContext globalContext, QueryContext queryContext,
+                                    ReteEntityFilter[] entityFilters) {
++        if(entityFilters == null) {
++            return new Filter[0];
++        }
+         Filter[] tangoFilters = new Filter[entityFilters.length];
+-
+         for (int i = 0; i < tangoFilters.length; i++) {
+-            tangoFilters[i] = new WrapperFilter(entityFilters[i], globalContext, queryContext);
++            tangoFilters[i] = CoherenceFilterHelper.convert(globalContext, queryContext, entityFilters[i], filterStrategy);
+         }
+-
+         return tangoFilters;
+     }
+ 
++    public static synchronized boolean isFilterOptimizationEnabled() {
++        return isFilterOptimizerEnabled.get();
++    }
++
+     //-----------
+ 
+-    protected static class WrapperFilter implements Filter, Externalizable {
++    public static class WrapperFilter implements Filter, Externalizable {
+         protected ReteEntityFilter actualFilter;
+ 
+         protected GlobalContext globalContext;
+@@ -89,7 +130,7 @@
+             return retVal;
+         }
+ 
+-        private void immerse(final Concept concept) {
++        protected void immerse(final Concept concept) {
+             //Init QOM.
+             if (queryObjectManager == null) {
+                 CacheServerAgentService singleton =
+@@ -172,4 +213,69 @@
+             actualFilter = (ReteEntityFilter) in.readObject();
+         }
+     }
++
++    public static class IndexAwareWrapperFilter extends WrapperFilter implements IndexAwareFilter, Externalizable {
++
++        protected Filter innerFilter;
++
++        public IndexAwareWrapperFilter() {
+-}
++        }
++
++        public IndexAwareWrapperFilter(Filter innerFilter) {
++            this.innerFilter = innerFilter;
++        }
++
++        public void setValue(Object value) throws Exception {
++            Constructor<? extends Filter> constructor = innerFilter.getClass().getDeclaredConstructor(ValueExtractor.class, Comparable.class);
++            innerFilter = constructor.newInstance(((ExtractorFilter)innerFilter).getValueExtractor(), value);
++        }
++
++        public void setValues(Object value_1, Object value_2) throws Exception {
++            Constructor<? extends Filter> constructor = innerFilter.getClass().getConstructor(ValueExtractor.class, Comparable.class, Comparable.class);
++            innerFilter = constructor.newInstance(((ExtractorFilter)innerFilter).getValueExtractor(), value_1, value_2);
++        }
++
++        @Override
++        public void writeExternal(ObjectOutput out) throws IOException {
++            out.writeObject(innerFilter);
++        }
++
++        @Override
++        public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
++            innerFilter = (Filter)in.readObject();
++        }
++
++        @Override
++        public int calculateEffectiveness(Map map, Set set) {
++            if(innerFilter != null && innerFilter instanceof IndexAwareFilter) {
++                int effectiveness = ((IndexAwareFilter) innerFilter).calculateEffectiveness(map, set);
++                return effectiveness;
++            }
++            return 0;
++        }
++
++        @Override
++        public Filter applyIndex(Map map, Set set) {
++            if(innerFilter instanceof IndexAwareFilter) {
++                return ((IndexAwareFilter) innerFilter).applyIndex(map, set);
++            }
++            return null;
++        }
++
++        @Override
++        public boolean evaluateEntry(Map.Entry entry) {
++            if(innerFilter instanceof IndexAwareFilter) {
++                return ((IndexAwareFilter) innerFilter).evaluateEntry(entry);
++            }
++            return false;
++        }
++
++        @Override
++        public boolean evaluate(Object obj) {
++            if(innerFilter != null) {
++                return innerFilter.evaluate(obj);
++            }
++            return false;
++        }
++    }
++}
+Index: query/src/com/tibco/cep/query/stream/impl/rete/integ/filter/FilterHelperCache.java
+===================================================================
+--- query/src/com/tibco/cep/query/stream/impl/rete/integ/filter/FilterHelperCache.java	Thu May 06 14:34:02 PDT 2010
++++ query/src/com/tibco/cep/query/stream/impl/rete/integ/filter/FilterHelperCache.java	Thu May 06 14:34:02 PDT 2010
+@@ -0,0 +1,112 @@
++package com.tibco.cep.query.stream.impl.rete.integ.filter;
++
++import com.tibco.cep.designtime.model.element.Concept;
++import com.tibco.cep.designtime.model.element.PropertyDefinition;
++import com.tibco.cep.designtime.model.event.Event;
++import com.tibco.cep.designtime.model.event.EventPropertyDefinition;
++import com.tibco.cep.query.stream.core.Component;
++import com.tibco.cep.query.stream.impl.rete.IndexManager;
++import com.tibco.cep.query.stream.monitor.ResourceId;
++
++import java.util.Collections;
++import java.util.Iterator;
++import java.util.List;
++import java.util.Map;
++import java.util.Properties;
++import java.util.concurrent.ConcurrentHashMap;
++import java.util.concurrent.ConcurrentMap;
++import java.util.concurrent.atomic.AtomicReference;
++
++/*
++* Author: Karthikeyan Subramanian / Date: May 3, 2010 / Time: 2:25:44 PM
++*/
++public class FilterHelperCache implements Component {
++
++    private ResourceId resourceId;
++    private final AtomicReference<IndexManager> indexManagerRef = new AtomicReference<IndexManager>();
++    private final ConcurrentMap<Concept, ConcurrentMap<String, PropertyDefinition>> conceptProperties =
++            new ConcurrentHashMap<Concept, ConcurrentMap<String, PropertyDefinition>>();
++    private final ConcurrentMap<Event, ConcurrentMap<String, EventPropertyDefinition>> eventProperties =
++            new ConcurrentHashMap<Event, ConcurrentMap<String, EventPropertyDefinition>>();
++
++    public FilterHelperCache() {
++        this.resourceId = new ResourceId(FilterHelperCache.class.getName());
++    }
++
++    @Override
++    public void init(Properties properties) throws Exception {
++        indexManagerRef.set(null);
++    }
++
++    @Override
++    public void discard() throws Exception {
++        indexManagerRef.set(null);
++    }
++
++    @Override
++    public void start() throws Exception {
++    }
++
++    @Override
++    public void stop() throws Exception {
++    }
++
++    @Override
++    public ResourceId getResourceId() {
++        return resourceId;
++    }
++
++    public IndexManager setIndexManager(IndexManager indexManager) {
++        if(indexManagerRef.compareAndSet(null, indexManager) == false) {
++            return indexManagerRef.get();
++        }
++        return indexManager;
++    }
++
++    public IndexManager getIndexManager() {
++        return indexManagerRef.get();
++    }
++
++    public Map<String, EventPropertyDefinition> addEventProperties(Event event) {
++        if(event != null) {
++            ConcurrentMap<String, EventPropertyDefinition> properties = new ConcurrentHashMap<String, EventPropertyDefinition>();
++            ConcurrentMap<String, EventPropertyDefinition> oldProps = eventProperties.putIfAbsent(event, properties);
++            if(oldProps != null) {
++                properties = oldProps;
++            }
++            Iterator<? extends EventPropertyDefinition> iterator = event.getUserProperties();
++            while(iterator.hasNext()) {
++                EventPropertyDefinition propertyDefinition = iterator.next();
++                properties.putIfAbsent(propertyDefinition.getPropertyName(), propertyDefinition);
++            }
++            return Collections.unmodifiableMap(properties);
++        }
++        return Collections.emptyMap();
++    }
++
++    public Map<String, PropertyDefinition> addConceptProperties(Concept concept) {
++        if(concept != null) {
++            ConcurrentMap<String, PropertyDefinition> properties = new ConcurrentHashMap<String, PropertyDefinition>();
++            ConcurrentMap<String, PropertyDefinition> oldProps = conceptProperties.putIfAbsent(concept, properties);
++            if(oldProps != null) {
++                properties = oldProps;
++            }
++            List propertyDefinitions = concept.getLocalPropertyDefinitions();
++            for(Object propertyDefinition : propertyDefinitions) {
++                PropertyDefinition propertyDefn = (PropertyDefinition)propertyDefinition;
++                properties.putIfAbsent(propertyDefn.getName(), propertyDefn);
++            }
++            return Collections.unmodifiableMap(properties);
++        }
++        return Collections.emptyMap();
++    }
++
++    public Map<String, PropertyDefinition>  getConceptProperties(Concept concept) {
++        return conceptProperties.get(concept);
++    }
++
++    public Map<String, EventPropertyDefinition> getEventProperties(Event event) {
++        return eventProperties.get(event);
++    }
++    
++}
+Index: query/src/com/tibco/cep/query/stream/impl/rete/IndexManager.java
+===================================================================
+--- query/src/com/tibco/cep/query/stream/impl/rete/IndexManager.java	Thu May 06 13:31:36 PDT 2010
++++ query/src/com/tibco/cep/query/stream/impl/rete/IndexManager.java	Thu May 06 13:31:36 PDT 2010
+@@ -0,0 +1,16 @@
++package com.tibco.cep.query.stream.impl.rete;
++
++import java.util.Map;
++import java.util.Set;
++
++/*
++* Author: Karthikeyan Subramanian / Date: Apr 7, 2010 / Time: 3:05:00 PM
++*/
++public interface IndexManager {
++
++    Map<IndexInfo, Set<String>> getAllIndices();
++
++    IndexInfo getIndexInfo(String columnName);
++
++    void addIndex(IndexInfo index, Set<String> extractors);
++}
+Index: query/src/com/tibco/cep/query/stream/impl/expression/comparison/ComparisonEvaluator.java
+===================================================================
+--- query/src/com/tibco/cep/query/stream/impl/expression/comparison/ComparisonEvaluator.java	(revision 21218)
++++ query/src/com/tibco/cep/query/stream/impl/expression/comparison/ComparisonEvaluator.java	Fri Apr 02 14:36:27 PDT 2010
+@@ -29,6 +29,9 @@
+         this.rightEvaluator = rightEvaluator;
+     }
+ 
++    public ExpressionEvaluator[] getOperands() {
++        return new ExpressionEvaluator[] {leftEvaluator, rightEvaluator};
++    }
+ 
+     /**
+      * @param globalContext
+Index: query/src/com/tibco/cep/query/stream/impl/expression/comparison/GreaterThanOrEqualToEvaluator.java
+===================================================================
+--- query/src/com/tibco/cep/query/stream/impl/expression/comparison/GreaterThanOrEqualToEvaluator.java	(revision 21218)
++++ query/src/com/tibco/cep/query/stream/impl/expression/comparison/GreaterThanOrEqualToEvaluator.java	Fri Apr 02 14:37:17 PDT 2010
+@@ -29,6 +29,9 @@
+         this.rightEvaluator = rightEvaluator;
+     }
+ 
++    public ExpressionEvaluator[] getOperands() {
++        return new ExpressionEvaluator[] {leftEvaluator, rightEvaluator};
++    }
+ 
+     /**
+      * @param globalContext
+Index: query/src/com/tibco/cep/query/stream/impl/expression/bool/NotEvaluator.java
+===================================================================
+--- query/src/com/tibco/cep/query/stream/impl/expression/bool/NotEvaluator.java	(revision 21218)
++++ query/src/com/tibco/cep/query/stream/impl/expression/bool/NotEvaluator.java	Mon Apr 05 14:27:51 PDT 2010
+@@ -25,7 +25,11 @@
+         this.evaluator = evaluator;
+     }
+ 
++    public ExpressionEvaluator getEvaluator() {
++        return evaluator;
++    }
+ 
++
+     /**
+      * @param globalContext
+      * @param queryContext
+Index: query/src/com/tibco/cep/query/stream/impl/expression/bindvar/BindVariableEvaluator.java
+===================================================================
+--- query/src/com/tibco/cep/query/stream/impl/expression/bindvar/BindVariableEvaluator.java	(revision 21218)
++++ query/src/com/tibco/cep/query/stream/impl/expression/bindvar/BindVariableEvaluator.java	Wed Apr 14 13:26:55 PDT 2010
+@@ -25,6 +25,9 @@
+         this.name = "BV$" + name;
+     }
+ 
++    public String getName() {
++        return name;
++    }
+ 
+     public Object evaluate(GlobalContext globalContext, QueryContext queryContext, FixedKeyHashMap<String, ? extends Tuple> aliasAndTuples) {
+         return queryContext.getGenericStore().get(this.name);
+Index: query/src/com/tibco/cep/query/stream/impl/rete/integ/filter/FilterBuilderContext.java
+===================================================================
+--- query/src/com/tibco/cep/query/stream/impl/rete/integ/filter/FilterBuilderContext.java	Wed May 05 19:07:16 PDT 2010
++++ query/src/com/tibco/cep/query/stream/impl/rete/integ/filter/FilterBuilderContext.java	Wed May 05 19:07:16 PDT 2010
+@@ -0,0 +1,13 @@
++package com.tibco.cep.query.stream.impl.rete.integ.filter;
++
++import com.tibco.cep.query.stream.expression.ExpressionEvaluator;
++
++/*
++* Author: Karthikeyan Subramanian / Date: Apr 5, 2010 / Time: 3:39:40 PM
++*/
++public interface FilterBuilderContext<F> {
++    
++    void buildFilters(ExpressionEvaluator evaluator);
++
++    F getFilter();
++}
+Index: query/src/com/tibco/cep/query/service/impl/MasterHelper.java
+===================================================================
+--- query/src/com/tibco/cep/query/service/impl/MasterHelper.java	(revision 31275)
++++ query/src/com/tibco/cep/query/service/impl/MasterHelper.java	Tue Apr 27 13:12:42 PDT 2010
+@@ -10,6 +10,7 @@
+ import com.tibco.cep.query.stream.core.Registry;
+ import com.tibco.cep.query.stream.impl.Master;
+ import com.tibco.cep.query.stream.impl.cache.SimpleCacheBuilder;
++import com.tibco.cep.query.stream.impl.rete.integ.CoherenceFilterHelper;
+ import com.tibco.cep.query.stream.impl.rete.integ.Manager;
+ import com.tibco.cep.query.stream.impl.rete.service.AgentService;
+ import com.tibco.cep.query.stream.impl.rete.service.RegionManager;
+@@ -62,8 +63,8 @@
+         boolean cachePrefetchAggressive = isCachePrefetchAggressive(beProperties, logger);
+         int maxCQThreads = getMaxThreadsForCQ(beProperties, logger);
+         initBQLConsole(querySessions, beProperties, logger);
+-//        boolean isFilterOptimizerEnabled = isFilterOptimizerEnabled(beProperties, logger);
+-//        CoherenceFilterHelper.setFilterOptimizerEnabled(isFilterOptimizerEnabled);
++        boolean isFilterOptimizerEnabled = isFilterOptimizerEnabled(beProperties, logger);
++        CoherenceFilterHelper.setFilterOptimizerEnabled(isFilterOptimizerEnabled);
+         boolean standaloneMode = isStandaloneMode(beProperties, logger);
+ 
+         for (AgentService agentService : queryAgentServices) {
+@@ -196,16 +197,16 @@
+         return null;
+     }
+ 
+-//    private static boolean isFilterOptimizerEnabled(Properties properties, Logger logger) {
+-//        String isEnabled = properties.getProperty(QueryProperty.FILTER_OPTIMIZER.getPropName(),
+-//                        Boolean.FALSE.toString());
+-//        boolean advancedFilterOptimizer = Boolean.parseBoolean(isEnabled);
+-//
+-//        logger.log(Level.DEBUG, "Query using %s: %s",
+-//                QueryProperty.FILTER_OPTIMIZER.getPropName(), advancedFilterOptimizer);
+-//        return advancedFilterOptimizer;
+-//    }
++    private static boolean isFilterOptimizerEnabled(Properties properties, Logger logger) {
++        String isEnabled = properties.getProperty(QueryProperty.FILTER_OPTIMIZER.getPropName(),
++                        Boolean.FALSE.toString());
++        boolean advancedFilterOptimizer = Boolean.parseBoolean(isEnabled);
+ 
++        logger.log(Level.WARN, "Query using %s: %s",
++                QueryProperty.FILTER_OPTIMIZER.getPropName(), advancedFilterOptimizer);
++        return advancedFilterOptimizer;
++    }
++
+     private static boolean isStandaloneMode(Properties properties, Logger logger) {
+         String s =
+                 properties.getProperty(SystemProperty.VM_NETWORK_MODE_STANDALONE.getPropertyName(),
+Index: query/src/com/tibco/cep/query/stream/impl/rete/integ/filter/FilterStrategy.java
+===================================================================
+--- query/src/com/tibco/cep/query/stream/impl/rete/integ/filter/FilterStrategy.java	Wed May 05 19:07:16 PDT 2010
++++ query/src/com/tibco/cep/query/stream/impl/rete/integ/filter/FilterStrategy.java	Wed May 05 19:07:16 PDT 2010
+@@ -0,0 +1,39 @@
++package com.tibco.cep.query.stream.impl.rete.integ.filter;
++
++import com.tibco.cep.query.stream.context.QueryContext;
++import com.tibco.cep.query.stream.expression.ExpressionEvaluator;
++
++import java.util.Collection;
++
++/*
++* Author: Karthikeyan Subramanian / Date: Apr 5, 2010 / Time: 3:37:24 PM
++*/
++public interface FilterStrategy<F> {
++
++    void resolveBindVariables(QueryContext queryContext) throws Exception;
++
++    /**
++     * Build comparison filters - equals, not equals, greater than, lesser than
++     * greater than equals, lesser than equals, In, Between, etc
++     * @param expressionEvaluator
++     * @return filter
++     */
++    F buildComparisonFilter(ExpressionEvaluator expressionEvaluator);
++
++    /**
++     * Build logical filters - and, or, not
++     * @param expressionEvaluator
++     * @return filter
++     */
++    F buildLogicalFilter(ExpressionEvaluator expressionEvaluator);
++
++    /**
++     * Build Miscellaneous Filters - Like, etc
++     * @param expressionEvaluator
++     * @return filter
++     */
++    F buildMiscellaneousFilter(ExpressionEvaluator expressionEvaluator);
++
++    
++    F bundleFilters(Collection<F> innerFilters);
++}
+Index: query/src/com/tibco/cep/query/stream/impl/rete/integ/filter/FilterBuilderContextImpl.java
+===================================================================
+--- query/src/com/tibco/cep/query/stream/impl/rete/integ/filter/FilterBuilderContextImpl.java	Thu May 06 10:44:59 PDT 2010
++++ query/src/com/tibco/cep/query/stream/impl/rete/integ/filter/FilterBuilderContextImpl.java	Thu May 06 10:44:59 PDT 2010
+@@ -0,0 +1,50 @@
++package com.tibco.cep.query.stream.impl.rete.integ.filter;
++
++import com.tibco.cep.query.stream.expression.ExpressionEvaluator;
++
++import java.util.LinkedList;
++import java.util.List;
++
++/*
++* Author: Karthikeyan Subramanian / Date: Apr 5, 2010 / Time: 4:34:48 PM
++*/
++public class FilterBuilderContextImpl<F> implements FilterBuilderContext<F> {
++
++    protected F filter = null;
++    protected FilterStrategy<F> strategy;
++    protected ExpressionEvaluator root;
++
++    public FilterBuilderContextImpl(FilterStrategy<F> strategy) {
++        this.strategy = strategy;
++    }
++
++    @Override
++    public void buildFilters(ExpressionEvaluator evaluator) {
++        root = evaluator;
++        filter = buildLogicalEvaluatorFilter(evaluator);
++        if(filter == null) {
++            filter = buildRelationalEvaluatorFilter(evaluator);
++        }
++        if(filter == null) {
++            filter = buildMiscellaneousFilter(evaluator);
++        }
++    }
++
++    public F getFilter() {
++        List<F> filters = new LinkedList<F>();
++        filters.add(filter);
++        return strategy.bundleFilters(filters);
++    }
++
++    private F buildLogicalEvaluatorFilter(ExpressionEvaluator evaluator) {
++        return strategy.buildLogicalFilter(evaluator);
++    }
++
++    private F buildRelationalEvaluatorFilter(ExpressionEvaluator evaluator) {
++        return strategy.buildComparisonFilter(evaluator);
++    }
++
++    private F buildMiscellaneousFilter(ExpressionEvaluator evaluator) {
++        return strategy.buildMiscellaneousFilter(evaluator);
++    }
++}
+Index: query/src/com/tibco/cep/query/stream/impl/rete/expression/ReteEntityFilterImpl.java
+===================================================================
+--- query/src/com/tibco/cep/query/stream/impl/rete/expression/ReteEntityFilterImpl.java	(revision 21218)
++++ query/src/com/tibco/cep/query/stream/impl/rete/expression/ReteEntityFilterImpl.java	Fri Apr 02 12:19:28 PDT 2010
+@@ -13,7 +13,11 @@
+ 
+     protected TupleValueExtractor extractor;
+ 
++    public TupleValueExtractor getExtractor() {
++        return extractor;
++    }
+ 
++
+     public ReteEntityFilterImpl(TupleValueExtractor extractor) {
+         this.extractor = extractor;
+     }
+Index: query/src/com/tibco/cep/query/stream/impl/Master.java
+===================================================================
+--- query/src/com/tibco/cep/query/stream/impl/Master.java	(revision 29170)
++++ query/src/com/tibco/cep/query/stream/impl/Master.java	Thu May 06 13:25:07 PDT 2010
+@@ -9,8 +9,13 @@
+ import com.tibco.cep.query.stream.impl.monitor.jmx.JMXHook;
+ import com.tibco.cep.query.stream.impl.query.CQScheduler;
+ import com.tibco.cep.query.stream.impl.rete.integ.Manager;
++import com.tibco.cep.query.stream.impl.rete.integ.filter.FilterHelperCache;
+ import com.tibco.cep.query.stream.impl.util.DelegatedLogger;
+-import com.tibco.cep.query.stream.monitor.*;
++import com.tibco.cep.query.stream.monitor.CustomMultiSourceException;
++import com.tibco.cep.query.stream.monitor.Flags;
++import com.tibco.cep.query.stream.monitor.Logger;
++import com.tibco.cep.query.stream.monitor.ResourceId;
++import com.tibco.cep.query.stream.monitor.ThreadCentral;
+ 
+ import java.io.PrintStream;
+ import java.util.ArrayList;
+@@ -69,7 +74,9 @@
+         registry.register(JMXHook.class, jmxHook);
+ 
+         CQScheduler cqScheduler = new CQScheduler();
+-        registry.register(CQScheduler.class, cqScheduler);        
++        registry.register(CQScheduler.class, cqScheduler);
++
++        registry.register(FilterHelperCache.class, new FilterHelperCache());
+     }
+ 
+     /**
+Index: query/src/com/tibco/cep/query/stream/impl/rete/integ/EntityLoaderImpl.java
+===================================================================
+--- query/src/com/tibco/cep/query/stream/impl/rete/integ/EntityLoaderImpl.java	(revision 13412)
++++ query/src/com/tibco/cep/query/stream/impl/rete/integ/EntityLoaderImpl.java	Thu May 06 13:33:39 PDT 2010
+@@ -8,10 +8,13 @@
+ import com.tibco.cep.query.stream.cache.SharedObjectSourceRepository;
+ import com.tibco.cep.query.stream.context.Context;
+ import com.tibco.cep.query.stream.context.DefaultQueryContext;
++import com.tibco.cep.query.stream.context.QueryContext;
+ import com.tibco.cep.query.stream.impl.expression.SimpleGlobalContext;
+ import com.tibco.cep.query.stream.impl.expression.SimpleQueryContext;
+ import com.tibco.cep.query.stream.impl.rete.ReteEntityBatchHandle;
+ import com.tibco.cep.query.stream.impl.rete.expression.ReteEntityFilter;
++import com.tibco.cep.query.stream.impl.rete.integ.filter.FilterStrategy;
++import com.tibco.cep.query.stream.impl.rete.integ.filter.coherence.FilterStrategyImpl;
+ import com.tibco.cep.query.stream.impl.rete.query.ReteQuery;
+ import com.tibco.cep.query.stream.impl.rete.query.Sender;
+ import com.tibco.cep.query.stream.impl.rete.service.EntityLoader;
+@@ -39,6 +42,10 @@
+     protected SharedObjectSourceRepository sosRepo;
+ 
+     protected Filter filter;
++    protected FilterStrategy filterStrategy;
++    protected QueryContext queryContext;
++    protected ReteEntityFilter[] reteFilters;
++    protected SimpleGlobalContext simpleGlobalContext;
+ 
+     public EntityLoaderImpl(Class klass, ReteQuery query, SharedObjectSourceRepository repository,
+                             int maxPerBatch, ReteEntityFilter[] reteFilters) {
+@@ -48,6 +55,7 @@
+         this.batchResult = new BatchResult();
+         this.maxPerBatch = maxPerBatch;
+         this.ids = new ArrayList<Long>(maxPerBatch);
++        this.reteFilters = reteFilters;
+ 
+         //-----------
+ 
+@@ -57,16 +65,19 @@
+         else {
+             Context context = query.getContext();
+ 
+-            SimpleGlobalContext simpleGlobalContext = new SimpleGlobalContext();
++            simpleGlobalContext = new SimpleGlobalContext();
+ 
+             DefaultQueryContext defaultQueryContext = context.getQueryContext();
+-            SimpleQueryContext simpleQueryContext = new SimpleQueryContext(
++            queryContext = new SimpleQueryContext(
+                     defaultQueryContext.getRegionName(), defaultQueryContext.getQueryName(),
+                     defaultQueryContext.getGenericStore());
+-
++            SharedObjectSource objectSource = repository.getSource(klass.getName());
++            NamedCache cache = (NamedCache) objectSource.getInternalSource();
++            if(CoherenceFilterHelper.isFilterOptimizationEnabled() == true) {
++                filterStrategy = new FilterStrategyImpl(klass, simpleGlobalContext, queryContext, cache);                
++            }
+             Filter[] tangoFilters = CoherenceFilterHelper
+-                    .convert(simpleGlobalContext, simpleQueryContext, reteFilters);
+-
++                    .convert(filterStrategy, simpleGlobalContext, queryContext, reteFilters);
+             this.filter = new AnyFilter(tangoFilters);
+         }
+     }
+@@ -78,7 +89,19 @@
+     private void init() {
+         SharedObjectSource source = sosRepo.getSource(entityClass.getName());
+         NamedCache cache = (NamedCache) source.getInternalSource();
+-
++        if(CoherenceFilterHelper.isFilterOptimizationEnabled() == true) {            
++            try {
++                filterStrategy.resolveBindVariables(queryContext);
++            } catch(Exception e) {
++                // Unable to resolve bind variables. Revert back to unoptimized filter.
++                int filterCount = reteFilters.length;
++                Filter[] filters = new Filter[filterCount];
++                for(int i = 0; i < filterCount; i++) {
++                    filters[i] = new CoherenceFilterHelper.WrapperFilter(reteFilters[i], simpleGlobalContext, queryContext);
++                }
++                this.filter = new AnyFilter(filters);
++            }
++        }
+         Set allKeys = cache.keySet(filter);
+         allKeysIterator = allKeys.iterator();
+     }
+Index: query/src/com/tibco/cep/query/stream/impl/rete/IndexInfoComparator.java
+===================================================================
+--- query/src/com/tibco/cep/query/stream/impl/rete/IndexInfoComparator.java	Wed May 05 19:07:16 PDT 2010
++++ query/src/com/tibco/cep/query/stream/impl/rete/IndexInfoComparator.java	Wed May 05 19:07:16 PDT 2010
+@@ -0,0 +1,23 @@
++package com.tibco.cep.query.stream.impl.rete;
++
++import com.tibco.cep.query.stream.impl.rete.IndexInfo;
++
++import java.util.Comparator;
++
++/*
++* Author: Karthikeyan Subramanian / Date: Apr 7, 2010 / Time: 11:27:09 AM
++*/
++public class IndexInfoComparator implements Comparator<IndexInfo> {
++
++    @Override
++    public int compare(IndexInfo index_1, IndexInfo index_2) {        
++        if(index_1.isOrdered() == index_2.isOrdered()) {
++            return (int)(index_1.getSelectivity() - index_2.getSelectivity());
++        } else {
++            if(index_1.isOrdered() == true) {
++                return 1;
++            }
++            return -1;
++        }
++    }
++}
+Index: query/src/com/tibco/cep/query/stream/impl/rete/integ/filter/coherence/IndexManagerImpl.java
+===================================================================
+--- query/src/com/tibco/cep/query/stream/impl/rete/integ/filter/coherence/IndexManagerImpl.java	Thu May 06 14:08:04 PDT 2010
++++ query/src/com/tibco/cep/query/stream/impl/rete/integ/filter/coherence/IndexManagerImpl.java	Thu May 06 14:08:04 PDT 2010
+@@ -0,0 +1,84 @@
++package com.tibco.cep.query.stream.impl.rete.integ.filter.coherence;
++
++import com.tangosol.net.CacheFactory;
++import com.tangosol.net.InvocationService;
++import com.tangosol.net.Member;
++import com.tangosol.net.NamedCache;
++import com.tangosol.util.ValueExtractor;
++import com.tangosol.util.extractor.ChainedExtractor;
++import com.tangosol.util.extractor.ReflectionExtractor;
++import com.tibco.cep.query.stream.impl.rete.IndexInfo;
++
++import java.util.Collections;
++import java.util.HashSet;
++import java.util.List;
++import java.util.Map;
++import java.util.Set;
++import java.util.concurrent.ConcurrentHashMap;
++import java.util.concurrent.ConcurrentMap;
++
++/*
++* Author: Karthikeyan Subramanian / Date: Apr 7, 2010 / Time: 11:29:01 AM
++*/
++public class IndexManagerImpl implements com.tibco.cep.query.stream.impl.rete.IndexManager {
++    
++    public static final String INVOCATION_SERVICE_NAME = "DiscoverInvocationService";
++    private final ConcurrentMap<IndexInfo, Set<String>> indices =
++            new ConcurrentHashMap<IndexInfo, Set<String>>();
++    
++    public IndexManagerImpl(NamedCache cache) {
++        List<IndexInfo> indexList = discoverIndexInfos(cache);
++        if(indexList != null) {
++            for(IndexInfo indexInfo : indexList) {
++                Set<String> extractors = new HashSet<String>();
++                if(indexInfo.getExtractor() instanceof ReflectionExtractor) {
++                    ReflectionExtractor reflectionExtractor = (ReflectionExtractor)indexInfo.getExtractor();
++                    extractors.add(reflectionExtractor.getMethodName());
++                } else if(indexInfo.getExtractor() instanceof ChainedExtractor) {
++                    ChainedExtractor chainedExtractor = (ChainedExtractor) indexInfo.getExtractor();
++                    for(ValueExtractor extractor : chainedExtractor.getExtractors()) {
++                        ReflectionExtractor reflectionExtractor = (ReflectionExtractor)extractor;
++                        extractors.add(reflectionExtractor.getMethodName());
++                    }
++                }
++                indices.putIfAbsent(indexInfo, extractors);
++            }
++        }
++    }
++
++    @Override
++    public void addIndex(IndexInfo index, Set<String> extractors) {
++        indices.putIfAbsent(index, extractors);
++    }
++
++    public List<IndexInfo> discoverIndexInfos(NamedCache cache) {
++        InvocationService invocationService = CacheFactory.getInvocationService(INVOCATION_SERVICE_NAME);
++        invocationService.setContextClassLoader(cache.getCacheService().getContextClassLoader());
++        invocationService.setUserContext(cache.getCacheService().getUserContext());
++        String resultKey = Thread.currentThread().getName() + ":" + System.nanoTime();
++        Member member = CacheFactory.getCluster().getLocalMember();
++        IndexFinderFilter filter = new IndexFinderFilter(resultKey, member);
++        if(cache.isActive() == true) {
++            cache.keySet(filter);
++            return filter.getIndices(resultKey);
++        }
++        return Collections.emptyList();
++    }    
++
++    @Override
++    public Map<IndexInfo, Set<String>> getAllIndices() {
++        return Collections.unmodifiableMap(indices);
++    }
++
++    @Override
++    public IndexInfo getIndexInfo(String columnName) {
++        String method = "get" + columnName;
++        for(IndexInfo indexInfo : indices.keySet()) {
++            Set<String> methods = indices.get(indexInfo);
++            if(methods.contains(method)) {
++                return indexInfo;
++            }
++        }
++        return null;
++    }
++}
+Index: query/src/com/tibco/cep/query/stream/impl/expression/comparison/InEvaluator.java
+===================================================================
+--- query/src/com/tibco/cep/query/stream/impl/expression/comparison/InEvaluator.java	(revision 21218)
++++ query/src/com/tibco/cep/query/stream/impl/expression/comparison/InEvaluator.java	Mon Apr 05 16:16:33 PDT 2010
+@@ -29,7 +29,14 @@
+         this.setMemberEvaluators = setMembers;
+     }
+ 
++    public ExpressionEvaluator[] getSetValues() {
++        return setMemberEvaluators;
++    }
+ 
++    public ExpressionEvaluator getEvaluator() {
++        return testedEvaluator;
++    }
++
+     public Object evaluate(GlobalContext globalContext, QueryContext queryContext, FixedKeyHashMap<String, ? extends Tuple> aliasAndTuples) {
+         return evaluateBoolean(globalContext, queryContext, aliasAndTuples);
+     }
+Index: query/src/com/tibco/cep/query/stream/impl/expression/comparison/GreaterThanEvaluator.java
+===================================================================
+--- query/src/com/tibco/cep/query/stream/impl/expression/comparison/GreaterThanEvaluator.java	(revision 21218)
++++ query/src/com/tibco/cep/query/stream/impl/expression/comparison/GreaterThanEvaluator.java	Fri Apr 02 14:37:08 PDT 2010
+@@ -29,7 +29,10 @@
+         this.rightEvaluator = rightEvaluator;
+     }
+ 
++    public ExpressionEvaluator[] getOperands() {
++        return new ExpressionEvaluator[] {leftEvaluator, rightEvaluator};
++    }
+-
++    
+     /**
+      * @param globalContext
+      * @param queryContext
+Index: query/src/com/tibco/cep/query/service/QueryProperty.java
+===================================================================
+--- query/src/com/tibco/cep/query/service/QueryProperty.java	(revision 29652)
++++ query/src/com/tibco/cep/query/service/QueryProperty.java	Tue Apr 06 18:08:24 PDT 2010
+@@ -9,6 +9,7 @@
+     LOCALCACHE_PREFETCHAGGRESSIVE("be.agent.query.localcache.prefetchaggressive"),
+     QUERYDATAPROVIDER_CLASSNAME("be.agent.query.querydataprovider.classname"),
+     CONTINUOUS_QUERY_MAX_THREADS("be.agent.query.continuous.threadpoolsize"),
++    FILTER_OPTIMIZER("be.agent.query.enable.filter.optimizer"),
+     SHOW_BQL_CONSOLE("be.agent.query.console");
+ 
+     //-------------
+Index: query/src/com/tibco/cep/query/stream/impl/expression/bool/OrEvaluator.java
+===================================================================
+--- query/src/com/tibco/cep/query/stream/impl/expression/bool/OrEvaluator.java	(revision 21218)
++++ query/src/com/tibco/cep/query/stream/impl/expression/bool/OrEvaluator.java	Fri Apr 02 14:31:46 PDT 2010
+@@ -20,6 +20,9 @@
+ 
+     protected ExpressionEvaluator[] childEvaluators;
+ 
++    public ExpressionEvaluator[] getOperands() {
++        return childEvaluators;
++    }
+ 
+     public OrEvaluator(ExpressionEvaluator leftEvaluator, ExpressionEvaluator rightEvaluator) {
+         this(new ExpressionEvaluator[]{leftEvaluator, rightEvaluator});
+Index: query/src/com/tibco/cep/query/stream/impl/rete/IndexInfo.java
+===================================================================
+--- query/src/com/tibco/cep/query/stream/impl/rete/IndexInfo.java	Wed May 05 18:41:30 PDT 2010
++++ query/src/com/tibco/cep/query/stream/impl/rete/IndexInfo.java	Wed May 05 18:41:30 PDT 2010
+@@ -0,0 +1,48 @@
++package com.tibco.cep.query.stream.impl.rete;
++
++import com.tangosol.util.ValueExtractor;
++
++import java.io.Serializable;
++
++/*
++* This is a dummy implementation. 
++* Replace this with real implementation for coherence and active spaces.
++* 
++* Author: Karthikeyan Subramanian / Date: Apr 7, 2010 / Time: 11:07:48 AM
++*/
++public class IndexInfo implements Serializable {
++    
++    private static final long serialVersionUID = 1L;
++    protected boolean isOrdered = false;
++    protected ValueExtractor extractor;
++    protected double selectivity = 1.0;
++
++    public IndexInfo(boolean ordered, ValueExtractor extractor) {
++        isOrdered = ordered;
++        this.extractor = extractor;
++    }
++
++    public ValueExtractor getExtractor() {
++        return extractor;
++    }
++
++    public void setExtractor(ValueExtractor extractor) {
++        this.extractor = extractor;
++    }
++
++    public boolean isOrdered() {
++        return isOrdered;
++    }
++
++    public void setOrdered(boolean ordered) {
++        isOrdered = ordered;
++    }
++
++    public void setSelectivity(double selectivity) {
++        this.selectivity = selectivity;
++    }
++
++    public double getSelectivity() {
++        return this.selectivity;
++    }
++}
+Index: query/src/com/tibco/cep/query/stream/impl/rete/integ/filter/coherence/FilterStrategyImpl.java
+===================================================================
+--- query/src/com/tibco/cep/query/stream/impl/rete/integ/filter/coherence/FilterStrategyImpl.java	Thu May 06 14:33:42 PDT 2010
++++ query/src/com/tibco/cep/query/stream/impl/rete/integ/filter/coherence/FilterStrategyImpl.java	Thu May 06 14:33:42 PDT 2010
+@@ -0,0 +1,633 @@
++package com.tibco.cep.query.stream.impl.rete.integ.filter.coherence;
++
++import com.tangosol.net.NamedCache;
++import com.tangosol.util.Filter;
++import com.tangosol.util.ValueExtractor;
++import com.tangosol.util.filter.AllFilter;
++import com.tangosol.util.filter.AndFilter;
++import com.tangosol.util.filter.AnyFilter;
++import com.tangosol.util.filter.BetweenFilter;
++import com.tangosol.util.filter.EqualsFilter;
++import com.tangosol.util.filter.GreaterEqualsFilter;
++import com.tangosol.util.filter.GreaterFilter;
++import com.tangosol.util.filter.InFilter;
++import com.tangosol.util.filter.LessEqualsFilter;
++import com.tangosol.util.filter.LessFilter;
++import com.tangosol.util.filter.NotEqualsFilter;
++import com.tangosol.util.filter.NotFilter;
++import com.tangosol.util.filter.OrFilter;
++import com.tibco.be.functions.coherence.extractor.CoherenceExtractorFunctions;
++import com.tibco.be.model.rdf.primitives.RDFBooleanTerm;
++import com.tibco.be.model.rdf.primitives.RDFBooleanWrapTerm;
++import com.tibco.be.model.rdf.primitives.RDFDateTimeTerm;
++import com.tibco.be.model.rdf.primitives.RDFDoubleTerm;
++import com.tibco.be.model.rdf.primitives.RDFDoubleWrapTerm;
++import com.tibco.be.model.rdf.primitives.RDFIntegerTerm;
++import com.tibco.be.model.rdf.primitives.RDFIntegerWrapTerm;
++import com.tibco.be.model.rdf.primitives.RDFLongTerm;
++import com.tibco.be.model.rdf.primitives.RDFLongWrapTerm;
++import com.tibco.be.model.rdf.primitives.RDFPrimitiveTerm;
++import com.tibco.be.model.rdf.primitives.RDFStringTerm;
++import com.tibco.be.model.util.ModelNameUtil;
++import com.tibco.cep.designtime.model.Ontology;
++import com.tibco.cep.designtime.model.element.Concept;
++import com.tibco.cep.designtime.model.element.PropertyDefinition;
++import com.tibco.cep.designtime.model.event.Event;
++import com.tibco.cep.designtime.model.event.EventPropertyDefinition;
++import com.tibco.cep.query.stream.context.GlobalContext;
++import com.tibco.cep.query.stream.context.QueryContext;
++import com.tibco.cep.query.stream.core.Registry;
++import com.tibco.cep.query.stream.expression.ExpressionEvaluator;
++import com.tibco.cep.query.stream.impl.expression.ConstantValueEvaluator;
++import com.tibco.cep.query.stream.impl.expression.EvaluatorToExtractorAdapter;
++import com.tibco.cep.query.stream.impl.expression.bindvar.BindVariableEvaluator;
++import com.tibco.cep.query.stream.impl.expression.bool.AndEvaluator;
++import com.tibco.cep.query.stream.impl.expression.bool.NotEvaluator;
++import com.tibco.cep.query.stream.impl.expression.bool.OrEvaluator;
++import com.tibco.cep.query.stream.impl.expression.comparison.BetweenEvaluator;
++import com.tibco.cep.query.stream.impl.expression.comparison.EqualityEvaluator;
++import com.tibco.cep.query.stream.impl.expression.comparison.GreaterThanEvaluator;
++import com.tibco.cep.query.stream.impl.expression.comparison.GreaterThanOrEqualToEvaluator;
++import com.tibco.cep.query.stream.impl.expression.comparison.InEvaluator;
++import com.tibco.cep.query.stream.impl.expression.comparison.InequalityEvaluator;
++import com.tibco.cep.query.stream.impl.expression.property.ConceptPropertyAtomValueEvaluator;
++import com.tibco.cep.query.stream.impl.expression.property.PropertyEvaluator;
++import com.tibco.cep.query.stream.impl.expression.property.SimpleEventPropertyValueEvaluator;
++import com.tibco.cep.query.stream.impl.rete.IndexInfo;
++import com.tibco.cep.query.stream.impl.rete.IndexInfoComparator;
++import com.tibco.cep.query.stream.impl.rete.IndexManager;
++import com.tibco.cep.query.stream.impl.rete.expression.ReteEntityFilter;
++import com.tibco.cep.query.stream.impl.rete.expression.ReteEntityFilterImpl;
++import com.tibco.cep.query.stream.impl.rete.integ.CoherenceFilterHelper;
++import com.tibco.cep.query.stream.impl.rete.integ.CoherenceFilterHelper.WrapperFilter;
++import com.tibco.cep.query.stream.impl.rete.integ.Manager;
++import com.tibco.cep.query.stream.impl.rete.integ.filter.FilterHelperCache;
++import com.tibco.cep.query.stream.impl.rete.integ.filter.FilterStrategy;
++import com.tibco.cep.query.stream.impl.rete.service.RegionManager;
++import com.tibco.cep.runtime.model.TypeManager;
++import com.tibco.cep.runtime.session.RuleServiceProvider;
++import com.tibco.cep.runtime.session.RuleServiceProviderManager;
++
++import java.util.Arrays;
++import java.util.Calendar;
++import java.util.Collection;
++import java.util.HashMap;
++import java.util.HashSet;
++import java.util.LinkedList;
++import java.util.List;
++import java.util.Map;
++import java.util.Set;
++
++/*
++* Author: Karthikeyan Subramanian / Date: Apr 2, 2010 / Time: 12:43:31 PM
++*/
++public class FilterStrategyImpl implements FilterStrategy<Filter> {
++    private GlobalContext globalContext;
++    private QueryContext queryContext;
++    private Map<Filter, IndexInfo> indexMap =
++            new HashMap<Filter, IndexInfo>();
++    private IndexManager indexManager;
++    private Map<String, PropertyDefinition> conceptPropertyMap = new HashMap<String, PropertyDefinition>();
++    private Map<String, EventPropertyDefinition> eventPropertyMap = new HashMap<String, EventPropertyDefinition>();
++    private Map<CoherenceFilterHelper.IndexAwareWrapperFilter, List<String>> bindVariableValueProxyMap =
++            new HashMap<CoherenceFilterHelper.IndexAwareWrapperFilter, List<String>>();
++    private Map<String, Integer> bindVariableTypeMap = new HashMap<String, Integer>();
++
++    public FilterStrategyImpl(Class klass, GlobalContext globalContext, QueryContext queryContext, NamedCache cache) {
++        this.globalContext = globalContext;
++        this.queryContext = queryContext;
++        FilterHelperCache filterHelperCache = Registry.getInstance().getComponent(FilterHelperCache.class);
++        this.indexManager = filterHelperCache.getIndexManager();
++        if(indexManager == null) {
++            this.indexManager = filterHelperCache.setIndexManager(new IndexManagerImpl(cache));            
++        }
++        Manager manager = Registry.getInstance().getComponent(Manager.class);
++        RegionManager regionManager = manager.getRegionManagers().get(queryContext.getRegionName());
++        TypeManager typeManager = regionManager.getAgentService().getEntityClassLoader();
++        RuleServiceProvider ruleServiceProvider = RuleServiceProviderManager.getInstance().getDefaultProvider();
++        Ontology ontology = ruleServiceProvider.getProject().getOntology();
++        String path = typeManager.getTypeDescriptor(klass).getURI();
++        Concept concept = ontology.getConcept(path);
++        conceptPropertyMap = filterHelperCache.addConceptProperties(concept);
++        Event event = ontology.getEvent(path);
++        eventPropertyMap = filterHelperCache.addEventProperties(event);        
++    }
++
++    @Override
++    public Filter buildComparisonFilter(ExpressionEvaluator evaluator) {
++        Filter filter = createDefaultFilter(evaluator);
++        if(evaluator instanceof EqualityEvaluator) {
++            EqualityEvaluator eqEval = (EqualityEvaluator)evaluator;
++            ExpressionEvaluator[] operands = eqEval.getOperands();
++            ExpressionEvaluator leftEvaluator = operands[0];
++            ExpressionEvaluator rightEvaluator = operands[1];
++            if(isIndexable(leftEvaluator, rightEvaluator) == true) {
++                ValueExtractor extractor = getExtractor(leftEvaluator, rightEvaluator);
++                Comparable comparable = getComparable(leftEvaluator, rightEvaluator);
++                IndexInfo indexInfo = getIndexInfo(leftEvaluator);
++                if(indexInfo == null) {
++                    indexInfo = getIndexInfo(rightEvaluator);
++                }
++                filter = new EqualsFilter(extractor, comparable);
++                if(indexInfo != null) {
++                    indexMap.put(filter, indexInfo);
++                }
++                filter = checkForBindVariables(filter, leftEvaluator, rightEvaluator);
++            }
++        } else if(evaluator instanceof InequalityEvaluator){
++            InequalityEvaluator inEqEval = (InequalityEvaluator)evaluator;
++            filter = buildNotEqualsFilter(inEqEval);
++        } else if(evaluator instanceof GreaterThanEvaluator) {
++            GreaterThanEvaluator greaterThanEvaluator = (GreaterThanEvaluator)evaluator;
++            ExpressionEvaluator[] operands = greaterThanEvaluator.getOperands();
++            ExpressionEvaluator leftEvaluator = operands[0];
++            ExpressionEvaluator rightEvaluator = operands[1];
++            if(isIndexable(leftEvaluator, rightEvaluator) == true) {
++                ValueExtractor extractor = getExtractor(leftEvaluator, rightEvaluator);
++                Comparable comparable = getComparable(leftEvaluator, rightEvaluator);
++                IndexInfo indexInfo = getIndexInfo(leftEvaluator);
++                if(indexInfo == null) {
++                    indexInfo = getIndexInfo(rightEvaluator);
++                }
++                if(leftEvaluator instanceof ConstantValueEvaluator || leftEvaluator instanceof BindVariableEvaluator) {
++                    filter = new LessFilter(extractor, comparable);
++                } else {
++                    filter = new GreaterFilter(extractor, comparable);
++                }
++                addIndexToMap(filter, indexInfo);
++                filter = checkForBindVariables(filter, leftEvaluator, rightEvaluator);
++            }
++        } else if(evaluator instanceof GreaterThanOrEqualToEvaluator) {
++            GreaterThanOrEqualToEvaluator greaterThanOrEqualToEvaluator = (GreaterThanOrEqualToEvaluator)evaluator;
++            ExpressionEvaluator[] operands = greaterThanOrEqualToEvaluator.getOperands();
++            ExpressionEvaluator leftEvaluator = operands[0];
++            ExpressionEvaluator rightEvaluator = operands[1];
++            if(isIndexable(leftEvaluator, rightEvaluator) == true) {
++                ValueExtractor extractor = getExtractor(leftEvaluator, rightEvaluator);
++                Comparable comparable = getComparable(leftEvaluator, rightEvaluator);
++                IndexInfo indexInfo = getIndexInfo(leftEvaluator);
++                if(indexInfo == null) {
++                    indexInfo = getIndexInfo(rightEvaluator);
++                }
++                if(leftEvaluator instanceof ConstantValueEvaluator || leftEvaluator instanceof BindVariableEvaluator) {
++                    filter = new LessEqualsFilter(extractor, comparable);
++                } else {
++                    filter = new GreaterEqualsFilter(extractor, comparable);
++                }
++                if(indexInfo != null) {
++                    indexMap.put(filter, indexInfo);
++                }
++                filter = checkForBindVariables(filter, leftEvaluator, rightEvaluator);
++            }
++        } else if(evaluator instanceof InEvaluator) {
++            InEvaluator inEvaluator = (InEvaluator) evaluator;
++            filter = buildInFilter(inEvaluator);
++        } else if(evaluator instanceof BetweenEvaluator) {
++            BetweenEvaluator betweenEvaluator = (BetweenEvaluator) evaluator;
++            filter = buildBetweenFilter(betweenEvaluator );
++        }
++        return filter;
++    }
++
++    @Override
++    public Filter buildMiscellaneousFilter(ExpressionEvaluator evaluator) {
++        Filter filter = createDefaultFilter(evaluator);
++        // Miscellaneous Filters like Like, etc
++        return filter;
++    }
++
++    @Override
++    public Filter buildLogicalFilter(ExpressionEvaluator evaluator) {
++        if(evaluator instanceof AndEvaluator) {
++            AndEvaluator andEval = (AndEvaluator)evaluator;
++            ExpressionEvaluator[] operands = andEval.getOperands();
++            Filter leftFilter = buildTangosolFilter(operands[0]);
++            Filter rightFilter = buildTangosolFilter(operands[1]);
++            return buildAndFilter(leftFilter, rightFilter);
++        } else if(evaluator instanceof OrEvaluator) {
++            OrEvaluator orEval = (OrEvaluator)evaluator;
++            ExpressionEvaluator[] operands = orEval.getOperands();
++            Filter leftFilter = buildTangosolFilter(operands[0]);
++            Filter rightFilter = buildTangosolFilter(operands[1]);
++            return buildOrFilter(leftFilter, rightFilter);
++        } else if(evaluator instanceof NotEvaluator) {
++            NotEvaluator notEval = (NotEvaluator)evaluator;
++            ExpressionEvaluator expressionEvaluator = notEval.getEvaluator();
++            Filter filter = buildTangosolFilter(expressionEvaluator);
++            if(filter instanceof WrapperFilter) {
++                return createDefaultFilter(evaluator);
++            }
++            return buildNotFilter(filter);
++        }
++        return null;
++    }
++
++    @Override
++    public void resolveBindVariables(QueryContext queryContext) throws Exception {
++        Map<String, Object> genericStore = queryContext.getGenericStore();
++        for(CoherenceFilterHelper.IndexAwareWrapperFilter wrapperFilter : bindVariableValueProxyMap.keySet()) {
++            List<String> bindVariables = bindVariableValueProxyMap.get(wrapperFilter);
++            List<Object> boundValues = new LinkedList<Object>();
++            for(String bindVariable : bindVariables) {
++                int type = bindVariableTypeMap.get(bindVariable);
++                boundValues.add(castBoundValue(genericStore.get(bindVariable), type));
++            }
++            if(boundValues.size() == 1) {
++                wrapperFilter.setValue(boundValues.get(0));
++            } else if(boundValues.size() == 2) {
++                wrapperFilter.setValues(boundValues.get(0), boundValues.get(1));
++            }
++        }
++    }
++
++    @Override
++    public Filter bundleFilters(Collection<Filter> filters) {
++        if(filters.size() == 1) {
++            return filters.iterator().next();
++        } else if(filters.size() == 0) {
++            return new AnyFilter();
++        }
++        List<Filter> reorderedFilters = reorderFilters(filters);
++        return new AllFilter(reorderedFilters.toArray(new Filter[0]));
++    }
++
++    private Object castBoundValue(Object boundValue, int type) {
++        switch(type) {
++            case PropertyDefinition.PROPERTY_TYPE_BOOLEAN:
++                return (Boolean.getBoolean(String.valueOf(boundValue)));
++            case PropertyDefinition.PROPERTY_TYPE_DATETIME:
++                Calendar calendar = Calendar.getInstance();
++                calendar.setTimeInMillis(Long.parseLong(String.valueOf(boundValue)));
++                return calendar;
++            case PropertyDefinition.PROPERTY_TYPE_INTEGER:
++                return Integer.parseInt(String.valueOf(boundValue));
++            case PropertyDefinition.PROPERTY_TYPE_LONG:
++                return Long.parseLong(String.valueOf(boundValue));
++            case PropertyDefinition.PROPERTY_TYPE_REAL:
++                return Double.parseDouble(String.valueOf(boundValue));
++            case PropertyDefinition.PROPERTY_TYPE_STRING:
++                return String.valueOf(boundValue);
++        }
++        return null;
++    }
++
++    private Filter buildAndFilter(Filter leftFilter, Filter rightFilter) {
++        Filter andFilter = new AndFilter(leftFilter, rightFilter);
++        IndexInfo leftIndex = indexMap.get(leftFilter);
++        IndexInfo rightIndex = indexMap.get(rightFilter);
++        addIndexToMap(andFilter, leftIndex, rightIndex);
++        return andFilter;
++    }
++
++    private Filter buildOrFilter(Filter leftFilter, Filter rightFilter) {
++        Filter orFilter = new OrFilter(leftFilter, rightFilter);
++        IndexInfo leftIndex = indexMap.get(leftFilter);
++        IndexInfo rightIndex = indexMap.get(rightFilter);
++        addIndexToMap(orFilter, leftIndex, rightIndex);
++        return orFilter;
++    }
++
++    private Filter buildNotFilter(Filter innerFilter) {
++        Filter filter = new NotFilter(innerFilter);
++        IndexInfo indexInfo = indexMap.get(innerFilter);
++        addIndexToMap(filter, indexInfo);
++        return filter;
++    }
++
++    private Filter buildNotEqualsFilter(InequalityEvaluator inequalityEvaluator) {
++        Filter filter = createDefaultFilter(inequalityEvaluator);
++        ExpressionEvaluator[] operands = inequalityEvaluator.getOperands();
++        if(operands.length != 1 || !(operands[0] instanceof EqualityEvaluator)) {
++            return filter;
++        }
++        EqualityEvaluator equalityEvaluator = (EqualityEvaluator) operands[0];        
++        ExpressionEvaluator leftEvaluator = equalityEvaluator.getOperands()[0];
++        ExpressionEvaluator rightEvaluator = equalityEvaluator.getOperands()[1];
++        if(isIndexable(leftEvaluator, rightEvaluator) == true) {
++            ValueExtractor extractor = getExtractor(leftEvaluator, rightEvaluator);
++            Comparable comparable = getComparable(leftEvaluator, rightEvaluator);
++            IndexInfo indexInfo = getIndexInfo(leftEvaluator);
++            if(indexInfo == null) {
++                indexInfo = getIndexInfo(rightEvaluator);
++            }
++            if(indexInfo != null) {
++                filter = new NotEqualsFilter(extractor, comparable);
++                addIndexToMap(filter, indexInfo);
++                filter = checkForBindVariables(filter, leftEvaluator, rightEvaluator);
++            }
++        }
++        return filter;
++    }
++
++    private Filter buildInFilter(InEvaluator inEvaluator) {
++        Filter filter = createDefaultFilter(inEvaluator);
++        ExpressionEvaluator exprEvaluator = inEvaluator.getEvaluator();
++        ExpressionEvaluator[] setMembers = inEvaluator.getSetValues();
++        Set<Comparable> values = new HashSet<Comparable>();
++        boolean isIndexed = exprEvaluator instanceof PropertyEvaluator;
++        if(!isIndexed) {
++            return filter;
++        }
++        List<String> bindVariables = new LinkedList<String>();
++        PropertyEvaluator propEval = (PropertyEvaluator)exprEvaluator;
++        for(ExpressionEvaluator setMember : setMembers) {
++            if((setMember instanceof ConstantValueEvaluator) == false &&
++                    (setMember instanceof BindVariableEvaluator) == false) {
++                isIndexed = false;
++                break;
++            }            
++            if(setMember instanceof ConstantValueEvaluator) {
++                values.add(getComparable(propEval, ((ConstantValueEvaluator)setMember).getConstant()));
++            }
++            String bindVariable = getBindVariable(setMember);
++            if(bindVariable != null) {
++                bindVariables.add(bindVariable);
++            }
++        }
++        if(isIndexed == true) {
++            IndexInfo indexInfo = getIndexInfo(exprEvaluator);
++            filter = new InFilter(getExtractor(propEval), values);
++            addIndexToMap(filter, indexInfo);            
++        }
++        return filter;
++    }
++
++    private Filter buildBetweenFilter(BetweenEvaluator betweenEvaluator) {
++        Filter filter = createDefaultFilter(betweenEvaluator);
++        ExpressionEvaluator exprEvaluator = betweenEvaluator.getExpressionEvaluator();
++        ExpressionEvaluator[] boundsEvaluator = betweenEvaluator.getBoundsEvaluator();
++        if(exprEvaluator instanceof PropertyEvaluator &&
++                (boundsEvaluator[0] instanceof ConstantValueEvaluator ||
++                    boundsEvaluator[0] instanceof BindVariableEvaluator) &&
++                        (boundsEvaluator[1] instanceof ConstantValueEvaluator ||
++                    boundsEvaluator[1] instanceof BindVariableEvaluator)) {
++            PropertyEvaluator propEval = (PropertyEvaluator)exprEvaluator;
++            IndexInfo indexInfo = getIndexInfo(exprEvaluator);
++            ValueExtractor extractor = getExtractor((PropertyEvaluator)exprEvaluator);
++            Comparable bounds_1 = null, bounds_2 = null;
++            if(boundsEvaluator[0] instanceof ConstantValueEvaluator) {
++                bounds_1 = getComparable(propEval,
++                        ((ConstantValueEvaluator)boundsEvaluator[0]).getConstant());
++            }
++            if(boundsEvaluator[1] instanceof ConstantValueEvaluator) {
++                bounds_2 = getComparable((PropertyEvaluator)exprEvaluator,
++                        ((ConstantValueEvaluator)boundsEvaluator[1]).getConstant());
++            }
++            filter = new BetweenFilter(extractor, bounds_1, bounds_2);
++            addIndexToMap(filter, indexInfo);
++            filter = checkForBindVariables(filter, boundsEvaluator[0], boundsEvaluator[1]);            
++        }
++        return filter;
++    }
++
++    private void addIndexToMap(Filter filter, IndexInfo indexInfo) {
++        if(indexInfo != null) {
++            indexMap.put(filter, indexInfo);
++        }
++    }
++
++    private void addIndexToMap(Filter filter, IndexInfo leftIndex, IndexInfo rightIndex) {
++        if(leftIndex != null && rightIndex != null && leftIndex.equals(rightIndex)) {
++            indexMap.put(filter, leftIndex);
++        }
++    }
++
++    private Filter checkForBindVariables(Filter filter, ExpressionEvaluator leftEvaluator, ExpressionEvaluator rightEvaluator) {
++        if(isBindVariable(leftEvaluator, rightEvaluator) == true) {
++            filter = new CoherenceFilterHelper.IndexAwareWrapperFilter(filter);
++            String bindVariable = getBindVariable(leftEvaluator);
++            if(bindVariable != null) {
++                List<String> variableNames = bindVariableValueProxyMap.get(filter);
++                int type = getType((PropertyEvaluator)rightEvaluator);
++                bindVariableTypeMap.put(bindVariable, type);
++                if(variableNames == null) {
++                    variableNames = new LinkedList<String>();
++                    bindVariableValueProxyMap.put((CoherenceFilterHelper.IndexAwareWrapperFilter)filter, variableNames);
++                }
++                variableNames.add(bindVariable);
++            }
++            bindVariable = getBindVariable(rightEvaluator);
++            if(bindVariable != null) {
++                List<String> variableNames = bindVariableValueProxyMap.get(filter);
++                int type = getType((PropertyEvaluator)leftEvaluator);
++                bindVariableTypeMap.put(bindVariable, type);
++                if(variableNames == null) {
++                    variableNames = new LinkedList<String>();
++                    bindVariableValueProxyMap.put((CoherenceFilterHelper.IndexAwareWrapperFilter)filter, variableNames);
++                }
++                variableNames.add(bindVariable);
++            }
++        }
++        return filter;        
++    }
++
++    private String getBindVariable(ExpressionEvaluator evaluator) {
++        if(evaluator instanceof BindVariableEvaluator) {
++            return ((BindVariableEvaluator) evaluator).getName();
++        }
++        return null;
++    }
++
++    private Filter createDefaultFilter(ExpressionEvaluator expressionEvaluator) {
++        ReteEntityFilter reteEntityFilter = new ReteEntityFilterImpl(
++                new EvaluatorToExtractorAdapter(expressionEvaluator));
++        return new WrapperFilter(reteEntityFilter, globalContext, queryContext);
++    }
++
++    private ValueExtractor getExtractor(PropertyEvaluator evaluator) {
++        String propertyName = evaluator.getPropertyName();
++        if(evaluator instanceof SimpleEventPropertyValueEvaluator) {
++            return (ValueExtractor) CoherenceExtractorFunctions.C_EventPropertyGetter(
++                        propertyName);
++        } else if(evaluator instanceof ConceptPropertyAtomValueEvaluator) {
++            PropertyDefinition propertyDefn = conceptPropertyMap.get(evaluator.getPropertyName());
++            if(propertyDefn.getName().equals(evaluator.getPropertyName())) {
++                switch(propertyDefn.getType()) {
++                    case PropertyDefinition.PROPERTY_TYPE_BOOLEAN:
++                        return (ValueExtractor)CoherenceExtractorFunctions.C_BooleanAtomGetter(
++                                    propertyName);
++                    case PropertyDefinition.PROPERTY_TYPE_DATETIME:
++                        return (ValueExtractor)CoherenceExtractorFunctions.C_DateTimeAtomGetter(
++                                    propertyName);
++                    case PropertyDefinition.PROPERTY_TYPE_INTEGER:
++                        return (ValueExtractor)CoherenceExtractorFunctions.C_IntAtomGetter(
++                                    propertyName);
++                    case PropertyDefinition.PROPERTY_TYPE_LONG:
++                        return (ValueExtractor)CoherenceExtractorFunctions.C_LongAtomGetter(
++                                    propertyName);
++                    case PropertyDefinition.PROPERTY_TYPE_REAL:
++                        return (ValueExtractor)CoherenceExtractorFunctions.C_DoubleAtomGetter(
++                                    propertyName);
++                    case PropertyDefinition.PROPERTY_TYPE_STRING:
++                        return (ValueExtractor)CoherenceExtractorFunctions.C_StringAtomGetter(
++                                    propertyName);
++                }
++            }
++        }
++        return null;
++    }
++
++    private int getType(PropertyEvaluator evaluator) {
++        int type = -1;
++        String propertyName = evaluator.getPropertyName();
++        if(evaluator instanceof SimpleEventPropertyValueEvaluator) {
++            EventPropertyDefinition propertyDefn = eventPropertyMap.get(propertyName);
++            RDFPrimitiveTerm term = propertyDefn.getType();
++            if(term instanceof RDFDoubleWrapTerm || term instanceof RDFDoubleTerm) {
++                type = PropertyDefinition.PROPERTY_TYPE_REAL;
++            } else if(term instanceof RDFBooleanTerm || term instanceof RDFBooleanWrapTerm) {
++                type = PropertyDefinition.PROPERTY_TYPE_BOOLEAN;
++            } else if(term instanceof RDFDateTimeTerm) {
++                type = PropertyDefinition.PROPERTY_TYPE_DATETIME;
++            } else if(term instanceof RDFIntegerTerm || term instanceof RDFIntegerWrapTerm) {
++                type = PropertyDefinition.PROPERTY_TYPE_INTEGER;
++            } else if(term instanceof RDFLongTerm || term instanceof RDFLongWrapTerm) {
++                type = PropertyDefinition.PROPERTY_TYPE_LONG;
++            } else if(term instanceof RDFStringTerm) {
++                type = PropertyDefinition.PROPERTY_TYPE_STRING;
++            }
++        } else if(evaluator instanceof ConceptPropertyAtomValueEvaluator) {
++            PropertyDefinition propertyDefn = conceptPropertyMap.get(evaluator.getPropertyName());
++            type = propertyDefn.getType();
++        }
++        return type;
++    }
++
++    private Comparable getComparable(PropertyEvaluator evaluator, Object value) {
++        int type = getType(evaluator);
++        switch(type) {
++            case PropertyDefinition.PROPERTY_TYPE_BOOLEAN:
++                return (Boolean.getBoolean(String.valueOf(value)));
++            case PropertyDefinition.PROPERTY_TYPE_DATETIME:
++                Calendar calendar = Calendar.getInstance();
++                calendar.setTimeInMillis(Long.parseLong(String.valueOf(value)));
++                return calendar;
++            case PropertyDefinition.PROPERTY_TYPE_INTEGER:
++                return Integer.parseInt(String.valueOf(value));
++            case PropertyDefinition.PROPERTY_TYPE_LONG:
++                return Long.parseLong(String.valueOf(value));
++            case PropertyDefinition.PROPERTY_TYPE_REAL:
++                return Double.parseDouble(String.valueOf(value));
++            case PropertyDefinition.PROPERTY_TYPE_STRING:
++                return String.valueOf(value);
++        }
++        return null;        
++    }
++
++    private Filter buildTangosolFilter(ExpressionEvaluator evaluator) {
++        Filter filter = buildLogicalFilter(evaluator);
++        if(filter == null) {
++            filter = buildComparisonFilter(evaluator);
++        }
++        return filter == null? createDefaultFilter(evaluator) : filter;
++    }
++    
++    private ValueExtractor getExtractor(ExpressionEvaluator leftEvaluator, ExpressionEvaluator rightEvaluator) {
++        if(leftEvaluator instanceof PropertyEvaluator) {
++            return getExtractor((PropertyEvaluator)leftEvaluator);
++        }
++        return getExtractor((PropertyEvaluator)rightEvaluator);
++    }
++
++    private Comparable getComparable(ExpressionEvaluator leftEvaluator, ExpressionEvaluator rightEvaluator) {
++        if(rightEvaluator instanceof ConstantValueEvaluator) {
++            return getComparable((PropertyEvaluator)leftEvaluator, ((ConstantValueEvaluator)rightEvaluator).getConstant());
++        } else if(leftEvaluator instanceof ConstantValueEvaluator){
++            return getComparable((PropertyEvaluator)rightEvaluator, ((ConstantValueEvaluator)leftEvaluator).getConstant());
++        } else if(rightEvaluator instanceof BindVariableEvaluator) {
++            // Dummy value which will be replaced later
++            return ((BindVariableEvaluator)rightEvaluator).getName();
++        } else if(leftEvaluator instanceof BindVariableEvaluator) {
++            // Dummy value which will be replaced later
++            return ((BindVariableEvaluator)leftEvaluator).getName();
++        }
++        return null;
++    }
++
++    private IndexInfo getIndexInfo(ExpressionEvaluator evaluator) {
++        if(evaluator instanceof SimpleEventPropertyValueEvaluator) {
++            SimpleEventPropertyValueEvaluator simpleEventPropertyValueEvaluator = (SimpleEventPropertyValueEvaluator)evaluator;
++            return indexManager.getIndexInfo(ModelNameUtil.generatedMemberName(simpleEventPropertyValueEvaluator.getPropertyName()));
++        } else if(evaluator instanceof ConceptPropertyAtomValueEvaluator) {
++            ConceptPropertyAtomValueEvaluator conceptPropertyAtomValueEvaluator = (ConceptPropertyAtomValueEvaluator)evaluator;
++            return indexManager.getIndexInfo(ModelNameUtil.generatedMemberName(conceptPropertyAtomValueEvaluator.getPropertyName()));
++        }
++        return null;
++    }
++
++    private boolean isIndexable(ExpressionEvaluator leftEvaluator,
++                                ExpressionEvaluator rightEvaluator) {
++        // one side should be a property evaluator and other side should be a constant value evaluator.
++        boolean isShallowReferenced = ((isShallowReferenced(leftEvaluator) &&
++                rightEvaluator instanceof ConstantValueEvaluator) ||
++                (isShallowReferenced(rightEvaluator)&&
++                        leftEvaluator instanceof ConstantValueEvaluator));
++        boolean isBindVariable = isBindVariable(leftEvaluator, rightEvaluator);
++        return isShallowReferenced || isBindVariable;
++    }
++
++    private boolean isBindVariable(ExpressionEvaluator leftEvaluator,
++                                   ExpressionEvaluator rightEvaluator) {
++        // check if bind variable is used.
++        return ((isShallowReferenced(leftEvaluator) &&
++            rightEvaluator instanceof BindVariableEvaluator) ||
++            (isShallowReferenced(rightEvaluator)&&
++                    leftEvaluator instanceof BindVariableEvaluator));
++    }
++
++    private boolean isShallowReferenced(ExpressionEvaluator evaluator) {
++        // This method excludes contained/reference concept property comparisons from
++        // filter building
++        return (evaluator instanceof SimpleEventPropertyValueEvaluator ||
++            evaluator instanceof ConceptPropertyAtomValueEvaluator);
++    }
++
++    private List<Filter> reorderFilters(Collection<Filter> filters) {
++        List<Filter> unindexedFilters = new LinkedList<Filter>();
++        Map<IndexInfo, List<Filter>> indexToFilterMap = new HashMap<IndexInfo, List<Filter>>();
++        List<Filter> uncompressedFilters = uncompressFilters(filters);
++        // Uncompress all the AND filters into same level.
++        boolean shouldContinue = (filters.size() != uncompressedFilters.size());
++        while(shouldContinue) {
++            int size = uncompressedFilters.size();
++            uncompressedFilters = uncompressFilters(uncompressedFilters);
++            shouldContinue = (size != uncompressedFilters.size());
++        }
++        // Apply index based filter ordering.
++        for(Filter filter : uncompressedFilters) {
++            IndexInfo index = indexMap.get(filter);
++            if(index != null) {
++                List<Filter> indexedFilters = indexToFilterMap.get(index);
++                if(indexedFilters == null) {
++                    indexedFilters = new LinkedList<Filter>();
++                    indexToFilterMap.put(index, indexedFilters);
++                }
++                indexedFilters.add(filter);
++            } else {
++                unindexedFilters.add(filter);
++            }
++        }
++        IndexInfo[] indices = indexToFilterMap.keySet().toArray(new IndexInfo[0]);
++        Arrays.sort(indices, new IndexInfoComparator());
++        List<Filter> reorderedFilters = new LinkedList<Filter>();
++        for(IndexInfo index : indices) {
++            reorderedFilters.addAll(indexToFilterMap.get(index));
++        }
++        reorderedFilters.addAll(unindexedFilters);
++        // Check index effectiveness
++        return reorderedFilters;
++    }
++
++    private List<Filter> uncompressFilters(Collection<Filter> filters) {
++        List<Filter> uncompressedFilters = new LinkedList<Filter>();
++        for(Filter filter : filters) {
++            if(filter instanceof AndFilter) {
++                AndFilter andFilter = (AndFilter)filter;
++                uncompressedFilters.addAll(Arrays.asList(andFilter.getFilters()));
++            } else {
++                uncompressedFilters.add(filter);
++            }
++        }
++        return uncompressedFilters;
++    }
++}
+Index: query/src/com/tibco/cep/query/stream/impl/expression/comparison/InequalityEvaluator.java
+===================================================================
+--- query/src/com/tibco/cep/query/stream/impl/expression/comparison/InequalityEvaluator.java	(revision 21218)
++++ query/src/com/tibco/cep/query/stream/impl/expression/comparison/InequalityEvaluator.java	Fri Apr 02 14:37:47 PDT 2010
+@@ -25,7 +25,9 @@
+         this.equalityEvaluator = new EqualityEvaluator(leftEvaluator, rightEvaluator);
+     }
+ 
+-
++    public ExpressionEvaluator[] getOperands() {
++        return new ExpressionEvaluator[] {equalityEvaluator};
++    }
+     /**
+      * @param globalContext
+      * @param queryContext
+Index: query/src/com/tibco/cep/query/stream/impl/expression/comparison/EqualityEvaluator.java
+===================================================================
+--- query/src/com/tibco/cep/query/stream/impl/expression/comparison/EqualityEvaluator.java	(revision 21218)
++++ query/src/com/tibco/cep/query/stream/impl/expression/comparison/EqualityEvaluator.java	Fri Apr 02 14:36:56 PDT 2010
+@@ -30,6 +30,9 @@
+         this.rightEvaluator = rightEvaluator;
+     }
+ 
++    public ExpressionEvaluator[] getOperands() {
++        return new ExpressionEvaluator[] {leftEvaluator, rightEvaluator};
++    }
+ 
+     /**
+      * @param globalContext
+Index: query/src/com/tibco/cep/query/stream/impl/expression/comparison/BetweenEvaluator.java
+===================================================================
+--- query/src/com/tibco/cep/query/stream/impl/expression/comparison/BetweenEvaluator.java	(revision 31316)
++++ query/src/com/tibco/cep/query/stream/impl/expression/comparison/BetweenEvaluator.java	Mon Apr 26 18:20:27 PDT 2010
+@@ -24,7 +24,14 @@
+     protected ExpressionEvaluator bound1Evaluator;
+     protected ExpressionEvaluator bound2Evaluator;
+ 
++    public ExpressionEvaluator[] getBoundsEvaluator() {
++        return new ExpressionEvaluator[]{bound1Evaluator, bound2Evaluator};
++    }
+ 
++    public ExpressionEvaluator getExpressionEvaluator() {
++        return exprEvaluator;
++    }
++
+     public BetweenEvaluator(
+             ExpressionEvaluator exprEvaluator,
+             ExpressionEvaluator bound1Evaluator,
+Index: query/src/com/tibco/cep/query/stream/impl/rete/integ/filter/coherence/IndexFinderFilter.java
+===================================================================
+--- query/src/com/tibco/cep/query/stream/impl/rete/integ/filter/coherence/IndexFinderFilter.java	Thu May 06 14:53:55 PDT 2010
++++ query/src/com/tibco/cep/query/stream/impl/rete/integ/filter/coherence/IndexFinderFilter.java	Thu May 06 14:53:55 PDT 2010
+@@ -0,0 +1,129 @@
++package com.tibco.cep.query.stream.impl.rete.integ.filter.coherence;
++
++import com.tangosol.net.AbstractInvocable;
++import com.tangosol.net.CacheFactory;
++import com.tangosol.net.InvocationService;
++import com.tangosol.net.Member;
++import com.tangosol.util.Filter;
++import com.tangosol.util.SimpleMapIndex;
++import com.tangosol.util.filter.IndexAwareFilter;
++import com.tibco.cep.query.stream.impl.rete.IndexInfo;
++
++import java.io.Serializable;
++import java.util.ArrayList;
++import java.util.Collections;
++import java.util.List;
++import java.util.Map;
++import java.util.Map.Entry;
++import java.util.Set;
++import java.util.concurrent.ConcurrentHashMap;
++import java.util.concurrent.ConcurrentMap;
++
++/**
++ * This implementation is taken from OTN forum thread.
++ * http://forums.oracle.com/forums/thread.jspa?messageID=2440167&#2440167
++ */
++
++public class IndexFinderFilter implements IndexAwareFilter, Serializable {
++    private static final long serialVersionUID = 1L;
++
++    private static ConcurrentMap<String, List<IndexInfo>> results =
++            new ConcurrentHashMap<String, List<IndexInfo>>();
++
++    public static class ResultSettingInvocable extends AbstractInvocable {
++
++        private String resultKey;
++        private List<IndexInfo> indexInfos;
++
++        public ResultSettingInvocable(String resultKey, List<IndexInfo> indexInfos) {
++            super();
++            this.resultKey = resultKey;
++            this.indexInfos = indexInfos;
++        }
++
++        @Override
++        public void run() {
++            System.err.println("ResultSettingInvocable");
++            results.putIfAbsent(resultKey, indexInfos);
++        }
++    }
++
++    private String resultKey;
++
++    private Member member;
++
++    public IndexFinderFilter() {
++    }
++
++    public IndexFinderFilter(String resultKey, Member member) {
++        super();
++        this.resultKey = resultKey;
++        this.member = member;
++    }
++
++    @Override
++    public Filter applyIndex(Map mapIndexes, Set keys){
++        System.err.println("applyIndex");
++        sendExtractors(mapIndexes);
++        return null;
++    }
++
++    @Override
++    public int calculateEffectiveness(Map mapIndexes, Set keys){
++        System.err.println("calculateEffectiveness");
++        sendExtractors(mapIndexes);
++        return 0;
++    }
++
++    private void sendExtractors(Map mapIndexes) {
++        List<IndexInfo> indexInfos = new ArrayList<IndexInfo>(mapIndexes.size());
++        for(Object closure : mapIndexes.values()) {
++            SimpleMapIndex mapIndex = (SimpleMapIndex)closure;
++            indexInfos.add(new IndexInfo(mapIndex.isOrdered(), mapIndex.getValueExtractor()));
++        }
++        InvocationService service = CacheFactory.getInvocationService(IndexManagerImpl.INVOCATION_SERVICE_NAME);
++        service.query(new ResultSettingInvocable(resultKey, indexInfos), Collections.singleton(member));
++    }
++
++    /**
++     * This is the code that determines if the given map is sorted in ascending
++     * or descending order.
++     * @param entry
++     * @return
++     */
++//    private boolean isAscending(Map contentMap) {
++//        if(contentMap.size() <= 1) {
++//            return false;
++//        }
++//        if(contentMap instanceof SortedMap) {
++//            SortedMap sortedContents = (SortedMap)contentMap;
++//            if(sortedContents.keySet().isEmpty() == true) {
++//                return false;
++//            }
++//            Iterator keyIterator = sortedContents.keySet().iterator();
++//            Comparator comparator = sortedContents.comparator();
++//            Object first = keyIterator.next();
++//            Object second = keyIterator.next();
++//            if(comparator.compare(first, second) > 0) {
++//                return false;
++//            } else {
++//                return true;
++//            }
++//        }
++//        return false;
++//    }
++
++    @Override
++    public boolean evaluateEntry(Entry entry) {
++        return false;
++    }
++
++    @Override
++    public boolean evaluate(Object value){
++        return false;
++    }
++
++    public List<IndexInfo> getIndices(String resultKey) {
++        return results.remove(resultKey);
++    }
++}

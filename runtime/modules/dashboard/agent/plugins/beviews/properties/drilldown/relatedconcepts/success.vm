@@ -1,0 +1,250 @@
+<!doctype html public "-//w3c//dtd html 3.2 final//en">
+<html>
+    <head>
+    <title>Related Concepts</title>
+    <link rel="stylesheet" type="text/css" href="/drilldown/css/tabletree.css" />
+    <link rel="stylesheet" type="text/css" href="/drilldown/css/page.css"/>
+    <script language="javascript" src="/scripts/imageutil.js"></script>
+    <script language="javascript">
+
+        var selectedRowId = "";
+
+        function expandCollapseType(idPrefix, cnt, last){
+            for (var i = 1 ; i <= cnt ; i++) {
+                var expanded = false;
+                var row = document.getElementById(idPrefix+"_"+i+"_row");
+                if (row.style.display == 'none') {
+                    row.style.display = '';
+                    expanded = true;
+                }
+                else {
+                    row.style.display = 'none';
+                }
+                var imgsrc = "";
+                if (last == true) {
+                    if (expanded == true) {
+                        imgsrc = "/drilldown/images/treeNodeOpenLast.gif";
+                    }
+                    else {
+                        imgsrc = "/drilldown/images/treeNodeCloseLast.gif";
+                    }
+                }
+                else {
+                    if (expanded == true) {
+                        imgsrc = "/drilldown/images/treeNodeOpen.gif";
+                    }
+                    else {
+                        imgsrc = "/drilldown/images/treeNodeClose.gif";
+                    }
+                }
+                document.getElementById(idPrefix+"_ecb").src = imgsrc;
+            }
+        }
+
+        function expandCollapseChildType(id, last){
+            var table = document.getElementById(id+"_table");
+            var rowCnt = table.rows.length;
+            var expanded = false;
+            for (var i = 1 ; i < rowCnt ; i++){
+                var row = table.rows[i];
+                if (row.style.display == 'none') {
+                    row.style.display = '';
+                    expanded = true;
+                }
+                else {
+                    row.style.display = 'none';
+                }
+            }
+            var imgsrc = "";
+            if (last == true) {
+                if (expanded == true) {
+                    imgsrc = "/drilldown/images/treeNodeOpenLast.gif";
+                }
+                else {
+                    imgsrc = "/drilldown/images/treeNodeCloseLast.gif";
+                }
+            }
+            else {
+                if (expanded == true) {
+                    imgsrc = "/drilldown/images/treeNodeOpen.gif";
+                }
+                else {
+                    imgsrc = "/drilldown/images/treeNodeClose.gif";
+                }
+            }
+            document.getElementById(id+"_ecb").src = imgsrc;
+        }
+
+        function select(rowid) {
+            clearSelection();
+            //update the ab's image
+            document.getElementById(rowid+"_ab").src = "/drilldown/images/rhselected.jpg";
+            var row = document.getElementById(rowid);
+            var cellCnt = row.cells.length;
+            for (var i = 2 ; i < cellCnt - 1; i++) {
+                row.cells[i].c_bgColor = row.cells[i].style.backgroundColor;
+                row.cells[i].style.backgroundColor = "#faf89a";
+            }
+            selectedRowId = rowid;
+        }
+
+        function clearSelection() {
+            if (selectedRowId != "") {
+                //update the ab's image
+                document.getElementById(selectedRowId+"_ab").src = "/drilldown/images/rhunselected.jpg";
+                var row = document.getElementById(selectedRowId);
+                var cellCnt = row.cells.length;
+                for (var i = 2 ; i < cellCnt - 1; i++) {
+                    row.cells[i].style.backgroundColor = row.cells[i].c_bgColor;
+                }
+                selectedRowId = "";
+            }
+        }
+
+
+    </script>
+</head>
+<body onload="MM_preloadImages('/drilldown/images/treeNodeOpenLast.gif','/drilldown/images/treeNodeCloseLast.gif', '/drilldown/images/treeNodeOpen.gif', '/drilldown/images/treeNodeClose.gif', '/drilldown/images/rhselected.jpg', '/drilldown/images/rhunselected.jpg');" class="pagebackgrd" leftmargin="10" bottommargin="10" rightmargin="10" topmargin="10">
+    <table border="0" cellpadding="2" cellspacing="0" width="100%" height="100%">
+        <tr align="center" valign="middle" width="100%">
+            <td align="center" valign="middle" width="20%">
+                <table border="0" cellpadding="0" cellspacing="0" width="100%" height="100%">
+					<tr align="left" valign="middle" height="24px">
+					    <td class="paglettitleleft" valign="middle" nowrap align="left" height="24px">&nbsp;</td>
+					    <td class="paglettitle" valign="middle" width="100%" nowrap align="left" height="24px">Related Concepts</td>
+					    <td class="paglettitleright" valign="middle" nowrap align="left" height="24px">&nbsp;</td>    
+					</tr>
+                    <tr align="center" valign="middle" height="98%">
+                        <td class="pageletbody" valign="top" height="100%" colspan="3">
+                            <div style="overflow:auto;height:100%;width:100%;">
+                                <table align="left" border="0" cellspacing="0" cellpadding="0" width="100%" class="tableStyle">
+                                    #foreach ( $typename in $datamodel.keySet() )
+                                        #set ($root = $velocityCount)
+                                        #set ($parents = $datamodel.get($typename))
+                                        #set ($colspan = $parents.get(0).fields.size() + 1)
+                                    <!-- type header -->
+                                    <tr align="left" valign="middle" class="trTableHeader">
+                                        <td class="imageTableHeader" width="18px"><img src="/drilldown/images/rhunselected.jpg"/></td>
+                                        <td colspan="$colspan" class="textTableHeader">$typename&nbsp;($parents.size())&nbsp;$widesttypename</td>
+                                        #if ($typename != $widesttypename) 
+                                        <td width="100%" class="ttRightFillerCell">&nbsp;</td>
+                                        #end
+                                    </tr>
+                                    <!-- type fields header -->
+                                    <tr align="left" valign="middle" class="normalColumnStyle" height="18">
+                                        <td class="treeCellLine" width="18px" style="background-color: rgb(255, 255, 255);"></td>
+                                        <td class="rowheaderColumn" width="18px"></td>
+                                        #foreach ( $fieldTitle in $parents.get(0).fields.keySet() )
+                                        <td class="thcolumnHeader" style="padding-left:5px;padding-right:20px">$fieldTitle</td>
+                                        #end
+                                        #if ($typename != $widesttypename) 
+                                        <td width="100%" class="ttRightFillerCell" style="background-color: rgb(255, 255, 255);">&nbsp;</td>
+                                        #end
+                                    </tr>
+                                        #foreach ( $parent in $parents )
+                                            #set ($isLastParent = !$velocityHasNext)
+                                            #set ($parentid = "${root}_$velocityCount")
+                                    <!-- type field value rows -->
+                                    <tr id="$parentid" name="$parentid" align="left" valign="middle" class="evenRowStyle">
+                                            #if( $isLastParent == false )
+                                        <td width="18px" style="background-color: rgb(255, 255, 255);"><img id="${parentid}_ecb" src="/drilldown/images/treeNodeOpen.gif" style="cursor:hand;" onclick="expandCollapseType('${parentid}',$parent.ChildrenTypes.size(),false);"></td>
+                                            #else
+                                        <td width="18px" style="background-color: rgb(255, 255, 255);"><img id="${parentid}_ecb" src="/drilldown/images/treeNodeOpenLast.gif" style="cursor:hand;" onclick="expandCollapseType('${parentid}',$parent.ChildrenTypes.size(),true);"></td>
+                                            #end
+                                        <td width="18px" ><img id="${parentid}_ab" src="/drilldown/images/rhunselected.jpg" onclick="select('$parentid');"></td>
+                                            #foreach ( $fieldValue in $parent.fields.values() )
+                                        <td class="columnStyle" nowrap onclick="select('$parentid');"><font style="normal_text">$fieldValue</font></td>
+                                            #end
+                                            #if ($typename != $widesttypename) 
+                                        <td width="100%" class="ttRightFillerCell" style="background-color: rgb(255, 255, 255);">&nbsp;</td>
+                                            #end
+                                    </tr>
+                                    <!-- children -->
+                                            #set ($childholdingspan = $colspan + 1)
+                                            #foreach ( $childtype in $parent.ChildrenTypes )
+                                                #set ($isLastChildType =  !$velocityHasNext)
+                                                #set ($children = $parent.getChildren($childtype))
+                                                #set ($childTypeId = "${parentid}_$velocityCount")
+                                    <tr id="${childTypeId}_row" align="left" valign="middle">
+                                                #if( $isLastParent == false )
+                                        <!-- More parent concepts exists, so show a '|'  -->
+                                        <td  width="18px" class="treeCellLine"></td>
+                                                #else
+                                        <!-- No more parent concepts exists, so show a blank  -->
+                                        <td width="18px">&nbsp;</td>
+                                                #end
+                                                #if ( $velocityCount == 1 )
+                                                    #if( $isLastChildType == false )
+                                        <!-- First and not the last type in the parent, so show general open node  -->
+                                        <td  width="18px" style="background-color: rgb(255, 255, 255);" class="treeCellLine" valign="top"><img id="${childTypeId}_ecb" src="/drilldown/images/treeNodeOpen.gif" style="cursor:hand;" onclick="expandCollapseChildType('${childTypeId}',false);"></td>
+                                                    #else
+                                        <!-- First and the last type in the parent, so show last open node -->
+                                        <td  width="18px" style="background-color: rgb(255, 255, 255);" valign="top"><img id="${childTypeId}_ecb" src="/drilldown/images/treeNodeOpenLast.gif" style="cursor:hand;" onclick="expandCollapseChildType('${childTypeId}',true);"></td>
+                                                    #end
+                                                #else
+                                                    #if( $isLastChildType == false )
+                                        <!-- Remaining type in the parent, so show general open node  -->
+                                        <td  width="18px" style="background-color: rgb(255, 255, 255);" class="treeCellLine" valign="top"><img id="${childTypeId}_ecb" src="/drilldown/images/treeNodeOpen.gif" style="cursor:hand;" onclick="expandCollapseChildType('${childTypeId}',false);"></td>                                                    
+                                                    #else
+                                        <!-- Remaining and the last type in the parent, so show last open node  -->
+                                        <td  width="18px" style="background-color: rgb(255, 255, 255);" valign="top"><img id="${childTypeId}_ecb" src="/drilldown/images/treeNodeOpenLast.gif" style="cursor:hand;" onclick="expandCollapseChildType('${childTypeId}',true);"></td>
+                                                    #end
+                                                #end
+                                        <td colspan="$childholdingspan">
+                                            <table id="${childTypeId}_table" name="${parentid}_${childtype}" align="left" border="0" cellspacing="0" cellpadding="0" width="100%" class="tableStyle">
+                                                #set ($childcolspan = $children.get(0).fields.size() + 1)
+                                                <!-- child type header -->
+                                                <tr align="left" valign="middle" class="trTableHeader">
+                                                    <td width="18px" class="imageTableHeader" ><img src="/drilldown/images/rhunselected.jpg"/></td>
+                                                    <td colspan="$childcolspan" class="textTableHeader">$childtype&nbsp;($children.size())&nbsp;$widesttypename</td>
+                                                    #if ($childtype != $widesttypename) 
+                                                    <td width="100%" class="ttRightFillerCell">&nbsp;</td>
+                                                    #end
+                                                </tr>
+                                                <!-- child type fields header -->
+                                                <tr align="left" valign="middle" class="normalColumnStyle" height="18">
+                                                    <td width="18px" class="treeCellLine" style="background-color: rgb(255, 255, 255);"></td>
+                                                    <td width="18px" class="rowheaderColumn"></td>
+                                                #foreach ( $childFieldTitle in $children.get(0).fields.keySet() )
+                                                    <td class="thcolumnHeader" style="padding-left:5px;padding-right:20px">$childFieldTitle</th>
+                                                #end
+                                                #if ($childtype != $widesttypename) 
+                                                    <td width="100%" class="ttRightFillerCell" style="background-color: rgb(255, 255, 255);">&nbsp;</td>
+                                                #end
+                                                </tr>
+                                                #foreach ( $child in $children )
+                                                #set ($childId = "${childTypeId}_$velocityCount")
+                                                <!-- child type field value rows -->
+                                                <tr id="${childId}" align="left" valign="middle" class="evenRowStyle">
+                                                    #if( $velocityHasNext == true )
+                                                    <!-- More child concepts exist, so show a "|" -->
+                                                    <td width="18px" style="background-color: rgb(255, 255, 255);"><img src="/drilldown/images/treeItem.gif"/></td>
+                                                    #else
+                                                    <!-- Last child concept, so show last open node -->
+                                                    <td width="18px" style="background-color: rgb(255, 255, 255);"><img src="/drilldown/images/treeItemLast.gif"/></td>
+                                                    #end
+                                                    <td width="18px"><img name="${childId}_ab" src="/drilldown/images/rhunselected.jpg" onclick="select('${childId}');"/></td>
+                                                    #foreach ( $fieldValue in $child.fields.values() )
+                                                    <td class="columnStyle" nowrap onclick="select('${childId}');"><font style="normal_text">$fieldValue</font></td>
+                                                    #end
+                                                    #if ($childtype != $widesttypename) 
+                                                    <td width="100%" class="ttRightFillerCell" style="background-color: rgb(255, 255, 255);">&nbsp;</td>
+                                                    #end
+                                                </tr>
+                                                #end
+                                            </table>
+                                        </td>
+                                    </tr>
+                                            #end
+                                        #end
+                                    #end
+                                </table>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

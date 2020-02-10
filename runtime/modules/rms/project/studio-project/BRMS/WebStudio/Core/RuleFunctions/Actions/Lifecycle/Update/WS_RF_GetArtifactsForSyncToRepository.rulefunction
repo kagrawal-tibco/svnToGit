@@ -1,0 +1,121 @@
+/**
+ * @description 
+ */
+WebStudio.Core.Concepts.DataSources.WS_C_TemporaryReturnData rulefunction WebStudio.Core.RuleFunctions.Actions.Lifecycle.Update.WS_RF_GetArtifactsForSyncToRepository {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object servletRequest;
+		WebStudio.Security.Authn.Concepts.WS_C_LoggedInUser loggedInUser;
+		String projectName;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.Lifecycle.Update.WS_RF_GetArtifactsForSyncToRepository");
+		 
+	    WS_C_ResponseData responseData = null;
+		int responseStatus = 0;
+		int recordCount = 0;
+		String errorCode = null;
+		String responseMessage = null;
+
+		if (!WS_RF_CheckHTTPMethod(servletRequest, "GET")) {
+			responseStatus = -1;
+			recordCount = 0;
+			errorCode = "ERR_5101";
+			responseMessage = "Invalid HTTP Method, expect method is [GET].";
+		} else {
+			//Get the User roles
+			String[] roles = Instance.PropertyArray.toArrayString(loggedInUser.roles);
+			
+			Log.log(LOGGER, "Debug", "Project name %s passed as parameter", projectName);
+			
+			double numberOfArtifacts;
+			responseData = Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/WS_C_ResponseData");
+			
+			String subscriptionId = null;
+			if (loggedInUser.jwtToken != null) subscriptionId = loggedInUser.jwtToken.sbsc;
+			
+			String scsRootURL = WS_RF_GetSCSRootURL(projectName, subscriptionId);
+			Log.log(LOGGER, "Debug", "SCS root URL configured is %s", scsRootURL);
+			
+			// Need to get the artifacts from the SCS
+			if (scsRootURL == null) {
+				throw Exception.newException(null, "Source control repository location not present. Set ws.scs.rootURL property", null);
+			}
+			
+			String scsIntegrationType = System.getSystemPropertyAsString("ws.scs.impl.type", null);
+			String filterClass = System.getSystemPropertyAsString("ws.scs.fetch.artifacts.filter", null);
+			
+			// fetch the preferences for SCS userName/password details
+			String[] scsCredentials = WS_RF_GetSCSCredentials(loggedInUser.username);
+			String output = WS.SCS.listManagedProjectArtifacts(scsIntegrationType, scsRootURL, projectName, null, scsCredentials[0], scsCredentials[1], filterClass, null);
+			
+			// first update the project
+			if (!String.equals(scsIntegrationType, "file")) {
+				Log.log(LOGGER, "Debug", "Updating the SCS repository.");
+				WS.SCS.updateProjectArtifacts(scsIntegrationType, scsRootURL, projectName, scsCredentials[0], scsCredentials[1]);
+			}
+	
+			String[] artifactTypesSupported = {"CONCEPT", "EVENT", "RULEFUNCTION", "RULETEMPLATE", "RULETEMPLATEVIEW"};
+			String artifactType, artifactPath, artifactFileExtn, artifactImageSrc, EXTENSION;
+			boolean isSupported, hasAccess, updatedPostLastSync = true;
+			DateTime artifactDT;
+			
+			if (output != null && !String.equals(output, "")) {
+				//Convert to concept model
+				WS_C_SCSProjectContents scsProjectContents = Instance.createTransientInstanceFromXML("/WebStudio/Core/Concepts/Common/WS_C_SCSProjectContents", output);
+				WS_C_ProjectArtifacts projectArtifacts = scsProjectContents.projectArtifacts;
+				WS_C_Artifact[] artifacts = Instance.PropertyArray.toArrayContainedConcept(projectArtifacts.artifact);
+				Log.log(LOGGER, "Debug", "Project Artifact Size - %s", artifacts@length);
+				
+				WS_C_ProjectArtifactNamesDataSourceRecord projectArtifactDataSourceRecord = null;
+				if (roles != null) {
+					for (int i = 0; i < artifacts@length; i++) {
+						artifactType = artifacts[i].artifactType;
+					    	artifactPath = artifacts[i].artifactPath;
+					    	artifactFileExtn = artifactType;
+					    	
+						artifactImageSrc = Util.HashMap.get("ARTIFACT_TYPE_IMAGES", artifactType);
+						if (artifactImageSrc == null) artifactImageSrc = "file.png";
+						
+						EXTENSION = String.toUpperCase(artifactFileExtn);
+						
+						isSupported = WS_RF_IsArtifactTypeSupported(EXTENSION, artifactTypesSupported);						
+						if (isSupported) {			
+							hasAccess = RMS.Authorization.ensureAccess(projectName, subscriptionId, roles, artifactPath, EXTENSION, "read");
+		
+							if (hasAccess) {
+								artifactDT = DateTime.parseLong(Number.longValue(artifacts[i].lastUpdated, 10));
+								WS_C_UserArtifact userArtifact = WS_RF_IsUserArtifact(WS_RF_CreateUserArtifactExtId(null, artifactPath, projectName, loggedInUser.username, null, null), artifactType);
+								if (userArtifact != null && userArtifact.lastSyncDate != null) {
+									updatedPostLastSync = DateTime.after(artifactDT, userArtifact.lastSyncDate);
+								}
+								
+								if (updatedPostLastSync) {
+									WS_C_AbstractDataSourceRecord projectArtifactsDataSourceRecord = 
+										Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/Records/WS_C_ProjectArtifactNamesDataSourceRecord");
+									projectArtifactDataSourceRecord = projectArtifactsDataSourceRecord;
+									projectArtifactDataSourceRecord.artifactPath = artifactPath;
+									projectArtifactDataSourceRecord.artifactType = artifactType;
+									projectArtifactDataSourceRecord.fileExtension = artifactFileExtn;
+									projectArtifactDataSourceRecord.imageSrc = artifactImageSrc;
+									projectArtifactDataSourceRecord.no = (i+1) + "";
+									projectArtifactDataSourceRecord.changeType = "Added";
+									
+									Instance.PropertyArray.appendContainedConcept(responseData.record, projectArtifactsDataSourceRecord, 1L);
+									numberOfArtifacts++;
+								}
+							}
+						}
+					}
+				}
+			}
+			
+			responseStatus = 0;
+			recordCount = numberOfArtifacts;
+		}
+		
+		return WS_RF_CreateTemporaryReturnData(responseStatus, recordCount, null, null, responseData);
+	}
+}

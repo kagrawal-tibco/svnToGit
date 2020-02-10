@@ -1,0 +1,38 @@
+/**
+ * @description 
+ */
+void rulefunction Authentication.SSO.Common.BAAS_RF_SetSAMLHTTPResponseHeadersAndCookies {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String ssoToken;
+		String relayState;
+		String samlAssertionResponse;
+		Object asyncContextObject;
+	}
+	body {
+		Object servletResponse = HTTP.Servlet.getServletResponse(asyncContextObject);
+		Object cookie = HTTP.Servlet.Response.getCookie("BAASSSO", ssoToken, null, "/");
+		HTTP.Servlet.Response.setCookie(servletResponse, cookie);
+		System.debugOut(samlAssertionResponse);
+		//encode it using base64
+		String encodedSAMLResponse = HTTP.toBase64(samlAssertionResponse);
+		encodedSAMLResponse = String.replaceAll(encodedSAMLResponse, "\r", "");
+		encodedSAMLResponse = String.replaceAll(encodedSAMLResponse, "\n", "");
+		//Add this to the URL itself. The URL should be the url of the assertion consumer
+		//service on the side of the assertion requesting SP.
+		Object urlBuffer = String.createBuffer(0);
+		String.append(urlBuffer, "http://localhost:3333/assnconsumer");
+		String.append(urlBuffer, "?SAMLResponse=");
+		String.append(urlBuffer, encodedSAMLResponse);
+		String.append(urlBuffer, "&");
+		String.append(urlBuffer, "RelayState=");
+		String.append(urlBuffer, relayState);
+
+		
+		String redirectURL = String.convertBufferToString(urlBuffer);
+		String.clearBuffer(urlBuffer);
+		HTTP.Servlet.Response.sendRedirectTo(asyncContextObject, redirectURL);
+	}
+}

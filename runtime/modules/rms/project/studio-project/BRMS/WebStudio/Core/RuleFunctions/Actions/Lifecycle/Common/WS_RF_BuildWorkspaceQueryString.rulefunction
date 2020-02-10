@@ -1,0 +1,29 @@
+/**
+ * @description Build query string to query user workspace for some search path.
+ */
+String rulefunction WebStudio.Core.RuleFunctions.Actions.Lifecycle.Common.WS_RF_BuildWorkspaceQueryString {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.Lifecycle.Common.WS_RF_BuildWorkspaceQueryString");
+		
+		Object queryBuffer = String.createBuffer(0);
+		
+		String.append(queryBuffer, "select ua from /WebStudio/Core/Concepts/WS_C_UserArtifact ua");	
+		String.append(queryBuffer, " where");
+		String.append(queryBuffer, " ua.parentProjectId = $parentProjectId");
+		String.append(queryBuffer, " and ua.softDelete = false");
+		String.append(queryBuffer, " and ua.softDeleteViaProjectDelete = false");
+		String.append(queryBuffer, " and /#String/regionMatches(");	
+		String.append(queryBuffer, "false, ua.artifactPath, 0, $searchPath, 0, /#String/length($searchPath))");
+	
+		String workspaceQueryString = String.convertBufferToString(queryBuffer);
+		Log.log(LOGGER, "Debug", "Workspace sync query with bind variables [%s]", workspaceQueryString);
+		String.clearBuffer(queryBuffer);
+		
+		return workspaceQueryString;
+	}
+}

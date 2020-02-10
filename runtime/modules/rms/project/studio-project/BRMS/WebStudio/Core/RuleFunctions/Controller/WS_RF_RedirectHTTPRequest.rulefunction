@@ -1,0 +1,24 @@
+/**
+ * @description 
+ * Fetches new uri for redirection of the request. 
+ */
+WebStudio.Core.Concepts.DataSources.WS_C_TemporaryReturnData rulefunction WebStudio.Core.RuleFunctions.Controller.WS_RF_RedirectHTTPRequest {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String contextPath;
+		String newContextPath;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Controllers.WS_RF_RedirectHTTPRequest");
+		int responseStatus = 0;
+		int recordCount = 0;
+		String errorCode = null;
+		String responseMessage =  "Resource at " + contextPath + " has been permanently moved. Redirecting to " + newContextPath;	
+		Log.log(LOGGER, "Info", responseMessage);
+		WS_C_TemporaryReturnData tempReturnData = WS_RF_CreateTemporaryReturnData(responseStatus, recordCount, errorCode, responseMessage, null);
+		tempReturnData.redirectURL = newContextPath; 
+		return tempReturnData;
+	}
+}

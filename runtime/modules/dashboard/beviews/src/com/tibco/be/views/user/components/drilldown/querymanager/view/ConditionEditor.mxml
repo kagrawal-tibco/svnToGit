@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" styleName="queryManagerConditionEditor" >
+	
+	<mx:Script>
+		<![CDATA[
+			import com.tibco.be.views.user.components.drilldown.querymanager.events.ConditionUpdatedEvent;
+			import mx.events.ValidationResultEvent;
+			import mx.collections.ArrayCollection;
+			
+			//meta data
+			protected var _fieldID:String;
+			[Bindable]
+			protected var _fieldName:String;
+			protected var _fieldDataType:String;
+			/** The state of the renderer without any attention to the data it stores */ 
+			protected var _state:String = "";
+			protected var _conditionAsString:String;
+			protected var _defaultOperator:String = "";
+			protected var _defaultConditions:ArrayCollection = new ArrayCollection();
+			protected var _currentOperator:String = "";
+			protected var _currentConditions:ArrayCollection = new ArrayCollection();
+			
+			public function doValidation():ValidationResultEvent { return null;}
+			
+			public function get state():String{ return _state; }
+			public function get fieldName():String{ return _fieldName; }
+			public function get conditionAsString():String{ return _conditionAsString; }
+			
+			public function set state(value:String):void{ _state = value; }
+			public function set conditionAsString(value:String):void{ 
+				_conditionAsString = value;
+				dispatchHeaderChangeEvent(new ConditionUpdatedEvent(ConditionUpdatedEvent.IS_HEADER_CHANGED,true,true,_conditionAsString)); 
+			}
+			
+			public function init(fieldID:String, fieldName:String, fieldDataType:String, sOperator:String, conditions:ArrayCollection):void{
+				_fieldID = new String(fieldID);
+				_fieldName = new String(fieldName);
+				_fieldDataType = new String(fieldDataType);
+					
+				_defaultOperator = sOperator;
+				_currentOperator = sOperator;
+				// defensive copy
+				_defaultConditions.removeAll();
+				_currentConditions.removeAll();
+				for each(var condition:String in conditions){
+					_defaultConditions.addItem(new String(condition));
+					_currentConditions.addItem(new String(condition));
+				}
+			}
+			
+			public function resetConditionToDefault():void{
+				//trace("resetCondtionToDefault called..");
+				_currentOperator = _defaultOperator;
+				_currentConditions.removeAll();
+				for each(var condition:String in _defaultConditions){
+					_currentConditions.addItem(new String(condition));
+				}
+				redraw(_defaultOperator,_defaultConditions);
+			}
+			
+			public function resetConditionToAny():void{
+				_currentOperator = "Is Any";
+				_currentConditions.removeAll();
+				redraw("Is Any", _defaultConditions);
+			}
+			
+			public function redraw(operator:String, conditions:ArrayCollection):void{}
+			
+			// XML representation of 
+			public function getFieldXML():XML{
+				var fieldXML:XML = new XML(<field/>);
+				fieldXML.@id = _fieldID;
+				fieldXML.@name = _fieldName;
+				fieldXML.@datatype = _fieldDataType;
+				//var conditionXML:XML = new XML(<condition/>);
+				if(_currentOperator != "Is Any"){
+					var conditionXML:XML = new XML(<condition/>);
+					conditionXML.@operator = _currentOperator;
+					for each(var condition:String in _currentConditions){
+						//we add the <...CDATA...> as &lt;...CDATA...&gt; and then escape it since we are sending XML (query XML) inside XML (request XML)
+						//backend code replaces &lt; and &gt; in queryXML, looks like a horrible fix, need to find a better fix or more elegant design for XML 
+						//within XML    
+						var xmlList:XMLList = XMLList("<value>"+encodeURIComponent("&lt;![CDATA["+condition+"]]&gt;")+"</value>");
+						conditionXML.appendChild(xmlList);
+					}
+					fieldXML.appendChild(conditionXML);
+				}
+				// do not append condition node if condition == Is Any 
+				//else{
+					//conditionXML.appendChild(<value>Is Any</value>);
+				//}
+				//fieldXML.appendChild(conditionXML);
+				return fieldXML;
+			}
+			
+			public function reset():void {
+				
+			}
+			
+			public function dispatchHeaderChangeEvent(event:ConditionUpdatedEvent):void{
+				dispatchEvent(event);
+			}
+			
+		]]>
+	</mx:Script>
+</mx:VBox>

@@ -1,0 +1,51 @@
+/**
+ * @description Check whether supported artifacts are present in the project
+ */
+String[] rulefunction WebStudio.Core.RuleFunctions.Utils.Lifecycle.WS_RF_CheckSupportedArtifactsInProject {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String username;
+		String projectName;
+		String scsRootURL;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.WS_RF_CheckSupportedArtifactsInProject");
+		
+		String scsIntegrationType = System.getSystemPropertyAsString("ws.scs.impl.type", null);
+		
+		// fetch the preferences for SCS userName/password details
+		String[] scsCredentials = WS_RF_GetSCSCredentials(username);
+		String filterClass = System.getSystemPropertyAsString("ws.scs.fetch.artifacts.filter", null);
+		
+		WS_C_Artifact[] userArtifacts = null;		
+		String output = WS.SCS.listManagedProjectArtifacts(scsIntegrationType, scsRootURL, projectName, null, scsCredentials[0], scsCredentials[1], filterClass, null);
+		if (output != null && !String.equals(output, "")) {
+			//Convert to concept model
+			WS_C_SCSProjectContents scsProjectContents = Instance.createTransientInstanceFromXML("/WebStudio/Core/Concepts/Common/WS_C_SCSProjectContents", output);
+			WS_C_ProjectArtifacts projectArtifacts = scsProjectContents.projectArtifacts;
+			userArtifacts = Instance.PropertyArray.toArrayContainedConcept(projectArtifacts.artifact);
+		}
+		
+		boolean hasDTs = false, hasRTIs = false, hasProcesses = false;		
+		for (int loop = 0; loop < userArtifacts@length; loop++) {
+			WS_C_Artifact userArtifact = userArtifacts[loop];
+			if (userArtifact.artifactType == "ruletemplateinstance") {
+				hasRTIs = true;
+			} else if (userArtifact.artifactType == "rulefunctionimpl") {
+				hasDTs = true;
+			} else if (userArtifact.artifactType == "process") {
+				hasProcesses = true;
+			}
+		}
+		
+		String[] warnMessages = {null};
+		if (!hasDTs && !hasRTIs && !hasProcesses) {
+			warnMessages[0] = "Project has no Decision Table / Rule Template Instance / Process definitions.";	
+			return warnMessages;
+		} else {
+			return null;
+		}
+	}
+}

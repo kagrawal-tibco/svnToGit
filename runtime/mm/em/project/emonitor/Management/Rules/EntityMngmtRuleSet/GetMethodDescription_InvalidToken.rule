@@ -1,0 +1,23 @@
+/**
+ * @description 
+ * @author hlouro-lt-T61
+ */
+rule Management.Rules.EntityMngmtRuleSet.GetMethodDescription_InvalidToken {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Management.Events.request.MethodDescriptionRequestEvent requestevent;
+	}
+	when {
+		requestevent.token == null || String.length(requestevent.token) == 0;
+	}
+	then {
+		String family = "GetMethodDescription_InvalidToken";
+		Shared.RuleFunctions.log(family,"DEBUG","Rule " + family + " triggered");
+		
+		Shared.Events.reqres.FailureResponseEvent event = Shared.Events.reqres.FailureResponseEvent.FailureResponseEvent(null,null,"001","Invalid token");
+		Event.replyEvent(requestevent, event);
+	}
+}

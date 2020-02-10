@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<function-descriptors name="betea-functions">
+
+	<!-- Some basic standard / statistical functions -->
+	
+	
+	<function-descriptor name="System.COUNT" category="system.statistics"
+		multivalued="false" implclass="com.tibco.rta.runtime.metric.functions.CountMetric"
+		datatype="LONG" description="count function">
+	</function-descriptor>
+
+	<function-descriptor name="System.AVG" category="system.statistics"
+		multivalued="false" implclass="com.tibco.rta.runtime.metric.functions.AverageMetric"
+		datatype="DOUBLE" description="average function">
+		<function-params>
+			<function-param id="PARAM1" datatype="LONG" ordinal="0"
+				description="Measuable Quanitity to be averaged" />
+		</function-params>
+
+		<function-context>
+			<function-param id="count" datatype="LONG" ordinal="0"
+				description="" />
+			<function-param id="sum" datatype="DOUBLE" ordinal="1"
+				description="" />
+		</function-context>
+
+	</function-descriptor>
+
+	<function-descriptor name="System.STDDEV" category="system.statistics"
+		multivalued="false" implclass="com.tibco.rta.runtime.metric.functions.StdDevMetric"
+		datatype="DOUBLE" description="standard deviation function">
+		<function-params>
+			<function-param id="PARAM1" datatype="LONG" ordinal="0"
+				description="Standard Deviation of measurable quantity" />
+		</function-params>
+
+		<function-context>
+			<function-param id="count" datatype="LONG" ordinal="0"
+				description="" />
+			<function-param id="sum" datatype="DOUBLE" ordinal="1"
+				description="" />
+			<function-param id="sumofsquare" datatype="DOUBLE"
+				ordinal="2" description="" />
+		</function-context>
+
+	</function-descriptor>
+
+	<function-descriptor name="System.TOP5" category="system.statistics"
+		multivalued="true" implclass="com.tibco.rta.runtime.metric.functions.Top5Metric"
+		datatype="LONG" description="Top 5 function">
+		<function-params>
+			<function-param id="PARAM1" datatype="LONG" ordinal="0"
+				description="Top 5 of measurable quantity" />
+		</function-params>
+	</function-descriptor>
+
+	<function-descriptor name="System.BINNING" category="statistics"
+		multivalued="true" implclass="com.tibco.rta.runtime.metric.functions.Binning"
+		datatype="DOUBLE"
+		description="function that will appropriately distributes facts in various bins">
+		<function-params>
+			<function-param id="PARAM1" datatype="LONG" ordinal="0"
+				description="Measuable Quanitity to be bucketed" />
+		</function-params>
+	</function-descriptor>
+
+	<function-descriptor name="System.SUM" category="system.statistics"
+		multivalued="false" implclass="com.tibco.rta.runtime.metric.functions.SumMetric"
+		datatype="DOUBLE" description="sum function">
+		<function-params>
+			<function-param id="PARAM1" datatype="LONG" ordinal="0"
+				description="Sum of measuable quanitity" />
+		</function-params>
+	</function-descriptor>
+	
+	<function-descriptor name="System.SUMLONG" category="system.statistics"
+		multivalued="false" implclass="com.tibco.rta.runtime.metric.functions.SumMetricLong"
+		datatype="LONG" description="sum function">
+		<function-params>
+			<function-param id="PARAM1" datatype="LONG" ordinal="0"
+				description="Sum of measuable quanitity" />
+		</function-params>
+	</function-descriptor>
+
+	<function-descriptor name="System.MEDIAN" category="system.statistics"
+		multivalued="false" implclass="com.tibco.rta.runtime.metric.functions.MedianMetric"
+		datatype="DOUBLE" description="median function">
+		<function-params>
+			<function-param id="PARAM1" datatype="LONG" ordinal="0"
+				description="Median of measurable quantity" />
+		</function-params>
+	</function-descriptor>
+
+	<function-descriptor name="System.TP5" category="system.statistics"
+		multivalued="false"
+		implclass="com.tibco.rta.runtime.metric.functions.DerivedFifthPercentileMetric"
+		datatype="DOUBLE" description="fifth percentile function">
+		<function-params>
+			<function-param id="PARAM1" datatype="LONG" ordinal="0"
+				description="5th percentile of measurable quantity" />
+		</function-params>
+		<function-context>
+			<function-param id="count" datatype="LONG" ordinal="0"
+				description="" />
+			<function-param id="sum" datatype="DOUBLE" ordinal="1"
+				description="" />
+			<function-param id="sumofsquare" datatype="DOUBLE"
+				ordinal="2" description="" />
+		</function-context>
+
+	</function-descriptor>
+
+	<function-descriptor name="System.TP95" category="system.statistics"
+		multivalued="false"
+		implclass="com.tibco.rta.runtime.metric.functions.DerivedNinetyFifthPercentileMetric"
+		datatype="DOUBLE" description="ninety fifth percentile function">
+		<function-params>
+			<function-param id="PARAM1" datatype="LONG" ordinal="0"
+				description="95th percentile of measurable quantity" />
+		</function-params>
+		<function-context>
+			<function-param id="count" datatype="LONG" ordinal="0"
+				description="" />
+			<function-param id="sum" datatype="DOUBLE" ordinal="1"
+				description="" />
+			<function-param id="sumofsquare" datatype="DOUBLE"
+				ordinal="2" description="" />
+		</function-context>
+	</function-descriptor>
+
+
+	<function-descriptor name="System.SETVAL" category="system.standard"
+		multivalued="false" implclass="com.tibco.rta.runtime.metric.functions.SetValueMetric"
+		datatype="OBJECT" description="set value function">
+		<function-params>
+			<function-param id="PARAM1" datatype="OBJECT" ordinal="0" description="Value to be set" />
+		</function-params>
+	</function-descriptor>
+	
+</function-descriptors>

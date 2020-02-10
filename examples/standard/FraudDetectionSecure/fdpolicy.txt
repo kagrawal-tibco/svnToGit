@@ -1,0 +1,220 @@
+// ***************************************************************************************
+// ***** TIBCO ACTIVESPACES SECURITY POLICY                                          *****
+// *****                                                                             *****
+// ***** WARNING: CONFIDENTIAL INFORMATION!                                          *****
+// *****                                                                             *****
+// ***** TO BE ACCESSED ONLY BY TIBCO ACTIVESPACES CONTROLLER MEMBERS/PROCESSES      *****
+// ***** AND THEIR ADMINISTRATION PERSONNEL THAT HAVE AUTHORITATIVE CONTROL OVER     *****
+// ***** EACH SECURITY DOMAIN, INCLUDED IN THIS POLICY INSTANCE. PLEASE CONSULT      *****
+// ***** THE USER MANUAL FOR MORE DETAILS.                                           *****
+// ***************************************************************************************
+
+// policy instance [created 2016-01-20 14:51:02:137]
+policy fdpolicy {
+
+// domain instance #1
+domain fddomain {
+
+// Metaspace Access List
+// 
+// List each metaspace, and its discovery URL, which is to be covered by
+// the settings for this security domain.
+// 
+// Format:
+// 	metaspace_access=metaspace=<metaspace name1>;discovery=<TCP discovery URL1>
+// 	metaspace_access=metaspace=<metaspace name2>;discovery=<TCP discovery URL2>
+// 	...
+// 
+// Note: Must specify at least one metaspace and discovery URL.
+// 
+metaspace_access=metaspace=fdsecure;discovery=tcp://127.0.0.1:32767
+
+
+// Transport Security
+// Specify the level of security to use when transmitting data within ActiveSpaces.
+// 
+// Options:
+// 	encrypted_normal (default): use secure transport with 128 bit symmetric key encryption
+// 	encrypted_strong          : use secure transport with 256 bit symmetric key encryption
+// 	integrity                 : use secure transport without encryption
+// 
+transport_security=encrypted_normal
+
+// Restricted Transport Access
+// 
+// Specify whether transport access should be restricted to only those 
+// ActiveSpaces applications using a token file whose identity certificate
+// is contained in the given file. The file is a plain text file containing
+// one or more identity certificates extracted (copied and pasted) from token
+// files.
+// 
+// Format:
+// 	transport_access=<true|false(default)>;cert_file=<certificate file path>
+// 
+transport_access=true;cert_file=%TIBCO_BE_HOME_ESC%/examples/standard/FraudDetectionSecure/fd_trusted_identities.txt
+
+// Data Encryption
+// 
+// Specify whether data should be encrypted when it resides in memory and
+// is persisted on the local disk (shared-nothing persistence). Use the
+// field definitions to define encryptable fields in any space.
+// 
+// Options:
+// 	false (default): do not encrypt the data
+// 	true           : always encrypt the data
+data_encryption=true
+
+// Authentication
+// 
+// Specify the type of authentication to use for this security domain and
+// information for connecting to the authentication source.
+// 
+// Format:
+// 	authentication=<none(default)|userpwd|x509>;[source=<system|ldap>;<source property>;...;hint=<string>
+// 
+// Examples:
+// 	authentication=userpwd;source=system;service=login;hint=acme_server
+// 
+// 	// searchUnder: <true|false (default)> search for objects under base DN, if objects may reside at different levels of the directory
+// 	// allowEmptyPassword: <true|false (default)> allow or reject empty passwords from clients
+// 	// objectClass: <* | string> define specific object class to look at during search, * denotes any object class. Only used when searchUnder is enabled.
+// 	authentication=userpwd;source=ldap;name=cn;host=ldapsvr.com;plainPort=389;baseDN=dc=users,dc=com;searchUnder=false;allowEmptyPassword=false;objectClass=*;hint=acme_dir
+// 	authentication=x509;source=ldap;name=uid;host=ldapsvr.com;securePort=636;baseDN=dc=users,dc=com;trustStore=ldap.p7b;hint=acme_dir
+authentication=userpwd;source=system;service=login;hint=n/a
+
+// Security Domain Access Control
+// 
+// Enable or disable access control for the security domain and what the
+// default behavior should be for users or groups for which no permissions are
+// either explicitly or implicitly defined.
+// 
+// Format:
+// 	access_control=<true|false(default>;default=<deny|grant>
+// 
+access_control=false;default=deny
+
+// Access Control Groups
+// 
+// Define groups of users where each group will have a specific set of
+// permissions. The list of groups must be preceded by a line with 'groups'.
+// There can be zero or more group assignments in the list.
+// Single group assignment lines can be broken into two or more lines by
+// leaving a comma (,) at the end of the line.
+// 
+// Format:
+// 	groups
+// 		<user defined name>=<user name>,<user name>,...
+// 
+// Example:
+// 	group1 = user1, user2, user3
+// 	group2 = user4, group1, user5
+// 	group3 = user6, user7, My Ldap X509Cert CN, group2
+// 	admins = admin1, admin2
+// 
+groups
+
+
+// Access Control Permissions
+// 
+// Assign permissions to users or groups and specify whether the permissions
+// should be limited to a particular metaspace or space. The list of permission
+// assignments must be preceded by a line with 'permissions'.
+// There can be zero or more permission assignment lines in the list. Permission 
+// assignment lines can be broken into two or more lines by leaving a comma (,) 
+// at the end of the line to be continued on the next line.
+// 
+// Format:
+// 	permissions
+// 		<metaspace name>/<space name> <<user name>|<group name>>=<privilege>
+// 
+// Wildcard: The asterisk (*) can be used as a wildcard for the metaspace name,
+//           the space name or both.
+// 
+// The available rights options in a privilege:
+// 	deny_all
+// 	grant_all
+// 	read
+// 	write
+// 	invoke
+// 	seeder
+// 	encrypt
+// 	admin
+// 
+// Examples:
+// 	ms1/* group1=read, seeder
+// 	ms4/sp1 group2=write, encrypt
+// 	*/sp2 group1=write, invoke
+// 	ms2/* admins=admin, encrypt
+// 
+permissions
+
+
+// Domain Identity
+// /CN=fddomain-A3D2B3D5
+
+// Safe Identity Password: #SAFE#74lecAR2axVgy+yfHdj2jfOp/P/S+jKCgHlUhsUyvwy8zD6/XDqDdY8Xamy/KH/+4X
+-----BEGIN ENCRYPTED PRIVATE KEY-----
+MIIFHzBJBgkqhkiG9w0BBQ0wPDAbBgkqhkiG9w0BBQwwDgQIBKI4YRcznXECAggA
+MB0GCWCGSAFlAwQBKgQQm6tZuYrkv9kc4hE7PsR70ASCBNAFibZo0Oh/q7bgl+5L
+PGYgtJI8422GnOYVoZLoG5VnH1VflY/CF2ugBB6MJy9eMsj3ZpVzcm7ugrEZWn4Z
+OnJUeEfz8I6sgA0MnGdGxCT42ztmhKyl1X9cGnlsq6BpeNeUC9kao4zVW9yMuEHj
+0H57/x5ANdoy8rnF6q/06DgU2OCLTwiy64Ekmy/OQA7zC8nGw5aqlAgZa6wii/mx
+2YrZ2G4GodbrgOxYI/DfLSSXMe44z7aRjoslyn3/o1ropa7tveCNmG9IJFLNTFxo
+ePXtdV23mOkvDLeHkPnpZGxC6nxPtsWW579lJuAxwbtaWpNdurKbUzZV9IRw/ze6
+AzrbhKWXBF1vbcL6SobRkMEp7K4zMkpC/kTJ1DmXmwi2LCYX9Yi9o5E0h9+DTkPB
++SYqado/REE1Trjg6Rn1tA7uYqkOvKgWzudFOCYDq+5moeo1Mw5KikK2uh3QQstF
+Nb7TTl3lJFmv8SS7wZHwzwyb40ToSnu1Y0Brs59tWZwBaKTzhoMd1Jhl7Oil24p6
+PRi1komCtztV6T5z3jk20krUWKA98lveSlnkWi40kcNd55a6D1ckt1jcKVQ5fE4I
+cizBHHVIFfiDoEn/XbyOYqKJNftgqDi8NUTMT4Vd5EYfKRnoQIijNvwijoQOwW+v
+V5GEn8x8b5Xn5R9l2lEsXnOJ/WO1rpqI7cFHQ05mRS6+4rN9R9dJ0u5GTlpQjb5Y
+AfaA/dIQuM3OjMpWgbODxaPv+d+1gTquTZq7l3KOmrkmDrBcplX8SpBtkkp5Bpmg
+YiKFHZwa4FcUg2AdmyfWTBXpZXKDiXrV5IQGG7zX+gt4eV+kgH76FpduJkgVGzpa
+pJ75r0Z39ImxSgzjoA2Ae2Y+GSoeilBJ9ueUpQFDV0W3Iu1UP8F0RJ94bQw3ewVd
+Yn73EC6H/39guyUYt8+MU6i1JM4DLxnljxNEPwrm0RubZnL8ic/6caP3TAqbnLFs
+HyFprnZZuzTL0B9DDYgFTxNMRwJ5Cjl92yJKBObAPIVWQtKCwM4DHmfTZqVWhIK1
+Hi0G2Ig41q0qtcLFHx5aJkhgeQJmBO+44Jgk0ndduWNnI/Reuhjrq9U5YJHT2TNs
+oDpK40m8f3lKvsqU3ZAmFJAg9azVBcuRZq9J/UOq4Bhzw4TjD3UhwICArt2zJhaq
+m1iRj5IUBWO3y54S1Mz9KoLumiQKc1h/XNBF1psnvn+4/xrmUP4JKVeBSfUSnREx
+jPQSUVOZO9JhJTE9fi594IL5J98yikbQ0FcqPCj3kiKY0tx9yCfDA9cKSV6f0lcs
+tqEonKFhyYH/NT6tP9k9jNRfT3DJUK/5NSyfH9x3vKRDeUZBHJxc1w6281Jzn7Es
+ielORUU7o2ApZp6j6k/0wu8ghBMVhyyiZT2yBGpqJSvYJd6UBwFKVKr2p/rxfbGd
+TCm/uXNu2cETMSOhClDFBcsit2JY/6hy2LzWgJ11kn0I+Ihrvu6LjCXbVIHdxjnX
+VCCl1uSiRYSqR6lQbZrpS2Uou5W6MtMWCemD6NL+9YqqMHruEcCPHIm4S8/1Mwyg
+FKAa6b4HXl4CFnzcM7aLu0IclX6QvJWiLAoJYUJ8A7p+2xKLV168gorHmzUuXKej
+qiF16S3zsIp9O3qfjE23L/jGuQ==
+-----END ENCRYPTED PRIVATE KEY-----
+-----BEGIN CERTIFICATE-----
+MIIC0DCCAbigAwIBAgIJAPWXntCN93rlMA0GCSqGSIb3DQEBCwUAMBwxGjAYBgNV
+BAMMEWZkZG9tYWluLUEzRDJCM0Q1MB4XDTE2MDEyMDA4MjEwMloXDTQzMDYwNjA5
+MjEwMlowHDEaMBgGA1UEAwwRZmRkb21haW4tQTNEMkIzRDUwggEiMA0GCSqGSIb3
+DQEBAQUAA4IBDwAwggEKAoIBAQDtCzXCkkS9SjOJpCKmygSXL0LymdksnuNNQUub
+s0xQEXZ9YSfIwvFeg0kht2kNV/Z5mwttvDgkInP5gmoKoxbLI2QU6iGZcHQ9X/l4
+JF1j8qKWOuCTvrKLuEoS2PmBfv8NI+Gf4XcmUuuQDkSoeNJg15vwpexMc7EnQ9FE
+wTRLII2p3M7fIu6vCZQ8KEVHosG0PiopbXZYzwbu1gIm9zgHlVX0m/hjAJ5FQ4IF
+BoWqqNUvC3AQK/bL3fqz6YZ/xwQXbw6u4hYbS/8jb8ykdVPptoHf2x2GpreqCaid
+S+RYGuFy1ecNR7IYexWZEcheKAZGe8ypZvNkkykS53ok8w71AgMBAAGjFTATMBEG
+CWCGSAGG+EIBAQQEAwIGQDANBgkqhkiG9w0BAQsFAAOCAQEAZKo/OaXdbE7OR7Sl
+/O/pm+OFmxmIFpqhgJiMzVm2HGPDGKaWJvQUw9OO3/8hOCvPtVJP+KXKSpFmCt34
+MIGILHdByaCyQrJ+PupifDaMTSSJJo9S3ArgoTUxTRxVrHdlRcPFx3KR/jKpVVOX
+CXgDpNI8enbFG3vbd7t+HSkVVLI6qxF2d7Tbkk261aUeXeAZPmqaBBwyVWMjmnHK
+vIMZZrbbweZ8CM/3knMrpoTosBMo5rtmv+clF4jYujujGBEndKAmCLKR9uazqnK7
+4IUkg7tKxMlvxqVduuA82DxcIktRfirlwBKQKSwv9Lpt4pXxXWr0zfyHOMMbWKVT
+bD35aA==
+-----END CERTIFICATE-----
+
+
+// Domain Data Key
+//
+// Used for encrypting memory and locally persisted data
+//
+-----BEGIN DOMAIN DATA KEY-----
+/kgMDUMs+P6JLXAp/X+MoOvSwKNQLVvBS4K2e24DCV9CAxRT2FP9yRSKqBft8ehu
+gI5NWyVo5hwGTOZgDR9dM54/d8niP8/bFwwdd7T8mUUe472y/tRQsPISChb6yARn
+lHo0sJnpDPdJpRcJRvhmvGEEtPRydNUr3S6B2fm7UvPVWKjlVuZkNdcPwjQydOEu
+a5o9SM+WQsuLEeMhMWeSMtDudW1w8GfdWWfYDQIuOP24HLaf3t0Bz5zYChu/A/Sf
+imjTfAJW7j+T9cXOLknFebERz9Owg/a9zLOEnTI4YsNxNzqclCKY+f2NOBfEycEd
+wD8+zuIA0ySZshBM1MF6kn8s8AJyie037ewIg0SvNO8=
+-----END DOMAIN DATA KEY-----
+
+}
+}

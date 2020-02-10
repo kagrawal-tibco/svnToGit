@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="org.eclipse.ui.editors">
+         <editor
+            class="com.tibco.cep.sharedresource.mqtt.MqttEditor"
+            default="true"
+            extensions="sharedmqttcon"
+            icon="icons/mqtt.gif"
+            id="com.tibco.cep.sharedresource.mqtt.MqttEditor"
+            name="Mqtt Editor">
+     	</editor>
+   </extension>
+   <extension
+         point="org.eclipse.ui.newWizards">
+         <category
+             id="com.tibco.cep.sharedresource.ui.category"
+             name="TIBCO Shared Resources">
+        </category>
+        <wizard
+	       canFinishEarly="false"
+	       category="com.tibco.cep.sharedresource.ui.category"
+	       class="com.tibco.cep.sharedresource.ui.wizards.NewMqttWizard"
+	       finalPerspective="com.tibco.cep.studio.application.perspective"
+	       icon="icons/mqtt.gif"
+	       id="com.tibco.cep.studio.ui.newMqttWizard"
+	       name="MQTT Connection">
+            <description>
+               Create a new MQTT Connection resource
+            </description>
+        </wizard>
+   </extension>
+   <extension
+         point="com.tibco.cep.studio.core.projectResourceValidator">
+      <validator
+            Validator="com.tibco.cep.sharedresource.validation.MqttSharedResourceValidator"
+            extensions="sharedmqttcon">
+      </validator>
+   </extension>
+   <extension
+         point="com.tibco.cep.studio.core.refactoringParticipant">
+      <refactoringParticipant
+            participant="com.tibco.cep.sharedresource.refactor.MqttRefactoringParticipant">
+      </refactoringParticipant>
+   </extension>
+   <extension
+         point="com.tibco.cep.sharedresource.sharedResourcePropertyProvider">
+         <SharedResource
+             sharedResourcePropertyProvider="com.tibco.cep.sharedresource.mqtt.DefaultSharedResourcePropertyProvider">
+         </SharedResource>
+   </extension>
+
+</plugin>

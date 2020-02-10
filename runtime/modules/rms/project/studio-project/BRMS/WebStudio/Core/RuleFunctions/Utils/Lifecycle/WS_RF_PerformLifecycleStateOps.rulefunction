@@ -1,0 +1,192 @@
+/**
+ * @description Perform lifecycle state operations based on current artifact revisions and many other things.
+ */
+void rulefunction WebStudio.Core.RuleFunctions.Utils.Lifecycle.WS_RF_PerformLifecycleStateOps {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String workspaceName;
+		String projectName;
+		String username;
+		String operation;
+		WebStudio.Core.Concepts.WS_C_UserArtifact userArtifact;
+		WebStudio.Core.Concepts.WS_C_UserArtifactRevision userArtifactRevision;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.Lifecycle.WS_RF_PerformLifecycleStateOps");
+		
+		String subscriptionId = WS_RF_GetSubscriptionId(username);
+		
+		if (WS_RF_IsManagedArtifactType(userArtifact.artifactType, operation)) {
+			//Only do this for managed artifact types.
+			WS_C_LifecycleMetadata lifecycleMetadata = Instance.newInstance("/WebStudio/Core/Concepts/Lifecycle/WS_C_LifecycleMetadata", null);
+			
+			WS_C_AbstractOperation abstractOperation = WS_RF_ArtifactOperationCreationFactory(operation);
+			Log.log(LOGGER, "Debug", "Current Operation Name - %s", abstractOperation.opName);
+			//Assert it
+			WS.Common.assertInstance(abstractOperation, false);
+			
+			// check if userArtifactRevision was already associated to a lifecycleMetadata
+			if (userArtifactRevision.lifecycleMetadata != null) {
+				WS_C_LifecycleMetadata templifeCycleMetadata = userArtifactRevision.lifecycleMetadata;
+				WS_C_ArtifactBaseState[] stateHistory = Instance.PropertyArray.toArrayConcept(templifeCycleMetadata.stateHistory);
+				if (stateHistory != null) {
+					Log.log(LOGGER, "Debug", "Total State History - %s to remove", stateHistory@length);
+					for (int j=0; j<stateHistory@length; j++) {
+						Log.log(LOGGER, "Debug", "Removing State - %s", stateHistory[j].stateName);
+						Instance.PropertyArray.removeConceptReference(templifeCycleMetadata.stateHistory, stateHistory[j]);
+						Instance.deleteInstance(stateHistory[j]);
+					}
+				}
+				// Prevent removing the currentState instance since its also tied to WS_C_UserCheckin->committables[index].commitLifeCycleState
+				// This is done via WS_RF_SetCheckpointRevisionForArtifact 
+//				if (templifeCycleMetadata.currentState != null) {
+//					Log.log(LOGGER, "Debug", "Deleting templifeCycleMetadata.currentState Id [%s] & Name[%s]", templifeCycleMetadata.currentState@id, templifeCycleMetadata.currentState.stateName);
+//					Instance.deleteInstance(templifeCycleMetadata.currentState);
+//				}
+				if (templifeCycleMetadata.lastOperation != null) {
+					Log.log(LOGGER, "Debug", "Deleting templifeCycleMetadata.lastOperation Id [%s] & Name[%s]", templifeCycleMetadata.lastOperation@id, templifeCycleMetadata.lastOperation.opName);
+					Instance.deleteInstance(templifeCycleMetadata.lastOperation);
+				}
+				
+				Log.log(LOGGER, "Debug", "Deleting templifeCycleMetadata");
+				Instance.deleteInstance(templifeCycleMetadata);
+				
+			} else {
+				Log.log(LOGGER, "Debug", "userArtifactRevision.lifecycleMetadata is null");
+			}
+			
+			Instance.PropertyAtom.setContainedConcept(userArtifactRevision.lifecycleMetadata, lifecycleMetadata, 1L);
+			//Set operation performed
+			Instance.PropertyAtom.setConceptReference(lifecycleMetadata.lastOperation, abstractOperation, 1L);
+			
+			//Check if existing revisions are present
+			String[] existingRevisionIds = Instance.PropertyArray.toArrayString(userArtifact.artifactRevisionIds);
+			Log.log(LOGGER, "Debug", "Total existing revision Id's - %s", existingRevisionIds@length);
+			if (existingRevisionIds@length == 0) {
+				//First time save followed by create/checkout
+				//If operation is "fetch" then it is checkout else create
+				if (abstractOperation instanceof WS_C_FetchOperation) {
+					Instance.PropertyAtom.setConceptReference(lifecycleMetadata.currentState, WS_RF_ArtifactStateCreationFactory("Borrowed"), 1L);
+				} else if (abstractOperation instanceof WS_C_SaveOperation) {
+					Instance.PropertyAtom.setConceptReference(lifecycleMetadata.currentState, WS_RF_ArtifactStateCreationFactory("New"), 1L);
+				}
+				Instance.PropertyArray.appendConceptReference(lifecycleMetadata.stateHistory, lifecycleMetadata.currentState, 1L);
+				boolean fromMaster = WS_RF_FetchAndSetLatestArtifactContentsFromMaster(projectName, userArtifact, userArtifactRevision, subscriptionId);
+				Log.log(LOGGER, "Debug", "From Master [%s].", fromMaster);
+				if (!fromMaster) {
+					//Make this the checkpoint revision if this could not be resolved from a master.
+					WS_RF_SetCheckpointRevisionConceptReference(userArtifact, userArtifactRevision);
+				}
+				//TODO set right actor for checkpoint revision
+			} else {
+				//This means it was already present either from previous checkout or new creation.
+				if (abstractOperation instanceof WS_C_SaveOperation) {
+					Instance.PropertyAtom.setConceptReference(lifecycleMetadata.currentState, WS_RF_ArtifactStateCreationFactory("Save"), 1L);
+					if (abstractOperation instanceof WS_C_MergeOperation) {
+						WS_RF_FetchAndSetLatestArtifactContentsFromMaster(projectName, userArtifact, null, subscriptionId);	
+					}	
+				} else if (abstractOperation instanceof WS_C_DeleteOperation) {
+					Instance.PropertyAtom.setConceptReference(lifecycleMetadata.currentState, WS_RF_ArtifactStateCreationFactory("Delete"), 1L);
+				} else if (abstractOperation instanceof WS_C_FetchOperation) {
+					//Case where update is performed post local delete
+					Instance.PropertyAtom.setConceptReference(lifecycleMetadata.currentState, WS_RF_ArtifactStateCreationFactory("Borrowed"), 1L);
+				}
+			}
+			Log.log(LOGGER, "Debug", "Current Checkpoint Revision [%s].", userArtifact.checkpointRevision);
+			
+			//Check the states of checkpoint revision and current revision
+			WS_C_UserArtifactRevision checkpointRevision = Instance.PropertyAtom.getConceptReference(userArtifact.checkpointRevision, 1L);
+			WS_C_LifecycleMetadata checkpointRevisionMetadata = Instance.PropertyAtom.getContainedConcept(checkpointRevision.lifecycleMetadata, 1L);
+			WS_C_ArtifactBaseState checkpointState = Instance.PropertyAtom.getConceptReference(checkpointRevisionMetadata.currentState, 1L);
+			
+			WS_C_ArtifactBaseState currentState = Instance.PropertyAtom.getConceptReference(lifecycleMetadata.currentState, 1L);
+			
+			Log.log(LOGGER, "Debug", "Current state - [%s] & Checkpoint state - [%s]", currentState.stateName, checkpointState.stateName);
+			
+			//1.) If checkpoint is at baseline and current not, add it to commit.
+			//Example Checkout/Update followed by modify/delete op.
+			if (WS_RF_IsBaseLineState(checkpointState) && !WS_RF_IsBaseLineState(currentState)) {
+				//Add to committables if not present.
+				if (currentState instanceof WS_C_ArtifactDeleteState) {
+					abstractOperation = WS_RF_ArtifactOperationCreationFactory("Delete");
+				} else {
+					abstractOperation = WS_RF_ArtifactOperationCreationFactory("Modify");
+					if (userArtifact.softDelete && (currentState instanceof WS_C_ArtifactSaveState) && (checkpointState instanceof WS_C_ArtifactApprovedState)) {
+						//Delete -> Approve followed by Save (re-create/import with same name), so flip the delete state
+						Log.log(LOGGER, "Debug", "Case - Delete -> Approve followed by Save (re-create/import with same name), so flip the delete state."); 
+						WS_RF_FlipSoftDeleteState(userArtifact);
+					}
+				}
+				Log.log(LOGGER, "Debug", "Case - If checkpoint is at baseline and current not, add it to commit, abstractOperation - %s", abstractOperation.opName);
+				WS_RF_ContributeToCommittableDelta(workspaceName, username, userArtifactRevision, abstractOperation, false);
+			}
+			//2.) If checkpoint is not baseline and current is baseline, do not add to commit.
+			//Example Creation -> Save -> Save -> Update
+			if (!WS_RF_IsBaseLineState(checkpointState) && WS_RF_IsBaseLineState(currentState)) {
+				Log.log(LOGGER, "Debug", "Case - If checkpoint is not baseline and current is baseline, do not add to commit");
+				//Remove from committables if present.
+				WS_RF_ContributeToCommittableDelta(workspaceName, username, userArtifactRevision, abstractOperation, true);
+			}
+			
+			boolean localDelete = false;
+			//3.) If checkpoint is not baseline and current is not baseline, update revision to latest.
+			if (!WS_RF_IsBaseLineState(checkpointState) && !WS_RF_IsBaseLineState(currentState)) {
+				WS_C_AbstractUserEntity userEntity = userArtifact;
+				boolean removeEntry = false;			
+				if (currentState instanceof WS_C_ArtifactDeleteState) {
+					abstractOperation = WS_RF_ArtifactOperationCreationFactory("Delete");
+					//This means it needs to be removed from committables.
+					removeEntry = true;
+					
+					// case for local delete -> Should not have a master copy, should have atleast 1 revision and the base revision state should be new
+					if (existingRevisionIds@length > 0) {
+						String latestRevisionId = existingRevisionIds[existingRevisionIds@length - 1];
+						Log.log(LOGGER, "Debug", "Latest Revision Id - %s", latestRevisionId);
+						WS_C_UserArtifactRevision latestRevision = Instance.getByExtIdByUri(latestRevisionId, "/WebStudio/Core/Concepts/WS_C_UserArtifactRevision");
+						
+						String workspaceExtId = WS_RF_CreateUserArtifactExtId("WORKSPACE", null, null, username, null, null);
+						WS_C_UserWorkspace userWorkspace = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(workspaceExtId, false, "/WebStudio/Core/Concepts/WS_C_UserWorkspace");
+						WS_C_WorkspaceCommittableDelta committableDelta = Instance.PropertyAtom.getContainedConcept(userWorkspace.committableDelta, 1L);
+						WS_C_CommittableDeltaEntry committableDeltaEntry = WS_RF_QueryCommitableDeltaEntry(committableDelta, latestRevision);
+										
+						if (committableDeltaEntry != null && committableDeltaEntry.operation != null && committableDeltaEntry.operation instanceof WS_C_CreateOperation) {
+							Log.log(LOGGER, "Debug", "Latest Operation [%s] & marking for local delete.", committableDeltaEntry.operation.opName);
+							localDelete = true;
+						}						
+						
+					}
+					Log.log(LOGGER, "Debug", "CurrentState[%s], CheckPointState[%s], RemoveEntry[%s] & LocalDelete[%s]", currentState.stateName, checkpointState.stateName, removeEntry, localDelete);
+				} else if ((checkpointState instanceof WS_C_ArtifactDeleteState) && userEntity.softDelete) {
+					//Artifact deleted locally, then freshly added with same name, this will be modify operation
+					abstractOperation = WS_RF_ArtifactOperationCreationFactory("Modify");
+					//and also Flip the delete state
+					WS_RF_FlipSoftDeleteState(userEntity);
+					Log.log(LOGGER, "Debug", "Artifact deleted locally, then freshly added with same name, this will be modify operation - CurrentState[%s] & CheckPointState[%s]", currentState.stateName, checkpointState.stateName);
+				} else {
+					//Update Existing revision and point it to this.
+					abstractOperation = WS_RF_ArtifactOperationCreationFactory("Create");
+					Log.log(LOGGER, "Debug", "Update Existing revision and point it to this");
+				}
+				Log.log(LOGGER, "Debug", "Case - If checkpoint is not baseline and current is not baseline, update revision to latest, abstractOperation - %s", abstractOperation.opName);
+				WS_RF_ContributeToCommittableDelta(workspaceName, username, userArtifactRevision, abstractOperation, removeEntry);
+			}
+			//This case is achieved if Checkout -> Delete -> Update
+			if (WS_RF_IsBaseLineState(checkpointState) && WS_RF_IsBaseLineState(currentState)) {
+				if (checkpointState == currentState && existingRevisionIds@length > 0) {
+					Log.log(LOGGER, "Debug", "Case - if Checkout -> Delete -> Update");
+					//Remove from committables if any matching found present.
+					WS_RF_ContributeToCommittableDelta(workspaceName, username, userArtifactRevision, abstractOperation, true);
+				}
+			}
+			
+			// clear reference is local delete
+			if (localDelete) {
+				Log.log(LOGGER, "Debug", "Doing local Delete");
+				WS_RF_ClearLocalArtifactReferences(userArtifact, projectName, username);
+			}
+			Log.log(LOGGER, "Debug", "Final Check, Total Revisions [%s], Current Checkpoint Revision [%s].", userArtifact.artifactRevisionIds@length, userArtifact.checkpointRevision);
+		}
+	}
+}

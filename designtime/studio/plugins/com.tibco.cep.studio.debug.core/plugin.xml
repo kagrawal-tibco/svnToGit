@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension-point id="responseDeserializer" name="Debug Task Response Deserializer" schema="schema/responseDeserializer.exsd"/>
+   <extension-point id="debugSessionHandler" name="BE Debug Session Handler" schema="schema/debugSessionHandler.exsd"/>
+   <extension-point id="mappedSourceInfoProvider" name="Mapped Source Info Provider" schema="schema/mappedSourceInfoProvider.exsd"/>
+   <extension-point id="debugVariableProvider" name="Debug Variable Provider" schema="schema/debugVariableProvider.exsd"/>
+   <extension
+         point="org.eclipse.debug.core.launchConfigurationTypes">
+      <launchConfigurationType
+            name="BusinessEvents Application"
+            delegate="com.tibco.cep.studio.debug.core.launch.ApplicationDelegate"
+            modes="debug, run"
+            public="true"
+            sourceLocatorId="com.tibco.cep.studio.debug.core.applicationSourceLocator"
+            sourcePathComputerId="com.tibco.cep.studio.debug.core.applicationSourcePathComputer"
+            id="com.tibco.cep.studio.debug.core.ApplicationLaunch">
+      </launchConfigurationType>
+      <launchConfigurationType
+            delegate="com.tibco.cep.studio.debug.core.launch.RemoteApplicationDelegate"
+            id="com.tibco.cep.studio.debug.core.RemoteApplicationLaunch"
+            modes="debug"
+            name="Remote BusinessEvents Application"
+            public="true"
+            sourceLocatorId="com.tibco.cep.studio.debug.core.applicationSourceLocator"
+            sourcePathComputerId="com.tibco.cep.studio.debug.core.applicationSourcePathComputer">
+      </launchConfigurationType>
+      <!--
+      <launchConfigurationType
+            name="BusinessEvents Rule"
+            delegate="com.tibco.cep.studio.debug.core.launch.RuleDelegate"
+            modes="debug, run"
+            public="true"
+            sourceLocatorId="com.tibco.cep.studio.debug.core.ruleSourceLocator"
+            sourcePathComputerId="com.tibco.cep.studio.debug.core.ruleSourcePathComputer"
+            id="com.tibco.cep.studio.debug.core.RuleLaunch">
+      </launchConfigurationType>
+      -->
+   </extension>
+   <extension
+		point="org.eclipse.debug.core.sourceLocators">
+		<sourceLocator
+			name="BusinessEvents Application Source Lookup Director"
+            class="com.tibco.cep.studio.debug.core.launch.ApplicationSourceLookupDirector"
+            id="com.tibco.cep.studio.debug.core.applicationSourceLocator">
+		</sourceLocator>
+		<!--
+		<sourceLocator
+			name="BusinessEvents Rule Source Lookup Director"
+            class="com.tibco.cep.studio.debug.core.launch.RuleSourceLookupDirector"
+            id="com.tibco.cep.studio.debug.core.ruleSourceLocator">
+		</sourceLocator>
+		-->
+	</extension>
+	<extension
+        point="org.eclipse.debug.core.sourcePathComputers">
+		<sourcePathComputer
+            class="com.tibco.cep.studio.debug.core.launch.ApplicationSourcePathComputer"
+            id="com.tibco.cep.studio.debug.core.applicationSourcePathComputer">
+		</sourcePathComputer>
+		<!--
+		<sourcePathComputer
+            class="com.tibco.cep.studio.debug.core.launch.RuleSourcePathComputer"
+            id="com.tibco.cep.studio.debug.core.ruleSourcePathComputer">
+		</sourcePathComputer>
+		-->		
+	</extension>
+	 <extension point="org.eclipse.debug.core.breakpoints">
+	   <breakpoint
+          class="com.tibco.cep.studio.debug.core.model.RuleBreakpoint"
+          id="com.tibco.cep.studio.debug.core.rulebreakpoint"
+          markerType="com.tibco.cep.studio.debug.core.RuleBreakpointMarker"
+          name="Rule Break point">
+	   </breakpoint>
+    <breakpoint
+          class="com.tibco.cep.studio.debug.core.model.RuleJavaBreakpoint"
+          id="com.tibco.cep.studio.debug.core.ruleJavabreakpoint"
+          markerType="com.tibco.cep.studio.debug.core.RuleJavaBreakPointMarker"
+          name="Rule Java Breakpoint">
+    </breakpoint>
+	 </extension>
+ 	 <extension id="RuleBreakpointMarker"
+	 	 	name="RuleBreakpoint Marker"
+	 		point="org.eclipse.core.resources.markers">
+		<super type="org.eclipse.debug.core.breakpointMarker"/>
+		<persistent value="true"/>
+		<attribute name="com.tibco.cep.studio.debug.breakpoint.logConsole"/>
+		<attribute name="com.tibco.cep.studio.debug.breakpoint.suspendPolicy"/>
+		<attribute name="com.tibco.cep.studio.debug.breakpoint.type"/>
+	</extension>
+   <extension
+         id="RuleJavaBreakPointMarker"
+         name="RuleJavaBreakPointMarker"
+         point="org.eclipse.core.resources.markers">
+      <super
+            type="com.tibco.cep.studio.debug.core.RuleBreakpointMarker">
+      </super>
+      <persistent
+            value="false">
+      </persistent>
+   </extension>
+   <extension
+         point="org.eclipse.debug.core.sourceContainerTypes">
+      <sourceContainerType
+            class="com.tibco.cep.studio.debug.core.launch.ProjectLibrarySourceContainerTypeDelegate"
+            id="com.tibco.cep.studio.debug.core.sourceContainer.projectLibrary"
+            name="Project Library">
+      </sourceContainerType>
+      <sourceContainerType
+            class="com.tibco.cep.studio.debug.core.launch.StudioProjectSourceContainerTypeDelegate"
+            id="com.tibco.cep.studio.debug.core.sourceContainer.studioProject"
+            name="Studio Project">
+      </sourceContainerType>
+   </extension>
+   <extension
+         point="org.eclipse.core.runtime.preferences">
+      <initializer
+            class="com.tibco.cep.studio.debug.core.StudioDebugCorePluginPreferenceInitializer">
+      </initializer>
+   </extension>
+   <extension
+         point="com.tibco.cep.studio.debug.core.responseDeserializer">
+      <response
+            deserializer="com.tibco.cep.studio.debug.input.serializer.DebugInputTaskDeserializer">
+      </response>
+   </extension>
+   <extension
+         point="com.tibco.cep.studio.debug.core.responseDeserializer">
+      <response
+            deserializer="com.tibco.cep.studio.debug.input.serializer.TesterInputTaskDeserializer">
+      </response>
+   </extension>
+   <extension
+         point="com.tibco.cep.studio.debug.core.responseDeserializer">
+      <response
+            deserializer="com.tibco.cep.studio.debug.input.serializer.WMTaskContentsDeserializer">
+      </response>
+   </extension>
+   <extension
+         point="com.tibco.cep.studio.debug.core.responseDeserializer">
+      <response
+            deserializer="com.tibco.cep.studio.debug.input.serializer.DebugTestDataInputTaskDeserializer">
+      </response>
+   </extension>
+   <extension
+         point="com.tibco.cep.studio.debug.core.debugSessionHandler">
+      <breakpointHandler
+            class="com.tibco.cep.studio.debug.core.model.impl.RuleBreakpointHandler">
+      </breakpointHandler>
+      <stepHandler
+            class="com.tibco.cep.studio.debug.core.model.impl.RuleStepHandler">
+      </stepHandler>
+   </extension>
+   <extension
+         point="com.tibco.cep.studio.debug.core.mappedSourceInfoProvider">
+      <provider
+            class="com.tibco.cep.studio.debug.core.model.DefaultSourceInfoProvider">
+      </provider>
+   </extension>
+   <extension
+         point="com.tibco.cep.studio.debug.core.debugVariableProvider">
+      <provider
+            class="com.tibco.cep.studio.debug.core.model.var.ConceptVariableProvider">
+      </provider>
+   </extension>
+   <extension
+         point="com.tibco.cep.studio.debug.core.debugVariableProvider">
+      <provider
+            class="com.tibco.cep.studio.debug.core.model.var.EventVariableProvider">
+      </provider>
+   </extension>
+</plugin>

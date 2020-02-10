@@ -1,0 +1,142 @@
+/**
+ * @description 
+ * @author vpatil-t420
+ */
+rule WebStudio.Core.Rules.Lifecycle.WS_R_PerformWorkItemDelegation {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		WebStudio.Core.Events.Lifecycle.WS_E_WorklistDelegationEvent worklistDelegationEvent;
+	}
+	when {
+		worklistDelegationEvent != null;
+	}
+	then {
+		Object LOGGER = Log.getLogger("WebStudio.Core.Rules.Lifecycle.WS_R_PerformWorkItemDelegation");
+		
+		WS_C_ResponseData responseData = null;
+		int responseStatus = 0;
+		int recordCount = 0;
+		String errorCode = null;
+		String responseMessage = null;
+		
+		Log.log(LOGGER, "Debug", "Received roles - [%s] & received revisions - [%s]", worklistDelegationEvent.roles, worklistDelegationEvent.revisionIds);
+		String[] roles = String.split(worklistDelegationEvent.roles, ",");
+		String[] revisionIds = String.split(worklistDelegationEvent.revisionIds, ",");
+		String delagationFailedRevisions = "";
+		boolean allRolePermission = true;
+		
+		//Get worklist items from current user role sink 
+		Object[] srcReviewSinkExtId = WS_RF_GetReviewSinkExtId(String.split(worklistDelegationEvent.userRole, ","), worklistDelegationEvent.subscriptionId);
+		String reviewTaskExtId = null;
+		
+		for (int i=0; i<srcReviewSinkExtId@length; i++) {
+			Log.log(LOGGER, "Debug", "Source Review Sink ExtId %s", srcReviewSinkExtId[i]);
+			boolean srcReviewSinkLock = Cluster.DataGrid.Lock(srcReviewSinkExtId[i], -1, false);
+			Log.log(LOGGER, "Debug", "Source Lock Status %s", srcReviewSinkLock);
+			if (srcReviewSinkLock) {
+				WS_C_CommonReviewSink sourceRoleReviewSink = 
+					Cluster.DataGrid.CacheLoadConceptByExtIdByUri(srcReviewSinkExtId[i], false, "/WebStudio/Core/Concepts/Lifecycle/WS_C_CommonReviewSink");
+				if (sourceRoleReviewSink != null) {
+					Log.log(LOGGER, "Debug", "Before, Number of worklist items for worklistId[%s] - [%s]", srcReviewSinkExtId[i], sourceRoleReviewSink.reviewTaskExtIds@length);
+					
+					// here remove the worklist item from current user role
+					for (int j = 0; j < revisionIds@length; j++) {
+						reviewTaskExtId = WS_RF_CreateUserArtifactExtId(revisionIds[j], null, null, null, worklistDelegationEvent.subscriptionId, null);
+						WS_C_AbstractReviewTask reviewTask = Instance.getByExtIdByUri(reviewTaskExtId, "/WebStudio/Core/Concepts/Lifecycle/WS_C_ReviewTask");
+						Concept referencedUserCheckinC = Instance.getByExtIdByUri(reviewTask.referencedCheckinId, "/Approval/Concepts/ArtifactsConcepts/AMS_C_Checkin");
+						if (referencedUserCheckinC == null) referencedUserCheckinC = Instance.getByExtIdByUri(reviewTask.referencedCheckinId, "/WebStudio/Core/Concepts/Lifecycle/WS_C_UserCheckin");
+						
+						String managedProjectName;
+						if (referencedUserCheckinC instanceof WS_C_UserCheckin) {
+						   WS_C_UserCheckin referencedUserCheckin = referencedUserCheckinC;
+						   managedProjectName = referencedUserCheckin.managedProjectName;
+						 } else if(referencedUserCheckinC instanceof AMS_C_Checkin) {
+						   AMS_C_Checkin referencedUserCheckin = referencedUserCheckinC;
+						   managedProjectName = referencedUserCheckin.projectName;
+						}
+						
+					  	for (int r=0; r<roles@length; r++) {
+							String[] sRole = {roles[r]};
+							boolean hasAccess = RMS.Authorization.ensureAccess(managedProjectName, worklistDelegationEvent.subscriptionId, sRole, null, "PROJECT", "approval");
+							if (!hasAccess) {
+								allRolePermission = false;
+							 }							
+						   }
+						
+						   if (allRolePermission) {	
+						       Instance.PropertyArray.removeString(sourceRoleReviewSink.reviewTaskExtIds, revisionIds[j]);
+						       // Add Audit Trail entry for every Delegated item within the project, for now only via WS
+							   if (referencedUserCheckinC instanceof WS_C_UserCheckin) {
+							  		WS_C_UserCheckin referencedUserCheckin = referencedUserCheckinC;
+							  		WS_C_CommittableDeltaEntry[] deltaEntries = Instance.PropertyArray.toArrayConcept(referencedUserCheckin.committables);
+							  		if (deltaEntries != null) {
+							  			for (int k=0; k<deltaEntries@length; k++) {
+							  				WS_C_UserArtifact userArtifact = WS_RF_IsUserArtifact(deltaEntries[k].userArtifactRevision.parentArtifactId, deltaEntries[k].userArtifactRevision.parentArtifactType);
+							  				if (userArtifact != null) {
+							  					WS_RF_AddAuditTrailEntry(worklistDelegationEvent.userName, referencedUserCheckin.managedProjectName, userArtifact.artifactPath, userArtifact.artifactType, "DELEGATE", String.format("Delegated revision [%s] to roles [%s]",revisionIds[j], worklistDelegationEvent.roles));
+							  				}
+							  			}
+							  		}
+							  	}
+						       
+							} else {
+								delagationFailedRevisions = delagationFailedRevisions + revisionIds[j] + " ";
+							}
+							
+							allRolePermission = true;
+					}
+					Log.log(LOGGER, "Debug", "After, Number of worklist items for worklistId[%s] - [%s]", srcReviewSinkExtId[i], sourceRoleReviewSink.reviewTaskExtIds@length);								
+				
+				}
+			}
+		}		
+		// here add the revisions to the newly delegated role
+		if (roles@length > 0) {
+				Object[] targetReviewSinkExtId = WS_RF_GetReviewSinkExtId(roles, worklistDelegationEvent.subscriptionId);
+				for (int i = 0; i < targetReviewSinkExtId@length; i++) {
+					Log.log(LOGGER, "Debug", "Target Review Sink ExtId %s", targetReviewSinkExtId[i]);
+					
+					boolean targetReviewSinkLock = Cluster.DataGrid.Lock(targetReviewSinkExtId[i], -1, false);
+					Log.log(LOGGER, "Debug", "Target Lock Status %s", targetReviewSinkLock);
+					if (targetReviewSinkLock) {
+						WS_C_CommonReviewSink targetRoleReviewSink = 
+							Cluster.DataGrid.CacheLoadConceptByExtIdByUri(targetReviewSinkExtId[i], false, "/WebStudio/Core/Concepts/Lifecycle/WS_C_CommonReviewSink");
+						if (targetRoleReviewSink == null) {
+							targetRoleReviewSink = Instance.newInstance("/WebStudio/Core/Concepts/Lifecycle/WS_C_CommonReviewSink", targetReviewSinkExtId[i]);
+						}
+						Log.log(LOGGER, "Debug", "Before, Number of worklist items for worklistId[%s] - [%s]", targetReviewSinkExtId[i], targetRoleReviewSink.reviewTaskExtIds@length);
+						for (int j = 0; j < revisionIds@length; j++) {
+							Instance.PropertyArray.appendString(targetRoleReviewSink.reviewTaskExtIds, revisionIds[j], 1L);
+						}
+						Log.log(LOGGER, "Debug", "After, Number of worklist items for worklistId[%s] - [%s]", targetReviewSinkExtId[i], targetRoleReviewSink.reviewTaskExtIds@length);
+					}
+				}
+		} else {
+			responseMessage = "No roles selected for delegation";
+			responseStatus = -1;
+			errorCode = "ERR_4550";
+		}
+		
+		if (String.equals(delagationFailedRevisions, "")) {
+		    responseMessage = String.format("Revisions [%s] successfully delegated to role [%s]", worklistDelegationEvent.revisionIds, worklistDelegationEvent.roles);
+		} else {
+			delagationFailedRevisions = String.substring(delagationFailedRevisions, 0, String.length(delagationFailedRevisions) - 1);
+			responseMessage = "Revisions ["+ delagationFailedRevisions +"] failed to delegate to one or more roles which do not have approve permission.";
+			responseStatus = -1;
+			errorCode = "ERR_4551";
+		}
+		
+		
+		Object asyncContext = Util.HashMap.getObject(worklistDelegationEvent.mapLockKey, worklistDelegationEvent.asyncContextId);
+		Object servletResponse = HTTP.Servlet.getServletResponse(asyncContext);
+		
+		String responseDSXML = WS_RF_CreateAndSerializeResponseDataSource(responseStatus, recordCount, errorCode, responseMessage, responseData, worklistDelegationEvent.contentType);
+	    
+	    Log.log(LOGGER, "Debug", "Response DS XML %s", responseDSXML);
+		HTTP.Servlet.Response.setResponseHeader(servletResponse, "Content-type", worklistDelegationEvent.contentType + ";charset=utf-8");
+		HTTP.Servlet.Response.setResponseContent(asyncContext, responseDSXML, true);
+	}
+}

@@ -1,0 +1,24 @@
+/**
+ * @description
+ * @author anpatil-dt
+ */
+rule Rules.onDeleteTicker {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Events.DeleteTicker e;
+	}
+	when {
+	}
+	then {
+		Dashboards.M_TickerTracker tickerTracker = Instance.deleteInstance(Dashboards.M_TickerTracker.lookup(e.ticker))/*Dashboards.M_TickerTracker.delete(e.ticker)*/;
+		if (tickerTracker != null) {
+ 			System.debugOut("Deleted Dashboards.M_TickerTracker[ticker="+tickerTracker.Ticker+",price="+tickerTracker.Price+",volume="+tickerTracker.Volume+"]");
+		}
+		else {
+			System.debugOut("Found no Dashboards.M_TickerTracker with ticker as "+e.ticker);
+		}
+	}
+}

@@ -1,0 +1,44 @@
+/**
+ * @description Load approved artifacts for all managed projects.
+ */
+void rulefunction Approval.Rules.RuleFunctions.ArtifactRuleFunctions.Startup.AMS_RF_LoadApprovedArtifacts {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		
+	}
+	body {
+		String pathSeparator = "/";
+		String baseProjectDir = WS_RF_GetSCSRootURL(null, null);
+//		String decisionDataDir = System.getSystemPropertyAsString("rms.project.decisiondata", "decisiondata");
+		
+		if (String.indexOfString(baseProjectDir, 0, ":") != -1) {
+			baseProjectDir = String.toUpperCase(String.substringBefore(baseProjectDir,":")) + ":" + String.substringAfter(baseProjectDir, ":");
+		}
+		
+		//List all project folders
+		String[] projects = RMS.Approval.fetchServedProjectsList(baseProjectDir);
+		
+		for (int loop = 0; loop < projects@length; loop++) {
+			String projectName = projects[loop];
+			Object decisionDataAbsPathBuffer = String.createBuffer(0);
+			String.append(decisionDataAbsPathBuffer, baseProjectDir);
+			String.append(decisionDataAbsPathBuffer, pathSeparator);
+			String.append(decisionDataAbsPathBuffer, projectName);
+//			String.append(decisionDataAbsPathBuffer, pathSeparator);
+//			String.append(decisionDataAbsPathBuffer, decisionDataDir);
+			
+			String decisionDataAbsPath = String.convertBufferToString(decisionDataAbsPathBuffer);
+			String.clearBuffer(decisionDataAbsPathBuffer);	
+			
+			//Create and load concept
+			Approval.
+				Rules.
+					RuleFunctions.
+						ArtifactRuleFunctions.
+							Startup.
+								AMS_RF_LoadAndPopulateApprovedArtifactsConcept(projectName, decisionDataAbsPath);	
+		}
+	}
+}

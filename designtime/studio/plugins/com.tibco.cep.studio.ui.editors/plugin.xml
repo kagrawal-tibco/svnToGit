@@ -1,0 +1,2089 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.2"?>
+<plugin>
+   <extension-point id="com.tibco.cep.studio.ResourceManager" name="ResourceManager" schema="schema/com.tibco.cep.designer.ResourceManager.exsd"/>
+   <extension-point id="com.tibco.cep.studio.ui.editors.projectDiagramContributor" name="Project Diagram Contributor" schema="schema/com.tibco.cep.studio.ui.editors.projectDiagramContributor.exsd"/>
+   <extension-point id="formEditorContributor" name="Form Editor Contributor" schema="schema/formEditorContributor.exsd"/>
+   <extension-point id="cddPropertyPresentation" name="CDD Property Presentation" schema="schema/cddPropertyPresentation.exsd"/>
+  <!-- <extension-point id="dependencyDiagramContributor" name="Dependency Diagram Contributor" schema="schema/dependencyDiagramContributor.exsd"/>-->
+<extension
+         point="org.eclipse.core.runtime.contentTypes">
+      <file-association
+            content-type="com.tibco.cep.concept.file-association.concept"
+            file-extensions="concept">
+      </file-association>
+      <file-association
+            content-type="com.tibco.cep.concept.file-association.scorecard"
+            file-extensions="scorecard">
+      </file-association>
+      <file-association
+            content-type="com.tibco.cep.enum.file-association.enum"
+            file-extensions="enum">
+      </file-association>
+   </extension>
+   
+   <extension
+         point="org.eclipse.ui.contexts">
+      <context
+            name="Rule editor scope"
+            parentId="org.eclipse.ui.textEditorScope"
+            description="Rule editor scope"
+            id="com.tibco.cep.studio.ui.editors.ruleEditorScope">
+      </context>
+   </extension>
+   <!--
+   	<extension point="org.eclipse.ui.popupMenus">
+		<viewerContribution id="com.tibco.cep.studio.debug.ui.RulerPopupActions"
+			targetID="#RuleRulerContext">
+			<action
+				id="com.tibco.cep.studio.ui.editors.rules.actions.RulesSelectRulerAction" 
+				label="Quick Fix"
+				icon="icons/brkp_obj.gif"
+				class="com.tibco.cep.studio.ui.editors.rules.actions.RulesSelectRulerAction"
+				menubarPath="addons">
+			</action>
+   		</viewerContribution>
+   	</extension>
+   	-->
+   <extension
+   		point="org.eclipse.ui.bindings">
+   		<key
+            sequence="F3"
+            contextId="com.tibco.cep.studio.ui.editors.ruleEditorScope"
+            commandId="com.tibco.cep.studio.ui.editors.rules.actions.opendeclaration"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration">
+        </key>
+   		<key
+            sequence="Ctrl+Shift+G"
+            contextId="com.tibco.cep.studio.ui.editors.ruleEditorScope"
+            commandId="com.tibco.cep.studio.ui.editors.rules.actions.searchforreferences"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration">
+        </key>
+        <key
+            sequence="Ctrl+/"
+            contextId="com.tibco.cep.studio.ui.editors.ruleEditorScope"
+            commandId="com.tibco.cep.studio.ui.editors.rules.actions.togglecommentaction"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration">
+        </key>
+        <key
+            sequence="Ctrl+Alt+R"
+            contextId="com.tibco.cep.studio.ui.editors.ruleEditorScope"
+            commandId="com.tibco.cep.studio.ui.editors.rules.actions.renamevariableaction"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration">
+        </key>
+        <key
+            sequence="Ctrl+Shift+P"
+            contextId="com.tibco.cep.studio.ui.editors.ruleEditorScope"
+            commandId="com.tibco.cep.studio.ui.editors.rules.actions.gotomatchingbracketaction"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration">
+        </key>
+   </extension>
+   <extension
+         point="org.eclipse.ui.editors">
+      <editor
+            class="com.tibco.cep.studio.ui.editors.RuleFormEditor"
+            contributorClass="org.eclipse.ui.editors.text.TextEditorActionContributor"
+            default="true"
+            extensions="rule"
+            icon="icons/rules.png"
+            id="com.tibco.cep.editors.ui.rulesEditor"
+            name="Rules Editor">
+      </editor>
+      <editor
+            class="com.tibco.cep.studio.ui.editors.RuleFunctionFormEditor"
+            contributorClass="org.eclipse.ui.editors.text.TextEditorActionContributor"
+            default="true"
+            extensions="rulefunction"
+            icon="icons/rule-function.png"
+            id="com.tibco.cep.editors.ui.rulefunctionEditor"
+            name="Rule Function Editor">
+      </editor>
+      <editor
+            class="com.tibco.cep.studio.ui.editors.concepts.ConceptDiagramEditor"
+            contributorClass="com.tibco.cep.studio.ui.editors.concepts.ConceptDiagramEditorContributor"
+            default="true"
+            extensions="conceptview,concept"
+            icon="icons/conceptview.png"
+            id="com.tibco.cep.concept.editors.ConceptDiagramEditor"
+            name="Concept Diagram Editor">
+      </editor>
+      <editor
+            class="com.tibco.cep.studio.ui.editors.concepts.ConceptFormEditor"
+            default="true"
+            extensions="concept"
+            icon="icons/concept.png"
+            id="com.tibco.cep.concept.editors.formeditor"
+            name="Concept Form Editor">
+      </editor>
+      <editor
+            class="com.tibco.cep.studio.ui.editors.concepts.ScorecardFormEditor"
+            default="true"
+            extensions="scorecard"
+            icon="icons/scorecard.png"
+            id="com.tibco.cep.scorecard.editors.formeditor"
+            name="Scorecard">
+      </editor>
+      <editor
+            class="com.tibco.cep.studio.ui.editors.concepts.EnumFormEditor"
+            default="true"
+            extensions="enum"
+            icon="icons/scorecard.png"
+            id="com.tibco.cep.enum.editors.formeditor"
+            name="Enumeration">
+      </editor>
+      <editor
+            class="com.tibco.cep.studio.ui.editors.events.EventFormEditor"
+            default="true"
+            extensions="event"
+            icon="icons/event.png"
+            id="com.tibco.cep.event.editors.formeditor"
+            name="Simple Event">
+      </editor>
+      <editor
+            class="com.tibco.cep.studio.ui.editors.events.EventDiagramEditor"
+            contributorClass="com.tibco.cep.studio.ui.editors.events.EventDiagramEditorContributor"
+            default="false"
+            extensions="eventview,event"
+            icon="icons/eventview.png"
+            id="com.tibco.cep.event.editors.EventDiagramEditor"
+            name="Event Diagram Editor">
+      </editor>
+      <editor
+            class="com.tibco.cep.studio.ui.editors.events.TimeEventFormEditor"
+            default="true"
+            extensions="time"
+            icon="icons/time-event.gif"
+            id="com.tibco.cep.studio.entities.editor.timeevent"
+            name="Time Event">
+      </editor>
+      <editor
+            class="com.tibco.cep.studio.ui.editors.project.ProjectDiagramEditor"
+            contributorClass="com.tibco.cep.studio.ui.editors.project.ProjectDiagramEditorContributor"
+            default="true"
+            extensions="projectview"
+            icon="icons/project_diagram.png"
+            id="com.tibco.cep.studio.project.editors.ProjectDiagramEditor"
+            name="Project Diagram Editor">
+      </editor>
+      <editor
+            class="com.tibco.cep.studio.ui.editors.channels.ChannelFormEditor"
+            default="true"
+            extensions="channel"
+            icon="icons/channel_16x16.png"
+            id="com.tibco.cep.studio.ui.editors.editor.channel"
+            name="Channel Editor">
+      </editor>
+      <!--
+      <editor
+            class="com.tibco.cep.studio.ui.editors.archives.EnterpriseArchiveEditor"
+            default="false"
+            extensions="archive"
+            icon="icons/enterpriseArchive16x16.gif"
+            id="com.tibco.cep.studio.ui.editor.enterprisearchive"
+            name="Enterprise Archive Editor">
+      </editor>
+      -->
+      <editor
+            class="com.tibco.cep.studio.ui.editors.domain.DomainFormEditor"
+            default="true"
+            extensions="domain"
+            icon="icons/domainModelView_16x15.png"
+            id="com.tibco.cep.editors.ui.editor.domain"
+            name="Domain Model Editor">
+      </editor>
+      <editor
+            class="com.tibco.cep.studio.ui.editors.display.DisplayFormEditor"
+            default="true"
+            extensions="display"
+            icon="icons/locale-alt16.png"
+            id="com.tibco.cep.editors.ui.editor.display"
+            name="Display Model Editor">
+      </editor>
+      <editor
+            class="com.tibco.cep.studio.ui.editors.sequence.SequenceDiagramEditor"
+            contributorClass="com.tibco.cep.diagramming.actions.DiagramEditorContributor"
+            default="true"
+            extensions="sequenceview"
+            icon="icons/sequence_diagram.png"
+            id="com.tibco.cep.studio.project.editors.SequenceDiagramEditor"
+            name="Sequence Diagram Editor">
+      </editor>
+      <editor
+            class="com.tibco.cep.studio.ui.editors.dependency.DependencyDiagramEditor"
+            contributorClass="com.tibco.cep.diagramming.actions.DiagramEditorContributor"
+            default="true"
+            extensions="dependencyview"
+            icon="icons/dependency_diagram.png"
+            id="com.tibco.cep.studio.project.editors.DependencyDiagramEditor"
+            name="Dependency Diagram Editor">
+      </editor>
+      <editor
+            class="com.tibco.cep.studio.ui.editors.clusterconfig.ClusterConfigEditor"
+            default="true"
+            extensions="cdd"
+            icon="icons/cdd_16x16.gif"
+            id="com.tibco.cep.studio.ui.editor.ClusterConfigEditor"
+            name="Cluster Deployment Descriptor Editor">
+      </editor>
+      <editor
+            class="com.tibco.cep.studio.ui.editors.globalvar.GlobalVariablesEditor"
+            default="true"
+            extensions="substvar"
+            icon="icons/global_var_edit.png"
+            id="com.tibco.cep.studio.ui.editor.GlobalVariablesEditor"
+            name="Global Variables Editor">
+      </editor>
+      <editor
+            class="com.tibco.cep.studio.ui.editors.retegraph.ReteGraphDiagramEditor"
+            contributorClass="com.tibco.cep.studio.ui.editors.retegraph.ReteGraphDiagramEditorContributor"
+            default="true"
+            extensions="retenet"
+            icon="icons/nodes.gif"
+            id="com.tibco.cep.studio.retegraph.editors.ReteGraphDiagram"
+            name="Rete Network Viewer">
+      </editor>
+      <editor
+            class="com.tibco.cep.studio.ui.editors.RuleTemplateFormEditor"
+            contributorClass="org.eclipse.ui.editors.text.TextEditorActionContributor"
+            default="true"
+            extensions="ruletemplate"
+            icon="icons/rulesTemplate.png"
+            id="com.tibco.cep.editors.ui.rulesTemplateEditor"
+            name="Rules Template Editor">
+      </editor>
+      <editor
+            class="com.tibco.cep.studio.ui.editors.RuleTemplateViewFormEditor"
+            default="true"
+            extensions="ruletemplateview"
+            icon="icons/rulesTemplateView.png"
+            id="com.tibco.cep.editors.ui.rulesTemplateViewEditor"
+            name="Rules Template View Editor">
+      </editor>
+   </extension>
+   	<extension point="org.eclipse.ui.editorActions">
+      <editorContribution
+            targetID="com.tibco.cep.editors.ui.rulesEditor"
+            id="com.tibco.cep.studio.ui.editors.rules.actions.breakpointRulerActions">
+         <action
+               actionID="RulerClick"
+               class="com.tibco.cep.studio.ui.editors.rules.actions.RulesSelectionRulerAction"
+               disabledIcon="icons/brkpd_obj.gif"
+               icon="icons/brkp_obj.gif"
+               id="com.tibco.cep.studio.ui.editors.rules.actions.RulesSelectionRulerAction"
+               label="Quick Fix">
+         </action>
+      </editorContribution>
+      <editorContribution
+            targetID="com.tibco.cep.editors.ui.rulefunctionEditor"
+            id="com.tibco.cep.studio.ui.editors.rules.actions.breakpointRulerActions">
+         <action
+               actionID="RulerClick"
+               class="com.tibco.cep.studio.ui.editors.rules.actions.RulesSelectionRulerAction"
+               disabledIcon="icons/brkpd_obj.gif"
+               icon="icons/brkp_obj.gif"
+               id="com.tibco.cep.studio.ui.editors.rules.actions.RulesSelectionRulerAction"
+               label="Quick Fix">
+         </action>
+      </editorContribution>
+	</extension>
+   <extension
+         point="org.eclipse.ui.editors.annotationTypes">
+      <type
+            markerSeverity="2"
+            name="com.tibco.cep.editors.ui.problem"
+            super="org.eclipse.ui.workbench.texteditor.error">
+      </type>
+   </extension>
+   <extension
+         point="org.eclipse.ui.editors.markerAnnotationSpecification">
+      <specification
+            annotationImageProvider="com.tibco.cep.studio.ui.editors.rules.text.RulesAnnotationImageProvider"
+            annotationType="com.tibco.cep.editors.ui.problem"
+            presentationLayer="1">
+      </specification>
+   </extension>
+   <extension
+         id="ruleSyntaxProblem"
+         name="Rule Syntax Error"
+         point="org.eclipse.core.resources.markers">
+      <super
+            type="org.eclipse.core.resources.problemmarker">
+      </super>
+      <persistent
+            value="true">
+      </persistent>
+   </extension>
+<extension
+      point="org.eclipse.ui.commands">
+   <category
+         id="com.tibco.cep.concept.category"
+         name="Concept Editor">
+   </category>
+   <command
+         categoryId="com.tibco.cep.concept.category"
+         description="Opens a new Concept Editor"
+         id="com.tibco.cep.concept.new"
+         name="New ">
+   </command>
+   <command
+         name="Open Studio Element"
+         categoryId="org.eclipse.ui.category.navigate"
+         description="Open current studio element"
+         id="com.tibco.cep.studio.ui.editors.rules.actions.opendeclaration">
+   </command>
+   <command
+         name="Search For References"
+         categoryId="org.eclipse.ui.category.navigate"
+         description="Search for references of current studio element"
+         id="com.tibco.cep.studio.ui.editors.rules.actions.searchforreferences">
+   </command>
+   <command
+         name="Toggle Comment"
+         categoryId="org.eclipse.ui.category.edit"
+         description="Toggle comment"
+         id="com.tibco.cep.studio.ui.editors.rules.actions.togglecommentaction">
+   </command>
+   <command
+         name="Rename Variable"
+         categoryId="org.eclipse.ui.category.edit"
+         description="Rename variable"
+         id="com.tibco.cep.studio.ui.editors.rules.actions.renamevariableaction">
+   </command>
+   <command
+         name="Go To Matching Bracket"
+         categoryId="org.eclipse.ui.category.edit"
+         description="Go To Matching Bracket"
+         id="com.tibco.cep.studio.ui.editors.rules.actions.gotomatchingbracketaction">
+   </command>
+   <command
+         id="com.tibco.cep.studio.projectexplorer.showConceptViewaction"
+         name="Show Concept View">
+   </command>
+   <command
+         id="com.tibco.cep.studio.ui.editors.showEventViewAction"
+         name="Show Event View">
+   </command>
+    <command
+         id="com.tibco.cep.studio.projectexplorer.concept.createDependencyDiagram.objectContribution"
+         name="Show Dependency Diagram View">
+   </command>
+   <command
+         id="com.tibco.cep.studio.projectexplorer.event.createDependencyDiagram.objectContribution"
+         name="Show Dependency Diagram View">
+   </command>
+   <command
+         id="com.tibco.cep.studio.projectexplorer.event.sequenceDiagram"
+         name="Show Sequence Diagram View">
+   </command>
+   <command
+         id="com.tibco.cep.studio.projectexplorer.channel.createDependencyDiagram.objectContribution"
+         name="Show Dependency Diagram View">
+   </command>
+   <command
+         id="com.tibco.cep.studio.projectexplorer.rule.createDependencyDiagram.objectContribution"
+         name="Show Dependency Diagram View">
+   </command>
+   <command
+         id="com.tibco.cep.studio.projectexplorer.rulefunction.createDependencyDiagram.objectContribution"
+         name="Show Dependency Diagram View">
+   </command>
+   <command
+         id="com.tibco.cep.studio.projectexplorer.statemachine.createDependencyDiagram.objectContribution"
+         name="Show Dependency Diagram View">
+   </command>
+   <command
+         id="com.tibco.cep.studio.projectexplorer.domain.createDependencyDiagram.objectContribution"
+         name="Show Dependency Diagram View">
+   </command>
+</extension>
+<extension
+      point="org.eclipse.ui.preferencePages">
+   <page
+         category="com.tibco.cep.studio.ui.preference.page.designer"
+         class="com.tibco.cep.studio.ui.preferences.PrintPreferencePage"
+         id="com.tibco.cep.studio.ui.editors.preference.page.printing"
+         name="Printing">
+   </page>
+   <page
+         category="com.tibco.cep.studio.ui.editors.preference.page.diagram"
+         class="com.tibco.cep.studio.ui.preferences.ConceptDiagramPreferencePage"
+         id="com.tibco.cep.studio.ui.editors.preference.page.concept.diagram"
+         name="Concept">
+   </page>
+   <page
+         category="com.tibco.cep.studio.ui.editors.preference.page.diagram"
+         class="com.tibco.cep.studio.ui.preferences.EventDiagramPreferencePage"
+         id="com.tibco.cep.studio.ui.editors.preference.page.event.diagram"
+         name="Event">
+   </page>
+   <page
+         category="com.tibco.cep.studio.ui.editors.preference.page.diagram"
+         class="com.tibco.cep.studio.ui.preferences.ProjectDiagramPreferencePage"
+         id="com.tibco.cep.studio.ui.editors.preference.page.project.diagram"
+         name="Project">
+   </page>
+   <page
+         category="com.tibco.cep.studio.ui.editors.preference.page.printing"
+         class="com.tibco.cep.studio.ui.preferences.PrintAppearancePreferencePage"
+         id="com.tibco.cep.studio.ui.editors.preference.page.printing.font"
+         name="Appearance">
+   </page>
+   <page
+         category="com.tibco.cep.studio.ui.preference.page.designer"
+         class="com.tibco.cep.studio.ui.preferences.RulesPreferencePage"
+         id="com.tibco.cep.studio.ui.editors.preference.rules"
+         name="Rules">
+   </page>
+   <page
+         category="com.tibco.cep.studio.ui.editors.preference.page.diagram"
+         class="com.tibco.cep.studio.ui.preferences.SequenceDiagramPreferencePage"
+         id="com.tibco.cep.studio.ui.editors.preference.page.sequence.diagram"
+         name="Sequence">
+   </page>
+   <page
+         category="com.tibco.cep.studio.ui.editors.preference.page.diagram"
+         class="com.tibco.cep.studio.ui.preferences.DependencyDiagramPreferencePage"
+         id="com.tibco.cep.studio.ui.editors.preference.page.dependency.diagram"
+         name="Dependency">
+   </page>
+</extension>
+<extension
+      point="com.tibco.cep.studio.core.importProjectNotification">
+   <importListener
+         importListener="com.tibco.cep.studio.ui.diagrams.ConceptImportListener">
+   </importListener>
+   <importListener
+         importListener="com.tibco.cep.studio.ui.diagrams.EventImportListener">
+   </importListener>
+   <importListener
+         importListener="com.tibco.cep.studio.ui.diagrams.ProjectDiagramImportListener">
+   </importListener>
+</extension>
+ <extension
+         point="org.eclipse.ui.popupMenus">
+      <objectContribution
+            adaptable="true"
+            id="com.tibco.cep.studio.projectexplorer.createProjectView.objectContribution"
+            objectClass="org.eclipse.core.resources.IResource">
+         <action
+               class="com.tibco.cep.studio.ui.diagrams.actions.GenerateProjectDiagramActionDelegate"
+               enablesFor="+"
+               icon="icons/project_diagram.png"
+               id="com.tibco.cep.studio.projectexplorer.showProjectViewaction"
+               label="Create Selected Entity Project Diagram"
+               menubarPath="group.open">
+         </action>
+      </objectContribution>
+      <objectContribution
+            id="com.tibco.cep.studio.ui.editors.propertyNode.conceptPropertyobjectContribution"
+            objectClass="com.tibco.cep.studio.ui.navigator.model.PropertyNode">
+         <action
+               class="com.tibco.cep.studio.ui.editors.domain.AssociateDomainsAction"
+               enablesFor="1"
+               icon="icons/domainModelView_16x15.png"
+               id="com.tibco.cep.studio.ui.editors.associateConceptPropertyDomainAction"
+               label="Associate Domains..."
+               menubarPath="group.open">
+         </action>
+      </objectContribution>
+      <objectContribution
+            adaptable="false"
+            id="com.tibco.cep.studio.ui.editors.propertyNode.eventPropertyobjectContribution"
+            objectClass="com.tibco.cep.studio.ui.navigator.model.EventPropertyNode">
+         <action
+               class="com.tibco.cep.studio.ui.editors.domain.AssociateDomainsAction"
+               enablesFor="1"
+               icon="icons/domainModelView_16x15.png"
+               id="com.tibco.cep.studio.ui.editors.associateEventPropertyDomainAction"
+               label="Associate Domains..."
+               menubarPath="group.open">
+         </action>
+      </objectContribution>
+      <objectContribution
+            adaptable="false"
+            id="com.tibco.cep.studio.ui.editors.generateConceptView.objectContribution"
+            objectClass="org.eclipse.core.resources.IResource">
+         <action
+               class="com.tibco.cep.studio.ui.diagrams.actions.GenerateConceptDiagramActionDelegate"
+               definitionId="com.tibco.cep.studio.projectexplorer.showConceptViewaction"
+               enablesFor="1"
+               icon="icons/conceptview.png"
+               id="com.tibco.cep.studio.projectexplorer.showConceptViewaction"
+               label="Create Concept Model Diagram"
+               menubarPath="group.open">
+         </action>
+          <visibility>
+            <or>
+               <objectClass
+                     name="org.eclipse.core.resources.IProject">
+               </objectClass>
+               <objectClass
+                     name="org.eclipse.core.resources.IFolder">
+               </objectClass>
+               <objectClass
+                     name="org.eclipse.core.resources.IFile">
+               </objectClass>
+            </or>
+         </visibility>
+      </objectContribution>
+      <objectContribution
+            adaptable="false"
+            id="com.tibco.cep.studio.ui.editors.generateEventViewobjectContribution"
+            objectClass="org.eclipse.core.resources.IResource">
+         <action
+               class="com.tibco.cep.studio.ui.diagrams.actions.GenerateEventDiagramActionDelegate"
+               definitionId="com.tibco.cep.studio.ui.editors.showEventViewAction"
+               enablesFor="1"
+               icon="icons/eventview.png"
+               id="com.tibco.cep.studio.ui.editors.showEventViewAction"
+               label="Create Event Model Diagram"
+               menubarPath="group.open">
+         </action>
+          <visibility>
+            <or>
+               <objectClass
+                     name="org.eclipse.core.resources.IProject">
+               </objectClass>
+               <objectClass
+                     name="org.eclipse.core.resources.IFolder">
+               </objectClass>
+               <objectClass
+                     name="org.eclipse.core.resources.IFile">
+               </objectClass>
+            </or>
+         </visibility>
+      </objectContribution>
+      <objectContribution
+            adaptable="false"
+            id="com.tibco.cep.studio.ui.editors.analyzeProject.objectContribution"
+            objectClass="org.eclipse.core.resources.IResource">
+         <action
+               class="com.tibco.cep.studio.ui.editors.project.AnalyzeProjectActionDelegate"
+               enablesFor="1"
+               icon="icons/Project_Analyze.png"
+               id="com.tibco.cep.studio.ui.editors.analyzeProjectViewaction"
+               label="Analyze"
+               menubarPath="additions">
+         </action>
+         <visibility>
+            <or>
+               <objectClass
+                     name="org.eclipse.core.resources.IProject">
+               </objectClass>
+               <objectClass
+                     name="org.eclipse.core.resources.IFolder">
+               </objectClass>
+               <objectClass
+                     name="org.eclipse.core.resources.IFile">
+               </objectClass>
+            </or>
+         </visibility>
+      </objectContribution>
+      <objectContribution
+            adaptable="false"
+            id="com.tibco.cep.studio.projectexplorer.event.createDependencyDiagram.objectContribution"
+            nameFilter="*.event"
+            objectClass="org.eclipse.core.resources.IFile">
+         <action
+               class="com.tibco.cep.studio.ui.diagrams.actions.GenerateDependencyDiagramActionDelegate"
+               definitionId="com.tibco.cep.studio.projectexplorer.event.createDependencyDiagram.objectContribution"
+               enablesFor="1"
+               icon="icons/dependency_diagram.png"
+               id="com.tibco.cep.studio.projectexplorer.event.createDependencyDiagram.objectContribution"
+               label="Create Dependency Diagram"
+               menubarPath="group.open">
+         </action>
+      </objectContribution>
+      <objectContribution
+            adaptable="false"
+            id="com.tibco.cep.studio.projectexplorer.concept.createDependencyDiagram.objectContribution"
+            nameFilter="*.concept"
+            objectClass="org.eclipse.core.resources.IFile">
+         <action
+               class="com.tibco.cep.studio.ui.diagrams.actions.GenerateDependencyDiagramActionDelegate"
+               definitionId="com.tibco.cep.studio.projectexplorer.concept.createDependencyDiagram.objectContribution"
+               enablesFor="1"
+               icon="icons/dependency_diagram.png"
+               id="com.tibco.cep.studio.projectexplorer.concept.createDependencyDiagram.objectContribution"
+               label="Create Dependency Diagram"
+               menubarPath="group.open">
+         </action>
+      </objectContribution>
+      <objectContribution
+            adaptable="false"
+            id="com.tibco.cep.studio.projectexplorer.rule.createDependencyDiagram.objectContribution"
+            nameFilter="*.rule"
+            objectClass="org.eclipse.core.resources.IFile">
+         <action
+               class="com.tibco.cep.studio.ui.diagrams.actions.GenerateDependencyDiagramActionDelegate"
+               definitionId="com.tibco.cep.studio.projectexplorer.rule.createDependencyDiagram.objectContribution"
+               enablesFor="1"
+               icon="icons/dependency_diagram.png"
+               id="com.tibco.cep.studio.projectexplorer.rule.createDependencyDiagram.objectContribution"
+               label="Create Dependency Diagram"
+               menubarPath="group.open">
+         </action>
+      </objectContribution>
+      <objectContribution
+            adaptable="false"
+            id="com.tibco.cep.studio.projectexplorer.rulefunction.createDependencyDiagram.objectContribution"
+            nameFilter="*.rulefunction"
+            objectClass="org.eclipse.core.resources.IFile">
+         <action
+               class="com.tibco.cep.studio.ui.diagrams.actions.GenerateDependencyDiagramActionDelegate"
+               definitionId="com.tibco.cep.studio.projectexplorer.rulefunction.createDependencyDiagram.objectContribution"
+               enablesFor="1"
+               icon="icons/dependency_diagram.png"
+               id="com.tibco.cep.studio.projectexplorer.rulefunction.createDependencyDiagram.objectContribution"
+               label="Create Dependency Diagram"
+               menubarPath="group.open">
+         </action>
+      </objectContribution>
+      <objectContribution
+            adaptable="false"
+            id="com.tibco.cep.studio.projectexplorer.channel.createDependencyDiagram.objectContribution"
+            nameFilter="*.channel"
+            objectClass="org.eclipse.core.resources.IFile">
+         <action
+               class="com.tibco.cep.studio.ui.diagrams.actions.GenerateDependencyDiagramActionDelegate"
+               definitionId="com.tibco.cep.studio.projectexplorer.channel.createDependencyDiagram.objectContribution"
+               enablesFor="1"
+               icon="icons/dependency_diagram.png"
+               id="com.tibco.cep.studio.projectexplorer.channel.createDependencyDiagram.objectContribution"
+               label="Create Dependency Diagram"
+               menubarPath="group.open">
+         </action>
+      </objectContribution>
+      <objectContribution
+            adaptable="false"
+            id="com.tibco.cep.studio.projectexplorer.domain.createDependencyDiagram.objectContribution"
+            nameFilter="*.domain"
+            objectClass="org.eclipse.core.resources.IFile">
+         <action
+               class="com.tibco.cep.studio.ui.diagrams.actions.GenerateDependencyDiagramActionDelegate"
+               definitionId="com.tibco.cep.studio.projectexplorer.domain.createDependencyDiagram.objectContribution"
+               enablesFor="1"
+               icon="icons/dependency_diagram.png"
+               id="com.tibco.cep.studio.projectexplorer.domain.createDependencyDiagram.objectContribution"
+               label="Create Dependency Diagram"
+               menubarPath="group.open">
+         </action>
+      </objectContribution>
+      <objectContribution
+            adaptable="false"
+            id="com.tibco.cep.studio.projectexplorer.statemachine.createDependencyDiagram.objectContribution"
+            nameFilter="*.statemachine"
+            objectClass="org.eclipse.core.resources.IFile">
+         <action
+               class="com.tibco.cep.studio.ui.diagrams.actions.GenerateDependencyDiagramActionDelegate"
+               definitionId="com.tibco.cep.studio.projectexplorer.statemachine.createDependencyDiagram.objectContribution"
+               enablesFor="1"
+               icon="icons/dependency_diagram.png"
+               id="com.tibco.cep.studio.projectexplorer.statemachine.createDependencyDiagram.objectContribution"
+               label="Create Dependency Diagram"
+               menubarPath="group.open">
+         </action>
+      </objectContribution>
+      <objectContribution
+            adaptable="false"
+            id="com.tibco.cep.studio.projectexplorer.scorecard.createDependencyDiagram.objectContribution"
+            nameFilter="*.scorecard"
+            objectClass="org.eclipse.core.resources.IFile">
+         <action
+               class="com.tibco.cep.studio.ui.diagrams.actions.GenerateDependencyDiagramActionDelegate"
+               definitionId="com.tibco.cep.studio.projectexplorer.scorecard.createDependencyDiagram.objectContribution"
+               enablesFor="1"
+               icon="icons/dependency_diagram.png"
+               id="com.tibco.cep.studio.projectexplorer.scorecard.createDependencyDiagram.objectContribution"
+               label="Create Dependency Diagram"
+               menubarPath="group.open">
+         </action>
+      </objectContribution>
+      <objectContribution
+            adaptable="false"
+            id="com.tibco.cep.studio.projectexplorer.event.sequenceDiagram"
+            nameFilter="*.event"
+            objectClass="org.eclipse.core.resources.IFile">
+         <action
+               class="com.tibco.cep.studio.ui.diagrams.actions.GenerateSequenceDiagramActionDelegate"
+               definitionId="com.tibco.cep.studio.projectexplorer.event.sequenceDiagram"
+               enablesFor="1"
+               icon="icons/sequence_diagram.png"
+               id="com.tibco.cep.studio.ui.editors.sequence.event.action"
+               label="Create Sequence Diagram"
+               menubarPath="group.open">
+         </action>
+      </objectContribution>
+      <objectContribution
+            adaptable="false"
+            id="com.tibco.cep.studio.projectexplorer.rule.sequenceDiagram"
+            nameFilter="*.rule"
+            objectClass="org.eclipse.core.resources.IFile">
+         <action
+               class="com.tibco.cep.studio.ui.diagrams.actions.GenerateSequenceDiagramActionDelegate"
+               enablesFor="1"
+               icon="icons/sequence_diagram.png"
+               id="com.tibco.cep.studio.ui.editors.sequence.rule.action"
+               label="Create Sequence Diagram"
+               menubarPath="group.open">
+         </action>
+      </objectContribution>
+      <objectContribution
+            adaptable="false"
+            id="com.tibco.cep.studio.projectexplorer.rulefunction.sequenceDiagram"
+            nameFilter="*.rulefunction"
+            objectClass="org.eclipse.core.resources.IFile">
+         <action
+               class="com.tibco.cep.studio.ui.diagrams.actions.GenerateSequenceDiagramActionDelegate"
+               enablesFor="1"
+               icon="icons/sequence_diagram.png"
+               id="com.tibco.cep.studio.ui.editors.sequence.rulefunction.action"
+               label="Create Sequence Diagram"
+               menubarPath="group.open">
+         </action>
+      </objectContribution>
+      <objectContribution
+            adaptable="false"
+            id="com.tibco.cep.studio.projectexplorer.time.createDependencyDiagram.objectContribution"
+            nameFilter="*.time"
+            objectClass="org.eclipse.core.resources.IFile">
+         <action
+               class="com.tibco.cep.studio.ui.diagrams.actions.GenerateDependencyDiagramActionDelegate"
+               definitionId="com.tibco.cep.studio.projectexplorer.time.createDependencyDiagram.objectContribution"
+               enablesFor="1"
+               icon="icons/dependency_diagram.png"
+               id="com.tibco.cep.studio.projectexplorer.time.createDependencyDiagram.objectContribution"
+               label="Create Dependency Diagram"
+               menubarPath="group.open">
+         </action>
+      </objectContribution>
+      <objectContribution
+            adaptable="false"
+            id="com.tibco.cep.studio.projectexplorer.time.sequenceDiagram"
+            nameFilter="*.time"
+            objectClass="org.eclipse.core.resources.IFile">
+         <action
+               class="com.tibco.cep.studio.ui.diagrams.actions.GenerateSequenceDiagramActionDelegate"
+               definitionId="com.tibco.cep.studio.projectexplorer.time.sequenceDiagram"
+               enablesFor="1"
+               icon="icons/sequence_diagram.png"
+               id="com.tibco.cep.studio.ui.editors.sequence.event.action"
+               label="Create Sequence Diagram"
+               menubarPath="group.open">
+         </action>
+      </objectContribution>
+   </extension>
+ <extension
+       point="com.tibco.cep.studio.ResourceManager">
+    <ResourceManager
+          class="com.tibco.cep.studio.ui.persistence.ManageResourceFile"
+          id="com.tibco.cep.concept.form.editors.ManageResourceFile"
+          name="ManageResourceFile">
+    </ResourceManager>
+ </extension>
+ 
+   <extension
+         id="problem"
+         name="Rules Problem"
+         point="org.eclipse.core.resources.markers">
+      <super type="org.eclipse.core.resources.problemmarker"/>
+   	  <persistent value="false"/>            
+   </extension>
+
+   <extension
+         point="org.eclipse.ui.editors.annotationTypes">
+      <type
+            name="com.tibco.cep.studio.ui.editors.error.syntax"
+            super="org.eclipse.ui.workbench.texteditor.error"
+            markerType="com.tibco.cep.studio.ui.editors.problem"
+            markerSeverity="2">
+      </type>
+      <type
+            name="com.tibco.cep.studio.ui.editors.error.resolution"
+            super="org.eclipse.ui.workbench.texteditor.error"
+            markerType="com.tibco.cep.studio.ui.editors.problem"
+            markerSeverity="2">
+      </type>
+      <type
+            name="com.tibco.cep.studio.ui.editors.warning.resolution"
+            super="org.eclipse.ui.workbench.texteditor.warning"
+            markerType="com.tibco.cep.studio.ui.editors.warning"
+            markerSeverity="2">
+      </type>
+	</extension>
+   <extension
+         point="org.eclipse.core.runtime.preferences">
+      <initializer
+            class="com.tibco.cep.studio.ui.preferences.StudioPreferenceInitializer">
+      </initializer>
+   </extension>
+   <extension
+         point="org.eclipse.ui.editorActions">
+      <editorContribution
+            id="com.tibco.cep.studio.ui.editors.projectDiagramEditorContribution"
+            targetID="com.tibco.cep.studio.project.editors.ProjectDiagramEditor">
+        	 <menu
+               id="com.tibco.cep.studio.ui.editors.project.diagram.menu"
+               label="Diagram"
+               path="additions">
+            <separator
+                  name="DiagramGroup1">
+            </separator>
+            <separator
+                  name="DiagramGroup2">
+            </separator>
+            <separator
+                  name="DiagramGroup3">
+            </separator>
+            <separator
+                  name="DiagramGroup4">
+            </separator>
+            <separator
+                  name="DiagramGroup5">
+            </separator>
+            <separator
+                  name="DiagramGroup6">
+            </separator>
+         </menu>
+          <menu
+                id="com.tibco.cep.diagramming.layout_menu"
+                label="&amp;Layout"
+                path="com.tibco.cep.studio.ui.editors.project.diagram.menu/DiagramGroup1">
+             <separator
+                   name="LayoutGroup">
+             </separator>
+          </menu>
+         <menu
+               id="com.tibco.cep.diagramming.tool_menu"
+               label="&amp;Interactive Tools"
+               path="com.tibco.cep.studio.ui.editors.project.diagram.menu/DiagramGroup1">
+            <separator
+                  name="ToolsGroup">
+            </separator>
+         </menu>
+		<action
+        class="com.tibco.cep.diagramming.actions.ExportToImageActionDelegate"
+        icon="icons/imageExport.gif"
+        id="com.tibco.cep.tomsawyer.imageexport"
+        label="Export to Image..."
+        menubarPath="com.tibco.cep.studio.ui.editors.project.diagram.menu/DiagramGroup3"
+        tooltip="Diagram Export to Image">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.PrintActionDelegate"
+               icon="icons/print.gif"
+               id="com.tibco.cep.tomsawyer.print"
+               label="Print"
+               menubarPath="com.tibco.cep.studio.ui.editors.project.diagram.menu/DiagramGroup2"
+               tooltip="Diagram Print">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.PrintPreviewActionDelegate"
+               icon="icons/printPreview.gif"
+               id="com.tibco.cep.tomsawyer.printpreview"
+               label="Print Preview..."
+               menubarPath="com.tibco.cep.studio.ui.editors.project.diagram.menu/DiagramGroup2"
+               tooltip="Diagram Print Preview">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.PrintSetupActionDelegate"
+               icon="icons/printSetup.gif"
+               id="com.tibco.cep.tomsawyer.printsetup"
+               label="Print Setup..."
+               menubarPath="com.tibco.cep.studio.ui.editors.project.diagram.menu/DiagramGroup2"
+               tooltip="Diagram Print Setup">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.LinkNavigatorActionDelegate"
+               icon="icons/linkNavigation.gif"
+               id="com.tibco.cep.tomsawyer.linknavigator"
+               label="Link &amp;Navigator"
+               menubarPath="com.tibco.cep.studio.ui.editors.project.diagram.menu/com.tibco.cep.diagramming.tool_menu/ToolsGroup"
+               tooltip="Link Navigator">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.InteractiveZoomActionDelegate"
+               icon="icons/interactiveZoom.gif"
+               id="com.tibco.cep.tomsawyer.interactivezoom"
+               label="&amp;Interactive Zoom"
+               menubarPath="com.tibco.cep.studio.ui.editors.project.diagram.menu/com.tibco.cep.diagramming.tool_menu/ToolsGroup"
+               tooltip="Interactive Zoom">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.ZoomActionDelegate"
+               icon="icons/zoom.gif"
+               id="com.tibco.cep.tomsawyer.marqueezoom"
+               label="&amp;Marquee Zoom"
+               menubarPath="com.tibco.cep.studio.ui.editors.project.diagram.menu/com.tibco.cep.diagramming.tool_menu/ToolsGroup"
+               tooltip="Marquee Zoom">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.MagnifyActionDelegate"
+               icon="icons/magnifyZoom.png"
+               id="com.tibco.cep.tomsawyer.magnify"
+               label="&amp;Magnify"
+               menubarPath="com.tibco.cep.studio.ui.editors.project.diagram.menu/com.tibco.cep.diagramming.tool_menu/ToolsGroup"
+               tooltip="Magnify Zoom">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.PanActionDelegate"
+               icon="icons/pan.gif"
+               id="com.tibco.cep.tomsawyer.pan"
+               label="Pan"
+               menubarPath="com.tibco.cep.studio.ui.editors.project.diagram.menu/com.tibco.cep.diagramming.tool_menu/ToolsGroup"
+               tooltip="Pan">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.SelectActionDelegate"
+               icon="icons/select.gif"
+               id="com.tibco.cep.tomsawyer.select"
+               label="&amp;Select"
+               menubarPath="com.tibco.cep.studio.ui.editors.project.diagram.menu/com.tibco.cep.diagramming.tool_menu/ToolsGroup"
+               tooltip="Select">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.FitWindowActionDelegate"
+               icon="icons/fitInCanvas.gif"
+               id="com.tibco.cep.tomsawyer.fitinwindow"
+               label="&amp;Fit In Window"
+               menubarPath="com.tibco.cep.studio.ui.editors.project.diagram.menu/DiagramGroup5"
+               tooltip="Fit In Window">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.IncrementalLayoutActionDelegate"
+               icon="icons/incrementalLayout.gif"
+               id="com.tibco.cep.tomsawyer.incrementallayout"
+               label="In&amp;cremental Layout"
+               menubarPath="com.tibco.cep.studio.ui.editors.project.diagram.menu/DiagramGroup4"
+               tooltip="Arrange all objects incrementally">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.RoutingActionDelegate"
+               icon="icons/routing.gif"
+               id="com.tibco.cep.tomsawyer.edge.routing"
+               label="Link Routing"
+               menubarPath="com.tibco.cep.studio.ui.editors.project.diagram.menu/DiagramGroup4"
+               tooltip="Arrange all edges">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.LabelingActionDelegate"
+               icon="icons/labeling.gif"
+               id="com.tibco.cep.tomsawyer.labeling"
+               label="L&amp;abeling"
+               menubarPath="com.tibco.cep.studio.ui.editors.project.diagram.menu/DiagramGroup4"
+               tooltip="Arrange all labels">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.HierarchicalObliqueLayoutActionDelegate"
+               icon="icons/hierarchicaldeep.png"
+               id="com.tibco.cep.diagramming.hierarchical.oblique.layout"
+               label="Hierarchical Layout (Oblique)"
+               menubarPath="com.tibco.cep.studio.ui.editors.project.diagram.menu/com.tibco.cep.diagramming.layout_menu/LayoutGroup"
+               tooltip="Arranges the nodes in a hierarchical layout">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.HierarchicalRectilinearLayoutActionDelegate"
+               icon="icons/hierarchicaldeep.png"
+               id="com.tibco.cep.diagramming.hierarchical.rectilinear.layout"
+               label="Hierarchical Layout (Rectilinear)"
+               menubarPath="com.tibco.cep.studio.ui.editors.project.diagram.menu/com.tibco.cep.diagramming.layout_menu/LayoutGroup"
+               tooltip="Arranges the nodes in a hierarchical layout">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.SymmetricLayoutActionDelegate"
+               icon="icons/symmetricdeep.png"
+               id="com.tibco.cep.diagramming.symmetric.layout"
+               label="Symmetric Layout"
+               menubarPath="com.tibco.cep.studio.ui.editors.project.diagram.menu/com.tibco.cep.diagramming.layout_menu/LayoutGroup"
+               tooltip="Arranges the nodes in a symmetric layout">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.OrthogonalLayoutActionDelegate"
+               icon="icons/orthogonaldeep.png"
+               id="com.tibco.cep.diagramming.orthogonal.layout"
+               label="Orthogonal Layout"
+               menubarPath="com.tibco.cep.studio.ui.editors.project.diagram.menu/com.tibco.cep.diagramming.layout_menu/LayoutGroup"
+               tooltip="Arranges the nodes in a orthogonal layout">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.CircularLayoutActionDelegate"
+               icon="icons/circulardeep.png"
+               id="com.tibco.cep.diagramming.circular.layout"
+               label="Circular Layout"
+               menubarPath="com.tibco.cep.studio.ui.editors.project.diagram.menu/com.tibco.cep.diagramming.layout_menu/LayoutGroup"
+               tooltip="Arranges the nodes in a circualr layout">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.LayoutActionDelegate"
+               icon="icons/globalLayout.png"
+               id="com.tibco.cep.diagramming.default.layout"
+               label="Default Layout"
+               menubarPath="com.tibco.cep.studio.ui.editors.project.diagram.menu/com.tibco.cep.diagramming.layout_menu/LayoutGroup"
+               tooltip="Sets default layout">
+         </action>
+      </editorContribution>
+      <editorContribution
+            id="com.tibco.cep.studio.ui.editors.conceptDiagramEditorContribution"
+            targetID="com.tibco.cep.concept.editors.ConceptDiagramEditor">
+             <menu
+               id="com.tibco.cep.studio.ui.editors.concept.diagram.menu"
+               label="Diagram"
+               path="additions">
+            <separator
+                  name="DiagramGroup1">
+            </separator>
+            <separator
+                  name="DiagramGroup2">
+            </separator>
+            <separator
+                  name="DiagramGroup3">
+            </separator>
+            <separator
+                  name="DiagramGroup4">
+            </separator>
+            <separator
+                  name="DiagramGroup5">
+            </separator>
+         </menu>
+             <menu
+                   id="com.tibco.cep.diagramming.layout_menu"
+                   label="&amp;Layout"
+                   path="com.tibco.cep.studio.ui.editors.concept.diagram.menu/DiagramGroup1">
+                <separator
+                      name="LayoutGroup">
+                </separator>
+             </menu>
+         <menu
+               id="com.tibco.cep.diagramming.tool_menu"
+               label="&amp;Interactive Tools"
+               path="com.tibco.cep.studio.ui.editors.concept.diagram.menu/DiagramGroup1">
+            <separator
+                  name="ToolsGroup">
+            </separator>
+         </menu>
+		<action
+        class="com.tibco.cep.diagramming.actions.ExportToImageActionDelegate"
+        icon="icons/imageExport.gif"
+        id="com.tibco.cep.tomsawyer.imageexport"
+        label="Export to Image..."
+        menubarPath="com.tibco.cep.studio.ui.editors.concept.diagram.menu/DiagramGroup3"
+        tooltip="Diagram Export to Image">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.PrintActionDelegate"
+               icon="icons/print.gif"
+               id="com.tibco.cep.tomsawyer.print"
+               label="Print"
+               menubarPath="com.tibco.cep.studio.ui.editors.concept.diagram.menu/DiagramGroup2"
+               tooltip="Diagram Print">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.PrintPreviewActionDelegate"
+               icon="icons/printPreview.gif"
+               id="com.tibco.cep.tomsawyer.printpreview"
+               label="Print Preview..."
+               menubarPath="com.tibco.cep.studio.ui.editors.concept.diagram.menu/DiagramGroup2"
+               tooltip="Diagram Print Preview">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.PrintSetupActionDelegate"
+               icon="icons/printSetup.gif"
+               id="com.tibco.cep.tomsawyer.printsetup"
+               label="Print Setup..."
+               menubarPath="com.tibco.cep.studio.ui.editors.concept.diagram.menu/DiagramGroup2"
+               tooltip="Diagram Print Setup">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.LinkNavigatorActionDelegate"
+               icon="icons/linkNavigation.gif"
+               id="com.tibco.cep.tomsawyer.linknavigator"
+               label="Link &amp;Navigator"
+               menubarPath="com.tibco.cep.studio.ui.editors.concept.diagram.menu/com.tibco.cep.diagramming.tool_menu/ToolsGroup"
+               tooltip="Link Navigator">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.InteractiveZoomActionDelegate"
+               icon="icons/interactiveZoom.gif"
+               id="com.tibco.cep.tomsawyer.interactivezoom"
+               label="&amp;Interactive Zoom"
+               menubarPath="com.tibco.cep.studio.ui.editors.concept.diagram.menu/com.tibco.cep.diagramming.tool_menu/ToolsGroup"
+               tooltip="Interactive Zoom">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.ZoomActionDelegate"
+               icon="icons/zoom.gif"
+               id="com.tibco.cep.tomsawyer.marqueezoom"
+               label="&amp;Marquee Zoom"
+               menubarPath="com.tibco.cep.studio.ui.editors.concept.diagram.menu/com.tibco.cep.diagramming.tool_menu/ToolsGroup"
+               tooltip="Marquee Zoom">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.MagnifyActionDelegate"
+               icon="icons/magnifyZoom.png"
+               id="com.tibco.cep.tomsawyer.magnify"
+               label="&amp;Magnify"
+               menubarPath="com.tibco.cep.studio.ui.editors.concept.diagram.menu/com.tibco.cep.diagramming.tool_menu/ToolsGroup"
+               tooltip="Magnify Zoom">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.PanActionDelegate"
+               icon="icons/pan.gif"
+               id="com.tibco.cep.tomsawyer.pan"
+               label="Pan"
+               menubarPath="com.tibco.cep.studio.ui.editors.concept.diagram.menu/com.tibco.cep.diagramming.tool_menu/ToolsGroup"
+               tooltip="Pan">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.SelectActionDelegate"
+               icon="icons/select.gif"
+               id="com.tibco.cep.tomsawyer.select"
+               label="&amp;Select"
+               menubarPath="com.tibco.cep.studio.ui.editors.concept.diagram.menu/com.tibco.cep.diagramming.tool_menu/ToolsGroup"
+               tooltip="Select">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.FitWindowActionDelegate"
+               icon="icons/fitInCanvas.gif"
+               id="com.tibco.cep.tomsawyer.fitinwindow"
+               label="&amp;Fit In Window"
+               menubarPath="com.tibco.cep.studio.ui.editors.concept.diagram.menu/DiagramGroup5"
+               tooltip="Fit In Window">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.IncrementalLayoutActionDelegate"
+               icon="icons/incrementalLayout.gif"
+               id="com.tibco.cep.tomsawyer.incrementallayout"
+               label="In&amp;cremental Layout"
+               menubarPath="com.tibco.cep.studio.ui.editors.concept.diagram.menu/DiagramGroup4"
+               tooltip="Arrange all objects incrementally">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.RoutingActionDelegate"
+               icon="icons/routing.gif"
+               id="com.tibco.cep.tomsawyer.edge.routing"
+               label="Link Routing"
+               menubarPath="com.tibco.cep.studio.ui.editors.concept.diagram.menu/DiagramGroup4"
+               tooltip="Arrange all edges">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.LabelingActionDelegate"
+               icon="icons/labeling.gif"
+               id="com.tibco.cep.tomsawyer.labeling"
+               label="L&amp;abeling"
+               menubarPath="com.tibco.cep.studio.ui.editors.concept.diagram.menu/DiagramGroup4"
+               tooltip="Arrange all labels">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.HierarchicalObliqueLayoutActionDelegate"
+               icon="icons/hierarchicaldeep.png"
+               id="com.tibco.cep.tomsawyer.hierarchical.oblique.layout"
+               label="Hierarchical Layout (Oblique)"
+               menubarPath="com.tibco.cep.studio.ui.editors.concept.diagram.menu/com.tibco.cep.diagramming.layout_menu/LayoutGroup"
+               tooltip="Arranges the nodes in a hierarchical layout">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.HierarchicalRectilinearLayoutActionDelegate"
+               icon="icons/hierarchicaldeep.png"
+               id="com.tibco.cep.tomsawyer.hierarchical.rectilinear.layout"
+               label="Hierarchical Layout (Rectilinear)"
+               menubarPath="com.tibco.cep.studio.ui.editors.concept.diagram.menu/com.tibco.cep.diagramming.layout_menu/LayoutGroup"
+               tooltip="Arranges the nodes in a hierarchical layout">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.SymmetricLayoutActionDelegate"
+               icon="icons/symmetricdeep.png"
+               id="com.tibco.cep.tomsawyer.symmetric.layout"
+               label="Symmetric Layout"
+               menubarPath="com.tibco.cep.studio.ui.editors.concept.diagram.menu/com.tibco.cep.diagramming.layout_menu/LayoutGroup"
+               tooltip="Arranges the nodes in a symmetric layout">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.OrthogonalLayoutActionDelegate"
+               icon="icons/orthogonaldeep.png"
+               id="com.tibco.cep.tomsawyer.orthogonal.layout"
+               label="Orthogonal Layout"
+               menubarPath="com.tibco.cep.studio.ui.editors.concept.diagram.menu/com.tibco.cep.diagramming.layout_menu/LayoutGroup"
+               tooltip="Arranges the nodes in a orthogonal layout">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.CircularLayoutActionDelegate"
+               icon="icons/circulardeep.png"
+               id="com.tibco.cep.tomsawyer.circular.layout"
+               label="Circular Layout"
+               menubarPath="com.tibco.cep.studio.ui.editors.concept.diagram.menu/com.tibco.cep.diagramming.layout_menu/LayoutGroup"
+               tooltip="Arranges the nodes in a circualr layout">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.LayoutActionDelegate"
+               icon="icons/globalLayout.png"
+               id="com.tibco.cep.tomsawyer.default.layout"
+               label="Default Layout"
+               menubarPath="com.tibco.cep.studio.ui.editors.concept.diagram.menu/com.tibco.cep.diagramming.layout_menu/LayoutGroup"
+               tooltip="Sets default layout">
+         </action>
+      </editorContribution>
+      <editorContribution
+            id="com.tibco.cep.studio.ui.editors.eventDiagramEditorContribution"
+            targetID="com.tibco.cep.event.editors.EventDiagramEditor">
+             <menu
+               id="com.tibco.cep.studio.ui.editors.event.diagram.menu"
+               label="Diagram"
+               path="additions">
+            <separator
+                  name="DiagramGroup1">
+            </separator>
+            <separator
+                  name="DiagramGroup2">
+            </separator>
+            <separator
+                  name="DiagramGroup3">
+            </separator>
+            <separator
+                  name="DiagramGroup4">
+            </separator>
+            <separator
+                  name="DiagramGroup5">
+            </separator>
+         </menu>
+             <menu
+                   id="com.tibco.cep.diagramming.layout_menu"
+                   label="&amp;Layout"
+                   path="com.tibco.cep.studio.ui.editors.event.diagram.menu/DiagramGroup1">
+                <separator
+                      name="LayoutGroup">
+                </separator>
+             </menu>
+         <menu
+               id="com.tibco.cep.diagramming.tool_menu"
+               label="&amp;Interactive Tools"
+               path="com.tibco.cep.studio.ui.editors.event.diagram.menu/DiagramGroup1">
+            <separator
+                  name="ToolsGroup">
+            </separator>
+         </menu>
+		<action
+        class="com.tibco.cep.diagramming.actions.ExportToImageActionDelegate"
+        icon="icons/imageExport.gif"
+        id="com.tibco.cep.tomsawyer.imageexport"
+        label="Export to Image..."
+        menubarPath="com.tibco.cep.studio.ui.editors.event.diagram.menu/DiagramGroup3"
+        tooltip="Diagram Export to Image">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.PrintActionDelegate"
+               icon="icons/print.gif"
+               id="com.tibco.cep.tomsawyer.print"
+               label="Print"
+               menubarPath="com.tibco.cep.studio.ui.editors.event.diagram.menu/DiagramGroup2"
+               tooltip="Diagram Print">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.PrintPreviewActionDelegate"
+               icon="icons/printPreview.gif"
+               id="com.tibco.cep.tomsawyer.printpreview"
+               label="Print Preview..."
+               menubarPath="com.tibco.cep.studio.ui.editors.event.diagram.menu/DiagramGroup2"
+               tooltip="Diagram Print Preview">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.PrintSetupActionDelegate"
+               icon="icons/printSetup.gif"
+               id="com.tibco.cep.tomsawyer.printsetup"
+               label="Print Setup..."
+               menubarPath="com.tibco.cep.studio.ui.editors.event.diagram.menu/DiagramGroup2"
+               tooltip="Diagram Print Setup">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.LinkNavigatorActionDelegate"
+               icon="icons/linkNavigation.gif"
+               id="com.tibco.cep.tomsawyer.linknavigator"
+               label="Link &amp;Navigator"
+               menubarPath="com.tibco.cep.studio.ui.editors.event.diagram.menu/com.tibco.cep.diagramming.tool_menu/ToolsGroup"
+               tooltip="Link Navigator">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.InteractiveZoomActionDelegate"
+               icon="icons/interactiveZoom.gif"
+               id="com.tibco.cep.tomsawyer.interactivezoom"
+               label="&amp;Interactive Zoom"
+               menubarPath="com.tibco.cep.studio.ui.editors.event.diagram.menu/com.tibco.cep.diagramming.tool_menu/ToolsGroup"
+               tooltip="Interactive Zoom">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.ZoomActionDelegate"
+               icon="icons/zoom.gif"
+               id="com.tibco.cep.tomsawyer.marqueezoom"
+               label="&amp;Marquee Zoom"
+               menubarPath="com.tibco.cep.studio.ui.editors.event.diagram.menu/com.tibco.cep.diagramming.tool_menu/ToolsGroup"
+               tooltip="Marquee Zoom">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.MagnifyActionDelegate"
+               icon="icons/magnifyZoom.png"
+               id="com.tibco.cep.tomsawyer.magnify"
+               label="&amp;Magnify"
+               menubarPath="com.tibco.cep.studio.ui.editors.event.diagram.menu/com.tibco.cep.diagramming.tool_menu/ToolsGroup"
+               tooltip="Magnify Zoom">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.PanActionDelegate"
+               icon="icons/pan.gif"
+               id="com.tibco.cep.tomsawyer.pan"
+               label="Pan"
+               menubarPath="com.tibco.cep.studio.ui.editors.event.diagram.menu/com.tibco.cep.diagramming.tool_menu/ToolsGroup"
+               tooltip="Pan">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.SelectActionDelegate"
+               icon="icons/select.gif"
+               id="com.tibco.cep.tomsawyer.select"
+               label="&amp;Select"
+               menubarPath="com.tibco.cep.studio.ui.editors.event.diagram.menu/com.tibco.cep.diagramming.tool_menu/ToolsGroup"
+               tooltip="Select">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.FitWindowActionDelegate"
+               icon="icons/fitInCanvas.gif"
+               id="com.tibco.cep.tomsawyer.fitinwindow"
+               label="&amp;Fit In Window"
+               menubarPath="com.tibco.cep.studio.ui.editors.event.diagram.menu/DiagramGroup5"
+               tooltip="Fit In Window">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.IncrementalLayoutActionDelegate"
+               icon="icons/incrementalLayout.gif"
+               id="com.tibco.cep.tomsawyer.incrementallayout"
+               label="In&amp;cremental Layout"
+               menubarPath="com.tibco.cep.studio.ui.editors.event.diagram.menu/DiagramGroup4"
+               tooltip="Arrange all objects incrementally">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.RoutingActionDelegate"
+               icon="icons/routing.gif"
+               id="com.tibco.cep.tomsawyer.edge.routing"
+               label="Link Routing"
+               menubarPath="com.tibco.cep.studio.ui.editors.event.diagram.menu/DiagramGroup4"
+               tooltip="Arrange all edges">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.LabelingActionDelegate"
+               icon="icons/labeling.gif"
+               id="com.tibco.cep.tomsawyer.labeling"
+               label="L&amp;abeling"
+               menubarPath="com.tibco.cep.studio.ui.editors.event.diagram.menu/DiagramGroup4"
+               tooltip="Arrange all labels">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.HierarchicalObliqueLayoutActionDelegate"
+               icon="icons/hierarchicaldeep.png"
+               id="com.tibco.cep.tomsawyer.hierarchical.oblique.layout"
+               label="Hierarchical Layout (Oblique)"
+               menubarPath="com.tibco.cep.studio.ui.editors.event.diagram.menu/com.tibco.cep.diagramming.layout_menu/LayoutGroup"
+               tooltip="Arranges the nodes in a hierarchical layout">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.HierarchicalRectilinearLayoutActionDelegate"
+               icon="icons/hierarchicaldeep.png"
+               id="com.tibco.cep.tomsawyer.hierarchical.rectilinear.layout"
+               label="Hierarchical Layout (Rectilinear)"
+               menubarPath="com.tibco.cep.studio.ui.editors.event.diagram.menu/com.tibco.cep.diagramming.layout_menu/LayoutGroup"
+               tooltip="Arranges the nodes in a hierarchical layout">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.SymmetricLayoutActionDelegate"
+               icon="icons/symmetricdeep.png"
+               id="com.tibco.cep.tomsawyer.symmetric.layout"
+               label="Symmetric Layout"
+               menubarPath="com.tibco.cep.studio.ui.editors.event.diagram.menu/com.tibco.cep.diagramming.layout_menu/LayoutGroup"
+               tooltip="Arranges the nodes in a symmetric layout">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.OrthogonalLayoutActionDelegate"
+               icon="icons/orthogonaldeep.png"
+               id="com.tibco.cep.tomsawyer.orthogonal.layout"
+               label="Orthogonal Layout"
+               menubarPath="com.tibco.cep.studio.ui.editors.event.diagram.menu/com.tibco.cep.diagramming.layout_menu/LayoutGroup"
+               tooltip="Arranges the nodes in a orthogonal layout">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.CircularLayoutActionDelegate"
+               icon="icons/circulardeep.png"
+               id="com.tibco.cep.tomsawyer.circular.layout"
+               label="Circular Layout"
+               menubarPath="com.tibco.cep.studio.ui.editors.event.diagram.menu/com.tibco.cep.diagramming.layout_menu/LayoutGroup"
+               tooltip="Arranges the nodes in a circualr layout">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.LayoutActionDelegate"
+               icon="icons/globalLayout.png"
+               id="com.tibco.cep.tomsawyer.default.layout"
+               label="Default Layout"
+               menubarPath="com.tibco.cep.studio.ui.editors.event.diagram.menu/com.tibco.cep.diagramming.layout_menu/LayoutGroup"
+               tooltip="Sets default layout">
+         </action>
+      </editorContribution>
+      <editorContribution
+            id="com.tibco.cep.studio.ui.editors.sequenceDiagramEditorContribution"
+            targetID="com.tibco.cep.studio.project.editors.SequenceDiagramEditor">
+         <menu
+               id="com.tibco.cep.studio.ui.editors.sequence.diagram.menu"
+               label="Diagram"
+               path="additions">
+            <separator
+                  name="DiagramGroup1">
+            </separator>
+            <separator
+                  name="DiagramGroup2">
+            </separator>
+            <separator
+                  name="DiagramGroup3">
+            </separator>
+            <separator
+                  name="DiagramGroup4">
+            </separator>
+            <separator
+                  name="DiagramGroup5">
+            </separator>
+            <separator
+                  name="DiagramGroup6">
+            </separator>
+         </menu>
+         <menu
+               id="com.tibco.cep.diagramming.layout_menu"
+               label="&amp;Layout"
+               path="com.tibco.cep.studio.ui.editors.sequence.diagram.menu/DiagramGroup1">
+            <separator
+                  name="LayoutGroup">
+            </separator>
+         </menu>
+         <menu
+               id="com.tibco.cep.diagramming.tool_menu"
+               label="&amp;Interactive Tools"
+               path="com.tibco.cep.studio.ui.editors.sequence.diagram.menu/DiagramGroup1">
+            <separator
+                  name="ToolsGroup">
+            </separator>
+         </menu>
+         <action
+               class="com.tibco.cep.diagramming.actions.ExportToImageActionDelegate"
+               icon="icons/imageExport.gif"
+               id="com.tibco.cep.tomsawyer.imageexport"
+               label="Export to Image..."
+               menubarPath="com.tibco.cep.studio.ui.editors.sequence.diagram.menu/DiagramGroup3"
+               tooltip="Diagram Export to Image">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.PrintActionDelegate"
+               icon="icons/print.gif"
+               id="com.tibco.cep.tomsawyer.print"
+               label="Print"
+               menubarPath="com.tibco.cep.studio.ui.editors.sequence.diagram.menu/DiagramGroup2"
+               tooltip="Diagram Print">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.PrintPreviewActionDelegate"
+               icon="icons/printPreview.gif"
+               id="com.tibco.cep.tomsawyer.printpreview"
+               label="Print Preview..."
+               menubarPath="com.tibco.cep.studio.ui.editors.sequence.diagram.menu/DiagramGroup2"
+               tooltip="Diagram Print Preview">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.PrintSetupActionDelegate"
+               icon="icons/printSetup.gif"
+               id="com.tibco.cep.diagramming.printsetup"
+               label="Print Setup..."
+               menubarPath="com.tibco.cep.studio.ui.editors.sequence.diagram.menu/DiagramGroup2"
+               tooltip="Diagram Print Setup">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.LinkNavigatorActionDelegate"
+               icon="icons/linkNavigation.gif"
+               id="com.tibco.cep.tomsawyer.linknavigator"
+               label="Link &amp;Navigator"
+               menubarPath="com.tibco.cep.studio.ui.editors.sequence.diagram.menu/com.tibco.cep.diagramming.tool_menu/ToolsGroup"
+               tooltip="Link Navigator">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.InteractiveZoomActionDelegate"
+               icon="icons/interactiveZoom.gif"
+               id="com.tibco.cep.tomsawyer.interactivezoom"
+               label="&amp;Interactive Zoom"
+               menubarPath="com.tibco.cep.studio.ui.editors.sequence.diagram.menu/com.tibco.cep.diagramming.tool_menu/ToolsGroup"
+               tooltip="Interactive Zoom">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.ZoomActionDelegate"
+               icon="icons/zoom.gif"
+               id="com.tibco.cep.tomsawyer.marqueezoom"
+               label="&amp;Marquee Zoom"
+               menubarPath="com.tibco.cep.studio.ui.editors.sequence.diagram.menu/com.tibco.cep.diagramming.tool_menu/ToolsGroup"
+               tooltip="Marquee Zoom">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.MagnifyActionDelegate"
+               icon="icons/magnifyZoom.png"
+               id="com.tibco.cep.tomsawyer.magnify"
+               label="&amp;Magnify"
+               menubarPath="com.tibco.cep.studio.ui.editors.sequence.diagram.menu/com.tibco.cep.diagramming.tool_menu/ToolsGroup"
+               tooltip="Magnify Zoom">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.PanActionDelegate"
+               icon="icons/pan.gif"
+               id="com.tibco.cep.tomsawyer.pan"
+               label="Pan"
+               menubarPath="com.tibco.cep.studio.ui.editors.sequence.diagram.menu/com.tibco.cep.diagramming.tool_menu/ToolsGroup"
+               tooltip="Pan">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.SelectActionDelegate"
+               icon="icons/select.gif"
+               id="com.tibco.cep.tomsawyer.select"
+               label="&amp;Select"
+               menubarPath="com.tibco.cep.studio.ui.editors.sequence.diagram.menu/com.tibco.cep.diagramming.tool_menu/ToolsGroup"
+               tooltip="Select">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.FitWindowActionDelegate"
+               icon="icons/fitInCanvas.gif"
+               id="com.tibco.cep.tomsawyer.fitinwindow"
+               label="&amp;Fit In Window"
+               menubarPath="com.tibco.cep.studio.ui.editors.sequence.diagram.menu/DiagramGroup5"
+               tooltip="Fit In Window">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.IncrementalLayoutActionDelegate"
+               icon="icons/incrementalLayout.gif"
+               id="com.tibco.cep.tomsawyer.incrementallayout"
+               label="In&amp;cremental Layout"
+               menubarPath="com.tibco.cep.studio.ui.editors.sequence.diagram.menu/DiagramGroup4"
+               tooltip="Arrange all objects incrementally">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.RoutingActionDelegate"
+               icon="icons/routing.gif"
+               id="com.tibco.cep.tomsawyer.edge.routing"
+               label="Link Routing"
+               menubarPath="com.tibco.cep.studio.ui.editors.sequence.diagram.menu/DiagramGroup4"
+               tooltip="Arrange all edges">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.LabelingActionDelegate"
+               icon="icons/labeling.gif"
+               id="com.tibco.cep.tomsawyer.labeling"
+               label="L&amp;abeling"
+               menubarPath="com.tibco.cep.studio.ui.editors.sequence.diagram.menu/DiagramGroup4"
+               tooltip="Arrange all labels">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.HierarchicalObliqueLayoutActionDelegate"
+               icon="icons/hierarchicaldeep.png"
+               id="com.tibco.cep.tomsawyer.hierarchical.oblique.layout"
+               label="Hierarchical Layout (Oblique)"
+               menubarPath="com.tibco.cep.studio.ui.editors.sequence.diagram.menu/com.tibco.cep.diagramming.layout_menu/LayoutGroup"
+               tooltip="Arranges the nodes in a hierarchical layout">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.HierarchicalRectilinearLayoutActionDelegate"
+               icon="icons/hierarchicaldeep.png"
+               id="com.tibco.cep.tomsawyer.hierarchical.rectilinear.layout"
+               label="Hierarchical Layout (Rectilinear)"
+               menubarPath="com.tibco.cep.studio.ui.editors.sequence.diagram.menu/com.tibco.cep.diagramming.layout_menu/LayoutGroup"
+               tooltip="Arranges the nodes in a hierarchical layout">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.SymmetricLayoutActionDelegate"
+               icon="icons/symmetricdeep.png"
+               id="com.tibco.cep.tomsawyer.symmetric.layout"
+               label="Symmetric Layout"
+               menubarPath="com.tibco.cep.studio.ui.editors.sequence.diagram.menu/com.tibco.cep.diagramming.layout_menu/LayoutGroup"
+               tooltip="Arranges the nodes in a symmetric layout">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.OrthogonalLayoutActionDelegate"
+               icon="icons/orthogonaldeep.png"
+               id="com.tibco.cep.tomsawyer.orthogonal.layout"
+               label="Orthogonal Layout"
+               menubarPath="com.tibco.cep.studio.ui.editors.sequence.diagram.menu/com.tibco.cep.diagramming.layout_menu/LayoutGroup"
+               tooltip="Arranges the nodes in a orthogonal layout">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.CircularLayoutActionDelegate"
+               icon="icons/circulardeep.png"
+               id="com.tibco.cep.tomsawyer.circular.layout"
+               label="Circular Layout"
+               menubarPath="com.tibco.cep.studio.ui.editors.sequence.diagram.menu/com.tibco.cep.diagramming.layout_menu/LayoutGroup"
+               tooltip="Arranges the nodes in a circualr layout">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.LayoutActionDelegate"
+               icon="icons/globalLayout.png"
+               id="com.tibco.cep.tomsawyer.default.layout"
+               label="Default Layout"
+               menubarPath="com.tibco.cep.studio.ui.editors.sequence.diagram.menu/com.tibco.cep.diagramming.layout_menu/LayoutGroup"
+               tooltip="Sets default layout">
+         </action>
+      </editorContribution>
+      <editorContribution
+            id="com.tibco.cep.studio.ui.editors.dependencyDiagramEditorContribution"
+            targetID="com.tibco.cep.studio.project.editors.DependencyDiagramEditor">
+         <menu
+               id="com.tibco.cep.studio.ui.editors.dependency.diagram.menu"
+               label="Diagram"
+               path="additions">
+            <separator
+                  name="DiagramGroup1">
+            </separator>
+            <separator
+                  name="DiagramGroup2">
+            </separator>
+            <separator
+                  name="DiagramGroup3">
+            </separator>
+            <separator
+                  name="DiagramGroup4">
+            </separator>
+            <separator
+                  name="DiagramGroup5">
+            </separator>
+            <separator
+                  name="DiagramGroup6">
+            </separator>
+         </menu>
+         <menu
+               id="com.tibco.cep.diagramming.layout_menu"
+               label="&amp;Layout"
+               path="com.tibco.cep.studio.ui.editors.dependency.diagram.menu/DiagramGroup1">
+            <separator
+                  name="LayoutGroup">
+            </separator>
+         </menu>
+         <menu
+               id="com.tibco.cep.diagramming.tool_menu"
+               label="&amp;Interactive Tools"
+               path="com.tibco.cep.studio.ui.editors.dependency.diagram.menu/DiagramGroup1">
+            <separator
+                  name="ToolsGroup">
+            </separator>
+         </menu>
+         <action
+               class="com.tibco.cep.diagramming.actions.ExportToImageActionDelegate"
+               icon="icons/imageExport.gif"
+               id="com.tibco.cep.tomsawyer.imageexport"
+               label="Export to Image..."
+               menubarPath="com.tibco.cep.studio.ui.editors.dependency.diagram.menu/DiagramGroup3"
+               tooltip="Diagram Export to Image">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.PrintActionDelegate"
+               icon="icons/print.gif"
+               id="com.tibco.cep.tomsawyer.print"
+               label="Print"
+               menubarPath="com.tibco.cep.studio.ui.editors.dependency.diagram.menu/DiagramGroup2"
+               tooltip="Diagram Print">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.PrintPreviewActionDelegate"
+               icon="icons/printPreview.gif"
+               id="com.tibco.cep.tomsawyer.printpreview"
+               label="Print Preview..."
+               menubarPath="com.tibco.cep.studio.ui.editors.dependency.diagram.menu/DiagramGroup2"
+               tooltip="Diagram Print Preview">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.PrintSetupActionDelegate"
+               icon="icons/printSetup.gif"
+               id="com.tibco.cep.tomsawyer.printsetup"
+               label="Print Setup..."
+               menubarPath="com.tibco.cep.studio.ui.editors.dependency.diagram.menu/DiagramGroup2"
+               tooltip="Diagram Print Setup">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.LinkNavigatorActionDelegate"
+               icon="icons/linkNavigation.gif"
+               id="com.tibco.cep.tomsawyer.linknavigator"
+               label="Link &amp;Navigator"
+               menubarPath="com.tibco.cep.studio.ui.editors.dependency.diagram.menu/com.tibco.cep.diagramming.tool_menu/ToolsGroup"
+               tooltip="Link Navigator">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.InteractiveZoomActionDelegate"
+               icon="icons/interactiveZoom.gif"
+               id="com.tibco.cep.tomsawyer.interactivezoom"
+               label="&amp;Interactive Zoom"
+               menubarPath="com.tibco.cep.studio.ui.editors.dependency.diagram.menu/com.tibco.cep.diagramming.tool_menu/ToolsGroup"
+               tooltip="Interactive Zoom">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.ZoomActionDelegate"
+               icon="icons/zoom.gif"
+               id="com.tibco.cep.tomsawyer.marqueezoom"
+               label="&amp;Marquee Zoom"
+               menubarPath="com.tibco.cep.studio.ui.editors.dependency.diagram.menu/com.tibco.cep.diagramming.tool_menu/ToolsGroup"
+               tooltip="Marquee Zoom">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.MagnifyActionDelegate"
+               icon="icons/magnifyZoom.png"
+               id="com.tibco.cep.tomsawyer.magnify"
+               label="&amp;Magnify"
+               menubarPath="com.tibco.cep.studio.ui.editors.dependency.diagram.menu/com.tibco.cep.diagramming.tool_menu/ToolsGroup"
+               tooltip="Magnify Zoom">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.PanActionDelegate"
+               icon="icons/pan.gif"
+               id="com.tibco.cep.tomsawyer.pan"
+               label="Pan"
+               menubarPath="com.tibco.cep.studio.ui.editors.dependency.diagram.menu/com.tibco.cep.diagramming.tool_menu/ToolsGroup"
+               tooltip="Pan">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.SelectActionDelegate"
+               icon="icons/select.gif"
+               id="com.tibco.cep.tomsawyer.select"
+               label="&amp;Select"
+               menubarPath="com.tibco.cep.studio.ui.editors.dependency.diagram.menu/com.tibco.cep.diagramming.tool_menu/ToolsGroup"
+               tooltip="Select">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.FitWindowActionDelegate"
+               icon="icons/fitInCanvas.gif"
+               id="com.tibco.cep.tomsawyer.fitinwindow"
+               label="&amp;Fit In Window"
+               menubarPath="com.tibco.cep.studio.ui.editors.dependency.diagram.menu/DiagramGroup5"
+               tooltip="Fit In Window">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.IncrementalLayoutActionDelegate"
+               icon="icons/incrementalLayout.gif"
+               id="com.tibco.cep.tomsawyer.incrementallayout"
+               label="In&amp;cremental Layout"
+               menubarPath="com.tibco.cep.studio.ui.editors.dependency.diagram.menu/DiagramGroup4"
+               tooltip="Arrange all objects incrementally">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.RoutingActionDelegate"
+               icon="icons/routing.gif"
+               id="com.tibco.cep.tomsawyer.edge.routing"
+               label="Link Routing"
+               menubarPath="com.tibco.cep.studio.ui.editors.dependency.diagram.menu/DiagramGroup4"
+               tooltip="Arrange all edges">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.LabelingActionDelegate"
+               icon="icons/labeling.gif"
+               id="com.tibco.cep.tomsawyer.labeling"
+               label="L&amp;abeling"
+               menubarPath="com.tibco.cep.studio.ui.editors.dependency.diagram.menu/DiagramGroup4"
+               tooltip="Arrange all labels">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.HierarchicalObliqueLayoutActionDelegate"
+               icon="icons/hierarchicaldeep.png"
+               id="com.tibco.cep.tomsawyer.hierarchical.oblique.layout"
+               label="Hierarchical Layout (Oblique)"
+               menubarPath="com.tibco.cep.studio.ui.editors.dependency.diagram.menu/com.tibco.cep.diagramming.layout_menu/LayoutGroup"
+               tooltip="Arranges the nodes in a hierarchical layout">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.HierarchicalRectilinearLayoutActionDelegate"
+               icon="icons/hierarchicaldeep.png"
+               id="com.tibco.cep.tomsawyer.hierarchical.rectilinear.layout"
+               label="Hierarchical Layout (Rectilinear)"
+               menubarPath="com.tibco.cep.studio.ui.editors.dependency.diagram.menu/com.tibco.cep.diagramming.layout_menu/LayoutGroup"
+               tooltip="Arranges the nodes in a hierarchical layout">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.SymmetricLayoutActionDelegate"
+               icon="icons/symmetricdeep.png"
+               id="com.tibco.cep.tomsawyer.symmetric.layout"
+               label="Symmetric Layout"
+               menubarPath="com.tibco.cep.studio.ui.editors.dependency.diagram.menu/com.tibco.cep.diagramming.layout_menu/LayoutGroup"
+               tooltip="Arranges the nodes in a symmetric layout">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.OrthogonalLayoutActionDelegate"
+               icon="icons/orthogonaldeep.png"
+               id="com.tibco.cep.tomsawyer.orthogonal.layout"
+               label="Orthogonal Layout"
+               menubarPath="com.tibco.cep.studio.ui.editors.dependency.diagram.menu/com.tibco.cep.diagramming.layout_menu/LayoutGroup"
+               tooltip="Arranges the nodes in a orthogonal layout">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.CircularLayoutActionDelegate"
+               icon="icons/circulardeep.png"
+               id="com.tibco.cep.tomsawyer.circular.layout"
+               label="Circular Layout"
+               menubarPath="com.tibco.cep.studio.ui.editors.dependency.diagram.menu/com.tibco.cep.diagramming.layout_menu/LayoutGroup"
+               tooltip="Arranges the nodes in a circualr layout">
+         </action>
+         <action
+               class="com.tibco.cep.diagramming.actions.LayoutActionDelegate"
+               icon="icons/globalLayout.png"
+               id="com.tibco.cep.tomsawyer.default.layout"
+               label="Default Layout"
+               menubarPath="com.tibco.cep.studio.ui.editors.dependency.diagram.menu/com.tibco.cep.diagramming.layout_menu/LayoutGroup"
+               tooltip="Sets default layout">
+         </action>
+      </editorContribution>
+   </extension>
+   <extension
+         point="org.eclipse.ui.actionSets">
+      <actionSet
+            id="com.tibco.cep.studio.ui.editors.projectactions"
+            label="Studio Project Actions  "
+            visible="true">
+              <action
+                    class="com.tibco.cep.studio.ui.diagrams.actions.GenerateProjectDiagramActionDelegate"
+                    definitionId="com.tibco.cep.studio.ui.generateProjectView"
+                    icon="icons/Project_Analyze.png"
+                    id="com.tibco.cep.studio.ui.generateProjectView"
+                    label="View"
+                    menubarPath="project/build.ext2"
+                    style="push">
+              </action>
+              <action
+                    class="com.tibco.cep.studio.ui.editors.project.AnalyzeProjectActionDelegate"
+                    icon="icons/Project_Analyze.png"
+                    id="com.tibco.cep.studio.ui.analyzeProject"
+                    label="Analyze"
+                    menubarPath="project/build.ext2"
+                    style="push">
+              </action>
+      </actionSet>
+   </extension>
+    <extension
+         point="org.eclipse.ui.navigator.navigatorContent">
+       <navigatorContent
+            activeByDefault="true"
+            contentProvider="com.tibco.cep.studio.ui.navigator.providers.ConceptContentProvider"
+            id="com.tibco.cep.studio.projectexplorer.conceptContent"
+            labelProvider="com.tibco.cep.studio.ui.navigator.providers.ConceptAttributeLabelProvider"
+            name="Concept attributes"
+            priority="normal">
+         <triggerPoints>
+            <instanceof
+                  value="org.eclipse.core.resources.IFile">
+            </instanceof>
+            <or>
+               <test
+                     forcePluginActivation="true"
+                     property="org.eclipse.core.resources.extension"
+                     value="concept">
+               </test>
+               <test
+                     forcePluginActivation="true"
+                     property="org.eclipse.core.resources.extension"
+                     value="scorecard">
+               </test>
+            </or>
+         </triggerPoints>
+          <possibleChildren>
+            <instanceof
+                  value="org.eclipse.core.resources.IFile">
+            </instanceof>
+            <or>
+                <test
+                        forcePluginActivation="true"
+                        property="org.eclipse.core.resources.extension"
+                        value="domain">
+                  </test>
+            </or>
+         </possibleChildren>
+         <dropAssistant
+               class="com.tibco.cep.studio.ui.navigator.dnd.StudioNavigatorDropAdapterAssistant"
+               id="com.tibco.cep.studio.ui.editors.domainDropAssistant">
+            <possibleDropTargets>
+               <or>
+                  <instanceof
+                        value="com.tibco.cep.studio.ui.navigator.model.PropertyNode">
+                  </instanceof>
+                  <instanceof
+                        value="com.tibco.cep.studio.ui.navigator.model.EventPropertyNode">
+                  </instanceof>
+               </or>
+            </possibleDropTargets>
+         </dropAssistant>
+         <commonSorter
+               class="com.tibco.cep.studio.ui.views.NavigatorCommonSorter">
+         </commonSorter>
+      </navigatorContent>
+      <navigatorContent
+            activeByDefault="true"
+            contentProvider="com.tibco.cep.studio.ui.navigator.providers.EventContentProvider"
+            id="com.tibco.cep.studio.projectexplorer.eventNavigatorContent"
+            labelProvider="com.tibco.cep.studio.ui.navigator.providers.EventPropertyLabelProvider"
+            name="Event User Properties"
+            priority="normal">
+         <triggerPoints>
+            <instanceof
+                  value="org.eclipse.core.resources.IFile">
+            </instanceof>
+            <test
+                  forcePluginActivation="true"
+                  property="org.eclipse.core.resources.extension"
+                  value="event">
+            </test>
+         </triggerPoints>
+           <possibleChildren>
+            <instanceof
+                  value="org.eclipse.core.resources.IFile">
+            </instanceof>
+            <or>
+                <test
+                        forcePluginActivation="true"
+                        property="org.eclipse.core.resources.extension"
+                        value="domain">
+                  </test>
+            </or>
+         </possibleChildren>
+         <dropAssistant
+               class="com.tibco.cep.studio.ui.navigator.dnd.StudioNavigatorDropAdapterAssistant"
+               id="com.tibco.cep.studio.ui.editors.eventPropertyDomainDropAssistant">
+            <possibleDropTargets>
+               <or>
+                  <instanceof
+                        value="com.tibco.cep.studio.ui.navigator.model.PropertyNode">
+                  </instanceof>
+                  <instanceof
+                        value="com.tibco.cep.studio.ui.navigator.model.EventPropertyNode">
+                  </instanceof>
+               </or>
+            </possibleDropTargets>
+         </dropAssistant>
+         <commonSorter
+               class="com.tibco.cep.studio.ui.views.NavigatorCommonSorter">
+         </commonSorter>
+      </navigatorContent>
+   </extension>
+   <extension
+          point="org.eclipse.ui.startup">
+       <startup
+             class="com.tibco.cep.studio.ui.editors.EditorsUIPluginStartup">
+       </startup>
+    </extension>
+   <extension
+         point="org.eclipse.ui.importWizards">
+      <wizard
+            category="com.tibco.cep.studio.ui.category"
+            class="com.tibco.cep.studio.ui.editors.wizards.ImportDomainModelWizard"
+            icon="icons/domain_model_view.png"
+            id="com.tibco.cep.studio.ui.editors.importdomainwizard"
+            name="Domain Model">
+         <description>
+            Import a domain model
+         </description>
+      </wizard>
+   </extension>
+   <extension
+         point="org.eclipse.ui.importWizards">
+      <wizard
+            category="com.tibco.cep.studio.ui.category"
+            class="com.tibco.cep.studio.ui.editors.wizards.ImportTestDataWizard"
+            icon="icons/testdata_excel.png"
+            id="com.tibco.cep.studio.ui.editors.importtestdatawizard"
+            name="Test Data">
+         <description>
+            Import Test Data
+         </description>
+      </wizard>
+   </extension>
+   <extension
+         id="com.tibco.cep.studio.ui.editors.newWizards"
+         point="org.eclipse.ui.newWizards">
+		<wizard
+               canFinishEarly="false"
+               category="com.tibco.cep.studio.ui.category"
+               class="com.tibco.cep.studio.ui.editors.wizards.NewChannelWizard"
+               finalPerspective="com.tibco.cep.studio.application.perspective"
+               icon="icons/channel_16x16.png"
+               id="com.tibco.cep.studio.ui.newChannelWizard"
+               name="Channel">
+	         <description>
+	            Create a new channel
+	         </description>
+      	</wizard>
+   </extension>
+   <extension
+         point="org.eclipse.ui.views.properties.tabbed.propertyContributor">
+      <propertyContributor
+            contributorId="com.tibco.cep.studio.ui.editors.project.diagram.propertyContributor"
+            labelProvider="com.tibco.cep.studio.ui.editors.project.ProjectDiagramPropertyLabelProvider">
+         <propertyCategory
+               category="default"></propertyCategory>
+      </propertyContributor>
+   </extension>
+   <extension
+         point="org.eclipse.ui.views.properties.tabbed.propertyTabs">
+      <propertyTabs
+            contributorId="com.tibco.cep.studio.ui.editors.project.diagram.propertyContributor">
+         <propertyTab
+               category="default"
+               id="project.diagram.propertyTab.general"
+               label="General">
+         </propertyTab>
+      </propertyTabs>
+   </extension>
+   <extension
+         point="org.eclipse.ui.views.properties.tabbed.propertySections">
+      <propertySections
+            contributorId="com.tibco.cep.studio.ui.editors.project.diagram.propertyContributor">
+         <propertySection
+               class="com.tibco.cep.studio.ui.editors.project.ProjectDiagramGeneralPropertySection"
+               id="com.tibco.cep.studio.ui.editors.genreral.propertySection"
+               tab="project.diagram.propertyTab.general">
+            <input
+                  type="com.tomsawyer.graphicaldrawing.TSEObject">
+            </input>
+         </propertySection>
+      </propertySections>
+   </extension>
+   <extension
+           point="com.tibco.cep.studio.core.searchParticipant">
+        <searchParticipant
+              participant="com.tibco.cep.studio.ui.editors.clusterconfig.ClusterConfigSearchParticipant">
+        </searchParticipant>
+   </extension>
+   <extension
+           point="com.tibco.cep.studio.core.agentExtension">
+        <agentExtension
+              agentExtension="com.tibco.cep.studio.ui.editors.utils.StudioUIAgentExtension">
+        </agentExtension>
+   </extension>
+   <extension
+         point="org.eclipse.jdt.ui.classpathContainerPage">
+      <classpathContainerPage
+            class="com.tibco.cep.studio.ui.editors.java.BEThirdPartyLibraryContainerPage"
+            id="com.tibco.cep.studio.ui.editors.thirdPartyContainerPage"
+            name="BusinessEvents Third Party Library">
+      </classpathContainerPage>
+   </extension>
+   <extension
+         point="org.eclipse.jdt.ui.classpathContainerPage">
+      <classpathContainerPage
+            id="com.tibco.cep.studio.ui.editors.coreClasspathContainerPage"
+            name="BusinessEvents Core Library"
+            class="com.tibco.cep.studio.ui.editors.java.BEClasspathContainerPage">
+      </classpathContainerPage>
+   </extension>
+    <!--
+      <extension
+         point="org.eclipse.ui.views">
+      <category
+            name="Ryan&apos;s Stuff"
+            id="com.tibco.cep.studio.mapper.ui">
+      </category>
+      <view
+            name="Mapper Test View"
+            icon="icons/sample.gif"
+            category="com.tibco.cep.studio.mapper.ui"
+            class="com.tibco.cep.studio.ui.editors.views.MapperView"
+            id="com.tibco.cep.studio.ui.editors.views.MapperView">
+      </view>
+   </extension>
+   -->
+   
+</plugin>
+  

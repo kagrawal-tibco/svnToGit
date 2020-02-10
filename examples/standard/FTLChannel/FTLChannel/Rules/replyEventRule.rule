@@ -1,0 +1,23 @@
+rule Rules.replyEventRule {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Events.tibrequestEvent request;
+	}
+	when {
+		
+	}
+	then {
+		System.debugOut("\n==============================start replyEventRule==============================");
+		System.debugOut("Received request  \nString : " + request.MyString  + "\n Long:" +request.MyLong);
+		
+		Events.tibreplyEvent response = Events.tibreplyEvent.tibreplyEvent("", "", "Server Reply", 3000);
+		Event.replyEvent(request, response);
+		System.debugOut("Replied");
+		Event.consumeEvent(request);
+		
+		System.debugOut("\n================================end replyEventRule===============================");
+	}
+}

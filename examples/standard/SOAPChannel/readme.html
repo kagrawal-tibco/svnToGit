@@ -1,0 +1,119 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>     SOAP Channel
+
+- TIBCO BusinessEvents&reg; Examples
+</title>
+<meta http-equiv="Content-type" content="text/html; charset=iso-8859-1" />
+<meta http-equiv="Content-Language" content="en-us" />
+<link rel="Shortcut Icon" href="../../_resources/icon.gif" type="image/gif" />
+<style type="text/css" media="all">@import "../../_resources/examples.css";</style>
+</head>
+<body>
+
+
+<h1>SOAP Channel</h1>
+
+
+<h2>Purpose of This Example</h2>
+
+<p>This example demonstrates TIBCO BusinessEvents&reg; implementing a web service: Some TIBCO BusinessEvents RuleFunctions are exposed as operations in a web service, described by a WSDL file.
+A SOAP client can invoke these operations, passing input parameters and receiving results.</p>
+
+
+<h2>How it Works</h2>
+
+<p>A WSDL file describes the operations available.</p>
+
+<p>For each operation, there is an HTTP destination with a serializer/deserializer set to
+<code>com.tibco.cep.driver.http.serializer.SOAPMessageSerializer</code>.
+These destinations receive SOAP requests over HTTP, and transform them into SOAPEvent's.</p>
+
+<p>In the CDD, each destination is assigned a preprocessor that implements the matching operation.</p>
+
+<p>Each preprocessor function replies to the incoming event, causing a response to be sent to the client.</p>
+
+
+<h2> Before You Begin: Ensure a SOAP Client is Installed</h2>
+
+<p>In the How to Run the Example section, Web Tools Platform (WTP) is used to provide the SOAP client.
+This section explains how to check if WTP is already installed, and how to install it. </p>
+<p>You don't have to use WTP, however.
+You can use any client that can work with SOAP over HTTP, such as TIBCO ActiveMatrix BusinessWorks&trade;
+or TIBCO&reg; General Interface.</p>
+
+<ol>
+<li>In TIBCO BusinessEvents Studio, go to <code>Help</code> &gt; <code>Install New Software...</code>.</li>
+<li>For the <code>Work with: </code> field, select the option <code>All Available Sites</code>.</li>
+<li>Check the checkbox <code>Hide items that are already installed</code>.</li>
+<li>Expand the option <code>Web, XML, Java EE and OSGi Enterprise Development</code>.</li>
+<li>If there are items listed in <code>Web, XML, Java EE and OSGi Enterprise Development</code>, you need to install WTP.</li>
+<li>Check the <code>Web, XML, Java EE and OSGi Enterprise Development</code> check box, click <code>Next</code> to install the updates. Follow the prompts to complete the installation.</li>
+<li>You may have to restart TIBCO BusinessEvents Studio after installation to apply the changes.</li>
+</ol>
+
+<h2>How to Run the Example</h2>
+<p>The instructions use WTP (see above). If you are using a different SOAP client, adapt the instructions  as needed.</p>
+<ol>
+<li>
+<p>Open a command window,
+and at the command prompt start the TIBCO BusinessEvents engine using the following command.</p>
+
+<pre class="commands">
+cd <i>BE_HOME</i>/examples/standard/SOAPChannel
+<i>BE_HOME</i>/bin/be-engine --propFile <i>BE_HOME</i>/bin/be-engine.tra -u default -c SOAPChannel/Deployments/SOAP.cdd SOAPChannel.ear
+</pre>
+
+<p>Adapt the command as needed, for example if you have customized the example project,
+or are running it from a different directory.</p>
+</li>
+
+<li>
+<p>Import the <code>SOAPClient</code> project from
+<code><i>BE_HOME</i>/examples/standard/SOAPChannel/SOAPClient</code> into TIBCO BusinessEvents Studio.</p>
+</li>
+
+<li>
+<p>In the TIBCO BusinessEvents Studio editor, in the SOAPClient project,
+open the <code>ConcreteMathService.wsdl</code> file and see the web service structure.</p>
+<p><img src="images/wsdl.png" alt=""/></p>
+</li>
+
+<li>In Project Explorer, right-click on <code>ConcreteMathService.wsdl</code>
+and select <code>Web Services</code> &gt; <code>Test with Web Services Explorer</code>.
+</li>
+
+<li>
+<p>In Web Services Explorer, expand HTTPBinding and select an operation
+(<code>Subtract</code>, <code>Multiply</code>, <code>Divide</code>, or <code>Add</code>). In the Actions panel, provide parameter values as needed.
+For example, choose the <code>Add</code> operation,
+and provide the parameter values <code>5</code> and <code>6</code>.</p>
+</li>
+
+<li>
+<p>Click the <code>Go</code> button to invoke the operation. In the Status panel, you see the returned result.</p>
+<p><img src="images/soaprequest.png" alt=""/></p>
+
+<p>Note that on the server side, in the command window, you see corresponding messages, such as:</p>
+<pre class="logs">
+###Getting the first and second value and adding###
+The first number for addition is =5.0
+The second number for addition is =6.0
+###Creating the SoapEventOut###
+###The addition of the 2 numbers are=###11.0
+###Printing SOAPEventOut Payload###
+</pre>
+<p>The SOAP message also displays for your information.</p>
+</li>
+
+</ol>
+
+<div class="footer">
+<p>TIBCO BusinessEvents&reg; 5.6<br />
+Copyright&copy; 2004-2019 TIBCO Software Inc. All rights reserved.</p>
+</div>
+</body>
+</html>

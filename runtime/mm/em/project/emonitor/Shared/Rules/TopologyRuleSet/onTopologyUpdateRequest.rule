@@ -1,0 +1,37 @@
+/**
+ * @description 
+ * @author 
+ */
+rule Shared.Rules.TopologyRuleSet.onTopologyUpdateRequest {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Shared.Events.reqres.topology.TopologyUpdateRequestEvent	topologyupdaterequestevent;
+		
+	}
+	when {
+		Shared.Concepts.GlobalScoreCard.siteID != null && String.length(String.trim(Shared.Concepts.GlobalScoreCard.siteID)) != 0;
+	}
+	then {
+		Shared.RuleFunctions.log("OnTopologyUpdateRequest","DEBUG","Triggering Topology rediscovery...");
+		//get the site 
+		Shared.RuleFunctions.log("OnTopologyUpdateRequest","DEBUG","Site ID is "+Shared.Concepts.GlobalScoreCard.siteID);
+		Shared.Concepts.MonitorableEntity site = Instance.getByExtId(Shared.Concepts.GlobalScoreCard.siteID);
+		Shared.RuleFunctions.log("OnTopologyUpdateRequest","DEBUG","Site is "+site);
+		String cacheMode = BEMM.topology.getCacheProvider();
+		
+		Shared.RuleFunctions.log("OnTopologyUpdateRequest","DEBUG","Datagrid provider is: " + cacheMode);			
+		
+		if (site != null) {
+			Shared.RuleFunctions.topology.doTplgyDiscovery(cacheMode, site);
+			
+		    Shared.RuleFunctions.log("OnTopologyUpdateRequest","DEBUG",toXML(site,10,null,Shared.Concepts.GlobalScoreCard.purgeCounts));
+		}
+		
+		Shared.RuleFunctions.log("OnTopologyUpdateRequest","DEBUG","Completed Topology rediscovery...");
+		Shared.RuleFunctions.topology.scheduleTopologyUpdateEvent();
+		Event.consumeEvent(topologyupdaterequestevent);
+	}
+}

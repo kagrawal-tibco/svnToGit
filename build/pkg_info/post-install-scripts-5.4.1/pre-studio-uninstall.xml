@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<project name="pre-uninstall" default="pre-uninstall" basedir=".">
+	<property file="post-install.properties"/>
+	<import file="common-tasks.xml"/>
+	<target name="pre-uninstall" depends="restore-tra-files, restore-designtime-plugins">
+			<echo message="Done pre-uninstallation tasks." />
+		</target>
+		
+		<target name="restore-tra-files">
+			<if>
+				<available file="${tibco.home}/be/5.4/backup/5.4.1_pre/studio/bin" type="dir"/>
+				<then>
+					<echo message="Restoring tra files"/>
+					<move todir="${tibco.home}/be/5.4/studio/bin">
+					<fileset dir="${tibco.home}/be/5.4/backup/5.4.1_pre/studio/bin">
+						<include name="studio-tools.tra"/>
+					</fileset>
+					</move>
+				</then>
+			</if>				
+		</target>
+		
+		<target name="restore-designtime-plugins">
+			<if>
+				<available file="${tibco.home}/be/5.4/backup/5.4.1_pre/studio/eclipse/plugins" type="dir"/>
+				<then>
+					<echo message="Restoring designtime plugins" />
+							<move todir="${tibco.home}/be/5.4/studio/eclipse/plugins">
+								<fileset dir="${tibco.home}/be/5.4/backup/5.4.1_pre/studio/eclipse/plugins">
+									<include name="com.tibco.cep.diagramming_5.4.*.jar*"/>						
+									<include name="com.tibco.cep.rt_5.4.*.jar*"/>
+									<include name="com.tibco.cep.sharedresource_5.4.*.jar*"/>	
+									<include name="com.tibco.cep.studio.application_5.4.*.jar*"/>						
+									<include name="com.tibco.cep.studio.cli_5.4.*.jar*"/>						
+									<include name="com.tibco.cep.studio.common_5.4.*.jar*"/>						
+									<include name="com.tibco.cep.studio.core_5.4.*.jar*"/>						
+									<include name="com.tibco.cep.studio.debug.core_5.4.*.jar*"/>						
+									<include name="com.tibco.cep.studio.debug.ui_5.4.*.jar*"/>						
+									<include name="com.tibco.cep.studio.mapper_5.4.*.jar*"/>
+									<include name="com.tibco.cep.studio.tester.core_5.4.*.jar*"/>
+									<include name="com.tibco.cep.studio.tester.ui_5.4.*.jar*"/>						
+									<include name="com.tibco.cep.studio.ui.editors_5.4.*.jar*"/>						
+									<include name="com.tibco.cep.studio.ui.navigator_5.4.*.jar*"/>						
+									<include name="com.tibco.cep.studio.ui_5.4.*.jar*"/>						
+									<include name="com.tibco.cep.tpcl_5.4.*.jar*"/>						
+									<include name="com.tibco.cep.tra_5.4.*.jar*"/>
+									<include name="com.tibco.cep.studio.wizard.as_5.4.*.jar*"/>
+									<include name="com.tibco.cep.studio.wizard.hawk_5.4.*.jar*"/>						
+									<include name="com.tibco.cep.studio.ws_5.4.*.jar*"/>
+									<include name="com.tibco.xml.*.jar*"/>
+									<include name="com.tibco.cep.studio.xerces_5.4.*.jar*"/>
+								    <include name="com.tibco.cep.thirdparty_5.4.*.jar*"/>
+									<include name="com.tibco.cep.studio.util_5.4.*.jar*"/>
+									<include name="com.tibco.cep.studio.mapper.ui_5.4.*.jar*"/>
+									<include name="com.tibco.cep.studio.dashboard.rt_5.4.*.jar*"/>
+									<include name="com.tibco.cep.security_5.4.*.jar*"/>
+									<include name="com.tibco.cep.eventstreamprocessing_5.4.*.jar*"/>
+									<include name="com.tibco.cep.eventstreamprocessing.common_5.4.*.jar*"/>
+									<include name="com.tibco.cep.datamodeling.common_5.4.*.jar*"/>
+									<include name="com.tibco.cep.liveview_5.4.*.jar" />
+								</fileset>
+							</move>
+				</then>
+			</if>
+			
+		</target> 
+		
+</project>	

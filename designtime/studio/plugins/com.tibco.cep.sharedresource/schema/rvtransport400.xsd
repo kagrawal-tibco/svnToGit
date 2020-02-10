@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<xsd:schema
+        targetNamespace="http://tibco.com/be/shared/rv400"
+        xmlns:aems="http://www.tibco.com/xmlns/aemeta/services/2002"
+        xmlns:bt="http://tibco.com/be/shared/basetypes"
+        xmlns:tns="http://tibco.com/be/shared/rv400"
+        xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+    <xsd:import schemaLocation="basetypes.xsd"
+                namespace="http://tibco.com/be/shared/basetypes"/>
+    <xsd:import schemaLocation="aemeta-services-2002.xsd"
+                namespace="http://www.tibco.com/xmlns/aemeta/services/2002"/>
+
+    <xsd:element name="Advanced" type="tns:Advanced-type"/>
+    <xsd:element name="Certified" type="tns:Certified-type"/>
+    <xsd:element name="CmName" type="xsd:string"/>
+    <xsd:element name="CmqName" type="xsd:string"/>
+    <xsd:element name="Connection" type="tns:Connection-type"/>
+    <xsd:element name="Daemon" type="xsd:string"/>
+    <xsd:element name="Description" type="xsd:string"/>
+    <xsd:element name="DistributedQueue" type="tns:DistributedQueue-type"/>
+    <xsd:element name="General" type="tns:General-type"/>
+    <xsd:element name="LedgerFile" type="xsd:string"/>
+    <xsd:element name="MessageTimeout" type="bt:intOrGVs"/>
+    <xsd:element name="Network" type="xsd:string"/>
+    <xsd:element name="RelayAgent" type="xsd:string"/>
+    <xsd:element name="Reliable" type="tns:Reliable-type"/>
+    <xsd:element name="RendezVousTransport" type="tns:RendezVousTransport-type"/>
+    <xsd:element name="RequireOldMessage" type="bt:booleanOrGVs"/>
+    <xsd:element name="SchedulerActivation" type="bt:doubleOrGVs"/>
+    <xsd:element name="SchedulerHeartbeat" type="bt:doubleOrGVs"/>
+    <xsd:element name="SchedulerWeight" type="bt:intOrGVs"/>
+    <xsd:element name="Service" type="bt:intOrGVs"/>
+    <xsd:element name="SyncLedgerFile" type="bt:booleanOrGVs"/>
+    <xsd:element name="WorkerCompleteTime" type="bt:longOrGVs"/>
+    <xsd:element name="WorkerTasks" type="bt:intOrGVs"/>
+    <xsd:element name="WorkerWeight" type="bt:intOrGVs"/>
+
+
+    <xsd:complexType name="Advanced-type">
+        <xsd:sequence>
+            <xsd:choice>
+                <xsd:element ref="tns:Reliable"/>
+                <xsd:element ref="tns:Certified"/>
+                <xsd:element ref="tns:DistributedQueue"/>
+            </xsd:choice>
+        </xsd:sequence>
+    </xsd:complexType>
+
+    <xsd:complexType name="Certified-type">
+        <xsd:sequence>
+            <xsd:element ref="tns:CmName"/>
+            <xsd:element ref="tns:LedgerFile"/>
+            <xsd:element ref="tns:SyncLedgerFile"/>
+            <xsd:element ref="tns:RelayAgent"/>
+            <xsd:element ref="tns:RequireOldMessage"/>
+            <xsd:element ref="tns:MessageTimeout"/>
+        </xsd:sequence>
+    </xsd:complexType>
+
+    <xsd:complexType name="Connection-type">
+        <xsd:sequence>
+            <xsd:element ref="tns:Daemon"/>
+            <xsd:element ref="tns:Network"/>
+            <xsd:element ref="tns:Service"/>
+            <xsd:element ref="aems:ssl" minOccurs="0"/>
+        </xsd:sequence>
+    </xsd:complexType>
+
+    <xsd:complexType name="DistributedQueue-type">
+        <xsd:sequence>
+            <xsd:element ref="tns:CmqName"/>
+            <xsd:element ref="tns:WorkerWeight"/>
+            <xsd:element ref="tns:WorkerTasks"/>
+            <xsd:element ref="tns:WorkerCompleteTime"/>
+            <xsd:element ref="tns:SchedulerWeight"/>
+            <xsd:element ref="tns:SchedulerHeartbeat"/>
+            <xsd:element ref="tns:SchedulerActivation"/>
+        </xsd:sequence>
+    </xsd:complexType>
+
+    <xsd:complexType name="General-type">
+        <xsd:sequence>
+            <xsd:element ref="tns:Description"/>
+        </xsd:sequence>
+    </xsd:complexType>
+
+    <xsd:complexType name="Reliable-type"/>
+
+    <xsd:complexType name="RendezVousTransport-type">
+        <xsd:sequence>
+            <xsd:element ref="tns:General"/>
+            <xsd:element ref="tns:Connection"/>
+            <xsd:element ref="tns:Advanced"/>
+        </xsd:sequence>
+    </xsd:complexType>
+
+</xsd:schema>

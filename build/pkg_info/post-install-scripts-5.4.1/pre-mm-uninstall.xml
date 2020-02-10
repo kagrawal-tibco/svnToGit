@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<project name="pre-uninstall" default="pre-uninstall" basedir=".">
+	<property file="post-install.properties"/>
+	<import file="common-tasks.xml"/>
+	<target name="pre-uninstall" depends="restore-tra-files">
+		<!--<delete dir="${tibco.home.esc}/be/${beVersionShort}/mm/bin" /> -->
+		<echo message="Done pre-uninstallation tasks." />
+	</target>
+	
+	<target name="restore-tra-files">
+		<echo message="Restoring tra files"/>
+			<move todir="${tibco.home}/be/5.4/mm/bin">
+				<fileset dir="${tibco.home}/be/5.4/backup/5.4.1_pre/mm/bin">
+					<include name="be-mm.tra"/>
+					<include name="mm-tools.tra"/>
+				</fileset>
+			</move>
+	</target>
+</project>	

@@ -1,0 +1,260 @@
+/**
+ * @description Compare 2 artifact revisions
+ * @author aathalye-lt
+ */
+rule Approval.Rules.ArtifactsRuleSet.ArtifactsHistoryRules.AMS_RU_ArtifactsDiffRule {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Approval.Events.ArtifactEvents.History.AMS_E_ArtifactsDiffRequestEvent ams_e_artifactsdiffrequestevent;
+	}
+	when {
+		ams_e_artifactsdiffrequestevent.diffArtifactPath1 != null || ams_e_artifactsdiffrequestevent.diffArtifactPath2 != null;
+	}
+	then {
+		if (ams_e_artifactsdiffrequestevent.loggedInUserName != null) {
+			ams_e_artifactsdiffrequestevent.loggedInUserName = HTTP.decodeURL(ams_e_artifactsdiffrequestevent.loggedInUserName, "UTF-8");
+		}
+		Object LOGGER = Log.getLogger("Approval.Rules.ArtifactsRuleSet.ArtifactsHistoryRules.AMS_RU_ArtifactsDiffRule");
+		String encoding = "UTF-8";
+		String projectName = ams_e_artifactsdiffrequestevent.projectName;
+		//These 2 paths could very well be same if we are comparing 2 different 
+		//artifacts from same revisions.
+		long revisionId1 = ams_e_artifactsdiffrequestevent.diffRevisionId1;
+		long revisionId2 = ams_e_artifactsdiffrequestevent.diffRevisionId2;
+		
+		//These 2 paths could very well be same if we are comparing same 
+		//artifact from 2 different revisions.
+		String diffArtifactPath1 = ams_e_artifactsdiffrequestevent.diffArtifactPath1;
+		String diffArtifactPath2 = ams_e_artifactsdiffrequestevent.diffArtifactPath2;
+		String diffArtifactExtension1 = ams_e_artifactsdiffrequestevent.diffArtifactExtension1;
+		String diffArtifactExtension2 = ams_e_artifactsdiffrequestevent.diffArtifactExtension2;
+		//If both are absent also it will be local copy versus master compare.
+		//If any one is absent compare the available revision with master copy.
+		//If both are present compare them.
+				
+		String pathSeparator = "/";
+		String baseProjectDir = System.getSystemPropertyAsString("rms.projects.baselocation", null);
+		String workspaceDirName = System.getSystemPropertyAsString("rms.project.workspace", "workspace");
+		String decisionDataDirName = 
+			System.getSystemPropertyAsString("rms.project.decisiondata", "decisiondata");
+		  
+		Log.log(LOGGER, "Info", "Revision Id 1 - %s", revisionId1);
+		Log.log(LOGGER, "Info", "Revision Id 2 - %s", revisionId2);
+		//Case 1 Handle local versus master case.
+		//Get artifact matching this revision id
+		if (revisionId1 <= 0 && revisionId2 <= 0) {
+			Object masterBuffer = String.createBuffer(0);
+			//Read master copy
+			//Use artifact path and extension suffixed 1.
+			//The root master directory.
+			String[] masterBufferStrings =
+				{baseProjectDir,
+				 pathSeparator,
+				 projectName,
+				 pathSeparator,
+				 decisionDataDirName,
+				 pathSeparator,
+				 diffArtifactPath1,
+				 ".",
+				 diffArtifactExtension1};
+			
+			masterBuffer = Approval.CommonServices.AMS_RF_JoinStringsToBuffer(masterBufferStrings, masterBuffer);		
+			
+			String masterArtifactFQPath = String.convertBufferToString(masterBuffer);
+			
+			String masterFileContents = File.readFileAsString(masterArtifactFQPath, encoding);
+			//Compress contents and set the property to this value
+			String masterArtifactCompressedContents = RMS.Util.compressString(masterFileContents);
+			
+			Object payloadBuffer = String.createBuffer(0);
+			String[] responseStrings = 
+				{"<tns:DiffedArtifacts xmlns:tns=\"www.tibco.com/be/rms/ArtifactsDiff\">", "\n", "<tns:MasterArtifactContent>", "\n", masterArtifactCompressedContents, "\n",  "</tns:MasterArtifactContent>", "\n", "</tns:DiffedArtifacts>"}; 
+			payloadBuffer = 
+				Approval.CommonServices.AMS_RF_JoinStringsToBuffer(responseStrings, payloadBuffer);
+			
+			String payload = String.convertBufferToString(payloadBuffer);	
+			
+			AMS_E_ArtifactsDiffResponseEvent responseEvent = 
+				Approval.Events.ArtifactEvents.History.AMS_E_ArtifactsDiffResponseEvent.AMS_E_ArtifactsDiffResponseEvent(null, payload);
+			//Send response
+			Event.replyEvent(ams_e_artifactsdiffrequestevent, responseEvent);					
+		
+		//Revision against master copy case
+		} else if (revisionId2 <= 0 || revisionId1 <= 0) {
+			int availableRevisionId = -1;
+			if (revisionId1 <= 0)  {
+				availableRevisionId = revisionId2;
+			} else {
+				availableRevisionId = revisionId1;
+			}
+			
+			WS_C_UserCheckin referencedCheckin1 = Approval.CommonServices.AMS_RF_GetReferencedCheckin(availableRevisionId);
+			if (referencedCheckin1 != null) {
+				//Check if this artifact is contained there.
+				if (Approval.
+						Rules.
+							RuleFunctions.
+								ArtifactRuleFunctions.AMS_RF_IsArtifactInCheckin(referencedCheckin1, diffArtifactPath1)) {
+					//Read artifact contents	
+					
+					Object baseWSDirBuffer = String.createBuffer(0);
+					//The base directory for checkins
+					String[] strings = 
+						{baseProjectDir, 
+						 pathSeparator, 
+						 projectName, 
+						 pathSeparator,
+						 workspaceDirName,
+						 pathSeparator,
+						 "" + availableRevisionId,
+						 pathSeparator,
+						 diffArtifactPath1,
+						 ".",
+						 diffArtifactExtension1};
+					
+					baseWSDirBuffer = Approval.CommonServices.AMS_RF_JoinStringsToBuffer(strings, baseWSDirBuffer);	
+										
+					String artifactFQPath = String.convertBufferToString(baseWSDirBuffer);
+					
+					String fileContents = File.readFileAsString(artifactFQPath, encoding);
+					//Compress contents and set the property to this value
+					String compressedContents = RMS.Util.compressString(fileContents);	
+					
+					Object masterBuffer = String.createBuffer(0);
+					//Read master copy
+					//Use artifact path and extension suffixed 1.
+					//The root master directory.
+					String[] masterBufferStrings =
+						{baseProjectDir,
+						 pathSeparator,
+						 projectName,
+						 pathSeparator,
+						 decisionDataDirName,
+						 pathSeparator,
+						 diffArtifactPath1,
+						 ".",
+						 diffArtifactExtension1};
+					
+					masterBuffer = Approval.CommonServices.AMS_RF_JoinStringsToBuffer(masterBufferStrings, masterBuffer);		
+					
+					String masterArtifactFQPath = String.convertBufferToString(masterBuffer);
+					
+					String masterFileContents = File.readFileAsString(masterArtifactFQPath, encoding);
+					//Compress contents and set the property to this value
+					String masterArtifactCompressedContents = RMS.Util.compressString(masterFileContents);
+					
+					Object payloadBuffer = String.createBuffer(0);
+					String[] responseStrings = 
+						{"<tns:DiffedArtifacts xmlns:tns=\"www.tibco.com/be/rms/ArtifactsDiff\">", "\n", " <tns:RemoteArtifactContent revisionId=\"", "" + availableRevisionId, "\"", ">", "\n", compressedContents, "</tns:RemoteArtifactContent>", "\n", "<tns:MasterArtifactContent>", "\n", compressedContents, "</tns:MasterArtifactContent>", "\n", "</tns:DiffedArtifacts>"}; 
+					payloadBuffer = 
+						Approval.CommonServices.AMS_RF_JoinStringsToBuffer(responseStrings, payloadBuffer);
+						
+					String payload = String.convertBufferToString(payloadBuffer);
+																		
+					AMS_E_ArtifactsDiffResponseEvent responseEvent = 
+						Approval.Events.ArtifactEvents.History.AMS_E_ArtifactsDiffResponseEvent.AMS_E_ArtifactsDiffResponseEvent(null, payload);
+					//Send response
+					Event.replyEvent(ams_e_artifactsdiffrequestevent, responseEvent);							
+				}
+			}
+		} 
+		//2 non-zero revisions case
+		else {
+			WS_C_UserCheckin referencedCheckin1 = 
+					Approval.CommonServices.AMS_RF_GetReferencedCheckin(revisionId1);
+			WS_C_UserCheckin referencedCheckin2 =
+					Approval.CommonServices.AMS_RF_GetReferencedCheckin(revisionId2);
+			
+			if (referencedCheckin1 == null || referencedCheckin2 == null) {
+				String errorMessage = "No matching data found for revision " + revisionId1 + " or revision " + revisionId2;
+				Exception ex = 
+				Exception.newException("Compare Revisions Failed", errorMessage, null);
+				Approval.Events.ArtifactEvents.AMS_E_ErrorEvent	errorEvent = 
+					Approval.CommonServices.AMS_RF_CreateErrorEvent("COMPARE_REVISIONS_FAILURE", errorMessage, null);
+				Event.replyEvent(ams_e_artifactsdiffrequestevent, errorEvent);
+			} else {
+				if (Approval.
+						Rules.
+							RuleFunctions.
+								ArtifactRuleFunctions.AMS_RF_IsArtifactInCheckin(referencedCheckin1, diffArtifactPath1)
+						&&
+					Approval.
+						Rules.
+							RuleFunctions.
+								ArtifactRuleFunctions.AMS_RF_IsArtifactInCheckin(referencedCheckin2, diffArtifactPath2)) {
+					//Read artifact contents	
+					
+					Object revId1Buffer = String.createBuffer(0);
+					//The base directory for checkins
+					String[] revId1Strings = 
+						{baseProjectDir, 
+						 pathSeparator, 
+						 projectName, 
+						 pathSeparator,
+						 workspaceDirName,
+						 pathSeparator,
+						 "" + revisionId1,
+						 pathSeparator,
+						 diffArtifactPath1,
+						 ".",
+						 diffArtifactExtension1};
+					
+					revId1Buffer = Approval.CommonServices.AMS_RF_JoinStringsToBuffer(revId1Strings, revId1Buffer);	
+										
+					String revId1ArtifactFQPath = String.convertBufferToString(revId1Buffer);
+					
+					String revId1FileContents = File.readFileAsString(revId1ArtifactFQPath, encoding);
+					//Compress contents and set the property to this value
+					String revId1CompressedContents = RMS.Util.compressString(revId1FileContents);
+					
+					Object revId2Buffer = String.createBuffer(0);
+					//The base directory for checkins
+					String[] revId2Strings = 
+						{baseProjectDir, 
+						 pathSeparator, 
+						 projectName, 
+						 pathSeparator,
+						 workspaceDirName,
+						 pathSeparator,
+						 "" + revisionId2,
+						 pathSeparator,
+						 diffArtifactPath2,
+						 ".",
+						 diffArtifactExtension2};
+					
+					revId2Buffer = Approval.CommonServices.AMS_RF_JoinStringsToBuffer(revId2Strings, revId2Buffer);	
+										
+					String revId2ArtifactFQPath = String.convertBufferToString(revId2Buffer);
+					
+					String revId2FileContents = File.readFileAsString(revId2ArtifactFQPath, encoding);
+					//Compress contents and set the property to this value
+					String revId2CompressedContents = RMS.Util.compressString(revId2FileContents);
+					
+					Object payloadBuffer = String.createBuffer(0);
+					String[] responseStrings = 
+						{"<tns:DiffedArtifacts xmlns:tns=\"www.tibco.com/be/rms/ArtifactsDiff\">", "\n", "<tns:RemoteArtifactContent revisionId=\"", "" + revisionId1, "\"", ">", "\n", revId1CompressedContents, "</tns:RemoteArtifactContent>", "\n", "<tns:RemoteArtifactContent revisionId=\"", "" + revisionId2, "\"", ">", "\n", revId2CompressedContents, "</tns:RemoteArtifactContent>", "\n", "</tns:DiffedArtifacts>"}; 
+					payloadBuffer = 
+						Approval.CommonServices.AMS_RF_JoinStringsToBuffer(responseStrings, payloadBuffer);
+						
+					String payload = String.convertBufferToString(payloadBuffer);	
+					
+					AMS_E_ArtifactsDiffResponseEvent responseEvent = 
+						Approval.Events.ArtifactEvents.History.AMS_E_ArtifactsDiffResponseEvent.AMS_E_ArtifactsDiffResponseEvent(null, payload);
+					//Send response
+					Event.replyEvent(ams_e_artifactsdiffrequestevent, responseEvent);					
+				} else {
+					//Either revision does not contain information of the said artifact
+					String errorMessage = "No matching data found for revision " + revisionId1 + " or revision " + revisionId2;
+					Exception ex = 
+						Exception.newException("Compare Revisions Failed", errorMessage, null);
+					Approval.Events.ArtifactEvents.AMS_E_ErrorEvent	errorEvent = 
+						Approval.CommonServices.AMS_RF_CreateErrorEvent("COMPARE_REVISIONS_FAILURE", errorMessage, null);
+					Event.replyEvent(ams_e_artifactsdiffrequestevent, errorEvent);
+				}
+			}
+		}
+	}
+}

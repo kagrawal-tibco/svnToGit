@@ -1,0 +1,67 @@
+/**
+ * @description Create RULETEMPLATEINSTANCE builder concept from SCS while fetching.
+ */
+WebStudio.Core.Concepts.RuleTemplateInstance.Builder.WS_C_RuleTemplateInstanceBuilder rulefunction WebStudio.Core.RuleFunctions.Utils.RT.Builder.Ops.Fetch.WS_RF_CreateRuleTemplateInstanceBuilderConceptFromSCS {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String projectName;
+		String username;
+		String scsIntegrationType;
+		String scsRootURL;
+		String artifactPath;
+		Object ruleTemplateEObject;
+		String[] roles;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.RT.Builder.Ops.Fetch.WS_RF_CreateRuleTemplateInstanceBuilderConceptFromSCS");
+		
+		String implementsPath = WS.RTI.getRuleTemplateInstanceImplementsPath(ruleTemplateEObject);
+		Log.log(LOGGER, "Debug", "Path of implemented Rule Template %s by Instance %s", implementsPath, artifactPath);
+		
+		//Create a concept now
+        WS_C_RuleTemplateInstanceBuilder ruleTemplateInstanceBuilder = 
+        	Instance.newInstance("/WebStudio/Core/Concepts/RuleTemplateInstance/Builder/WS_C_RuleTemplateInstanceBuilder", "RTI_BUILDER_" + WS.Common.generateUUID());
+        ruleTemplateInstanceBuilder.implementsPath = implementsPath;
+        
+        int rulePriority = WS.RTI.getRuleTemplateInstancePriority(ruleTemplateEObject);
+        ruleTemplateInstanceBuilder.rulePriority = rulePriority;
+        
+        //Look for base Rule Template to see if it has already been loaded
+        WS_C_RuleTemplateInstanceUserArtifact baseRuleTemplateInstanceUserArtifact = 
+        	WS_RF_CreateOrGetRequisiteBaseRuleTemplateConceptFromSCS("Builder", scsIntegrationType, scsRootURL, username, projectName, implementsPath, roles);
+        			
+        String[] revisionIds = Instance.PropertyArray.toArrayString(baseRuleTemplateInstanceUserArtifact.artifactRevisionIds);
+		//Load instance with this latest revision id
+		String latestRevisionId = revisionIds[0];
+		//This is already in Rete. No need to load it again.
+		WS_C_UserArtifactRevision userArtifactRevision = Instance.getByExtIdByUri(latestRevisionId, "/WebStudio/Core/Concepts/WS_C_UserArtifactRevision");
+		
+		Log.log(LOGGER, "Debug", "Artifact Content ID for %s", userArtifactRevision.artifactContentsId);
+		//Either builder or view
+		Concept baseRuleTemplateContainedConcept = WS_RF_GetArtifactContentInstance(userArtifactRevision.artifactContentsId, userArtifactRevision.parentArtifactType);
+		
+		WS_C_RuleTemplateInstanceBuilder baseRuleTemplateInstanceBuilder = null;
+		if (baseRuleTemplateContainedConcept instanceof WS_C_RuleTemplateInstanceBuilder) {
+			baseRuleTemplateInstanceBuilder = baseRuleTemplateContainedConcept;
+			//Get symbols from it
+			WS_C_Symbols baseRuleTemplateBuilderSymbols = Instance.PropertyAtom.getConceptReference(baseRuleTemplateInstanceBuilder.symbols, 1L);
+			if (baseRuleTemplateBuilderSymbols != null) {
+				//Set this in the child RTI instance
+				Instance.PropertyAtom.setConceptReference(ruleTemplateInstanceBuilder.symbols, baseRuleTemplateBuilderSymbols, 1L);
+			}
+		}
+		//Add its condition filter structure and commands from model.
+		WS_RF_RTIBuilderEModelToConceptSerializer(ruleTemplateEObject, baseRuleTemplateContainedConcept, ruleTemplateInstanceBuilder);
+		
+		// set the display properties
+		if (baseRuleTemplateInstanceBuilder.displayProperties != null) {
+			Instance.PropertyAtom.setConceptReference(ruleTemplateInstanceBuilder.displayProperties, baseRuleTemplateInstanceBuilder.displayProperties,1L);
+		} else {
+			Log.log(LOGGER, "Debug", "Display Properties are not set.");
+		}
+		
+		return ruleTemplateInstanceBuilder;	
+	}
+}

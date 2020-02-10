@@ -1,0 +1,46 @@
+/**
+ * @description 
+ */
+void rulefunction Management.RuleFunctions.Exceptions.printAndSendException {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object Except;
+		String family;
+		String methodFQName;
+		String monitoredEntityName;
+		Event requestevent;
+	}
+	body {
+		Exception e = Except;	//Automatic cast to Exception
+		String TOKEN = "$";
+		String errMsg="";
+		String errXMLStr="";
+		String level = "ERROR";
+		
+		if (methodFQName != null && String.length(String.trim(methodFQName)) != 0) {
+			errXMLStr = "Exception occurred while invoking method: "+methodFQName+TOKEN;
+			errMsg = level + ": Exception occurred while invoking method: "+methodFQName;
+		}
+		
+		if (monitoredEntityName != null && String.length(String.trim(monitoredEntityName)) != 0) {
+			errXMLStr = errXMLStr + "Monitored Entity: " +monitoredEntityName+TOKEN;
+	    	errMsg = errMsg + " on monitored entity: " + monitoredEntityName+". ";
+		}
+		
+		if (e!=null  && String.length(String.trim(e@message)) != 0) { 
+			errXMLStr = errXMLStr + "Exception: "+e@message;
+			errMsg = errMsg+ ".\n" + e@message + ".";
+		}
+		
+		if (e!=null  && String.length(String.trim(e@stackTrace)) != 0) { 
+			errMsg = errMsg +"\n" + e@stackTrace;
+		}
+			
+	    Shared.RuleFunctions.log(family,level," ... SENDING ... "+errXMLStr);
+	    Shared.RuleFunctions.log(family,level,errMsg);
+	    Shared.Events.reqres.FailureResponseEvent event = Shared.Events.reqres.FailureResponseEvent.FailureResponseEvent(null,null,"100",errXMLStr);
+	    Event.replyEvent(requestevent, event);
+	}
+}

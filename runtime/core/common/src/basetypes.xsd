@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<xsd:schema
+    ecore:documentRoot="BaseTypesRoot" 
+	ecore:nsPrefix="basetypes"
+	ecore:package="com.tibco.be.util.config.sharedresources.basetypes"
+	elementFormDefault="unqualified"
+	xmlns:bt="http://tibco.com/be/basetypes"
+	xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore"
+	xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+	targetNamespace="http://tibco.com/be/basetypes">
+	
+	<xsd:import namespace="http://www.eclipse.org/emf/2002/Ecore"
+		schemaLocation="platform:/plugin/org.eclipse.emf.ecore/model/Ecore.xsd" />
+	
+	<xsd:simpleType ecore:name="Gv" name="gv-type">
+		<xsd:restriction base="xsd:string">
+			<xsd:pattern value="([^%]*%%[^%]*%%)+[^%]*" />
+		</xsd:restriction>
+	</xsd:simpleType>
+ 
+	<xsd:simpleType ecore:name="BooleanOrGvs" name="booleanOrGVs-type">
+		<xsd:union memberTypes="xsd:boolean bt:gv-type" />
+	</xsd:simpleType>
+
+	<xsd:simpleType ecore:name="DecimalOrGvs" name="decimalOrGVs-type">
+		<xsd:union memberTypes="xsd:decimal bt:gv-type" />
+	</xsd:simpleType>
+
+	<xsd:simpleType ecore:name="DoubleOrGvs" name="doubleOrGVs-type">
+		<xsd:union memberTypes="xsd:double bt:gv-type" />
+	</xsd:simpleType>
+
+	<xsd:simpleType ecore:name="DateTimeOrGvs" name="dateTimeOrGVs-type">
+		<xsd:union memberTypes="xsd:dateTime bt:gv-type" />
+	</xsd:simpleType>
+
+	<xsd:simpleType ecore:name="FloatOrGvs" name="floatOrGVs-type">
+		<xsd:union memberTypes="xsd:float bt:gv-type" />
+	</xsd:simpleType>
+
+	<xsd:simpleType ecore:name="HexBinaryOrGVs" name="hexBinaryOrGVs-type">
+		<xsd:union memberTypes="xsd:hexBinary bt:gv-type" />
+	</xsd:simpleType>
+
+	<xsd:simpleType ecore:name="IntOrGVs" name="intOrGVs-type">
+		<xsd:union memberTypes="xsd:int bt:gv-type" />
+	</xsd:simpleType>
+
+	<xsd:simpleType ecore:name="LongOrGVs" name="longOrGVs-type">
+		<xsd:union memberTypes="xsd:long bt:gv-type" />
+	</xsd:simpleType>
+
+	<xsd:simpleType ecore:name="StringOrGVs" name="stringOrGVs-type">
+		<xsd:union memberTypes="bt:gv-type xsd:string" />
+	</xsd:simpleType>
+
+	<xsd:simpleType ecore:name="JndiPropertyTypeOrGvs" name="jndiPropertyTypeOrGvs-type">
+		<xsd:union memberTypes="bt:gv-type">
+			<xsd:simpleType  ecore:name="JndiPropertyTypeOrGvsEnum">
+				<xsd:restriction base="xsd:string">
+					<xsd:enumeration value="boolean" />
+					<xsd:enumeration value="byte" />
+					<xsd:enumeration value="char" />
+					<xsd:enumeration value="double" />
+					<xsd:enumeration value="float" />
+		    		<xsd:enumeration value="int"/>
+		    		<xsd:enumeration value="long"/>
+		    		<xsd:enumeration value="short"/>
+		    		<xsd:enumeration value="string"/>
+				</xsd:restriction>
+			</xsd:simpleType>
+		</xsd:union>
+	</xsd:simpleType>
+
+</xsd:schema>

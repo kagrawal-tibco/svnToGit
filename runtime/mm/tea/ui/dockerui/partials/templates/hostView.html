@@ -1,0 +1,321 @@
+<div ng-controller='IndexCtrl' class="appManagementPage tea-theme wrapper row-offcanvas row-offcanvas-left">
+	<div ng-include src="'partials/templates/header.html'"></div>
+	<div class="beTeaAgentView">
+    <aside class="left-side sidebar-offcanvas" ng-class="">
+        <div ng-include src="'partials/templates/leftNav.html'"></div>
+    </aside>
+    <div ng-controller='hostCtrl' >
+     <div ng-show="notification.show">
+      		<div ng-include="'partials/templates/directive/showNotification.html'"></div>
+     </div>
+     <div class="adminView">
+		<div id="loaderdiv" style="display: none;">
+			<img src="images/icons/loader.gif" class="ajax-loader" />
+		</div>
+		<div class="instanceViewPanel1">
+         	<div class="row" ng-show="breadCrumbs.length > 1">
+         		<div class="pull-left be_breadCrumbs_div" ng-class="{'tea-status-error' : host.status.state=='Unreachable','tea-status-ok':host.status.state=='Reachable'}">
+         			<ul>
+         				<li class="be_breadCrumbs pull-left" ng-repeat = "b in breadCrumbs.slice(0,breadCrumbs.length-1)"><a ng-click="breadCrumbsRouting(b)">{{b.name}}</a> > </li>
+         				<li class="pull-left"> {{breadCrumbs[breadCrumbs.length -1].name}}</li>
+         				<!-- <li style="padding-left: 10px;" class="button pull-left"> 
+         					<div ng-include="'partials/templates/createHost.html'"></div>   
+            				<div ng-class="!host.config.predefined ? 'disableOperation' :'operation'"  ng-click="host.config.predefined  ? showEditHost():null">             	
+      	  		  				<i title="Edit Host" class="fa fa-pencil"></i>
+				  			</div> 
+            			</li>  -->
+         			</ul>
+         		</div> 
+         	</div>    
+         	<div ng-include="'partials/templates/aboutBETeaView.html'"></div> 
+         	<div ng-include="'partials/templates/createInstance.html'"></div>
+         	<ul class="appBox clearfix">    
+         		<!-- <li class="firstButton pull-left" ng-if="hasPermission(16)">
+                    <div ng-class="showCopyOperation() ? 'operation' : 'disableOperation'" ng-click="showCopyOperation() ? showCopyInstance() : null" >
+                        <i  class="fa fa-clipboard"></i>
+                        <span>Copy</span>
+                    </div>
+                </li> --> 
+                <li class="button pull-left" ng-if="hasPermission(19)">
+                    <div ng-class="showOperations() && !check.allDeployed ? 'operation' : 'disableOperation'" ng-click="showOperations() && !check.allDeployed ? deleteInstance(null,true) : null" >
+                        <i  class="fa fa-trash-o"></i>
+                        <span>Delete</span>
+                    </div>
+                </li>     
+        		<!-- <li class="button pull-left" ng-if="hasPermission(8)">  
+        			<div ng-class="showOperations() && !check.allStarted ? 'operation' : 'disableOperation'" ng-click="showOperations() && !check.allStarted  ? startHost() : null">                  	
+      	  		  		<i  class="fa fa-play"></i>
+				  		<span>Start</span> 
+				  	</div>   
+            	</li> --> 
+            	<!-- <li class="button pull-left" ng-if="hasPermission(9)">    
+            		<div  ng-class="showOperations() && !check.allStopped? 'operation' : 'disableOperation'" ng-click="showOperations() && !check.allStopped? stopHost() : null">               	
+      	  		  		<i  class="fa fa-stop"></i>
+				  		<span>Stop</span>
+				  	</div> 
+            	</li>  -->
+            	<!-- <li class="button pull-left" ng-if="hasPermission(10)"> 
+            		<div ng-class="showOperations() && !check.allKilled? 'operation' : 'disableOperation'" ng-click="showOperations() && !check.allKilled? killHost() : null"> 
+      	  		  		<i  class="fa fa-times"></i>
+				  		<span>Kill</span> 
+				  	</div>
+            	</li> --> 
+            	<!-- <li class="button pull-left" ng-if="hasPermission(11)">   
+            		<div ng-class="showOperations() && !check.allDeployed ? 'operation' : 'disableOperation'" ng-click="showOperations() && !check.allDeployed ? deployHost() : null">                	
+      	  		  		<i  class="fa fa-upload"></i>
+				  		<span>Deploy</span> 
+				  	</div>
+           		 </li> 
+            	<li class="button pull-left" ng-if="hasPermission(12)">    
+            		<div ng-class="showOperations() && !check.allUndeployed? 'operation' : 'disableOperation'" ng-click="showOperations() && !check.allUndeployed? undeployHost() : null">               	
+      	  		  		<i  class="fa fa-download"></i>
+				  		<span>Un-deploy</span> 
+				  	</div>
+            	</li>  
+            	<li class="button pull-left" ng-if="hasPermission(3)"> 
+            		<div ng-include="'partials/templates/hotDeployInstance.html'"></div> 
+            		<div ng-class="showOperations() && check.isHotDeployAllow ? 'operation' :'disableOperation'" ng-click="showOperations() && check.isHotDeployAllow? showHotDeployModal() :null">                     	
+      	  		  		<i class="fa fa-fire"></i>
+				  		<span>Hot-deploy</span> 
+				  	</div>
+            	</li>
+                <li class="button pull-left">
+                    <div ng-class="showOperations()? 'operation' : 'disableOperation'" ng-click="showOperations()? downloadLogs() : null" >
+                        <i  class="fa fa-arrow-circle-down"></i>
+                        <span>BE Logs</span>
+                    </div>
+                </li>
+                <li class="button pull-left">
+                    <div ng-class="showOperations()? 'operation' : 'disableOperation'" ng-click="showOperations()? downloadASLogs() : null" >
+                        <i  class="fa fa-arrow-circle-down"></i>
+                        <span>AS Logs</span>
+                    </div>
+                </li> -->
+                <li class="button pull-left">
+                    <div ng-class="showOperations() && !check.allStopped ? 'operation' : 'disableOperation'" ng-click="showOperations() && !check.allStopped? downloadThreadDump() : null" >
+                        <i  class="fa fa-arrow-circle-down"></i>
+                        <span>ThreadDumps</span>
+                    </div>
+                </li>
+            	<!-- <li class="button pull-left">
+            		<div ng-include="'partials/templates/groupGlobalVariablesUpdatePanel.html'"></div>
+            		<div ng-include="'partials/templates/groupJVMPropertiesUpdatePanel.html'"></div>
+            		<div ng-include="'partials/templates/groupBusinessPropertiesUpdatePanel.html'"></div>
+            		<div ng-include="'partials/templates/groupSystemVariablesUpdatePanel.html'"></div>
+            		<div ng-include="'partials/templates/groupLogLevelPanel.html'"></div>
+            		<span class="dropdown pull-right" dropdown on-toggle="toggled(open)">
+      					<a href class="dropdown-toggle" ng-class="{disabled:!showOperations()}" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+      						<div ng-class="showOperations() ? 'operation' : 'disableOperation'">
+      	  		  				<i class="fa fa-ellipsis-v"></i>
+				  				<span>More</span> 
+				  			</div>
+      					</a>
+      					<ul class="dropdown-menu">
+        					<li>
+         		 				<a ng-click="loadGroupGlobalVariables()">Global Variables</a>
+        					</li>
+        					<li>        			
+         		 				<a ng-click="loadGroupSystemVariables()">System Properties</a>
+        					</li>
+        					<li>        			
+         		 				<a ng-click="loadGroupBusinessEventsProperties()">BusinessEvents Properties</a>
+        					</li>
+        					<li>        			
+         		 				<a ng-click="loadGroupJVMProperties()">JVM Properties</a>
+        					</li>
+        					<li>        			
+         		 				<a ng-click="loadGroupLogLevelPatterns()">Deployed Log Level</a>
+        					</li>
+        					<li>        			
+         		 				<a ng-click="loadGroupRuntimeLoggers()">Runtime Log Level</a>
+        					</li>
+      					</ul>
+    				</span>
+            	</li> -->   
+            	<li class="button pull-right"> 
+            		<div class="operation" ng-click="reloadPage()">
+      	  		  		<i class="fa fa-refresh"></i>
+				  		<span>Refresh</span> 
+				  	</div>
+            	</li>                
+        	</ul> 
+        </div>
+        <div class="instanceViewPanel2">
+           <div style="margin-top: 10px;margin-bottom: 0;margin-left: 42px;">
+        		<div class="row">                             
+                	<div class="pull-left staticInfoDiv">
+                		<div class="pull-left" style="width: 25%;">OS Type</div>
+                    	<div class="pull-left" style=" margin-left: 10px;margin-right: 10px;">:</div>
+                   		<div>{{host.config.os}}</div>
+                	</div>
+                    <div class="pull-left staticInfoDiv">
+                    	<div class="pull-left" style="width: 25%;">IP Address</div>
+                    	<div class="pull-left" style=" margin-left: 10px;margin-right: 10px;">:</div>
+                   	 	<div>{{host.config.hostIp}}</div>        
+                    </div>
+                </div>
+              
+               
+             </div>  
+        </div> 
+        <div>
+           <div class="container">
+            <div  ng-include="'partials/templates/actionConfirmation.html'"></div>
+            
+    		<section>
+       			<ul class="navTable">
+            		<li ng-click="showViewType('instances')" ng-class="{active:isSet('instances')}"><a>Instances</a></li>
+            		<li  ng-click="showViewType('operation')" ng-class="{active:isSet('operation')}"><a>Operation</a></li>
+        		</ul>
+        		<div ng-show="isSet('instances')">
+        				<div class="instanceListView">
+        					<table tea-table class="tea-table">
+        					<thead>
+        				   		<tr>
+        				   			<th class="selection"><input type="checkbox" ng-model="filteredValues.allInstancesChecked" ng-change="selectAllInstances();showIndividualOperations()"></th>
+        				   			<th>
+		        				   		Name
+		        				   		<i title="sort" class="operation fa fa-sort" ng-click="onSortCall('name')" ></i>
+		        				   		<div>
+      										<input ng-model="search.name" class="be_filter_input" type="text" /></li>
+    									</div>
+		        				   	</th>
+        				   			<th>
+		        				   		Status
+		        				   		<i title="sort" class="operation fa fa-sort" ng-click="onSortCall('status.state')" ></i>
+		        				   		<div>
+      										<input ng-model="search.status" class="be_filter_input" type="text" /></li>
+    									</div>
+		        				   	</th>
+        				   			<th>
+		        				   		UpTime
+		        				   		<i title="sort" class="operation fa fa-sort" ng-click="onSortCall('config.upTime')" ></i>
+		        				   	</th>
+        				   			<th>
+		        				   		JMX Port
+		        				   		<i title="sort" class="operation fa fa-sort" ng-click="onSortCall('config.jmxPort')" ></i>
+		        				   		<div>
+      										<input ng-model="search.jmxPort" class="be_filter_input" type="text" /></li>
+    									</div>
+		        				   	</th>
+        				   			<th style="min-width: 135px !important;">
+		        				   		Processing Unit
+		        				   		<i title="sort" class="operation fa fa-sort" ng-click="onSortCall('config.puId')" ></i>
+		        				   		<div>
+      										<input ng-model="search.puId" class="be_filter_input" type="text" /></li>
+    									</div>
+		        				   	</th>
+        				   			<th>
+		        				   		Process Id
+		        				   		<i title="sort" class="operation fa fa-sort" ng-click="onSortCall('config.processId')" ></i>
+		        				   		<div>
+      										<input ng-model="search.processId" class="be_filter_input" type="text" /></li>
+    									</div>
+		        				   	</th>
+        				   			<th style="min-width: 155px !important;">
+		        				   		Deployment Status
+		        				   		<i title="sort" class="operation fa fa-sort" ng-click="onSortCall('config.deploymentStatus')" ></i>
+		        				   		<div>
+      										<input ng-model="search.deploymentStatus" class="be_filter_input" type="text" /></li>
+    									</div>
+		        				   	</th>
+		        				    <th>
+		        				   		CPU Usage
+		        				   		<i title="sort CPU" class="operation fa fa-sort" ng-click="onSortCall('config.cpuUsage.cpuUsageInPercent')" ></i>
+		        				   	</th>
+		        				   	<th>
+		        				   		Memory
+		        				   		<i title="sort Memory" class="operation fa fa-sort" ng-click="onSortCall('config.memoryUsage.percentUsed')" ></i>
+		        				   	</th>
+        				   			<th style="min-width: 60px;"></th>
+        				   		</tr>        				   
+        					</thead>
+        					<tbody>
+        						<tr ng-repeat="instance in filteredList | orderBy:sort.column:sort.descending | filter:filterFunction">  
+        							<td><input type="checkbox" ng-model="instance.isChecked" ng-change="selectInstanceEntity();showIndividualOperations()"></td>      						
+        							<td>        							
+				 						<a ng-click="showInstance(instance)">{{instance.name}}</a>				 								     
+        							</td>
+        							<td>
+        								<ul>
+		        							<!-- 
+		        							<li class="pull-left" style="margin-left: 10px;margin-top: 4px;" ng-show="instance.status.state=='Running'">
+		        								<span class="operation">
+		        									<i title="Stop" class="fa fa-stop" ng-click="stopInstance($index)"></i>
+		        								</span>
+		        							</li> -->
+		        							<li class="pull-left" style="padding-left:30px;" ng-show="instance.status.state == 'Needs Deployment' || instance.status.state=='Starting' || instance.status.state=='Stopping'">
+		        								<div title="{{instance.status.state}}"   ng-show="instance.status.state == 'Needs Deployment'" class="instanceStateIndicator_other"></div>
+		        								<span ng-show="instance.status.state=='Starting' || instance.status.state=='Stopping'">
+		        									<i title="{{instance.status.state}}" class="be_startingSpinner fa fa-spinner fa-spin fa-2x"></i>
+		        								</span>
+		        							</li>
+		        							<li class="pull-left" style="padding-left:10px;" ng-show="instance.status.state=='Stopped' || instance.status.state=='Running'">
+		        								<div title="{{instance.status.state}}" ng-class="{'instanceStateIndicator_stopped':instance.status.state=='Stopped' , 'instanceStateIndicator_ok':instance.status.state=='Running' && instance.config.healthStatus == 'ok','instanceStateIndicator_warning':instance.status.state=='Running' && instance.config.healthStatus == 'warning','instanceStateIndicator_critical':instance.status.state=='Running' && instance.config.healthStatus == 'critical' }"></div>
+		        							</li> 
+		        						</ul>
+        							</td>
+        							<td>{{instance.config.upTime}}</td>
+        							<td>{{instance.config.jmxPort}}</td>
+        							<td>
+				 						<a ng-click="showInstanceProcessingUnit(instance.config.puId)">{{instance.config.puId}}</a>				 								     
+        							</td>
+        							<td>
+        								{{instance.config.processId}}
+        							</td>
+        							<td>
+        								{{instance.config.deploymentStatus}}
+        							</td> 
+        							<td>
+		        						<div ng-class="{'cpuAndMemoryDiv':instance.status.state == 'Running'}">
+        									<cpu-group-div be-instance-object="instance"></cpu-group-div>
+        								</div>
+		        					</td>
+		        					<td>
+		        						<div ng-class="{'cpuAndMemoryDiv':instance.status.state == 'Running'}">
+        									<memory-group-div be-instance-object="instance"></memory-group-div>
+        								</div>
+		        					</td>
+        							<td>
+		        						<i title="Delete" style="margin-left: 10px;" class="operation fa fa-trash-o" ng-click="deleteInstance(instance,false)" ng-if="hasPermission(19)"></i>
+		        					</td>   						
+        						</tr>
+        					</tbody>
+        					<tfoot>
+                        		<tr>
+                            		<td colspan="11">- END OF DATA -</td>
+                        		</tr>
+                        	</tfoot>
+        				</table>
+        			</div>        			
+        		</div>
+        		<div ng-show="isSet('operation')" class="">
+        			 <div ng-include="'partials/templates/operationsView.html'"></div>
+	            </div>
+	            <div ng-if="isSet('beHomes')">
+							<div class="instanceListView">
+								<table tea-table class="tea-table">
+									<thead>
+										<tr>
+											<th>BE HOME</th>
+											<th>BE TRA</th>
+											<th>Version</th>
+										</tr>
+									</thead>
+									<tbody>
+										<tr ng-repeat="beDetail in host.config.masterHost.be">
+											<td>{{beDetail.beHome}}</td>
+											<td>{{beDetail.beTra}}</td>
+											<td>{{beDetail.version}}</td>
+										</tr>
+									</tbody>
+								</table>
+							</div>
+						</div>
+    		</section>
+		</div>
+        </div>
+     </div> 
+    </div>
+    </div>
+</div>    

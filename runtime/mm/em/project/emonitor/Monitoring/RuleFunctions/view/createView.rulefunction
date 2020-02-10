@@ -1,0 +1,84 @@
+/**
+ * @description 
+ */
+Shared.Concepts.AbstractMonitorView rulefunction Monitoring.RuleFunctions.view.createView {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Shared.Concepts.MonitorableEntity	monitorable;
+		String	compType;
+		String	compFQName;
+		
+		
+	}
+	body {
+		//if entity is inactive, only generate view for predefined cluster
+		if(monitorable.active == false){
+			if(monitorable.type != "cluster" || monitorable.predefined == false)
+			return null;			
+		}
+		
+		Shared.RuleFunctions.log("createView","INFO","Creating view with ext id as "+compFQName);
+		
+		String componentConfigMapId = getComponentConfigMapId(monitorable,compType);
+		if (componentConfigMapId == null) {
+		    return null;
+		}
+		
+		String viewType = Util.HashMap.getObject(componentConfigMapId,"type");
+		String dataRetrievalType = Util.HashMap.getObject(componentConfigMapId,"dataretrievaltype");
+		String[] seriesNames = Util.HashMap.getObject(componentConfigMapId,"seriesnames");
+		long threshold = Util.HashMap.getObject(componentConfigMapId,"threshold");
+		
+		Shared.RuleFunctions.log("createView","DEBUG","viewType= " + viewType);
+		Shared.RuleFunctions.log("createView","DEBUG","dataRetrievalType= " + dataRetrievalType);
+		Shared.RuleFunctions.log("createView","DEBUG","threshold= " + threshold);
+		
+		for (int n=0; n< seriesNames@length; n++) {
+			Shared.RuleFunctions.log("createView","DEBUG","seriesNames["+n+"]= " + seriesNames[n]);
+		}
+		
+		
+		
+		Shared.Concepts.AbstractMonitorView monView = Instance.getByExtId(compFQName);
+		
+		if (monView != null) 
+			return monView;		
+		
+		Shared.RuleFunctions.log("createView","INFO","Creating NEW MONITOR VIEW of type '" + viewType + "' for entity "+getFQName(monitorable));
+		monView = Instance.newInstance("/Monitoring/Concepts/"+viewType+"View",compFQName);
+		monView.type = compType;
+		monView.monitorable = monitorable;
+		Shared.RuleFunctions.log("createView","DEBUG","BEFORE");
+		monitorable.monitorViews[monitorable.monitorViews@length] = monView;
+		Shared.RuleFunctions.log("createView","DEBUG","AFTER");
+		
+		boolean dataDrivenSeries = seriesNames!=null && seriesNames@length == 1 && seriesNames[0] == "datadriven";
+		
+		Shared.RuleFunctions.log("createView","DEBUG","seriesNames@length= " + seriesNames@length);
+		Shared.RuleFunctions.log("createView","DEBUG","monView.seriesdata@length= " + monView.seriesdata@length);
+
+		if (dataDrivenSeries == false) {
+			Shared.RuleFunctions.log("createView","DEBUG","dataDrivenSeries == false");
+		    for (int i = 0 ; i < seriesNames@length ; i = i + 1) {
+		        monView.seriesdata[i] = Instance.newInstance("/Shared/Concepts/SeriesData",compFQName+":"+seriesNames[i]);
+		        monView.seriesdata[i].name = seriesNames[i];
+		        monView.seriesdata[i].threshold = threshold;
+		        Shared.RuleFunctions.log("createView","INFO","Creating series with ext id as "+monView.seriesdata[i]@extId);
+		    }
+		}
+		else {
+		    //search to see if series are already running 
+			Shared.RuleFunctions.log("createView","DEBUG","dataDrivenSeries == true");
+		    Object[] seriesData = BEMM.dashboard.searchByExtId(Cluster.DataGrid.CacheName("/Shared/Concepts/SeriesData"), compFQName); 
+		    if (seriesData != null && seriesData@length > 0) {
+		        for (int i = 0 ; i < seriesData@length ; i = i + 1) {
+                    Shared.RuleFunctions.log("createView","DEBUG","Setting monView.seriesData["+i+"]= " + seriesData[i]);
+		            monView.seriesdata[i] = seriesData[i];
+		        }
+		    }
+		}
+		return monView;
+	}
+}

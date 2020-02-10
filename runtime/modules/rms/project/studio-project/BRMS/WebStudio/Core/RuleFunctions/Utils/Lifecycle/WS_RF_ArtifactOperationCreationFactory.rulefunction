@@ -1,0 +1,40 @@
+/**
+ * @description Factory RF to denote the operation caried out as a concept.
+ */
+WebStudio.Core.Concepts.Lifecycle.Ops.WS_C_AbstractOperation rulefunction WebStudio.Core.RuleFunctions.Utils.Lifecycle.WS_RF_ArtifactOperationCreationFactory {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String opName;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.Lifecycle.WS_RF_ArtifactOperationCreationFactory");
+		WS_C_AbstractOperation abstractOperation = null;
+
+		Log.log(LOGGER, "Debug", "Operation Selected - [%s]", opName);		
+		if (opName == "Fetch") {
+			abstractOperation = 
+				Instance.newTransientInstance("/WebStudio/Core/Concepts/Lifecycle/Ops/WS_C_FetchOperation");
+		} else if (opName == "Save") {
+			abstractOperation = 
+				Instance.newTransientInstance("/WebStudio/Core/Concepts/Lifecycle/Ops/WS_C_SaveOperation");
+		} else if (opName == "Delete" || opName == "Deleted" || opName == "DELETE") {
+			abstractOperation = 
+				Instance.newTransientInstance("/WebStudio/Core/Concepts/Lifecycle/Ops/WS_C_DeleteOperation");
+		} else if (opName == "Create" || opName == "Created" || opName == "Add") {
+			abstractOperation = 
+				Instance.newTransientInstance("/WebStudio/Core/Concepts/Lifecycle/Ops/WS_C_CreateOperation");
+		} else if (opName == "Modify" || opName == "Modified" || opName == "MODIFY") {
+			abstractOperation = 
+				Instance.newTransientInstance("/WebStudio/Core/Concepts/Lifecycle/Ops/WS_C_ModifyOperation");
+		} else if (opName == "Merge" || opName == "Synchronize") {
+			abstractOperation = 
+				Instance.newTransientInstance("/WebStudio/Core/Concepts/Lifecycle/Ops/WS_C_MergeOperation");
+		}
+		if (abstractOperation != null) {
+			abstractOperation.opName = opName;
+		}
+		return abstractOperation;
+	}
+}

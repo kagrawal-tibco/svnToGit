@@ -1,0 +1,209 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>     Locking
+
+- TIBCO BusinessEvents&reg; Examples
+</title>
+<meta http-equiv="Content-type" content="text/html; charset=iso-8859-1" />
+<meta http-equiv="Content-Language" content="en-us" />
+<link rel="Shortcut Icon" href="../../_resources/icon.gif" type="image/gif" />
+<style type="text/css" media="all">@import "../../_resources/examples.css";</style>
+<style type="text/css" media="all">
+button {
+	padding: .5em 1em .5em 1em;
+	white-space: pre;
+	margin: 0;
+}
+</style>
+<script type="text/javascript" src="../../_resources/examples.js" /></script>
+<script type="text/javascript">
+function buildForms() {
+ var form;
+
+
+ SendEventForm.setServer("http://localhost:8101");
+
+ form = SendEventForm.get("open");
+ form.setDestinationPath("/Channels/Http1/Open");
+ form.setEventPath("/Events/OpenAccount");
+ form.addProperty("accountNumber", "Bob", 1, "readonly");
+ form.addProperty("initialBalance", "2000");
+ form.build();
+
+ form = SendEventForm.get("withdrawWithLock1");
+ form.setDestinationPath("/Channels/Http1/WithdrawWithLock");
+ form.setEventPath("/Events/Withdraw");
+ form.addProperty("accountNumber", "Bob", 1, "readonly");
+ form.addProperty("amount", "1", 1, "readonly");
+ form.build();
+
+ form = SendEventForm.get("withdrawWithoutLock1");
+ form.setDestinationPath("/Channels/Http1/WithdrawWithoutLock");
+ form.setEventPath("/Events/Withdraw");
+ form.addProperty("accountNumber", "Bob", 1, "readonly");
+ form.addProperty("amount", "1", 1, "readonly");
+ form.build();
+
+ SendEventForm.setServer("http://localhost:8102");
+
+ form = SendEventForm.get("withdrawWithLock2");
+ form.setDestinationPath("/Channels/Http2/WithdrawWithLock");
+ form.setEventPath("/Events/Withdraw");
+ form.addProperty("accountNumber", "Bob", 1, "readonly");
+ form.addProperty("amount", "1", 1, "readonly");
+ form.build();
+
+ form = SendEventForm.get("withdrawWithoutLock2");
+ form.setDestinationPath("/Channels/Http2/WithdrawWithoutLock");
+ form.setEventPath("/Events/Withdraw");
+ form.addProperty("accountNumber", "Bob", 1, "readonly");
+ form.addProperty("amount", "1", 1, "readonly");
+ form.build();
+
+}
+
+function withdraw(useLock, times) {
+ if (times < 1) return;
+ var formId = (useLock ? "withdrawWithLock" : "withdrawWithoutLock") + ((times % 2) + 1);
+ document.getElementById(formId).submit();
+ times--;
+ setTimeout("withdraw(" + useLock + "," + times + ")", 50);
+}
+</script>
+</head>
+<body onLoad="buildForms()">
+
+
+<h1>Locking</h1>
+
+<h2>Purpose of This Example</h2>
+
+<p>The <em>Locking</em> example shows how
+to <em>synchronize conflicting operations using a lock function</em>.</p>
+
+<h2>How it Works</h2>
+
+<p>Three engines are running: one cache server and two inference engines.</p>
+
+<p>The two inference engines compete for updating
+a <code>Concepts.Account</code> resource stored in the cache.
+They both run the same preprocessors and rules.</p>
+
+<p>On each inference engine,
+one HTTP destination handles <code>Events.OpenAccount</code> events,
+and the other, named <code>WithdrawWithLock</code>, handles <code>Events.Withdraw</code> events.</p>
+
+<p>In the CDD, the <code>WithdrawWithLock</code> destination is assigned a preprocessor.
+This preprocessor acquires a cluster-wide lock named after the account number,
+then loads the instance of <code>Concepts.Account</code> that is identified
+by this account number.</p>
+
+<p>A rule updates the <code>Concepts.Account</code> instance
+by deducting an amount from the <code>balance</code> field.</p>
+
+<p>The lock that was acquired in the preprocessor
+is released automatically at the end of the RTC.</p>
+
+<p>Since the updates are protected by a lock,
+the account balance is properly updated.
+</p>
+
+<p>A set of destinations that use no lock
+is provided for comparison.
+When using those, the account balance is
+not necessarily properly updated.</p>
+
+
+<h2>How to Run the Example</h2>
+<ol>
+
+<li>
+<p>Open three command windows and at the command prompt,
+start the TIBCO BusinessEvents engine using the following commands.
+</p>
+
+<pre class="commands">
+cd <i>BE_HOME</i>/examples/standard/Locking
+<i>BE_HOME</i>/bin/be-engine --propFile <i>BE_HOME</i>/bin/be-engine.tra -c Locking/default.cdd -u cache Locking.ear
+</pre>
+
+<pre class="commands">
+cd <i>BE_HOME</i>/examples/standard/Locking
+<i>BE_HOME</i>/bin/be-engine --propFile <i>BE_HOME</i>/bin/be-engine.tra -c Locking/default.cdd -u default Locking.ear
+</pre>
+
+<pre class="commands">
+cd <i>BE_HOME</i>/examples/standard/Locking
+<i>BE_HOME</i>/bin/be-engine --propFile <i>BE_HOME</i>/bin/be-engine.tra -c Locking/default.cdd -u inference2 Locking.ear
+</pre>
+
+<!-----------------------------------------------------------------------------
+Italic is ON at this point and should be OFF. No <i> or <em> tags are present.
+------------------------------------------------------------------------------->
+
+<p>Adapt the commands as needed,
+for example if you have customized the example project,
+or are running it from a different directory.</p>
+</li>
+
+
+<li>
+<p>Send an <code>Events.OpenAccount</code> event to create an account:</p>
+<form id="open"></form>
+<p>In the command window you see a message like this:</p>
+<pre class="logs">#######   Account Created : Bob, Initial Balance = 2000
+</pre>
+</li>
+
+<li>
+<p>Send <code>Events.Withdraw</code> events to both inference engines
+using the <em>preprocessor that locks:</em></p>
+<div style="display: none">
+<form id="withdrawWithLock1"></form>
+<form id="withdrawWithLock2"></form>
+</div>
+
+<p><button onclick="withdraw(true, 50);">Send 25 + 25 = 50 events that each withdraw 1 from account Bob</button></em></p>
+
+<p>In the command window of the inference engines,
+you see messages similar to this:</p>
+<pre class="logs">######### Withdrew 1.0 from account 'Bob'.  New balance = 1908.0
+######### Withdrew 1.0 from account 'Bob'.  New balance = 1907.0
+######### Withdrew 1.0 from account 'Bob'.  New balance = 1904.0
+######### Withdrew 1.0 from account 'Bob'.  New balance = 1900.0
+</pre>
+
+<p>No two lines will show the same account balance. The lowest count of one of the inference engine should match the expected final balance.</p>
+</li>
+
+<li>
+<p>Send <code>Events.Withdraw</code> events to both inference engines
+using the <em>preprocessor that does not lock:</em></p>
+<div style="display: none">
+<form id="withdrawWithoutLock1"></form>
+<form id="withdrawWithoutLock2"></form>
+</div>
+
+<p><button onclick="withdraw(false, 50);">Send 25 + 25 = 50 events that each withdraw 1 from account Bob</button></em></p>
+
+<p>It is likely that some lines will show the same account balance,
+and that the lowest count of neither inference engine will
+match the expected final balance.</p>
+</li>
+
+<li>
+<p> To reset the data, restart the engine at the command line.</p>
+</li>
+
+</ol>
+
+
+<div class="footer">
+<p>TIBCO BusinessEvents&reg; 5.6<br />
+Copyright&copy; 2004-2019 TIBCO Software Inc. All rights reserved.</p>
+</div>
+</body>
+</html>

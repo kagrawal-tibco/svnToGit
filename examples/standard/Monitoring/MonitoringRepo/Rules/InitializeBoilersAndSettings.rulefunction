@@ -1,0 +1,31 @@
+/**
+ * @description 
+ */
+void rulefunction Rules.InitializeBoilersAndSettings {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		
+	}
+	body {
+		MonitoringMetrics.SimulatorCriteria.lower_bound=1.0;
+		MonitoringMetrics.SimulatorCriteria.upper_bound=2.0;
+		MonitoringMetrics.SimulatorCriteria.value=.9;
+		
+		MonitoringMetrics.Criteria1.SampleRate=5*1000;
+		MonitoringMetrics.Criteria1.SampleWindow=60*1000;
+		MonitoringMetrics.Criteria1.TargetTemp=100;
+		
+		Concepts.Boiler.Boiler(null       /*extId String       */,
+		                      "B1MOL"    /*Id String          */,
+		                      1000.0     /*Capacity double    */,
+				 "Molasses"  /*Contents String   */,
+		                     "Operating" /*Status String      */,
+		                      90.0       /*NormalTemp double  */,
+		                      50.0       /*CurrentTemp double */
+		                      );
+		
+		System.debugOut("##### Initialized boiler <B1MOL> ..");
+	}
+}

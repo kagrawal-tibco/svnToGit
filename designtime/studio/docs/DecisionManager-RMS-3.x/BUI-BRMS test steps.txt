@@ -1,0 +1,70 @@
+Steps for testing BUI-BRMS:
+
+Pre-requisites:
+
+1.) BE installed/Orion builds.
+
+2.) Sun One Directory server.
+
+3.) BRMS.ear (designer project).
+
+Steps:
+
+1.) Set up the Sun One Directory server on your box. Download Location: http://www.sun.com/software/products/directory_srvr_ee/get.jsp.
+    See the SVN_HOME/docs/Steps for Sun one DS.doc
+
+2.) Install the DS, and remember the admin login credentials, and port number.
+
+3.) Login with admin creds on the Sun One Console.
+
+4.) You should see the screen as in the Fig1.
+
+5.) Click on User, and Groups Tab, and then click on Create button at the bottom.
+
+6.) This should pop up screen like Fig2.
+
+7.) Select a base tree to create users inside.
+
+8.) Fill in all details of a user, and remember the password. Fig3.
+
+9.) Go back to Fig 1, and open your directory server under the tree.
+
+10.) Click on the Directory tab here and check your created user. uid=jdoe,dc=apac,dc=tibco,dc=com. You should see screen - Fig4.
+
+11.) Right click on your base tree, to open create role option. Fig 5.
+
+12.) Fill role detials, name = IT and add jdoe as user to role members.
+
+13.) You can add more roles, and add same user to multiple roles.
+-----------------------------------------------------------------------------------------------------------------------------------
+
+1.) Edit Config.properties under <SVN_HOME>/decision/.
+   
+   be.mgmtserver.auth.type=ldap
+
+   be.mgmtserver.auth.ldap.host=aathalye-lt.apac.tibco.com
+   be.mgmtserver.auth.ldap.port=37008 #Change this to your admin port
+   be.mgmtserver.auth.ldap.adminDN=cn=Directory Administrators,dc=apac,dc=tibco,dc=com
+   be.mgmtserver.auth.ldap.adminPassword=admin
+   #Base Tree under which to search
+   be.mgmtserver.auth.ldap.baseDN=dc=apac,dc=tibco,dc=com #Change this to the base tree you created users in
+
+2.) Start the BE engine (any location with jars updated from the orion tree), and with ear file parameter set to BRMS.ear with following system properties:
+--propFile E:\software\workingdir\be-engine30.tra
+-Djava.security.auth.login.config=<SVN_HOME>/decision/config/jaas-config.config -Dbe.bui.config=<SVN_HOME>/decision/config/config.properties
+
+3.) Open the BUI, and click on File -> Login.
+
+4.) Give a valid username/password e.g: (jdoe/jdoe).
+
+5.) If login is successful you should see "Authentication successful" msg.
+
+6.) Click on File -> Checkout Project.
+
+7.) Enter URL like "http://<hostnameofbe>:8888/Transports/Channels/HTTPChannel/CheckoutProjectDestination.
+
+8.) Browse to a directory where you want to checkout the Decision project on file system, and click enter.
+
+9.) If things go well, you should see the project on your file system. Open the .dp file through File -> Open.
+
+

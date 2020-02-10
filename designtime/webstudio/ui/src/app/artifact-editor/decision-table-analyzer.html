@@ -1,0 +1,33 @@
+<div class="outerDiv">
+   <div class="headerDiv">
+      <div class="headerDivIn"><input type="image" src="assets/img/dtanalyzer.png"width="18" height="18"/><label class="{{isRtl() ? 'headerLabel-rtl' : 'headerLabel' }}" i18n>{{i18n('Table Analyzer')}}</label></div>
+   </div>
+   <div class="actionDiv">
+      <input type="image" class="actionElement" src="assets/img/refresh.png" title="Refresh" (click)="clearHighlights()" width="18" height="18"/>
+      <input type="image" class="actionElement" src="assets/img/detail.gif" title="Coverage" (click)="showCoverage()" width="18" height="18"/>
+      <input type="image" class="actionElement" src="assets/img/analyze.png" title="Analyze" (click)="analyzeTable()" width="18" height="18"/>
+      <input type="image" class="actionElement" src="assets/img/testdata.png" title="TestDataCoverage" (click)="testDataCoverage()" width="18" height="18"/>
+   </div>
+   <div class="valuePart">
+      <accordion>
+         <accordion-group  *ngFor="let column of this.valuesAnalyzer" heading="{{column.columnName}}" isOpen='true'>
+            <div *ngIf='!column.isRangeFilter'>
+               <table>
+                  <tr *ngFor="let entry of column.value">
+                     <td>
+                        <input type="checkbox" [checked]="isEntrySelected(entry)" (change)="updateList(entry, column)">
+                     </td>
+                     <td class="entryValue">{{entry}}</td>
+                  </tr>
+               </table>
+            </div>
+            <div *ngIf='column.isRangeFilter'>
+               <label class="rangeLabel"><ng-container i18n>{{i18n('Range')}}</ng-container>({{column.minValue}} - {{column.maxValue}})</label><br>
+               <input class="lValue" type="text" [(ngModel)]="column.sminValue" placeholder="{{i18n('lower..')}}'" i18n-placeholder>
+               <div style="height: 2px"></div>
+               <input class="uValue" type="text" [(ngModel)]="column.smaxValue" placeholder="{{i18n('upper..')}}'" i18n-placeholder>
+            </div>
+         </accordion-group>
+      </accordion>
+   </div>
+</div>

@@ -1,0 +1,20 @@
+/**
+ * @description Preprocessor for audit trail requests.
+ */
+void rulefunction Approval.Rules.RuleFunctions.Preprocessors.AMS_RFP_AuditTrailPP {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Approval.Events.ArtifactEvents.AuditTrail.AMS_E_AuditTrailRequestEvent ams_e_auditTrailRequestevent;
+	}
+	body {
+		//Create extid
+		String patternId = ams_e_auditTrailRequestevent.patternId;
+		String artifactPath = ams_e_auditTrailRequestevent.artifactPath;
+		
+		String extId = patternId + "@" + artifactPath;
+		//Lock this concept
+		Cluster.DataGrid.Lock(extId, -1, false);
+	}
+}

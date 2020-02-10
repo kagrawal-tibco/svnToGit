@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Panel 
+	xmlns:mx="http://www.adobe.com/2006/mxml"
+	xmlns:components="com.hillelcoren.components.*"
+	xmlns:querymanager="com.tibco.be.views.user.components.drilldown.querymanager.*"
+	layout="vertical"
+	width="100%" height="100%"
+	styleName="queryManagerPanel"
+	horizontalScrollPolicy="off"
+xmlns:containers="com.tibco.be.views.ui.containers.*">
+
+	<mx:Script>
+	<![CDATA[
+		import mx.events.ValidationResultEvent;
+		import com.tibco.be.views.user.dashboard.FloatingBEVPanel;
+		
+		import com.tibco.be.views.core.kernel.Kernel;
+		import com.tibco.be.views.user.components.drilldown.querymanager.BEVQueryManagerComponent;
+		
+        import mx.collections.ArrayCollection;
+        import mx.containers.TitleWindow;
+        import mx.core.Application;
+        import mx.events.MenuEvent;
+        import mx.managers.PopUpManager;
+        
+        import com.tibco.be.views.core.ui.controls.MessageBox;
+
+		public var _controller:QueryManagerController;
+		
+		[Bindable]
+		private var _listData:ArrayCollection = new ArrayCollection();
+		private var _bevQMComponent:BEVQueryManagerComponent;
+		private var _titleWindow:QueryExportDialog;
+		
+		public function get controller():QueryManagerController{ return _controller; }
+		public function get listData():ArrayCollection{ return _listData; }
+		
+		public function set bevQMComponent(value:BEVQueryManagerComponent):void{ _bevQMComponent = value; }
+		public function set listData(value:ArrayCollection):void{ _listData = value; }
+		
+		public function init(queryMgrXML:XML):void{
+			_controller = new QueryManagerController(this, queryMgrXML);
+			//accordion.removeAllChildren();
+		}
+		
+		private function entityComboChange(event:Event):void{
+			var selectedEntity:String = event.currentTarget.selectedItem;
+			if(selectedEntity != null){
+				var entityId:String = _controller.getEntityId(selectedEntity);
+				//trace("selected entity: "+selectedEntity+", id: "+entityId);				
+				// call server method to get fields for selectedEntity
+				// TODO remove comment when using with server
+				_bevQMComponent.fireEvent(entityId);
+			}
+		}
+		
+		public function updateFieldsEditorPane(queryMgrXML:XML):void{
+			_controller.updateFieldsPanel(queryMgrXML);
+		}
+		
+		public function addConditionEditor(conditionEditor:ConditionEditor):void{
+			_listData.addItem(conditionEditor);
+		}
+		
+		public function refresh():Boolean{
+			return _listData.refresh();
+		}
+		
+		public function clearConditionEditors():void{
+			_listData.removeAll();
+		}
+		
+		private function submitClicked(event:Event):void{
+			var valResult:ValidationResultEvent = _controller.getValidationResult(); 
+			if(valResult != null){
+				MessageBox.show(DisplayObjectContainer(Application.application), "Query Manager",valResult.message);
+			}
+			else{
+				var qmModelXML:XML = _controller.getQueryMgrModel();
+				//trace(qmModelXML);
+				_bevQMComponent.fireEventExecuteQuery(qmModelXML);			
+			}
+		}
+		
+		private function exportClicked(event:Event):void{
+			var valResult:ValidationResultEvent = _controller.getValidationResult(); 
+			if(valResult != null){
+				MessageBox.show(DisplayObjectContainer(Application.application), "Query Manager",valResult.message);
+			}
+			else{
+				_bevQMComponent.fireEventGetQMExportOptionsDefaults();
+			}
+		}
+		
+		public function showQueryExportDialog(type:String, depth:String, pertypecount:String, overallcount:String, includesystemfields:String):void{
+			var exportDialog:NewQueryExportDialog = new NewQueryExportDialog();
+			Kernel.instance.uimediator.uicontroller.openWindow(exportDialog, DisplayObjectContainer(Application.application), true);
+			Kernel.instance.uimediator.uicontroller.centerWindow(exportDialog);
+			exportDialog.qmComponent = this;
+			exportDialog.initQueryExportDialog(type,depth,pertypecount,overallcount,includesystemfields);
+		}
+		
+		public function exportQueryData(type:String, depth:String, pertypecount:String, overallcount:String, includesystemfields:String):void{
+			_bevQMComponent.fireEventExportQueryData(type,depth,pertypecount,overallcount,includesystemfields);
+		}
+		
+		public function handleItemClick(event:MenuEvent):void{
+			cmbFieldNames.showBrowser();
+        }
+		
+	]]>
+	</mx:Script>
+	
+	<mx:XML format="e4x" id="menuData">
+        <root>
+            <menuitem data="browse" label="Browse..."/>
+        </root>
+    </mx:XML>
+	
+	<containers:CommonHeaderBar verticalAlign="middle" width="100%" paddingTop="11" paddingBottom="11" paddingLeft="10" paddingRight="10"  backgroundGradientStart="#AFAFAF" backgroundGradientEnd="#3B3B3B" showSecondaryTopBorder="false">
+		<components:AdvancedAutoComplete id="cmbFieldNames" width="100%"
+			backspaceAction="remove" matchType="anyPart" allowDuplicates="false" 
+			selectedItemStyleName="none" actionsMenuDataProvider="{menuData}"
+			prompt="Select one…" browserClass="com.tibco.be.views.user.components.drilldown.querymanager.view.QueryManagerMetricBrowser"
+			itemClick="handleItemClick(event);"	
+			change="entityComboChange(event);"		
+		/>
+	</containers:CommonHeaderBar>
+	
+	<mx:List id="conditionEditorList"
+		width="100%" height="100%"
+		wordWrap="false"
+		variableRowHeight="true"
+		selectable="false"
+		dataProvider="{_listData}"
+		styleName="queryManagerConditionEditorList"
+		itemRenderer="com.tibco.be.views.user.components.drilldown.querymanager.view.ConditionEditorListItem">
+	</mx:List>
+
+	<containers:CommonHeaderBar width="100%" height="45" verticalAlign="middle" paddingLeft="10" backgroundGradientStart="#AFAFAF" backgroundGradientEnd="#3B3B3B" showSecondaryTopBorder="false">		
+		<mx:Button id="export" label="Export" width="65" height="20" styleName="commonButton" click="exportClicked(event)" enabled="false"/>
+		<mx:Button id="execute" label="Execute" width="65" height="20" styleName="commonButton" click="submitClicked(event)" enabled="false"/>		
+	</containers:CommonHeaderBar>
+	
+</mx:Panel>

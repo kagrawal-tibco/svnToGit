@@ -1,0 +1,163 @@
+#!/bin/bash
+#
+# Copyright (c) 2016-2019 TIBCO Software Inc.
+# All Rights Reserved. Confidential & Proprietary.
+# For more information, please contact:
+# TIBCO Software Inc., Palo Alto, California, USA
+#
+#
+
+config_realm()
+{
+$TIBDG_ROOT/bin/tibdg -r $URL -s - > /dev/null <<FOO
+grid create copyset_size=1 statekeeper_count=1
+keeper create -d $BASEDIR/k1_data k1
+copyset create cset1
+node create -cs cset1 -d $BASEDIR/n1_data n1
+proxy create p1
+
+table create Employee empId long
+column create Employee name string
+column create Employee age long
+column create Employee joiningDate datetime
+column create Employee isPermanant long
+column create Employee salary double
+column create Employee departments opaque
+index create Employee index_name name
+
+table create Address addressId long
+column create Address address string
+index create Address index_address address
+
+table create Phone phoneId long
+column create Phone home string
+column create Phone mobile string
+index create Phone index_mobile mobile
+FOO
+}
+
+start_realmserver()
+{
+    RSDIR=$BASEDIR/realm_data
+    mkdir -p $RSDIR
+
+    if $TIBDG_ROOT/bin/tibdg -r $URL status -j 2>&1 | grep -v "Server error 500" > /dev/null; then
+        echo "realm server already running"
+	return
+    fi
+
+    echo "starting realm server"
+    $TIBDG_ROOT/ftl/bin/tibrealmserver -ht $HOSTPORT -d $RSDIR --logfile $LOGDIR/rs.log &
+    sleep 1
+    while ! $TIBDG_ROOT/bin/tibdg -r $URL status -j 2>&1 | grep -v "Server error 500" > /dev/null; do
+        echo "waiting for realm server start"
+        sleep 1
+    done
+
+    if $TIBDG_ROOT/bin/tibdg -r $URL status -j 2>&1 | grep "Error: Grid name '_default' not found" > /dev/null; then
+        echo "configuring realm server"
+        config_realm
+    else
+        echo "realm server already configured"
+    fi
+}
+
+is_proc_running()
+{
+    running=`$TIBDG_ROOT/bin/tibdg -r $URL status 2>&1 | awk -v proc=$1 -v name=$2 '$1 == proc && $2 == name && $3 != "NOT" && $4 != "RUNNING" { print }'`
+    if [ ! -z "$running" ]; then
+	return 0
+    fi
+    return 1
+}
+
+start_proc()
+{
+    if is_proc_running $1 $2; then
+	echo "$1 $2 is already running"
+	return
+    fi
+
+    echo "starting $1 $2"
+    `$TIBDG_ROOT/bin/tibdg$1 -r $URL -t tibdg:debug --logfile $LOGDIR/$2.log -n $2 > /dev/null 2>&1 &`
+}
+
+wait_for_proc()
+{
+    for i in {1..30}
+    do
+	if is_proc_running $1 $2; then
+	    return
+	fi
+	echo "waiting for $1 $2 start"
+	sleep 1
+    done
+
+    echo "failed to start $1 $2"
+    exit
+}
+
+wait_for_grid()
+{
+    for i in {1..30}
+    do
+	if $TIBDG_ROOT/bin/tibdg -r $URL status -j 2>&1 | grep online | grep true > /dev/null; then
+	    echo "grid is online"
+	    return
+	fi
+	echo "waiting for grid to be online"
+	sleep 1
+    done
+
+    echo "grid failed to go online"
+    exit
+}
+
+# main
+if [[ -z  $TIBDG_ROOT  ]]; then
+
+    if [[ -e "setup" ]]; then
+        . ./setup
+    fi
+
+    if [[ -z $TIBDG_ROOT ]]; then
+        echo "Missing required environment variable TIBDG_ROOT. Please set using the setup script in the samples directory."
+        exit
+    fi
+fi
+
+HOSTPORT=localhost:5055
+BASEDIR=activespacesdata
+
+while getopts 'r:d:' flag; do
+  case "${flag}" in
+    d) BASEDIR="${OPTARG}" ;;
+    r) HOSTPORT="${OPTARG##http://}" ;;
+    *) echo "syntax: as-start [-r host:port] [-d data_directory]"
+	exit ;;
+  esac
+done
+
+URL=http://$HOSTPORT
+
+echo "Using Realm Server at ${URL} with grid data at ${BASEDIR}"
+
+LOGDIR=$BASEDIR/logs
+mkdir -p $LOGDIR
+if [ $? -ne 0 ] ; then
+    echo "Failed to create log directory (${LOGDIR}). Rerun with -d flag set to a writable directory or make ${BASEDIR} writable."
+    exit
+fi
+
+start_realmserver
+
+start_proc keeper k1
+wait_for_proc keeper k1
+
+start_proc proxy p1
+wait_for_proc proxy p1
+
+start_proc node n1
+wait_for_proc node n1
+
+wait_for_grid

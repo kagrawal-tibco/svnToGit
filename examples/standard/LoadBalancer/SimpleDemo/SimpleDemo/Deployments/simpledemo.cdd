@@ -1,0 +1,295 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<cluster xmlns="http://tibco.com/businessevents/configuration/5.6">
+    <revision>
+        <version>60</version>
+        <author>TIBCO Software Inc.</author>
+        <date>2014/10/15 11:41:08</date>
+        <comment/>
+    </revision>
+    <name>LoadBalancer_SimpleDemo</name>
+    <message-encoding>UTF-8</message-encoding>
+    <object-management>
+        <cache-manager>
+            <provider>
+                <name>TIBCO</name>
+            </provider>
+            <cache-agent-quorum/>
+            <backup-copies>1</backup-copies>
+            <entity-cache-size>10000</entity-cache-size>
+            <discovery-url/>
+            <listen-url/>
+            <remote-listen-url/>
+            <protocol-timeout>-1</protocol-timeout>
+            <read-timeout>60000</read-timeout>
+            <write-timeout>60000</write-timeout>
+            <lock-timeout>-1</lock-timeout>
+            <shoutdown-wait>8500</shoutdown-wait>
+            <workerthreads-count>4</workerthreads-count>
+            <explicit-tuple>false</explicit-tuple>
+            <object-table>
+                <max-size>100000</max-size>
+            </object-table>
+            <backing-store>
+                <persistence-option>None</persistence-option>
+                <cache-aside>false</cache-aside>
+                <cache-loader-class>com.tibco.be.oracle.BECoherenceOracleStore</cache-loader-class>
+                <enforce-pools>false</enforce-pools>
+                <strategy/>
+                <type>Oracle</type>
+                <data-store-path/>
+                <persistence-policy>ASYNC</persistence-policy>
+                <parallel-recovery>true</parallel-recovery>
+                <primary-connection>
+                    <uri/>
+                    <initial-size>10</initial-size>
+                    <max-size>10</max-size>
+                    <min-size>10</min-size>
+                </primary-connection>
+            </backing-store>
+            <domain-objects>
+                <default-mode>cache</default-mode>
+                <check-for-version>true</check-for-version>
+                <constant>false</constant>
+                <enable-tracking>true</enable-tracking>
+                <evict-on-update>false</evict-on-update>
+                <cache-limited>false</cache-limited>
+                <subscribe>true</subscribe>
+                <pre-load-enabled>false</pre-load-enabled>
+                <pre-load-fetch-size/>
+                <pre-load-handles>all</pre-load-handles>
+                <domain-object>
+                    <cache-limited>true</cache-limited>
+                    <evict-on-update>false</evict-on-update>
+                    <mode>memory</mode>
+                    <pre-load-fetch-size>0</pre-load-fetch-size>
+                    <uri>/Events/TestEventA</uri>
+                    <backing-store>
+                        <enabled>true</enabled>
+                        <table-name/>
+                        <properties>
+                            <property>
+                                <name>name</name>
+                            </property>
+                            <property>
+                                <name>JMSMessageID</name>
+                            </property>
+                            <property>
+                                <name>JMSRedelivered</name>
+                            </property>
+                            <property>
+                                <name>JMSTimestamp</name>
+                            </property>
+                            <property>
+                                <name>__content_id__</name>
+                            </property>
+                            <property>
+                                <name>__likely_dup_delivery__</name>
+                            </property>
+                            <property>
+                                <name>__version_id__</name>
+                            </property>
+                            <property>
+                                <name>__ack_expected__</name>
+                            </property>
+                        </properties>
+                    </backing-store>
+                    <indexes>
+                        <index/>
+                    </indexes>
+                </domain-object>
+            </domain-objects>
+        </cache-manager>
+        <db-concepts>
+            <db-uris/>
+            <check-interval>60</check-interval>
+            <inactivity-timeout>0</inactivity-timeout>
+            <initial-size>5</initial-size>
+            <max-size>5</max-size>
+            <min-size>5</min-size>
+            <property-check-interval>900</property-check-interval>
+            <retry-count>-1</retry-count>
+            <wait-timeout>1</wait-timeout>
+        </db-concepts>
+    </object-management>
+    <rulesets/>
+    <function-groups/>
+    <destination-groups/>
+    <process-groups/>
+    <log-configs>
+        <log-config id="logConfig">
+            <enabled>true</enabled>
+            <roles>*:info</roles>
+            <files>
+                <enabled>true</enabled>
+                <dir>logs</dir>
+                <name/>
+                <max-number>10</max-number>
+                <max-size>5000000</max-size>
+                <append>true</append>
+            </files>
+            <terminal>
+                <enabled/>
+                <sys-out-redirect/>
+                <sys-err-redirect/>
+                <encoding/>
+            </terminal>
+            <line-layout>
+                <enabled>false</enabled>
+                <class/>
+                <arg/>
+            </line-layout>
+        </log-config>
+    </log-configs>
+    <agent-classes>
+        <inference-agent-class id="inference-receiver-class">
+            <rules>
+                <uri>/Receiver/Rules/OnTestEventA</uri>
+            </rules>
+            <destinations>
+                <destination id="Destination_0_3670140E">
+                    <pre-processor/>
+                    <queue-size/>
+                    <thread-count/>
+                    <threading-model>shared-queue</threading-model>
+                    <uri>/Channels/JMS/Destination</uri>
+                </destination>
+            </destinations>
+            <startup/>
+            <shutdown/>
+            <local-cache>
+                <eviction>
+                    <max-size/>
+                    <max-time/>
+                </eviction>
+            </local-cache>
+            <shared-queue>
+                <size>1024</size>
+                <workers>10</workers>
+            </shared-queue>
+            <load>
+                <max-active/>
+            </load>
+            <concurrent-rtc>false</concurrent-rtc>
+            <check-for-duplicates>false</check-for-duplicates>
+            <businessworks>
+                <uri/>
+            </businessworks>
+            <property-group/>
+        </inference-agent-class>
+        <inference-agent-class id="inference-router-class">
+            <rules/>
+            <destinations>
+                <destination id="Destination_0_1DE01B12">
+                    <pre-processor/>
+                    <queue-size/>
+                    <thread-count/>
+                    <threading-model>shared-queue</threading-model>
+                    <uri>/Channels/JMS/Destination</uri>
+                </destination>
+            </destinations>
+            <startup/>
+            <shutdown/>
+            <local-cache>
+                <eviction>
+                    <max-size>1024</max-size>
+                    <max-time>900</max-time>
+                </eviction>
+            </local-cache>
+            <shared-queue>
+                <size>1024</size>
+                <workers>10</workers>
+            </shared-queue>
+            <load>
+                <max-active/>
+            </load>
+            <concurrent-rtc>false</concurrent-rtc>
+            <check-for-duplicates>false</check-for-duplicates>
+            <businessworks>
+                <uri/>
+            </businessworks>
+            <property-group/>
+        </inference-agent-class>
+    </agent-classes>
+    <processing-units>
+        <processing-unit id="receiver">
+            <agents>
+                <agent>
+                    <ref>inference-receiver-class</ref>
+                    <key/>
+                    <priority/>
+                </agent>
+            </agents>
+            <logs>logConfig</logs>
+            <hot-deploy>false</hot-deploy>
+            <cache-storage-enabled>true</cache-storage-enabled>
+            <db-concepts>false</db-concepts>
+            <property-group>
+                <property-group comment="" name="com.sun.management.jmxremote">
+                    <property name="com.sun.management.jmxremote" value="true"/>
+                    <property name="com.sun.management.jmxremote.ssl" value="true"/>
+                    <property name="com.sun.management.jmxremote.port" value="5560"/>
+                    <property name="com.sun.management.jmxremote.authenticate" value="false"/>
+                </property-group>
+                <property-group comment="" name="cache">
+                    <property-group comment="" name="coherence">
+                        <property name="tangosol.coherence.ttl" value="0"/>
+                        <property name="tangosol.coherence.clusteraddress" value="224.3.3.15"/>
+                        <property name="tangosol.coherence.clusterport" value="35064"/>
+                    </property-group>
+                </property-group>
+            </property-group>
+        </processing-unit>
+        <processing-unit id="router">
+            <agents>
+                <agent>
+                    <ref>inference-router-class</ref>
+                    <key/>
+                    <priority/>
+                </agent>
+            </agents>
+            <logs>logConfig</logs>
+            <hot-deploy>false</hot-deploy>
+            <cache-storage-enabled>false</cache-storage-enabled>
+            <db-concepts>false</db-concepts>
+            <property-group>
+                <property-group comment="" name="com.sun.management.jmxremote">
+                    <property name="com.sun.management.jmxremote" value="true"/>
+                    <property name="com.sun.management.jmxremote.ssl" value="true"/>
+                    <property name="com.sun.management.jmxremote.port" value="5560"/>
+                    <property name="com.sun.management.jmxremote.authenticate" value="false"/>
+                </property-group>
+                <property-group comment="" name="cache">
+                    <property-group comment="" name="coherence">
+                        <property name="tangosol.coherence.ttl" value="0"/>
+                        <property name="tangosol.coherence.clusteraddress" value="224.3.3.15"/>
+                        <property name="tangosol.coherence.clusterport" value="35064"/>
+                    </property-group>
+                </property-group>
+            </property-group>
+        </processing-unit>
+    </processing-units>
+    <load-balancer-configs>
+        <pair-configs>
+            <pair-config>
+                <receiver>inference-receiver-class</receiver>
+                <router>inference-router-class</router>
+                <name>pair1</name>
+                <channel>/Channels/JMS/Destination</channel>
+                <key>name</key>
+                <property-group>
+                    <property name="transport" value="tcp"/>
+                    <property name="hostname" value="localhost"/>
+                    <property name="port" value="45450"/>
+                </property-group>
+            </pair-config>
+        </pair-configs>
+        <adhoc-configs/>
+    </load-balancer-configs>
+    <property-group>
+        <property-group comment="" name="auth">
+            <property name="be.auth.type" value="file"/>
+            <property name="be.auth.file.location" value="%TIBCO_BE_HOME_ESC%/mm/config/users.pwd"/>
+            <property name="java.security.auth.login.config" value="%TIBCO_BE_HOME_ESC%/mm/config/jaas-config.config"/>
+        </property-group>
+    </property-group>
+</cluster>

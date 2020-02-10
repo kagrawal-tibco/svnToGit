@@ -1,0 +1,39 @@
+/**
+ * @description 
+ * @author 
+ */
+rule Monitoring.Rules.DashboardRuleSet.UnsubscribeAll_ValidToken {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Monitoring.Events.request.UnsubscribeAllRequestEvent	requestevent;
+		
+	}
+	when {
+		requestevent.token != null && String.length(requestevent.token) != 0;
+	}
+	then {
+		Shared.Concepts.LoggedInUser user = Instance.getByExtId(requestevent.token);
+		if (user == null) {
+		    Shared.Events.reqres.FailureResponseEvent event = Shared.Events.reqres.FailureResponseEvent.FailureResponseEvent(null,null,"001","Invalid token");
+		    Event.replyEvent(requestevent, event);
+		}
+		else {
+		    user.lastAccessTime = System.currentTimeMillis();
+		    int viewCnt = user.monitorView@length;
+		    for (int i = 0 ; i < viewCnt ; i = i + 1) {
+		        user.monitorView[i].lastAccessTime = System.currentTimeMillis();
+		        //we do not perform unsubscribe since we want to keep updating the charts
+		        //unsubscribeView(view);        
+		    }
+		    Instance.PropertyArray.clear(user.monitorView);
+		    String msg = "All components successfully unsubscribed...";
+		    Shared.RuleFunctions.log("UnsubscribeAll_ValidToken","DEBUG",msg);
+		    Shared.Events.reqres.SuccessSimpleResponseEvent event = Shared.Events.reqres.SuccessSimpleResponseEvent.SuccessSimpleResponseEvent(null,null,msg,null);
+		    Event.replyEvent(requestevent, event);
+		}
+		Event.consumeEvent(requestevent);
+	}
+}

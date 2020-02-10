@@ -1,0 +1,28 @@
+/**
+ * @description Get the URL of the WebStudio server 
+ */
+String rulefunction WebStudio.Core.RuleFunctions.Utils.WS_RF_GetWebStudioServerURL {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object servletRequest;		
+	}
+	body {
+		String protocol = HTTP.Servlet.Request.getServerScheme(servletRequest);
+		String serverName = HTTP.Servlet.Request.getServerName(servletRequest);
+		int port = HTTP.Servlet.Request.getServerPort(servletRequest);
+		
+		String serverPort = String.valueOfInt(port);
+		Object reusableBuffer = String.createBuffer(0);
+		String.append(reusableBuffer, protocol);
+		String.append(reusableBuffer, "://");
+		String.append(reusableBuffer, serverName);
+		String.append(reusableBuffer, ":");
+		String.append(reusableBuffer, serverPort);
+		String.append(reusableBuffer, "/");   
+		String.append(reusableBuffer, "WebStudio");
+		
+		return String.convertBufferToString(reusableBuffer);				
+	}
+}

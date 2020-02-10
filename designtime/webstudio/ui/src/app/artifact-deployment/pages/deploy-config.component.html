@@ -1,0 +1,41 @@
+<div class='card panel-sm page-lg'>
+	<div class='card-header' i18n>{{i18n('
+    Deployment Configuration
+    ')}}</div>
+  <div class='card-body'>
+    <div class='row'>
+      <div class='col-sm-12'>
+        <!-- <label for="futureDeploy" class='control-label control-label-normal' i18n>{{i18n('Schedule a future start time of deployment ')}}</label>  
+          <toggle-switch
+          [size]='"mini"'
+          [(value)]='futureDeploy'
+          ></toggle-switch>
+        -->
+        <mat-slide-toggle [(ngModel)]="futureDeploy" color="primary">
+            {{i18n('Schedule a future start time of deployment ')}}
+        </mat-slide-toggle> 
+      </div>
+    </div>
+    <div class='row top-pad' *ngIf='futureDeploy'>
+      <div class='col-sm-12'>
+        <div class='divider-top top-pad'>
+          <div class='row'>
+            <div class='col-sm-6'>
+              <label for="deployTime" class='control-label control-label-normal' i18n>{{i18n('Deploy Time')}}</label>
+              <datetime-editor
+                [edit]='true'
+                [(value)]='deployTime'
+              ></datetime-editor>
+              <div *ngIf='futureDeploy && !deployTime' class= 'alert alert-warning'>
+                <small i18n>{{i18n('Deploy time is required if you want to schedule the deployment to start in the future.')}}</small> 
+              </div>
+              <div *ngIf='futureDeploy && pastTime' class='alert alert-warning'>
+                <small i18n>{{i18n('Deploy time can only be sometime in the future.')}}</small> 
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

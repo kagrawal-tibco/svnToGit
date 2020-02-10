@@ -1,0 +1,27 @@
+/**
+ * @description Rule to send change notification
+ * @author vdhumal-t420
+ */
+rule WebStudio.Core.Rules.Lifecycle.WS_R_SendNotification {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		WebStudio.Core.Events.Lifecycle.WS_E_SendNotificationEvent sendNotificationEvent;
+	}
+	when {
+		sendNotificationEvent.notifyType != null;
+		sendNotificationEvent.notifyContextPropsMapId != null;
+		sendNotificationEvent.notifyMessageDataMapId != null;
+		sendNotificationEvent.createdMapIdsMapId != null;
+	}
+	then {
+		String notifyType = sendNotificationEvent.notifyType;
+		String contextPropsMapId = sendNotificationEvent.notifyContextPropsMapId;
+		String messageDataMapId = sendNotificationEvent.notifyMessageDataMapId;
+		String createdMapIdsMap_Id = sendNotificationEvent.createdMapIdsMapId;
+		Cluster.executeRuleFunction("Email_Wrk_Manager", "/WebStudio/Core/RuleFunctions/Utils/Lifecycle/WS_RF_SendNotification", false, 
+																				notifyType, contextPropsMapId, messageDataMapId, createdMapIdsMap_Id);																					  		
+	}
+}

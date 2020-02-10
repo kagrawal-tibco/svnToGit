@@ -1,0 +1,61 @@
+/**
+ * @description Perform sync changes based on sync type.
+ * @author aathalye-T410
+ */
+rule WebStudio.Core.Rules.Lifecycle.WS_R_PerformWorkspaceSynchronization {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		WebStudio.Core.Events.Lifecycle.WS_E_WorkspaceSynchronizationEvent workspaceSynchronizationEvent;
+	}
+	when {
+		workspaceSynchronizationEvent@payload != null;
+	}
+	then {
+		Object LOGGER = Log.getLogger("WebStudio.Core.Rules.Lifecycle.WS_R_PerformWorkspaceSynchronization");
+		
+		WS_C_CheckoutRequestProject project = 
+			Instance.createTransientInstanceFromEvent("/WebStudio/Core/Concepts/Request/Usecases/Checkout/WS_C_CheckoutRequestProject", workspaceSynchronizationEvent);
+		
+		WS_C_ArtifactCheckoutDataItem[] artifactItems = Instance.PropertyArray.toArrayContainedConcept(project.artifactItem);
+		
+		int numberOfArtifacts = artifactItems@length;
+		Log.log(LOGGER, "Debug", "Number of artifacts [%s]", numberOfArtifacts);
+		
+		String projectName = project.name;
+		String username = workspaceSynchronizationEvent.username;
+		
+		String userProjectExtId = WS_RF_CreateUserArtifactExtId(null, null, projectName, username, null, null);
+		WS_C_UserProject userProject = Instance.getByExtIdByUri(userProjectExtId, "/WebStudio/Core/Concepts/WS_C_UserProject");
+		
+		for (int loop = 0; loop < numberOfArtifacts; loop++) {
+			WS_C_ArtifactCheckoutDataItem artifactDataItem = artifactItems[loop];
+			String artifactPath = artifactDataItem.artifactPath;
+			Log.log(LOGGER, "Debug", "Synchronization Path for artifact requested [%s]", artifactPath);
+			
+			String artifactType = artifactDataItem.artifactType;
+			String syncType = artifactDataItem.changeType;
+
+			Log.log(LOGGER, "Debug", "[Artifact Path] - %s, [Artifact Type] - %s, [Sync Type] - %s", artifactPath, artifactType, syncType);
+			WS_RF_PerformArtifactSynchronization(artifactPath, artifactType, username, syncType, userProject);
+			
+			WS_RF_UpdateProjectSummary(projectName, workspaceSynchronizationEvent.username, "SYNC");
+			WS_RF_AddAuditTrailEntry(username, projectName, artifactPath, artifactType, "SYNC", "Synchronization Successful");
+		}	
+		
+		WS_C_ResponseData responseData = 
+			Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/WS_C_ResponseData");
+		Object asyncContext = Util.HashMap.getObject(workspaceSynchronizationEvent.mapLockKey, workspaceSynchronizationEvent.asyncContextId);
+		//Clear it
+		Util.HashMap.removeObject(workspaceSynchronizationEvent.mapLockKey, workspaceSynchronizationEvent.asyncContextId);
+		Util.HashMap.deleteMap(workspaceSynchronizationEvent.mapLockKey);
+		String responseDSXML = WS_RF_CreateAndSerializeResponseDataSource(0, 0, null, null, responseData, workspaceSynchronizationEvent.contentType);
+		
+		Object servletResponse = HTTP.Servlet.getServletResponse(asyncContext);
+		
+		HTTP.Servlet.Response.setResponseHeader(servletResponse, "Content-type", "application/xml;charset=utf-8");	    										
+		HTTP.Servlet.Response.setResponseContent(asyncContext, responseDSXML, true);	
+	}
+}

@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<project name="pre-uninstall" default="pre-uninstall" basedir=".">
+	<property file="post-install.properties"/>
+
+	<taskdef resource="net/sf/antcontrib/antcontrib.properties"/>
+	
+	<target name="pre-uninstall" depends="restore-mm, restore-runtime-plugins,restore-tpcl-jars,restore-ext-tibco-jars">
+		<echo message="Done pre-uninstallation tasks." />
+	</target>
+
+	<target name="restore-mm">
+		<if>
+			<available file="${tibco.home}/be/5.6/backup/5.6.1_pre/mm" type="dir"/>
+			<then>
+				<echo message="Restoring designtime plugins" />
+						<move todir="${tibco.home}/be/5.6/mm">
+							<fileset dir="${tibco.home}/be/5.6/backup/5.6.1_pre/mm">
+								<include name="bin/**"/>
+								<include name="deployment/**"/>
+								<include name="lib/**"/>	
+								<include name="project/**"/>
+								<include name="web-root/**"/>
+								<include name="config/**"/>
+							</fileset>
+						</move>
+			</then>
+		</if>
+		
+	</target> 
+	
+
+	<target name="restore-runtime-plugins">
+		<echo message="Restoring runtime plugins" />
+		<if>
+			<available file="${tibco.home}/be/5.6/backup/5.6.1_pre" type="dir"/>
+			<then>
+				<move todir="${tibco.home}/be/5.6/lib/eclipse/plugins">
+					<fileset dir="${tibco.home}/be/5.6/backup/5.6.1_pre/lib/eclipse/plugins">
+						<include name="com.tibco.cep.tra_5.6.*.jar*" />
+						<include name="com.tibco.cep.datamodeling.common_5.6.*.jar*"/>
+						<include name="com.tibco.cep.eventstreamprocessing.common_5.6.*.jar*"/>
+						<include name="com.tibco.cep.decision.table.common_5.6.*.jar*"/>
+					</fileset>
+				</move>
+			</then>
+		</if>
+		
+	</target>
+	
+
+	<target name="restore-tpcl-jars">
+		<echo message="Restoring runtime tpcl" />
+				<if>
+					<available file="${tibco.home}/be/5.6/backup/5.6.1_pre" type="dir"/>
+					<then>
+						<move todir="${tibco.home}/be/5.6/lib/ext/tpcl">
+							<fileset dir="${tibco.home}/be/5.6/backup/5.6.1_pre/lib/ext/tpcl">
+								<include name="amazon-kinesis-client-1.9.2.jar" />
+								<include name="jsch-0.1.51.jar" />
+								<include name="slf4j-api-1.7.7.jar" />
+								<include name="slf4j-log4j12-1.7.7.jar" />
+								<include name="apache/commons-collections-3.2.2.jar" />
+								<include name="apache/commons-jexl-2.1.1.jar" />
+								<include name="apache/commons-lang3-3.3.2.jar" />
+								<include name="apache/httpclient-4.5.5.jar" />
+								<include name="apache/httpcore-4.4.9.jar" />
+								<include name="apache/httpcore-nio-4.4.9.jar" />
+								<include name="apache/httpmime-4.5.5.jar" />
+								<include name="apache/poi-3.7-20101029.jar" />
+								<include name="apache/poi-ooxml-3.7-20101029.jar" />
+								<include name="apache/poi-ooxml-schemas-3.7-20101029.jar" />
+								<include name="apache/poi-scratchpad-3.7-20101029.jar" />
+								<include name="apache/ecj-4.4.2.jar" />
+								<include name="apache/tomcat7-embed-websocket.jar" />
+								<include name="apache/tomcat-embed-logging-juli.jar" />
+								<include name="apache/tomcat-embed-logging-log4j.jar" />
+								<include name="aws/commons-lang-2.6.jar"/>
+								<include name="emf/org.eclipse.core.resources_3.11.1.v20161107-2032.jar"/>
+								<include name="emf/org.eclipse.emf.common_2.12.0.v20160420-0247.jar"/>
+								<include name="emf/org.eclipse.emf.ecore_2.12.0.v20160420-0247.jar"/>
+								<include name="emf/org.eclipse.emf.ecore.xmi_2.12.0.v20160420-0247.jar"/>
+								<include name="gwt/**"/>
+							</fileset>
+						</move>
+					</then>
+				</if>
+	</target>
+	
+	<target name="restore-ext-tibco-jars">
+		<echo message="Restoring runtime tpcl" />
+				<if>
+					<available file="${tibco.home}/be/5.6/backup/5.6.1_pre" type="dir"/>
+					<then>
+						<move todir="${tibco.home}/be/5.6/lib/ext/tibco">
+							<fileset dir="${tibco.home}/be/5.6/backup/5.6.1_pre/lib/ext/tibco">
+								<include name="**/**"/>
+							</fileset>
+						</move>
+					</then>
+				</if>
+	</target>
+	
+</project>	

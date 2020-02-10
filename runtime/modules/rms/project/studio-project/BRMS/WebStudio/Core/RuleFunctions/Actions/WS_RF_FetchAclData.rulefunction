@@ -1,0 +1,55 @@
+/**
+ * @description 
+ */
+WebStudio.Core.Concepts.DataSources.WS_C_TemporaryReturnData rulefunction WebStudio.Core.RuleFunctions.Actions.WS_RF_FetchAclData {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object servletRequest;
+		WebStudio.Security.Authn.Concepts.WS_C_LoggedInUser loggedInUser;
+		String projectName;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.WS_RF_FetchAclData");
+		
+		int totalRowsCounter = 0;
+		String responseMessage = null;
+		int responseStatusCode = 0;
+		String errorCode = null;
+		WS_C_ResponseData responseData = null;
+		
+		boolean isAdmin = WS_RF_IsAdminRole(loggedInUser);
+		
+		if (!WS_RF_CheckHTTPMethod(servletRequest, "GET")) {
+			responseStatusCode = -1;
+			errorCode = "ERR_5101";
+			responseMessage = "Invalid HTTP Method, expect method is [GET].";
+			
+		} else if (isAdmin) {
+			String subscriptionId = HTTP.Servlet.Request.getRequestParameter(servletRequest, "subscriptionId");
+			responseData = Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/WS_C_ResponseData");
+			
+			WebStudio.Core.Concepts.Permissions.WS_C_Acl aclData = WS_RF_CreateAclData(projectName, subscriptionId);
+			if (aclData != null) {
+				Log.log(LOGGER, "Debug", "UserDatas - %s", aclData);
+				
+				WS_C_AbstractDataSourceRecord userDataSourceRecord = aclData;
+				Instance.PropertyArray.appendContainedConcept(responseData.record, userDataSourceRecord, 1L);
+				
+				totalRowsCounter = 1;
+			} else {
+				responseMessage = "AclData not found for project [" + projectName + "]";
+				Log.log(LOGGER, "Debug", responseMessage);
+				responseStatusCode = -1;
+				errorCode = "ERR_1210";
+			}
+		} else {
+			responseStatusCode = -1;
+			errorCode = "ERR_1211";
+			responseMessage = "User do not have this permission";
+		}
+		
+		return WS_RF_CreateTemporaryReturnData(responseStatusCode, totalRowsCounter, errorCode, responseMessage, responseData);
+	}
+}

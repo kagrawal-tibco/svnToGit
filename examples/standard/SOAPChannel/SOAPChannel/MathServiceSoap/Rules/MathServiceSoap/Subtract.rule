@@ -1,0 +1,33 @@
+/**
+ * @description 
+ * @author null
+ */
+rule MathServiceSoap.Rules.MathServiceSoap.Subtract {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		MathServiceSoap.Events.SubtractSoapIn	soapeventin;
+		
+	}
+	when {
+		
+	}
+	then {
+		System.debugOut("###SUBTRACTION###");
+		System.debugOut("###Printing SOAPEventIn Payload###");
+		System.debugOut(soapeventin@payload);
+		
+		System.debugOut("###Getting the first and second value and subtracting###");
+		System.debugOut("The first number for subtraction is ="+XPath.evalAsDouble("xpath://<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xpath>\n    <expr>$soapeventin/payload/xsd6:message/xsd3:Envelope/xsd3:Body/xsd2:Subtract/a</expr>\n    <namespaces>\n        <namespace URI=\"http://www.tibco.com/TNT/webservices/\" pfx=\"xsd2\"/>\n        <namespace URI=\"http://www.w3.org/2001/XMLSchema\" pfx=\"xsd\"/>\n        <namespace URI=\"www.tibco.com/be/ontology/MathService/MathServiceSoap/Events/AddSoapIn\" pfx=\"xsd4\"/>\n        <namespace URI=\"http://schemas.xmlsoap.org/soap/envelope/\" pfx=\"xsd3\"/>\n        <namespace URI=\"www.tibco.com/be/ontology/MathServiceSoap/Events/SubtractSoapIn\" pfx=\"xsd6\"/>\n        <namespace URI=\"www.tibco.com/be/ontology/MathService/MathServiceSoap/Events/SubtractSoapIn\" pfx=\"xsd5\"/>\n    </namespaces>\n    <variables>\n        <variable>soapeventin</variable>\n    </variables>\n</xpath>"));
+		System.debugOut("The second number for subtraction is ="+XPath.evalAsDouble("xpath://<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xpath>\n    <expr>$soapeventin/payload/xsd6:message/xsd3:Envelope/xsd3:Body/xsd2:Subtract/b</expr>\n    <namespaces>\n        <namespace URI=\"http://www.tibco.com/TNT/webservices/\" pfx=\"xsd2\"/>\n        <namespace URI=\"http://www.w3.org/2001/XMLSchema\" pfx=\"xsd\"/>\n        <namespace URI=\"www.tibco.com/be/ontology/MathService/MathServiceSoap/Events/AddSoapIn\" pfx=\"xsd4\"/>\n        <namespace URI=\"http://schemas.xmlsoap.org/soap/envelope/\" pfx=\"xsd3\"/>\n        <namespace URI=\"www.tibco.com/be/ontology/MathServiceSoap/Events/SubtractSoapIn\" pfx=\"xsd6\"/>\n        <namespace URI=\"www.tibco.com/be/ontology/MathService/MathServiceSoap/Events/SubtractSoapIn\" pfx=\"xsd5\"/>\n    </namespaces>\n    <variables>\n        <variable>soapeventin</variable>\n    </variables>\n</xpath>"));
+		
+		System.debugOut("###Creating the SoapEventOut###");
+		MathServiceSoap.Events.SubtractSoapOut soapeventout=Event.createEvent("xslt://{{/MathServiceSoap/Events/SubtractSoapOut}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:ns=\"http://www.tibco.com/TNT/webservices/\" xmlns:ns1=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:ns2=\"www.tibco.com/be/ontology/MathServiceSoap/Events/SubtractSoapIn\" xmlns:ns3=\"www.tibco.com/be/ontology/MathServiceSoap/Events/SubtractSoapOut\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"1.0\" exclude-result-prefixes=\"ns2 ns1 ns xsd\">\n    <xsl:output method=\"xml\"/>\n    <xsl:param name=\"soapeventin\"/>\n    <xsl:template match=\"/\">\n        <createEvent>\n            <event>\n                <payload>\n                    <ns3:message>\n                        <ns1:Envelope>\n                            <ns1:Body>\n                                <ns:SubtractResponse>\n                                    <SubtractResult>\n                                        <xsl:value-of select=\"$soapeventin/payload/ns2:message/ns1:Envelope/ns1:Body/ns:Subtract/a - $soapeventin/payload/ns2:message/ns1:Envelope/ns1:Body/ns:Subtract/b\"/>\n                                    </SubtractResult>\n                                </ns:SubtractResponse>\n                            </ns1:Body>\n                        </ns1:Envelope>\n                    </ns3:message>\n                </payload>\n            </event>\n        </createEvent>\n    </xsl:template>\n</xsl:stylesheet>");
+		System.debugOut("###The subtraction of the 2 numbers are=###"+XPath.evalAsDouble("xpath://<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xpath>\n    <expr>$soapeventout/payload/xsd7:message/xsd3:Envelope/xsd3:Body/xsd2:SubtractResponse/SubtractResult</expr>\n    <namespaces>\n        <namespace URI=\"http://www.tibco.com/TNT/webservices/\" pfx=\"xsd2\"/>\n        <namespace URI=\"http://www.w3.org/2001/XMLSchema\" pfx=\"xsd\"/>\n        <namespace URI=\"www.tibco.com/be/ontology/MathService/MathServiceSoap/Events/AddSoapIn\" pfx=\"xsd4\"/>\n        <namespace URI=\"http://schemas.xmlsoap.org/soap/envelope/\" pfx=\"xsd3\"/>\n        <namespace URI=\"www.tibco.com/be/ontology/MathService/MathServiceSoap/Events/SubtractSoapOut\" pfx=\"xsd6\"/>\n        <namespace URI=\"www.tibco.com/be/ontology/MathService/MathServiceSoap/Events/AddSoapOut\" pfx=\"xsd5\"/>\n        <namespace URI=\"www.tibco.com/be/ontology/MathServiceSoap/Events/SubtractSoapOut\" pfx=\"xsd7\"/>\n    </namespaces>\n    <variables>\n        <variable>soapeventout</variable>\n    </variables>\n</xpath>"));
+		System.debugOut("###Printing SOAPEventOut Payload###");
+		System.debugOut(soapeventout@payload);
+		Event.replyEvent(soapeventin,soapeventout);
+	}
+}

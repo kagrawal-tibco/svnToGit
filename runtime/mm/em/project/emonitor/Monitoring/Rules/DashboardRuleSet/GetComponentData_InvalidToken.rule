@@ -1,0 +1,22 @@
+/**
+ * @description 
+ * @author 
+ */
+rule Monitoring.Rules.DashboardRuleSet.GetComponentData_InvalidToken {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Monitoring.Events.request.ComponentDataRequestEvent	requestevent;
+		
+	}
+	when {
+		requestevent.token == null || String.length(requestevent.token) == 0;
+	}
+	then {
+		Shared.Events.reqres.FailureResponseEvent event = Shared.Events.reqres.FailureResponseEvent.FailureResponseEvent(null,null,"001","Invalid token");
+		Event.replyEvent(requestevent, event);
+		Event.consumeEvent(requestevent);
+	}
+}

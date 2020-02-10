@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beviewsconfig:TextComponent xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:beviewsconfig="http://www.tibco.com/be/designer" xmlns:designtime="http:///com/tibco/cep/designtime/core/model/designtime_ontology.ecore" namespace="/Dashboards/" folder="/Dashboards/" name="VisualAlertTextChart" description="" GUID="716A564B-E90B-4928-0C21-BDD9B8F2DACF" ownerProjectName="TestDashboard" version="1268689729997" displayName="Visual Alert" helpText="Test Help" componentColorSetIndex="0" seriesColorIndex="-1">
+  <extendedProperties>
+    <properties xsi:type="designtime:SimpleProperty" name="Category">
+      <extendedProperties>
+        <properties xsi:type="designtime:SimpleProperty" name="VT1"/>
+        <properties xsi:type="designtime:SimpleProperty" name="VT2"/>
+        <properties xsi:type="designtime:SimpleProperty" name="VT3"/>
+      </extendedProperties>
+    </properties>
+    <properties xsi:type="designtime:SimpleProperty" name="MaxValue" value="100.0"/>
+    <properties xsi:type="designtime:SimpleProperty" name="MinValue" value="0.0"/>
+  </extendedProperties>
+  <visualization xsi:type="beviewsconfig:TextVisualization" namespace="/Dashboards/" folder="/Dashboards/" name="TCV_" description="" GUID="B4BA297F-AA3E-B650-B0A7-E72666D81B18" ownerProjectName="TestDashboard" version="1268689729997" showHeader="true">
+    <seriesConfig xsi:type="beviewsconfig:TextSeriesConfig" namespace="/Dashboards/" folder="/Dashboards/" name="NoAlert" description="" GUID="A356464C-E905-2ABF-BF8F-265293C4A70E" ownerProjectName="TestDashboard" version="1268689660642">
+      <actionRule namespace="/Dashboards/" folder="/Dashboards/" name="Series__AR" description="" GUID="696EBF24-3BB4-3382-2DE1-BB79C4EA80F5" ownerProjectName="TestDashboard" version="1268689660642" threshold="0" thresholdUnit="count">
+        <dataSource href="TestMetricDataSource.datasource#/"/>
+        <params namespace="/Dashboards/" folder="/Dashboards/" name="token" description="" GUID="417ED72E-608D-3E38-7126-95EC1772AEA8" ownerProjectName="TestDashboard" version="1268689660642" type="String"/>
+      </actionRule>
+      <valueDataConfig xsi:type="beviewsconfig:TextValueDataConfig" headerName="Value Column" width="30" alignment="right">
+        <extractor>
+          <sourceField href="TestMetric.metric#//@properties.6"/>
+        </extractor>
+        <formatter xsi:type="beviewsconfig:TextFieldFormat" toolTipFormat="{GF1}={VF1}" displayFormat="{VF1}" showLabel="true">
+          <formatStyle fontSize="10" fontStyle="normal"/>
+        </formatter>
+      </valueDataConfig>
+      <categoryDataConfig xsi:type="beviewsconfig:TextCategoryDataConfig">
+        <extractor>
+          <sourceField href="TestMetric.metric#//@properties.5"/>
+        </extractor>
+        <formatter xsi:type="beviewsconfig:TextFieldFormat" displayFormat="{GF1}"/>
+      </categoryDataConfig>
+    </seriesConfig>
+    <seriesConfig xsi:type="beviewsconfig:TextSeriesConfig" namespace="/Dashboards/" folder="/Dashboards/" name="Alert" description="" GUID="6A63D2D2-676C-B698-F66F-247C70894E7E" ownerProjectName="TestDashboard" version="1268689660642">
+      <actionRule namespace="/Dashboards/" folder="/Dashboards/" name="Series__AR" description="" GUID="92BA6CFF-E4BF-020F-5C33-52209FD45DD0" ownerProjectName="TestDashboard" version="1268689660642" threshold="0" thresholdUnit="count">
+        <dataSource href="TestMetricDataSource.datasource#/"/>
+        <alert xsi:type="beviewsconfig:RangeAlert" namespace="/Dashboards/" folder="/Dashboards/" name="Blank Range" description="" GUID="C4711B66-871A-E91D-0E91-7890F450E528" ownerProjectName="TestDashboard" version="1268689660642" enabled="true" lowerValue="0.0" upperValue="25.0">
+          <action xsi:type="beviewsconfig:VisualAlertAction" namespace="/Dashboards/" folder="/Dashboards/" name="A_" description="" GUID="9841B873-0EDC-B4FE-506F-F5EE487FF56D" ownerProjectName="TestDashboard" version="1268689660642" enabled="true" fillColor="ff0000" fontSize="10" fontStyle="normal" fontColor="000000"/>
+        </alert>
+        <alert xsi:type="beviewsconfig:RangeAlert" namespace="/Dashboards/" folder="/Dashboards/" name="Green Range" description="" GUID="CF7EEE11-A65C-0D16-226B-1649AC93EDA0" ownerProjectName="TestDashboard" version="1268689660642" enabled="true" lowerValue="26.0" upperValue="50.0">
+          <action xsi:type="beviewsconfig:VisualAlertAction" namespace="/Dashboards/" folder="/Dashboards/" name="A_" description="" GUID="E66AEEEE-45EC-777D-63F1-6079C3216284" ownerProjectName="TestDashboard" version="1268689660642" enabled="true" fillColor="00FF00" fontSize="10" fontStyle="normal" fontColor="000000"/>
+        </alert>
+        <alert xsi:type="beviewsconfig:RangeAlert" namespace="/Dashboards/" folder="/Dashboards/" name="Orange Range" description="" GUID="E7DC31E2-E391-EAAA-99C0-9E04A6DEBF0E" ownerProjectName="TestDashboard" version="1268689660642" enabled="true" lowerValue="51.0" upperValue="75.0">
+          <action xsi:type="beviewsconfig:VisualAlertAction" namespace="/Dashboards/" folder="/Dashboards/" name="A_" description="" GUID="C7F63434-268E-8113-8B7A-5254571CABE0" ownerProjectName="TestDashboard" version="1268689660642" enabled="true" fillColor="FF8000" fontSize="10" fontStyle="normal" fontColor="000000"/>
+        </alert>
+        <alert xsi:type="beviewsconfig:RangeAlert" namespace="/Dashboards/" folder="/Dashboards/" name="Red Range" description="" GUID="6D03EBD1-B904-DE8B-36C4-BAFC5788AF0A" ownerProjectName="TestDashboard" version="1268689660642" enabled="true" lowerValue="76.0" upperValue="100.0">
+          <action xsi:type="beviewsconfig:VisualAlertAction" namespace="/Dashboards/" folder="/Dashboards/" name="A_" description="" GUID="39BB0A43-D4E3-80DA-B6C1-3FEEE1B9849D" ownerProjectName="TestDashboard" version="1268689660642" enabled="true" fillColor="ff0000" fontSize="10" fontStyle="normal" fontColor="000000"/>
+        </alert>
+        <drillableFields href="TestMetric.metric#//@properties.5"/>
+        <params namespace="/Dashboards/" folder="/Dashboards/" name="token" description="" GUID="F5EE13AA-928C-318C-855B-48B81D0BB22C" ownerProjectName="TestDashboard" version="1268689660642" type="String"/>
+      </actionRule>
+      <valueDataConfig xsi:type="beviewsconfig:TextValueDataConfig" headerName="Value Column" width="30" alignment="right">
+        <extractor>
+          <sourceField href="TestMetric.metric#//@properties.6"/>
+        </extractor>
+        <formatter xsi:type="beviewsconfig:IndicatorFieldFormat" toolTipFormat="{GF1}={VF1}" displayFormat="{VF1}" showLabel="true" showTextValue="true" textValueAnchor="west">
+          <formatStyle fontSize="10" fontStyle="normal"/>
+        </formatter>
+      </valueDataConfig>
+      <categoryDataConfig xsi:type="beviewsconfig:TextCategoryDataConfig">
+        <extractor>
+          <sourceField href="TestMetric.metric#//@properties.5"/>
+        </extractor>
+        <formatter xsi:type="beviewsconfig:TextFieldFormat" displayFormat="{GF1}"/>
+      </categoryDataConfig>
+    </seriesConfig>
+    <valueGuidelineConfig xsi:type="beviewsconfig:TextValueGuidelineConfig" headerAlignment="right">
+      <headerFormatStyle fontSize="10" fontStyle="bold"/>
+    </valueGuidelineConfig>
+    <categoryGuidelineConfig xsi:type="beviewsconfig:TextCategoryGuidelineConfig" headerName="Categories" sortOrder="unsorted" headerAlignment="left" labelAlignment="left" width="40">
+      <headerFormatStyle fontSize="10" fontStyle="bold"/>
+      <labelFormatStyle fontSize="10" fontStyle="normal"/>
+    </categoryGuidelineConfig>
+  </visualization>
+  <layoutConstraint xsi:type="beviewsconfig:FlowLayoutConstraint" componentRowSpan="1" componentColSpan="1"/>
+  <relatedElement href="AreaChart.chart#/"/>
+  <relatedElement href="BarChartTest.chart#/"/>
+</beviewsconfig:TextComponent>

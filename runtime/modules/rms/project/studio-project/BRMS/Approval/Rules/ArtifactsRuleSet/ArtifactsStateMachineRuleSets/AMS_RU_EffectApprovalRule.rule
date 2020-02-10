@@ -1,0 +1,99 @@
+/**
+ * @description Effect rule resulting in status change to Approve
+ * @author aathalye-lt
+ */
+rule Approval.Rules.ArtifactsRuleSet.ArtifactsStateMachineRuleSets.AMS_RU_EffectApprovalRule {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Approval.Events.ArtifactEvents.StateMachine.AMS_E_ApprovalRequestEvent ams_e_approvalrequestevent;
+		Approval.Concepts.ArtifactsConcepts.AMS_C_ArtifactCommited ams_c_artifactcommited;
+	}
+	when {
+		ams_e_approvalrequestevent.revisionId == ams_c_artifactcommited.revisionId &&
+		ams_e_approvalrequestevent.artifactPath == ams_c_artifactcommited.artifactPath;
+	}
+	then {
+		Object LOGGER = Log.getLogger("Approval.Rules.ArtifactsRuleSet.ArtifactsStateMachineRuleSets.AMS_RU_EffectApprovalRule");
+		String baseProjectDir = System.getSystemPropertyAsString("rms.projects.baselocation", null);
+		String pathSeparator = "/";
+				
+		String artifactProjectName = ams_c_artifactcommited.projectName;	
+		String artifactPath = ams_c_artifactcommited.artifactPath;
+		//Look for base approved directory
+		String decisionDataDir = 
+			System.getSystemPropertyAsString("rms.project.decisiondata", "decisiondata");
+		
+		
+		//The base directory for checkins
+		Object buffer = String.createBuffer(0);
+		
+		String.clearBuffer(buffer);
+		
+		String[] joinStringsApprovedDirPath = {baseProjectDir, pathSeparator, artifactProjectName, pathSeparator, decisionDataDir};
+		buffer =  
+			Approval.CommonServices.AMS_RF_JoinStringsToBuffer(joinStringsApprovedDirPath, buffer);
+		String approvedDirPath = String.convertBufferToString(buffer);
+		
+		String.clearBuffer(buffer);	
+		
+		Log.log(LOGGER, "Debug", "Approved Directory Path %s", approvedDirPath);
+				
+		boolean dirExists = File.fileExists(approvedDirPath);	
+		
+		if (dirExists) {
+			//Write this file to this directory
+			String artifactExtension = String.toLowerCase(ams_c_artifactcommited.artifactFileExtension);
+				
+			//Get absolute path of file
+			String approvedArtifactFilePath = approvedDirPath +
+			                                  artifactPath + 
+			                                  "." + 
+			                                  artifactExtension;
+			String artifactOperation = ams_c_artifactcommited.operation;
+			
+			boolean isDeleted = false;
+			if (String.equals("DELETE", artifactOperation)) {
+				Log.log(LOGGER, "Debug", "Attempting to delete file %s", approvedArtifactFilePath);
+				//Perform delete
+				isDeleted = File.fileRemove(approvedArtifactFilePath);
+				Log.log(LOGGER, "Debug", "Delete file %s", isDeleted);
+			} else {			                                  		
+                String contents = ams_c_artifactcommited.artifactContent;
+                String compressedContents = ams_c_artifactcommited.artifactContent;
+				//This will be base64 encoded so decode it first
+				//Uncompress this
+				try {
+					Object deflatedBytes = RMS.Util.decodeBase64(compressedContents);
+					Object inflatedBytes = RMS.Util.decompressBytes(deflatedBytes);
+				  
+					boolean created = File.createFolders(approvedDirPath, artifactPath);
+					if (created) {
+						Log.log(LOGGER, "Debug", "Writing out approved File %s", approvedArtifactFilePath);
+						RMS.Util.writeToFile(approvedArtifactFilePath, inflatedBytes);
+					}
+					
+					//Also change deployablestate concept's dirty flag to true indicating
+					//any ear already present to be out of sync if it is not a DT
+					if (!String.equals(artifactExtension, "rulefunctionimpl")) {
+						//This rule could be executed on one agent while generate deployable on other.
+						//To avoid duplicate creation take a lock on this concept's extid.
+						String deployableStateExtId = "Deploy" + "@" + artifactProjectName;
+						if (Cluster.DataGrid.Lock(deployableStateExtId, -1, false)) {
+							AMS_C_DeployableState deployableState = Instance.getByExtIdByUri(deployableStateExtId, "/Approval/Concepts/ArtifactsConcepts/AMS_C_DeployableState");
+							if (deployableState == null) {
+								deployableState = Instance.createInstance("xslt://{{/Approval/Concepts/ArtifactsConcepts/AMS_C_DeployableState}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"1.0\" exclude-result-prefixes=\"xsl xsd\">\n    <xsl:output method=\"xml\"/>\n    <xsl:param name=\"artifactProjectName\"/>\n    <xsl:template match=\"/\">\n        <createObject>\n            <object>\n                <xsl:attribute name=\"extId\">\n                    <xsl:value-of select=\"concat(&quot;Deploy&quot;, concat(&quot;@&quot;, $artifactProjectName))\"/>\n                </xsl:attribute>\n            </object>\n        </createObject>\n    </xsl:template>\n</xsl:stylesheet>");
+							}
+							deployableState.dirty = true;
+						}	
+					}					
+				} catch (Exception e) {
+					
+				}
+			}
+			AMS_RF_UpdateApprovedArtifacts(ams_c_artifactcommited.projectName, artifactPath + "." + artifactExtension, isDeleted);
+		}
+	}
+}

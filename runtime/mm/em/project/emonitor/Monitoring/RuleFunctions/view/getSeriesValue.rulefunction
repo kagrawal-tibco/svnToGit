@@ -1,0 +1,81 @@
+/**
+ * @description 
+ */
+Object rulefunction Monitoring.RuleFunctions.view.getSeriesValue {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Shared.Concepts.AbstractMonitorView	view;
+		Shared.Concepts.SeriesData	seriesdata;
+		String	categoryValue;
+		int	valueLocation;
+	}
+	body {
+		String componentConfigMapId = getComponentConfigMapId(view.monitorable,view.type);
+		int idx = -2;
+		if (Util.HashMap.getObject(componentConfigMapId,"timebased") == true){
+		    idx = seriesdata.rawValues@length - 1;
+		}
+		else if (categoryValue != null){
+		    idx = Instance.PropertyArray.indexOfString(seriesdata.categories,categoryValue);
+		}
+		else if (categoryValue == "*"){
+		   idx = -1;
+		}
+		Object temp = null;
+		if (idx == -1){
+		    Object[] seriesDataSet = Object[seriesdata.categories@length]{};
+		    for (int i = 0 ; i < seriesdata.categories@length ; i = i + 1){
+		        Object[] dataset = Object[3]{};
+		        dataset[0] = seriesdata.categories[i];
+		        String[] rawValues = String.split(seriesdata.rawValues[i],"#");
+		        Shared.RuleFunctions.log("getSeriesValue","DEBUG",seriesdata@extId+".rawValues["+i+"] is "+seriesdata.rawValues[i]);
+		        String rawValue = rawValues[0];
+		        if (valueLocation > 0){
+		            rawValue = rawValues[valueLocation];
+		        }
+		        dataset[1] = Number.doubleValue(rawValue);
+		        String[] values = String.split(seriesdata.values[i],"#");
+		        Shared.RuleFunctions.log("getSeriesValue","DEBUG",seriesdata@extId+".values["+i+"] is "+seriesdata.values[i]);
+		        String value = values[0];
+		        if (valueLocation > 0){
+		            value = values[valueLocation];
+		        }
+		        try {
+		            dataset[2] = Number.doubleValue(value);
+		        } catch (Exception e){
+		            dataset[2] = value;
+		        }
+		        seriesDataSet[i] = dataset;
+		    }
+		    temp = seriesDataSet;
+		}
+		else {
+		    Object[] seriesDataSet = Object[1]{};
+		    Object[] dataset = Object[3]{};
+		    dataset[0] = seriesdata.categories[idx];
+		    String[] rawValues = String.split(seriesdata.rawValues[idx],"#");
+		    Shared.RuleFunctions.log("getSeriesValue","DEBUG",seriesdata@extId+".rawValues["+idx+"] is "+seriesdata.rawValues[idx]);
+		    String rawValue = rawValues[0];
+		    if (valueLocation > 0){
+		        rawValue = rawValues[valueLocation];
+		    }
+		    dataset[1] = Number.doubleValue(rawValue);
+		    String[] values = String.split(seriesdata.values[idx],"#");
+		    Shared.RuleFunctions.log("getSeriesValue","DEBUG",seriesdata@extId+".values["+idx+"] is "+seriesdata.values[idx]);
+		    String value = values[0];
+		    if (valueLocation > 0){
+		        value = values[valueLocation];
+		    }
+		    try {
+		        dataset[2] = Number.doubleValue(value);
+		    } catch (Exception e){
+		        dataset[2] = value;
+		    }
+		    seriesDataSet[0] = dataset;
+		    temp = seriesDataSet;
+		}
+		return temp;
+	}
+}

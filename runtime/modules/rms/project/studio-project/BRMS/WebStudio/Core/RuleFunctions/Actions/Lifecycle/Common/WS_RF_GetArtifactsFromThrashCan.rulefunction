@@ -1,0 +1,53 @@
+/**
+ * @description 
+ */
+Object rulefunction WebStudio.Core.RuleFunctions.Actions.Lifecycle.Common.WS_RF_GetArtifactsFromThrashCan {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		//Project to check thrashed artifacts for.
+		String projectName;
+		String searchPath;
+		String subscriptionId;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.Lifecycle.Common.WS_RF_GetArtifactsFromThrashCan");
+		
+		//TODO fetch using query which is not working as a result of bug in query.
+		String thrashcanExtId = WS_RF_CreateUserArtifactExtId("THRASH_CAN", null, null, null, subscriptionId, null);
+		WS_C_ThrashCan globalThrashCan = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(thrashcanExtId, false, "/WebStudio/Core/Concepts/Lifecycle/WS_C_ThrashCan");
+		
+		String stackID = "THRASH_STACK_" + System.nanoTime();
+		Object thrashedStack = WS.Common.Stack.create(stackID);
+		//Empty it
+		WS.Common.Stack.clear(thrashedStack);
+		if (globalThrashCan != null) {
+			WS_C_ThrashedArtifact[] allThrashedArtifacts = Instance.PropertyArray.toArrayContainedConcept(globalThrashCan.thrashedArtifacts);
+			for (int loop = 0; loop < allThrashedArtifacts@length; loop++) {
+				WS_C_ThrashedArtifact thrashedArtifact = allThrashedArtifacts[loop];
+				String masterArtifactId = thrashedArtifact.deletedMasterArtifactId;
+				Log.log(LOGGER, "Debug", "Deleted master artifact id [%s]", masterArtifactId);
+				//Load the masterartifact
+				WS_C_MasterArtifact masterArtifact = Instance.getByExtIdByUri(masterArtifactId, "/WebStudio/Core/Concepts/Lifecycle/WS_C_MasterArtifact");
+				if (masterArtifact != null) {
+					String artifactPath = masterArtifact.artifactPath;
+					String managedProjectName = masterArtifact.managedProjectName;
+					Log.log(LOGGER, "Debug", "Deleted master artifact path [%s]", artifactPath);
+					if (String.equals(managedProjectName, projectName)) {
+						boolean matches = String.regionMatches(false, artifactPath, 0, searchPath, 0, String.length(searchPath));
+						if (matches) {
+							Log.log(LOGGER, "Debug", "Master artifact path [%s] matches search path [%s]", artifactPath, searchPath);
+							WS.Common.Stack.push(thrashedStack, thrashedArtifact);
+						}
+					}
+				}
+			} 
+		}
+		Object thrashed = WS.Common.Stack.toArray(thrashedStack, "be.gen.WebStudio.Core.Concepts.Lifecycle.WS_C_ThrashedArtifact", "com.tibco.cep.runtime.service.loader.BEClassLoader");
+		// cleanup and delete the stack
+		WS.Common.Stack.delete(stackID);
+		
+		return thrashed;
+	}
+}

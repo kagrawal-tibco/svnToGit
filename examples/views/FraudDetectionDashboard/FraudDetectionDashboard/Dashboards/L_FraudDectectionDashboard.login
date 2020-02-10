@@ -1,0 +1,2 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beviewsconfig:Login xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:beviewsconfig="http://www.tibco.com/be/designer" namespace="/Dashboards/" folder="/Dashboards/" name="L_FraudDectectionDashboard" description="" GUID="A8189C3C-65CB-9685-8FD7-AA1A99859EC5" ownerProjectName="FraudDetectionDashboard" version="1314318329370" title="Fraud Detection" imageURL="/Dashboards/images/loginlogo.jpg"/>

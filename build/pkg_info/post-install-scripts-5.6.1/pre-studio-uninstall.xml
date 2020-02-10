@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<project name="pre-uninstall" default="pre-uninstall" basedir=".">
+	<property file="post-install.properties"/>
+	
+	<taskdef resource="net/sf/antcontrib/antcontrib.properties"/>
+	
+	<target name="pre-uninstall" depends="restore-tra-files, restore-designtime-plugins" >
+		<delete dir="${tibco.home.esc}/be/${beVersionShort}/eclipse-platform/eclipse/p2/org.eclipse.equinox.p2.engine/profileRegistry" />
+		<echo message="Done pre-uninstallation tasks." />
+	</target>
+	
+	<target name="restore-tra-files">
+		<if>
+			<available file="${tibco.home}/be/5.6/backup/5.6.1_pre/studio/bin" type="dir"/>
+			<then>
+				<echo message="Restoring tra files"/>
+				<move todir="${tibco.home}/be/5.6/studio/bin">
+				<fileset dir="${tibco.home}/be/5.6/backup/5.6.1_pre/studio/bin">
+					<include name="studio-tools.tra"/>
+				</fileset>
+				</move>
+			</then>
+		</if>				
+	</target>
+
+	
+	<target name="restore-designtime-plugins">
+		<if>
+			<available file="${tibco.home}/be/5.6/backup/5.6.1_pre/studio/eclipse/plugins" type="dir"/>
+			<then>
+				<echo message="Restoring designtime plugins" />
+						<move todir="${tibco.home}/be/5.6/studio/eclipse/plugins">
+							<fileset dir="${tibco.home}/be/5.6/backup/5.6.1_pre/studio/eclipse/plugins">
+								<include name="com.tibco.cep.diagramming_5.6.*.jar*"/>						
+								<include name="com.tibco.cep.rt_5.6.*.jar*"/>
+								<include name="com.tibco.cep.sharedresource_5.6.*.jar*"/>	
+								<include name="com.tibco.cep.studio.application_5.6.*.jar*"/>						
+								<include name="com.tibco.cep.studio.cli_5.6.*.jar*"/>						
+								<include name="com.tibco.cep.studio.common_5.6.*.jar*"/>						
+								<include name="com.tibco.cep.studio.core_5.6.*.jar*"/>						
+								<include name="com.tibco.cep.studio.debug.core_5.6.*.jar*"/>						
+								<include name="com.tibco.cep.studio.debug.ui_5.6.*.jar*"/>						
+								<include name="com.tibco.cep.studio.mapper_5.6.*.jar*"/>
+								<include name="com.tibco.cep.studio.tester.core_5.6.*.jar*"/>
+								<include name="com.tibco.cep.studio.tester.ui_5.6.*.jar*"/>						
+								<include name="com.tibco.cep.studio.ui.editors_5.6.*.jar*"/>						
+								<include name="com.tibco.cep.studio.ui.navigator_5.6.*.jar*"/>						
+								<include name="com.tibco.cep.studio.ui_5.6.*.jar*"/>						
+								<include name="com.tibco.cep.tpcl_5.6.*.jar*"/>						
+								<include name="com.tibco.cep.tra_5.6.*.jar*"/>
+								<include name="com.tibco.cep.studio.wizard.as_5.6.*.jar*"/>
+								<include name="com.tibco.cep.studio.wizard.hawk_5.6.*.jar*"/>						
+								<include name="com.tibco.cep.studio.ws_5.6.*.jar*"/>
+								<include name="com.tibco.xml.*.jar*"/>
+								<include name="com.tibco.cep.studio.xerces_5.6.*.jar*"/>
+							    <include name="com.tibco.cep.thirdparty_5.6.*.jar*"/>
+								<include name="com.tibco.cep.studio.util_5.6.*.jar*"/>
+								<include name="com.tibco.cep.studio.mapper.ui_5.6.*.jar*"/>
+								<include name="com.tibco.cep.studio.dashboard.rt_5.6.*.jar*"/>
+								<include name="com.tibco.cep.security_5.6.*.jar*"/>
+								<include name="com.tibco.cep.eventstreamprocessing_5.6.*.jar*"/>
+								<include name="com.tibco.cep.eventstreamprocessing.common_5.6.*.jar*"/>
+								<include name="com.tibco.cep.datamodeling.common_5.6.*.jar*"/>
+								<include name="com.tibco.cep.liveview_5.6.*.jar" />
+								<include name="com.tibco.cep.datamodeling_5.6.*.jar" />
+								<include name="com.tibco.cep.decision.table.capabilities_5.6.*.jar" />
+								<include name="com.tibco.cep.decision.table.common_5.6.*.jar" />
+								<include name="com.tibco.cep.decision.table.core_5.6.*.jar" />
+								<include name="com.tibco.cep.decision.table.ui_5.6.*.jar" />
+								<include name="com.tibco.cep.decision.tree.common_5.6.*.jar" />
+								<include name="com.tibco.cep.decision.tree.core_5.6.*.jar" />
+								<include name="com.tibco.cep.decision.tree.ui_5.6.*.jar" />
+								<include name="com.tibco.cep.sharedresource.as3_5.6.*.jar" />
+								<include name="com.tibco.cep.sharedresource.ascon_5.6.*.jar" />
+								<include name="com.tibco.cep.sharedresource.ftl_5.6.*.jar" />
+								<include name="com.tibco.cep.sharedresource.hawk_5.6.*.jar" />
+								<include name="com.tibco.cep.sharedresource.mqtt_5.6.*.jar" />
+								<include name="com.tibco.cep.studio.cluster.topology_5.6.*.jar" />
+								<include name="com.tibco.cep.studio.dbconcept_5.6.*.jar" />
+								<include name="com.tibco.cep.studio.decision.table.ui_5.6.*.jar" />
+								<include name="com.tibco.cep.studio.rms.core_5.6.*.jar" />
+								<include name="com.tibco.cep.studio.rms.ui_5.6.*.jar" />
+								<include name="com.tibco.cep.studio.streambase_5.6.*.jar" />
+								<include name="com.tibco.cep.studio.ui.statemachine_5.6.*.jar" />
+								<include name="com.tibco.cep.studio.wizard.ftl_5.6.*.jar" />
+								<include name="com.tibco.cep.bpmn.common_5.6.*.jar" />
+								<include name="com.tibco.cep.bpmn.core_5.6.*.jar" />
+								<include name="com.tibco.cep.bpmn.rt_5.6.*.jar" />
+								<include name="com.tibco.cep.bpmn.ui_5.6.*.jar" />
+							</fileset>
+						</move>
+			</then>
+		</if>
+		
+	</target> 
+	
+	
+	
+	
+		
+</project>	

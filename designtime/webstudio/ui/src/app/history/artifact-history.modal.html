@@ -1,0 +1,48 @@
+<!-- <div class="container-fluid">
+  <div class="row"> -->
+    <div class="card panel-sm">
+      <div class="card-header">
+      	<button (click)='toggleMaximize()' class="float-right btn-outline-primary">
+	      	<i
+		      	class="fa"
+		      	[class.fa-window-restore]="maximized"
+		      	[class.fa-expand]="!maximized"
+		      	>
+	      	</i>
+      	</button>
+        <ng-container i18n>{{i18n('Artifact History')}}</ng-container>
+      </div>
+      <div
+        class="card-body"
+        *ngIf='!entries || entries.length === 0'
+        >
+        <small i18n>{{i18n('No History For This Artifact.')}}</small>
+      </div>
+      <ul
+        class='list-group list-group-sm history-entries list-group-scroll'
+        *ngIf='entries?.length > 0'
+        >
+        <li
+          class='list-group-item'
+          *ngFor='let e of entries'
+          [class.active]='e.highlighted'
+        >
+          <artifact-history-entry
+            [input]='e'
+            [highlighted]='e.highlighted'
+            [highlightReason]='e.highlightReason'
+          ></artifact-history-entry>
+        </li>
+      </ul>
+    </div>
+  <!-- </div> -->
+  <div class="row btn-area left-pad top-pad">
+    <div class="col-sm-12">
+      <button
+        type="button"
+        class='btn btn-outline-primary btn-sm btn-narrow'
+        (click)='onClose()' i18n
+        >{{i18n('Close')}}</button>
+    </div>
+  </div>
+<!-- </div> -->

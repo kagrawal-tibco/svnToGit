@@ -1,0 +1,36 @@
+/**
+ * @description 
+ */
+boolean rulefunction WebStudio.Core.RuleFunctions.Utils.Lifecycle.WS_RF_CheckForAllowedRepositorySyncTypes {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		WebStudio.Core.Concepts.Request.Usecases.Checkout.WS_C_CheckoutRequestProject project;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.Lifecycle.WS_RF_CheckForAllowedRepositorySyncTypes");
+		
+		WS_C_ArtifactCheckoutDataItem[] artifactItems = Instance.PropertyArray.toArrayContainedConcept(project.artifactItem);
+		
+		boolean validSyncArtifact = true;
+		String invalidArtifactTypes = "";
+		for (int i=0; i<artifactItems@length; i++) {
+			if (!String.equals(artifactItems[i].artifactType, "concept") &&
+				!String.equals(artifactItems[i].artifactType, "event") &&
+				!String.equals(artifactItems[i].artifactType, "rulefunction") &&
+				!String.equals(artifactItems[i].artifactType, "ruletemplate") &&
+				!String.equals(artifactItems[i].artifactType, "ruletemplateview")) {
+					
+				invalidArtifactTypes += artifactItems[i].artifactType + ", ";				
+				validSyncArtifact = false;	
+			}
+		}
+		
+		if (!validSyncArtifact) {
+			Log.log(LOGGER, "Debug", "Invalid Artifacts found - %s", invalidArtifactTypes);
+		}
+		
+		return validSyncArtifact;
+	}
+}

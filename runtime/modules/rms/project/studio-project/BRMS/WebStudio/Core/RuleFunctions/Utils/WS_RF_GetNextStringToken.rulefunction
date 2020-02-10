@@ -1,0 +1,26 @@
+/**
+ * @description 
+ */
+String rulefunction WebStudio.Core.RuleFunctions.Utils.WS_RF_GetNextStringToken {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String baseString;
+		String delimiter;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.WS_RF_GetNextStringToken");
+		
+		String nextToken = null;
+		
+		int delimiterIndex = String.indexOfString(baseString, 0, delimiter);
+		if (delimiterIndex != -1) {
+			nextToken = String.substring(baseString, 0, delimiterIndex);
+		} else {
+			nextToken = baseString;
+		}
+		
+		return nextToken;
+	}
+}

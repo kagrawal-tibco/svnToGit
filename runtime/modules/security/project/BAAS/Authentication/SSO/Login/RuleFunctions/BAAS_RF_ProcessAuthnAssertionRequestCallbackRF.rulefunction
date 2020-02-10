@@ -1,0 +1,59 @@
+/**
+ * @description Process authn assertion request from SP via browser redirect and send login page to browser.
+ */
+void rulefunction Authentication.SSO.Login.RuleFunctions.BAAS_RF_ProcessAuthnAssertionRequestCallbackRF {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object asyncContextObject;
+		Concept sessionConcept;
+	}
+	body {
+		
+		//SAML request will be received as a post data because we use HTTP-POST binding
+		Object servletRequest = HTTP.Servlet.getServletRequest(asyncContextObject);
+		Object servletResponse = HTTP.Servlet.getServletResponse(asyncContextObject);
+		//Keep relaying relay state param
+		String relayState = 
+			HTTP.Servlet.Request.getRequestParameter(servletRequest, "RelayState");
+		
+		//Get SAMLRequest post data
+		String charset = 
+			HTTP.Servlet.Request.getRequestHeader(servletRequest, "Content-transfer-encoding");
+		if (charset == null) {charset = "UTF-8";}
+		
+		//Get SAMLRequest post data
+		String samlRequestBase64Content = 
+			HTTP.Servlet.Request.getRequestParameter(servletRequest, "SAMLRequest");
+		samlRequestBase64Content = String.replaceAll(samlRequestBase64Content, " ", "+");
+
+		//Base64 decode it
+		String samlRequestContent = HTTP.fromBase64(samlRequestBase64Content, charset);
+		
+		System.debugOut("Processing authn assertion request SAMLRequest");
+		//Parse this
+		//Get issuer url. This should be the SPs entity id as well and registered with MDS.
+		String issuerURL = 
+			XPath.execute("$var//saml:Issuer/text()", samlRequestContent, "saml=urn:oasis:names:tc:SAML:2.0:assertion");
+		System.debugOut("Authn Request issuer url " + issuerURL);
+		String assertionRequestId = 
+			XPath.execute("$var//samlp:AuthnRequestType/attribute::ID", samlRequestContent, "samlp=urn:oasis:names:tc:SAML:2.0:protocol");
+		
+		
+		//Do redirect to login page.
+		System.debugOut("Redirecting to Idp Loginpage");
+		Object urlBuffer = String.createBuffer(0);
+		String.append(urlBuffer, "/loginpage/Login.jsp");
+		String.append(urlBuffer, "?RelayState=");
+		String.append(urlBuffer, relayState);
+		String.append(urlBuffer, "&AuthReqId=");
+		String.append(urlBuffer, assertionRequestId);
+		String.append(urlBuffer, "&Audience=");
+		String.append(urlBuffer, issuerURL);
+		String redirectUrl = String.convertBufferToString(urlBuffer);
+		String.clearBuffer(urlBuffer);
+		
+		HTTP.Servlet.Response.sendRedirectTo(asyncContextObject, redirectUrl);
+	}
+}

@@ -1,0 +1,28 @@
+
+==================================
+BQL: select * from /ConceptModel/StockTick;
+==================================
+
+select * from "dist-limited-nobs$QueryTrades$$be.gen.ConceptModel.StockTick";
+
+select count(1) from "dist-limited-nobs$QueryTrades$$be.gen.ConceptModel.StockTick";
+
+select $2zsymbol, $2zvolume, $2zprice from "dist-limited-nobs$QueryTrades$$be.gen.ConceptModel.StockTick";
+
+select $2zsymbol, count(1) from "dist-limited-nobs$QueryTrades$$be.gen.ConceptModel.StockTick" group by $2zsymbol;
+
+select id, extId, $2zsymbol, $2zvolume, $2zprice from "dist-limited-nobs$QueryTrades$$be.gen.ConceptModel.StockTick" where $2zsymbol = "TIBX";
+
+==================================
+
+select * from "dist-limited-nobs$QueryTrades$$be.gen.ConceptModel.Trade";
+
+select $2zcounterpartyId.value from "dist-limited-nobs$QueryTrades$$be.gen.ConceptModel.Trade";
+
+select id, extId, $2zcounterpartyId.value, $2zloanamtusd.value, $2zsecurityId.value, $2zcategory.value, $2zsettlestatus.value, $2ztradeId.value from "dist-limited-nobs$QueryTrades$$be.gen.ConceptModel.Trade";
+
+select $2zsecurityId.value, count(1), min($2zloanamtusd.value), max($2zloanamtusd.value), avg($2zloanamtusd.value) from "dist-limited-nobs$QueryTrades$$be.gen.ConceptModel.Trade" group by $2zsecurityId.value;
+
+select count(1), min($2zloanamtusd.value), max($2zloanamtusd.value), avg($2zloanamtusd.value) from "dist-limited-nobs$QueryTrades$$be.gen.ConceptModel.Trade";
+
+select id, key(), value() from "dist-limited-nobs$QueryTrades$$be.gen.ConceptModel.Trade";

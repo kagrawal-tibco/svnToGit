@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+	 xmlns="http://www.tibco.com/businessevents/BEMM/2009/09/BEMMTopology.xsd"
+	 targetNamespace="http://www.tibco.com/businessevents/BEMM/2009/09/BEMMTopology.xsd"
+	 elementFormDefault="qualified"
+	 attributeFormDefault="unqualified">
+
+	<xs:element name="site">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="description" type="xs:string" minOccurs="0"/>
+				<xs:element ref="clusters"/>
+				<xs:element ref="host-resources" minOccurs="0"/>
+			</xs:sequence>
+			<xs:attribute name="name" type="xs:string"/>
+		</xs:complexType>
+	</xs:element>
+
+	<xs:element name="clusters">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="cluster" maxOccurs="unbounded"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+
+	<xs:element name="cluster">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="master-files"/>
+				<xs:element ref="run-version"/>
+				<xs:element ref="deployment-units" minOccurs="0"/>
+                <xs:element ref="deployment-mappings" minOccurs="0"/>
+			</xs:sequence>
+			<xs:attribute name="name" type="xs:string"/>
+			<xs:attribute name="project-cdd" type="xs:string"/>
+		</xs:complexType>
+	</xs:element>
+
+	<xs:element name="master-files">
+		<xs:complexType>
+			<xs:all>
+                <xs:element ref="cdd-master"/>
+				<xs:element ref="ear-master" minOccurs="0"/>
+			</xs:all>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="cdd-master" type="xs:string"/>
+	<xs:element name="ear-master" type="xs:string"/>
+
+	<xs:element name="run-version">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="be-runtime"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+    <xs:element name="be-runtime">
+		<xs:complexType>
+			<xs:attribute name="version" type="xs:string" default="4.0.0"/>
+		</xs:complexType>
+	</xs:element>
+
+    <xs:element name="deployment-units">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="deployment-unit" maxOccurs="unbounded"/>
+			</xs:sequence>
+		</xs:complexType>
+    </xs:element>
+	<xs:element name="deployment-unit">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="deployed-files"/>
+				<xs:element ref="processing-units-config"/>
+			</xs:sequence>
+			<xs:attribute name="name" type="xs:string"/>
+            <xs:attribute name="id" type="xs:ID"/>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="deployed-files">
+		<xs:complexType>
+			<xs:all>
+				<xs:element ref="cdd-deployed"/>
+				<xs:element ref="ear-deployed"/>
+			</xs:all>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="cdd-deployed" type="xs:string"/>
+	<xs:element name="ear-deployed" type="xs:string"/>
+	<xs:element name="processing-units-config">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="processing-unit-config" maxOccurs="unbounded"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="processing-unit-config">
+		<xs:complexType>
+			<xs:attribute name="id" type="xs:ID"/>
+			<xs:attribute name="use-as-engine-name" type="xs:boolean" default="false"/>
+			<xs:attribute name="puid" type="xs:string"/>
+			<xs:attribute name="jmxport" type="xs:string"/>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="deployment-mappings">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="deployment-mapping" maxOccurs="unbounded"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="deployment-mapping">
+		<xs:complexType>
+			<xs:attribute name="deployment-unit-ref" type="xs:IDREF"/>
+			<xs:attribute name="host-ref" type="xs:IDREF"/>
+		</xs:complexType>
+	</xs:element>
+    
+	<xs:element name="host-resources">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="host-resource" maxOccurs="unbounded"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+
+    <xs:element name="host-resource">
+		<xs:complexType>
+			<xs:all>
+				<xs:element ref="hostname"/>
+				<xs:element ref="ip"/>
+				<xs:element ref="user-credentials" minOccurs="0"/>
+				<xs:element ref="os-type"/>
+				<xs:element ref="software"/>
+				<xs:element ref="start-pu-method"/>
+			</xs:all>
+			<xs:attribute name="id" type="xs:ID"/>
+		</xs:complexType>
+	</xs:element>
+
+	<xs:element name="hostname" type="xs:string"/>
+
+	<xs:element name="ip" type="xs:string"/>
+
+	<xs:element name="user-credentials">
+		<xs:complexType>
+			<xs:attribute name="username" type="xs:string"/>
+			<xs:attribute name="password" type="xs:string"/>
+		</xs:complexType>
+	</xs:element>
+
+	<xs:element name="os-type" type="xs:string"/>
+
+	<xs:element name="software">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="be" maxOccurs="unbounded"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+    <xs:element name="be">
+		<xs:complexType>
+			<xs:all>
+				<xs:element ref="tra" minOccurs="0"/>
+				<xs:element ref="home"/>
+			</xs:all>
+			<xs:attribute name="version" type="xs:string" default="4.0.0"/>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="tra" type="xs:string"/>
+	<xs:element name="home" type="xs:string"/>
+
+	<xs:element name="start-pu-method">
+		<xs:complexType>
+			<xs:choice>
+				<xs:element ref="hawk"/>
+				<xs:element ref="ssh"/>
+				<xs:element ref="pstools"/>
+			</xs:choice>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="hawk">
+		<xs:complexType/>
+	</xs:element>
+	<xs:element name="ssh">
+		<xs:complexType>
+			<xs:attribute name="port" type="xs:string"/>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="pstools">
+		<xs:complexType/>
+	</xs:element>
+
+</xs:schema>

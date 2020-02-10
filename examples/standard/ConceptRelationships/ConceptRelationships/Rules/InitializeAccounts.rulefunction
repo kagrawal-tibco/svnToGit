@@ -1,0 +1,45 @@
+/**
+ * @description 
+ */
+void rulefunction Rules.InitializeAccounts {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		
+	}
+	body {
+		
+		Concepts.Address address = Concepts.Address.Address(null/*extId String */,
+															"Hillview Ave."/*Street String */,
+															"Palo Alto"/*city String */,
+															"CA"/*state String */,
+															"650-888-5554"/*phone String */);
+       		
+        
+		Concepts.Customer customer = Concepts.Customer.Customer(null /*extId String */,
+																"cust1" /*custId String */,
+																"John" /*FirstName String */,
+																"Doe" /*LastName String */,
+																null /*address Concepts.Address[] */);
+		customer.address[customer.address@length] = address;
+		Concepts.CheckingAccount checking = 
+		Concepts.CheckingAccount.CheckingAccount(null /*extId String */,
+												25000.00 /*Balance double */,
+												"OK" /*Status String */,
+												customer /*customer Concepts.Customer */,
+												"Checking1" /*Id String */,
+												"CHECKING" /*Type String */);
+		Concepts.CreditCardAccount credit = 
+		Concepts.CreditCardAccount.CreditCardAccount(null /*extId String */,
+												1000.0 /*Amount double */,
+												20000.0 /*CreditLimit double */,
+												customer /*customer Concepts.Customer */,
+												"Credit1" /*Id String */,
+												"CREDIT" /*Type String */);										
+
+		System.debugOut("##### Created customer id " + customer.custId + " with checking account id <" + checking.Id + "> and credit account id <" + credit.Id + ">");
+		System.debugOut("##### CHECKING account balance " + checking.Balance);
+		System.debugOut("##### CREDIT account balance " + credit.Amount);
+	}
+}

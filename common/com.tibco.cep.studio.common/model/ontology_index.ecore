@@ -1,0 +1,351 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0"
+    xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" name="model"
+    nsURI="http:///com/tibco/cep/designer/index/core/model/ontology_index.ecore" nsPrefix="model">
+  <eClassifiers xsi:type="ecore:EClass" name="DesignerProject" eSuperTypes="#//ElementContainer">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="entityElements" upperBound="-1"
+        eType="#//EntityElement"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="decisionTableElements"
+        upperBound="-1" eType="#//DecisionTableElement"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="archiveElements" upperBound="-1"
+        eType="#//ArchiveElement"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="ruleElements" upperBound="-1"
+        eType="#//RuleElement"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="rootPath" lowerBound="1"
+        eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="lastPersisted" lowerBound="1"
+        eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EDate"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="referencedProjects" upperBound="-1"
+        eType="#//DesignerProject" containment="true"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="driverManager" eType="ecore:EClass designtime_ontology.ecore#//service/channel/DriverManager"
+        transient="true"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="domainInstanceElements"
+        upperBound="-1" transient="true" containment="true">
+      <eGenericType eClassifier="#//InstanceElement">
+        <eTypeArguments/>
+      </eGenericType>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="archivePath" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="version" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EInt"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="StructuredElement" abstract="true" interface="true"/>
+  <eClassifiers xsi:type="ecore:EClass" name="DesignerElement" abstract="true" eSuperTypes="#//StructuredElement">
+    <eOperations name="accept">
+      <eParameters name="visitor" eType="#//IStructuredElementVisitor"/>
+    </eOperations>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="name" lowerBound="1" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="elementType" lowerBound="1"
+        eType="#//ELEMENT_TYPES"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="lazilyCreated" lowerBound="1"
+        eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="lastModified" lowerBound="1"
+        eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EDate"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="creationDate" lowerBound="1"
+        eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EDate"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="ElementContainer" abstract="true" interface="true"
+      eSuperTypes="#//DesignerElement">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="entries" upperBound="-1"
+        eType="#//DesignerElement" containment="true"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="Folder" eSuperTypes="#//ElementContainer"/>
+  <eClassifiers xsi:type="ecore:EClass" name="MemberElement" abstract="true" eSuperTypes="#//DesignerElement">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="offset" lowerBound="1"
+        eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EInt"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="length" lowerBound="1"
+        eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EInt"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="ElementReference">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="name" lowerBound="1" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="attRef" lowerBound="1"
+        eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="typeRef" lowerBound="1"
+        eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="offset" lowerBound="1"
+        eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EInt"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="length" lowerBound="1"
+        eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EInt"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="qualifier" eType="#//ElementReference"
+        containment="true"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="array" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="method" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="binding" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EJavaObject"
+        transient="true"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="TypeElement" abstract="true" eSuperTypes="#//DesignerElement">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="folder" lowerBound="1"
+        eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="StateMachineElement" eSuperTypes="#//EntityElement">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="compilableScopes" upperBound="-1"
+        eType="#//scope/CompilableScopeEntry" containment="true"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="indexName" lowerBound="1"
+        eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="EventElement" eSuperTypes="#//EntityElement">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="expiryActionScopeEntry"
+        eType="#//scope/CompilableScopeEntry" containment="true"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="EntityElement" eSuperTypes="#//TypeElement">
+    <eOperations name="accept">
+      <eParameters name="visitor" eType="#//IStructuredElementVisitor"/>
+    </eOperations>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="entity" lowerBound="1"
+        eType="ecore:EClass designtime_ontology.ecore#//Entity"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="DecisionTableElement" eSuperTypes="#//TypeElement">
+    <eOperations name="accept">
+      <eParameters name="visitor" eType="#//IStructuredElementVisitor"/>
+    </eOperations>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="implementation" lowerBound="1"
+        eType="ecore:EClass http://www.eclipse.org/emf/2002/Ecore#//EObject"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="ArchiveElement" eSuperTypes="#//TypeElement">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="archive" lowerBound="1"
+        eType="ecore:EClass designtime_ontology.ecore#//archive/ArchiveResource"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="RuleElement" eSuperTypes="#//TypeElement">
+    <eOperations name="accept">
+      <eParameters name="visitor" eType="#//IStructuredElementVisitor"/>
+    </eOperations>
+    <eOperations name="doVisitChildren">
+      <eParameters name="visitor" eType="#//IStructuredElementVisitor"/>
+    </eOperations>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="rule" lowerBound="1" eType="ecore:EClass designtime_ontology.ecore#//rule/Compilable"
+        containment="true"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="virtual" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="scope" eType="#//scope/RootScopeBlock"
+        containment="true"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="globalVariables" upperBound="-1"
+        eType="#//GlobalVariableDef" containment="true"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="indexName" lowerBound="1"
+        eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="VariableDefinition" eSuperTypes="#//MemberElement">
+    <eOperations name="accept">
+      <eParameters name="visitor" eType="#//IStructuredElementVisitor"/>
+    </eOperations>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="type" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="array" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="LocalVariableDef" eSuperTypes="#//VariableDefinition"/>
+  <eClassifiers xsi:type="ecore:EClass" name="GlobalVariableDef" eSuperTypes="#//VariableDefinition"/>
+  <eClassifiers xsi:type="ecore:EEnum" name="ELEMENT_TYPES">
+    <eLiterals name="Unknown"/>
+    <eLiterals name="Concept" value="1"/>
+    <eLiterals name="Scorecard" value="2"/>
+    <eLiterals name="Instance" value="3"/>
+    <eLiterals name="SimpleEvent" value="4"/>
+    <eLiterals name="Channel" value="5"/>
+    <eLiterals name="Destination" value="6"/>
+    <eLiterals name="Rule" value="7"/>
+    <eLiterals name="RuleFunction" value="8"/>
+    <eLiterals name="RuleSet" value="9"/>
+    <eLiterals name="StateMachine" value="10"/>
+    <eLiterals name="TimeEvent" value="11"/>
+    <eLiterals name="EnterpriseArchive" value="12"/>
+    <eLiterals name="BEArchiveResource" value="13"/>
+    <eLiterals name="SharedArchive" value="14"/>
+    <eLiterals name="ProcessArchive" value="15"/>
+    <eLiterals name="AdapterArchive" value="16"/>
+    <eLiterals name="PrimitiveType" value="16"/>
+    <eLiterals name="DecisionTable" value="17" literal="DecisionTable"/>
+    <eLiterals name="Metric" value="18" literal="Metric"/>
+    <eLiterals name="Domain" value="19" literal="Domain"/>
+    <eLiterals name="Project" value="20" literal="Project"/>
+    <eLiterals name="Folder" value="21" literal="Folder"/>
+    <eLiterals name="DomainInstance" value="22"/>
+    <eLiterals name="TextChartComponent" value="24"/>
+    <eLiterals name="StateMachineComponent" value="25"/>
+    <eLiterals name="PageSelectorComponent" value="26"/>
+    <eLiterals name="AlertComponent" value="27"/>
+    <eLiterals name="ContextActionRuleSet" value="28"/>
+    <eLiterals name="BluePrintComponent" value="29"/>
+    <eLiterals name="QueryManagerComponent" value="30"/>
+    <eLiterals name="SearchViewComponent" value="31"/>
+    <eLiterals name="RelatedAssetsComponent" value="32"/>
+    <eLiterals name="DrilldownComponent" value="33"/>
+    <eLiterals name="Query" value="34"/>
+    <eLiterals name="View" value="35"/>
+    <eLiterals name="DashboardPage" value="36"/>
+    <eLiterals name="AssetPage" value="37"/>
+    <eLiterals name="SearchPage" value="38"/>
+    <eLiterals name="PageSet" value="39"/>
+    <eLiterals name="SeriesColor" value="40"/>
+    <eLiterals name="TextComponentColorSet" value="41"/>
+    <eLiterals name="ChartComponentColorSet" value="42"/>
+    <eLiterals name="Header" value="43"/>
+    <eLiterals name="Login" value="44"/>
+    <eLiterals name="Skin" value="45"/>
+    <eLiterals name="RolePreference" value="46"/>
+    <eLiterals name="ChartComponent" value="47"/>
+    <eLiterals name="TextComponent" value="48"/>
+    <eLiterals name="DataSource" value="49"/>
+    <eLiterals name="RuleTemplate" value="50"/>
+    <eLiterals name="RuleTemplateView" value="51"/>
+    <eLiterals name="Process" value="52"/>
+    <eLiterals name="XsltFunction" value="53" literal="XsltFunction"/>
+    <eLiterals name="JavaSource" value="54" literal="JavaSource"/>
+    <eLiterals name="JavaResource" value="55"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="InstanceElement" eSuperTypes="#//TypeElement">
+    <eTypeParameters name="T">
+      <eBounds eClassifier="ecore:EClass designtime_ontology.ecore#//element/BaseInstance"/>
+    </eTypeParameters>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="instances" upperBound="-1">
+      <eGenericType eTypeParameter="#//InstanceElement/T"/>
+    </eStructuralFeatures>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="entityPath" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="SharedElement" eSuperTypes="#//DesignerElement">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="archivePath" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="entryPath" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="fileName" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="SharedDecisionTableElement" eSuperTypes="#//SharedElement #//DecisionTableElement">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="sharedImplementation" lowerBound="1"
+        eType="ecore:EClass http://www.eclipse.org/emf/2002/Ecore#//EObject" transient="true"
+        containment="true"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="SharedRuleElement" eSuperTypes="#//SharedElement #//RuleElement"/>
+  <eClassifiers xsi:type="ecore:EClass" name="SharedStateMachineElement" eSuperTypes="#//StateMachineElement #//SharedEntityElement"/>
+  <eClassifiers xsi:type="ecore:EClass" name="SharedEventElement" eSuperTypes="#//SharedEntityElement #//EventElement"/>
+  <eClassifiers xsi:type="ecore:EClass" name="SharedEntityElement" eSuperTypes="#//SharedElement #//EntityElement">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="sharedEntity" lowerBound="1"
+        eType="ecore:EClass designtime_ontology.ecore#//Entity" transient="true" containment="true"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="SharedProcessElement" eSuperTypes="#//SharedElement #//ProcessElement">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="sharedProcess" eType="ecore:EClass http://www.eclipse.org/emf/2002/Ecore#//EObject"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="ProcessElement" eSuperTypes="#//EntityElement">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="process" eType="ecore:EClass http://www.eclipse.org/emf/2002/Ecore#//EObject"
+        containment="true"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="IStructuredElementVisitor" instanceClassName="com.tibco.cep.studio.core.index.model.IStructuredElementVisitor"
+      abstract="true" interface="true">
+    <eOperations name="preVisit" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean">
+      <eParameters name="element" eType="#//StructuredElement"/>
+    </eOperations>
+    <eOperations name="postVisit" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean">
+      <eParameters name="element" eType="#//StructuredElement"/>
+    </eOperations>
+    <eOperations name="visitChildren" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean">
+      <eParameters name="element" eType="#//StructuredElement"/>
+    </eOperations>
+    <eOperations name="visit" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean">
+      <eParameters name="element" eType="#//StructuredElement"/>
+    </eOperations>
+    <eOperations name="visitDesignerProject" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean">
+      <eParameters name="element" eType="#//DesignerProject"/>
+    </eOperations>
+    <eOperations name="visitFolder" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean">
+      <eParameters name="element" eType="#//Folder"/>
+    </eOperations>
+    <eOperations name="visitStateMachineElement" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean">
+      <eParameters name="element" eType="#//StateMachineElement"/>
+    </eOperations>
+    <eOperations name="visitEntityElement" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean">
+      <eParameters name="element" eType="#//EntityElement"/>
+    </eOperations>
+    <eOperations name="visitDecisionTableElement" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean">
+      <eParameters name="element" eType="#//DecisionTableElement"/>
+    </eOperations>
+    <eOperations name="visitRuleElement" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean">
+      <eParameters name="element" eType="#//RuleElement"/>
+    </eOperations>
+    <eOperations name="visitLocalVariableDefinition" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean">
+      <eParameters name="element" eType="#//LocalVariableDef"/>
+    </eOperations>
+    <eOperations name="visitGlobalVariableDefinition" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean">
+      <eParameters name="element" eType="#//GlobalVariableDef"/>
+    </eOperations>
+    <eOperations name="visitScopeBlock" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean">
+      <eParameters name="element" eType="#//scope/ScopeBlock"/>
+    </eOperations>
+    <eOperations name="visitArchiveElement" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean">
+      <eParameters name="element" eType="#//ArchiveElement"/>
+    </eOperations>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="JavaElement" eSuperTypes="#//EntityElement">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="javaSource" lowerBound="1"
+        eType="ecore:EClass designtime_ontology.ecore#//java/JavaSource" containment="true"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="SharedJavaElement" eSuperTypes="#//JavaElement #//SharedEntityElement"/>
+  <eClassifiers xsi:type="ecore:EClass" name="JavaResourceElement" eSuperTypes="#//EntityElement">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="javaResource" lowerBound="1"
+        eType="ecore:EClass designtime_ontology.ecore#//java/JavaResource" containment="true"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="SharedJavaResourceElement" eSuperTypes="#//JavaResourceElement #//SharedEntityElement"/>
+  <eClassifiers xsi:type="ecore:EClass" name="BindingVariableDef" eSuperTypes="#//GlobalVariableDef"/>
+  <eSubpackages name="scope" nsURI="http:///com/tibco/cep/designer/index/core/model/scope/ontology_index.ecore"
+      nsPrefix="scope">
+    <eClassifiers xsi:type="ecore:EClass" name="ScopeBlock" eSuperTypes="#//StructuredElement">
+      <eOperations name="accept">
+        <eParameters name="visitor" eType="#//IStructuredElementVisitor"/>
+      </eOperations>
+      <eOperations name="doVisitChildren">
+        <eParameters name="visitor" eType="#//IStructuredElementVisitor"/>
+      </eOperations>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="type" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EInt"/>
+      <eStructuralFeatures xsi:type="ecore:EReference" name="parentScopeDef" eType="#//scope/ScopeBlock"
+          eOpposite="#//scope/ScopeBlock/childScopeDefs"/>
+      <eStructuralFeatures xsi:type="ecore:EReference" name="childScopeDefs" upperBound="-1"
+          eType="#//scope/ScopeBlock" containment="true" eOpposite="#//scope/ScopeBlock/parentScopeDef"/>
+      <eStructuralFeatures xsi:type="ecore:EReference" name="defs" upperBound="-1"
+          eType="#//LocalVariableDef" containment="true"/>
+      <eStructuralFeatures xsi:type="ecore:EReference" name="refs" upperBound="-1"
+          eType="#//ElementReference" containment="true"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="offset" lowerBound="1"
+          eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EInt"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="length" lowerBound="1"
+          eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EInt"/>
+    </eClassifiers>
+    <eClassifiers xsi:type="ecore:EClass" name="RootScopeBlock" eSuperTypes="#//scope/ScopeBlock">
+      <eStructuralFeatures xsi:type="ecore:EReference" name="definitionRef" lowerBound="1"
+          eType="#//ElementReference" containment="true"/>
+    </eClassifiers>
+    <eClassifiers xsi:type="ecore:EClass" name="CompilableScope">
+      <eStructuralFeatures xsi:type="ecore:EReference" name="globalVariables" upperBound="-1"
+          eType="#//GlobalVariableDef" containment="true"/>
+      <eStructuralFeatures xsi:type="ecore:EReference" name="conditionScope" eType="#//scope/ScopeBlock"
+          containment="true"/>
+      <eStructuralFeatures xsi:type="ecore:EReference" name="actionScope" eType="#//scope/ScopeBlock"
+          containment="true"/>
+    </eClassifiers>
+    <eClassifiers xsi:type="ecore:EClass" name="CompilableScopeEntry">
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="ruleName" lowerBound="1"
+          eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+      <eStructuralFeatures xsi:type="ecore:EReference" name="scope" lowerBound="1"
+          eType="#//scope/CompilableScope" containment="true"/>
+    </eClassifiers>
+  </eSubpackages>
+  <eSubpackages name="search" nsURI="http:///com/tibco/cep/designer/index/core/model/search/ontology_index.ecore"
+      nsPrefix="search">
+    <eClassifiers xsi:type="ecore:EClass" name="ElementMatch">
+      <eStructuralFeatures xsi:type="ecore:EReference" name="feature" eType="ecore:EClass http://www.eclipse.org/emf/2002/Ecore#//EObject"/>
+      <eStructuralFeatures xsi:type="ecore:EReference" name="matchedElement" eType="ecore:EClass http://www.eclipse.org/emf/2002/Ecore#//EObject"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="label" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eClassifiers>
+    <eClassifiers xsi:type="ecore:EClass" name="MethodArgumentMatch" eSuperTypes="#//search/RuleSourceMatch">
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="function" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EJavaObject"
+          transient="true"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="argNode" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EJavaObject"
+          transient="true"/>
+    </eClassifiers>
+    <eClassifiers xsi:type="ecore:EClass" name="StringLiteralMatch" eSuperTypes="#//search/RuleSourceMatch"/>
+    <eClassifiers xsi:type="ecore:EClass" name="NonEntityMatch">
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="projectName" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"
+          transient="true"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="filePath" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"
+          transient="true"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="match" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EJavaObject"
+          transient="true"/>
+    </eClassifiers>
+    <eClassifiers xsi:type="ecore:EClass" name="RuleSourceMatch">
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="offset" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EInt"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="length" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EInt"/>
+      <eStructuralFeatures xsi:type="ecore:EReference" name="containingRule" eType="ecore:EClass http://www.eclipse.org/emf/2002/Ecore#//EObject"/>
+    </eClassifiers>
+  </eSubpackages>
+</ecore:EPackage>

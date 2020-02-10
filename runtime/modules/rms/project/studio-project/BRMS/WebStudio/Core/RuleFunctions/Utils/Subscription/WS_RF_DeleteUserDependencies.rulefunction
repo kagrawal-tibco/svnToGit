@@ -1,0 +1,91 @@
+/**
+ * @description 
+ */
+void rulefunction WebStudio.Core.RuleFunctions.Utils.Subscription.WS_RF_DeleteUserDependencies {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String userName;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.Subscription.WS_RF_DeleteUserDependencies");
+		
+		// clearing up Dashboard details
+		String dashboardExtId = WS_RF_CreateUserArtifactExtId("DASHBOARD", null, null, userName, null, null);
+		WS_C_UserDashboard userDashboard = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(dashboardExtId, true, "/WebStudio/Core/Concepts/Dashboard/WS_C_UserDashboard");
+		if (userDashboard != null) {
+			Log.log(LOGGER, "Debug", "Processing User Dashboard deletion");
+			WS_C_Group[] groups = Instance.PropertyArray.toArrayContainedConcept(userDashboard.userGroups);
+			Log.log(LOGGER, "Debug", "Total groups to clean up - %s", groups@length);
+			for (int k=0; k<groups@length; k++) {
+				String[] groupArtifactExtIds = Instance.PropertyArray.toArrayString(groups[k].artifactIds);
+				Log.log(LOGGER, "Debug", "Total groups artifacts to clean up - %s", groupArtifactExtIds@length);
+				for (int i=0; i<groupArtifactExtIds@length; i++) {
+					WS_C_GroupArtifact groupArtifact = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(groupArtifactExtIds[i], true, "/WebStudio/Core/Concepts/Dashboard/WS_C_GroupArtifact");
+					if (groupArtifact != null) {
+						Instance.deleteInstance(groupArtifact);
+					} else {
+						Log.log(LOGGER, "Debug", "Group Artifact with ExtId [%s] does not exits.", groupArtifactExtIds[i]);
+					}
+				}
+				Log.log(LOGGER, "Debug", "Deleting Group - %s",  groups[k]@extId);
+				Instance.deleteInstance(groups[k]);
+			}
+			Log.log(LOGGER, "Debug", "Deleting Dashboard - %s",  userDashboard@extId);
+			Instance.deleteInstance(userDashboard);
+		} else {
+			Log.log(LOGGER, "Debug", "User Dashboard with ExtId [%s] does not exits.", dashboardExtId);
+		}
+		
+		// Clear Preferences
+		String preferencesExtId = WS_RF_CreateUserArtifactExtId("PREFERENCES", null, null, userName, null, null);
+		WS_C_UserPreferences userPreferences = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(preferencesExtId, true, "/WebStudio/Core/Concepts/WS_C_UserPreferences");
+		if (userPreferences != null) {
+			Log.log(LOGGER, "Debug", "Deleting User Preferences - %s",  preferencesExtId);
+			Instance.deleteInstance(userPreferences);
+		} else {
+			Log.log(LOGGER, "Debug", "User Preferences with ExtId [%s] does not exits.", preferencesExtId);
+		}
+		
+		// Clear Workspace
+		String workspaceExtId = WS_RF_CreateUserArtifactExtId("WORKSPACE", null, null, userName, null, null);
+		WS_C_UserWorkspace userWorkspace = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(workspaceExtId, true, "/WebStudio/Core/Concepts/WS_C_UserWorkspace");
+		if (userPreferences != null) {
+			Log.log(LOGGER, "Debug", "Deleting User Workspace - %s",  workspaceExtId);
+			if (userWorkspace.committableDelta != null) {
+				Log.log(LOGGER, "Debug", "Deleting User Workspace Committable Delta");
+				WS_C_CommittableDeltaEntry[] commitableDeltaEntry = Instance.PropertyArray.toArrayConcept(userWorkspace.committableDelta.deltaEntry);
+				Log.log(LOGGER, "Debug", "Total committable delta entries to clean up - %s", commitableDeltaEntry@length);
+				for (int j=0; j<commitableDeltaEntry@length; j++) {
+					if (commitableDeltaEntry[j].userArtifactRevision != null) WS_RF_DeleteArtifactRevision(commitableDeltaEntry[j].userArtifactRevision);
+					if (commitableDeltaEntry[j].commitLifeCycleState != null) Instance.deleteInstance(commitableDeltaEntry[j].commitLifeCycleState);
+					if (commitableDeltaEntry[j].operation != null) Instance.deleteInstance(commitableDeltaEntry[j].operation);
+					if (commitableDeltaEntry[j].parentCheckinId != null) {
+						Log.log(LOGGER, "Debug", "TODO - parentCheckinId [%s] exists for workspace committableDelta. Need to check if this needs to be cleaned up", commitableDeltaEntry[j].parentCheckinId);
+					}
+					if (commitableDeltaEntry[j].deployEnvironments != null && commitableDeltaEntry[j].deployEnvironments@length > 0) {
+						Log.log(LOGGER, "Debug", "TODO - deployEnvironments [%s] exists for workspace committableDelta. Need to check if this needs to be cleaned up", commitableDeltaEntry[j].deployEnvironments@length);
+					}
+					
+					Instance.deleteInstance(commitableDeltaEntry[j]);
+				}
+				Instance.PropertyArray.clear(userWorkspace.committableDelta.deltaEntry);
+			}
+			Instance.deleteInstance(userWorkspace);
+		} else {
+			Log.log(LOGGER, "Debug", "User Workspace with ExtId [%s] does not exits.", workspaceExtId);
+		}
+		
+		// Delete user entry
+		WS.Acl.removeUserEntryFromList(userName);
+		
+		// remove the loggedIn-user
+		String userExtId = WS_RF_CreateUserArtifactExtId("webstudio", null, null, userName, null, null);
+		WS_C_LoggedInUser loggedInUser = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(userExtId, false, "/WebStudio/Security/Authn/Concepts/WS_C_LoggedInUser");
+		if (loggedInUser != null) {
+		} else {
+			Log.log(LOGGER, "Debug", "User Workspace with ExtId [%s] does not exits.", workspaceExtId);
+		}
+	}
+}

@@ -1,0 +1,79 @@
+/**
+ * @description Perform post partial checkout operations
+ * @author smahajan-t420
+ */
+rule WebStudio.Core.Rules.Lifecycle.WS_R_PerformPartialCheckoutOps {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		WebStudio.Core.Events.Lifecycle.WS_E_PartialCheckoutCompletionEvent partialCheckoutCompletionEvent;
+	}
+	when {
+		partialCheckoutCompletionEvent.userArtifact_extIDs != null && 
+		partialCheckoutCompletionEvent.project_extID != null;
+	}
+	then {
+		Object LOGGER = Log.getLogger("WebStudio.Core.Rules.Lifecycle.WS_R_PerformPartialCheckoutOps");
+			
+		WS_C_UserProject userProject = Instance.getByExtIdByUri(partialCheckoutCompletionEvent.project_extID, "/WebStudio/Core/Concepts/WS_C_UserProject");
+		String scsRootURL = WS_RF_GetSCSRootURL(userProject.name, WS_RF_GetSubscriptionId(partialCheckoutCompletionEvent.username));
+		Log.log(LOGGER, "Debug", "SCS root URL configured is %s", scsRootURL);
+		
+		String[] userArtifactextIDAndType = String.split(partialCheckoutCompletionEvent.userArtifact_extIDs, ";");
+		
+		Log.log(LOGGER, "Debug", "Total artifacts[%s] to add to project[%s]. Current project artifact count[%s]", userArtifactextIDAndType@length, userProject.name, userProject.userArtifacts@length);
+		
+		for (int i=0; i<userArtifactextIDAndType@length; i++) {
+			String[] artifactParts = String.split(userArtifactextIDAndType[i], ":");
+			if (artifactParts@length != 2) {
+				Log.log(LOGGER, "Debug", "Missing type details in [%s]",  userArtifactextIDAndType[i]);
+				throw Exception.newException("InvalidArguments", "Missing type details in [" + userArtifactextIDAndType[i] + "]", null);
+			}
+			String artifactExtId = artifactParts[0];
+			String artifactType = artifactParts[1];
+			
+			WS_C_UserArtifact userArtifact = null;
+			
+			if (artifactType == "ruletemplateinstance" || artifactType == "ruletemplate") {
+				userArtifact = Instance.getByExtIdByUri(artifactExtId, "/WebStudio/Core/Concepts/RuleTemplateInstance/WS_C_RuleTemplateInstanceUserArtifact");
+			} else if (artifactType == "rulefunctionimpl" || artifactType == "rulefunction") {
+				userArtifact = Instance.getByExtIdByUri(artifactExtId, "/WebStudio/Core/Concepts/Decision/WS_C_UserDTableArtifact");
+			} else if (artifactType == "beprocess") {
+				userArtifact = Instance.getByExtIdByUri(artifactExtId, "/WebStudio/Core/Concepts/Process/WS_C_ProcessUserArtifact");
+			} else if (artifactType == "domain") {
+				userArtifact = Instance.getByExtIdByUri(artifactExtId, "/WebStudio/Core/Concepts/Domain/WS_C_DomainUserArtifact");
+			} else {
+				userArtifact = Instance.getByExtIdByUri(artifactExtId, "/WebStudio/Core/Concepts/WS_C_UserArtifact");
+			}
+			
+			if (userArtifact != null) {
+				Instance.PropertyArray.appendContainedConcept(userProject.userArtifacts, userArtifact, 1L);
+				Log.log(LOGGER, "Debug", "User Artifact: %s added to user Project:%s", userArtifact.artifactPath, userProject.name);
+				
+				// adding now (checkout) as the last sync date
+				if (userArtifact.lastSyncDate == null) userArtifact.lastSyncDate = DateTime.now();
+				
+				// check for base path for Decision tables
+				if ((String.equals(userArtifact.artifactFileExtn, "rulefunctionimpl") || String.equals(userArtifact.artifactFileExtn, "ruletemplateinstance")) 
+						&& userArtifact.baseArtifactPath == null) {
+					Log.log(LOGGER, "Debug", "Base Path for artifact: %s missing, adding now", userArtifact.artifactPath);
+					String baseArtifactName = WS_RF_GetImplementsPath(partialCheckoutCompletionEvent.username, userProject.name, userArtifact.artifactPath, userArtifact.artifactFileExtn, scsRootURL);
+					
+					if (baseArtifactName != null) {
+						String baseArtifactExtn = "rulefunction";
+						if (String.equals(userArtifact.artifactFileExtn, "ruletemplateinstance")) {
+							baseArtifactExtn = "ruletemplate";
+						}
+						userArtifact.baseArtifactPath = baseArtifactName + baseArtifactExtn;
+					}
+				}
+			} else {
+				Log.log(LOGGER, "Debug", "User Artifact with extId [%s] not found !!", artifactExtId);
+			}
+		}
+		Log.log(LOGGER, "Debug", "Post addition total artifact counts in project[%s] is [%s]", userProject.name, userProject.userArtifacts@length);
+		
+	}
+}

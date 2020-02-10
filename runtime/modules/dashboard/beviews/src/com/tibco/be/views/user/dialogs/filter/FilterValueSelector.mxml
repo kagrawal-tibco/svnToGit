@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox
+	xmlns:mx="http://www.adobe.com/2006/mxml"
+	xmlns:components="com.hillelcoren.components.*"
+	width="175"
+	height="70"
+	cornerRadius="8"
+	borderStyle="solid"
+	borderThickness="1"
+	backgroundColor="#cccccc"
+	verticalAlign="middle"
+	paddingLeft="5"
+	paddingRight="5"
+	horizontalScrollPolicy="off"
+	verticalScrollPolicy="off"
+>
+	<mx:Script>
+		<![CDATA[
+			import mx.controls.TextInput;
+			import mx.controls.ComboBox;
+			import com.hillelcoren.components.AdvancedAutoComplete;
+			import mx.collections.ArrayCollection;
+			import mx.events.MenuEvent;
+			
+			private var _itemId:String;
+			
+			[Bindable]
+			private var _itemName:String;
+			
+			[Bindable]
+			private var _itemDataType:String = null;
+
+			[Bindable]
+			private var _itemValues:ArrayCollection = null;
+			
+			private var _itemInitialValue:String = null;
+						
+			public function get itemId():String{ return _itemId; }
+			public function get itemName():String{ return _itemName; }
+			public function get itemDataType():String{return _itemDataType; }
+			public function get itemValues():ArrayCollection{return _itemValues; }
+			public function get itemInitialValue():String{ return _itemInitialValue; }
+			
+			public function get selectedValue():String{
+				if(_itemDataType == "date"){
+					var cmbBox:ComboBox = ComboBox(dataComp);					
+					//return cmbBox.selectedItem;
+					return cmbBox.text;
+				}
+				else if(_itemDataType == "numeric"){
+					var txtInput:TextInput = TextInput(dataComp);
+					return txtInput.text;
+				}
+				else if(_itemDataType == "string"){
+					var autoComplete:AdvancedAutoComplete = AdvancedAutoComplete(dataComp);
+					if(autoComplete.selectedItem == null){
+						return "";
+					}
+					var convertedStr:String = replace(autoComplete.selectedItem,"\"","&#34;");
+					return convertedStr;
+				}
+				return null;
+			}
+			
+			public function set itemId(value:String):void{ _itemId = value; }
+			public function set itemName(value:String):void{ _itemName = value; }
+			public function set itemValues(value:ArrayCollection):void{ _itemValues = value; }
+			public function set itemDataType(value:String):void{ _itemDataType = value; }
+			public function set itemInitialValue(value:String):void{ _itemInitialValue = value; } 
+			
+			// replace all functionality
+			private function replace(org:String, fnd:String, rpl:String):String{	
+				return org.split(fnd).join(rpl);
+			}
+			
+			public function addItemValue(value:Object):void{
+				_itemValues.addItem(value);
+			}
+			
+			public function handleItemClick(event:MenuEvent):void{
+				//autoComplete.showBrowser();
+				components:AdvancedAutoComplete(dataComp).showBrowser(); 
+            }
+            
+//            public function getFirstValue():Object{
+//            	if(_itemValues.length < 1){
+//            		return "";
+//            	}
+//            	return	_itemValues.getItemAt(0,0);
+//            }
+			
+		]]>
+	</mx:Script>
+	
+	<mx:Label id="lbl_ItemName" text="{_itemName}" />
+	<mx:XML format="e4x" id="menuData">
+        <root>
+            <menuitem data="browse" label="Browse..."/>
+        </root>
+    </mx:XML>
+	<!-- <components:AdvancedAutoComplete id="autoComplete" dataProvider="{ _itemValues }" 
+     	backspaceAction="remove" matchType="anyPart" allowDuplicates="false" 
+     	selectedItem="{getFirstValue()}" allowNewValues="true" allowEditingNewValues="true"
+		selectedItemStyleName="underline" actionsMenuDataProvider="{ menuData }" itemClick="handleItemClick(event)"/>
+	-->
+	<!-- <mx:ComboBox id="cb_ItemValues" labelField="name" dataProvider="{_itemValues}" editable="true"/> -->
+	<mx:UIComponent id="dataComp"/>
+	
+</mx:VBox>

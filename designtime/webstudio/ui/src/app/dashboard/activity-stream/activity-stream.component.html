@@ -1,0 +1,108 @@
+<div class='timeline-header'>
+	<div style="width: 100%">
+		<mat-checkbox class="timeline-header-button" 
+			[ngClass]="{
+				'float-right': !isRtl(),
+				'float-left': isRtl()
+			}"
+			(click)='toggleShowActive()'>
+			<div class="{{isRtl() ? 'pull-left' : 'pull-right'}}" *ngIf="!enableTCEUI()" i18n>{{i18n('Show only unresolved/deployable items')}}</div>
+			<div class="{{isRtl() ? 'pull-left' : 'pull-right'}}" *ngIf="enableTCEUI()" i18n>{{i18n('Show only deployable items')}}</div>
+		</mat-checkbox> 
+		<img class="{{isRtl() ? 'header-img-rtl' : 'header-img'}}" mat-card-avatar src="assets/img/ic-process.png">
+		<div class="header {{isRtl() ? 'pull-right' : 'pull-left'}}" i18n>{{i18n('Recent User Activity')}}</div>
+	</div>
+	<div>
+		<div style="width: calc(100% - 18px)">
+			<input-debounce class='timeline-search' [delay]="400" placeholder="{{i18n('Search for recent activity')}}" i18n-placeholder (value)="searchChanged($event)">
+			</input-debounce>
+			<button mat-icon-button class="btn-filter" (click)="collapsed=!collapsed"
+				[class.mat-button-toggle-checked]="!collapsed"
+				matTooltip="{{i18n('Show additional filter options')}}" i18n-matTooltip placement="right" container="body" containerClass="animated fadeIn">
+				<i class="fa fa-2x fa-filter"></i>
+			</button>
+		</div>
+	</div>
+</div>
+<div class="faded-container">
+	<div style="margin-left: 10%" *ngIf="!collapsed">
+		<activity-stream-filter [activityFilter]='activityFilter'></activity-stream-filter>
+	</div>
+	<div class="fade-opacity fade-up">
+	</div>
+	<div 
+		class="{{ collapsed ? 'faded-content' : 'faded-content-sm' }}" >
+		<div style="margin-bottom:-16px;" 
+		class="scrollable-content"
+		[class.scrollable-content-right]="isRtl()"
+		infinite-scroll
+		[scrollWindow]="false"
+		[infiniteScrollDistance]="scrollDistance"
+		[infiniteScrollThrottle]="throttle"
+		(scrolled)="onScrollDown()">
+			<div style="margin-left: 8px;">
+				<div class="empty-msg text-center" *ngIf='allActivity?.length === 0'>
+					<div class="message">
+						<ng-container i18n>{{i18n('No recent activity')}}</ng-container>
+					</div>
+				</div>
+				<div style="padding-bottom: 24px">
+					<ul class="timeline {{ isRtl() ? 'timeline-right' : 'timeline-left' }}">
+						<li>
+							<div class="timeline-badge-date {{ isRtl() ? 'timeline-badge-date-right' : 'timeline-badge-date-left' }}"><div i18n>{{i18n('Today')}}<span class="left-pad" style="font-size: 16px; font-weight: 400">{{today | date:'fullDate'}}</span></div></div>
+						</li>
+						<li class='animated' [@filtered]='item.state'
+							*ngFor="let item of allActivity"
+							class="timelineitem {{ isRtl() ? 'slideInLeft timelineitem-right' : 'slideInRight timelineitem-left' }}">
+							<div class="timeline-badge {{ isRtl() ? 'timeline-badge-right' : 'timeline-badge-left' }} {{item.severity ? 'alert-' + item.severity : ''}}">
+								<i style="background: #f8f8f8"
+								class="{{item.icon}} {{item.severity ? 'alert-' + item.severity : ''}}"></i></div>
+							<div class="item-placeholder">
+								<div class="timeline-panel">
+									<span *ngIf="item.title"
+										class="timeline-panel-header center-align">{{item.title}}</span>
+									<div class="timeline-body">
+										<commit-item *ngIf="item.data" [commitItem]='item.data'
+											(approvalResult)="onResolve(item.data, $event)"
+											(cancelCommit)='onWithdraw(item.data)' (delegateCommit)='onDelegate(item.data)'
+											(deleteCommit)='onDelete(item.data, $event)'
+											[mode]='getMode(item.data)'>
+										</commit-item>
+										<div *ngIf="!item.data && !item.activities">
+											<span><i class="userProfile {{item.userImg}}"></i><i
+													class="userProfile"><b>{{item.userName}}</b></i>
+													<span class="timeline-panel-summary" 
+														*ngIf="item.summary">{{item.summary}}:<br>
+													</span>
+													{{item.details}}</span>
+										</div>
+										<div *ngIf="!item.data && item.activities">
+											<span><i class="userProfile {{item.userImg}}"></i><i
+												class="userProfile"><b>{{item.userName}}</b></i>
+												<span class="timeline-panel-summary" 
+													*ngIf="item.summary">{{item.summary}} ({{item.activities?.length}} items):<br>
+												</span>
+											</span>
+											<span *ngFor="let sub of item.activities;">
+												{{sub.details}}<br>
+											</span>
+										</div>
+									</div>
+									<div class="timestamp-inline">
+											{{item.timestamp | date : 'short'}}</div>
+								</div>
+							</div>
+							<div class="timeline-spacer">
+							</div>
+							<div class="timeline-spacer timeline-spacer-btm">
+							</div>
+						</li>
+					</ul>
+					<div style="top: 25px" class="timeline-badge-date {{ isRtl() ? 'timeline-badge-date-right' : 'timeline-badge-date-left' }}" i18n>{{i18n('End of activity')}}</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="fade-opacity fade-down">
+	</div>
+</div>

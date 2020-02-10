@@ -1,0 +1,24 @@
+/**
+ * @description 
+ * @author TIBCO Software Inc.
+ */
+rule Rules.BookInformationRule {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		
+		Events.BookDataEvent bookdataevent;
+	}
+	when {
+		
+	}
+	then {
+		
+		System.debugOut("#########Publishing Book Information##########");
+		System.debugOut("Book '"+bookdataevent.BookTitle+"' is written by "+bookdataevent.BookAuthor+".");
+		System.debugOut("Its market price is just $"+bookdataevent.BookPrice);
+		Event.consumeEvent(bookdataevent);
+	}
+}

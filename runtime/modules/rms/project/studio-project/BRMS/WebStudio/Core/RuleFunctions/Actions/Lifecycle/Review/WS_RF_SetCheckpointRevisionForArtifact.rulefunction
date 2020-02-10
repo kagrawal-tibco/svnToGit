@@ -1,0 +1,85 @@
+/**
+ * @description Set the checkpoint revision for a user committed entry.
+ */
+void rulefunction WebStudio.Core.RuleFunctions.Actions.Lifecycle.Review.WS_RF_SetCheckpointRevisionForArtifact {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String managedProjectName;
+		WebStudio.Core.Concepts.Lifecycle.WS_C_CommittableDeltaEntry committableDeltaEntry;
+		String subscriptionId;
+	}
+	body {
+		Object LOGGER= Log.getLogger("WebStudio.Core.RuleFunctions.Actions.Lifecycle.Review.WS_RF_SetCheckpointRevisionForArtifact");
+		
+		WS_C_ArtifactBaseState commitLifeCycleState = 
+			Instance.PropertyAtom.getConceptReference(committableDeltaEntry.commitLifeCycleState, 1L);
+		
+		Log.log(LOGGER, "Debug", "CommitLifeCycleState - %s", commitLifeCycleState.stateName);
+		
+		WS_C_UserArtifactRevision referencedRevision = Instance.PropertyAtom.getConceptReference(committableDeltaEntry.userArtifactRevision, 1L);
+		//Get parent artifact
+		WS_C_UserArtifact parentUserArtifact = WS_RF_IsUserArtifact(referencedRevision.parentArtifactId, referencedRevision.parentArtifactType);
+		Log.log(LOGGER, "Debug", "Total Revisions [%s], Current Checkpoint Revision [%s].", parentUserArtifact.artifactRevisionIds@length, parentUserArtifact.checkpointRevision);
+			
+		if (commitLifeCycleState instanceof WS_C_ArtifactCommittedState) { 
+			//Set this revision as checkpoint revision.
+			//Moment artifact is committed successfully the particular revision becomes its checkpoint.
+			WS_RF_SetCheckpointRevisionConceptReference(parentUserArtifact, referencedRevision);
+		} else if (commitLifeCycleState instanceof WS_C_ArtifactApprovedState) {
+			//Checkpoint is already done by this stage.
+			//So this is a misnomer. Just set master revision to this revision.
+			//Set master artifact to this revision
+			String masterArtifactExtId = WS_RF_CreateUserArtifactExtId(null, parentUserArtifact.artifactPath, managedProjectName, null, subscriptionId, null);
+			WS_C_MasterArtifact masterArtifact = Instance.getByExtIdByUri(masterArtifactExtId, "/WebStudio/Core/Concepts/Lifecycle/WS_C_MasterArtifact");
+			if (masterArtifact != null) {
+				//Set this revision as latest for master artifact and use this for subsequent checkouts/updates.
+				Instance.PropertyAtom.setConceptReference(masterArtifact.currentMasterRevision, referencedRevision, 1L);
+				Instance.PropertyAtom.setDateTime(masterArtifact.masterRevUpdateTime, DateTime.now(), 1L);
+			}
+		} 
+		
+		//Set checkpoint state to appropriate types i.e. commit/approve/reject
+		if (commitLifeCycleState instanceof WS_C_ArtifactCommittedState || commitLifeCycleState instanceof WS_C_ArtifactApprovedState || commitLifeCycleState instanceof WS_C_ArtifactRejectedState) {
+			WS_C_LifecycleMetadata containedLifecycleMetadata = Instance.PropertyAtom.getContainedConcept(referencedRevision.lifecycleMetadata, 1L);
+			Instance.PropertyAtom.setConceptReference(containedLifecycleMetadata.currentState, commitLifeCycleState, 1L);
+			Log.log(LOGGER, "Debug", "containedLifecycleMetadata.currentState - %s", containedLifecycleMetadata.currentState.stateName);
+		}
+		
+		// finally check for Rejected case
+		if (commitLifeCycleState instanceof WS_C_ArtifactRejectedState) {
+			Log.log(LOGGER, "Debug", "Reject case");
+			WS_C_LifecycleMetadata containedLifecycleMetadata = Instance.PropertyAtom.getContainedConcept(referencedRevision.lifecycleMetadata, 1L);
+			WS_C_AbstractOperation lastOperationPerformed = Instance.PropertyAtom.getConceptReference(containedLifecycleMetadata.lastOperation, 1L);
+			WS_C_ArtifactBaseState artifactCurrentState = Instance.PropertyAtom.getConceptReference(containedLifecycleMetadata.currentState, 1L);
+			
+			String masterArtifactExtId = WS_RF_CreateUserArtifactExtId(null, parentUserArtifact.artifactPath, managedProjectName, null, subscriptionId, null);
+			WS_C_MasterArtifact masterArtifact = Instance.getByExtIdByUri(masterArtifactExtId, "/WebStudio/Core/Concepts/Lifecycle/WS_C_MasterArtifact");
+			Log.log(LOGGER, "Debug", "masterArtifact - %s", masterArtifact);
+			if (masterArtifact != null) {
+				WS_C_UserArtifactRevision currentMasterRevision = Instance.PropertyAtom.getConceptReference(masterArtifact.currentMasterRevision, 1L);
+				Log.log(LOGGER, "Debug", "currentMasterRevision - %s", currentMasterRevision);
+			}
+			
+			boolean sameUserArtifact = WS_RF_CheckIfArtifactChangeBySameUser(referencedRevision, parentUserArtifact);
+			if (sameUserArtifact) {
+				if (lastOperationPerformed instanceof WS_C_ModifyOperation) {
+					WS_RF_SetToBaseRevision(parentUserArtifact, managedProjectName);
+				} else if (lastOperationPerformed instanceof WS_C_DeleteOperation) {
+					long[] artifactRevisionIds = Instance.PropertyArray.toArrayLong(parentUserArtifact.artifactRevisionIds);
+					if(artifactRevisionIds != null){
+						Log.log(LOGGER, "Debug", "Total Revisions [%s]", artifactRevisionIds@length);
+					}
+					
+					Log.log(LOGGER, "Debug", "Artifact Soft Delete State is [%s]", parentUserArtifact.softDelete);
+					if (parentUserArtifact.softDelete) {
+						WS_RF_FlipSoftDeleteState(parentUserArtifact);
+					}
+				}
+			}
+		}
+		
+		Log.log(LOGGER, "Debug", "Final Check, Total Revisions [%s], Current Checkpoint Revision [%s].", parentUserArtifact.artifactRevisionIds@length, parentUserArtifact.checkpointRevision);
+	}
+}

@@ -1,0 +1,40 @@
+/**
+ * @description Startup Notification service 
+ */
+void rulefunction WebStudio.Core.RuleFunctions.Startup.WS_RF_StartNotificationService {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Startup.WS_RF_StartNotificationService");
+
+		boolean notifyEnabled = System.getSystemPropertyAsBoolean("ws.notify.enabled", false);
+		if (notifyEnabled) {		
+			Log.log(LOGGER, "Info", "Starting Notification service....");
+			//Start notification work manager
+			Cluster.createWorkManager("Email_Wrk_Manager", 5);
+			//Establish the connection for Notification
+			String notifyContextImplClass = System.getSystemPropertyAsString("ws.notify.context.impl.class", null);
+			String notifyImplClass = System.getSystemPropertyAsString("ws.notify.impl.class", null);
+			String messageTemplateFile = System.getSystemPropertyAsString("ws.notify.message.template.file", null);			
+			Util.HashMap.createMap("NOTIFY_CONTEXT_MAP");
+			Object notifyContextProps = Util.HashMap.getMap("NOTIFY_CONTEXT_MAP"); 
+			try {
+				//1. Initialize notification context
+				Object notifyContextObj = WS.Common.Notify.initializeNotificationContext(notifyImplClass, notifyContextImplClass, notifyContextProps);
+				//2. Load message templates
+				String messageTemplateContents = File.readFileAsString(messageTemplateFile, "UTF-8");
+				WS.Common.Notify.loadMessageTemplates(messageTemplateContents);								
+				//3. Open connection
+				WS.Common.Notify.openConnection(notifyContextObj);
+				Log.log(LOGGER, "Debug", "Notification service started.");
+			} catch (Exception exception) {
+				Log.logException(LOGGER, "ERROR", "Error starting the Notification service.", exception);
+			}	
+			Util.HashMap.deleteMap("NOTIFY_CONTEXT_MAP");			
+		}
+	}
+}

@@ -1,0 +1,25 @@
+/**
+ * @description 
+ */
+void rulefunction RuleFunctions.PreProcessor {
+	
+	attribute {
+		validity = ACTION;
+	}
+	
+	scope {
+		Event request;
+	}
+	
+	body {
+		// Replies to the request event, in order to close the HTTP request.
+		// To keep it simple, uses the request event as the response. 
+		Event.replyEvent(request, request);		
+		
+		if (request instanceof Events.ChangeEvent) {	
+			ChangeEvent e = request;		
+			Cluster.DataGrid.CacheLoadConceptByExtId(e.name, true);
+		}
+	}
+	
+}

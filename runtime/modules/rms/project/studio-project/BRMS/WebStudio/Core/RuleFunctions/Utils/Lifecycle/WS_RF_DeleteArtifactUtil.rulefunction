@@ -1,0 +1,127 @@
+/**
+ * @description 
+ */
+String[] rulefunction WebStudio.Core.RuleFunctions.Utils.Lifecycle.WS_RF_DeleteArtifactUtil {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		WebStudio.Security.Authn.Concepts.WS_C_LoggedInUser loggedInUser;
+		WebStudio.Core.Concepts.Request.Usecases.Delete.WS_C_DeleteRequest deleteRequest;
+		String contentType;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.Lifecycle.WS_RF_DeleteArtifactUtil");
+		
+		String responseMessage = null;
+		String errorCode = null;
+		int responseStatus = 0;
+		
+		String username = loggedInUser.username;
+		//Convert to concept model
+		WS_C_DeleteRequestData requestContainedData = deleteRequest.data;
+		WS_C_DeleteRequestProject project = Instance.PropertyArray.toArrayContainedConcept(requestContainedData.project)[0];
+		String projectName = project.name;
+		
+		Log.log(LOGGER, "Debug", "Project Name Request value Received [%s]", projectName);
+		
+		WS_C_ArtifactDeleteDataItem[] artifactItems = Instance.PropertyArray.toArrayContainedConcept(project.artifactItem);
+		
+		if (artifactItems@length == 0) {
+			Log.log(LOGGER, "Info", "No artifacts found for delete for project [%s]. Defaulting to entire project delete.", projectName);
+			WS_C_ArtifactDeleteDataItem artifactItem = 
+				Instance.newTransientInstance("/WebStudio/Core/Concepts/Request/Usecases/Delete/WS_C_ArtifactDeleteDataItem");
+			artifactItem.artifactPath = "/";	
+			artifactItems = WS_C_ArtifactDeleteDataItem[]{artifactItem};
+		}
+		int numberOfArtifacts = artifactItems@length;
+		Log.log(LOGGER, "Debug", "Number of artifacts %s", numberOfArtifacts);
+		
+		String userProjectExtId = WS_RF_CreateUserArtifactExtId(null, null, projectName, loggedInUser.username, null, null);
+		boolean projectLock = Cluster.DataGrid.Lock(userProjectExtId, 2000, false);
+		if (projectLock) {
+			WS_C_UserProject userProject = 
+				Cluster.DataGrid.CacheLoadConceptByExtIdByUri(userProjectExtId, false, "/WebStudio/Core/Concepts/WS_C_UserProject");
+			if (userProject == null) {
+				errorCode = "ERR_1110";
+				responseMessage = String.format("No project found with name [%s]", projectName); 
+			} else {
+				//Workspace query
+				//Find artifacts in WS project matching delete path.
+				String workspaceQueryString = WS_RF_BuildWorkspaceQueryString();
+				String queryArgsKey = "Query_Args_" + System.nanoTime();
+				Util.HashMap.createMap(queryArgsKey);
+				Util.HashMap.putObject(queryArgsKey, "parentProjectId", userProject@extId);
+				
+				String stackID = "RESULTS_STACK_" + System.nanoTime();
+				Object resultsStack = WS.Common.Stack.create(stackID);
+				for (int loop = 0; loop < numberOfArtifacts; loop++) {
+					WS_C_ArtifactDeleteDataItem artifactDataItem = artifactItems[loop];
+					String searchPath = artifactDataItem.artifactPath;
+					Log.log(LOGGER, "Debug", "Delete Path requested [%s]", searchPath);
+					if (String.equals("/", searchPath)) {
+						Log.log(LOGGER, "Info", "Removing project [%s] from user workspace", projectName);
+						WS.Common.Stack.push(resultsStack, userProject);
+						//No need to go further
+						break;
+					} else {
+						String artifactType = artifactDataItem.artifactType; 
+						//Check if search path itself maps to an artifact
+						WS_C_UserArtifact matchingUserArtifact = WS_RF_IsUserArtifact(WS_RF_CreateUserArtifactExtId(null, searchPath, projectName, username, null, null), artifactType);
+						if (matchingUserArtifact != null) {
+							WS.Common.Stack.push(resultsStack, matchingUserArtifact);
+						} else {
+							//This path could be entire project specified by /, or a specific folder like /Concepts.
+							Util.HashMap.putObject(queryArgsKey, "searchPath", searchPath);
+							
+							Object[] workspaceResults = WS_RF_QueryWorkspaceForMatches(workspaceQueryString, queryArgsKey);
+							if (workspaceResults == null) {
+								errorCode = "ERR_1160";
+								responseMessage = String.format("No workspace entries matching search path [%s]", searchPath);
+							} else {
+								//Accumulate results 
+								for (int resultLoop = 0; resultLoop < workspaceResults@length; resultLoop++) {
+									Object result = workspaceResults[resultLoop];
+									if (result instanceof WS_C_UserArtifact) {
+										WS.Common.Stack.push(resultsStack, result);
+									}
+								}
+							}
+						}
+					}
+					
+					// clear and delete the map
+					Util.HashMap.clear(queryArgsKey);
+					Util.HashMap.deleteMap(queryArgsKey);
+				}
+				
+				WS_C_AbstractUserEntity[] deleteableEntities = 
+					WS.Common.Stack.toArray(resultsStack, "be.gen.WebStudio.Core.Concepts.WS_C_AbstractUserEntity", "com.tibco.cep.runtime.service.loader.BEClassLoader");
+				WS.Common.Stack.delete(stackID);
+				
+				Object errorMessage = String.createBuffer(0);
+				boolean userHasAccess = WS_RF_CheckUserAccessToDeleteArtifacts(loggedInUser, projectName, deleteableEntities, errorMessage);
+				
+				if (userHasAccess) {
+					//Get the User roles
+					String[] roles = Instance.PropertyArray.toArrayString(loggedInUser.roles);
+					String allRoles = WS.Common.joinStringArray(roles, ",");
+					
+					WS_E_ArtifactDeleteEvent deleteEvent = 
+						Event.createEvent("xslt://{{/WebStudio/Core/Events/Lifecycle/WS_E_ArtifactDeleteEvent}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" xmlns:ns=\"www.tibco.com/be/ontology/WebStudio/Core/Events/Lifecycle/WS_E_ArtifactDeleteEvent\" xmlns:ns1=\"www.tibco.com/be/ontology/WebStudio/Core/Concepts/WS_C_UserArtifact\" xmlns:ns2=\"www.tibco.com/be/ontology/WebStudio/Core/Concepts/WS_C_AbstractUserEntity\" version=\"2.0\" exclude-result-prefixes=\"ns2 ns1 xsl ns xsd\"><xsl:output method=\"xml\"/><xsl:param name=\"username\"/><xsl:param name=\"projectName\"/><xsl:param name=\"errorCode\"/><xsl:param name=\"responseMessage\"/><xsl:param name=\"deleteableEntities\"/><xsl:param name=\"contentType\"/><xsl:param name=\"allRoles\"/><xsl:template name=\"Function\" match=\"/\"><createEvent><event><username><xsl:value-of select=\"$username\"/></username><projectName><xsl:value-of select=\"$projectName\"/></projectName><errorCode><xsl:value-of select=\"$errorCode\"/></errorCode><responseMessage><xsl:value-of select=\"$responseMessage\"/></responseMessage><roles><xsl:value-of select=\"$allRoles\"/></roles><contentType><xsl:value-of select=\"$contentType\"/></contentType><payload><ns:DeleteableEntities><xsl:for-each select=\"$deleteableEntities/elements\"><ns2:WS_C_AbstractUserEntity><xsl:if test=\"@extId\"><xsl:attribute name=\"extId\"><xsl:value-of select=\"@extId\"/></xsl:attribute></xsl:if><xsl:if test=\"@Id\"><xsl:attribute name=\"Id\"><xsl:value-of select=\"@Id\"/></xsl:attribute></xsl:if><xsl:if test=\"softDelete\"><softDelete><xsl:value-of select=\"softDelete\"/></softDelete></xsl:if></ns2:WS_C_AbstractUserEntity></xsl:for-each></ns:DeleteableEntities></payload></event></createEvent></xsl:template></xsl:stylesheet>");
+					Event.assertEvent(deleteEvent);	
+				}
+				else {
+					Log.log(LOGGER, "Debug", "Access Denied to user %s to delete artifacts from project %s.", username, projectName);
+					responseMessage = String.convertBufferToString(errorMessage);
+					errorCode = "ERR_1103";
+					responseStatus = -1;
+				}	
+			}
+			Cluster.DataGrid.UnLock(userProjectExtId, false);
+		}
+		Log.log(LOGGER, "Debug", "Response Status[%s], ErrorCode[%s] & Message[%s]", responseMessage, errorCode, responseMessage);
+		
+		return String[] {String.valueOfInt(responseStatus), errorCode, responseMessage};
+	}
+}

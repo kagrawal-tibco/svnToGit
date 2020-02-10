@@ -1,0 +1,51 @@
+/**
+ * @description Create appropriate instance of user artifact based on artifact type.
+ */
+WebStudio.Core.Concepts.WS_C_UserArtifact rulefunction WebStudio.Core.RuleFunctions.Utils.WS_RF_UserArtifactCreationFactory {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String userArtifactExtId;
+		String artifactPath;
+		String artifactType;
+		String artifactFileExtn;
+		String userProjectId;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.WS_RF_UserArtifactCreationFactory");
+		
+		WS_C_UserArtifact userArtifact = null;
+		if (String.equals(artifactType, "ruletemplate") || String.equals(artifactType, "ruletemplateinstance")) {
+			userArtifact = 
+				Instance.newInstance("/WebStudio/Core/Concepts/RuleTemplateInstance/WS_C_RuleTemplateInstanceUserArtifact", userArtifactExtId);
+		} else if (String.equals(artifactType, "rulefunctionimpl") || String.equals(artifactType, "rulefunction")) {
+			//Use default for now
+			userArtifact = 
+				Instance.newInstance("/WebStudio/Core/Concepts/Decision/WS_C_UserDTableArtifact", userArtifactExtId);
+			WS_C_UserDTableArtifact dtUserArtifact = userArtifact;
+			dtUserArtifact.singlePageView = false;	
+		} else if (String.equals(artifactType, "beprocess")) {
+			userArtifact = 
+				Instance.newInstance("/WebStudio/Core/Concepts/Process/WS_C_ProcessUserArtifact", userArtifactExtId);
+		} else if (String.equals(artifactType, "domain")) {
+			userArtifact = 
+				Instance.newInstance("/WebStudio/Core/Concepts/Domain/WS_C_DomainUserArtifact", userArtifactExtId);
+		} else {
+			userArtifact = 
+				Instance.newInstance("/WebStudio/Core/Concepts/WS_C_UserArtifact", userArtifactExtId);
+		}
+		userArtifact.artifactPath = artifactPath;
+		userArtifact.artifactType = artifactType;
+		userArtifact.artifactFileExtn = artifactFileExtn;	
+		if (userProjectId != null && !String.equals(userProjectId, "")) userArtifact.parentProjectId = userProjectId;
+		
+		// set unique ID for the artifact, this ID will be used as Rule Id for RT based Rule
+		// Multiple versions of the same artifact will continue to have the same ID
+		if (userArtifact.UUID == null) {
+			userArtifact.UUID = WS.Common.generateUUID();
+		}
+		
+		return userArtifact;
+	}
+}

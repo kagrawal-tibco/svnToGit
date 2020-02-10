@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.2"?>
+<plugin>
+	<extension
+         point="org.eclipse.ui.editors">
+      <editor
+            class="com.tibco.cep.decision.tree.ui.editor.DecisionTreeEditor"
+            contributorClass="com.tibco.cep.decision.tree.ui.editor.DecisionTreeDiagramContributor"
+            default="true"
+            extensions="dtree"
+            icon="icons/DecisionTree16x16.png"
+            id="com.tibco.cep.decision.tree.ui.editor"
+            name="Decision Tree Editor">
+      </editor>
+	</extension>
+	<extension point="org.eclipse.ui.newWizards">
+		<wizard name="Decision Tree"
+              icon="icons/DecisionTree16x16.png"
+              category="com.tibco.cep.studio.ui.category"
+              class="com.tibco.cep.decision.tree.ui.wizards.DecisionTreeNewWizard"
+              id="com.tibco.cep.decision.tree.wizards.DecisionTreeCreationWizard">
+         <description>
+            Create a new Decision Tree
+         </description>
+		</wizard>
+	</extension>
+   <extension
+         point="org.eclipse.ui.popupMenus">
+      <objectContribution
+            adaptable="false"
+            id="com.tibco.cep.decision.generateTreeobjectcontribution"
+            nameFilter="*.rulefunctionimpl"
+            objectClass="org.eclipse.core.resources.IFile">
+         <action
+               class="com.tibco.cep.decision.tree.ui.actions.GenerateDecisionTreeActionDelegate"
+               enablesFor="1"
+               icon="icons/generateDecisionTree.png"
+               id="com.tibco.cep.decision.tree.generateTreeAaction"
+               label="Create Decision Tree"
+               menubarPath="group.open"
+               style="push">
+         </action>
+      </objectContribution>
+	</extension>
+      <extension
+            point="org.eclipse.ui.views.properties.tabbed.propertyContributor">
+         <propertyContributor
+               contributorId="com.tibco.cep.decision.treePropertyContributor"
+               labelProvider="com.tibco.cep.decision.tree.properties.DecisionTreePropertiesLabelProvider">
+            <propertyCategory
+                  category="default">
+            </propertyCategory>
+         </propertyContributor>
+      </extension>
+      <extension
+            point="org.eclipse.ui.views.properties.tabbed.propertyTabs">
+         <propertyTabs
+               contributorId="com.tibco.cep.decision.treePropertyContributor">
+            <propertyTab
+                  category="default"
+                  id="decisionTree.propertyTab.general"
+                  label="General">
+            </propertyTab>
+         </propertyTabs>   
+	</extension>    
+      <extension
+            point="org.eclipse.ui.views.properties.tabbed.propertySections">
+         <propertySections
+               contributorId="com.tibco.cep.decision.treePropertyContributor">
+            <propertySection
+                  class="com.tibco.cep.decision.tree.properties.GeneralPropertySection"
+                  filter="com.tibco.cep.decision.tree.properties.GeneralPropertyFilter"
+                  id="com.tibco.cep.decisionTree.genPropertySection"
+                  tab="decisionTree.propertyTab.general">
+               <input
+                     type="com.tomsawyer.graphicaldrawing.TSEObject">
+               </input>
+            </propertySection>
+          </propertySections>
+         </extension>   	
+</plugin>

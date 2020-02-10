@@ -1,0 +1,76 @@
+/**
+ * @description 
+ * @author 
+ */
+rule Monitoring.Rules.BEMetricsDataPopulators.onConcurrentLockMetricEvent {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Monitoring.Events.bemetrics.ConcurrentLockMetricEvent	metricevent;
+		
+	}
+	when {
+		metricevent.hostName != null && String.length(String.trim(metricevent.hostName)) != 0 && metricevent.metricName != null && String.length(String.trim(metricevent.metricName)) != 0; //&& metricevent.index == -1;
+	}
+	then {
+		Shared.RuleFunctions.log("onConcurrentLockMetricEvent","DEBUG","Received ConcurrentLockMetricEvent[id="+metricevent@id+",hostName="+metricevent.hostName+",metricName="+metricevent.metricName+",idx="+metricevent.index+",size="+metricevent.batchSize+",batchStart="+metricevent.isBatchStart+",batchEnd="+metricevent.isBatchEnd+"]");
+		Shared.Concepts.MonitorableEntity[] entities = searchMonitorableEntities(metricevent.hostName);
+		if (entities == null){
+		    Shared.RuleFunctions.log("onConcurrentLockMetricEvent","DEBUG","No entities found matching "+metricevent.hostName);
+		    Event.consumeEvent(metricevent);
+		    return;
+		}
+		Object inferenceAgentEntities = Collections.List.createLinkedList();
+		for (int i = 0 ; i < entities@length ; i = i + 1) {
+			if (entities[i].type == "process") {
+				for (int j = 0 ; j < entities[i].children@length ; j++) {
+					if (entities[i].children[j].type == "inference") {
+						Collections.add(inferenceAgentEntities, entities[i].children[j]);
+					}
+				}		
+			}
+		}
+		Object inferenceAgentEntitiesIter = Collections.iterator(inferenceAgentEntities);
+		while (Collections.Iterator.hasNext(inferenceAgentEntitiesIter) == true) {
+			Shared.Concepts.MonitorableEntity inferenceAgent = Collections.Iterator.next(inferenceAgentEntitiesIter);
+		    String monitorableFQName = getFQName(inferenceAgent);
+		    String viewExtId = monitorableFQName+":locks";
+		    Shared.Concepts.AbstractMonitorView view = Instance.getByExtId(viewExtId);
+		    if (view != null) {
+		        Shared.RuleFunctions.log("onConcurrentLockMetricEvent","DEBUG","Going to use View[extId="+view@extId+",type="+view.type+"]...");
+		        String componentConfigMapId = getComponentConfigMapId(view.monitorable,view.type);
+		        String[] seriesNames = Util.HashMap.getObject(componentConfigMapId,"seriesnames");
+		        for (int j = 0 ; j < seriesNames@length ; j = j + 1){
+		            String seriesDataExtId = view@extId+":"+seriesNames[j];
+		            Shared.Concepts.SeriesData seriesData = Instance.getByExtId(seriesDataExtId);
+		            if (seriesData == null){
+		                seriesData = Instance.newInstance("/Shared/Concepts/SeriesData",seriesDataExtId);
+		                seriesData.name = seriesNames[j];
+		                seriesData.threshold = Util.HashMap.getObject(componentConfigMapId,"threshold");
+		                view.seriesdata[view.seriesdata@length] = seriesData;
+		                Shared.RuleFunctions.log("onConcurrentLockMetricEvent","DEBUG","Created SeriesData[extId"+seriesDataExtId+",name"+seriesNames[j]+"] under View[extId="+view@extId+",type="+view.type+"]...");
+		            }
+		            else {
+		                Shared.RuleFunctions.log("onConcurrentLockMetricEvent","DEBUG","Updating SeriesData[extId"+seriesDataExtId+",name"+seriesNames[j]+"] under View[extId="+view@extId+",type="+view.type+"]...");
+		            }
+		            seriesData.categories[seriesData.categories@length] = String.valueOfLong(metricevent.startTimeMillis+(metricevent.endTimeMillis-metricevent.startTimeMillis)/2);
+		            if (seriesNames[j] == "locks") {
+		                seriesData.values[seriesData.values@length] = String.valueOfLong(metricevent.cnt);
+		                seriesData.rawValues[seriesData.rawValues@length] = String.valueOfLong(metricevent.cnt);
+		            }
+		            else {
+		                Shared.RuleFunctions.log("onConcurrentLockMetricEvent","WARNING","Unknown series name ["+seriesNames[j]+"] under View[extId="+view@extId+",type="+view.type+"]...");
+		                seriesData.values[seriesData.values@length] = "0.0";
+		                seriesData.rawValues[seriesData.rawValues@length] = "0.0";
+		            }
+		        }
+		    }
+		    else {
+		        Shared.RuleFunctions.log("onConcurrentLockMetricEvent","DEBUG","Found no view matching "+viewExtId+"...");
+		    }
+		}
+		Event.consumeEvent(metricevent);
+	}
+}

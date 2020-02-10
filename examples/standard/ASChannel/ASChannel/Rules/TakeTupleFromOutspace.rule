@@ -1,0 +1,89 @@
+/**
+ * @description 
+ * @author huabin-lt
+ */
+rule Rules.TakeTupleFromOutspace {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		
+		Events.OutspaceDefEvent outspaceDefEvent;
+	}
+	when {
+		
+	}
+	then {
+		System.debugOut("Take Tuple from Outspace Rule: OutspaceDefEvent ID: " + outspaceDefEvent.eid);
+		System.debugOut("Take Tuple from Outspace Rule: OutspaceDefEvent VALUE: " + outspaceDefEvent.value);
+		System.debugOut("Take Tuple from Outspace Rule: OutspaceDefEvent DATETIME: " + outspaceDefEvent.datetime);
+		System.debugOut("Take Tuple from Outspace Rule: OutspaceDefEvent CONSUMPTION MODE: " + AS.getConsumptionMode(outspaceDefEvent));
+		System.debugOut("Take Tuple from Outspace Rule: OutspaceDefEvent EVENT TYPE: " + AS.getEventType(outspaceDefEvent));
+
+
+		String asChannel = System.getGlobalVariableAsString("aschannel", "/Channels/aschannel");
+		String myspaceEntryBrowser = System.getGlobalVariableAsString("aschannel.myspace.entrybrowser", "/Channels/aschannel/MyspaceWithEntryBrowserLeechType");
+		String outspaceOutbound = System.getGlobalVariableAsString("aschannel.outspace.outbound", "/Channels/aschannel/OutspaceOutBound");
+
+		// not set event template because there's not a bound event in the destination OutspaceOutbound,
+		// so the type of return value is Object[M][N][2].
+		// query
+		Object[] result = AS.query(outspaceOutbound, null, "get", "snapshot", "all", 0, 1000, "eid > 1000");
+		if (result != null) {
+			for (int i=0; i<result@length; i++) {
+				Object[] tuple = result[i];
+				for (int j=0; j<tuple@length; j++) {
+					Object[] keyValue = tuple[j];
+					System.debugOut("Take Tuple From Outspace: ResultX "+i+","+j+" is "+keyValue[0]);
+					System.debugOut("Take Tuple From Outspace: ResultX "+i+","+j+" is "+keyValue[1]);
+				}
+			}
+		}
+
+
+		// set event template, so the type of return value is SimpleEvent, which can be cast to OutspaceDefEvent
+		Events.OutspaceDefEvent outspaceEventTemplate = Events.OutspaceDefEvent.OutspaceDefEvent("template", null, 0, null, null, null, null, null);
+		// query
+		result = AS.query(outspaceOutbound, outspaceEventTemplate, "get", "snapshot", "all", 0, 1000, "eid > 1000");
+		if (result != null) {
+			for (int i=0; i<result@length; i++) {
+				Events.OutspaceDefEvent temp = result[i];
+				System.debugOut("Take Tuple From Outspace: ResultY id is "+temp.eid);
+				System.debugOut("Take Tuple From Outspace: ResultY value is "+temp.value);
+				System.debugOut("Take Tuple From Outspace: ResultY datetime is "+temp.datetime);
+			}
+		}
+
+		// begin transaction
+		AS.beginTransaction(asChannel);
+
+		// put tuple
+		if (outspaceDefEvent.eid > 11000) {
+			Events.OutspaceDefEvent newOutputEvent2 = Events.OutspaceDefEvent.OutspaceDefEvent(
+				"newOutputEvent+10000",
+				null,
+				outspaceDefEvent.eid+10000,
+				"New Output Event +10000 TEXT PAYLOAD " + outspaceDefEvent.value,
+				DateTime.now(),
+				null, null, null);
+			AS.putEvent(outspaceOutbound, newOutputEvent2);
+			System.debugOut("OUT-TAKE: New Output Event 2: ID = " + (outspaceDefEvent.eid+10000));
+		} else {
+			Events.OutspaceDefEvent newOutputEvent2 = Events.OutspaceDefEvent.OutspaceDefEvent(
+				"newOutputEvent+1111",
+				null,
+				outspaceDefEvent.eid+1111,
+				"New Output Event +1111 TEXT PAYLOAD " + outspaceDefEvent.value,
+				DateTime.now(),
+				null, null, null);
+			AS.putEvent(outspaceOutbound, newOutputEvent2);
+			System.debugOut("OUT-TAKE: New Output Event 2: ID = " + (outspaceDefEvent.eid+1111));
+		}
+		// release transaction
+		Object tid = AS.releaseTransaction(asChannel);
+		System.debugOut("OUT-TAKE: New Output Event 2: TransactionID = " + tid);
+		Util.HashMap.createMap("asContext");
+		Util.HashMap.putObject("asContext", "tid1", tid);
+	}
+}

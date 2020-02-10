@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="org.eclipse.ui.editors">
+      <editor
+            class="com.tibco.cep.studio.sb.sharedresource.SBConfigEditor"
+            default="true"
+            extensions="sharedsb"
+            icon="icons/streambase_16x16.png"
+            id="com.tibco.cep.sharedresource.streambase.SBConfigEditor"
+            name="StreamBase Configuration Editor">
+      </editor>
+   </extension>
+   <extension
+         point="org.eclipse.ui.newWizards">
+		<category
+	         id="com.tibco.cep.sharedresource.ui.category"
+	         name="TIBCO Shared Resources">
+		</category>
+		<wizard
+	           canFinishEarly="false"
+	           category="com.tibco.cep.sharedresource.ui.category"
+	           class="com.tibco.cep.studio.sb.sharedresource.ui.wizards.NewSBConfigWizard"
+	           finalPerspective="com.tibco.cep.studio.application.perspective"
+	           icon="icons/streambase_16x16.png"
+	           id="com.tibco.cep.studio.sb.ui.newSBConfigWizard"
+	           name="StreamBase Resource">
+	        <description>
+	           Create a new StreamBase resource
+	        </description>
+		</wizard>
+      <category
+            name="TIBCO Channel Wizards"
+            id="com.tibco.cep.studio.wizard">
+      </category>
+      <wizard
+      		category="com.tibco.cep.studio.wizard"
+            class="com.tibco.cep.studio.sb.ui.wizards.NewSBWizard"
+            icon="icons/streambase_16x16.png"
+            id="com.tibco.cep.studio.sb.ui.wizards.NewSBWizard"
+            name="StreamBase Destination and Event">
+         <description>
+            Create a Destination and SimpleEvent from a StreamBase schema
+         </description>
+      </wizard>
+	</extension>
+<!-- make this active by default in 5.3 -->
+<!--
+   <extension
+         point="org.eclipse.ui.activities">
+      <activity
+            description="Handles enablement of StreamBase functionality"
+            id="com.tibco.cep.studio.streambase.development"
+            name="StreamBase Activity">
+         <enabledWhen>
+            <systemTest
+                  property="com.tibco.cep.studio.streambase.development"
+                  value="true">
+            </systemTest>
+         </enabledWhen>
+      </activity>
+      <activityPatternBinding
+            activityId="com.tibco.cep.studio.streambase.development"
+            pattern="com\.tibco\.cep\.studio\.streambase/.*">
+      </activityPatternBinding>
+      <categoryActivityBinding
+            activityId="com.tibco.cep.studio.streambase.development"
+            categoryId="com.tibco.cep.standard.category">
+      </categoryActivityBinding>
+      <activityRequirementBinding
+            activityId="com.tibco.cep.studio.streambase.development"
+            requiredActivityId="com.tibco.cep.standard.development">
+      </activityRequirementBinding>
+   </extension>
+   -->
+</plugin>

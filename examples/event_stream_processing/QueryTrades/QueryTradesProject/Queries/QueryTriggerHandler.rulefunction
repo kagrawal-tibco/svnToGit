@@ -1,0 +1,32 @@
+/**
+ * @description 
+ */
+void rulefunction Queries.QueryTriggerHandler {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		EventsAndChannels.QueryTrigger	querytrigger;
+	}
+	body {
+		String[] names = {"loan", "avg-stock-price", "settled-vs-latest-tick"};
+		String uniqueId = querytrigger@id + "";
+		
+		if(String.equals(querytrigger.DATA, names[0])){
+		    Queries.CalculateLoanCQ(uniqueId);
+		}
+		else if(String.equals(querytrigger.DATA, names[1])){
+		    Queries.CalcAvgStockPriceSS(uniqueId);
+		}
+		else if(String.equals(querytrigger.DATA, names[2])){
+		    Queries.CalcFullySettledVsTickCQ(uniqueId);
+		}
+		else{
+		    System.debugOut("Invalid query name: " + querytrigger.DATA);
+		    System.debugOut("Valid names are: " + names[0] + ", " + names[1] + ", " + names[2]);
+		}
+		
+		Event.replyEvent(querytrigger, EventsAndChannels.QueryResponse.QueryResponse(null, null));
+		Event.consumeEvent(querytrigger);
+	}
+}

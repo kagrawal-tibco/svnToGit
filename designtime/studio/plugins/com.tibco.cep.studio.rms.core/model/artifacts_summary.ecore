@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0"
+    xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" name="artifacts"
+    nsURI="http:///com/tibco/cep/rms/artifacts/artifacts_summary.ecore" nsPrefix="rms">
+  <eClassifiers xsi:type="ecore:EClass" name="ArtifactsSummary">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="name" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="addedArtifacts" upperBound="-1"
+        eType="#//ArtifactSummaryEntry" containment="true"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="modifiedArtifacts" upperBound="-1"
+        eType="#//ArtifactSummaryEntry" containment="true"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="deletedArtifacts" upperBound="-1"
+        eType="#//ArtifactSummaryEntry" containment="true"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="rmsRepo" eType="#//RMSRepo"
+        containment="true"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EEnum" name="ArtifactsType">
+    <eLiterals name="DECISIONTABLE" literal="rulefunctionimpl"/>
+    <eLiterals name="DOMAIN" value="1" literal="domain"/>
+    <eLiterals name="RULE" value="2" literal="rule"/>
+    <eLiterals name="RULEFUNCTION" value="3" literal="rulefunction"/>
+    <eLiterals name="CONCEPT" value="4" literal="concept"/>
+    <eLiterals name="EVENT" value="5" literal="event"/>
+    <eLiterals name="TIMEEVENT" value="6" literal="time"/>
+    <eLiterals name="SCORECARD" value="7" literal="scorecard"/>
+    <eLiterals name="METRIC" value="8" literal="metric"/>
+    <eLiterals name="CHANNEL" value="9" literal="channel"/>
+    <eLiterals name="STATEMACHINE" value="10" literal="statemachine"/>
+    <eLiterals name="SHAREDHTTP" value="11" literal="sharedhttp"/>
+    <eLiterals name="RVTRANSPORT" value="12" literal="rvtransport"/>
+    <eLiterals name="SHAREDJMSCON" value="13" literal="sharedjmscon"/>
+    <eLiterals name="SHAREDJDBC" value="14" literal="sharedjdbc"/>
+    <eLiterals name="SHAREDJNDICONFIG" value="15" literal="sharedjndiconfig"/>
+    <eLiterals name="IDENTITY" value="16" literal="id"/>
+    <eLiterals name="GLOBALVARIABLES" value="17" literal="substvar"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="Artifact">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="artifactPath" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="artifactType" eType="#//ArtifactsType"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="artifactContent" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="artifactExtension" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="containerPath" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="updateTime" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EDate"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="committedVersion" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"
+        defaultValueLiteral=""/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="ArtifactSummaryEntry">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="artifact" eType="#//Artifact"
+        containment="true"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="operationType" eType="#//ArtifactOperation"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="artifactChanger" eType="#//ArtifactChanger"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="commitStatus" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"
+        defaultValueLiteral="false"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EEnum" name="ArtifactOperation">
+    <eLiterals name="ADD"/>
+    <eLiterals name="MODIFY" value="1"/>
+    <eLiterals name="DELETE" value="2"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EEnum" name="ArtifactChanger">
+    <eLiterals name="LOCAL"/>
+    <eLiterals name="REMOTE"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="RMSRepo">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="repoURL" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="rmsProject" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+  </eClassifiers>
+</ecore:EPackage>

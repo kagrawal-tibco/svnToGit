@@ -1,0 +1,135 @@
+<div
+  [hidden]='!duplicate'
+  class='alert alert-warning'
+  style="position: inherit"
+i18n>{{i18n('
+  We already have the deployment descriptor with the same configuration.
+  ')}}</div>
+<form #descriptorInfo ='ngForm'>
+  <fieldset [disabled]='!edit'>
+    <div class='form-group'>
+      <label for='targetType' class='control-label control-label-normal' i18n>{{i18n('Target Type')}}</label> 
+      <select
+        id='targetType'
+        [required]='edit'
+        class="form-control form-control-sm"
+        [(ngModel)] = "input.type"
+        name='targetType'
+        #targetType='ngModel'
+      >
+        <option
+          *ngFor="let t of availableTargetTypes"
+          [value]='t'
+          >{{ getTargetTypeDisplay(t) }}</option>
+      </select>
+    </div>
+    <div class="form-group" *ngIf='isURI()'>
+      <label for='targetServer' class='control-label control-label-normal' i18n>{{i18n('StreamBase Server URI')}}</label>
+      <span *ngIf='edit' class='opague'><small><i>separate multiple URIs with<span class='monospace' style='background-color: lightgray'>&nbsp;,&nbsp;</span></i></small></span>
+      <input 
+        #targetURIInput
+        type="text" 
+        class="form-control form-control-sm"
+        id='targetServer'
+        name="targetServer"
+        [(ngModel)]='input.streamBaseTarget'
+        [required]='edit'
+        autocomplete="off"
+        spellcheck='false'
+        placeholder="{{ edit ? 'sb[s]://host-name[:port-number][,...]' : ''}}"
+        #targetServer='ngModel'
+        >
+      <div
+        *ngIf ='targetServer.errors && targetServer.errors["invalidPath"]'
+        class='alert alert-warning'
+      >
+        {{targetServer.errors["invalidPath"]}}
+      </div>
+    </div>
+    <div class="form-group" *ngIf='isServiceName()'>
+      <label for='targetServer' class='control-label control-label-normal' i18n>{{i18n('StreamBase Service Name')}}</label>
+      <span *ngIf='edit' class='opague'><small><i>separate multiple service names with<span class='monospace' style='background-color: lightgray'>&nbsp;,&nbsp;</span></i></small></span>
+      <input 
+        #targetServiceNameInput
+        type="text" 
+        class="form-control form-control-sm"
+        id='targetServer'
+        name="targetServer"
+        [(ngModel)]='input.streamBaseTarget'
+        [required]='edit'
+        autocomplete="off"
+        spellcheck='false'
+        placeholder="{{ edit ? 'service-name[,...]' : '' }}"
+        #targetServer='ngModel'
+        >
+      <div
+        *ngIf ='targetServer.errors && targetServer.errors["invalidPath"]'
+        class='alert alert-warning'
+      >
+        {{targetServer.errors["invalidPath"]}}
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="operatorName" class='control-label control-label-normal' i18n>{{i18n('Target StreamBase Operator')}}</label>
+      <input 
+        #operatorNameInput
+        type="text" 
+        class="form-control form-control-sm"
+        id='operatorName'
+        name="operatorName"
+        [(ngModel)]='input.decisionTableOperatorName'
+        [required]='input.type === "STREAMBASE_SERVICE_NAME" ? false : edit'
+        autocomplete="off"
+        placeholder="{{ edit ? '[container.][module1.][...][moduleN.]operator-name' : ''}}"
+        #operatorName='ngModel'
+        >
+    </div>
+    <div class="form-group">
+      <label for="revision" class='control-label control-label-normal' i18n>{{i18n('Version')}}</label>
+      <input 
+        type="hidden" 
+        name="revision" 
+        [(ngModel)]='input.amsDecisionTableVersion'
+        [required]='edit'
+        #revision='ngModel'
+      >
+      <div class='btn-group' id='revision' name='revision'>
+        <div class='btn-group'>
+          <button 
+            type="button" 
+            class="btn btn-outline-primary btn-sm btn-wide dropdown-toggle" 
+            data-toggle="dropdown" 
+            aria-haspopup="true" 
+            aria-expanded="false"
+            > {{getRevisionString(selectedRevision)}}
+            <span class="caret"></span>
+          </button>
+          <ul *ngIf='edit' class="dropdown-menu max-height max-height-sm">
+            <li *ngFor='let r of availableRevisions'>
+              <a 
+                class='clickable' (click)='selectedRevision = r'
+                ><small>{{getRevisionString(r)}}</small></a>
+            </li>
+          </ul>
+        </div>
+        <button *ngIf='edit' type="button" class='btn btn-outline-primary btn-sm' (click)='onViewContent()' i18n>{{i18n('View Content')}}</button> 
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="description" class='control-label control-label-normal' i18n>{{i18n('Description')}}</label>
+      <textarea
+        #descriptionInput
+        style="height: auto;"
+        class="form-control form-control-sm"
+        id='description'
+        name="description"
+        [(ngModel)]='input.description'
+        autocomplete="off"
+        placeholder="{{i18n('Description')}}"
+        i18n-placeholder
+        #description='ngModel'
+        ></textarea>
+    </div>
+  </fieldset>
+</form>

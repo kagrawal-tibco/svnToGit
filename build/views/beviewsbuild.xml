@@ -1,0 +1,524 @@
+<project name="BE Views Build" basedir="." default="nodefault">
+
+    <!-- Loads the properties files -->
+    <target name="set-properties">
+        <property file="build.${user.name}.properties" />
+        <property file="build.properties" />
+        <property file="constants.${user.name}.properties" />
+        <property file="constants.properties" />
+
+        <property name="views.root" location="${env.SRC_ROOT}/runtime/modules/dashboard" />
+        <property name="views.gen" location="${be.root}/src/${env.PORT}/${env.BUILD_TYPE}/views" />
+        <property name="views.tmp" location="${be.root}/tmp/${env.PORT}/${env.BUILD_TYPE}/views" />
+        <property name="views.obj" location="${be.root}/obj/${env.PORT}/${env.BUILD_TYPE}/views" />
+        <property name="views.exp" location="${be.root}/exp/${env.PORT}/${env.BUILD_TYPE}/views" />
+
+        <property name="build.environment" value="OS:${os.name} ${os.version}; Java:${java.vm.version} by ${java.vm.vendor}" />
+    </target>
+
+    <!-- Sets up the generated source folder properties -->
+    <target name="set-src" depends="set-properties">
+        <property name="views.dashboard.tmp" location="${views.tmp}" />
+        <property name="views.dashboard.gensrc" location="${views.gen}" />
+    	<property name="views.dashboard.rt.common.gensrc" location="${be.root}/src/${env.PORT}/${env.BUILD_TYPE}/views-rt-common" />
+    </target>
+
+    <!-- Sets up all the build output folder properties -->
+    <target name="set-bld" depends="set-src">
+    	<property name="views.dashboard.rt.common.obj" location="${views.obj}/dashboard-rt-common" />
+        <property name="views.dashboard.obj" location="${views.obj}/dashboard" />
+        <property name="views.metricengine.obj" location="${views.obj}/metricengine" />
+        <property name="views.tools.obj" location="${views.obj}/tools" />
+    </target>
+
+    <!-- Sets up all the exported artifacts folder properties -->
+    <target name="set-exp" depends="set-bld">
+        <property name="views.exp.bin" location="${views.exp}/bin" />
+        <property name="views.exp.lib" location="${views.exp}/lib" />
+        <property name="views.exp.config" location="${views.exp}/config" />
+        <property name="views.exp.webroot" location="${views.exp}/web-root" />
+        <property name="views.exp.tools" location="${views.exp}/tools" />
+    </target>
+
+    <!-- Sets up all the dependencies -->
+    <target name="set-dep">
+        <path id="project.classpath">
+        	<pathelement path="${studiort.bld}" />
+        	<pathelement path="${views.dashboard.rt.common.obj}" />
+            <pathelement path="${views.dashboard.obj}" />
+            <pathelement path="${views.metricengine.obj}" />
+            <pathelement path="${common.bld}" />
+            <pathelement path="${base.bld}" />
+            <pathelement path="${query.bld}" />
+            <pathelement path="${drivers.bld}" />
+            <pathelement path="${kernel.bld}" />
+            <pathelement path="${security.bld}" />
+            <pathelement path="${studiorms.jar}/" />
+            <pathelement path="${rms.bld}" />
+            <pathelement path="${functions.bld}" />
+            <pathelement path="${backingstore.bld}" />
+	     <pathelement path="${interpreter.bld}" />
+            <path refid="emf.classpath" />
+            <path refid="tpcl.classpath" />
+            <path refid="tomcat.classpath" />
+            <path refid="stringtemplate.classpath" />
+            <path refid="antlr.classpath" />
+            <path refid="tangosol.classpath" />
+            <path refid="tomsawyer.dev.classpath" />
+            <path refid="apache.commons.classpath" />
+            <!--  <fileset dir="${studio.exp}/studio/eclipse/plugins" includes="*.jar" /> -->
+			<fileset dir="${ORACLE_LIB}" includes="*.jar" />
+            <fileset dir="${env.ECLIPSE_EMF_HOME}/plugins" includes="**/*.jar" />
+            <!--<fileset dir="${J2EE_LIB}" includes="*.jar" />-->
+            <fileset dir="${CASTOR_LIB}" includes="${CASTOR_LIB_INCLUDES}" />
+            <!-- TODO , remove the below two pathelements once we get the whole designtime/runtime concept resolved -->
+            <!--pathelement path="${studio.bld}/plugins/com.tibco.cep.studio.common/@dot" /-->
+            <!--pathelement path="${studio.bld}/plugins/com.tibco.cep.studio.dashboard.common/@dot" /-->
+            <fileset dir="${VELOCITY_LIB}" includes="${VELOCITY_LIB_INCLUDES}" />
+            <path refid="tra.classpath" />
+            <path refid="rv.classpath" />
+        </path>
+        <path id="project.xdoclet.classpath">
+            <!-- Removed project.classpath from XDOCLET classpath, since it was causing a tomcat.log being created @ the build folder level. Very Odd, possibly due to tomcat 7.X upgrade - Anand 08/02/2011 -->
+            <!--path refid="project.classpath" /-->
+            <fileset dir="${XDOCLET_LIB}" includes="*.jar" />
+        </path>
+        <path id="project.malgen.classpath">
+            <path refid="project.xdoclet.classpath" />
+            <pathelement location="${views.dashboard.tmp}/lib/${views.dashboard.codegenerator.lib.name}" />
+        </path>
+    </target>
+
+    <!-- Sets up all the properties needs to build and package -->
+    <target name="set-all" depends="set-properties,
+                                    set-src,
+                                    set-bld,
+                                    set-exp,
+                                    set-dep">
+    </target>
+
+    <!-- Initializes the build envoirenment -->
+    <target name="init" depends="set-all">
+        <!-- Create all build related directories -->
+        <mkdir dir="${views.dashboard.gensrc}" />
+    	<mkdir dir="${views.dashboard.rt.common.gensrc}"/>
+    	<mkdir dir="${views.dashboard.rt.common.obj}" />
+        <mkdir dir="${views.dashboard.obj}" />
+        <mkdir dir="${views.metricengine.obj}"/>
+        <mkdir dir="${views.tools.obj}"/>
+        <tstamp>
+            <format property="BUILD_DATE" pattern="MM-dd-yyyy h:mm:ss a" locale="en" />
+        </tstamp>
+        <uptodate property="malgenbuild.not.needed" targetfile="${views.dashboard.tmp}/lib/${views.dashboard.codegenerator.lib.name}">
+            <srcfiles dir="${views.dashboard.codegenerator.src.dir}" includes="**/*.java" />
+        </uptodate>
+        <uptodate property="malgen.not.needed" targetfile="${views.dashboard.gensrc}/com/tibco/cep/dashboard/psvr/mal/model/MALBEViewsConfig.java">
+            <srcfiles file="${xsd.dir}/beviewsconfig.reverse.xsd" />
+            <srcfiles file="${views.dashboard.codegenerator.template.dir}/mal-manager.xdt" />
+        </uptodate>
+        <uptodate property="oglgen.not.needed" srcfile="${xsd.dir}/ogl.xsd" targetfile="${views.dashboard.gensrc}/com/tibco/cep/dashboard/psvr/ogl/model/VisualizationData.java" />
+        <uptodate property="edmgen.not.needed" srcfile="${xsd.dir}/edm.xsd" targetfile="${views.dashboard.gensrc}/com/tibco/cep/dashboard/psvr/olg/model/edm/FilterEditorModel.java"/>
+    </target>
+
+    <!-- Builds the XDoclet MAL Code Generator -->
+    <target name="malgeneratorbuild" depends="init" unless="malgenbuild.not.needed">
+        <ant antfile="${views.dashboard.codegenerator.dir}/build.xml" inheritall="true" inheritrefs="true">
+            <property name="views.dashboard.codegenerator.classes.dir" value="${views.dashboard.obj}/codegenerator" />
+            <property name="views.dashboard.codegenerator.lib.dir" value="${views.dashboard.tmp}/lib" />
+        </ant>
+    </target>
+
+    <!-- Sets up classpaths and task definitions for XDoclet usage -->
+    <target name="setupxdoclet">
+        <taskdef name="xdoclet" classname="xdoclet.DocletTask" classpathref="project.malgen.classpath" />
+    </target>
+
+    <!-- Generates MAL model classes -->
+    <target name="genmal" depends="init,malgeneratorbuild,setupxdoclet" unless="malgen.not.needed">
+        <echo>Generating MAL model classes</echo>
+        <java classname="org.exolab.castor.builder.SourceGenerator">
+            <arg line="-i ${xsd.dir}/beviewsconfig.xsd" />
+            <arg line="-dest ${views.dashboard.gensrc}/" />
+            <arg line="-types j2" />
+            <arg line="-nodesc" />
+            <arg line="-nomarshall" />
+            <arg line="-f" />
+            <arg line="-binding-file ${xsd.dir}/beviewsconfigbinding.xml" />
+            <classpath>
+                <fileset dir="${CASTOR_LIB}" includes="${CASTOR_LIB_INCLUDES}" />
+                <path refid="tpcl.classpath" />
+                <pathelement location="${xsd.dir}" />
+            </classpath>
+        </java>
+        <xdoclet destdir="${views.dashboard.gensrc}" force="true" verbose="true">
+            <fileset dir="${views.dashboard.gensrc}">
+                <include name="com/tibco/cep/dashboard/psvr/mal/model/*.java" />
+            </fileset>
+            <template templateFile="${views.dashboard.codegenerator.template.dir}/mal-manager.xdt" destinationFile="{0}Manager.java">
+                <packageSubstitution packages="model" substituteWith="managers" />
+            </template>
+        </xdoclet>
+    </target>
+
+    <!-- Generates OGL model classes -->
+    <target name="genogl" depends="init" unless="oglgen.not.needed">
+        <echo>Generating OGL model classes</echo>
+        <java classname="org.exolab.castor.builder.SourceGenerator">
+            <arg line="-i ${xsd.dir}/ogl.xsd" />
+            <arg line="-dest ${views.dashboard.gensrc}" />
+            <arg line="-types j2" />
+            <arg line="-package com.tibco.cep.dashboard.psvr.ogl.model" />
+            <arg line="-f" />
+            <arg line="-binding-file ${xsd.dir}/oglbinding.xml" />
+            <classpath>
+                <fileset dir="${CASTOR_LIB}" includes="${CASTOR_LIB_INCLUDES}" />
+                <path refid="tpcl.classpath" />
+            </classpath>
+        </java>
+    </target>
+
+    <!-- Generates EDM classes -->
+    <target name="genedm" depends="init" unless="edmgen.not.needed">
+        <java classname="org.exolab.castor.builder.SourceGenerator">
+            <arg line="-i ${xsd.dir}/edm.xsd" />
+            <arg line="-dest ${views.dashboard.gensrc}" />
+            <arg line="-types j2"/>
+            <arg line="-package com.tibco.cep.dashboard.psvr.ogl.model.edm"/>
+            <arg line="-f"/>
+            <arg line="-binding-file ${xsd.dir}/edmbinding.xml" />
+            <classpath>
+                <fileset dir="${CASTOR_LIB}" includes="${CASTOR_LIB_INCLUDES}" />
+                <path refid="tpcl.classpath" />
+            </classpath>
+        </java>
+    </target>
+
+    <target name="pre-dashboard-rt-common" depends="set-all">
+        <filter token="BE_VERSION" value="${BE_VERSION}"/>
+        <filter token="BE_BUILD" value="${env.BE_BUILD}"/>
+        <filter token="BE_DATE" value="${BE_DATE}"/>
+        <filter token="BE_COMPANY" value="${BE_COMPANY}"/>
+        <filter token="BE_PRODUCT" value="${env.BE_PRODUCT}"/>
+        <filter token="BE_COPYRIGHT" value="${BE_COPYRIGHT}"/>
+        <filter token="BE_CONTAINER_ID" value="${BE_CONTAINER_ID}"/>
+        <filter token="BE_CONTAINER_MINIMUM_VERSION" value="${BE_VERSION_MAJOR}.${BE_VERSION_MINOR}.${BE_VERSION_UPDATE}.0"/>
+        <filter token="BE_LICENSE" value="${env.BE_LICENSE}"/>
+        <copy file="${rt.common.dir}/src/com/tibco/be/viewsrt/cep_viewsrtVersion.tag" tofile="${rt.common.dir}/src/com/tibco/be/viewsrt/cep_viewsrtVersion.java" filtering="true" overwrite="true" outputencoding="UTF-8"/>
+    </target>
+
+	<!-- Build be-dashboard-rt-common.jar -->
+	<target name="compile-dashboard-rt-common">
+ 		<if>
+            <equals arg1="${env.TAG_FILTERING}" arg2="on"/>
+            <then>
+                <antcall target="pre-dashboard-rt-common"/>
+            </then>
+            <else>
+            </else>
+        </if>
+		<echo>Compiling external common Layer</echo>
+		<copy file="${rt.common.dir}/src/com/tibco/be/viewsrt/cep_viewsrtVersion.java" tofile="${views.dashboard.rt.common.gensrc}/com/tibco/be/viewsrt/cep_viewsrtVersion.java" filtering="true" overwrite="true" outputencoding="UTF-8"/>
+		<javac classpathref="project.classpath" compiler="${compiler}" debug="${debug}" source="${javacSource}" target="${javacTarget}" deprecation="${deprecation}" destdir="${views.dashboard.rt.common.obj}" nowarn="on">
+			<src path="${rt.common.plugin.dir}/src" />
+			<src path="${views.dashboard.rt.common.gensrc}" />
+		</javac>
+	</target>
+
+    <target name="dashboard-rt-common-jar" depends="compile-dashboard-rt-common" description="Packages the common runtime libraries of dashboard agent">
+        <mkdir dir="${views.exp.lib}" />
+        <jar destfile="${views.exp.lib}/${rt.common.jar.file.name}">
+            <fileset dir="${views.dashboard.rt.common.obj}" includes="${jar.classes.includes}" />
+            <fileset dir="${rt.common.plugin.dir}/src" includes="${jar.properties.includes}" />
+            <manifest>
+                <attribute name="Built-By" value="${user.name}" />
+                <attribute name="Built-On" value="${BUILD_DATE}" />
+                <attribute name="Build-Ver" value="${version.timestamp}" />
+                <attribute name="Build-Env" value="${build.environment}" />
+                <attribute name="Main-Class" value="com.tibco.be.viewsrt.cep_viewsrtVersion"/>
+            </manifest>
+        </jar>
+    </target>
+
+    <target name="pre-agent" depends="set-all">
+        <filter token="BE_VERSION" value="${BE_VERSION}"/>
+        <filter token="BE_BUILD" value="${env.BE_BUILD}"/>
+        <filter token="BE_DATE" value="${BE_DATE}"/>
+        <filter token="BE_COMPANY" value="${BE_COMPANY}"/>
+        <filter token="BE_PRODUCT" value="${env.BE_PRODUCT}"/>
+        <filter token="BE_COPYRIGHT" value="${BE_COPYRIGHT}"/>
+        <filter token="BE_CONTAINER_ID" value="${BE_CONTAINER_ID}"/>
+        <filter token="BE_CONTAINER_MINIMUM_VERSION" value="${BE_VERSION_MAJOR}.${BE_VERSION_MINOR}.${BE_VERSION_UPDATE}.0"/>
+        <filter token="BE_LICENSE" value="${env.BE_LICENSE}"/>
+        <copy file="${common.dir}/src/com/tibco/cep/dashboard/cep_dashboardVersion.tag" tofile="${common.dir}/src/com/tibco/cep/dashboard/cep_dashboardVersion.java" filtering="true" overwrite="true" outputencoding="UTF-8"/>
+    </target>
+
+    <target name="compile-agent" depends="init,genmal,genogl,genedm,compile-dashboard-rt-common,compile-metricengine" description="Compiles the java source code">
+        <if>
+            <equals arg1="${env.TAG_FILTERING}" arg2="on"/>
+            <then>
+                <antcall target="pre-agent"/>
+            </then>
+            <else>
+            </else>
+        </if>
+        <echo>Compiling Common Layer</echo>
+        <javac classpathref="project.classpath" compiler="${compiler}" debug="${debug}" source="${javacSource}" target="${javacTarget}" deprecation="${deprecation}" destdir="${views.dashboard.obj}" nowarn="on">
+            <src path="${common.dir}/src" />
+        </javac>
+        <echo>Compiling Core Layer</echo>
+        <javac classpathref="project.classpath" compiler="${compiler}" debug="${debug}" source="${javacSource}" target="${javacTarget}" deprecation="${deprecation}" destdir="${views.dashboard.obj}" nowarn="on">
+            <src path="${psvr.dir}/src"/>
+            <src path="${views.dashboard.gensrc}" />
+        </javac>
+        <echo>Compiling Default PlugIn</echo>
+        <javac classpathref="project.classpath" compiler="${compiler}" debug="${debug}" source="${javacSource}" target="${javacTarget}" deprecation="${deprecation}" destdir="${views.dashboard.obj}" nowarn="on">
+            <src path="${defaultplugin.dir}/src" />
+        </javac>
+        <echo>Compiling BEViews PlugIn</echo>
+        <javac classpathref="project.classpath" compiler="${compiler}" debug="${debug}" source="${javacSource}" target="${javacTarget}" deprecation="${deprecation}" destdir="${views.dashboard.obj}" nowarn="on">
+            <src path="${beviewsplugin.dir}/src" />
+        </javac>
+        <echo>Compiling Integration Layer</echo>
+        <javac classpathref="project.classpath" compiler="${compiler}" debug="${debug}" source="${javacSource}" target="${javacTarget}" deprecation="${deprecation}" destdir="${views.dashboard.obj}" nowarn="on">
+            <src path="${integration.dir}/src"/>
+        </javac>
+    </target>
+
+    <target name="compile-agent-function-catalog" depends="compile-agent" description="Generates the function catalog files">
+        <!--<javadoc destdir="${views.dashboard.obj}" failonerror="true">-->
+            <!--<classpath refid="project.classpath" />-->
+            <!--<doclet name="FunctionHelpPropertiesDoclet">-->
+                <!--<path refid="stringtemplate.classpath" />-->
+                <!--<path refid="antlr.classpath" />-->
+                <!--<path path="${fdg.exp}" />-->
+            <!--</doclet>-->
+            <!--<packageset dir="${common.dir}/src" defaultexcludes="true"/>-->
+            <!--<packageset dir="${metricengine.dir}/src" defaultexcludes="true"/>-->
+            <!--<packageset dir="${views.dashboard.gensrc}" defaultexcludes="true"/>-->
+            <!--<packageset dir="${psvr.dir}/src" defaultexcludes="true"/>-->
+        <!--</javadoc>-->
+        <copy todir="${views.dashboard.obj}">
+            <fileset dir="${psvr.dir}">
+                <include name="**/*.catalog" />
+            </fileset>
+        </copy>
+    </target>
+
+
+    <target name="agent-jar" depends="compile-agent" description="Packages the dashboard agent jar">
+        <mkdir dir="${views.exp.lib}" />
+        <jar destfile="${views.exp.lib}/${jar.file.name}">
+            <fileset dir="${views.dashboard.obj}" includes="${jar.classes.includes}" />
+            <fileset dir="${common.dir}/src" includes="${jar.properties.includes}" />
+            <fileset dir="${common.dir}/properties" includes="${jar.properties.includes}" />
+            <fileset dir="${psvr.dir}/src" includes="${jar.properties.includes}" />
+            <fileset dir="${psvr.dir}/properties" includes="${jar.properties.includes}" />
+            <fileset dir="${defaultplugin.dir}/src" includes="${jar.properties.includes}" />
+            <fileset dir="${defaultplugin.dir}/properties" includes="${jar.properties.includes}" />
+            <fileset dir="${beviewsplugin.dir}/src" includes="${jar.properties.includes}" />
+            <fileset dir="${beviewsplugin.dir}/properties" includes="${jar.properties.includes}" />
+            <fileset dir="${integration.dir}/src" includes="${jar.properties.includes}" />
+            <manifest>
+                <attribute name="Built-By" value="${user.name}" />
+                <attribute name="Built-On" value="${BUILD_DATE}" />
+                <attribute name="Build-Ver" value="${version.timestamp}" />
+                <attribute name="Build-Env" value="${build.environment}" />
+                <attribute name="Main-Class" value="com.tibco.cep.dashboard.cep_dashboardVersion"/>
+            </manifest>
+        </jar>
+    </target>
+
+    <target name="pre-metricengine" depends="set-all">
+        <filter token="BE_VERSION" value="${BE_VERSION}"/>
+        <filter token="BE_BUILD" value="${env.BE_BUILD}"/>
+        <filter token="BE_DATE" value="${BE_DATE}"/>
+        <filter token="BE_COMPANY" value="${BE_COMPANY}"/>
+        <filter token="BE_PRODUCT" value="${env.BE_PRODUCT}"/>
+        <filter token="BE_COPYRIGHT" value="${BE_COPYRIGHT}"/>
+        <filter token="BE_CONTAINER_ID" value="${BE_CONTAINER_ID}"/>
+        <filter token="BE_CONTAINER_MINIMUM_VERSION" value="${BE_VERSION_MAJOR}.${BE_VERSION_MINOR}.${BE_VERSION_UPDATE}.0"/>
+        <filter token="BE_LICENSE" value="${env.BE_LICENSE}"/>
+        <copy file="${metricengine.dir}/src/com/tibco/cep/metric/cep_metricVersion.tag" tofile="${metricengine.dir}/src/com/tibco/cep/metric/cep_metricVersion.java" filtering="true" overwrite="true" outputencoding="UTF-8"/>
+    </target>
+
+    <target name="build-metric-grammar" depends="set-all">
+        <!-- antlr options -->
+        <property name="antlr.profile" value="false"/>
+        <property name="antlr.report" value="true"/>
+        <property name="antlr.multithreaded" value="true"/>
+        <property name="antlr.depend" value="false"/>
+        <property name="antlr.debug" value="false"/>
+        <property name="antlr.print" value="false"/>
+
+   <!--     <taskdef name="antlr3" classname="org.apache.tools.ant.antlr.ANTLR3" classpathref="antlr.classpath"/> -->
+
+        <property name="metric.grammar.file" value="${metricengine.dir}/src/com/tibco/cep/metric/condition/grammar/filter.g"/>
+        <property name="metric.grammar.output" value="${metricengine.dir}/src/com/tibco/cep/metric/condition/ast"/>
+
+        <echo message="antlr ${metric.grammar.file}"/>
+        <echo message="${metric.grammar.output}"/>
+
+   <!--     <antlr3 target="${metric.grammar.file}" outputdirectory="${metric.grammar.output}" libdirectory="${metric.grammar.output}" multithreaded="${antlr.multithreaded}" report="${antlr.report}" profile="${antlr.profile}" depend="${antlr.depend}" debug="${antlr.debug}" print="${antlr.print}">
+                <classpath>
+                  <path refid="antlr.classpath"/>
+                </classpath>
+        </antlr3> -->
+    </target>
+
+    <target name="compile-metricengine" depends="init, build-metric-grammar" description="Compiles the engine java source code">
+        <if>
+            <equals arg1="${env.TAG_FILTERING}" arg2="on"/>
+            <then>
+                <antcall target="pre-metricengine"/>
+            </then>
+            <else>
+            </else>
+        </if>
+        <echo>Compiling Metric Engine Layer</echo>
+        <javac classpathref="project.classpath" compiler="${compiler}" debug="${debug}" source="${javacSource}" target="${javacTarget}" deprecation="${deprecation}" destdir="${views.metricengine.obj}" nowarn="on">
+            <src path="${metricengine.dir}/src" />
+        </javac>
+    </target>
+
+    <target name="compile-metricengine-function-catalog" depends="compile-metricengine" description="Generates the function catalog files for metric engine">
+		<!--<if>-->
+			<!--<equals arg1="${env.JAVADOC_GENERATION}" arg2="true" />-->
+			<!--<then>-->
+		        <!--<javadoc destdir="${views.metricengine.obj}" failonerror="true">-->
+		            <!--<classpath refid="project.classpath" />-->
+		            <!--<doclet name="FunctionHelpPropertiesDoclet">-->
+		                <!--<path refid="stringtemplate.classpath" />-->
+		                <!--<path refid="antlr.classpath" />-->
+		                <!--<path path="${fdg.exp}" />-->
+		            <!--</doclet>-->
+		            <!--<packageset dir="${metricengine.dir}/src" defaultexcludes="true"/>-->
+		        <!--</javadoc>-->
+			<!--</then>-->
+		<!--</if>-->
+        <copy todir="${views.metricengine.obj}">
+            <fileset dir="${metricengine.dir}">
+                <include name="**/*.catalog" />
+            </fileset>
+        </copy>
+    </target>
+
+
+    <target name="metricengine-jar" depends="compile-metricengine-function-catalog" description="Packages the metric engine jar">
+        <mkdir dir="${views.exp.lib}" />
+        <jar destfile="${views.exp.lib}/${metricengine.jar.file.name}">
+            <fileset dir="${views.metricengine.obj}" includes="${jar.classes.includes}" />
+            <fileset dir="${metricengine.dir}/src" includes="${jar.properties.includes}" />
+            <fileset dir="${metricengine.dir}/properties" includes="${jar.properties.includes}" />
+            <manifest>
+                <attribute name="Built-By" value="${user.name}" />
+                <attribute name="Built-On" value="${BUILD_DATE}" />
+                <attribute name="Build-Ver" value="${version.timestamp}" />
+                <attribute name="Build-Env" value="${build.environment}" />
+                <attribute name="Main-Class" value="com.tibco.cep.metric.cep_metricVersion"/>
+            </manifest>
+        </jar>
+    </target>
+
+    <target name="compile-tools" depends="compile-agent" description="Compiles the tools java source code">
+        <echo>Compiling Tools</echo>
+        <javac classpathref="project.classpath" compiler="${compiler}" debug="${debug}" source="${javacSource}" target="${javacTarget}" deprecation="${deprecation}" destdir="${views.tools.obj}" nowarn="on">
+            <src path="${tools.dir}/src" />
+        </javac>
+    </target>
+
+    <target name="tools-jar" depends="compile-tools" description="Packages the tools jar">
+        <mkdir dir="${views.exp.tools}" />
+        <jar destfile="${views.exp.tools}/${tools.jar.file.name}">
+            <fileset dir="${views.tools.obj}" includes="${jar.classes.includes}" />
+            <manifest>
+                <attribute name="Built-By" value="${user.name}" />
+                <attribute name="Built-On" value="${BUILD_DATE}" />
+                <attribute name="Build-Ver" value="${version.timestamp}" />
+                <attribute name="Build-Env" value="${build.environment}" />
+            </manifest>
+        </jar>
+    </target>
+
+    <target name="pre-all" depends="pre-metricengine,pre-dashboard-rt-common,pre-agent"/>
+
+    <target name="build-all" depends="metricengine-jar,dashboard-rt-common-jar,agent-jar,tools-jar" description="Builds the dashboard agent and metric engine in embedded mode" />
+
+    <target name="package-all" depends="build-all" description="Packages dashboard agent for external usage">
+        <!-- Create all packaging related directories -->
+        <mkdir dir="${views.exp.bin}" />
+        <mkdir dir="${views.exp.config}" />
+        <mkdir dir="${views.exp.webroot}" />
+        <mkdir dir="${views.exp.lib}/ext" />
+
+        <!-- copy all binary launcher files -->
+        <copy todir="${views.exp.bin}">
+            <fileset dir="${views.root}/bin/" includes="**/*"/>
+        </copy>
+
+        <!-- copy all config files -->
+        <copy todir="${views.exp.config}">
+            <fileset dir="${views.root}/config/" includes="**/*"/>
+        </copy>
+
+        <!-- copy all insight web root files including UI SWF's -->
+        <copy todir="${views.exp.webroot}">
+            <fileset dir="${views.root}/docroot/" includes="**/*"/>
+        </copy>
+
+        <copy todir="${views.exp.webroot}/swfs/" flatten="true">
+            <!-- copy Flex autocomplete component to web-root/swfs -->
+            <fileset dir="${env.FLEXAUTOCOMPLETE_LIB}" includes="${env.FLEXAUTOCOMPLETE_LIB_INCLUDES}"/>
+            <!-- Copy the compiled Insight SWFs -->
+            <!--fileset dir="${insightui.dir}" includes="${insightui.includes}"/-->
+            <!-- Copy the compiled BEViews SWFs -->
+            <fileset dir="${beviewsui.dir}" includes="${beviewsui.includes}" />
+            <!-- Copy the compiled BEViews Event Debugger SWFs -->
+            <fileset dir="${beviewsdebug.dir}" includes="${beviewsdebug.includes}" />
+        </copy>
+
+        <!-- rename dashboard.swf to old_dashboard.swf -->
+        <!--move file="${views.exp.webroot}/swfs/dashboard.swf" tofile="${views.exp.webroot}/swfs/old_dashboard.swf"/-->
+        <!-- rename BEViews.swf to dashboard.swf -->
+        <move file="${views.exp.webroot}/swfs/BEViews.swf" tofile="${views.exp.webroot}/swfs/dashboard.swf"/>
+        <!-- rename BEVDrillDown.swf to drilldown.swf -->
+        <!-- move file="${views.exp.webroot}/swfs/BEVDrillDown.swf" tofile="${views.exp.webroot}/swfs/drilldown.swf"/-->
+        <!-- rename BEViewsMonitor.swf to dashboardmonitor.swf -->
+        <move file="${views.exp.webroot}/swfs/BEViewsMonitor.swf" tofile="${views.exp.webroot}/swfs/dashboardmonitor.swf"/>
+        <!-- rename ChartPreview.swf to cp.swf -->
+        <move file="${views.exp.webroot}/swfs/ChartPreview.swf" tofile="${views.exp.webroot}/swfs/cp.swf"/>
+        <!-- copy external libraries to lib/ext -->
+        <copy todir="${views.exp.lib}/ext">
+            <fileset dir="${CASTOR_LIB}" includes="${CASTOR_LIB_INCLUDES}" />
+            <fileset dir="${VELOCITY_LIB}" includes="${VELOCITY_LIB_INCLUDES}" />
+        </copy>
+
+        <!-- copy all tools binary launcher files -->
+        <copy todir="${views.exp.tools}">
+            <fileset dir="${tools.dir}" includes="*.tra"/>
+        </copy>
+    </target>
+
+    <target name="clean" depends="set-exp" description="Removes presentation server build artifacts">
+        <delete dir="${views.dashboard.gensrc}" failonerror="false" />
+        <delete dir="${views.dashboard.obj}" failonerror="false" />
+        <delete dir="${views.metricengine.obj}" failonerror="false" />
+        <delete dir="${views.tools.obj}" failonerror="false" />
+        <delete dir="${views.exp.webroot}" failonerror="false" />
+        <delete file="${views.exp.lib}/${jar.file.name}" failonerror="false" />
+        <delete file="${views.exp.lib}/${metricengine.jar.file.name}" failonerror="false" />
+        <delete file="${views.exp.tools}/${tools.jar.file.name}" failonerror="false" />
+    </target>
+
+    <target name="clean-all" depends="set-exp" description="Removes all the presentation server build artifacts">
+        <antcall target="clean" />
+        <ant antfile="${views.dashboard.codegenerator.dir}/build.xml" inheritall="true" inheritrefs="true" target="clean">
+            <property name="views.dashboard.codegenerator.classes.dir" value="${views.dashboard.obj}/codegenerator" />
+            <property name="views.dashboard.codegenerator.lib.dir" value="${views.tmp}/lib" />
+        </ant>
+    </target>
+
+    <target name="nodefault">
+        <echo>Please run the build from the top level build.xml using build-psvr target</echo>
+    </target>
+
+</project>

@@ -1,0 +1,62 @@
+<div class="modal fade box-sizing" id="createInstance">
+ 	<form  enctype="multipart/form-data" method="post" name="instanceCreateForm" novalidate>
+       <div class="modal-header box-sizing">
+       	 	<button type="button" class="close" data-dismiss="modal" aria-hidden="true">x</button>
+			<span ng-show="!isCopy" class="lead"><h4>{{$parent.instanceData.operation}} {{$parent.instanceData.instanceName}}</h4></span>
+			<span ng-show="isCopy" class="lead"><h4>{{$parent.instanceData.operation}} {{$parent.instance.name}}</h4></span>
+	   </div>
+	   
+	   <div class="modal-body box-sizing">
+			<div class="form-horizontal">
+				<div class="control-group">
+                    <label class="control-label">Instance Name:</label>
+                    <div class="controls">
+                        	<input name="instanceNameInput" type="text" placeholder="InstanceName" id="instanceNameTextField"
+                               ng-model="$parent.instanceData.instanceName" ng-disabled="isEdit" required autofocus>
+                    </div>                	
+					<label class="control-label" ng-if="!$parent.instanceData.isMonitorable">Processing Unit: </label>
+					<div class="controls" ng-if="!$parent.instanceData.isMonitorable">					
+					    <select ng-model="$parent.instanceData.processingUnit" required ng-disabled="$parent.isEdit && $parent.instanceData.deployed">
+					   		 <option ng-repeat="pu in appProcessingUnits"  value="{{pu.name}}">
+      							{{pu.name}}
+    						</option>
+					    </select>
+					</div>
+					<label class="control-label">Machine Name: </label>
+					<div class="controls">
+					    <select ng-model="$parent.instanceData.hostName" required ng-disabled="$parent.isEdit && $parent.instanceData.deployed">
+					    	<option ng-repeat="host in beHosts"  value="{{host.name}}">
+      							{{host.name}}
+    						</option>
+					    </select>					    
+					</div>					
+					<label class="control-label">JMX Port:</label>
+                    <div class="controls">
+                        	<input name="instanceJMxPort" type="text" placeholder="JMX Port" id="jmxPortTextField"
+                               ng-model="$parent.instanceData.jmxPort"  required ng-disabled="$parent.isEdit && $parent.instanceData.deployed">
+                    </div>                  
+                    <label class="control-label">JMX User Name:</label>
+                    <div class="controls">
+                        	<input name="instanceJMxUserName" type="text" placeholder="JMX UserName" id="jmxUserNameTextField"
+                               ng-model="$parent.instanceData.jmxUserName" ng-disabled="$parent.isEdit && $parent.instanceData.deployed" autocomplete="off">
+                    </div>
+                    <label class="control-label">JMX Password:</label>
+                    <div class="controls">
+                        	<input name="instanceJMXPassword" type="password" placeholder="JMX Password" id="jmxPasswordTextField"
+                               ng-model="$parent.instanceData.jmxPassword" ng-disabled="$parent.isEdit && $parent.instanceData.deployed" autocomplete="off">
+                    </div>                 
+				</div>
+			</div>
+	  	</div>	
+	  	<div class="modal-footer box-sizing">
+	  		<div ng-show="$parent.isError" class="pull-left">
+				<span class="fileuploadError">*{{$parent.errorMessage}}</span>
+			</div>
+	    	<button ng-if="!$parent.instanceData.deployed" type="button" ng-disabled="instanceCreateForm.$invalid"  ng-click="$parent.saveOrEditInstance()"               
+                ng-class="{'tbt-btn':true, 'primary-btn':true,'button_disabled':instanceCreateForm.$invalid}">Save</button>
+	    	<button type="button" data-dismiss="modal" aria-hidden="true" class="btn tbt-btn secondary-btn" ng-click="close()">
+		   		 Cancel
+	    	</button>
+    	</div>
+    </form>
+ </div>

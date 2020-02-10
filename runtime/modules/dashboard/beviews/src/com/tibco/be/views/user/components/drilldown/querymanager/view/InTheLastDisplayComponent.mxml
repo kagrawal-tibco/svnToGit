@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AbstractDateDisplayComponent xmlns="com.tibco.be.views.user.components.drilldown.querymanager.view.*" 
+	xmlns:mx="http://www.adobe.com/2006/mxml" 
+	width="100%" height="100%"
+	paddingTop="10"
+	paddingBottom="10"
+	paddingLeft="10"
+	>
+	<mx:Script>	
+		<![CDATA[
+			import mx.events.ValidationResultEvent;
+			private var editor:ConditionEditor;	
+			private var currentConditions:ArrayCollection;
+			
+			private static var valuesToDisplayMap:Dictionary = new Dictionary();
+			private static var displayToValuesMap:Dictionary = new Dictionary();
+			
+			[Bindable]
+			private var requireFieldErrorMsg:String;
+			[Bindable]
+			private var negIntErrorMsg:String;
+			[Bindable]
+			private var intErrorMsg:String;
+			// initialize mappings
+			valuesToDisplayMap["seconds"] = "Second(s)";
+			valuesToDisplayMap["minutes"] = "Minute(s)";
+			valuesToDisplayMap["hours"] = "Hour(s)";
+			valuesToDisplayMap["days"] = "Day(s)";
+			valuesToDisplayMap["months"] = "Month(s)";
+			valuesToDisplayMap["years"] = "Year(s)";
+			
+			displayToValuesMap["Second(s)"] = "seconds";
+			displayToValuesMap["Minute(s)"] = "minutes";
+			displayToValuesMap["Hour(s)"] = "hours";
+			displayToValuesMap["Day(s)"] = "days";
+			displayToValuesMap["Month(s)"] = "months";
+			displayToValuesMap["Year(s)"] = "years";
+			
+			public function initComponent(text:String, duration:String, conditions:ArrayCollection, editor:ConditionEditor, fieldName:String):void{
+				this.editor = editor; 
+				this.currentConditions = conditions;
+				this.requireFieldErrorMsg = fieldName+": Field value cannot be empty.";
+				this.negIntErrorMsg = fieldName+": Value may not be negative.";
+				this.intErrorMsg = fieldName+": The number must be an integer.";
+				valueText.text = text;
+				durationCombo.selectedItem = getDisplayString(duration);
+				if(currentConditions.length < 2){
+					currentConditions.addItem(duration);
+				}
+			}
+			private function txtChange(event:Event):void{
+				currentConditions[0] = valueText.text;
+				editor.conditionAsString = "Is In The Last "+ currentConditions[0] + " "+getDisplayString(currentConditions[1]);
+			}
+			
+			private function comboChange(event:Event):void {
+				var selectedDuration:String = event.currentTarget.selectedItem;
+				if(currentConditions.length < 2){
+					currentConditions.addItem(new String(getValueString(selectedDuration)));
+				}
+				else {
+					currentConditions[1] = getValueString(selectedDuration);
+				}
+				editor.conditionAsString = "Is In The Last "+ currentConditions[0] + " "+getDisplayString(currentConditions[1]);
+			}
+			
+			public function getDisplayString(valueStr:String):String {
+				return valuesToDisplayMap[valueStr];
+			}
+			public function getValueString(displayStr:String):String {
+				return displayToValuesMap[displayStr];
+			}
+			
+			public override function doValidation():ValidationResultEvent {
+				return numberValidator.validate();
+			}
+			
+		]]>
+	</mx:Script>
+	
+	<mx:NumberValidator id="numberValidator" 
+		source="{valueText}" property="text" 
+		allowNegative="false" 
+		required="true" 
+		domain="int"
+		integerError="{intErrorMsg}"
+		negativeError="{negIntErrorMsg}"
+		requiredFieldError="{requireFieldErrorMsg}"
+		/>
+	
+	<mx:HBox
+		width="100%" height="100%"
+		paddingTop="10"
+		paddingBottom="10"
+		paddingLeft="10"
+	>
+	<mx:TextInput id="valueText" change="txtChange(event);" width="40"/>
+	<mx:ComboBox id="durationCombo" change="comboChange(event);">
+		<mx:ArrayCollection>
+			<!-- <mx:String>seconds</mx:String>
+			<mx:String>minutes</mx:String>
+			<mx:String>hours</mx:String>
+			<mx:String>days</mx:String>
+			<mx:String>months</mx:String>
+			<mx:String>years</mx:String> -->
+			<mx:String>Second(s)</mx:String>
+			<mx:String>Minute(s)</mx:String>
+			<mx:String>Hour(s)</mx:String>
+			<mx:String>Day(s)</mx:String>
+			<mx:String>Month(s)</mx:String>
+			<mx:String>Year(s)</mx:String>			
+		</mx:ArrayCollection>
+	</mx:ComboBox>
+	</mx:HBox>
+
+	
+</AbstractDateDisplayComponent>

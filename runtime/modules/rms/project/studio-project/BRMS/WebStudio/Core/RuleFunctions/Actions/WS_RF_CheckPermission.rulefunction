@@ -1,0 +1,50 @@
+/**
+ * @description 
+ */
+WebStudio.Core.Concepts.DataSources.WS_C_TemporaryReturnData rulefunction WebStudio.Core.RuleFunctions.Actions.WS_RF_CheckPermission {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object servletRequest;
+		WebStudio.Security.Authn.Concepts.WS_C_LoggedInUser loggedInUser;
+		String projectName;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.Lifecycle.Update.WS_RF_GetArtifactsForSyncToRepository");
+		 
+		int responseStatus = 0;
+		int recordCount = 0;
+		String errorCode = null;
+		String responseMessage = null;
+
+		WS_C_ResponseData responseData = Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/WS_C_ResponseData");
+		
+		if (!WS_RF_CheckHTTPMethod(servletRequest, "GET")) {
+			responseStatus = -1;
+			errorCode = "ERR_5101";
+			responseMessage = "Invalid HTTP Method, expect method is [GET].";
+		} else {
+			//Get the User roles
+			String[] roles = Instance.PropertyArray.toArrayString(loggedInUser.roles);
+			
+			Log.log(LOGGER, "Debug", "Project name %s passed as parameter", projectName);
+			
+			String artifactPath = HTTP.Servlet.Request.getRequestParameter(servletRequest, "artifactPath");
+			String artifactType = HTTP.Servlet.Request.getRequestParameter(servletRequest, "artifactType");
+			String permissionType = HTTP.Servlet.Request.getRequestParameter(servletRequest, "permissionType");
+			
+			String subscriptionId = null;
+			if (loggedInUser.jwtToken != null) subscriptionId = loggedInUser.jwtToken.sbsc;
+				
+			WS_C_UserPermissionDataSourceRecord permissionRecord = Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/Records/WS_C_UserPermissionDataSourceRecord");
+			permissionRecord.allow = RMS.Authorization.ensureAccess(projectName, subscriptionId, roles, artifactPath, artifactType, permissionType);
+			permissionRecord.isAdmin = WS_RF_IsAdminRole(loggedInUser);
+			
+			WS_C_AbstractDataSourceRecord abstractDSRecord = permissionRecord;
+			Instance.PropertyArray.appendContainedConcept(responseData.record, abstractDSRecord, 1L);
+		}
+		
+		return WS_RF_CreateTemporaryReturnData(responseStatus, recordCount, errorCode, responseMessage, responseData);
+	}
+}

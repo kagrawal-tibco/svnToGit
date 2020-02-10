@@ -1,0 +1,110 @@
+/**
+ * @description 
+ */
+WebStudio.Core.Concepts.DataSources.WS_C_ResponseData rulefunction WebStudio.Core.RuleFunctions.Utils.DT.WS_RF_BuildDecisionTableResponse {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String projectName;
+		String artifactPath;
+		String artifactExtn;
+		WebStudio.Core.Concepts.Decision.Pagination.WS_C_DecisionTable decisionTable;
+		String errorCode;
+		String userName;
+		int pageNum;		
+	}
+	body {
+
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.DT.WS_RF_BuildDecisionTableResponse");
+	
+		WS_C_ResponseData responseData = null;
+
+		if (errorCode == null) {
+			responseData = Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/WS_C_ResponseData");
+										
+			WS_C_AbstractDataSourceRecord abstractDataSourceRecord = 
+											Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/Records/WS_C_ArtifactContentsDataSourceRecord");
+	
+			WS_C_ArtifactContentsDataSourceRecord artifactContentsDataSourceRecord = abstractDataSourceRecord;
+
+			WebStudio.Core.Concepts.DataSources.Artifacts.Decision.WS_C_DecisionTablePageDetails decisionTableArtifactDetails = 
+														Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/Artifacts/Decision/WS_C_DecisionTablePageDetails");
+			decisionTableArtifactDetails.projectName = projectName;
+			decisionTableArtifactDetails.artifactPath = artifactPath;
+			
+			WS_C_UserArtifact userArtifact = WS_RF_IsUserArtifact(WS_RF_CreateUserArtifactExtId(null, artifactPath, projectName, userName, null, null), artifactExtn);
+			if (userArtifact instanceof WS_C_UserDTableArtifact) {
+				WS_C_UserDTableArtifact dtUserArtifact = userArtifact;
+				Instance.PropertyAtom.setBoolean(decisionTableArtifactDetails.decisionTableSinglePageView, dtUserArtifact.singlePageView, 1L);
+			}
+
+			decisionTableArtifactDetails.tableName = decisionTable.name;
+			decisionTableArtifactDetails.folderPath = decisionTable.folder;
+			decisionTableArtifactDetails.implementsPath = decisionTable.implementsPath;
+			decisionTableArtifactDetails.arguments = Instance.PropertyAtom.getContainedConcept(decisionTable.arguments, 1L);
+			decisionTableArtifactDetails.metadata = Instance.PropertyAtom.getContainedConcept(decisionTable.metadata, 1L);				
+							
+			WebStudio.Core.Concepts.Decision.Pagination.WS_C_TableRuleSet decisionTableRuleSet = Instance.PropertyAtom.getContainedConcept(decisionTable.decisionTable, 1L);
+			WS_C_TableColumns dtColumns = decisionTableRuleSet.columns;
+			WS_C_TableColumns newDTColumns = Instance.newTransientInstance("/WebStudio/Core/Concepts/Decision/Pagination/WS_C_TableColumns");
+			WS_C_TableColumn[] dtColumnList = Instance.PropertyArray.toArrayContainedConcept(dtColumns.column);
+			for (int i = 0; i < dtColumnList@length; i++) {
+				WS_C_TableColumn tableColumn = Instance.newTransientInstance("/WebStudio/Core/Concepts/Decision/Pagination/WS_C_TableColumn");
+				tableColumn.columnId = 	dtColumnList[i].columnId;
+				tableColumn.name = WS.Common.escapeXML(dtColumnList[i].name);
+				tableColumn.columnAlias = dtColumnList[i].columnAlias;
+				tableColumn.columnType = dtColumnList[i].columnType;					
+				tableColumn.property = dtColumnList[i].property;
+				tableColumn.propertyType = dtColumnList[i].propertyType;
+				tableColumn.isArrayProperty= dtColumnList[i].isArrayProperty;
+				tableColumn.associatedDM = dtColumnList[i].associatedDM;
+				tableColumn.isSubstitution = dtColumnList[i].isSubstitution;
+				tableColumn.defaultCellText = dtColumnList[i].defaultCellText;
+				Instance.PropertyArray.appendContainedConcept(newDTColumns.column, tableColumn, 1L);	
+			}	
+			decisionTableArtifactDetails.decisionTableColumns = newDTColumns;
+			decisionTableArtifactDetails.decisionTableTotalPages = decisionTableRuleSet.totalPages; 
+			decisionTableArtifactDetails.decisionTableLastRuleId = decisionTableRuleSet.lastRuleId;
+			
+			String[] tablePageIds = Instance.PropertyArray.toArrayString(decisionTableRuleSet.tablePageIds);
+			if (pageNum == 0) { //Open DT, so get first page 
+				decisionTableArtifactDetails.decisionTablePage = Instance.getByExtIdByUri(tablePageIds[0], "/WebStudio/Core/Concepts/Decision/Pagination/WS_C_TablePage");
+			} else {
+				decisionTableArtifactDetails.decisionTablePage = Instance.getByExtIdByUri(tablePageIds[pageNum - 1], "/WebStudio/Core/Concepts/Decision/Pagination/WS_C_TablePage");
+			}		
+			
+			if (pageNum == 0) { //Open DT, so get the exception table aswell
+				WebStudio.Core.Concepts.Decision.Pagination.WS_C_TableRuleSet exceptionTableRuleSet = Instance.PropertyAtom.getConceptReference(decisionTable.exceptionTable, 1L);	
+				WS_C_TableColumns etColumns = exceptionTableRuleSet.columns;
+				WS_C_TableColumns newETColumns = Instance.newTransientInstance("/WebStudio/Core/Concepts/Decision/Pagination/WS_C_TableColumns");
+				WS_C_TableColumn[] etColumnList = Instance.PropertyArray.toArrayContainedConcept(etColumns.column);
+				for (int i = 0; i < etColumnList@length; i++) {
+					WS_C_TableColumn tableColumn = Instance.newTransientInstance("/WebStudio/Core/Concepts/Decision/Pagination/WS_C_TableColumn");
+					tableColumn.columnId = 	etColumnList[i].columnId;
+					tableColumn.name = WS.Common.escapeXML(etColumnList[i].name);
+					tableColumn.columnAlias = etColumnList[i].columnAlias;
+					tableColumn.columnType = etColumnList[i].columnType;					
+					tableColumn.property = etColumnList[i].property;
+					tableColumn.propertyType = etColumnList[i].propertyType;
+					tableColumn.isArrayProperty= etColumnList[i].isArrayProperty;
+					tableColumn.associatedDM = etColumnList[i].associatedDM;
+					tableColumn.isSubstitution = etColumnList[i].isSubstitution;
+					tableColumn.defaultCellText = etColumnList[i].defaultCellText;
+					Instance.PropertyArray.appendContainedConcept(newETColumns.column, tableColumn, 1L);	
+				}	
+				decisionTableArtifactDetails.exceptionTableColumns = newETColumns;
+				decisionTableArtifactDetails.exceptionTableTotalPages = exceptionTableRuleSet.totalPages;
+				decisionTableArtifactDetails.exceptionTableLastRuleId = exceptionTableRuleSet.lastRuleId;
+				tablePageIds = Instance.PropertyArray.toArrayString(exceptionTableRuleSet.tablePageIds);
+				decisionTableArtifactDetails.exceptionTablePage = Instance.getByExtIdByUri(tablePageIds[0], "/WebStudio/Core/Concepts/Decision/Pagination/WS_C_TablePage");				
+			}
+										
+			WS_C_AnyArtifactDetails artifactDetails = decisionTableArtifactDetails;
+			Instance.PropertyAtom.setContainedConcept(artifactContentsDataSourceRecord.artifactDetails, artifactDetails, 1L);	
+			Instance.PropertyArray.appendContainedConcept(responseData.record, abstractDataSourceRecord, 1L);
+		}
+		
+		return responseData;			
+	}
+}

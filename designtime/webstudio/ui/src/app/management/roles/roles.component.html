@@ -1,0 +1,136 @@
+<div class='card'>
+  <div class='card-header' i18n>{{i18n('
+    Role Management
+    ')}}</div>
+  <div class='card-body'>
+    <div class='row'>
+      <div class='col-sm-6'>
+        <div class='card role-list' *ngIf='roleRecordSub | async; let roles' (outsideClick)='cancelAddRole()'>
+          <div class='card-header'>
+            <span i18n>{{i18n('
+              Roles
+              ')}}</span>
+            <span class='pull-right'>
+              <i class="fa fa-plus" [ngClass]="{ 'clickable active' : !addRoleEnabled }" (click)='!addRoleEnabled && onAddRole()'></i>
+              <i class="fa fa-minus" [ngClass]="{ 'clickable active' : selectedRole && !addRoleEnabled }" (click)='(selectedRole && !addRoleEnabled) && onDeleteRole()'></i>
+            </span>
+          </div>
+          <div class="list-group">
+            <a *ngFor='let role of roles' class="list-group-item clickable" [class.active]='role.name === selectedRole?.name' (click)='onRoleSelected(role.name)'>
+              <small>{{ role.name }}</small>
+            </a>
+            <a class='list-group-item' *ngIf='addRoleEnabled'>
+              <input-with-confirm [required]='true' [placeholder]='"Enter name for the role..."' i18n-placeholder (result)='confirmAddRole($event)' (cancel)='cancelAddRole()'></input-with-confirm>
+            </a>
+          </div>
+        </div>
+      </div>
+      <div class='col-sm-6'>
+        <div class='card user-list' (outsideClick)='cancelAddUser()'>
+          <div class='card-header'>
+            <span i18n>{{i18n('
+              Users
+              ')}}</span>
+            <span class='pull-right'>
+              <i class="fa fa-plus" [ngClass]="{ 'clickable active' : !addUserEnabled }" (click)='!addUserEnabled && onAddUser()'></i>
+              <i class="fa fa-minus" [ngClass]="{ 'clickable active' : selectedUser && !addUserEnabled }" (click)='(selectedUser && !addUserEnabled) && onDeleteUser()'></i>
+            </span>
+          </div>
+          <div class="list-group">
+            <a *ngFor='let user of selectedRole?.users' class="list-group-item clickable" [class.active]='user === selectedUser' (click)='onUserSelected(user)'>
+              <small>{{ user }}</small>
+            </a>
+            <a class='list-group-item' *ngIf='addUserEnabled'>
+              <select-with-confirm [placeholder]='"Click to select users..."' i18n-placeholder [candidates]='userCandidates' (result)='confirmAddUser($event)'
+                (cancel)='cancelAddUser()'></select-with-confirm>
+            </a>
+            <div class='card-body empty-msg' *ngIf='!addUserEnabled && selectedRole && selectedRole.users.length === 0'>
+              <small i18n>{{i18n('No user is assigned with this role.')}}</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class='row'>
+      <div class='col-sm-4'>
+        <div class='card'>
+          <div class='card-header'>
+            <span i18n>
+              Type
+            </span>
+          </div>
+          <div class='list-group' *ngIf='selectedRole'>
+            <a class='list-group-item clickable' *ngFor='let item of permissionTypes' (click)='onPermissionTypeSelected(item)' [class.active]='item === selectedPermissionType'>
+              <small>{{ (item.includes('_') ? item.replace('_', ' ') : item) | titlecase }}</small>
+            </a>
+          </div>
+          <div class='card-body empty-msg' *ngIf='!selectedRole'>
+            <small>{{ typeSectionMessage }}</small>
+          </div>
+        </div>
+      </div>
+      <!-- <div *ngIf='selectedPermissionType !== "manage_server" && selectedPermissionType !== "manage_permissions"'> -->
+        <div *ngIf='selectedPermissionType !== "manage_server" && selectedPermissionType !== "manage_permissions"' class='col-sm-4'>
+          <div class='card'>
+            <div class='card-header'>
+              <span i18n>
+                Action
+              </span>
+            </div>
+            <div class='list-group' *ngIf='selectedPermissionType'>
+              <a class='list-group-item clickable' *ngFor='let entry of permissionActions' (click)='onPermissionActionSelected(entry.key)'
+                [class.active]='entry.key === selectedPermissionAction'>
+                <small>{{ entry.text }}</small>
+              </a>
+            </div>
+            <div class='card-body empty-msg' *ngIf='!selectedPermissionType'>
+              <small>{{ actionSectionMessage }}</small>
+            </div>
+          </div>
+        </div>
+        <div *ngIf='selectedPermissionType !== "manage_server" && selectedPermissionType !== "manage_permissions"' class='col-sm-4'>
+          <div class='card' (outsideClick)='cancelAddInstance()'>
+            <div class='card-header'>
+              <span i18n>
+                Instance
+              </span>
+              <span class='pull-right'>
+                <i class="fa fa-plus" [ngClass]="{ 'clickable active' : !addInstanceEnabled }" (click)='!addInstanceEnabled && onAddInstance()'></i>
+                <i class="fa fa-minus" [ngClass]="{ 'clickable active' : selectedPermissionInstance && !addInstanceEnabled }" (click)='(selectedPermissionInstance && !addInstanceEnabled) && onDeleteInstance()'></i>
+              </span>
+            </div>
+            <div class='list-group'>
+              <a class='list-group-item clickable' *ngFor='let entry of permissionInstances' (click)='onPermissionInstanceSelected(entry)'
+                [class.active]='entry === selectedPermissionInstance'>
+                <permission-instance [input]='entry'></permission-instance>
+              </a>
+              <a class='list-group-item' *ngIf='addInstanceEnabled'>
+                <input-with-confirm [checkbox]='!permissionInstances.includes("*")' [checkboxLabel]='"All"' [checkedValue]='"*"' [required]='true'
+                  [placeholder]='"Enter instance for the action..."' i18n-placeholder (result)='confirmAddInstance($event)' (cancel)='cancelAddInstance()'></input-with-confirm>
+              </a>
+              <div class='card-body empty-msg' *ngIf='instanceSectionMessage && !addInstanceEnabled'>
+                <small>{{ instanceSectionMessage }}</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      <!-- </div> -->
+      <!-- <div *ngIf='selectedPermissionType === "manage_server" || selectedPermissionType === "manage_permissions"'> -->
+        <div *ngIf='selectedPermissionType === "manage_server" || selectedPermissionType === "manage_permissions"' class='col-sm-4'>
+          <div class='card'>
+            <div class="card-header">
+              <span>{{selectedPermissionType === "manage_server" ? "Manage Server" : "Manage  Permissions"}}</span>
+            </div>
+            <div class='card-body'>
+              <label class='form-control'>
+                <input type="checkbox" class='form-group'
+                [checked]="getPermission(selectedPermissionType)"
+                (click)='setManageServerOrPermissions($event.currentTarget.checked)'/><ng-container i18n>{{i18n(' Allow')}}</ng-container></label>
+            </div>
+          </div>
+        </div>
+
+      <!-- </div> -->
+    </div>
+  </div>
+</div>

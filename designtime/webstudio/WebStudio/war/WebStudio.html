@@ -1,0 +1,241 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+   "http://www.w3.org/TR/html4/loose.dtd">
+
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <link rel="shortcut icon" href="webstudio/images/icons/16/tibco16-32.gif" />
+    <title>TIBCO BusinessEvents WebStudio</title>
+    <!--CSS for loading message at application Startup-->
+    <style type="text/css">
+        body { overflow:hidden}
+        
+         td{
+          unicode-bidi: embed;
+        } 
+        
+        #loading {
+            border: 1px solid #ccc;
+            position: absolute;
+            left: 40%;
+            top: 40%;
+            padding: 2px;
+            z-index: 20001;
+            height: auto;
+        }
+        #loading a {
+            color: #225588;
+        }
+        #loading .loadingIndicator {
+            background: white;
+            font: bold 13px tahoma, arial, helvetica;
+            padding: 10px;
+            margin: 0;
+            height: auto;
+            color: #444;
+        }
+        .message {
+            font: normal 10px arial, tahoma, sans-serif;
+        }
+        
+        .newUIWrapper {
+          float: right;
+          margin-top:15px;
+          margin-right: 15px;
+          cursor:pointer;
+        }
+
+        .anchorAsButton {
+          background: #3498db;
+          background-image: linear-gradient(to bottom, #3498db, #2980b9);
+          font-family: Arial;
+          color: #ffffff;
+          font-size: 14px;
+          padding: 7px 12px 7px 12px;
+          text-decoration: none;
+        }
+
+        .anchorAsButton:hover {
+          background: #3cb0fd;
+          background-image: linear-gradient(to bottom, #3cb0fd, #3498db);
+          text-decoration: none;
+        }
+    </style>
+    
+    <!-- IMPORTANT : You must set the variable isomorphicDir to [MODULE_NAME]/sc/ so that the SmartGWT resources are 
+	  correctly resolved -->	
+	<script> var isomorphicDir = "webstudio/sc/"; </script>
+
+    <!--                                                               -->
+    <!-- Consider inlining CSS to reduce the number of requested files -->
+    <!--                                                               -->
+    <link type="text/css" rel="stylesheet" href="styles/WebStudio.css">
+
+    <!--                                           -->
+    <!-- This script loads your compiled module.   -->
+    <!-- If you add any GWT meta tags, they must   -->
+    <!-- be added before this line.                -->
+    <!--                                           -->
+    <script type="text/javascript" language="javascript" src="webstudio/webstudio.nocache.js"></script>
+	    	
+	<script type="text/javascript">
+		// Change value of below variable to enable/disable client logging
+     	var webstudio_logging_enabled = false;
+     	var webstudio_process_logging_enabled = false;
+	 	
+		// DS request timeout (ms). Applicable per request. Default being 4 min. setting this to zero, will disable timeout.
+		var dataSource_request_timeout = 0;
+		
+		// Path to images dir.
+		var webstudio_images_dir = "webstudio/images/";
+		
+		//Company logo url - This can be a URL to another website OR a local relative path (in which case the image has to be available in the war)
+		var company_logo_url = "";
+		
+		// Matrix of compatible browsers for WS. [Note: Also accordingly change the text for "Recommended Browser" message.] 
+		var browserCompatibilityMatrix = {
+			"Firefox" : { "minCompatibleVer":20, "maxCompatibleVer":-1 },
+			"Internet Explorer" : { "minCompatibleVer":9, "maxCompatibleVer":11 },
+			"Chrome" : { "minCompatibleVer":20, "maxCompatibleVer":-1}
+		};
+	 	
+	    // To hide loading wrapper
+	 	function hideLoading() {
+       		if (document.getElementById) {
+             	document.getElementById('loadingWrapper').style.visibility = 'hidden';
+         	}
+      	}
+      	
+      	// To display loading wrapper
+      	function showLoading() {
+       		if (document.getElementById) {
+             	document.getElementById('loadingWrapper').style.visibility = 'visible';
+       		}
+    	}
+		
+		// To display Unsupported Browser Error
+      	function showUnsupportedBrowserError(unsupportedBrowserMessage, recommendedBrowserMessage, detectedBrowserMessage) {
+       		if (document.getElementById) {
+       			if (unsupportedBrowserMessage != null && unsupportedBrowserMessage.trim().length > 0) {
+       				document.getElementById('unsupportedBrowserMessage').innerHTML = unsupportedBrowserMessage;
+       			}
+       			if (recommendedBrowserMessage != null && recommendedBrowserMessage.trim().length > 0) {
+       				document.getElementById('recommendedBrowserMessage').innerHTML = recommendedBrowserMessage;
+       			}
+       			if (detectedBrowserMessage != null && detectedBrowserMessage.trim().length > 0) {
+       				document.getElementById('detectedBrowserMessage').innerHTML = detectedBrowserMessage;
+       			}
+             	document.getElementById('unsupportedBrowser').style.visibility = 'visible';
+       		}
+    	}
+		
+		// All tasks/actions to be performed before the GWt iframe loads
+		function preLoadTasks() {
+			internationalize();
+		}
+		
+		// Set the i18N property set based on the browser locale
+		function internationalize() {
+			var location = window.location + "";
+    		if (location.indexOf("locale") == -1) {
+    			var locale = getBrowserLocale();
+				window.location = location + (location.indexOf("?") == -1 ? "?" : "&") + "locale=" + locale.replace('-','_');
+    		}
+    	}
+    	
+    	// Fetch the browser locale, defaults to en_US
+    	function getBrowserLocale() {
+    		var locale = navigator.language;
+    		if (locale == null) {
+				locale = navigator.browserLanguage;
+				if (locale == null) {
+					locale = navigator.systemLanguage;
+					if (locale = null) {
+						locale = navigator.userLanguage;
+					}
+				}
+			}
+			if (locale == null) locale = "en_US";
+			return locale;
+    	}
+    	
+    	// invoke preLoadTasks before DOM loading starts
+    	preLoadTasks();   
+    	
+		//Delete process element  
+    	function deleteElement(projectID, moduleName, modelID, viewID, viewName) {
+			try {
+				deleteProcessElement();
+			} catch (e) {
+				console.log(e);
+			}
+		}
+		//Undo process element  
+    	function undoElement(projectID, moduleName, modelID, viewID, viewName) {
+			try {
+				undoProcessElement();
+			} catch (e) {
+				console.log(e);
+			}
+		}
+		//Redo process element  
+    	function redoElement(projectID, moduleName, modelID, viewID, viewName) {
+			try {
+				redoProcessElement();
+			} catch (e) {
+				console.log(e);
+			}
+		}
+		
+		// redirect to the new UI
+    	function loadNewUI() {
+   	      window.location.href="new/index.html";
+   	    }
+	</script>
+    
+  </head>
+
+  <!--                                           -->
+  <!-- The body can have arbitrary html, or      -->
+  <!-- you can leave the body empty if you want  -->
+  <!-- to create a completely dynamic UI.        -->
+  <!--                                           -->
+  <body> 
+    <!-- OPTIONAL: include this if you want history support -->
+    <iframe src="javascript:''" id="__gwt_historyFrame" tabIndex='-1' style="position:absolute;width:0;height:0;border:0"></iframe>
+    
+    <!-- Link for trying out the new UI -->
+    <div class="newUIWrapper">
+      <div class="anchorAsButton" onclick="loadNewUI();">Try the new UI</div>
+    </div>
+    
+    <!--add loading indicator while the app is being loaded-->
+	<div id="loadingWrapper">
+		<div id="loading">
+			<div class="loadingIndicator">
+				<img src="webstudio/images/spinner_grey.gif" width="16" height="16" style="margin-right:8px;float:left;vertical-align:top;"/>TIBCO BusinessEvents<sup>&reg;</sup> WebStudio<br/>
+				<span id="loadingMsg" class="message">Loading...</span>
+			</div>
+		</div>
+	</div>
+	
+	<!--Show error when browser is unsupported-->
+	<div id="unsupportedBrowser" style="width:250px;visibility:hidden;border: 1px solid #ccc; position: absolute; left: 40%; top: 40%; padding: 2px; z-index: 20010; height: auto; background: white; font: bold 13px tahoma, arial, helvetica; padding: 10px; margin: 0; color: #444;">
+		<img src="webstudio/images/tibco48-8.gif" width="16" height="16" style="margin-right:8px;float:left;vertical-align:top;"/>TIBCO BusinessEvents<sup>&reg;</sup> WebStudio<br/><br/>
+		<div id="unsupportedBrowserMessage">Unsupported Browser.</div><br/>
+		<div id="detectedBrowserMessage" class="message"></div>
+		<div id="recommendedBrowserMessage" class="message">Recommended browsers:<br/>Internet Explorer (9, 11), Mozilla FireFox 20 or later, Google Chrome 20 or later.</div>
+	</div>
+	
+	<!--include the application JS-->
+	<script type="text/javascript">document.getElementById('loadingMsg').innerHTML = '<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' ;</script>
+    
+    <!-- RECOMMENDED if your web app will not function without JavaScript enabled -->
+    <noscript>
+      <div style="width: 22em; position: absolute; left: 50%; margin-left: -11em; color: red; background-color: white; border: 1px solid red; padding: 4px; font-family: sans-serif">
+        Your web browser must have JavaScript enabled
+        in order for this application to display correctly.
+      </div>
+    </noscript>
+  </body>
+</html>

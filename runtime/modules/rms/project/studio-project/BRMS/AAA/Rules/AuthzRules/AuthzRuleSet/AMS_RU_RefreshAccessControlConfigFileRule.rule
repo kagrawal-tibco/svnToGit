@@ -1,0 +1,41 @@
+/**
+ * @description Fetch update Access Control Config File for a project
+ * @author aathalye-lt
+ */
+rule AAA.Rules.AuthzRules.AuthzRuleSet.AMS_RU_RefreshAccessControlConfigFileRule {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Approval.Events.ArtifactEvents.AMS_E_RefreshAccessConfigFileRequestEvent ams_e_refreshaccessconfigfilerequestevent;
+	}
+	when {
+		ams_e_refreshaccessconfigfilerequestevent.projectname != null;
+	}
+	then {
+		String encoding = "UTF-8";
+		String projectName = ams_e_refreshaccessconfigfilerequestevent.projectname;
+		
+		String pathSeparator = "/";
+		String aclFileLocation = System.getSystemPropertyAsString("ws.projects.acl.location", null);
+		
+		String aclFilePath = aclFileLocation + pathSeparator + projectName + ".ac";
+		
+		if (File.fileExists(aclFilePath)) {
+			String fileContents = File.readFileAsString(aclFilePath, encoding);
+			
+			Approval.Events.ArtifactEvents.AMS_E_RefreshAccessConfigFileResponseEvent responseEvent = 
+				Event.createEvent("xslt://{{/Approval/Events/ArtifactEvents/AMS_E_RefreshAccessConfigFileResponseEvent}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"1.0\" exclude-result-prefixes=\"xsl xsd\">\n    <xsl:output method=\"xml\"/>\n    <xsl:param name=\"fileContents\"/>\n    <xsl:template match=\"/\">\n        <createEvent>\n            <event>\n                <refreshStatus>\n                    <xsl:value-of select=\"&quot;SUCCESS&quot;\"/>\n                </refreshStatus>\n                <payload>\n                    <xsl:copy-of select=\"$fileContents\"/>\n                </payload>\n            </event>\n        </createEvent>\n    </xsl:template>\n</xsl:stylesheet>");
+			
+			Event.replyEvent(ams_e_refreshaccessconfigfilerequestevent, responseEvent);	
+		} else {
+			Exception ex = 
+				Exception.newException("ACL file absent", "No file at location " + aclFilePath, null);
+			Approval.Events.ArtifactEvents.AMS_E_ErrorEvent	errorEvent = 
+				Approval.CommonServices.AMS_RF_CreateErrorEvent("ACCESS_CONFIG_REFRESH_FAILURE", "No file at location " + aclFilePath, null);
+			Event.replyEvent(ams_e_refreshaccessconfigfilerequestevent, errorEvent);
+		}	
+		Event.consumeEvent(ams_e_refreshaccessconfigfilerequestevent);
+	}
+}

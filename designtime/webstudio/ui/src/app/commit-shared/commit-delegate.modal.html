@@ -1,0 +1,63 @@
+<h3 mat-dialog-title i18n>{{i18n('Delegate Commit')}} '{{cc.id}}'</h3>
+<div class="row">
+    <div class="col-sm-12">
+        <mat-form-field style="width: 250px">
+            <mat-select  
+              [formControl]="targetRoles" placeholder="{{i18n('Select Role/s To Delegate To')}}" i18n multiple>
+              <mat-option *ngFor='let role of delegateRoleOptions' [value]='role.name'>
+                  {{role.name}}
+              </mat-option>
+             </mat-select>
+          </mat-form-field>         
+    </div>
+</div>
+<div class="row left-pad right-pad bottom-pad top-pad" mat-dialog-actions>
+    <button style="margin-right: 1em" type="button" class='btn btn-outline-primary btn-sm left-pad right-pad' (click)='onClose()' i18n>{{i18n('Close')}}</button>
+    <button
+      type="button"
+      class='btn btn-primary btn-sm pull-right left-pad right-pad'
+      (click)='onConfirm()'
+      [disabled]='!canConfirm()' i18n
+    >{{i18n('Confirm')}}</button>  
+</div>
+<!-- <div class="row">
+        <div class="col-sm-12">
+          <div class="card">
+            <div class="card-header card-header-sm">
+              <strong i18n>{{i18n('Delegate Commit')}}</strong> '{{cc.id}}'
+            </div>
+            <div class="card-body">
+             <div class="form-group">
+                <mat-form-field>
+                    <mat-select  
+                      [formControl]="targetRoles" placeholder="{{i18n('Select Role/s To Delegate To')}}" i18n multiple>
+                      <mat-option *ngFor='let role of delegateRoleOptions' [value]='role.id'>
+                          {{role.name}}
+                      </mat-option>
+                     </mat-select>
+                  </mat-form-field>               
+              <label class='control-label control-label-normal' i18n>{{i18n('Select Role/s To Delegate To')}}</label> 
+                   <ss-multiselect-dropdown
+                    [options]='this.delegateRoleOptions'
+                    [texts]='this.delegateTexts'
+                    [settings]='this.delegateRoleSettings'
+                    [(ngModel)]='this.selectedRoles'
+                    (ngModelChange)='onChangeRoles($event)'
+                  >
+                  </ss-multiselect-dropdown> 
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="row left-pad right-pad bottom-pad top-pad">
+        <div class="col-sm-12">
+          <button type="button" class='btn btn-outline-primary btn-sm' (click)='onClose()' i18n>{{i18n('Close')}}</button>
+          <button
+            type="button"
+            class='btn btn-primary btn-sm pull-right'
+            (click)='onConfirm()'
+            [disabled]='!canConfirm()' i18n
+          >{{i18n('Confirm')}}</button>
+        </div>
+      </div> -->

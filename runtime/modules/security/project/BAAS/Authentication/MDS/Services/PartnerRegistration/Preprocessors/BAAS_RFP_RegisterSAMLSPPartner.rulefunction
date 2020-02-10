@@ -1,0 +1,42 @@
+/**
+ * @description PP for registering a SAML SP partner with MDS.
+ */
+void rulefunction Authentication.MDS.Services.PartnerRegistration.Preprocessors.BAAS_RFP_RegisterSAMLSPPartner {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Authentication.MDS.Services.PartnerRegistration.Events.BAAS_E_RegisterSAMLSPPartnerRequestEvent baas_e_registersamlsppartner;
+	}
+	body {
+		String partnerIDURI = baas_e_registersamlsppartner.partnerIDURI;
+		//Lock and load partner registry.
+		System.debugOut("New partner entity id " + partnerIDURI);
+		//Check if such a partner id exists in the partner regisry.
+		boolean partnerIDLock = Cluster.DataGrid.Lock(partnerIDURI, -1, false);
+		if (partnerIDLock) {
+			BAAS_C_SAMLPartner existingSAMLPartner = Cluster.DataGrid.CacheLoadConceptByExtId(partnerIDURI, true);
+			if (existingSAMLPartner != null) {
+				throw Exception.newException("Partner registration error", "Attempt to register a partner with an existing partner entity id", null);
+				//TODO send response
+			}
+		}
+		//Lock and load partner registry
+		boolean partnerRegistryLock = Cluster.DataGrid.Lock("PARTNER_REGISTRY", -1, false);
+		if (partnerRegistryLock) {
+			BAAS_C_PartnerRegistry mdsPartnerRegistry = Cluster.DataGrid.CacheLoadConceptByExtId("PARTNER_REGISTRY", true);
+			if (mdsPartnerRegistry == null) {
+				throw Exception.newException("Partner Registry creation error", "No partner registry created in metadata repository", null);
+				//Send response.
+			}
+			BAAS_C_SAMLPartner newSAMLPartner = 
+				Authentication.MDS.Partner.Concepts.BAAS_C_SAMLPartner.BAAS_C_SAMLPartner(partnerIDURI, partnerIDURI, baas_e_registersamlsppartner@payload);
+		
+			Instance.PropertyArray.appendContainedConcept(mdsPartnerRegistry.samlPartners, newSAMLPartner, 1L);
+			//Send success response
+			BAAS_E_RegisterSAMLSPPartnerResponseEvent registerSAMLPartnerResponseEvent = 
+				Event.createEvent("xslt://{{/Authentication/MDS/Services/PartnerRegistration/Events/BAAS_E_RegisterSAMLSPPartnerResponseEvent}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"1.0\" exclude-result-prefixes=\"xsl xsd\">\n    <xsl:output method=\"xml\"/>\n    <xsl:template match=\"/\">\n        <createEvent>\n            <event>\n                <statusCode>\n                    <xsl:value-of select=\"1\"/>\n                </statusCode>\n            </event>\n        </createEvent>\n    </xsl:template>\n</xsl:stylesheet>");
+			Event.replyEvent(baas_e_registersamlsppartner, registerSAMLPartnerResponseEvent);
+		}
+	}
+}

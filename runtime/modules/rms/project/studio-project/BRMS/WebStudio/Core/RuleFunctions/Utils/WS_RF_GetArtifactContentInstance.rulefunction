@@ -1,0 +1,34 @@
+/**
+ * @description 
+ */
+WebStudio.Core.Concepts.DataSources.WS_C_AnyArtifactDetails rulefunction WebStudio.Core.RuleFunctions.Utils.WS_RF_GetArtifactContentInstance {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String artifactContentExtId;
+		String artifactType;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.WS_RF_GetArtifactContentInstance");
+		
+		Log.log(LOGGER, "Debug", "Looking up Artifact Content ExtId [%s] of type [%s]", artifactContentExtId, artifactType);
+		
+		WS_C_AnyArtifactDetails anyArtifact = null;
+		
+		if (artifactType == "ruletemplateinstance" || artifactType == "ruletemplate") {
+			anyArtifact = Instance.getByExtIdByUri(artifactContentExtId, "/WebStudio/Core/Concepts/RuleTemplateInstance/Builder/WS_C_RuleTemplateInstanceBuilder");
+			if (anyArtifact == null) anyArtifact = Instance.getByExtIdByUri(artifactContentExtId, "/WebStudio/Core/Concepts/RuleTemplateInstance/View/WS_C_RuleTemplateInstanceView");
+		} else if (artifactType == "rulefunctionimpl") {
+			anyArtifact = Instance.getByExtIdByUri(artifactContentExtId, "/WebStudio/Core/Concepts/Decision/Pagination/WS_C_DecisionTable");
+		} else if (artifactType == "beprocess") {
+			anyArtifact = Instance.getByExtIdByUri(artifactContentExtId, "/WebStudio/Core/Concepts/Process/WS_C_ProcessView");
+		} else if (artifactType == "domain") {
+			anyArtifact = Instance.getByExtIdByUri(artifactContentExtId, "/WebStudio/Core/Concepts/Domain/WS_C_Domain");
+		}
+		
+		if (anyArtifact == null) Log.log(LOGGER, "Debug", "Looking up Artifact Content ExtId [%s] of type [%s] not found !!", artifactContentExtId, artifactType);
+		
+		return anyArtifact;
+	}
+}

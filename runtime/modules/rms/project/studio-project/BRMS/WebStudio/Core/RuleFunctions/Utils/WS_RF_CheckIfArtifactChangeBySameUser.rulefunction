@@ -1,0 +1,24 @@
+/**
+ * @description 
+ */
+boolean rulefunction WebStudio.Core.RuleFunctions.Utils.WS_RF_CheckIfArtifactChangeBySameUser {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		WebStudio.Core.Concepts.WS_C_UserArtifactRevision referencedRevision;
+		WebStudio.Core.Concepts.WS_C_UserArtifact parentUserArtifact;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.WS_RF_CheckIfChangeBySameUser");
+		
+		// crop the extId to leave the version bit, to compare if the user+project+artifact is identical
+		String currentMasterRevisionExtId_trim = String.substring(referencedRevision@extId, 0, String.lastIndexOfString(referencedRevision@extId, 0, "@"));
+		Log.log(LOGGER, "Debug", "Version Trimmed ExtId's, currentMasterRevision - %s & parentUserArtifact - %s", currentMasterRevisionExtId_trim, parentUserArtifact@extId);
+		
+		boolean sameUserArtifact = String.equals(currentMasterRevisionExtId_trim, parentUserArtifact@extId);
+		Log.log(LOGGER, "Debug", "Changes by the same user - %s", sameUserArtifact);
+		
+		return sameUserArtifact;
+	}
+}

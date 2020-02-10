@@ -1,0 +1,223 @@
+/**
+ * @description 
+ */
+void rulefunction WebStudio.Core.RuleFunctions.Utils.RT.WS_RF_SyncRuleTemplateWithRepository {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String scsIntegrationType;
+		String scsRootURL;
+		String projectName;
+		String artifactPath;
+		String artifactType;
+		WebStudio.Core.Concepts.RuleTemplateInstance.WS_C_AbstractRuleTemplate abstractRuleTemplate;
+		String username;
+		String[] roles;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.RT.Builder.WS_RF_SyncRuleTemplateWithRepository");
+		
+		String subscriptionId = WS_RF_GetSubscriptionId(username);
+		
+		String artifactContents = WS_RF_FetchContentFromSCS(scsRootURL, projectName, artifactPath, artifactType, username);
+		Log.log(LOGGER, "Debug", "Contents of artifact loaded from SCS %s", artifactContents);
+		Object ruleTemplateObject = WS.RT.getBaseRuleTemplate(projectName, artifactContents, artifactType);
+		
+		if (abstractRuleTemplate instanceof WS_C_RuleTemplateInstanceBuilder) {
+			WS_C_RuleTemplateInstanceBuilder ruleTemplateBuilder = abstractRuleTemplate;
+			
+			// first process any symbol additions
+			Object[] latestRuleTemplateSymbols = WS.RT.Builder.getRuleTemplateBaseSymbols(ruleTemplateObject);
+			
+			WS_C_Symbols symbols = ruleTemplateBuilder.symbols;
+			WS_C_AbstractSymbolInfo[] existingSymbols = Instance.PropertyArray.toArrayConcept(symbols.symbolInfo);
+			
+			boolean addSymbol = false;
+			for (int i=0; i<latestRuleTemplateSymbols@length; i++) {
+				Object symbolChildNode = WS.RT.Builder.createSymbolNode(latestRuleTemplateSymbols[i]);
+				String symbolAlias = WS.RT.Builder.getSymbolAlias(symbolChildNode);
+				
+				addSymbol = true;			
+				for (int j=0; j<existingSymbols@length; j++) {
+					WS_C_AbstractSymbolInfo symbolInfo = existingSymbols[j];
+					
+					if (String.equals(symbolInfo.symbolAlias, symbolAlias)) {
+						addSymbol = false;
+						break;
+					}
+				}
+				
+				if (addSymbol) WS_RF_TraverseAndBuildSymbolHierarchy(scsIntegrationType, scsRootURL, projectName, latestRuleTemplateSymbols[i], ruleTemplateObject, symbols, false, username, roles, subscriptionId);
+			}
+			
+			// process any command additions		
+			WS_C_Commands commands = ruleTemplateBuilder.commands;
+			WS_C_CommandInfo[] existingCommands = Instance.PropertyArray.toArrayConcept(commands.commandInfo);
+			
+			boolean addCommand = false;
+			Object[] actionSymbols = WS.RT.Builder.getBuilderCommands(ruleTemplateObject);
+			for (int i = 0; i < actionSymbols@length; i++) {
+				Object actionSymbol = actionSymbols[i];
+				String commandAlias = WS.RT.Builder.getCommandAlias(actionSymbol);
+				Log.log(LOGGER, "Debug", "Command Alias %s", commandAlias);
+				
+				addCommand = true;
+				for (int j=0; j<existingCommands@length; j++) {
+					WS_C_CommandInfo commandInfo = existingCommands[j];
+					
+					if (String.equals(commandInfo.commandAlias, commandAlias)) {
+						addCommand = false;
+						break;
+					}
+				}
+				
+				if (addCommand) {
+					WS_C_CommandInfo commandInfo = Instance.newInstance("/WebStudio/Core/Concepts/RuleTemplateInstance/Builder/WS_C_CommandInfo", null);
+					
+					String commandType = WS.RT.Builder.getCommandType(null, scsRootURL, projectName, actionSymbol, WS_RF_GetEarPath(projectName, subscriptionId));
+					if (commandType == null) {
+						Log.log(LOGGER, "Debug", "Command Type not found for alias %s. Resolving from declaration", commandAlias);
+						commandType = WS_RF_ResolveSymbolType(scsIntegrationType, scsRootURL, projectName, commandAlias, ruleTemplateObject, subscriptionId);
+					}
+					String commandActionType = WS.RT.Builder.getCommandActionType(actionSymbol); 
+					Log.log(LOGGER, "Debug", "Command Action Type %s", commandActionType);
+					
+					if (!String.equals("modify", commandActionType)) {				
+						//Check if this symbol has not been traversed.
+						Object integer = Util.HashMap.getObject("SYMBOL_TYPES", commandType);
+						//If no null, this entry has ben processed.
+						if (integer == null) {
+							//Build its hierarchy inside
+							WS_C_Symbols commandSymbols = Instance.newInstance("/WebStudio/Core/Concepts/RuleTemplateInstance/Builder/WS_C_Symbols", null);
+							Instance.PropertyAtom.setConceptReference(commandInfo.symbols, commandSymbols, 1L);
+						
+							Log.log(LOGGER, "Info", "Processing previously unprocessed command symbol %s", commandType);
+							WS_RF_TraverseAndBuildSymbolHierarchy(scsIntegrationType, scsRootURL, projectName, actionSymbol, ruleTemplateObject, commandSymbols, true, username, roles, subscriptionId);
+						}
+					}
+										
+					Log.log(LOGGER, "Debug", "Command Type %s", commandType);
+					
+					commandInfo.commandAlias = commandAlias;
+					commandInfo.type = commandType;
+					commandInfo.actionType = commandActionType;
+					
+					//Append it
+					Instance.PropertyArray.appendConceptReference(commands.commandInfo, commandInfo, 1L);
+					
+					// look for any existing RTI's, if found they too need to be updated
+					WS_C_AbstractRuleTemplate[] ruleTemplateInstances = WS_RF_GetRuleTemplateInstances(projectName, artifactPath, username);
+					Log.log(LOGGER, "Debug", "Total RTI Builders to update - %s", ruleTemplateInstances@length);
+					
+					WS_C_RuleTemplateInstanceBuilder ruleTemplateInstanceToUpdate = null;
+					for (int j=0; j<ruleTemplateInstances@length; j++) {
+						if (ruleTemplateInstances[j] instanceof WS_C_RuleTemplateInstanceBuilder) {
+							ruleTemplateInstanceToUpdate = ruleTemplateInstances[j];
+							
+							Log.log(LOGGER, "Debug", "Total Commands - %s", ruleTemplateInstanceToUpdate.commands.commandInfo@length);
+							
+							WS_C_CommandInfo childCommandInfoConcept = Instance.newInstance("/WebStudio/Core/Concepts/RuleTemplateInstance/Builder/WS_C_CommandInfo", null);
+							childCommandInfoConcept.commandAlias = commandInfo.commandAlias;
+							childCommandInfoConcept.type = commandInfo.type;
+							childCommandInfoConcept.actionType = commandInfo.actionType;	
+							//Get symbols from base command info
+							WS_C_Symbols baseRuleTemplateBuilderCommandSymbols = Instance.PropertyAtom.getConceptReference(commandInfo.symbols, 1L);
+							if (baseRuleTemplateBuilderCommandSymbols != null) {
+								//Set this in the child RTI instance
+								Instance.PropertyAtom.setConceptReference(childCommandInfoConcept.symbols, baseRuleTemplateBuilderCommandSymbols, 1L);
+							}	
+							//If no action commands exist, this will be null hence the check.
+							if (ruleTemplateInstanceToUpdate.commands != null) {
+								Instance.PropertyArray.appendConceptReference(ruleTemplateInstanceToUpdate.commands.commandInfo, childCommandInfoConcept, 1L);
+							}
+							
+							Log.log(LOGGER, "Debug", "Total Commands after update - %s", ruleTemplateInstanceToUpdate.commands.commandInfo@length);
+							
+						} else {
+							Log.log(LOGGER, "Debug", "AbstractRuleTemplateInstance is not an instanceof WS_C_RuleTemplateInstanceBuilder.");
+						}
+					}			
+				}				
+			}
+		} else {			
+			WS_C_RuleTemplateInstanceView ruleTemplateView = abstractRuleTemplate;
+			
+			WS_C_BindingInfo[] bindingInfo = Instance.PropertyArray.toArrayContainedConcept(ruleTemplateView.view.bindingInfo);
+			
+			String stackID = "BINDING_" + System.nanoTime();
+			Object bindingStack = WS.Common.Stack.create(stackID);
+			//If it has anything clear it
+			WS.Common.Stack.clear(bindingStack);
+		
+			boolean addBinding = false;
+			Object[] rtBindings = WS.RT.View.getRuleTemplateBindings(ruleTemplateObject);
+			for (int i = 0; i < rtBindings@length; i++) {
+				Object rtBinding = rtBindings[i];
+				String bindingIdName = WS.RT.View.getBindingId(rtBinding);
+				String bindingValue = WS.RT.View.getBindingExpression(rtBinding);
+				
+				addBinding = true;
+				for (int j = 0; j < bindingInfo@length; j++) {
+					if (String.equals(bindingInfo[j].bindingId, bindingIdName)) {
+						// also check if default binding value has been changed, if yes, update that
+						if (!String.equals(bindingInfo[j].value, bindingValue)) bindingInfo[j].value = bindingValue;
+						addBinding = false;
+						break;
+					}
+				}
+				
+				if (addBinding) {
+					WS.Common.Stack.push(bindingStack, rtBinding);
+					
+					WS_C_BindingInfo bindingConcept = WS_RF_AddBindings(rtBinding, projectName, username, roles);
+					if (bindingConcept != null) {
+						Instance.PropertyArray.appendContainedConcept(ruleTemplateView.view.bindingInfo, bindingConcept, 1L);
+					}
+				}
+			}
+			
+			Object[] bindingObjectsToAdd = null;
+			if (!WS.Common.Stack.isEmpty(bindingStack)) {
+				bindingObjectsToAdd = WS.Common.Stack.toArray(bindingStack, "java.lang.Object", null);
+				WS.Common.Stack.delete(stackID);
+			}
+
+			//Get and update presentation text
+			String presentationText = WS.RT.View.getPresentationText(scsIntegrationType, scsRootURL, projectName, ruleTemplateObject);
+			ruleTemplateView.view.htmlText = presentationText;
+			
+			// Update the bindings for any existing RTI's as well
+			WS_C_AbstractRuleTemplate[] ruleTemplateInstances = WS_RF_GetRuleTemplateInstances(projectName, artifactPath, username);
+			Log.log(LOGGER, "Debug", "Total RTI Views to update - %s", ruleTemplateInstances@length);
+			
+			WS_C_RuleTemplateInstanceView ruleTemplateInstanceToUpdate = null;
+			for (int i=0; i<ruleTemplateInstances@length; i++) {
+				if (ruleTemplateInstances[i] instanceof WS_C_RuleTemplateInstanceView) {
+					ruleTemplateInstanceToUpdate = ruleTemplateInstances[i];
+					
+					Log.log(LOGGER, "Debug", "Total Bindings - %s", ruleTemplateInstanceToUpdate.view.bindingInfo@length);
+					
+					if (bindingObjectsToAdd != null) {
+						for (int j=0; j<bindingObjectsToAdd@length; j++) {
+							WS_C_BindingInfo bindingConcept = WS_RF_AddBindings(bindingObjectsToAdd[j], projectName, username, roles);
+							if (bindingConcept != null) {
+								Instance.PropertyArray.appendContainedConcept(ruleTemplateInstanceToUpdate.view.bindingInfo, bindingConcept, 1L);
+							} else {
+								Log.log(LOGGER, "Debug", "bindingConcept == null");
+							}
+						}
+					} else {
+						Log.log(LOGGER, "Debug", "No bindings to Add.");
+					}
+					
+					ruleTemplateInstanceToUpdate.view.htmlText = presentationText;
+					
+					Log.log(LOGGER, "Debug", "Total Bindings after update - %s", ruleTemplateInstanceToUpdate.view.bindingInfo@length);
+				} else {
+					Log.log(LOGGER, "Debug", "AbstractRuleTemplateInstance is not an instanceof WS_C_RuleTemplateInstanceView.");
+				}
+			}
+		}
+	}
+}

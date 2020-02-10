@@ -1,0 +1,32 @@
+<div class="row">
+  <div class="col-sm-12">
+    <div class="card panel-sm">
+      <div class="card-header">
+          {{title}}<ng-container i18n>{{i18n(' Checked-Out Artifacts of Project ')}}</ng-container>{{project.projectName}}
+      </div>
+      <div class="card-body">
+        <div class="form-group">
+          <change-list
+            [input]='candidatesObs'
+            [mode]='"REVERT"'
+          ></change-list>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="row left-pad right-pad bottom-pad top-pad">
+  <div class="col-sm-12">
+    <button
+      type="button"
+      class='btn btn-outline-primary btn-sm btn-narrow'
+      (click)='onCancel()' i18n
+      >{{i18n('Cancel')}}</button>
+    <button
+      [disabled]='!canSubmit()'
+      type="button"
+      class='btn btn-primary btn-sm btn-narrow pull-right'
+      (click)='onSubmit()' i18n
+      >{{i18n('Confirm')}}</button>
+  </div>
+</div>

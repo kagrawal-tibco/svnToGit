@@ -1,0 +1,25 @@
+/**
+ * @description 
+ * @author 
+ */
+rule Rules.IterateOverOrderline {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Events.OrderEvent	collectionevent;
+		
+	}
+	when {
+		
+	}
+	then {
+		int numOfItem = XPath.evalAsInt("xpath://<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xpath>\n    <expr>count($collectionevent/payload/xsd3:order/xsd3:orderline)</expr>\n    <namespaces>\n        <namespace URI=\"http://www.tibco.com/be/collection\" pfx=\"xsd3\"/>\n        <namespace URI=\"http://www.w3.org/2001/XMLSchema\" pfx=\"xsd\"/>\n        <namespace URI=\"http://ramp.raba.com/flagone/support\" pfx=\"xsd2\"/>\n    </namespaces>\n    <variables>\n        <variable>collectionevent</variable>\n    </variables>\n</xpath>");
+		
+		for(int count=1; count <= numOfItem; count=count+1) {
+		   Events.OrderlineEvent evt = Event.createEvent("xslt://{{/Events/OrderlineEvent}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:ns=\"http://ramp.raba.com/flagone/support\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" xmlns:ns1=\"http://www.tibco.com/be/collection\" version=\"1.0\" exclude-result-prefixes=\"ns1 xsd ns xsl\">\n    <xsl:output method=\"xml\"/>\n    <xsl:param name=\"collectionevent\"/>\n    <xsl:param name=\"count\"/>\n    <xsl:template match=\"/\">\n        <createEvent>\n            <event>\n                <payload>\n                    <xsl:copy-of select=\"$collectionevent/payload/ns1:order/ns1:orderline[number($count)]\"/>\n                </payload>\n            </event>\n        </createEvent>\n    </xsl:template>\n</xsl:stylesheet>");
+		   System.debugOut("orderline[" + count + "] as xml:\n\n" + evt@payload + "\n");
+		}
+	}
+}

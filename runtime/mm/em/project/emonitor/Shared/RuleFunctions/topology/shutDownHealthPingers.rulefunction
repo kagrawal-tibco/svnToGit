@@ -1,0 +1,33 @@
+/**
+ * @description 
+ */
+void rulefunction Shared.RuleFunctions.topology.shutDownHealthPingers {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		
+	}
+	body {
+		String siteID = Shared.Concepts.GlobalScoreCard.siteID;
+		BEMMUtil.LinkedList.createList("shutdownpingerentitystack");
+		//add the site entity to the top
+		BEMMUtil.LinkedList.add("shutdownpingerentitystack",0,Instance.getByExtId(siteID));
+		//repeat the loop till the stack is empty
+		while (BEMMUtil.LinkedList.isEmpty("shutdownpingerentitystack") == false) {
+		    //remove the top most element
+		    Shared.Concepts.MonitorableEntity entity = BEMMUtil.LinkedList.removeByIndex("shutdownpingerentitystack",0);
+		    //cycle through it's children and unregister them
+            if (entity != null && entity.children != null) {
+                int childCnt = entity.children@length;
+                for (int i = 0 ; i < childCnt ; i = i + 1){
+                    String fqName = getFQName(entity.children[i]);
+                    Shared.RuleFunctions.log("shutDownHealthPingers","DEBUG","Unregistering health pinger for "+fqName);
+                    BEMM.topology.unregisterPinger(String.split(getFQName(entity.children[i]),":"));
+                    //add the child to the bottom of the stack
+                    BEMMUtil.LinkedList.add("shutdownpingerentitystack", BEMMUtil.LinkedList.size("shutdownpingerentitystack"),entity.children[i]);
+                }
+            }
+		}
+	}
+}

@@ -1,0 +1,61 @@
+group concept;
+
+Event_Definition(elementInfo) ::= <<
+/**
+ * @description <elementInfo.description>
+ * @GUID <elementInfo.GUID>
+ */
+event <elementInfo.fullPath> <if(elementInfo.parent)>extends <elementInfo.parent><endif> {
+	attributes {
+		<if(elementInfo.defaultDestination)>
+		defaultDestination=<elementInfo.defaultDestination>;
+		<endif>
+		<if(elementInfo.retryOnException)>
+		retryOnException=<elementInfo.retryOnException>;
+		<endif>
+		<if(elementInfo.ttl)>
+		timeToLive=<elementInfo.ttl> <elementInfo.ttlUnits>;
+		<endif>
+	}
+	properties {
+		<if(elementInfo.properties)>
+		<elementInfo.properties:{ p | <Event_Property(property=p)> }; separator="\n">
+		<endif>
+	}
+	expiryAction {
+<Event_ExpiryAction(elementInfo.expiryAction)>
+	}
+	<if(elementInfo.payload)>
+	payload {
+		namespaces {
+			<elementInfo.payload.namespaces:{ ns | <Event_Namespace(namespace=ns)> }; separator="\n">
+		}
+		payloadString="<elementInfo.payload.payloadString>";
+	}
+	<endif>
+}
+>>
+
+Event_Namespace(namespace) ::= <<
+<namespace.prefix>="<namespace.namespace>" <if(namespace.location)> location="<namespace.location>"<endif>;
+>>
+
+Event_Property(property) ::= <<
+<property.type><if(property.array)>[]<endif> <property.name><if(property.hasDomains)> {
+	domain=<property.domain>;
+}
+<else>;<endif>
+>>
+
+Event_Declaration(declaration) ::= <<
+<declaration.key> <declaration.value>;
+>>
+
+Event_ExpiryAction(expiryAction) ::= <<
+		declare {
+			<expiryAction.declarations:{ d | <Event_Declaration(declaration=d)> }; separator="\n">
+		}
+		then {
+<expiryAction.actionText>
+		}
+>>

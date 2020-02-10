@@ -1,0 +1,126 @@
+1.) Access Control has been enforced for BE resources.
+
+2.) There are 2 types of Access Control modes:
+	a.) BEResource : This mode is used generally for populating the ontology tree, or anywhere else inside the Decision Table. This is the default mode.
+	b.) Domain Model : Used for enforcing ACL in domain model editor/API.
+	
+3.) Access Control configuration exists inside a configuration file (e.g: SVN_HOME/decision/config/ACL.xml).
+
+4.) This configuration file can be different per ear file, or same file could be used as policy for multiple ears however this mode is discouraged.
+
+5.) Access Control is Role based, so users belonging to same role will have same access privileges. 
+
+6.) User can belong to multiple roles in an organization so his privileges are union of the privileges that each role he belongs to gets.
+
+7.) To use ACL config file set system property acl.config.path=<path of ACL file>. This though will not be required for starting the RCP eventually.
+
+8.) Specifying resources:
+
+Note: Id, and Type attribute are mandatory.
+
+Three types of resource specification is permitted:
+
+a.) Template based specification:
+
+e.g:
+<resource id="C" type="CONCEPT"/>
+
+This means all concepts inside this ontology.
+
+b.) Using wildcard:
+
+e.g:
+
+<resource name="/Concepts/*" id="AllC" type="CONCEPT"/>
+This means all concepts under the /Concepts directory only or
+
+<resource name="/Concepts/*" id="AllP" type="PROPERTY"/>
+This means all Properties of all resources under /Concepts directory. This includes resources like Concepts/Events which have properties.
+
+
+
+c.) Absolute Path:
+
+e.g:
+
+<resource name="/Concepts/Person/FirstName" id="FN" type="PROPERTY"/>
+
+This means FirstName property of the Concept Person.
+
+9.) Specifying Permissions:
+
+Permissions can be specified only for resources declared in the ACL configuration file. e.g:
+
+<permission resourceref="#All">
+  <action type="read">ALLOW</action>
+</permission>
+
+This translates to ALLOW "Read" permission for a resource defined with the id "All". The resourceref has to point to a valid id of a resource defined
+inside the resources section of the config file.
+
+If you want to deny a certain permission use this:
+
+<permission resourceref="#All">
+  <action type="read">DENY</action>
+</permission>
+
+This means do not allow any read operation for resource with id "All".
+
+P.S: ALLOW, and DENY are case sensitive.
+
+How it works:
+
+
+If there are 2 resources defined:
+
+<resources>
+ <resource name="/Concepts/*" id="AllP" type="PROPERTY"/>
+ <resource name="/Concepts/Person/FirstName" id="FN" type="PROPERTY"/>
+</resources> 
+
+and two permissions defined as follows:
+
+<permissions>
+ <permission resourceref="#AllP">
+  <action type="create">ALLOW</action>
+ </permission>
+ <permission resourceref="#FN">
+  <action type="create">DENY</action>
+ </permission>
+</permissions>
+
+Then it means Give "create" permission for all resources under /Concepts directory but deny create privilege for FirstName which is also under the 
+same directory.
+
+Wild card based matching works this way:
+
+/Concepts/* is a resource defined.
+
+Then /Concepts/Account would match with /Concepts/*, however /Conc/Account WOULD NOT match with /Concepts/*.
+
+10.) The template based resource specification should be used wherever generic permission has to be given. eg: Give consume event privilege
+for a role for all events inside the ontology.
+
+11.) Wildcard based resource spec should be used wherever closer matching of resources is required like read access to all properties of event A.
+
+12.) Absolute path specification should be used where specific privileges need to be given. e.g: Do not allow send event privilege for event B, or
+do not allow modify privilege for property P of event B.
+
+**13.) All privileges are mutually exclusive which means a create permission does not imply a modify permission or a delete permission.
+
+14.) If a permission is NOT specifically given, it means the role DOES NOT have the permission. This way we ensure that if a certain privilege
+is not specified then accidentally unauthorized users do not get access to resources they should not have access to, or operations they should not
+have access to.
+Hence, for a resource if all possible permissions are required they need to be individually specified in the configuration file.
+
+15.) For domain model permissions in point 2 above, use the following syntax.
+
+<permission resourceref="#AllP" type="DOMAINMODEL">
+  <action type="create">ALLOW</action>
+</permission>
+
+This means allow creating a new Domain model entry for any resource which matches the AllP id (See above points for resource matching.)
+
+Reference:
+
+http://wiki.tibco.com/BEWiki/3.0_Doc

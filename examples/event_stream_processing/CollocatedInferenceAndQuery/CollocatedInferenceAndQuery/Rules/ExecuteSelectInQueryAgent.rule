@@ -1,0 +1,49 @@
+/**
+ * @description 
+ * @author ajayapra-lt
+ */
+rule Rules.ExecuteSelectInQueryAgent {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Events.Inference.CustomerMonitorTrigger trigger;
+	}
+	when {
+	}
+	then {
+		String queryString = 
+							"select {limit: first 5} c" +
+							" from /Concepts/Common/Customer as c" +
+							" where c.age = 4" +
+							" order by c@id desc;";
+		
+		Object resultList = Query.Util.executeInDynamicQuerySession(queryString, null, true, -1);
+
+		System.debugOut("Retrieved [" + Query.Util.sizeOfList(resultList) + "] customers using [" + queryString + "]");
+		
+		while(Query.Util.sizeOfList(resultList) > 0){
+			Concepts.Common.Customer c = Query.Util.removeFromList(resultList, 0);
+
+			/*
+			Before modifying the concept retrieved from the query agent, inform the
+			inference that this came from a foreign source.
+			*/
+			Cluster.DataGrid.CacheLoadEntity(c);
+			/*
+			Typically lock + query + load should be done in the pre-processor 
+			after acquiring the necessary locks. So, we re-touch the instance
+			by using Instance.getById()
+			*/
+			c = Instance.getById(c@id);
+			
+			String oldName = c.name;
+			c.name = c.name + ":__mod@" + System.currentTimeMillis();
+			
+			System.debugOut("         Modified [" + oldName + ", " + c.age + "] name to: [" + c.name + "]");			
+		}				
+		
+		System.debugOut("Done retrieving and modifying customers");
+	}
+}

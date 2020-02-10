@@ -1,0 +1,45 @@
+/**
+ * @description 
+ */
+void rulefunction Monitoring.RuleFunctions.view.computedpopulators.sysAlertsViewPopulator {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String	viewName;
+		Monitoring.Events.cmetrics.AlertEvent	alertevent;
+	}
+	body {
+		if (alertevent == null){
+		    return;
+		}
+		String extID = viewName;
+		Shared.Concepts.AbstractMonitorView view = Instance.getByExtId(extID);
+		if (view == null) {
+		    Shared.RuleFunctions.log("sysAlertsViewPopulator","DEBUG","No View found matching "+extID);
+		    return;
+		}
+		String componentConfigMapId = getComponentConfigMapId(view.monitorable,view.type);
+		if (componentConfigMapId == null) {
+		    Shared.RuleFunctions.log("sysAlertsViewPopulator","DEBUG","Invalid component definition found for "+view.type+"...");
+		    return;
+		}
+		String[] seriesNames = Util.HashMap.getObject(componentConfigMapId,"seriesnames");
+		String seriesName = seriesNames[0];
+		Shared.Concepts.SeriesData series = Instance.getByExtId(view@extId+":"+seriesName);
+		int dataSize = series.categories@length;
+		int idx = dataSize-1;
+		if (dataSize == series.threshold){
+		    idx = idx - 1;
+		}
+		for (int i = idx ; i >= 0 ; i = i - 1){
+		   series.categories[i+1] = series.categories[i]; 
+		   series.values[i+1] = series.values[i];
+		   series.rawValues[i+1] = series.rawValues[i];
+		}
+		series.categories[0] = alertevent@extId;
+		Shared.Concepts.MonitorableEntity entity = Instance.getByExtId(alertevent.entityId);
+		series.values[0] = alertevent.severity+"|"+entity.name+"|"+entity.type+"|"+alertevent.message+"|"+DateTime.getTimeInMillis(alertevent.timeReceived);
+		series.rawValues[0] = series.values[0];
+	}
+}

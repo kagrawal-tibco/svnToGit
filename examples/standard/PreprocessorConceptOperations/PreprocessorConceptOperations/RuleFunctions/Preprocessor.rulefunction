@@ -1,0 +1,30 @@
+/**
+ * @description 
+ */
+void rulefunction RuleFunctions.Preprocessor {
+	
+	attribute {
+		validity = ACTION;
+	}
+	
+	scope {
+		Events.Action	action;
+	}
+	
+	body {
+		RuleFunctions.CloseHttpRequest(action);
+		
+		System.debugOut("____________________________________________________________________________________________________________________________________________");
+		System.debugOut("Preprocessor: Event received with Action='"+ action.Action + "', Identifier='"+ action.Identifier + "', Parameter='"+ action.Parameter + "'.");
+		
+		if (String.equals(action.Action, "createConcept")) {			
+
+		    System.debugOut("Preprocessor: Creating concept '" + action.Identifier+"'");
+		    Instance.createInstance("xslt://{{/Concepts/Data}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"2.0\" exclude-result-prefixes=\"xsl xsd\"><xsl:output method=\"xml\"/><xsl:param name=\"action\"/><xsl:template name=\"Function\" match=\"/\"><createObject><object><xsl:if test=\"$action/Identifier\"><xsl:attribute name=\"extId\"><xsl:value-of select=\"$action/Identifier\"/></xsl:attribute></xsl:if><xsl:if test=\"$action/Parameter\"><Text><xsl:value-of select=\"$action/Parameter\"/></Text></xsl:if></object></createObject></xsl:template></xsl:stylesheet>");
+
+		    System.debugOut("Preprocessor: Consuming event before it goes to the working memory...");
+		    Event.consumeEvent(action);    
+		}
+	}
+	
+}

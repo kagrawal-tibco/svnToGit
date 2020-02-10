@@ -1,0 +1,105 @@
+/**
+ * @description 
+ */
+void rulefunction WebStudio.Core.RuleFunctions.Utils.RT.Builder.WS_RF_TraverseAndBuildSymbolHierarchy {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String scsIntegrationType;
+		String scsRootURL;
+		String projectName;
+		Object ruleTemplateSymbol;
+		Object ruleTemplateObject;
+		WebStudio.Core.Concepts.RuleTemplateInstance.Builder.WS_C_Symbols symbols;
+		//If true set the alias and type on the top level symbol info else not.
+		//Required when inserting into command.
+		boolean isCommandChild;
+		String username;
+		String[] roles;
+		String subscriptionId;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.RT.Builder.WS_RF_TraverseAndBuildSymbolHierarchy");
+					
+		String earPath = WS_RF_GetEarPath(projectName, subscriptionId);
+		
+		//Clear reference map too
+		String symbolName = "SYMBOL_IDS";
+		if (subscriptionId != null) symbolName = ("_" + subscriptionId);
+		Util.HashMap.clear(symbolName);
+		
+		//Create a basic stack for this
+		String stackID = "SYMBOLS_" + System.nanoTime();
+		Object symbolsStack = WS.Common.Stack.create(stackID);
+		//If it has anything clear it
+		WS.Common.Stack.clear(symbolsStack);
+		
+		//Create symbol for this type
+		Object symbolChildNode = WS.RT.Builder.createSymbolNode(ruleTemplateSymbol);
+		 
+		WS_C_ComplexSymbolInfo complexSymbolInfo = WS_RF_CreateBuilderAbstractSymbolInfoFactory(scsIntegrationType,
+			                                             scsRootURL,
+			                                             projectName,
+			                                             symbolChildNode,
+			                                             ruleTemplateObject,
+			                                             true,
+			                                             isCommandChild,
+			                                             username,
+			                                             roles,
+			                                             subscriptionId,
+			                                             earPath);
+
+	    WS_C_ComplexSymbolInfo parentSymbolInfo = complexSymbolInfo;
+		//Put this on base stack
+		WS.Common.Stack.push(symbolsStack, symbolChildNode);
+		Log.log(LOGGER, "Debug", "Processing symbolsStack.");
+		while (!(WS.Common.Stack.isEmpty(symbolsStack))) {
+			//Get top element
+			Object topChildNode = WS.Common.Stack.peek(symbolsStack);
+			if (!WS.RT.Builder.isNodeVisited(topChildNode)) {
+				//Process this node
+				Log.log(LOGGER, "Debug", "Processing node [%s]", topChildNode);
+				
+				//if not simple, load entity
+				//TODO check whether entity is already loaded into cache.
+				if (!WS.RT.Builder.isSimpleSymbolNode(topChildNode)) {
+					Log.log(LOGGER, "Debug", "Resolving contained Entity [%s]", topChildNode);
+					WS.RT.Builder.resolveContainedEntity(scsIntegrationType, scsRootURL, projectName, topChildNode, isCommandChild, earPath);
+				}
+				//Set visited flag to false.
+				WS.RT.Builder.setNodeVisited(topChildNode, false);
+				
+				//Check if it has children
+	            	if (WS.RT.Builder.hasUnvisitedChildren(topChildNode)) {
+	            		//This is new parentsymbolinfo
+	            		parentSymbolInfo = WS_RF_CreateBuilderAbstractSymbolInfoFactory(scsIntegrationType, scsRootURL, projectName, topChildNode, ruleTemplateObject, false, isCommandChild, username, roles, subscriptionId, earPath);
+	            		//Get unvisited children
+	            		Object[] unvisitedSymbolChildNodes = WS.RT.Builder.getSymbolNodeUnvisitedChildren(topChildNode);
+	            		for (int unvisitedSymbolLoop = 0; unvisitedSymbolLoop < unvisitedSymbolChildNodes@length; unvisitedSymbolLoop++) {
+	            			Object unvisitedSymbolChildNode = unvisitedSymbolChildNodes[unvisitedSymbolLoop];
+	            			//If not visited push it on stack
+	            			WS.Common.Stack.push(symbolsStack, unvisitedSymbolChildNode);
+	            			
+	            			//Create symbolinfo for each node
+	            			WS_C_AbstractSymbolInfo childSymbolInfo = WS_RF_CreateBuilderAbstractSymbolInfoFactory(scsIntegrationType, scsRootURL, projectName, unvisitedSymbolChildNode, ruleTemplateObject, false, isCommandChild, username, roles, subscriptionId, earPath);
+	            			
+	            			if (!WS_RF_CheckExistingSymbol(parentSymbolInfo, childSymbolInfo)) {
+		            			//Add this as child
+		            			Instance.PropertyArray.appendConceptReference(parentSymbolInfo.symbolInfo, childSymbolInfo, 1L);
+	            			}
+	            		}
+	            	} else {
+	            		//Pop it off the stack since no unvisited children exist.
+	            		topChildNode = WS.Common.Stack.pop(symbolsStack);
+	            		Log.log(LOGGER, "Debug", "Popped off node [%s]", topChildNode);
+	                	WS.RT.Builder.setNodeVisited(topChildNode, true);
+	            	}
+			}
+		}
+		WS.Common.Stack.delete(stackID);
+		
+		WS_C_AbstractSymbolInfo appendSymbolInfo = complexSymbolInfo;
+		Instance.PropertyArray.appendConceptReference(symbols.symbolInfo, appendSymbolInfo, 1L);
+	}
+}

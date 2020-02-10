@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<project name="post-install" default="post-install" basedir=".">
+	<property file="post-install.properties"/>
+	<import file="common-tasks.xml"/>
+		
+    <taskdef resource="net/sf/antcontrib/antcontrib.properties"/>
+	
+	<target name="post-install" depends="import-wrappers,
+					     				set-subst-vars,
+										backup-runtime-plugins,
+										backup-designtime-plugins" >
+		<echo message="Done post-installation tasks." />
+	</target>
+
+	<target name="import-wrappers">
+	</target>
+	
+	<target name="set-subst-vars">
+		<if>
+			<os family="mac"/>
+			<then>
+				<antcall target="substitute-variables">
+					<param name="out.file" value="${tibco.home}/be/${beVersionShort}/decisionmanager/eclipse/decisionmanager.app/Contents/MacOS/decisionmanager.ini"/>
+				</antcall>
+			</then>
+			<else>
+				<antcall target="substitute-variables">
+					<param name="out.file" value="${tibco.home}/be/${beVersionShort}/decisionmanager/eclipse/decisionmanager.ini"/>
+				</antcall>
+			</else>
+		</if>
+		
+		<antcall target="substitute-variables">
+			<param name="out.file" value="${tibco.home}/be/${beVersionShort}/decisionmanager/eclipse/configuration/studio.tra"/>
+		</antcall>
+		<antcall target="substitute-variables">
+			<param name="out.file" value="${tibco.home}/be/${beVersionShort}/decisionmanager/eclipse/dropins/TIBCOBusinessEvents-Studio-plugins.link"/>
+		</antcall>
+		<antcall target="substitute-variables">
+			<param name="out.file" value="${tibco.home}/be/${beVersionShort}/decisionmanager/eclipse/dropins/TIBCOBusinessEvents-EclipsePlatform-plugins.link"/>
+		</antcall>
+	</target>
+	
+	<target name="backup-runtime-plugins">
+		<echo message="Backing up runtime plugins" />
+		<if>
+			<available file="${tibco.home}/be/5.4/lib/eclipse/plugins/com.tibco.cep.decision.table.common_5.4.1.jar" type="file"/>
+			<then>
+				<mkdir dir="${tibco.home}/be/5.4/backup/5.4.1_pre/lib/eclipse/plugins" />
+				<move todir="${tibco.home}/be/5.4/backup/5.4.1_pre/lib/eclipse/plugins">
+					<fileset dir="${tibco.home}/be/5.4/lib/eclipse/plugins">
+						<include name="com.tibco.cep.decision.table.common_5.4.*.jar*"/>
+						<exclude name="*5.4.1.jar"/>
+					</fileset>
+				</move>
+			</then>
+		</if>
+	</target>
+
+	<target name="backup-designtime-plugins">
+		<echo message="Backing up designtime plugins" />
+		<mkdir dir="${tibco.home}/be/5.4/backup/5.4.1_pre/studio/eclipse/plugins" />
+		<move todir="${tibco.home}/be/5.4/backup/5.4.1_pre/studio/eclipse/plugins">
+			<fileset dir="${tibco.home}/be/5.4/studio/eclipse/plugins">
+				<include name="com.tibco.cep.decision.table.core_5.4.*.jar*"/>						
+				<include name="com.tibco.cep.decision.table.ui_5.4.*.jar*"/>						
+				<include name="com.tibco.cep.decision.tree.ui_5.4.*.jar*"/>						
+				<include name="com.tibco.cep.studio.rms.core_5.4.*.jar*"/>						
+				<include name="com.tibco.cep.studio.rms.ui_5.4.*.jar*"/>						
+				<include name="com.tibco.cep.decision.table.common_5.4.*.jar*"/>						
+				<include name="com.tibco.cep.decision.table.capabilities_5.4.*.jar*"/>						
+				<include name="com.tibco.cep.decision.tree.common_5.4.*.jar*"/>						
+				<include name="com.tibco.cep.decision.tree.core_5.4.*.jar*"/>
+				<exclude name="*5.4.1.jar"/>
+			</fileset>
+		</move>
+	</target>
+	
+	
+</project>	

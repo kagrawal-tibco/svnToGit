@@ -1,0 +1,135 @@
+/**
+ * @description 
+ * @author 
+ */
+rule Monitoring.Rules.EntityMonitoringRuleSet.onFailedPing {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Shared.Events.topology.FailedPingEvent	failedpingevent;
+		
+	}
+	when {
+		failedpingevent.entityFQName != null && String.length(String.trim(failedpingevent.entityFQName)) != 0;
+	}
+	then {
+		Shared.RuleFunctions.log("onFailedPing","DEBUG","Received FailedPingEvent for "+failedpingevent.entityFQName);
+		String searchFQName = failedpingevent.entityFQName;
+		if (String.startsWith(searchFQName,"Site:") == true){
+		    searchFQName = String.substring(searchFQName,5,String.length(searchFQName));
+		}
+		Shared.RuleFunctions.log("onFailedPing","DEBUG","Searching for "+failedpingevent.entityFQName);
+		Object[] entities = Shared.RuleFunctions.topology.searchMonitorableEntities(failedpingevent.entityFQName);
+		if(entities == null || entities@length == 0){
+			Shared.RuleFunctions.log("onFailedPing","DEBUG","Could not find entity: "+failedpingevent.entityFQName);
+			BEMM.topology.unregisterPinger(String.split(failedpingevent.entityFQName,":"));
+			BEMM.metrics.releaseCollector(failedpingevent.entityFQName);
+			Event.consumeEvent(failedpingevent);
+			return;
+		}
+		if (entities@length > 1){
+		    Shared.RuleFunctions.log("onFailedPing","WARNING",failedpingevent.entityFQName+" returned more then one entity...");
+		}
+		Shared.Concepts.MonitorableEntity failedEntity = entities[0];
+		Shared.RuleFunctions.log("onFailedPing","DEBUG","Found entity: "+failedEntity.name);
+		BEMMUtil.LinkedList.createList("failedpingstack");
+		try {
+		    BEMMUtil.LinkedList.add("failedpingstack",0,failedEntity);
+		    while (BEMMUtil.LinkedList.isEmpty("failedpingstack") == false){
+		        //pop the topmost entity
+		        Shared.Concepts.MonitorableEntity entity = BEMMUtil.LinkedList.removeByIndex("failedpingstack",0);
+		        String fqName = getFQName(entity);
+		        BEMM.topology.unregisterPinger(String.split(fqName,":"));
+		        if(entity.type != "cluster" || entity.predefined == false)
+		        	BEMM.metrics.releaseCollector(fqName); //added 02-24-2010 to release remoteMetricsCollector
+		        
+		        Shared.RuleFunctions.log("onFailedPing","DEBUG","Entity type: " + entity.type);
+		        if(entity.type == "process" || entity.type =="inference" || entity.type =="cache" || 
+		        		entity.type =="query" || entity.type =="dashboard") {
+		        	Shared.RuleFunctions.log("onFailedPing","DEBUG","Initiating removal of JMX Client connection for entity: " + fqName);
+		        	BEMM.methods.removeJMXClientConnection(fqName, entity.type);
+		        }
+		        
+		        Shared.RuleFunctions.log("onFailedPing","DEBUG","Unregistered pinger for: "+fqName);
+		        //mark the entity as inactive and unhealthy
+		        //check if entity is already inactive
+		        if (entity.active != false) {
+		            //entity is not inactive, store the current active flag value as previous
+		            entity.previousActiveState = "true";
+		            //mark entity as inactive
+		            entity.active = false;
+		            Shared.RuleFunctions.log("onFailedPing","DEBUG","Marked "+fqName+" active as false");
+		    		String newHealthLevel = determinePropertyValue(entity,"healthLevel",null);
+		    		if (entity.healthLevel != newHealthLevel) {		            
+		                entity.previousHealthLevel = entity.healthLevel;
+		                entity.healthLevel = newHealthLevel;
+		            	Shared.RuleFunctions.log("onFailedPing","DEBUG","Marked "+fqName+" healthLevel as "+newHealthLevel);
+		                
+		            }
+		            entity.initialized = false; //02-24-2010 to redo configure alerts once rediscover.
+		            Shared.RuleFunctions.log("onFailedPing","DEBUG","Marked "+fqName+" active as false and health as critical");
+		            //search for all existing views based on the monitorable entity
+		            //we are using fqName since we manipulate the searchFQName to drop 'Site:' to make search monitorable entities to work properly
+
+		            for (int i = 0 ; i < entity.monitorViews@length ; i = i + 1){
+		                Shared.Concepts.AbstractMonitorView view = entity.monitorViews[i];
+		                try {
+		                    String compName = view@extId;
+		                    String compConfigMapId = getComponentConfigMapId(entity,view.type);
+		                    if (Util.HashMap.getObject(compConfigMapId,"subscribable") == true) {
+		                        String typeWithPath = Shared.RuleFunctions.topology.getTypePath(entity)+"/"+view.type;
+		                        Shared.RuleFunctions.log("onFailedPing","DEBUG","Unsubscribing "+view@extId+"...");
+		                        unsubscribeView(view);
+		                    }
+		                }catch (Exception ex){
+		                    Shared.RuleFunctions.log("onFailedPing","WARNING","Could not unsubscribe "+view@extId+"...");
+		                    Shared.RuleFunctions.log("onFailedPing","WARNING",ex@stackTrace);
+		                }
+		                finally{
+		                	if(entity.type != "cluster" || entity.predefined == false){
+			        			for(int j=0;j<view.seriesdata@length;j++){
+			        				Instance.deleteInstance(view.seriesdata[j]);
+			        			}		                
+			                	Instance.deleteInstance(view);
+		                	}
+		                }
+
+		            }
+		            //added 02-25-2010 to delete alert history once the entity failed. keep cluster entity unchanged
+		            if(entity.type != "cluster" || entity.predefined == false){
+			            MonitorableEntityAlertHistory history = Instance.getByExtId(entity@extId+":alerthistory");
+			            if(history != null){
+			            	Instance.deleteInstance(history);
+			            	Shared.RuleFunctions.log("onFailedPing","DEBUG","Deleted alert history "+history@extId+"...");
+			            }
+		            }
+		        }
+		        //add all the children to mark them as inactive and unhealthy
+		        int childCnt = entity.children@length;
+		        for (int i = 0 ; i < childCnt ; i = i + 1){
+		            Shared.Concepts.MonitorableEntity childEntity = entity.children[i];
+		            BEMMUtil.LinkedList.add("failedpingstack",BEMMUtil.LinkedList.size("failedpingstack"),childEntity);
+		        }
+		    }
+		} finally {
+		    BEMMUtil.LinkedList.deleteList("failedpingstack");
+		}
+		//update health status of parents
+		Shared.Concepts.MonitorableEntity parent = failedEntity.parent;
+		while (parent != null){
+		    String parentFQName = getFQName(parent);
+		    Shared.RuleFunctions.log("onFailedPing","DEBUG","Triggering "+parentFQName+" health check...");
+		    String newParentHealthLevel = determinePropertyValue(parent,"healthLevel",null);
+		    if (parent.healthLevel != newParentHealthLevel) {
+		        //store current value of health as previous
+		        parent.previousHealthLevel = parent.healthLevel;
+		        parent.healthLevel = newParentHealthLevel;
+		        Shared.RuleFunctions.log("onFailedPing","DEBUG","Marked "+getFQName(parent)+"'s health level as "+parent.healthLevel);
+		    }
+		    parent = parent.parent;
+		}
+		Event.consumeEvent(failedpingevent);
+	}
+}

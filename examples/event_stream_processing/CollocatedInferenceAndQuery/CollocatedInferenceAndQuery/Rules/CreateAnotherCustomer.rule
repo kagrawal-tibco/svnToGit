@@ -1,0 +1,20 @@
+/**
+ * @description 
+ * @author ajayapra-lt
+ */
+rule Rules.CreateAnotherCustomer {
+	attribute {
+		priority = 10;
+		forwardChain = true;
+	}
+	declare {
+		Events.Inference.CustomerMonitorTrigger trigger;
+	}
+	when {
+	}
+	then {
+		if(Concepts.Inference.Status.customersCreated){
+			RuleFunctions.Inference.NewCustomer();
+		}
+	}
+}

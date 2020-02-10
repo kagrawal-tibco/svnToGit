@@ -1,0 +1,27 @@
+/**
+ * @description Generate classpath based on custom libraries for a project
+ */
+String rulefunction Approval.Rules.RuleFunctions.ArtifactRuleFunctions.AMS_RF_CreateClasspath {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String libPath;
+	}
+	body {
+		String classpath = "";
+
+		if (libPath != null) {
+			if (File.fileExists(libPath)) {
+				String[] jarFiles = File.listFiles(libPath, "*.jar");
+				
+				for (int loop = 0; loop < jarFiles@length; loop++) {
+					System.debugOut("Jar File Path >>> " + jarFiles[loop]);
+					classpath = String.concat(classpath, jarFiles[loop] + WS.Common.getClassPathSeparator());
+				}
+			}
+		}
+		
+		return classpath;
+	}
+}

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<xsd:schema
+    ecore:documentRoot="AeMetaServicesRoot" 
+	ecore:nsPrefix="aemetaservices"
+	ecore:package="com.tibco.be.util.config.sharedresources.aemetaservices"
+	elementFormDefault="unqualified"
+	xmlns="http://www.tibco.com/xmlns/aemeta/services/2002"
+	xmlns:bt="http://tibco.com/be/basetypes"
+	xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore"
+	xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+	targetNamespace="http://www.tibco.com/xmlns/aemeta/services/2002">
+	
+    <xsd:import namespace="http://www.eclipse.org/emf/2002/Ecore"
+		schemaLocation="platform:/plugin/org.eclipse.emf.ecore/model/Ecore.xsd" />
+    <xsd:import namespace="http://tibco.com/be/basetypes"
+    	schemaLocation="basetypes.xsd" />
+    
+    <xsd:element ecore:name="ssl" name="ssl" type="sslType" />
+
+	<xsd:complexType ecore:name="Ssl" name="sslType">
+		<xsd:all>
+			<xsd:element ecore:name="cert" name="cert" minOccurs="0">
+				<xsd:complexType mixed="true">
+					<xsd:attribute name="isRef" type="bt:booleanOrGVs-type"></xsd:attribute>
+				</xsd:complexType>
+			</xsd:element>
+			<xsd:element ecore:name="expectedHostName" name="expectedHostName" type="xsd:string" minOccurs="0" />	
+			<xsd:element ecore:name="debugTrace" name="debugTrace" type="bt:booleanOrGVs-type" minOccurs="0"/>
+			<xsd:element ecore:name="identity" name="identity" minOccurs="0">
+				<xsd:complexType mixed="true">
+					<xsd:attribute name="isRef" type="bt:booleanOrGVs-type"></xsd:attribute>						
+				</xsd:complexType>
+			</xsd:element>
+			<xsd:element ecore:name="requiresClientAuthentication" name="requiresClientAuthentication" type="xsd:string" minOccurs="0"/>
+			<xsd:element ecore:name="strongCipherSuitesOnly" name="strongCipherSuitesOnly" type="bt:booleanOrGVs-type" minOccurs="0"/>
+			<xsd:element ecore:name="trace" name="trace" type="bt:booleanOrGVs-type" minOccurs="0"/>
+			<xsd:element ecore:name="trustStorePassword" name="trustStorePassword" type="xsd:string" minOccurs="0"/>
+			<xsd:element ecore:name="verifyHostName" name="verifyHostName" type="bt:booleanOrGVs-type" minOccurs="0"/>
+		</xsd:all>
+	</xsd:complexType>
+
+</xsd:schema>

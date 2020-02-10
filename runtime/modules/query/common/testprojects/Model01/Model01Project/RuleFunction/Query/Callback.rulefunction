@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<ruleFunction icon="" name="Callback" description="" guid="X4a56c9f8Z119ede2c4a8ZX7ff7" bindings="" namespace="" folder="/RuleFunction/Query/" virtual="false">
+    <lastModified>2008-05-08T18:22:43.35-07:00</lastModified>
+    <extendedProperties/>
+    <hiddenProperties/>
+    <validity>ACTION</validity>
+    <returnType>void</returnType>
+    <arguments>
+        <argument identifier="listenerName" entity="String" entityType="">
+            <domain>
+                <entries/>
+            </domain>
+        </argument>
+        <argument identifier="isBatchEnd" entity="boolean" entityType="">
+            <domain>
+                <entries/>
+            </domain>
+        </argument>
+        <argument identifier="isQueryEnd" entity="boolean" entityType="">
+            <domain>
+                <entries/>
+            </domain>
+        </argument>
+        <argument identifier="row" entity="Object" entityType="">
+            <domain>
+                <entries/>
+            </domain>
+        </argument>
+        <argument identifier="closure" entity="Object" entityType="">
+            <domain>
+                <entries/>
+            </domain>
+        </argument>
+    </arguments>
+    <body>System.debugOut("Callback from listener '" + listenerName + "' called with closure '" + closure + "'.");
+if (isQueryEnd) {
+    System.debugOut("End of execution.");
+} else if (isBatchEnd) {
+    System.debugOut("Batch end.");    
+} else {
+    Object[] columns = row;
+    String text = "Row (" + columns@length + "): ";
+    if (columns@length &gt; 0) { text = text + columns[0]; }
+    for (int i=1; i &lt; columns@length; i = i+1) { text = text + ", " + columns[i]; }
+    System.debugOut(text);
+}
+</body>
+</ruleFunction>

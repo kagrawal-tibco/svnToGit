@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<project name="WebStudio" default="build" basedir=".">
+	<!-- Configure path to GWT SDK -->
+	<!--<dirname property="be.basedir" file="${ant.file.be}/../../build" />-->
+
+	<taskdef resource="net/sf/antcontrib/antcontrib.properties" />
+
+	<!-- ##################### -->
+	<!-- Environment variables -->
+	<!-- ##################### -->
+
+	<property environment="env" />
+
+	<!-- ####################### -->
+	<!-- User defined properties -->
+	<!-- ####################### -->
+	<property name="webstudio.dir" value="${be.basedir}/../designtime/webstudio/ui" />
+
+	<target name="build" depends="war" description="Build this project"/>
+
+	<target name="war" depends="new-ui-war" description="Create a war file">
+		<delete file="${webstudio.dir}/../WebStudio.war" failonerror="false"/>
+		
+		<mkdir dir="${webstudio.dir}/war/resources"/>
+		
+		<copy todir="${webstudio.dir}/war/resources">
+			<fileset dir="${webstudio.dir}/dist">
+		    </fileset>
+		</copy>
+		
+		<zip destfile="${webstudio.dir}/../WebStudio.war">
+			<fileset dir="${webstudio.dir}/war">
+				<exclude name="ds/"/>
+				<exclude name="*.log"/>
+			</fileset>
+		</zip>
+		<delete dir="${webstudio.dir}/war/resources"/>
+		<delete dir="${webstudio.dir}/dist"/>
+		<delete dir="${webstudio.dir}/node"/>
+	</target>
+	
+	<target name="new-ui-war">	
+		<if>
+		   <equals arg1="${env.ISWINDOWS}" arg2="1" />
+			<then>
+				<exec dir="${webstudio.dir}" executable="cmd">
+					<env key="JAVA_HOME" value="${env.JAVA_HOME}"/>
+					<arg line="/c ${env.MAVEN_HOME}/bin/mvn clean package" />
+				</exec>
+			</then>
+			<else>
+				<exec dir="${webstudio.dir}" executable="sh">
+					<env key="JAVA_HOME" value="${env.JAVA_HOME}"/>
+					<arg line="-c '${env.MAVEN_HOME}/bin/mvn clean package'" />
+				</exec>
+			</else>
+		</if>
+	</target>
+	
+	<target name="clean" description="Cleans this project">
+		<delete failonerror="false">
+			<fileset dir="${webstudio.dir}/war/WEB-INF/lib" excludes=".svn" />
+		</delete>
+		<delete dir="${webstudio.dir}/war/WEB-INF/classes" failonerror="false" />
+		<delete dir="${webstudio.dir}/war/webstudio" failonerror="false" />
+	</target>
+
+</project>

@@ -1,0 +1,145 @@
+<div class="SingleFilter" [ngClass]="{
+                                        'ws-diff-background-modify': this.isModified,
+                                        'ws-diff-background-add': this.isAdded,
+                                        'ws-diff-background-delete': this.isDeleted,
+                                        'ws-diff-background-conflict': this.isConflict,
+                                        'ws-problem-filter-selection': this.isProblematic
+                                      }" (dblclick)="this.resolveConflict()">
+
+  <form [formGroup]="rtiForm">
+    <div>
+      <div class="removeFilter">
+        <input type="image" title="Remove Single Filter" src="assets/img/delete.png" (click)="this.onDeleteFilter(this, $event)" [disabled]="this.readOnly" />
+      </div>
+    </div>
+    <!-- Links/ L.H.S-->
+    <div formArrayName="lhsFilter">
+      <div *ngFor="let link of this.filter.getLink(); let i = index">
+        <div [formGroupName]="i">
+          <div *ngIf="i === 0" (click)="this.toggled($event, i)">
+            <a href="#" id="lhsLink" mat-button [matMenuTriggerFor]="base">
+              {{this.filter.getLink()[i].getName()}}
+            </a>
+            <mat-menu #base="matMenu">
+              <li *ngFor='let symbol of this.currentLHSSymbols' mat-menu-item (click)="this.updateRTIFilter(symbol, i, true, true, $event)">
+                <img src="{{this.getImageSrc(symbol.getType())}}" style="width: 16px; height: 16px;" /> {{symbol.getSymbolAlias()}}
+              </li>
+            </mat-menu>
+          </div>
+          <div *ngIf="i > 0" (click)="this.toggled($event, i)">
+            <a href="#" id="lhsLink" mat-button [matMenuTriggerFor]="base">
+              {{this.filter.getLink()[i].getName()}}
+            </a>
+            <mat-menu #base="matMenu">
+              <li mat-menu-item [matMenuTriggerFor]="Operators" i18n>{{i18n(' Operators ')}}</li>
+              <li mat-menu-item [matMenuTriggerFor]="Fields" i18n>{{i18n(' Fields')}}</li>
+            </mat-menu>
+            <mat-menu #Operators="matMenu">
+              <li mat-menu-item *ngFor='let operator of this.currentLHSMenuOperators' (click)='this.onOperatorSelection(operator, true, $event)'> {{operator.operator}}</li>
+            </mat-menu>
+            <mat-menu #Fields="matMenu">
+              <div class="scrollable-menu">
+                  <li mat-menu-item *ngFor='let property of this.currentLHSMenuProperties' (click)='this.updateRTIFilter(property, i, true, true, $event)'> <img src="{{this.getImageSrc(property.getType())}}" style="width: 16px; height: 16px;">
+                    {{property.getSymbolAlias()}}
+                  </li>
+              </div>
+            </mat-menu>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Operators -->
+    <div class="operators">
+      <div (click)="this.toggled($event)">
+        <div *ngIf="!this.showProperties" aria-labelledby="operatorLink">
+          <a href="#" id="operatorLink" mat-button [matMenuTriggerFor]="operators" (click)="this.toggled($event)">
+                {{this.selectedOperator.operator}}
+          </a>
+          <mat-menu #operators="matMenu">
+            <li mat-menu-item *ngFor="let operator of this.currentOperators" (click)="this.onOperatorSelection(operator, true, $event)">
+              {{operator.operator}}
+            </li>
+          </mat-menu>
+        </div>
+        <div *ngIf="this.showProperties" aria-labelledby="operatorLink">
+          <a href="#" id="operatorLink" mat-button [matMenuTriggerFor]="operators" (click)="this.toggled($event)">
+                {{this.selectedOperator.operator}}
+          </a>
+          <mat-menu #operators="matMenu">
+            <li mat-menu-item [matMenuTriggerFor]="Operators" i18n>{{i18n(' Operators ')}}</li>
+            <li mat-menu-item [matMenuTriggerFor]="Fields" i18n>{{i18n(' Fields')}}</li>
+          </mat-menu>
+          <mat-menu #Operators="matMenu">
+            <li mat-menu-item *ngFor='let operator of this.currentOperators' (click)='this.onOperatorSelection(operator, true, $event)'> {{operator.operator}}</li>
+          </mat-menu>
+          <mat-menu #Fields="matMenu">
+            <div class="scrollable-menu">
+              <li mat-menu-item *ngFor='let property of this.currentProperties' (click)='this.updateRTIFilter(property, i, false, true, $event)'> <img src="{{this.getImageSrc(property.getType())}}" style="width: 16px; height: 16px;">
+                {{property.getSymbolAlias()}}
+              </li>
+            </div>
+          </mat-menu>
+        </div>
+      </div>
+    </div>
+    <!--Filter Value-->
+    <div [ngSwitch]="this.showValueField">
+      <div *ngSwitchCase="'input'">
+        <input type="text" formControlName="inputValue" name="filterValue" (change)="this.updateFilterValue($event)" [(ngModel)]="this.filter.getValue().value" [readonly]="this.readOnly" />
+      </div>
+      <div formArrayName="rhsFilter" *ngSwitchCase="'link'">
+        <div *ngFor="let link of this._filter.getValue().getLinks(); let i = index">
+          <div [formGroupName]="i" aria-labelledby="rhsLink">
+            <a href="#" id="rhsLink" mat-button [matMenuTriggerFor]="filterValue" (click)="this.toggledValue($event, i)">
+              {{this.filter.getValue().getLinks()[i].getName()}}
+            </a>
+
+              <mat-menu #filterValue="matMenu">
+                  <div class="scrollable-menu">
+                  <li mat-menu-item *ngFor="let propertyMenu of this.currentRHSMenuProperties" (click)="this.updateLinkFilterValue(propertyMenu, i, false, true, $event, true)">
+                    <img src="{{this.getImageSrc(propertyMenu.getType())}}" style="width: 16px; height: 16px;"> {{propertyMenu.getSymbolAlias()}}
+                  </li>
+                  <li mat-menu-item *ngIf="this.currentRHSSubMenuProperties.length > 0" [matMenuTriggerFor]="CurrentConceptFields" i18n>{{i18n('
+                    Current Concept Fields
+                    ')}}</li>
+                </div>
+              </mat-menu>
+              <mat-menu #CurrentConceptFields="matMenu">
+                <div class="scrollable-menu">
+                  <li  mat-menu-item *ngFor="let propertySubMenu of this.currentRHSSubMenuProperties" (click)="this.updateLinkFilterValue(propertySubMenu, i, true, true, $event)">
+                    <img src="{{this.getImageSrc(propertySubMenu.getType())}}" style="width: 16px; height: 16px;">
+                    {{propertySubMenu.getSymbolAlias()}}
+                  </li>
+                </div>
+              </mat-menu>
+          </div>
+        </div>
+      </div>
+      <div *ngSwitchCase="'NotApplicable'">
+      </div>
+      <div *ngSwitchCase="'DateTime'" style="max-width:100%">
+        <div *ngIf="!this.readOnly">
+          <dateTimePicker [currentDate]='this.filter.getValue().value' (dateChange)='this.updateDateValue($event)' i18n>{{i18n('
+            Loading Date Time Picker....
+            ')}}</dateTimePicker>
+        </div>
+        <div *ngIf="this.readOnly">
+          <input type="text" name="filterValue" value="{{this.convertStringToDate(this.filter.getValue().value)}}" [readonly]="this.readOnly" />
+        </div>
+      </div>
+      <div *ngSwitchCase="'DomainModel'">
+        <div *ngIf="!this.readOnly">
+          <select class="form-control" formControlName="domainModel" (change)="this.updateDomainValue($event)" [(ngModel)]='this.filter.getValue().value'>
+            <option *ngFor="let  domainValue of this.domainValues " [selected] ="domainValue.getValue() === this.filter.getValue().value">{{domainValue.getValue()}}</option>
+          </select>
+        </div>
+        <div *ngIf="this.readOnly">
+          <input type="text" name="filterValue" value="{{this.filter.getValue().value}}" [readonly]="this.readOnly" />
+        </div>
+      </div>
+    </div>
+    <div class="diff-previousvalue" *ngIf="this.isModified">
+      {{this.previousValue}}
+    </div>
+  </form>
+</div>

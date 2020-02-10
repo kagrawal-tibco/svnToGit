@@ -1,0 +1,27 @@
+/**
+ * @description 
+ */
+void rulefunction Queries.CalcFullySettledVsTickCQCallback {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String	resultName;
+		boolean	isBatchEnd;
+		boolean	hasEnded;
+		Object	row;
+		Object	closure;
+	}
+	body {
+		if (isBatchEnd) {
+		    System.debugOut("----Batch:" + resultName + "----");
+		} else if (hasEnded) {
+		    System.debugOut("----End:" + resultName + "----");
+		} else {
+		    Object[] columns = row;
+		
+		    System.debugOut(resultName + " :: " + columns[0]  + ", " +  columns[1] + ", " + columns[2]
+		                        + ", " + columns[3] + ", " + columns[4]);
+		}
+	}
+}

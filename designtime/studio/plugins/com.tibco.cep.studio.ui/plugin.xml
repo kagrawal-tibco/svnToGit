@@ -1,0 +1,917 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.2"?>
+<plugin>
+   <extension-point id="sharedResourceContributor" name="sharedResourceContributor" schema="schema/sharedResourceContributor.exsd"/>
+   <extension-point id="com.tibco.studio.ui.reusable.tray.view" name="ReusableView" schema="schema/com.tibco.studio.ui.reusable.view.exsd"/>
+   
+   <extension
+         point="org.eclipse.ui.commands">
+      <category
+            id="com.tibco.cep.studio.ui.commands.category"
+            name="Sample Category">
+      </category>
+      <command
+            categoryId="com.tibco.cep.studio.ui.commands.category"
+            id="com.tibco.cep.studio.ui.commands.sampleCommand"
+            name="Sample Command">
+      </command>
+      <command
+            categoryId="org.eclipse.ui.category.navigate"
+            description="Open Studio Element"
+            id="com.tibco.cep.studio.ui.opentypeaction"
+            name="Open Studio Element">
+      </command>
+      <command
+            categoryId="org.eclipse.ui.category.project"
+            description="Validate Project"
+            id="com.tibco.cep.studio.ui.validate"
+            name="Validate">
+      </command>
+      <command
+            categoryId="org.eclipse.search.ui.category.search"
+            description="Search for references"
+            id="com.tibco.cep.studio.ui.search.reference"
+            name="Search for references">
+      </command>
+      <command
+            categoryId="org.eclipse.ltk.ui.category.refactoring"
+            description="Rename element"
+            id="com.tibco.cep.studio.ui.refactor.rename"
+            name="Rename element">
+      </command>
+      <command
+            categoryId="org.eclipse.ltk.ui.category.refactoring"
+            description="Move element"
+            id="com.tibco.cep.studio.ui.refactor.move"
+            name="Move element">
+      </command>
+       <command
+            description="Search for references"
+            id="com.tibco.cep.studio.ui.search.references.IResource"
+            name="Search for references">
+      </command>
+   </extension>
+    <extension
+         point="org.eclipse.ui.popupMenus">
+      <objectContribution
+            adaptable="true"
+            id="com.tibco.cep.studio.ui.search.references.IResource"
+            objectClass="org.eclipse.core.resources.IResource">
+         <action
+               class="com.tibco.cep.studio.ui.actions.SearchForReferencesAction"
+               definitionId="com.tibco.cep.studio.ui.search.references.IResource"
+               enablesFor="1"
+               icon="icons/search.gif"
+               id="com.tibco.cep.studio.ui.search.references.IResource"
+               label="Search for references"
+               menubarPath="group.search"
+               tooltip="Search for references of this element">
+         </action>
+   	</objectContribution>
+   	<!-- Search for references action already appears for entities
+    <objectContribution
+            adaptable="false"
+            id="com.tibco.cep.studio.ui.search.references.Property"
+            objectClass="com.tibco.cep.studio.ui.navigator.model.PropertyNode">
+         <action
+               class="com.tibco.cep.studio.ui.actions.SearchForReferencesAction"
+               definitionId="com.tibco.cep.studio.ui.search.references.Property"
+               enablesFor="1"
+               icon="icons/search.gif"
+               id="com.tibco.cep.studio.ui.search.references.Property"
+               label="Search for references"
+               menubarPath="group.search"
+               tooltip="Search for references of this element">
+         </action>
+   	</objectContribution>
+   	-->
+   	<!-- this is done in the action provider
+      <objectContribution
+            adaptable="true"
+            id="com.tibco.cep.studio.ui.refactor.rename"
+            objectClass="org.eclipse.core.resources.IResource">
+         <menu
+               id="com.tibco.cep.studio.ui.refactor.menu"
+               label="Refactor"
+               path="group.refactor">
+            <separator name="group1"/>
+         </menu>
+         <action
+               class="com.tibco.cep.studio.ui.actions.RenameElementAction"
+               definitionId="com.tibco.cep.studio.ui.refactor.rename"
+               enablesFor="1"
+               icon="icons/search.gif"
+               id="com.tibco.cep.studio.ui.refactor.rename"
+               label="Rename element"
+               menubarPath="com.tibco.cep.studio.ui.refactor.menu/group1"
+               tooltip="Rename this element">
+         </action>
+   	</objectContribution>
+      <objectContribution
+            adaptable="true"
+            id="com.tibco.cep.studio.ui.refactor.move"
+            objectClass="org.eclipse.core.resources.IResource">
+         <menu
+               id="com.tibco.cep.studio.ui.refactor.menu"
+               label="Studio Refactor"
+               path="group.refactor">
+            <separator name="group1"/>
+         </menu>
+         <action
+               class="com.tibco.cep.studio.ui.actions.MoveResourceAction"
+               definitionId="com.tibco.cep.studio.ui.refactor.move"
+               enablesFor="1"
+               icon="icons/search.gif"
+               id="com.tibco.cep.studio.ui.refactor.move"
+               label="Move element"
+               menubarPath="com.tibco.cep.studio.ui.refactor.menu/group1"
+               tooltip="Move this element">
+         </action>
+   	</objectContribution>
+   	-->
+      <objectContribution
+            adaptable="false"
+            id="com.tibco.cep.studio.ui.search.references.Entity"
+            objectClass="com.tibco.cep.designtime.core.model.Entity">
+         <action
+               class="com.tibco.cep.studio.ui.actions.SearchForReferencesAction"
+               definitionId="com.tibco.cep.studio.ui.search.references.Entity"
+               enablesFor="1"
+               icon="icons/search.gif"
+               id="com.tibco.cep.studio.ui.search.references.Entity"
+               label="Search for references"
+               menubarPath="group.search"
+               tooltip="Search for references of this element">
+         </action>
+      </objectContribution>
+      <objectContribution
+            adaptable="false"
+            id="com.tibco.cep.studio.ui.search.references.SharedElement"
+            objectClass="com.tibco.cep.studio.core.index.model.SharedElement">
+         <action
+               class="com.tibco.cep.studio.ui.actions.SearchForReferencesAction"
+               definitionId="com.tibco.cep.studio.ui.search.references.SharedElement"
+               enablesFor="1"
+               icon="icons/search.gif"
+               id="com.tibco.cep.studio.ui.search.references.SharedElement"
+               label="Search for references"
+               menubarPath="group.search"
+               tooltip="Search for references of this element">
+         </action>
+      </objectContribution>
+      <objectContribution
+            adaptable="false"
+            id="com.tibco.cep.studio.ui.editors.validateProject.objectContribution"
+            objectClass="org.eclipse.core.resources.IResource">
+         <action
+               class="com.tibco.cep.studio.ui.actions.ValidateElementAction"
+               enablesFor="1"
+               icon="icons/Project_Validate.png"
+               id="com.tibco.cep.studio.ui.editors.validateProjectViewaction"
+               label="Validate Project"
+               menubarPath="additions"
+               tooltip="Validates TIBCO BusinessEvents Studio Element">
+         </action>
+      </objectContribution>
+      <objectContribution
+            adaptable="true"
+            id="com.tibco.cep.studio.ui.resource.buildEARObjectcontribution"
+            objectClass="org.eclipse.core.resources.IResource">
+         <action
+               class="com.tibco.cep.studio.ui.actions.BuildEnterpriseArchiveAction"
+               enablesFor="1"
+               icon="icons/enterpriseArchive16x16.gif"
+               id="com.tibco.cep.studio.ui.action.buildear"
+               label="Build Enterprise Archive..."
+               menubarPath="additions">
+         </action>
+      </objectContribution>
+      <objectContribution
+            adaptable="true"
+            id="com.tibco.cep.studio.ui.resource.generatePOMObjectcontribution"
+            objectClass="org.eclipse.core.resources.IResource">
+         <action
+               class="com.tibco.cep.studio.ui.actions.GeneratePOMAction"
+               enablesFor="1"
+               icon="icons/file.png"
+               id="com.tibco.cep.studio.ui.action.generatePOM"
+               label="Generate Maven POM file"
+               menubarPath="additions">
+         </action>
+      </objectContribution>
+       <objectContribution
+            adaptable="false"
+            id="com.tibco.cep.studio.ui.ConvertToJavaObjectContribution"
+            objectClass="org.eclipse.core.resources.IProject">
+         <action
+               class="com.tibco.cep.studio.ui.actions.ConvertToJavaProjectAction"
+               enablesFor="1"
+               id="com.tibco.cep.studio.ui.convertToJavaProjectAction"
+               label="Convert To Java Project..."
+               menubarPath="org.eclipse.ui.projectConfigure/additions">
+         </action>
+      </objectContribution>
+       <!--objectContribution
+             adaptable="false"
+             id="com.tibco.cep.studio.ui.ConvertToStudioObjectContribution"
+             objectClass="org.eclipse.core.resources.IProject">
+          <action
+                class="com.tibco.cep.studio.ui.actions.ConvertToStudioProjectAction"
+                enablesFor="1"
+                id="com.tibco.cep.studio.ui.convertToStudioProjectAction"
+                label="Convert To Studio Project..."
+                menubarPath="org.eclipse.ui.projectConfigure/additions">
+          </action>
+       </objectContribution-->
+   	</extension>
+   <extension
+         point="org.eclipse.ui.bindings">
+   		<key
+           commandId="com.tibco.cep.studio.ui.opentypeaction"
+           contextId="com.tibco.cep.studio.ui.editors.ruleEditorScope"
+           schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+           sequence="Ctrl+Shift+O">
+        </key>
+	</extension>
+   <extension
+         point="org.eclipse.ui.importWizards">
+      <category
+            id="com.tibco.cep.studio.ui.category"
+            name="TIBCO BusinessEvents">
+      </category>
+      <wizard
+            category="com.tibco.cep.studio.ui.category"
+            class="com.tibco.cep.studio.ui.wizards.ImportDesignerProjectWizard"
+            icon="icons/designer_project.gif"
+            id="com.tibco.cep.studio.ui.wizards.DesignerImportWizard"
+            name="TIBCO Designer">
+         <description>
+            Import a TIBCO Designer 5.6 project into TIBCO BusinessEvents.
+         </description>
+      </wizard>
+      <wizard
+            category="com.tibco.cep.studio.ui.category"
+            class="com.tibco.cep.studio.ui.wizards.ImportExistingStudioProjectWizard"
+            icon="icons/designer_project.gif"
+            id="com.tibco.cep.studio.ui.wizards.ExistingStudioImportWizard"
+            name="Existing TIBCO BusinessEvents Studio Project">
+         <description>
+            Import an existing TIBCO BusinessEvents Studio project into TIBCO BusinessEvents.
+         </description>
+      </wizard>
+       <wizard
+            category="com.tibco.cep.studio.ui.category"
+            class="com.tibco.cep.studio.ui.wizards.imports.ProjectLibraryImportWizard"
+            icon="icons/library_obj.gif"
+            id="com.tibco.cep.studio.ui.wizards.imports.ProjectLibraryImportWizard"
+            name="Project Library">
+         <description>
+            Import a project library from the local file system into the selected TIBCO BusinessEvents Studio project.
+         </description>
+      </wizard>
+</extension>
+<extension
+      point="org.eclipse.ui.ide.projectNatureImages">
+   <image
+         icon="icons/designer_project.gif"
+         id="com.tibco.cep.studio.ui.image"
+         natureId="com.tibco.cep.studio.core.studioNature">
+   </image>
+</extension>
+<extension
+      id="com.tibco.cep.studio.ui.newWizards"
+      point="org.eclipse.ui.newWizards">
+   <category
+         id="com.tibco.cep.studio.ui.category"
+         name="TIBCO BusinessEvents">
+   </category>  
+   <wizard
+         canFinishEarly="false"
+         category="com.tibco.cep.studio.ui.category"
+         class="com.tibco.cep.studio.ui.wizards.NewStudioProjectWizard"
+         finalPerspective="com.tibco.cep.studio.application.perspective"
+         icon="icons/designer_project.gif"
+         id="com.tibco.cep.studio.ui.newstudioprojectwizard"
+         name="Studio Project"
+         project="true">
+      <description>
+         Create a new TIBCO BusinessEvents Studio project
+      </description>
+   </wizard>
+      <wizard
+            canFinishEarly="false"
+            category="com.tibco.cep.studio.ui.category"
+            class="com.tibco.cep.studio.ui.wizards.NewConceptWizard"
+            finalPerspective="com.tibco.cep.studio.application.perspective"
+            icon="icons/concept.png"
+            id="com.tibco.cep.studio.ui.newConceptWizard"
+            name="Concept"
+            project="false">
+         <description>
+            Create a new concept
+         </description>
+      </wizard>
+      <wizard
+            canFinishEarly="false"
+            category="com.tibco.cep.studio.ui.category"
+            class="com.tibco.cep.studio.ui.wizards.NewEventWizard"
+            finalPerspective="com.tibco.cep.studio.application.perspective"
+            icon="icons/event.png"
+            id="com.tibco.cep.studio.ui.newEventwizard"
+            name="Simple Event">
+         <description>
+            Create a new event
+         </description>
+      </wizard>
+      <wizard
+            canFinishEarly="false"
+            category="com.tibco.cep.studio.ui.category"
+            class="com.tibco.cep.studio.ui.wizards.NewRuleWizard"
+            finalPerspective="com.tibco.cep.studio.application.perspective"
+            icon="icons/rules.png"
+            id="com.tibco.cep.studio.ui.newRulewizard"
+            name="Rule">
+         <description>
+            Create a new rule
+         </description>
+      </wizard>
+      <wizard
+            canFinishEarly="false"
+            category="com.tibco.cep.studio.ui.category"
+            class="com.tibco.cep.studio.ui.wizards.NewRuleTemplateWizard"
+            finalPerspective="com.tibco.cep.studio.application.perspective"
+            icon="icons/rulesTemplate.png"
+            id="com.tibco.cep.studio.ui.newRuleTemplatewizard"
+            name="Rule Template">
+         <description>
+            Create a new rule template
+         </description>
+      </wizard>
+      <wizard
+            category="com.tibco.cep.studio.ui.category"
+            class="com.tibco.cep.studio.ui.wizards.NewRuleTemplateViewWizard"
+            finalPerspective="com.tibco.cep.studio.application.perspective"
+            icon="icons/rulesTemplateView.png"
+            id="com.tibco.cep.studio.ui.newRuleTemplateViewWizard"
+            name="Rule Template View">
+         <description>
+            Create a new Rule Template View
+         </description>
+      </wizard>
+      <wizard
+            canFinishEarly="false"
+            category="com.tibco.cep.studio.ui.category"
+            class="com.tibco.cep.studio.ui.wizards.NewScorecardWizard"
+            finalPerspective="com.tibco.cep.studio.application.perspective"
+            icon="icons/scorecard.png"
+            id="com.tibco.cep.studio.ui.newScorecardWizard"
+            name="Scorecard">
+         <description>
+            Create a new Scorecard
+         </description>
+      </wizard>
+      <wizard
+            category="com.tibco.cep.studio.ui.category"
+            class="com.tibco.cep.studio.ui.wizards.NewDomainModelWizard"
+            finalPerspective="com.tibco.cep.studio.application.perspective"
+            icon="icons/domainModelView_16x15.png"
+            id="com.tibco.cep.studio.ui.newDomainModelWizard"
+            name="Domain Model">
+         <description>
+            Create a new Domain Model
+         </description>
+      </wizard>
+      <wizard
+            canFinishEarly="false"
+            category="com.tibco.cep.studio.ui.category"
+            class="com.tibco.cep.studio.ui.wizards.NewRuleFunctionWizard"
+            finalPerspective="com.tibco.cep.studio.application.perspective"
+            icon="icons/rule-function.png"
+            id="com.tibco.cep.studio.ui.newRuleFunctionWizard"
+            name="Rule Function">
+         <description>
+            Create a new rule function
+         </description>
+      </wizard>
+      <wizard
+            canFinishEarly="false"
+            category="com.tibco.cep.studio.ui.category"
+            class="com.tibco.cep.studio.ui.wizards.NewTimeEventWizard"
+            finalPerspective="com.tibco.cep.studio.application.perspective"
+            icon="icons/time-event.gif"
+            id="com.tibco.cep.studio.ui.newTimeEventwizard"
+            name="Time Event">
+         <description>
+            Create a new time event
+         </description>
+      </wizard>
+		<wizard
+	           canFinishEarly="false"
+	           category="com.tibco.cep.studio.ui.category"
+	           class="com.tibco.cep.studio.ui.wizards.NewClusterConfigurationWizard"
+	           finalPerspective="com.tibco.cep.studio.application.perspective"
+	           icon="icons/cdd_16x16.gif"
+	           id="com.tibco.cep.studio.ui.newClusterConfigurationWizard"
+	           name="Cluster Deployment Descriptor">
+	        <description>
+	           Create a new Cluster Deployment Descriptor
+	        </description>
+		</wizard>      
+		<wizard
+	           canFinishEarly="false"
+	           category="com.tibco.cep.studio.ui.category"
+	           class="com.tibco.cep.studio.ui.wizards.NewDisplayModelWizard"
+	           finalPerspective="com.tibco.cep.studio.application.perspective"
+	           icon="icons/locale-alt16.png"
+	           id="com.tibco.cep.studio.ui.newDisplayModelWizard"
+	           name="Display Model">
+	        <description>
+	           Create a new Display Model
+	        </description>
+		</wizard>    
+		<wizard
+	           canFinishEarly="false"
+	           category="com.tibco.cep.studio.ui.category"
+	           class="com.tibco.cep.studio.ui.wizards.NewTestDataWizard"
+	           finalPerspective="com.tibco.cep.studio.application.perspective"
+	           icon="icons/test.gif"
+	           id="com.tibco.cep.studio.ui.newTestDataWizard"
+	           name="Test Data">
+	        <description>
+	           Create a new Test Data
+	        </description>
+		</wizard>    
+		<wizard
+            canFinishEarly="false"
+            category="com.tibco.cep.studio.ui.category"
+            class="com.tibco.cep.studio.ui.wizards.NewJavaSourceWizard"
+            finalPerspective="com.tibco.cep.studio.application.perspective"
+            icon="icons/customFunction_class_obj.gif"
+            id="com.tibco.cep.studio.ui.newCatalogCustomFunctionWizard"
+            name="Custom Catalog Function"
+            project="false">
+         <description>
+            Create a new custom catalog function
+         </description>
+      </wizard>
+</extension>
+ <extension
+         point="org.eclipse.ui.views">
+      <category
+            id="com.tibco.cep.studio.ui.category"
+            name="TIBCO BusinessEvents"/>
+      <category
+            id="com.tibco.cep.overview.category"
+            name="Overview"
+            parentCategory="com.tibco.cep.studio.ui.category">
+      </category>
+      <view
+            category="com.tibco.cep.studio.ui.category"
+            class="com.tibco.cep.studio.ui.palette.views.PaletteView"
+            icon="icons/palette.gif"
+            id="com.tibco.cep.studio.palette.views.paletteview"
+            name="Palette">
+      </view>
+      <view
+            category="com.tibco.cep.studio.ui.category"
+            class="com.tibco.cep.studio.ui.views.CatalogFunctionsView"
+            icon="icons/library_obj.gif"
+            id="com.tibco.cep.studio.ui.views.CatalogFunctionsView"
+            name="Catalog Functions">
+      </view>
+      <view
+            category="com.tibco.cep.studio.ui.category"
+            class="com.tibco.cep.studio.ui.views.GlobalVariablesView"
+            icon="icons/global_var.png"
+            id="com.tibco.cep.studio.ui.views.GlobalVariablesView"
+            name="Global Variables">
+      </view>
+      <view
+            category="com.tibco.cep.studio.ui.category"
+            class="com.tibco.cep.studio.ui.overview.CommonOverview"
+            icon="icons/overview.gif"
+            id="com.tibco.cep.studio.ui.overview.commonoverview"
+            name="Overview"
+            restorable="true">
+      </view>
+   </extension>
+   <extension
+         id="com.tibco.cep.studio.ui.index.views"
+         point="org.eclipse.ui.views">
+      <view
+            name="Ontology Index"
+            icon="icons/sample.gif"
+            category="com.tibco.cep.studio.ui.category"
+            class="com.tibco.cep.studio.ui.views.IndexView"
+            id="com.tibco.cep.studio.ui.views.IndexView">
+      </view>
+   </extension>
+<extension
+      point="org.eclipse.ui.startup">
+   <startup
+         class="com.tibco.cep.studio.ui.StudioUIPluginStartup">
+   </startup>
+</extension>
+<extension
+      point="org.eclipse.search.searchResultViewPages">
+   <viewPage
+         class="com.tibco.cep.studio.ui.search.StudioElementSearchResultPage"
+         id="com.tibco.cep.studio.ui.search.designerelementsearchpage"
+         label="Studio Element Search"
+         searchResultClass="com.tibco.cep.studio.ui.search.StudioElementSearchResult">
+   </viewPage>
+</extension>
+<extension
+      point="org.eclipse.ui.actionSets">
+   <actionSet
+         id="com.tibco.cep.studio.ui.actions"
+         label="Designer UI Actions"
+         visible="true">
+	<action
+		 class="com.tibco.cep.studio.ui.actions.OpenStudioElementAction"
+		 definitionId="com.tibco.cep.studio.ui.opentypeaction"
+		 id="com.tibco.cep.studio.ui.opentypeaction"
+		 label="Open Studio Element"
+		 menubarPath="navigate/open.ext2"
+		 style="push"/>
+	<action
+       class="com.tibco.cep.studio.ui.actions.BuildEnterpriseArchiveAction"
+       definitionId="com.tibco.cep.studio.ui.build.earaction"
+       disabledIcon="icons/toolbar/enterpriseArchive_disabled.png"
+       icon="icons/enterpriseArchive16x16.gif"
+       id="com.tibco.cep.studio.ui.build.earaction"
+       label="Build Enterprise Archive..."
+       menubarPath="project/build.ext"
+       style="push"
+       toolbarPath="Normal/additions">
+    <selection
+          class="org.eclipse.core.resources.IProject">
+    </selection>
+ </action>
+      <action
+            class="com.tibco.cep.studio.ui.actions.ValidateElementAction"
+            definitionId="com.tibco.cep.studio.ui.validate"
+            disabledIcon="icons/toolbar/Project_Validate_disabled.png"
+            icon="icons/Project_Validate.png"
+            id="com.tibco.cep.studio.ui.validate"
+            label="Validate Project"
+            menubarPath="project/build.ext2"
+            style="push"
+            toolbarPath="Normal/additions"/>
+      <action
+            class="com.tibco.cep.studio.ui.actions.GlobalVariablesEditAction"
+            definitionId="com.tibco.cep.studio.ui.edit.globalvar"
+            disabledIcon="icons/toolbar/global_var_edit_disabled.png"
+            icon="icons/global_var_edit.png"
+            id="com.tibco.cep.studio.ui.edit.globalvar.action"
+            label="Edit Global Variables"
+            menubarPath="project/build.ext2"
+            style="push">
+         <selection
+               class="org.eclipse.core.resources.IProject">
+         </selection>
+      </action>
+      <action
+            class="com.tibco.cep.studio.ui.actions.GlobalVariablesAction"
+            definitionId="com.tibco.cep.studio.ui.edit.globalvar.tool.action"
+            disabledIcon="icons/toolbar/global_var_edit_disabled.png"
+            icon="icons/global_var_edit.png"
+            id="com.tibco.cep.studio.ui.edit.globalvar.tool.action"
+            label="Show Global Variables"
+            pulldown="true"
+            style="pulldown"
+            toolbarPath="Normal/additions"
+            tooltip="Global Variables">
+      </action>
+      <action
+            class="com.tibco.cep.studio.ui.actions.GeneratePOMAction"
+            definitionId="com.tibco.cep.studio.ui.generate.pomaction"
+            disabledIcon="icons/file.png"
+            icon="icons/file.png"
+            id="com.tibco.cep.studio.ui.generate.pomaction"
+            label="Generate Maven POM file"
+            menubarPath="project/build.ext"
+            style="push"
+            toolbarPath="Normal/additions">
+         <selection
+               class="org.eclipse.core.resources.IProject">
+         </selection>
+      </action>
+   </actionSet>
+</extension>
+<extension
+      point="com.tibco.cep.studio.core.projectResourceValidator">
+   	<validator
+		Validator="com.tibco.cep.studio.ui.validation.RuleResourceValidator"
+		extensions="rule,rulefunction,ruletemplate">
+   	</validator>
+   	<validator
+		Validator="com.tibco.cep.studio.ui.validation.RuleTemplateViewResourceValidator"
+		extensions="ruletemplateview">
+   	</validator>
+   	<validator
+		Validator="com.tibco.cep.studio.ui.validation.BusinessRuleResourceValidator"
+		extensions="ruletemplateinstance">
+   	</validator>
+   	<validator
+		Validator="com.tibco.cep.studio.ui.validation.ConceptResourceValidator"
+		extensions="concept,scorecard">
+	</validator>
+	<validator
+		Validator="com.tibco.cep.studio.ui.validation.EventResourceValidator"
+		extensions="event,time">
+	</validator>
+	<validator
+		Validator="com.tibco.cep.studio.ui.validation.ChannelResourceValidator"
+		extensions="channel">
+	</validator>
+	<validator
+		Validator="com.tibco.cep.studio.ui.validation.DomainResourceValidator"
+		extensions="domain">
+	</validator>
+	<validator
+		Validator="com.tibco.cep.studio.ui.validation.XSDResourceValidator"
+		extensions="xsd,wsdl">
+	</validator>
+   <!--validator Need To be done post 4.0.0
+         Validator="com.tibco.cep.studio.ui.validation.NewXSDResourceValidator"
+         extensions="xsd">
+   </validator-->
+</extension>
+<extension
+      point="org.eclipse.ui.decorators">
+   <decorator
+         adaptable="true"
+         class="com.tibco.cep.studio.ui.decorators.ValidationErrorDecorator"
+         id="com.tibco.cep.studio.ui.decorators.ValidationErrorDecorator"
+         label="Validation Error Decorator"
+         lightweight="true"
+         state="true">
+      <enablement>
+         <and>
+            <objectClass
+                  name="org.eclipse.core.resources.IResource">
+            </objectClass>
+            <or>
+               <objectClass
+                     name="org.eclipse.core.resources.IFolder">
+               </objectClass>
+               <objectClass
+                     name="org.eclipse.core.resources.IFile">
+               </objectClass>
+            </or>
+         </and>
+      </enablement>
+   </decorator>
+</extension>
+    <extension
+         point="org.eclipse.ui.exportWizards">
+	  <category
+            id="com.tibco.cep.studio.ui.export.category"
+            name="TIBCO BusinessEvents">
+      </category>
+      <wizard
+            category="com.tibco.cep.studio.ui.export.category"
+            class="com.tibco.cep.studio.ui.wizards.export.ProjectLibraryExportWizard"
+            icon="icons/library_obj.gif"
+            id="com.tibco.cep.studio.ui.wizards.export.ProjectLibraryExportWizard"
+            name="Project Library">
+         <description>
+            Create a project library from resources in an existing TIBCO BusinessEvents Studio project.
+         </description>
+      </wizard>
+      <wizard
+            category="com.tibco.cep.studio.ui.export.category"
+            class="com.tibco.cep.studio.ui.wizards.export.DomainModelExcelExportWizard"
+            icon="icons/domain_model_view.png"
+            id="com.tibco.cep.studio.ui.wizards.export.DomainModelExcelExportWizard"
+            name="Export Domain To Excel">
+         <selection
+               class="org.eclipse.core.resources.IResource">
+         </selection>
+         <description>
+            Exports a Domain Model to a Microsoft Excel File.
+         </description>
+      </wizard>
+      <wizard
+            category="com.tibco.cep.studio.ui.export.category"
+            class="com.tibco.cep.studio.ui.wizards.export.TestDataExcelExportWizard"
+            icon="icons/testdata_excel.png"
+            id="com.tibco.cep.studio.ui.wizards.export.TestDataExcelExportWizard"
+            name="Test Data">
+         <selection
+               class="org.eclipse.core.resources.IResource">
+         </selection>
+         <description>
+            Exports a Testdata to a Microsoft Excel File.
+         </description>
+      </wizard>
+      <wizard
+            category="com.tibco.cep.studio.ui.export.category"
+            class="com.tibco.cep.studio.ui.wizards.export.JDBCDeployExportWizard"
+            icon="icons/wizard/exportjdbc.gif"
+            id="com.tibco.cep.studio.ui.wizards.export.JdbcDeployExportWizard"
+            name="JDBC Deployment">
+         <description>
+            Generate the Project-Schema-Specific SQL Scripts
+         </description>
+         <selection
+               class="org.eclipse.core.resources.IResource">
+         </selection>
+      </wizard>
+      <wizard
+            category="com.tibco.cep.studio.ui.export.category"
+            class="com.tibco.cep.studio.ui.wizards.export.GenerateDocumentationWizard"
+           	id="com.tibco.cep.studio.ui.wizards.export.GenerateDocumentationWizard"
+           	icon="icons/wizard/generateDocumentation_16x16.png"
+            name="Export Process Documentation">
+         <description>
+            Generate Documentation for an TIBCO BusinessEvents Studio Project
+         </description>
+      </wizard>
+   </extension>
+   <extension
+         point="org.eclipse.ui.propertyPages">
+      <page
+            class="com.tibco.cep.studio.ui.property.page.ProjectBuildPathPropertyPage"
+            icon="icons/enterpriseArchive16x16.gif"
+            id="com.tibco.cep.studio.ui.project.buildPathPage"
+            name="Build Path">
+         <enabledWhen>
+            <instanceof
+                  value="org.eclipse.core.resources.IProject">
+            </instanceof>
+         </enabledWhen>
+      </page>
+   </extension>
+   <extension
+         id="projectAnalyzeProblem"
+         name="Project Analyzer Problems"
+         point="org.eclipse.core.resources.markers">
+      <super
+            type="org.eclipse.core.resources.problemmarker">
+      </super>
+      <persistent
+            value="false">
+      </persistent>
+   </extension>
+   <extension
+         point="org.eclipse.ui.decorators">
+      <decorator
+            adaptable="false"
+            class="com.tibco.cep.studio.ui.providers.CatalogFunctionsLabelProvider"
+            icon="icons/function.png"
+            id="com.tibco.cep.studio.ui.function.decorator"
+            label="Function Decorator"
+            lightweight="true"
+            state="true">
+         <enablement>
+            <objectClass
+                  name="com.tibco.be.model.functions.Predicate">
+            </objectClass>
+         </enablement>
+      </decorator>
+   </extension>
+   <extension
+         point="com.tibco.cep.studio.core.displayFrameProvider">
+      <displayFrameProvider
+            frame="com.tibco.cep.studio.ui.util.DefaultDisplayFrameProvider">
+      </displayFrameProvider>
+   </extension>
+   <extension
+         point="org.eclipse.core.runtime.preferences">
+      <initializer
+            class="com.tibco.cep.studio.ui.preferences.StudioUIPreferenceInitializer">
+      </initializer>
+   </extension>
+   <extension
+         point="org.eclipse.ui.preferencePages">
+      <page
+            category="com.tibco.cep.studio.ui.preference.page.designer"
+            class="com.tibco.cep.studio.ui.preferences.TestPreferencePage"
+            id="com.tibco.cep.studio.tester.testerPreferencePage"
+            name="Tester">
+      </page>
+      <page
+      		class="com.tibco.cep.studio.ui.preferences.StudioPreferencePage"
+        	id="com.tibco.cep.studio.ui.preference.page.designer"
+         	name="TIBCO BusinessEvents">
+      </page>
+      <page
+            category="com.tibco.cep.studio.ui.preference.page.designer"
+            class="com.tibco.cep.studio.ui.compare.preferences.ComparePreferencePage"
+            id="com.tibco.cep.studio.ui.compare.page"
+            name="Compare/Merge">
+      </page>
+      <page
+            category="com.tibco.cep.studio.ui.preference.page.designer"
+            class="com.tibco.cep.studio.ui.preferences.StudioValidationPreferencePage"
+            id="com.tibco.cep.studio.ui.project.validation.page"
+            name="Error/Warning">
+      </page>
+      <page
+            category="com.tibco.cep.studio.ui.preference.page.designer"
+            class="com.tibco.cep.studio.ui.preferences.CodegenPreferencePage"
+            id="com.tibco.cep.studio.ui.codegen.preferencePage"
+            name="Code Generation">
+      </page>
+      <page
+            category="com.tibco.cep.studio.ui.codegen.preferencePage"
+            class="com.tibco.cep.studio.ui.preferences.IgnoredResourcePreferencePage"
+            id="com.tibco.cep.studio.core.IgnoredResourcesPreferencePage"
+            name="Ignored Resources">
+      </page>
+      <page
+            category="com.tibco.cep.studio.ui.preference.page.designer"
+            class="com.tibco.cep.studio.ui.preferences.StudioBuildpathPreferencePage"
+            id="com.tibco.cep.studio.ui.page.buildpath"
+            name="Build Path">
+      </page>
+      <page
+            category="com.tibco.cep.studio.ui.page.buildpath"
+            class="com.tibco.cep.studio.ui.preferences.StudioClasspathVariablesPreferencePage"
+            id="com.tibco.cep.studio.ui.page.classpathvars"
+            name="Classpath Variables">
+      </page>
+   </extension>
+    <extension
+          point="org.eclipse.compare.structureMergeViewers">
+       <viewer
+             class="com.tibco.cep.studio.ui.compare.provider.ResourceViewerCreator"
+             extensions="depends.on.contentTypeBindings"
+             id="com.tibco.cep.studio.ui.compare.viewer">
+       </viewer>
+       <contentTypeBinding
+             contentTypeId="com.tibco.cep.studio.core.be.content-type"
+             structureMergeViewerId="com.tibco.cep.studio.ui.compare.viewer">
+       </contentTypeBinding>
+    </extension>
+    <!--
+    <extension
+          point="org.eclipse.core.runtime.contentTypes">
+       <content-type
+             base-type="org.eclipse.core.runtime.xml"
+             default-charset="ASCII"
+             file-extensions="concept,event,statemachine,channel"
+             id="entity"
+             name="Entity"
+             priority="high">
+       </content-type>
+       <content-type
+             base-type="org.eclipse.core.runtime.xml"
+             default-charset="ASCII"
+             file-extensions="rulefunctionimpl"
+             id="rulefunctionimpl"
+             name="Decision Table"
+             priority="high">
+       </content-type>
+    </extension>
+    -->
+
+    <extension
+          point="org.eclipse.compare.structureMergeViewers">
+       <viewer
+             class="com.tibco.cep.studio.ui.compare.provider.ResourceViewerCreator"
+             extensions="rule,rulefunction"
+             id="com.tibco.cep.studio.ui.compare.rule.viewer">
+       </viewer>
+    </extension>
+    <extension
+          point="org.eclipse.ui.ide.markerResolution">
+       <markerResolutionGenerator
+             class="com.tibco.cep.studio.ui.validation.resolution.EntityNamespaceResolutionGenerator"
+             markerType="com.tibco.cep.studio.core.namespaceProblem">
+       </markerResolutionGenerator>
+       <markerResolutionGenerator
+             class="com.tibco.cep.studio.ui.validation.resolution.EntityNamespaceResolutionGenerator"
+             markerType="com.tibco.cep.studio.core.ownerStateMachineProblem">
+       </markerResolutionGenerator>
+       <markerResolutionGenerator
+             class="com.tibco.cep.studio.ui.validation.resolution.EntityNamespaceResolutionGenerator"
+             markerType="com.tibco.cep.studio.core.propertyOwnerProblem">
+       </markerResolutionGenerator>
+    </extension>
+    <extension
+          point="com.tibco.studio.ui.reusable.tray.view">
+       <TrayView
+             class="com.tibco.cep.studio.ui.views.GlobalVariablesView"
+             id="com.tibco.cep.studio.ui.GlobalVariableTrayView">
+       </TrayView>
+    </extension>
+    <extension
+          point="org.eclipse.ui.ide.filesystemSupport">
+       <filesystemContributor
+             class="com.tibco.cep.studio.ui.filesystem.ProjectLibraryFileSystemContributor"
+             label="Project Library File"
+             scheme="projlib">
+       </filesystemContributor>
+    </extension>
+    <extension
+          point="com.tibco.cep.studio.core.quickFixProvider">
+       <provider
+             provider="com.tibco.cep.studio.ui.validation.resolution.MapperQuickFixProvider">
+       </provider>
+    </extension>
+ 
+    
+   </plugin>

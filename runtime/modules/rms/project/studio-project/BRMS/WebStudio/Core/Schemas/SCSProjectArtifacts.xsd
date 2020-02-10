@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema xmlns="http://www.w3.org/2001/XMLSchema" 
+targetNamespace="http://www.tibco.com/be/webstudio/SCSProjectArtifacts" 
+xmlns:tns="http://www.tibco.com/be/webstudio/SCSProjectArtifacts" elementFormDefault="qualified" xmlns:Q1="http://www.tibco.com/be/webstudio/ManagedProjects">
+
+    <import namespace="http://www.tibco.com/be/webstudio/ManagedProjects" schemaLocation="ManagedProjects.xsd"/>
+
+    <complexType name="ProjectArtifactsType">
+    	<sequence>
+    		<element name="Artifact" type="tns:ArtifactEntryType"
+    			maxOccurs="unbounded" minOccurs="0" />
+    	</sequence>
+    	<attribute name="projectName" type="string"/>
+    </complexType>
+
+    <complexType name="ArtifactEntryType">
+    	<complexContent>
+    		<extension base="Q1:EntryType">
+    			<sequence>
+    				<element name="ArtifactType" type="tns:SupportedArtifactType"/>
+    			</sequence>
+    		</extension>
+    	</complexContent>
+    </complexType>
+    
+
+    <complexType name="SupportedArtifactType">
+        <annotation>
+        	<documentation>More information about the artifact like type, file extension, image source info etc. This will allow extending supported artifact types.</documentation>
+        </annotation>
+        <sequence>
+    		<element name="fileExtension" type="string">
+    			<annotation>
+    				<documentation>File extension of the artifact to be supported.</documentation>
+    			</annotation>
+    		</element>
+    		<element name="imageSrc" type="anyURI">
+    			<annotation>
+    				<documentation>The URI to load image from.</documentation>
+    			</annotation>
+    		</element>
+    	</sequence>
+    	<attribute name="type" type="string">
+    		<annotation>
+    			<documentation>Type of the artifact. Preferably upper case.</documentation>
+    		</annotation>
+    	</attribute>
+    </complexType>
+</schema>

@@ -1,0 +1,37 @@
+/**
+ * @description Get all artifactTypes allowed for all roles of a user.
+ */
+String rulefunction Approval.Rules.RuleFunctions.ArtifactRuleFunctions.AMS_RF_GetUnionArtifactTypes {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		AAA.Concepts.AMS_C_LoggedInUser ams_c_loggedinuser;
+	}
+	body {
+		Object LOGGER = Log.getLogger("Approval.Rules.RuleFunctions.ArtifactRuleFunctions.AMS_RF_GetUnionArtifactTypes");
+		Log.log(LOGGER, "Info", "Logged in user - %s ", ams_c_loggedinuser.username);
+		String[] loggedInUserRoles = 
+			Instance.PropertyArray.toArrayString(ams_c_loggedinuser.roles);
+		
+		String allArtifactsTypes = "";
+		
+		for (int loop = 0, length = loggedInUserRoles@length; loop < length; loop++) {
+			String roleName = loggedInUserRoles[loop];
+			Log.log(LOGGER, "Debug", "Role in user %s ", roleName);
+			
+			AMS_C_Role role = Instance.getByExtIdByUri(roleName, "/AAA/Concepts/AMS_C_Role");
+			
+			if (role != null) {
+				String[] allowedArtifactTypes = 
+					Instance.PropertyArray.toArrayString(role.allowedArtifactTypes);
+				for (int innerLoop = 0, innerLength = allowedArtifactTypes@length; innerLoop < innerLength; innerLoop++) {
+					allArtifactsTypes = 
+						String.concat(allArtifactsTypes, allowedArtifactTypes[innerLoop]);
+					allArtifactsTypes = String.concat(allArtifactsTypes, ",");	
+				}
+			}
+		}
+		return allArtifactsTypes;
+	}
+}

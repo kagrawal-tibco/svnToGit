@@ -1,0 +1,40 @@
+/**
+ * @description 
+ * @author 
+ */
+rule Rules.RuleSet.ProcessApplication_Rule {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Events.ProcessApplication	processapplication;
+		Concepts.CreditCardApplication	creditcardapplication;
+		Concepts.Applicant applicant;
+		
+	}
+	when {
+		processapplication.start == true;  // true when the event to process application is received
+		processapplication.SSN == applicant.SSN; // make sure we process the proper applicant 
+		creditcardapplication.Name == applicant.Name; // make sure we process the proper credit card application
+	}
+	then {
+		System.debugOut("*************** 3 Invoking ProcessApplication_VirtualRuleFunction *****************");
+		Event.consumeEvent(processapplication);  //remove event from working memory
+		
+		Virtual_RF.Applicant_VirtualRuleFunction(applicant, null); // first set the credit limit of the applicant
+		
+		if (applicant.CreditLimit == 0) {
+		    System.debugOut("Credit application " + applicant.Status + ". At this time you are only eligible for a debit card\n");
+		} else {
+			// create a new CreditCard and attach it to the credit card application
+			creditcardapplication.CardIssued = Instance.createInstance("xslt://{{/Concepts/CreditCard}}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" version=\"2.0\" exclude-result-prefixes=\"xsl xsd\"><xsl:output method=\"xml\"/><xsl:template name=\"Function\" match=\"/\"><createObject><object><xsl:attribute name=\"extId\"><xsl:value-of select=\"&quot;cc_&quot;\"/></xsl:attribute></object></createObject></xsl:template></xsl:stylesheet>");
+			Virtual_RF.ProcessApplication_VirtualRuleFunction(applicant,creditcardapplication);    //call virtual rule function
+		    System.debugOut("Credit application " + applicant.Status + 
+		    	". You are eligible for a " + creditcardapplication.CardIssued.Id + 
+		    	" card with a credit limit of $" + applicant.CreditLimit );
+		    System.debugOut(creditcardapplication.CreditType + ": Minumum Rate of " + creditcardapplication.CardIssued.DefaultRate + 
+		    	"%, current interest rate of " + creditcardapplication.CardIssued.InterestRate + "%\n");
+		}
+	}
+}

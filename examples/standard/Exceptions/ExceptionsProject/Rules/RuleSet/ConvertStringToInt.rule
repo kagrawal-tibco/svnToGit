@@ -1,0 +1,29 @@
+/**
+ * @description 
+ * @author 
+ */
+rule Rules.RuleSet.ConvertStringToInt {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Events.Values_Event	values_event;
+		
+	}
+	when {
+		
+	}
+	then {
+		System.debugOut("______________________________________________________________________________________________________");
+		System.debugOut("ConvertStringToInt Rule: Event received with properties- '"+values_event.Text+"', "+values_event.Number);
+		try{
+		     System.debugOut("Converting String -"+values_event.Text+" to Integer");
+		     int i = Number.valueOfString(values_event.Text, 10);
+		     System.debugOut("ValueOfString :" + i);
+		}
+		finally{
+		    System.debugOut("Finally Block: I am executed even when there was an exception in Try block");
+		}
+	}
+}

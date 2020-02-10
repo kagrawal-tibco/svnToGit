@@ -1,0 +1,2343 @@
+/*
+ *
+ *   Author:     Suresh Subramani
+ *   File:       RuleGrammar.jj
+ *   Desc:       A grammar description of the Business Event Rule Language
+ *               JavaCC 3.1 or above is used as a compiler to generate Java files.
+ *               Please look into JavaCC documentation available at
+ *               https://javacc.dev.java.net/doc/javaccgrm.html
+ */
+
+options {
+  JAVA_UNICODE_ESCAPE = true;
+  UNICODE_INPUT = true;
+  STATIC=false;
+  ERROR_REPORTING = true;
+  //DEBUG_PARSER = true;
+  
+  //FORCE_LA_CHECK = true;
+}
+
+PARSER_BEGIN(RuleGrammar)
+
+package com.tibco.be.parser;
+
+import java.util.ArrayList;
+import com.tibco.be.parser.tree.*;
+import com.tibco.be.parser.semantic.NodeTransformation;
+import com.tibco.be.parser.impl.RuleTemplateParser;
+import java.io.InputStream;
+import java.io.Reader;
+
+public class RuleGrammar {
+    ParserClient client;
+    
+    ParseSyntaxTree mParseTree = new ParseSyntaxTree();
+       
+    public void setParserClient(ParserClient client) {
+        this.client = client;
+    }
+    
+    public void setTabSize(int tabSize) {
+        jj_input_stream.setTabSize(tabSize);
+    }
+    
+    public void re_init(Reader reader) {
+        ReInit(reader);
+        mParseTree.reset();
+    }
+    
+    public void re_init(InputStream stream) {
+        ReInit(stream);
+        mParseTree.reset();
+    }
+    
+    //skips past the past token, skips to (but doesn't consume) the to token
+    //arguments that are -1 will be ignored
+    //<EOF> will never be skipped past
+    //returns the last token skipped
+    protected Token error_skip_token(int past, int to) {
+        return error_skip_tokens(past == -1 ? null : new int[] {past}, to == -1 ? null : new int[] {to});
+    }
+
+    //skips past the past tokens, skips to (but doesn't consume) the to tokens
+    //null arguments will be ignored
+    //<EOF> will never be skipped past
+    //returns the last token skipped
+    protected Token error_skip_tokens(int[] past, int[] to) {
+    Token t = getToken(0);
+    while(true) {
+        if(getToken(1).kind == EOF || contains_int(to, getToken(1))) {
+            //System.out.println(t.image + " -- " + getToken(1).image);
+            return t;
+        }
+        //catch ParseError
+        //on the first iteration, getNextToken() returns the token that caused the error
+        t = getNextToken();
+        if(contains_int(past, t)) {
+            //System.out.println(t.image + " -- " + getToken(1).image);
+            return t;
+         }
+      }
+    }
+
+    protected boolean contains_int(int[] array, Token token) {
+        if(array == null || token == null) return false;
+        for(int ii = 0; ii < array.length; ii++) {
+            if(array[ii] == token.kind) return true;
+        }
+        return false;
+    }
+
+    protected void reportError(ParseException pe) {
+        client.addError(pe);
+        
+        //System.out.println(pe.getMessage());
+    }
+    
+    protected void reportError(ParseException pe, String message) {
+        client.addError(pe, message);
+    }
+}
+PARSER_END(RuleGrammar)
+
+/* WHITE SPACE */
+TOKEN: { <BEGIN_WHITESPACE: []> }
+SPECIAL_TOKEN :
+{
+  " "
+| "\t"
+| "\n"
+| "\r"
+| "\f"
+}
+TOKEN: { <END_WHITESPACE: []> }
+
+/* COMMENTS */
+TOKEN: { <BEGIN_COMMENT_START: []> }
+SPECIAL_TOKEN :
+    {
+      <START_SINGLE_LINE_COMMENT: "//"> : IN_SINGLE_LINE_COMMENT
+    |
+      <START_MULTI_LINE_COMMENT: "/*"> : IN_MULTI_LINE_COMMENT
+    }
+TOKEN: { <END_COMMENT_START: []> }
+
+TOKEN: { <BEGIN_COMMENT_END: []> }
+<IN_SINGLE_LINE_COMMENT>
+    SPECIAL_TOKEN :
+    {
+      <END_SINGLE_LINE_COMMENT: "\n" | "\r" | "\r\n" > : DEFAULT
+    }
+
+<IN_MULTI_LINE_COMMENT>
+    SPECIAL_TOKEN :
+    {
+      <END_MULTI_LINE_COMMENT: "*/" > : DEFAULT
+    }
+TOKEN: { <END_COMMENT_END: []> }
+
+<IN_SINGLE_LINE_COMMENT, IN_MULTI_LINE_COMMENT>
+    SKIP :
+    {
+      < ~[] >
+    }
+
+
+/* RESERVED WORDS AND LITERALS */
+TOKEN: { <BEGIN_RESERVED_WORDS: []> }
+
+/* RULES LANGUAGE RESERVED WORDS */
+TOKEN: { <BEGIN_KEYWORDS: []> }
+TOKEN :
+{
+     <RULE:     "rule" >
+   | <ATTR:     "attribute" >
+   | <SCOPE:	"scope" >
+   | <BODY:		"body" >
+   | <DECL:     "declare" >
+   | <WHEN:     "when" >
+   | <THEN:     "then" >
+   //when support for this keyword is implemented, move it to the display keywords section 
+   | <THIS:     "this" >
+   //when support for moveto keyword is implemented, move it to the display keywords section
+   | <MOVETO:   "moveto" > 
+   | <RULE_TEMPLATE: "ruletemplate" >
+   | <VIEWS:     "views" >
+   | <BINDINGS:  "bindings" >
+   | <DISPLAY:  "display" >
+   | <ACTIONCTX: "actionContext" >
+}
+
+/* RESERVED WORDS THAT THE USER MAY TYPE INTO THE RULE EDITOR */
+TOKEN: { <BEGIN_DISPLAY_KEYWORDS: []> }
+TOKEN:
+{  
+     <TRUE:     "true" >
+   | <FALSE:    "false" >
+   | <NULL:     "null" >
+   | <IF:       "if" >
+   | <ELSE:     "else" >
+   | <WHILE:    "while" >
+   | <FOR:      "for" >
+   | <CONTINUE: "continue" >
+   | <BREAK:    "break" >
+   | <RETURN:   "return" >
+   | <INSTANCEOF:  "instanceof" >
+   | <THROW:       "throw" >
+   | <TRY:         "try" >
+   | <CATCH:       "catch" >
+   | <FINALLY:     "finally" >
+   | <CALL:        "call" >
+   | <CREATE:       "create" >
+   | <MODIFY:      "modify" >
+
+    
+   //these type names are part of the RDFTypes
+   //and therefore don't need to be given
+   //their own tokens in the language, but
+   //since they are still special tokens in java
+   //they need to be disallowed as entity names,
+   //and keeping them as implemented keywords rather
+   //than java keywords prevents the highlighter from
+   //turning them red
+   | <INT:      "int" >
+   | <LONG:     "long" >
+   | <DOUBLE:   "double" >
+   | <BOOLEAN:  "boolean" >
+}
+TOKEN: { <END_DISPLAY_KEYWORDS: []> }
+
+TOKEN: { <END_KEYWORDS: []> }
+
+/* ATTRIBUTES (may be factored out later) */
+TOKEN: { <BEGIN_ATTRIBUTES: []> }
+TOKEN:
+{
+     <REQUEUE:  "requeue" >
+   | <PRIORITY: "priority" >
+   | <LASTMOD:  "$lastmod" >
+   | <FORWARD_CHAIN: "forwardChain" >
+   | <RANK_FUNCTION: "rank" >
+   | <VALIDITY: "validity" >
+}
+TOKEN: { <END_ATTRIBUTES: []> }
+
+/* JAVA RESERVED WORDS */
+TOKEN: { <BEGIN_JAVAWORDS: []> }
+TOKEN:
+{
+      <JAVAWORD_PACKAGE:     "package" >
+    | <JAVAWORD_CHAR:        "char" >
+    | <JAVAWORD_FLOAT:       "float" >
+    | <JAVAWORD_ABSTRACT:    "abstract" >
+    | <JAVAWORD_DEFAULT:     "default" >
+    | <JAVAWORD_PRIVATE:     "private" >
+    | <JAVAWORD_DO:          "do" >
+    | <JAVAWORD_IMPLEMENTS:  "implements" >
+    | <JAVAWORD_PROTECTED:   "protected" >
+    | <JAVAWORD_IMPORT:      "import" >
+    | <JAVAWORD_PUBLIC:      "public" >
+    | <JAVAWORD_THROWS:      "throws" >
+    | <JAVAWORD_BYTE:        "byte" >
+    | <JAVAWORD_TRANSIENT:   "transient" >
+    | <JAVAWORD_CASE:        "case" >
+    | <JAVAWORD_EXTENDS:     "extends" >
+    | <JAVAWORD_SHORT:       "short" >
+    | <JAVAWORD_FINAL:       "final" >
+    | <JAVAWORD_INTERFACE:   "interface" >
+    | <JAVAWORD_STATIC:      "static" >
+    | <JAVAWORD_VOID:        "void" >
+    | <JAVAWORD_STRICTFP:    "strictfp" >
+    | <JAVAWORD_VOLATILE:    "volatile" >
+    | <JAVAWORD_CLASS:       "class" >
+    | <JAVAWORD_NATIVE:      "native" >
+    | <JAVAWORD_SUPER:       "super" >
+    | <JAVAWORD_CONST:       "const" >
+    | <JAVAWORD_NEW:         "new" >
+    | <JAVAWORD_SWITCH:      "switch" >
+    | <JAVAWORD_GOTO:        "goto" >
+    | <JAVAWORD_SYNCHRONIZED: "synchronized" >
+}
+TOKEN: { <END_JAVAWORDS: []> }
+TOKEN: { <END_RESERVED_WORDS: []> }
+   
+/* LITERALS */
+TOKEN: { <BEGIN_LITERALS: []> }
+TOKEN :
+{
+  < DECIMAL_LONG_LITERAL: 
+    <DECIMAL_INT_LITERAL> ["l","L"]
+  >
+| 
+  < HEX_LONG_LITERAL:
+    <HEX_INT_LITERAL> ["l","L"]
+  >
+|
+  < DECIMAL_INT_LITERAL: (["0"-"9"])+ >
+        //remove leading zeroes so java doesn't think they're octal literals after code generation
+        { 
+            int ii = 0;
+            String img = matchedToken.image;
+            while(ii < img.length()) { 
+                if(img.charAt(ii)!='0') break;
+                else ii++;
+            }
+            
+            if(ii < img.length()) matchedToken.image = img.substring(ii);
+            else matchedToken.image = "0";
+         }
+|
+  < HEX_INT_LITERAL: "0" ["x","X"] (["0"-"9","a"-"f","A"-"F"])+ >
+|
+  < DOUBLE_LITERAL:
+        (["0"-"9"])+ "." (["0"-"9"])* (<EXPONENT>)? (["d","D"])?
+      | "." (["0"-"9"])+ (<EXPONENT>)? (["d","D"])?
+      | (["0"-"9"])+ <EXPONENT> (["d","D"])?
+      | (["0"-"9"])+ (<EXPONENT>)? ["d","D"]
+  >
+|
+  < #EXPONENT: ["e","E"] (["+","-"])? (["0"-"9"])+ >
+|
+  < STRING_LITERAL:
+      "\""
+      <STRING_CONTENTS>
+      "\""
+  >
+|
+  < #STRING_CONTENTS:
+  (   (~["\"","\\","\n","\r"])
+        | ("\\"
+            ( ["n","t","b","r","f","\\","'","\""]
+            | ["0"-"7"] ( ["0"-"7"] )?
+            | ["0"-"3"] ["0"-"7"] ["0"-"7"]
+            )
+          )
+  )*
+  >
+//|
+//  < PATH_LITERAL: "#" (~["#"])+ "#" >
+|
+    //xslt literals start with ""xslt:// and end with ""
+  < XSLT_LITERAL: "\"\"" "xslt://" <STRING_CONTENTS> "\"\"" > 
+}
+TOKEN: { <END_LITERALS: []> }
+
+/* IDENTIFIERS */
+
+TOKEN :
+{
+// The specifications for ID_START and ID_PART_ADDITIONS are very lengthy
+// so they are specified at the end of the file.
+  < IDENTIFIER: <ID_START> (<ID_START>|<ID_PART_ADDITIONS>)* >
+}
+
+/* SEPARATORS */
+TOKEN: { <BEGIN_SEPARATORS: []> }
+TOKEN :
+{
+      < LPAREN: "(" >
+    | < RPAREN: ")" >
+    | < LBRACE: "{" >
+    | < RBRACE: "}" >
+    | < LBRACKET: "[" >
+    | < RBRACKET: "]" >
+    | < SEMICOLON: ";" >
+    | < COMMA: "," >
+    | < DOT: "." >
+    | < AT: "@" >
+    //not really a separator but here for syntax coloring purposes
+    | < BRACKET_PAIR: "[]" >
+}
+TOKEN: { <END_SEPARATORS: []> }
+/* OPERATORS */
+TOKEN: { <BEGIN_OPERATORS: []> }
+TOKEN :
+{
+      < ASSIGN: "=" >
+    | < GT: ">" | "greater than" > { matchedToken.image = ">"; }
+    | < LT: "<" | "less than" > { matchedToken.image = "<"; }
+    | < BANG: "!" >
+    //colon is more a separator like <DOT>?
+    | < EQ: "==" | "equal to" > { matchedToken.image = "=="; }
+    | < LE: "<=" | "less than or equal" > { matchedToken.image = "<="; }
+    | < GE: ">=" | "greater than or equal" > { matchedToken.image = ">="; }
+    | < NE: "!=" | "not equal" > { matchedToken.image = "!="; }
+    | < SC_OR: "||" >
+    | < SC_AND: "&&" >
+    | < INCR: "++" >
+    | < DECR: "--" >
+    | < PLUSEQ: "+=" >
+    | < MINUSEQ: "-=" >
+    | < SLASHEQ: "/=" >
+    | < STAREQ: "*=" >
+    | < PCNTEQ: "%=" >
+    | < PLUS: "+" >
+    | < MINUS: "-" >
+    | < STAR: "*" >
+    | < SLASH: "/" >
+    | < PCNT: "%" >
+}
+TOKEN: { <END_OPERATORS: []> }
+
+/*
+ * more miscellaneous tokens for generating the parse tree
+ */
+TOKEN: { 
+      <ARRAY_ACCESS:    []>
+    | <LINE_STATEMENT:  []>
+    | <BLOCK_STATEMENT: []>
+    | <EXPRESSION_NAME: []>
+    | <ARRAY_LITERAL:   []>
+    | <ARRAY_ALLOCATOR: []>
+    | <MISSING_LHS:     []>
+    | <OPEN_RANGE:           []>
+    | <POST_INCR:           []>
+    | <POST_DECR:           []>
+}
+
+/***********************************************
+ * THE Business Event Rule Grammar Begins here *
+ ***********************************************/
+
+/*
+ * Program structuring syntax follows.
+ */
+
+void CompilationUnit() :
+{}
+{
+  try {
+    ( RuleDeclaration() )*
+    <EOF>
+  } catch (ParseException pe) {
+    reportError(pe);
+    //Print a message that the parser will not continue past this error
+    //not trying to recover any errors caught at this level
+    //throw pe;
+  }
+}
+
+//used for checking the condition in RuleChecker
+void ConditionBlock() :
+{}
+{
+try {
+    Predicates()
+    <EOF>
+  } catch (ParseException pe) {
+      Token start = getToken(0);
+      Token end = error_skip_tokens(new int[]{SEMICOLON}, new int[]{});
+      reportError(pe, CompileErrors.predicateExpected());
+  }
+}
+
+//Used for checking the action in RuleCompiler
+void ActionBlock() :
+{}
+{
+  try {
+    ThenStatements(SourceType.RULE_ACTION)
+    <EOF>
+  } catch (ParseException pe) {
+        Token start = getToken(0);
+        Token end = error_skip_tokens(new int[]{SEMICOLON}, new int[]{});
+        reportError(pe, CompileErrors.statementExpected());
+        
+    }
+}
+
+//used for getting the type of an expression
+void StandaloneExpression(SourceType srcType) :
+{
+    RootNode node = null;
+    Token end = null;
+}
+{
+try {
+    node = Predicate(srcType) {end = getToken(0);}
+    <EOF>
+  } catch (ParseException pe) {
+      //Token start = getToken(0);
+      //Token end = error_skip_tokens(new int[]{SEMICOLON}, new int[]{});
+      node = null;
+      if(pe.expectedTokenSequences.length > 0 && pe.expectedTokenSequences[0].length > 0 && pe.expectedTokenSequences[0][0] == RuleGrammarConstants.EOF && pe.currentToken != null && pe.currentToken.next != null && pe.currentToken.next.image != null && pe.currentToken.next.image.length() > 0) {
+        reportError(pe, "unexpected symbol: \"" + pe.currentToken.next.image + '"');
+      } else {
+        reportError(pe);
+      }
+  } finally {
+      if(node != null) node.setLastToken(end);
+  }
+}
+
+void StandaloneThenStatement(SourceType srcType) :
+{
+    Token start = null;
+    Token end = null;
+    RootNode root = null;
+}
+{
+try{
+    { start = getToken(1); }
+    ThenStatement()
+    {end = getToken(0);}
+    <EOF>
+    {
+        if(!mParseTree.isEmpty()) {
+            Node node = mParseTree.popNode();
+            root = new RootNode(srcType, start, end);
+            root.prependChild(node);
+            client.addThenTree(root);
+        }
+    }
+} catch (ParseException pe) {
+       if(pe.expectedTokenSequences.length > 0 && pe.expectedTokenSequences[0].length > 0 && pe.expectedTokenSequences[0][0] == RuleGrammarConstants.EOF && pe.currentToken != null && pe.currentToken.next != null && pe.currentToken.next.image != null && pe.currentToken.next.image.length() > 0) {
+         reportError(pe, "unexpected symbol: \"" + pe.currentToken.next.image + '"');
+       } else {
+         reportError(pe);
+       }
+}
+}
+
+void RuleFunctionBody(SourceType sourceType) :
+{}
+{
+  try {
+    ThenStatements(sourceType)
+    <EOF>
+  } catch (ParseException pe) {
+        Token start = getToken(0);
+        Token end = error_skip_tokens(new int[]{SEMICOLON}, new int[]{});
+        reportError(pe, CompileErrors.statementExpected());
+        
+    }
+}
+
+String Identifier()  :
+{ 
+    Token token;
+}
+{
+  ( token = <CALL>
+  | token = <CREATE>
+  | token = <MODIFY>
+  | token=<IDENTIFIER>
+  )
+  {
+    ProductionNode.newNode(mParseTree, token, Node.NODE_NULL_RELATION);
+    return token.image;
+  }
+}
+
+String XSLTLiteral()  :
+{ 
+    Token token;
+}
+{
+  token=<XSLT_LITERAL>
+  {
+    ProductionNode.newNode(mParseTree, token, Node.NODE_NULL_RELATION);
+    return token.image;
+  }
+}
+
+void RuleDeclaration() :
+{
+    NameNode fullName;
+}
+{
+        { ((RuleFileParserClient)client).newRule(); } 
+        <RULE> fullName = Name() { ((RuleFileParserClient)client).setName(fullName.toName()); }
+        "{" RuleNT() "}"
+}
+
+
+/** 
+ * RuleNT (NT => Non Terminal Identifier. The RuleNT is specified as
+ * Rule := "(AttributeNT | DeclareNT | WhenNT | ThenNT )*
+ * The grammar does have a weakness that you can declare Attribute n nos of times, 
+ * the Whenblock can be declared n nos
+ * time. Need to change the grammar at some time.
+ */
+
+void RuleNT() :
+{ }
+{
+    (AttributeNT() { }
+    | DeclareNT() { }
+    | WhenNT() { }
+    | ThenNT() { }
+    )*
+}
+
+void AttributeNT() :
+{ }
+{
+    <ATTR> "{"  ( AttributeBodyDeclaration() )* "}"    
+}
+
+void AttributeBodyDeclaration() :
+{ Token attr;
+  Token value = null;
+  NameNode declName = null;
+}
+{
+    try {
+        (
+              attr = <PRIORITY> <ASSIGN> value = IntegerLiteral() <SEMICOLON>
+            |
+              attr = <REQUEUE> <ASSIGN> value = BooleanLiteral() <SEMICOLON>
+            |
+              attr = <LASTMOD> <ASSIGN> value = StringLiteral() <SEMICOLON>
+            |
+              attr = <VALIDITY> <ASSIGN> value = StringLiteral() <SEMICOLON>
+            |
+              attr = <FORWARD_CHAIN> <ASSIGN> value = BooleanLiteral() <SEMICOLON>   
+            |     
+              attr = <RANK_FUNCTION> <ASSIGN>  ( value = NullLiteral() | declName = Name() ) <SEMICOLON>  
+        )
+        {
+        	if(declName != null) {
+        		((RuleFileParserClient)client).addAttribute(attr, declName.toName());
+          	} else {
+          		((RuleFileParserClient)client).addAttribute(attr, value.image);
+          	}
+        }
+        
+    } catch (ParseException pe) {
+        reportError(pe);
+        error_skip_tokens(new int[]{SEMICOLON}, new int[]{RBRACE});
+    }
+}
+
+
+
+void DeclareNT() :
+{ }
+{
+    	<DECL> <LBRACE> (Declarator())* <RBRACE>
+    |
+    	<SCOPE> <LBRACE> (Declarator())* <RBRACE>
+}
+
+
+void Declarator():
+{
+    NameNode declName;
+    Token varName;
+}
+{
+    try {
+//        (declName= Name() varName = <IDENTIFIER> <SEMICOLON>)
+        (declName= Name()
+            (
+            varName = <CALL>
+            | varName = <CREATE>
+            | varName = <MODIFY>
+            | varName = <IDENTIFIER>
+            ) <SEMICOLON>)
+        {
+            ((RuleFileParserClient)client).addDeclaration(declName.toName(), varName.image);
+        }
+    } catch (ParseException pe) {
+        reportError(pe);
+        error_skip_tokens(new int[]{SEMICOLON}, new int[]{RBRACE});   
+    }
+}
+
+void WhenNT() :
+{}
+{
+    <WHEN> <LBRACE> Predicates() <RBRACE>
+    {
+    }
+}
+
+void Predicates() :
+{
+    RootNode node;
+    Token end;
+}
+{
+    ( 
+        node = Predicate(SourceType.RULE_CONDITION) end = <SEMICOLON>
+        { if(node != null) node.setLastToken(end); }
+    )*
+}
+
+RootNode Predicate(SourceType srcType)  :
+{
+    mParseTree = new ParseSyntaxTree();
+    Token start = null;
+    //try {
+        start = getToken(1);
+    //} catch (TokenMgrError tme) {}
+    RootNode root = null;
+}
+{   
+    try {
+        Expression()
+        {
+            root = new RootNode(srcType, start, start);
+            mParseTree.buildTree(root);
+            Node endNode = root.getLastChild();
+            if(endNode != null) root.setLastToken(endNode.getLastToken());
+            client.addWhenTree(root);
+            //System.out.println(root.getSourceText());
+        }
+    } catch (ParseException pe) {
+        reportError(pe);
+        error_skip_tokens(new int[]{SEMICOLON}, new int[]{RBRACE});
+        root = null;
+    } finally {
+        return root;       
+    }
+}
+
+void Expression() :
+{
+   Token t = null;
+}
+{
+    ConditionalAndExpression() (
+        t = <SC_OR> ConditionalAndExpression() {
+                ProductionNode.newNode(mParseTree, t, Node.NODE_BINARY_RELATION);
+            }
+        )*
+        {
+            //Node n = mParseTree.buildExpressionNode();
+            //n.dump("EXPR");
+            //return n;
+
+
+        }
+
+
+
+}
+
+void ConditionalAndExpression() :
+{
+    Token t = null;
+}
+{
+
+      EqualityExpression()
+      (
+            t = <SC_AND> EqualityExpression() {
+                ProductionNode.newNode(mParseTree, t,Node.NODE_BINARY_RELATION);
+
+            }
+      )*
+      { }
+
+
+}
+
+void EqualityExpression() :
+{
+    Token t = null;
+}
+{
+//An equality expression has a value, and a relational expression has a value,
+//but a domain spec doesn't have a value, so it has to be treated separately from
+//releational expression, since a domain spec can never stand alone, for example
+//it can't be assigend to a variable (int i = (1,2] : NOT OK, boolean b = 1 == (1,2] : OK)
+    
+    (
+        LOOKAHEAD(DomainSpec())
+        DomainSpec()
+      |
+        RelationalExpression()
+      |
+        ComparisonNoLHS()
+    )
+    ( 
+        (t = <EQ> | t = <NE>) 
+        (
+            LOOKAHEAD(DomainSpec())
+            DomainSpec()
+          |
+            RelationalExpression()
+          |
+            ComparisonNoLHS()
+        )
+        {
+            ProductionNode.newNode(mParseTree, t,Node.NODE_BINARY_RELATION);
+        }
+
+    )*
+}
+
+void ComparisonNoLHS() :
+{
+    Token t = null;
+    Token newToken = null;
+}
+{
+    (
+        (t = <EQ> | t = <NE> )
+        (
+            LOOKAHEAD(DomainSpec())
+            DomainSpec()
+          |
+            UnaryExpression() 
+        )
+        {
+            //above expression is contained inside a unary comparison node, which is contained inside a unary MISSING_LHS node
+            ProductionNode.newNode(mParseTree, t,Node.NODE_UNARY_RELATION);
+            newToken = Token.newToken(RuleGrammarConstants.MISSING_LHS, "missing LHS", t.beginLine, t.beginColumn, t.endLine, t.endColumn);
+            ProductionNode.newNode(mParseTree, newToken, Node.NODE_UNARY_RELATION);
+        }
+    )
+
+|
+
+    ( 
+        t=<INSTANCEOF>
+        Type()
+        {
+            ProductionNode.newNode(mParseTree, t, Node.NODE_UNARY_RELATION);
+            newToken = Token.newToken(RuleGrammarConstants.MISSING_LHS, "missing LHS", t.beginLine, t.beginColumn, t.endLine, t.endColumn); 
+            ProductionNode.newNode(mParseTree, newToken, Node.NODE_UNARY_RELATION);
+        }
+    )
+
+|
+    (
+        ( t=<LT> | t=<GT> | t=<LE> | t=<GE> )
+        AdditiveExpression()
+        {
+            ProductionNode.newNode(mParseTree, t, Node.NODE_UNARY_RELATION);
+            newToken = Token.newToken(RuleGrammarConstants.MISSING_LHS, "missing LHS", t.beginLine, t.beginColumn, t.endLine, t.endColumn); 
+            ProductionNode.newNode(mParseTree, newToken, Node.NODE_UNARY_RELATION);
+        }
+    )
+}
+
+void DomainSpec() :
+{}
+{
+    RangeExpression() | SetMembershipExpression()
+}
+
+void RangeExpression() :
+{
+    ParseSyntaxTree tree = mParseTree;
+    mParseTree = new ParseSyntaxTree();
+    Token start = null;
+    Token end = null;
+    boolean hasStart = false;
+    boolean hasEnd = false;
+}
+{
+    ( start = "[" | start = "(" ) [ Expression() {hasStart = true;} ] "," [ Expression() {hasEnd = true;} ] ( end = "]" | end = ")" )
+    {
+        ProductionNodeListNode node = mParseTree.buildProductionNodeListNode(start, end, ProductionNodeListNode.RANGE_TYPE);
+        if(!hasStart) {
+            node.prependChild(NodeTransformation.OPEN_RANGE);
+        }
+        if(!hasEnd) {
+            Node startNode = node.removeFirstChild();
+            node.prependChild(NodeTransformation.OPEN_RANGE);
+            node.prependChild(startNode);
+        }
+        
+        tree.pushNode(node);
+        mParseTree.reset();
+        mParseTree = tree;
+    }
+}
+
+void SetMembershipExpression() :
+{
+    ParseSyntaxTree tree = mParseTree;
+    mParseTree = new ParseSyntaxTree();
+    Token start = null;
+    Token end = null;
+}
+{
+    ( start = "{" ) [ Expression() ( "," Expression() )* ] end = "}"
+    {
+        tree.pushNode(mParseTree.buildProductionNodeListNode(start, end, ProductionNodeListNode.SET_MEMBERSHIP_TYPE));
+        mParseTree.reset();
+        mParseTree = tree;
+    }
+}
+
+void RelationalExpression() :
+{
+    Token t = null;
+}
+{
+
+	AdditiveExpression()
+	(
+	  (    
+	    (( t=<LT> | t=<GT> | t=<LE> | t=<GE> ) AdditiveExpression())
+	  |
+	    ( t=<INSTANCEOF> Type() )
+	  )
+      {
+        ProductionNode.newNode(mParseTree, t, Node.NODE_BINARY_RELATION);
+      }	  
+	  
+	) *
+    { }
+
+}
+
+void AdditiveExpression() :
+{
+    Token t = null;
+
+}
+{
+
+  MultiplicativeExpression()
+  ( ( t=<PLUS> | t= <MINUS> )  MultiplicativeExpression()
+        {
+            ProductionNode.newNode(mParseTree, t,Node.NODE_BINARY_RELATION);
+        }
+  )*
+  { }
+}
+
+void MultiplicativeExpression() :
+{
+    Token t = null;
+
+}
+{
+
+    UnaryExpression() (
+    ( t=<STAR> | t=<SLASH> | t=<PCNT> ) UnaryExpression() {
+
+            ProductionNode.newNode(mParseTree, t,Node.NODE_BINARY_RELATION);
+     }
+    )*
+   { }
+}
+
+
+void UnaryExpression() :
+{
+Token t = null;
+}
+{
+  ( t="+" | t="-" | t ="!") UnaryExpression()
+  {
+        ProductionNode.newNode(mParseTree, t,Node.NODE_UNARY_RELATION);
+  }
+
+ | 
+   PrimaryExpression()
+}
+
+/*
+    //a.b.c ... is all one expression name
+    a.b.c ... > 5
+    
+    //a.b.c.lala single method invocation (primary) the .d is fieldaccess
+    a.b.c.lala().d
+
+*/
+void PrimaryExpression() :
+{}
+{
+	  PrimaryPrefix() ( PrimarySuffix() )*
+}
+
+void PrimaryPrefix() :
+{}
+{
+      Literal()
+	//|
+	//This()
+	|
+	  "(" Expression() ")"
+    
+    |
+        LOOKAHEAD(Type() "{")
+        ArrayLiteral()
+    |
+        LOOKAHEAD(ArrayAllocator())
+        ArrayAllocator()
+    |
+        LOOKAHEAD(MethodName() "(")
+        MethodName() ArgumentsSuffix()
+    |
+        ExpressionName()
+}
+
+void PrimarySuffix() :
+{}
+{
+      ArrayAccessSuffix()
+    |
+      FieldAccessSuffix()    
+}
+
+void ArrayAccessSuffix() :
+{ 
+    Token start;
+    Token end; 
+}
+{
+    start = "[" Expression() end = "]"
+    {
+        Token t = Token.newToken(RuleGrammarConstants.ARRAY_ACCESS, "[]", start.beginLine, start.beginColumn, end.endLine, end.endColumn);
+	    ProductionNode.newNode(mParseTree, t, Node.NODE_BINARY_RELATION);
+	}
+}
+
+void FieldAccessSuffix() :
+{
+    Token t;
+}
+{
+    //property or attribute access
+    ( t = "." | t = "@" )  Identifier()
+    {
+        ProductionNode.newNode(mParseTree, t, Node.NODE_BINARY_RELATION);
+    }
+}
+
+void ArgumentsSuffix() :
+{
+    //Backup the current ParseTree
+    ParseSyntaxTree tree = mParseTree;
+    mParseTree = new ParseSyntaxTree();
+    Token t= null;
+    
+    //If I am here, by grammar, the stack must have a 
+    //NameNode at the top
+}
+{
+  "(" [ ArgumentList() ] ")"
+  {
+    NameNode fnName = (NameNode) tree.popNode();
+    //System.out.println(mParseTree);
+    FunctionNode n = mParseTree.buildFunctionNode(fnName);
+    tree.pushNode(n);
+    mParseTree.reset();
+    mParseTree = tree;
+
+  }
+}
+
+void ArgumentList() :
+{}
+{
+    ( Expression() ( "," Expression() )* )
+  |
+    XSLTLiteral()
+  
+}
+
+Token Literal() :
+{
+    Token t;
+}
+{
+        t = IntegerLiteral() { return t;}
+    |   t = FloatingPointLiteral() { return t;}
+    |   t = StringLiteral() { return t;}
+    |   t = BooleanLiteral() { return t;}
+    |   t = NullLiteral() { return t;}
+}
+
+Token StringLiteral() : 
+{ Token t;}
+{
+	t = <STRING_LITERAL> {
+	ProductionNode.newNode(mParseTree, t, Node.NODE_NULL_RELATION);
+	return t;}
+}
+
+Token IntegerLiteral()  : 
+{
+    Token t;
+}
+{
+	( 
+	    t = <DECIMAL_INT_LITERAL> 
+	  | 
+	    t = <HEX_INT_LITERAL>
+	  |
+	    t = <DECIMAL_LONG_LITERAL> 
+	  | 
+	    t = <HEX_LONG_LITERAL>
+	) 
+	{
+	    ProductionNode.newNode(mParseTree, t, Node.NODE_NULL_RELATION);
+	    return t;
+	}
+}
+
+Token FloatingPointLiteral()  : 
+{
+    Token t;
+}
+{
+	t = <DOUBLE_LITERAL>
+	{
+	    ProductionNode.newNode(mParseTree, t, Node.NODE_NULL_RELATION);
+	    return t;
+	}
+}
+
+Token BooleanLiteral() :
+{Token t;}
+{
+    ( t = <TRUE> | t = <FALSE> )
+  {
+      ProductionNode.newNode(mParseTree, t, Node.NODE_NULL_RELATION);
+      return t;
+  }
+}
+
+Token NullLiteral()  :
+{Token t;}
+{
+  t = <NULL> { ProductionNode.newNode(mParseTree, t, Node.NODE_NULL_RELATION);
+  return t;}
+}
+
+//Token This()  :
+//{Token t;}
+//{
+//  t = <THIS> 
+//  { 
+//    ProductionNode.newNode(mParseTree, t, Node.NODE_NULL_RELATION);
+//    return t;
+//  }
+//}
+
+/******************
+******* Then Body Specification begins
+*/
+
+void ThenNT() :
+{}
+{
+	    <THEN> <LBRACE> ThenStatements(SourceType.RULE_ACTION) <RBRACE>
+	    {
+	    }
+    |
+    	<BODY> <LBRACE> ThenStatements(SourceType.RULE_ACTION) <RBRACE>
+    	{
+    	}
+}
+
+void ThenStatements(SourceType sourceType) :
+{
+    ParseSyntaxTree tree;
+}
+{
+//the entire try block is enclosed w/ parens and starred
+    (
+        try{
+            {
+                //Backup the current ParseTree
+                tree = mParseTree;
+                mParseTree = new ParseSyntaxTree();
+                
+                Token start = null;
+                //try {
+                    start = getToken(1);
+                //} catch (TokenMgrError tme) {}
+            }
+            
+            ThenStatement()
+            
+            {
+                if(!mParseTree.isEmpty()) {
+                    Node node = mParseTree.popNode();
+                    //Statement() already calls buildTree
+                    //mParseTree.buildTree(statement);
+                    RootNode root = new RootNode(sourceType, start, getToken(0));
+                    root.prependChild(node);
+                    client.addThenTree(root);
+                }
+                mParseTree.reset();
+                mParseTree = tree;
+                //statement.dump("");
+            } 
+        } catch (ParseException pe) {
+            reportError(pe);
+            error_skip_tokens(new int[]{SEMICOLON}, new int[]{RBRACE});
+        }
+    )*
+    {
+    }
+}
+
+void ThenStatement() :
+{}
+{
+        LOOKAHEAD(<CALL> Identifier()) CallStatement()
+    |
+        LOOKAHEAD(<CREATE> Identifier()) CreateStatement()
+    |
+        LOOKAHEAD(<MODIFY> Identifier()) ModifyStatement()
+    |
+        LOOKAHEAD(Type() Identifier()) LocalVariableDeclaration() ";"
+    |
+        Statement()
+}
+
+void Statement() :
+{
+    Token t = getToken(1);
+    Token statementToken;
+    //Backup the current ParseTree
+    ParseSyntaxTree tree = mParseTree;
+    mParseTree = new ParseSyntaxTree();
+    int arity = 1;
+}
+{
+    try{
+        (
+            arity = LineStatement() { statementToken = Token.newToken(RuleGrammarConstants.LINE_STATEMENT, "line statement", t.beginLine, t.beginColumn, t.endLine, t.endColumn); }
+          |
+            arity = BlockStatement() { statementToken = Token.newToken(RuleGrammarConstants.BLOCK_STATEMENT, "block statement", t.beginLine, t.beginColumn, t.endLine, t.endColumn); }
+        )
+        {
+            ProductionNode statement = new ProductionNode(statementToken, Node.NODE_NULL_RELATION);
+            mParseTree.buildTree(statement, arity);
+            tree.pushNode(statement);
+        }
+    } catch (ParseException pe) {
+        reportError(pe);
+        error_skip_tokens(new int[]{SEMICOLON}, new int[]{RBRACE});
+        //if there was an error, add an empty statement to the tree
+        tree.pushNode(new ProductionNode(statementToken = Token.newToken(RuleGrammarConstants.LINE_STATEMENT, "line statement", t.beginLine, t.beginColumn, t.beginLine, t.beginColumn), Node.NODE_NULL_RELATION));
+    } finally {
+        //restore parse tree;
+        mParseTree.reset();
+        mParseTree = tree;
+    }
+}
+
+int LineStatement() :
+{}
+{
+(    EmptyStatement()
+  |
+    LOOKAHEAD(<CALL> Identifier()) CallStatement()
+  |
+    LOOKAHEAD(<CREATE> Identifier()) CreateStatement()
+  |
+    LOOKAHEAD(<MODIFY> Identifier()) ModifyStatement()
+  |
+    StatementExpression() ";"
+  |
+    ReturnStatement()
+  |
+    BreakStatement()
+  |
+    ContinueStatement()
+  |
+    ThrowStatement()
+//  |
+//    ActionContextStatement()
+)
+{
+    return 1;
+}
+}
+
+int BlockStatement() :
+{ int arity = 1;}
+{
+    //Even if statements that don't have a block with curly braces are treated as block
+    //statements.  In this case, the body of the if statement is a line statement 
+    //instead of a block statement.
+(        If()
+    |
+        While()
+    |
+        For()
+    |
+        Block()
+    |
+        arity = TryCatchFinally()
+)
+{
+    return arity;
+}
+}
+
+void EmptyStatement() :
+{
+    Token t;
+}
+{
+    t = ";"
+    //{
+    //    ProductionNode.newNode(mParseTree, t, Node.NODE_NULL_RELATION);
+    //}
+    
+}
+
+void StatementExpression() :
+{
+    Token t=null;
+}
+{
+    //Function call is a PrimaryExpression but
+    //fn(); is ok, while other PrimaryExressionS must be part of an assignment
+    
+    LOOKAHEAD(MethodName() "(")
+    MethodName() ArgumentsSuffix() 
+         [
+            ( PrimarySuffix() )* AssignmentSuffix()
+         ]
+  |
+
+    PrimaryExpression() AssignmentSuffix()
+        
+  |
+    (
+    ( t="++" | t="--" ) PrimaryExpression()
+    { ProductionNode.newNode(mParseTree, t, Node.NODE_UNARY_RELATION); }
+    )
+}
+
+void AssignmentSuffix() :
+{
+    Token t = null;
+}
+{
+
+(
+    ( ( t="=" | t="+=" | t="-=" | t="*=" | t="/=" | t="%=" ) Expression() )
+|
+    ( t="++" | t="--" )
+)
+{ 
+    if(t.kind == INCR) {
+        t = Token.newToken(POST_INCR, "++", t.beginLine, t.beginColumn, t.endLine, t.endColumn);
+        ProductionNode.newNode(mParseTree, t, Node.NODE_UNARY_RELATION); 
+    } else if(t.kind == DECR) {
+        t = Token.newToken(POST_DECR, "--", t.beginLine, t.beginColumn, t.endLine, t.endColumn);
+        ProductionNode.newNode(mParseTree, t, Node.NODE_UNARY_RELATION);
+    } else {
+        ProductionNode.newNode(mParseTree, t, Node.NODE_BINARY_RELATION);
+    }
+}
+}
+
+void ReturnStatement() :
+{
+    Token t;
+}
+{
+    t = <RETURN> 
+    (
+        Expression() ";" { ProductionNode.newNode(mParseTree, t, Node.NODE_UNARY_RELATION); }
+      |
+        ";" { ProductionNode.newNode(mParseTree, t, Node.NODE_NULL_RELATION); }
+    ) 
+
+}
+
+void BreakStatement() :
+{
+    Token t;
+}
+{
+    t = <BREAK> ";"
+    {ProductionNode.newNode(mParseTree, t, Node.NODE_NULL_RELATION);}
+}
+
+void ContinueStatement() :
+{
+    Token t;
+}
+{
+    t = <CONTINUE> ";"
+    {ProductionNode.newNode(mParseTree, t, Node.NODE_NULL_RELATION);}
+}
+
+void ThrowStatement() :
+{
+    Token t;
+}
+{
+    t = <THROW> Expression() ";"
+    {ProductionNode.newNode(mParseTree, t, Node.NODE_UNARY_RELATION);}
+}
+
+void Block() :
+{
+    Token start, end;
+    ParseSyntaxTree tree = mParseTree;
+    mParseTree = new ParseSyntaxTree();
+}
+{
+    start = "{"
+    ( 
+	    LOOKAHEAD(<CALL> Identifier()) Statement()
+	  |
+	    LOOKAHEAD(<CREATE> Identifier()) Statement()
+	  |
+	    LOOKAHEAD(<MODIFY> Identifier()) Statement()
+	  |
+        LOOKAHEAD(Type() Identifier()) LocalVariableDeclaration() ";"
+      |  
+        Statement()
+    )* 
+    end = "}"
+    {
+        tree.pushNode(mParseTree.buildProductionNodeListNode(start, end, ProductionNodeListNode.BLOCK_TYPE));
+        mParseTree.reset();
+           mParseTree = tree;
+    }
+}
+
+void StatementExpressionList() :
+{
+    Token start = getToken(1);
+    ParseSyntaxTree tree = mParseTree;
+    mParseTree = new ParseSyntaxTree();
+
+}
+{
+    StatementExpression() ( "," StatementExpression() )*
+    {
+        tree.pushNode(mParseTree.buildProductionNodeListNode(start, getToken(0), ProductionNodeListNode.STATEMENT_EXPRESSION_LIST_TYPE));
+        mParseTree.reset();
+        mParseTree = tree;
+    }
+}
+
+void If() :
+{
+  Token t;
+  boolean hasElse = false;
+}
+{
+    /* (copied from JavaCC sample grammar Java1.1.jj)
+     * The disambiguating algorithm of JavaCC automatically binds dangling
+     * else's to the innermost if statement.  The LOOKAHEAD specification
+     * is to tell JavaCC that we know what we are doing.
+     */
+    ( 
+        t = <IF> "(" Expression() ")" Statement()
+        [ LOOKAHEAD (1) <ELSE> Statement() {hasElse = true;} ]
+    )
+    {
+        ProductionNode.newNode(mParseTree, t, hasElse ? 3 : Node.NODE_BINARY_RELATION);
+    }
+}
+
+void While() :
+{
+  Token t;
+}
+{
+    t = <WHILE> "(" Expression() ")" Statement()
+    {
+        ProductionNode.newNode(mParseTree, t, Node.NODE_BINARY_RELATION);
+    } 
+}
+
+void For() :
+{
+    Token t;
+    //two Semicolon and one Statement node are guaranteed
+    int arity = 3;
+}
+{
+    t = <FOR> "(" 
+        [ LOOKAHEAD(Type() Identifier()) LocalVariableDeclaration() { arity++; } 
+            | StatementExpressionList() { arity++; } ] Semicolon() 
+        [ Expression() { arity++; } ] Semicolon() 
+        [ StatementExpressionList() { arity++; }] ")"
+        Statement()
+    {
+        ProductionNode.newNode(mParseTree, t, arity);
+    }
+}
+
+int TryCatchFinally() :
+{
+int arity = 0;
+}
+{
+	Try() {arity++;}
+  (
+      ( (Catch() {arity++;}) [ Finally() {arity++;} ] )
+  |    //try without catch requires a finally clause
+       Finally() {arity++;}
+  )
+    
+{ 
+    return arity;
+}
+}
+
+void Try() :
+{
+  Token t;
+}
+{
+    t = <TRY> Block()
+    {
+        ProductionNode.newNode(mParseTree, t, Node.NODE_UNARY_RELATION);
+    } 
+}
+
+void Catch() :
+{
+  Token t;
+}
+{
+    t = <CATCH> "(" Type() Identifier() ")" Block()
+    {
+        ProductionNode.newNode(mParseTree, t, 3);
+    } 
+}
+
+void Finally() :
+{
+  Token t;
+}
+{
+    t = <FINALLY> Block()
+    {
+        ProductionNode.newNode(mParseTree, t, Node.NODE_UNARY_RELATION);
+    } 
+}
+
+//this is only used in the For() production
+//all other semicolons can be matched directly
+void Semicolon() :
+{
+    Token t;
+}
+{
+    t = ";"
+    {
+        ProductionNode.newNode(mParseTree, t, Node.NODE_NULL_RELATION);
+    }
+}
+
+//NameNode Name(NameNode.NameType type, NameNode.NameType finalType) :
+NameNode Name() :
+{
+    //Backup the current ParseTree
+    ParseSyntaxTree tree = mParseTree;
+    mParseTree = new ParseSyntaxTree();
+}
+{
+  (
+    Identifier() ( LOOKAHEAD(2) Dot() Identifier() )*
+  )
+  {
+    //NameNode nameNode = mParseTree.buildNameNode(type, finalType);
+    NameNode nameNode = mParseTree.buildNameNode();
+    tree.pushNode(nameNode);
+    mParseTree.reset();
+    mParseTree = tree; // restore
+    return nameNode;
+  }
+}
+
+void Dot() :
+{
+    Token dot;
+}
+{
+    dot = "."
+    {
+        ProductionNode.newNode(mParseTree, dot, Node.NODE_NULL_RELATION);    
+    }
+}
+
+void ExpressionName() :
+{
+    NameNode nameNode;
+}
+{
+    //Name(NameNode.AMBIGUOUS_NAME, NameNode.EXPRESSION_NAME)
+    nameNode = Name()
+    //need to enclose the name in a ProductionNode for use by NodeTypeVisitor
+    {
+        Token t = nameNode.getIds()[0]; 
+        Token statementToken = Token.newToken(RuleGrammarConstants.EXPRESSION_NAME, "expression name", t.beginLine, t.beginColumn, t.endLine, t.endColumn);
+        ProductionNode.newNode(mParseTree, statementToken, Node.NODE_UNARY_RELATION);
+    }
+}
+
+void MethodName() :
+{}
+{
+    //Name(NameNode.PACKAGE_NAME, NameNode.METHOD_NAME)
+    Name()
+    //this will be needed when member methods are supported
+    //Name(NameNode.AMBIGUOUS_NAME, NameNode.METHOD_NAME)
+}	
+
+void TypeName() :
+{}
+{
+    //Name(NameNode.PACKAGE_NAME, NameNode.TYPE_NAME)
+    Name()
+}
+
+/*
+void PackageName() :
+{}
+{
+    Name(NameNode.PACKAGE_NAME, NameNode.PACKAGE_NAME)
+}
+
+void PackageOrTypeName() :
+{}
+{
+    Name(NameNode.PACKAGE_OR_TYPE_NAME, NameNode.PACKAGE_OR_TYPE_NAME)
+}
+
+void AmbiguousName() :
+{}
+{
+	Name(NameNode.AMBIGUOUS_NAME, NameNode.AMBIGUOUS_NAME)
+}
+*/
+
+void Type() :
+{}
+{
+    TypeAdditionalArrayDim(0)
+}
+void TypeAdditionalArrayDim(int additionalArrayDim) :
+{
+    int arrayDimension = additionalArrayDim;
+    Token lastBracketPair = null;
+    /*
+        disallow this: int i, j[]; the full type must come first
+    */
+}
+{
+  ( TypeName() | PrimitiveType() ) [ lastBracketPair = "[]" { arrayDimension++; } ]
+  {
+        TypeNode node = new TypeNode((NameNode)mParseTree.popNode(), arrayDimension, lastBracketPair);
+        mParseTree.pushNode(node);
+  }
+}
+
+//this production is needed because these tokens can't
+// be used as general identifiers due to their being java keywords
+void PrimitiveType() :
+{
+    ParseSyntaxTree tree = mParseTree;
+    mParseTree = new ParseSyntaxTree();
+    Token t;
+}
+{
+    (
+      t = "boolean"
+    |
+      t = "int"
+    |
+      t = "long"
+    |
+      t = "double"
+    )
+    {
+        ProductionNode.newNode(mParseTree, token, Node.NODE_NULL_RELATION);
+        NameNode node = mParseTree.buildNameNode();
+        tree.pushNode(node);
+        mParseTree.reset();
+        mParseTree = tree;
+    }
+}
+
+void LocalVariableDeclaration() :
+{
+    ParseSyntaxTree tree = mParseTree;
+    mParseTree = new ParseSyntaxTree();
+}
+{
+  Type() VariableDeclarator() ( ","  VariableDeclarator() )*
+  {
+    tree.pushNode(mParseTree.buildDeclarationNode());
+    mParseTree.reset();
+    mParseTree = tree;
+  }
+}
+
+void VariableDeclarator() :
+{
+    Token t;
+}
+{
+  Identifier()
+  [ 
+    t = <ASSIGN>
+    (
+        LOOKAHEAD(LocalInitializerArrayLiteral() ( ";" | "," ) )
+        LocalInitializerArrayLiteral()
+      |
+        Expression() 
+    )
+    { ProductionNode.newNode(mParseTree, t, Node.NODE_BINARY_RELATION); }
+  ]
+}
+
+void LocalInitializerArrayLiteral() :
+{
+    Token start;
+    Token end;
+    ParseSyntaxTree tree = mParseTree;
+    mParseTree = new ParseSyntaxTree();
+}
+{
+    start = "{" [ Expression() ( "," Expression() )*  ] end = "}"
+  {
+        tree.pushNode(mParseTree.buildProductionNodeListNode(start, end, ProductionNodeListNode.ARRAY_LITERAL_TYPE));
+        mParseTree.reset();
+        mParseTree = tree;
+  }
+}
+
+//this is an expression
+void ArrayLiteral() :
+{
+    Token t = getToken(1);
+}
+{
+    Type() LocalInitializerArrayLiteral()  
+    {
+        ProductionNode.newNode(mParseTree, Token.newToken(RuleGrammarConstants.ARRAY_LITERAL, "array_literal", t.beginLine, t.beginColumn, t.endLine, t.endColumn), Node.NODE_BINARY_RELATION);
+    }
+}
+
+void ArrayAllocator() :
+{
+    Token start, end;
+}
+{
+    TypeAdditionalArrayDim(1) "[" Expression() "]" start = "{" end = "}"
+    {
+        ProductionNode.newNode(mParseTree, Token.newToken(RuleGrammarConstants.ARRAY_ALLOCATOR, "array_allocator", start.beginLine, start.beginColumn, end.endLine, end.endColumn), Node.NODE_BINARY_RELATION);
+    }
+}
+
+
+
+/* RULE TEMPLATE */
+
+
+void RTDeclaration() :
+{
+    NameNode fullName;
+}
+{
+        { ((RuleFileParserClient)client).newRule(); } //todo change for RT?
+        <RULE_TEMPLATE> fullName = Name()
+        { ((RuleFileParserClient)client).setName(fullName.toName()); }
+        <LBRACE>
+            AttributeNT()
+            [ViewsNT()]
+            [BindingsNT()]
+            [DisplayNT()]
+            RTDeclareNT()
+            WhenNT()
+            ActionContextNT()
+        <RBRACE>
+}
+
+void ViewsNT() :
+{}
+{
+      <VIEWS> <LBRACE> (View())* <RBRACE>
+}
+
+void View() :
+{}
+{
+      Name() <SEMICOLON>
+}
+
+void BindingsNT() :
+{}
+{
+      <BINDINGS> <LBRACE> (Binding())* <RBRACE>
+}
+
+void Binding():
+{
+    final ParseSyntaxTree backupTree = mParseTree;
+    mParseTree = new ParseSyntaxTree();
+    final Token start = getToken(1);
+}
+{
+    try {
+            Type() VariableDeclarator()
+
+            {
+                final BindingNode node = mParseTree.buildBindingNode();
+                backupTree.pushNode(node);
+
+                final RootNode root = new RootNode(SourceType.RT_BINDINGS, start, getToken(0));
+                root.prependChild(node);
+                ((RuleTemplateParser) client).addBindingTree(root);
+
+                mParseTree.reset();
+                mParseTree = backupTree;
+            }
+    } catch (ParseException pe) {
+        reportError(pe);
+        error_skip_tokens(new int[]{SEMICOLON}, new int[]{RBRACE});
+    }
+
+  [ IgnoredDomain() ]
+
+    <SEMICOLON>
+}
+
+void IgnoredDomain() :
+{
+    ParseSyntaxTree backup = mParseTree;
+    mParseTree = new ParseSyntaxTree();
+}
+{
+    <LPAREN> Name() <RPAREN>
+    {
+        mParseTree = backup;
+    }
+}
+
+void DisplayNT() :
+{ }
+{
+ 	<DISPLAY> <LBRACE> (Display())* <RBRACE>
+}
+
+void Display() :
+{}
+{
+	Name() <ASSIGN> StringLiteral() <SEMICOLON>
+}
+
+void RTDeclareNT() :
+{ }
+{
+    	<DECL> <LBRACE> (Declarator())* //todo local variables
+    	<RBRACE>
+}
+
+void ActionContextNT() :
+{}
+{
+      <ACTIONCTX> <LBRACE> ThenStatements(SourceType.RULE_ACTION) <RBRACE>
+}
+
+void ActionContextStatement() :
+{}
+{
+    CallStatement()
+    |
+    CreateStatement()
+    |
+    ModifyStatement()
+}
+
+void CallStatement() :
+{
+    final ParseSyntaxTree backupTree = mParseTree;
+    mParseTree = new ParseSyntaxTree();
+}
+{
+    <CALL> MethodName()
+    {
+        final NameNode nameNode = (NameNode) mParseTree.popNode();
+        mParseTree.pushNode(new FunctionNode(nameNode));
+    }
+    Identifier() <SEMICOLON>
+    {
+        final TemplatedDeclarationNode templatedDeclarationNode =
+            mParseTree.buildTemplatedDeclarationNode(TemplatedDeclarationNode.Mode.CALL);
+        backupTree.pushNode(templatedDeclarationNode);
+        mParseTree.reset();
+        mParseTree = backupTree;
+    }
+}
+
+void CreateStatement() :
+{
+    final ParseSyntaxTree backupTree = mParseTree;
+    mParseTree = new ParseSyntaxTree();
+}
+{
+    <CREATE> Type() VariableDeclarator() <SEMICOLON>
+    {
+        backupTree.pushNode(mParseTree.buildTemplatedDeclarationNode(TemplatedDeclarationNode.Mode.CREATE));
+        mParseTree.reset();
+        mParseTree = backupTree;
+    }
+}
+
+void ModifyStatement() :
+{
+    final ParseSyntaxTree backupTree = mParseTree;
+    mParseTree = new ParseSyntaxTree();
+}
+{
+    <MODIFY> Identifier() <SEMICOLON>
+    {
+        backupTree.pushNode(mParseTree.buildTemplatedProductionNode(
+            token, Node.NODE_UNARY_RELATION, TemplatedProductionNode.Mode.MODIFY));
+        mParseTree.reset();
+        mParseTree = backupTree;
+    }
+}
+
+TOKEN:
+{
+  // characters for which Character.isJavaIdentifierStart returns true (determined experimentally)
+  < #ID_START:
+      [
+        //disallow '$' in identifiers so that it is reserved for the code generator
+        //"\u0024",
+        "\u0041" - "\u005a",
+        "\u005f",
+        "\u0061" - "\u007a",
+        "\u00a2" - "\u00a5",
+        "\u00aa",
+        "\u00b5",
+        "\u00ba",
+        "\u00c0" - "\u00d6",
+        "\u00d8" - "\u00f6",
+        "\u00f8" - "\u021f",
+        "\u0222" - "\u0233",
+        "\u0250" - "\u02ad",
+        "\u02b0" - "\u02b8",
+        "\u02bb" - "\u02c1",
+        "\u02d0" - "\u02d1",
+        "\u02e0" - "\u02e4",
+        "\u02ee",
+        "\u037a",
+        "\u0386",
+        "\u0388" - "\u038a",
+        "\u038c",
+        "\u038e" - "\u03a1",
+        "\u03a3" - "\u03ce",
+        "\u03d0" - "\u03d7",
+        "\u03da" - "\u03f3",
+        "\u0400" - "\u0481",
+        "\u048c" - "\u04c4",
+        "\u04c7" - "\u04c8",
+        "\u04cb" - "\u04cc",
+        "\u04d0" - "\u04f5",
+        "\u04f8" - "\u04f9",
+        "\u0531" - "\u0556",
+        "\u0559",
+        "\u0561" - "\u0587",
+        "\u05d0" - "\u05ea",
+        "\u05f0" - "\u05f2",
+        "\u0621" - "\u063a",
+        "\u0640" - "\u064a",
+        "\u0671" - "\u06d3",
+        "\u06d5",
+        "\u06e5" - "\u06e6",
+        "\u06fa" - "\u06fc",
+        "\u0710",
+        "\u0712" - "\u072c",
+        "\u0780" - "\u07a5",
+        "\u0905" - "\u0939",
+        "\u093d",
+        "\u0950",
+        "\u0958" - "\u0961",
+        "\u0985" - "\u098c",
+        "\u098f" - "\u0990",
+        "\u0993" - "\u09a8",
+        "\u09aa" - "\u09b0",
+        "\u09b2",
+        "\u09b6" - "\u09b9",
+        "\u09dc" - "\u09dd",
+        "\u09df" - "\u09e1",
+        "\u09f0" - "\u09f3",
+        "\u0a05" - "\u0a0a",
+        "\u0a0f" - "\u0a10",
+        "\u0a13" - "\u0a28",
+        "\u0a2a" - "\u0a30",
+        "\u0a32" - "\u0a33",
+        "\u0a35" - "\u0a36",
+        "\u0a38" - "\u0a39",
+        "\u0a59" - "\u0a5c",
+        "\u0a5e",
+        "\u0a72" - "\u0a74",
+        "\u0a85" - "\u0a8b",
+        "\u0a8d",
+        "\u0a8f" - "\u0a91",
+        "\u0a93" - "\u0aa8",
+        "\u0aaa" - "\u0ab0",
+        "\u0ab2" - "\u0ab3",
+        "\u0ab5" - "\u0ab9",
+        "\u0abd",
+        "\u0ad0",
+        "\u0ae0",
+        "\u0b05" - "\u0b0c",
+        "\u0b0f" - "\u0b10",
+        "\u0b13" - "\u0b28",
+        "\u0b2a" - "\u0b30",
+        "\u0b32" - "\u0b33",
+        "\u0b36" - "\u0b39",
+        "\u0b3d",
+        "\u0b5c" - "\u0b5d",
+        "\u0b5f" - "\u0b61",
+        "\u0b85" - "\u0b8a",
+        "\u0b8e" - "\u0b90",
+        "\u0b92" - "\u0b95",
+        "\u0b99" - "\u0b9a",
+        "\u0b9c",
+        "\u0b9e" - "\u0b9f",
+        "\u0ba3" - "\u0ba4",
+        "\u0ba8" - "\u0baa",
+        "\u0bae" - "\u0bb5",
+        "\u0bb7" - "\u0bb9",
+        "\u0c05" - "\u0c0c",
+        "\u0c0e" - "\u0c10",
+        "\u0c12" - "\u0c28",
+        "\u0c2a" - "\u0c33",
+        "\u0c35" - "\u0c39",
+        "\u0c60" - "\u0c61",
+        "\u0c85" - "\u0c8c",
+        "\u0c8e" - "\u0c90",
+        "\u0c92" - "\u0ca8",
+        "\u0caa" - "\u0cb3",
+        "\u0cb5" - "\u0cb9",
+        "\u0cde",
+        "\u0ce0" - "\u0ce1",
+        "\u0d05" - "\u0d0c",
+        "\u0d0e" - "\u0d10",
+        "\u0d12" - "\u0d28",
+        "\u0d2a" - "\u0d39",
+        "\u0d60" - "\u0d61",
+        "\u0d85" - "\u0d96",
+        "\u0d9a" - "\u0db1",
+        "\u0db3" - "\u0dbb",
+        "\u0dbd",
+        "\u0dc0" - "\u0dc6",
+        "\u0e01" - "\u0e30",
+        "\u0e32" - "\u0e33",
+        "\u0e3f" - "\u0e46",
+        "\u0e81" - "\u0e82",
+        "\u0e84",
+        "\u0e87" - "\u0e88",
+        "\u0e8a",
+        "\u0e8d",
+        "\u0e94" - "\u0e97",
+        "\u0e99" - "\u0e9f",
+        "\u0ea1" - "\u0ea3",
+        "\u0ea5",
+        "\u0ea7",
+        "\u0eaa" - "\u0eab",
+        "\u0ead" - "\u0eb0",
+        "\u0eb2" - "\u0eb3",
+        "\u0ebd",
+        "\u0ec0" - "\u0ec4",
+        "\u0ec6",
+        "\u0edc" - "\u0edd",
+        "\u0f00",
+        "\u0f40" - "\u0f47",
+        "\u0f49" - "\u0f6a",
+        "\u0f88" - "\u0f8b",
+        "\u1000" - "\u1021",
+        "\u1023" - "\u1027",
+        "\u1029" - "\u102a",
+        "\u1050" - "\u1055",
+        "\u10a0" - "\u10c5",
+        "\u10d0" - "\u10f6",
+        "\u1100" - "\u1159",
+        "\u115f" - "\u11a2",
+        "\u11a8" - "\u11f9",
+        "\u1200" - "\u1206",
+        "\u1208" - "\u1246",
+        "\u1248",
+        "\u124a" - "\u124d",
+        "\u1250" - "\u1256",
+        "\u1258",
+        "\u125a" - "\u125d",
+        "\u1260" - "\u1286",
+        "\u1288",
+        "\u128a" - "\u128d",
+        "\u1290" - "\u12ae",
+        "\u12b0",
+        "\u12b2" - "\u12b5",
+        "\u12b8" - "\u12be",
+        "\u12c0",
+        "\u12c2" - "\u12c5",
+        "\u12c8" - "\u12ce",
+        "\u12d0" - "\u12d6",
+        "\u12d8" - "\u12ee",
+        "\u12f0" - "\u130e",
+        "\u1310",
+        "\u1312" - "\u1315",
+        "\u1318" - "\u131e",
+        "\u1320" - "\u1346",
+        "\u1348" - "\u135a",
+        "\u13a0" - "\u13f4",
+        "\u1401" - "\u166c",
+        "\u166f" - "\u1676",
+        "\u1681" - "\u169a",
+        "\u16a0" - "\u16ea",
+        "\u1780" - "\u17b3",
+        "\u17db",
+        "\u1820" - "\u1877",
+        "\u1880" - "\u18a8",
+        "\u1e00" - "\u1e9b",
+        "\u1ea0" - "\u1ef9",
+        "\u1f00" - "\u1f15",
+        "\u1f18" - "\u1f1d",
+        "\u1f20" - "\u1f45",
+        "\u1f48" - "\u1f4d",
+        "\u1f50" - "\u1f57",
+        "\u1f59",
+        "\u1f5b",
+        "\u1f5d",
+        "\u1f5f" - "\u1f7d",
+        "\u1f80" - "\u1fb4",
+        "\u1fb6" - "\u1fbc",
+        "\u1fbe",
+        "\u1fc2" - "\u1fc4",
+        "\u1fc6" - "\u1fcc",
+        "\u1fd0" - "\u1fd3",
+        "\u1fd6" - "\u1fdb",
+        "\u1fe0" - "\u1fec",
+        "\u1ff2" - "\u1ff4",
+        "\u1ff6" - "\u1ffc",
+        "\u203f" - "\u2040",
+        "\u207f",
+        "\u20a0" - "\u20af",
+        "\u2102",
+        "\u2107",
+        "\u210a" - "\u2113",
+        "\u2115",
+        "\u2119" - "\u211d",
+        "\u2124",
+        "\u2126",
+        "\u2128",
+        "\u212a" - "\u212d",
+        "\u212f" - "\u2131",
+        "\u2133" - "\u2139",
+        "\u2160" - "\u2183",
+        "\u3005" - "\u3007",
+        "\u3021" - "\u3029",
+        "\u3031" - "\u3035",
+        "\u3038" - "\u303a",
+        "\u3041" - "\u3094",
+        "\u309d" - "\u309e",
+        "\u30a1" - "\u30fe",
+        "\u3105" - "\u312c",
+        "\u3131" - "\u318e",
+        "\u31a0" - "\u31b7",
+        "\u3400" - "\u4db5",
+        "\u4e00" - "\u9fa5",
+        "\ua000" - "\ua48c",
+        "\uac00" - "\ud7a3",
+        "\uf900" - "\ufa2d",
+        "\ufb00" - "\ufb06",
+        "\ufb13" - "\ufb17",
+        "\ufb1d",
+        "\ufb1f" - "\ufb28",
+        "\ufb2a" - "\ufb36",
+        "\ufb38" - "\ufb3c",
+        "\ufb3e",
+        "\ufb40" - "\ufb41",
+        "\ufb43" - "\ufb44",
+        "\ufb46" - "\ufbb1",
+        "\ufbd3" - "\ufd3d",
+        "\ufd50" - "\ufd8f",
+        "\ufd92" - "\ufdc7",
+        "\ufdf0" - "\ufdfb",
+        "\ufe33" - "\ufe34",
+        "\ufe4d" - "\ufe4f",
+        "\ufe69",
+        "\ufe70" - "\ufe72",
+        "\ufe74",
+        "\ufe76" - "\ufefc",
+        "\uff04",
+        "\uff21" - "\uff3a",
+        "\uff3f",
+        "\uff41" - "\uff5a",
+        "\uff65" - "\uffbe",
+        "\uffc2" - "\uffc7",
+        "\uffca" - "\uffcf",
+        "\uffd2" - "\uffd7",
+        "\uffda" - "\uffdc",
+        "\uffe0" - "\uffe1",
+        "\uffe5" - "\uffe6"
+      ]
+  >
+|
+  // characters for which Character.isJavaIdentifierStart returns false 
+  // and Character.isJavaIdentifierPart returns true (determined experimentally)
+  < #ID_PART_ADDITIONS:
+      [
+          "\u0000" - "\u0008",
+          "\u000e" - "\u001b",
+          "\u0030" - "\u0039",
+          "\u007f" - "\u009f",
+          "\u0300" - "\u034e",
+          "\u0360" - "\u0362",
+          "\u0483" - "\u0486",
+          "\u0591" - "\u05a1",
+          "\u05a3" - "\u05b9",
+          "\u05bb" - "\u05bd",
+          "\u05bf",
+          "\u05c1" - "\u05c2",
+          "\u05c4",
+          "\u064b" - "\u0655",
+          "\u0660" - "\u0669",
+          "\u0670",
+          "\u06d6" - "\u06dc",
+          "\u06df" - "\u06e4",
+          "\u06e7" - "\u06e8",
+          "\u06ea" - "\u06ed",
+          "\u06f0" - "\u06f9",
+          "\u070f",
+          "\u0711",
+          "\u0730" - "\u074a",
+          "\u07a6" - "\u07b0",
+          "\u0901" - "\u0903",
+          "\u093c",
+          "\u093e" - "\u094d",
+          "\u0951" - "\u0954",
+          "\u0962" - "\u0963",
+          "\u0966" - "\u096f",
+          "\u0981" - "\u0983",
+          "\u09bc",
+          "\u09be" - "\u09c4",
+          "\u09c7" - "\u09c8",
+          "\u09cb" - "\u09cd",
+          "\u09d7",
+          "\u09e2" - "\u09e3",
+          "\u09e6" - "\u09ef",
+          "\u0a02",
+          "\u0a3c",
+          "\u0a3e" - "\u0a42",
+          "\u0a47" - "\u0a48",
+          "\u0a4b" - "\u0a4d",
+          "\u0a66" - "\u0a71",
+          "\u0a81" - "\u0a83",
+          "\u0abc",
+          "\u0abe" - "\u0ac5",
+          "\u0ac7" - "\u0ac9",
+          "\u0acb" - "\u0acd",
+          "\u0ae6" - "\u0aef",
+          "\u0b01" - "\u0b03",
+          "\u0b3c",
+          "\u0b3e" - "\u0b43",
+          "\u0b47" - "\u0b48",
+          "\u0b4b" - "\u0b4d",
+          "\u0b56" - "\u0b57",
+          "\u0b66" - "\u0b6f",
+          "\u0b82" - "\u0b83",
+          "\u0bbe" - "\u0bc2",
+          "\u0bc6" - "\u0bc8",
+          "\u0bca" - "\u0bcd",
+          "\u0bd7",
+          "\u0be7" - "\u0bef",
+          "\u0c01" - "\u0c03",
+          "\u0c3e" - "\u0c44",
+          "\u0c46" - "\u0c48",
+          "\u0c4a" - "\u0c4d",
+          "\u0c55" - "\u0c56",
+          "\u0c66" - "\u0c6f",
+          "\u0c82" - "\u0c83",
+          "\u0cbe" - "\u0cc4",
+          "\u0cc6" - "\u0cc8",
+          "\u0cca" - "\u0ccd",
+          "\u0cd5" - "\u0cd6",
+          "\u0ce6" - "\u0cef",
+          "\u0d02" - "\u0d03",
+          "\u0d3e" - "\u0d43",
+          "\u0d46" - "\u0d48",
+          "\u0d4a" - "\u0d4d",
+          "\u0d57",
+          "\u0d66" - "\u0d6f",
+          "\u0d82" - "\u0d83",
+          "\u0dca",
+          "\u0dcf" - "\u0dd4",
+          "\u0dd6",
+          "\u0dd8" - "\u0ddf",
+          "\u0df2" - "\u0df3",
+          "\u0e31",
+          "\u0e34" - "\u0e3a",
+          "\u0e47" - "\u0e4e",
+          "\u0e50" - "\u0e59",
+          "\u0eb1",
+          "\u0eb4" - "\u0eb9",
+          "\u0ebb" - "\u0ebc",
+          "\u0ec8" - "\u0ecd",
+          "\u0ed0" - "\u0ed9",
+          "\u0f18" - "\u0f19",
+          "\u0f20" - "\u0f29",
+          "\u0f35",
+          "\u0f37",
+          "\u0f39",
+          "\u0f3e" - "\u0f3f",
+          "\u0f71" - "\u0f84",
+          "\u0f86" - "\u0f87",
+          "\u0f90" - "\u0f97",
+          "\u0f99" - "\u0fbc",
+          "\u0fc6",
+          "\u102c" - "\u1032",
+          "\u1036" - "\u1039",
+          "\u1040" - "\u1049",
+          "\u1056" - "\u1059",
+          "\u1369" - "\u1371",
+          "\u17b4" - "\u17d3",
+          "\u17e0" - "\u17e9",
+          "\u180b" - "\u180e",
+          "\u1810" - "\u1819",
+          "\u18a9",
+          "\u200c" - "\u200f",
+          "\u202a" - "\u202e",
+          "\u206a" - "\u206f",
+          "\u20d0" - "\u20dc",
+          "\u20e1",
+          "\u302a" - "\u302f",
+          "\u3099" - "\u309a",
+          "\ufb1e",
+          "\ufe20" - "\ufe23",
+          "\ufeff",
+          "\uff10" - "\uff19",
+          "\ufff9" - "\ufffb"
+      ]
+  >
+}
+
+//catch-all token to prevent throwing Errors when encountering a character
+//that isn't at the start of any other token
+TOKEN:
+{
+   <ERROR: ~[] >
+}
+
+/*
+void PathLiteral() :
+{ 
+    Token token;
+}
+{   
+    token = <PATH_LITERAL>
+  {
+    ProductionNode.newNode(mParseTree, token, Node.NODE_NULL_RELATION);
+  }
+}
+*/
+/*
+    protected String trimPathLiteral(Token t) {
+        if(t.kind != RuleGrammarConstants.PATH_LITERAL) return t.image;
+        //remove the leading and trailing '#'
+        return t.image.substring(1, t.image.length() - 1);
+    }
+*/

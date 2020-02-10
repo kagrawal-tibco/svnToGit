@@ -1,0 +1,133 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>Fraud Detection Dashboard - TIBCO BusinessEvents&reg; Examples</title>
+<meta http-equiv="Content-type" content="text/html; charset=iso-8859-1" />
+<meta http-equiv="Content-Language" content="en-us" />
+<link rel="Shortcut Icon" href="../../_resources/icon.gif" type="image/gif" />
+<style type="text/css" media="all">@import "../../_resources/examples.css";</style>
+<script type="text/javascript" src="../../_resources/examples.js" /></script>
+<script type="text/javascript">
+function buildForms() {
+ var form;
+
+ SendEventForm.setServer("http://localhost:8004");
+
+ form = SendEventForm.get("createAccountForm");
+ form.setDestinationPath("/Channels/HTTP/AllOps");
+ form.setEventPath("/Events/AccountCreated");
+ form.addProperty("AccountId", "Bob");
+ form.addProperty("AccountBalance", "20000");
+ form.addProperty("AccountStatus", "Normal");
+ form.build();
+
+ form = SendEventForm.get("debitAccountForm");
+ form.setDestinationPath("/Channels/HTTP/AllOps");
+ form.setEventPath("/Events/Debit");
+ form.addProperty("TransactionType", "Debit");
+ form.addProperty("AccountId", "Bob");
+ form.addProperty("Amount", "10000");
+ form.build();
+
+ form = SendEventForm.get("creditAccountForm");
+ form.setDestinationPath("/Channels/HTTP/AllOps");
+ form.setEventPath("/Events/Credit");
+ form.addProperty("TransactionType", "Credit");
+ form.addProperty("AccountId", "Bob");
+ form.addProperty("Amount", "10000");
+ form.build();
+
+ form = SendEventForm.get("fraudAccountForm");
+ form.setDestinationPath("/Channels/HTTP/AllOps");
+ form.setEventPath("/Events/Fraud");
+ form.addProperty("TransactionType", "Fraud");
+ form.addProperty("AccountId", "Bob");
+ form.addProperty("Amount", "5000");
+ form.build();
+
+ form = SendEventForm.get("statusChangeAccountForm");
+ form.setDestinationPath("/Channels/HTTP/AllOps");
+ form.setEventPath("/Events/AccountStatusChange");
+ form.addProperty("AccountId", "Bob");
+ form.addProperty("AccountBalance", "18000");
+ form.addProperty("AccountStatus", "Suspended");
+ form.build();
+
+}
+</script>
+</head>
+<body onLoad="buildForms()">
+
+
+<h1>Fraud Detection Dashboard</h1>
+
+<h2>Purpose of This Example</h2>
+
+<p>This example shows a dashboard which renders a fraud detection scenario. The dashboad shows: </p>
+<ul>
+<li>Accounts in Normal and Suspended state</li>
+<li>Debit and fraud traffic</li>
+<li>Last ten accounts changed</li>
+<li>Top and Bottom ten accounts by value</li>
+</ul>
+
+
+<h2>How to Run the Example</h2>
+<ol>
+<li><p>Open a command window and at the command prompt, start the TIBCO BusinessEvents engine using the following command. </p>
+<pre class="commands">
+cd BE_HOME/examples/views/FraudDetectionDashboard
+BE_HOME/views/bin/be-views --propFile BE_HOME/views/bin/be-views.tra -u default -c FraudDetectionDashboard/Deployments/FraudDetectionDB.cdd FraudDetectionDashboard.ear
+</pre>
+<p>Adapt the command as needed, for example, if you have customized the example project, or are running it from a different directory.</p>
+</li>
+
+<li><p>Launch the URL <code>http://localhost:8181</code> using Internet Explorer.</p>
+<li><p>Login in to the dashboard using <code>admin</code> as Username and <code>admin</code> as Password.</p>
+
+<li><p>Create an account and give it a balance and status. Enter a name in the Account ID field. Enter, for example, Bob in AccountId, 20000 in the Balance, and Normal in the AccountStatus fields. Repeat this step to create multiple accounts, as desired.</p>
+<form id="createAccountForm"></form>
+<p>In the dashboard you should see the charts change to reflect the creation of the account.</p>
+<image src="readmeimages/accountcreated.png"/>
+</li>
+
+<li><p>Now debit the account. In the AccountId field, enter one of the account names you specified above. Enter the amount of the debit in the Amount field. Then click Send.</p>
+<form id="debitAccountForm"></form>
+<p>In the dashboard you should see the charts change to reflect the debit of the account.</p>
+<image src="readmeimages/debit.png"/>
+</li>
+
+<li><p>Now credit the account. In the AccountId field, enter one of the account names you specified above. Enter the amount of the credit in the Amount field. Then click Send.</p>
+<form id="creditAccountForm"></form>
+<p>In the dashboard you should see the charts change to reflect the credit of the account.</p>
+<image src="readmeimages/credit.png"/>
+</li>
+
+<li><p>Now create a fraud event. In the AccountId field, enter one of the account names you specified above. Enter the amount in the Amount field. Then click Send.</p>
+<form id="fraudAccountForm"></form>
+<p>In the dashboard you should see the charts change to reflect a fraud. </p>
+<image src="readmeimages/fraud.png"/>
+
+</li>
+
+<li><p>Now change the status of the account. In the AccountId field, enter one of the account names you specified above. Enter the amount of the credit in the AccountBalance field and 'Suspended' in the AccountStatus fields. Then click Send.</p>
+<form id="statusChangeAccountForm"></form>
+<p>In the dashboard you should see the charts change to reflect a change in account status. </p>
+<image src="readmeimages/accountstatuschange.png"/>
+</li>
+
+<li>
+	<p> To reset the data, restart the engine at the command line.</p>
+</li>
+
+
+</ol>
+
+<div class="footer">
+<p>TIBCO BusinessEvents&reg; 5.6<br />
+Copyright&copy; 2004-2019 TIBCO Software Inc. All rights reserved.</p>
+</div>
+</body>
+</html>

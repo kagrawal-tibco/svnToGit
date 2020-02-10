@@ -1,0 +1,47 @@
+/**
+ * @description 
+ */
+void rulefunction WebStudio.Core.RuleFunctions.Utils.DT.WS_RF_UpdateDTArguments {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		WebStudio.Core.Concepts.Decision.Pagination.WS_C_DecisionTableArguments dtArguments;
+		Object[] symbols;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.DT.WS_RF_UpdateDTArguments");
+		
+		WS_C_DecisionTableArgument[] arguments = Instance.PropertyArray.toArrayContainedConcept(dtArguments.argument);
+		
+		Log.log(LOGGER, "Debug", "Total DT arguments[%s] vs symbols[%s].", arguments@length, symbols@length);
+		
+		boolean addSymbol = true;
+		String symbolAlias = null;
+		for (int i=0;i<symbols@length; i++) {
+			addSymbol = true;
+
+			symbolAlias = WS.Decision.getRuleFunctionSymbolAlias(symbols[i]);
+			
+			for (int j=0; j<arguments@length; j++) {
+				if (String.equals(arguments[j].argumentAlias, symbolAlias)) {
+					addSymbol = false;
+					break;
+				}				
+			}
+			
+			if (addSymbol) {
+				Log.log(LOGGER, "Debug", "Adding new DT argument with alias %s", symbolAlias);
+				WS_C_DecisionTableArgument argument = Instance.newInstance("/WebStudio/Core/Concepts/Decision/Pagination/WS_C_DecisionTableArgument", null);
+				argument.argumentAlias = symbolAlias;
+				argument.path = WS.Decision.getRuleFunctionSymbolPath(symbols[i]);
+				argument.resourceType = WS.Decision.getRuleFunctionSymbolType(symbols[i]);
+				argument.isArray = WS.Decision.isRuleFunctionSymbolArray(symbols[i]);
+				
+				Log.log(LOGGER, "Debug", "Setting Resource type  - %s, %s, %s, %s", argument.resourceType, argument.path, argument.resourceType, argument.isArray);
+				
+		 		Instance.PropertyArray.appendContainedConcept(dtArguments.argument, argument, 1L);
+			}
+		}
+	}
+}

@@ -1,0 +1,66 @@
+/**
+ * @description Use this to decide based on type of artifact what concept model to instantiate but do not assert.
+ * Base factory to be used for all artifact types supported by webstudio.
+ */
+Concept rulefunction WebStudio.Core.RuleFunctions.Utils.WS_RF_ArtifactConceptModelCreationFactory {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String username;
+		String[] roles;
+		String projectName;
+		String artifactContent;
+		String artifactType; 
+		//Only for RTIs and DTables
+		String implementsPath;
+		WebStudio.Core.Concepts.WS_C_UserArtifact userArtifact;
+		String contentType;
+		int rulePriority;
+		String description;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.WS_RF_ArtifactConceptModelCreationFactory");
+		
+		Concept artifactModelInstance = null;
+		if (String.equals(artifactType, "ruletemplate") || String.equals(artifactType, "ruletemplateinstance")) {
+			WebStudio.Core.Concepts.RuleTemplateInstance.WS_C_RuleTemplateInstanceUserArtifact ruleTemplateInstanceUserArtifact = userArtifact;
+			artifactModelInstance =
+				WebStudio.
+					Core.
+						RuleFunctions.
+							Utils.RT.
+								WS_RF_CreateRuleTemplateInstanceModelFactory(username, roles, projectName, artifactContent, artifactType, implementsPath, ruleTemplateInstanceUserArtifact, contentType, rulePriority, description);
+		}
+		else if (String.equals(artifactType, "rulefunctionimpl")) {
+			
+			WS_C_DecisionTablePageSaveDataItem decisionTablePageSaveData = null;
+			if (String.equals(contentType, System.getGlobalVariableAsString("WebStudio/CONTENT_TYPE/XML", "application/xml"))) {
+				decisionTablePageSaveData = Instance.createTransientInstanceFromXML("/WebStudio/Core/Concepts/Decision/Pagination/WS_C_DecisionTablePageSaveDataItem", artifactContent);
+			} else {
+				decisionTablePageSaveData = Instance.createTransientInstanceFromJSON("/WebStudio/Core/Concepts/Decision/Pagination/WS_C_DecisionTablePageSaveDataItem", artifactContent);
+			}
+			
+			String[] revisionIds = Instance.PropertyArray.toArrayString(userArtifact.artifactRevisionIds);
+			if (revisionIds@length == 0) { //New DT
+				artifactModelInstance = WebStudio.Core.RuleFunctions.Utils.DT.WS_RF_CreateNewDecisionTableInstanceModel(username, projectName, userArtifact.artifactPath, artifactType, 
+																															implementsPath, decisionTablePageSaveData);	
+			} else { //Modify DT	
+				//Load instance with this latest revision id
+				String latestRevisionId = revisionIds[revisionIds@length - 1];
+				WS_C_UserArtifactRevision userArtifactRevision = Instance.getByExtIdByUri(latestRevisionId, "/WebStudio/Core/Concepts/WS_C_UserArtifactRevision");
+				WS_C_DecisionTable decisionTableModelConcept = WS_RF_GetArtifactContentInstance(userArtifactRevision.artifactContentsId, userArtifactRevision.parentArtifactType);
+	
+				artifactModelInstance = WebStudio.Core.RuleFunctions.Utils.DT.WS_RF_CreateDecisionTableInstanceModel(projectName, username, decisionTableModelConcept, decisionTablePageSaveData);
+			}
+		} else if (String.equals(artifactType, "beprocess")) {
+			WS_C_ProcessUserArtifact processUserArtifact = userArtifact;
+			artifactModelInstance = WS_RF_CreateProcessInstanceModel(username, projectName, artifactContent, artifactType, processUserArtifact, contentType);
+		} else if (String.equals(artifactType, "domain")) {
+			WS_C_DomainUserArtifact domainUserArtifact = userArtifact;
+			artifactModelInstance = WS_RF_CreateDomainContentConcept(username, projectName, artifactContent, artifactType, domainUserArtifact, contentType);
+		}
+		
+		return artifactModelInstance;
+	}
+}

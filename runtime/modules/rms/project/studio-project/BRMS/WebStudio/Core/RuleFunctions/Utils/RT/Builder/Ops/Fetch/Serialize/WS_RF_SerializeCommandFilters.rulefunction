@@ -1,0 +1,35 @@
+/**
+ * @description Serialize filters in command to concept model.
+ */
+void rulefunction WebStudio.Core.RuleFunctions.Utils.RT.Builder.Ops.Fetch.Serialize.WS_RF_SerializeCommandFilters {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object commandEModel;
+		WebStudio.Core.Concepts.RuleTemplateInstance.Builder.WS_C_CommandInfo commandInfo;
+	}
+	body {
+		//Also process filters.
+		Object[] commandFilters = WS.RTI.getChildFilterObjects(commandEModel);
+		
+		for (int filterLoop = 0; filterLoop < commandFilters@length; filterLoop++) {
+			Object commandFilter = commandFilters[filterLoop];
+			if (WS.RTI.isMultiFilter(commandFilter)) {
+				WebStudio.
+					Core.
+						RuleFunctions.
+							Utils.RT.Builder.
+								Ops.Fetch.Serialize.
+									WS_RF_SerializeMultiFilter(commandFilter, commandInfo);
+			} else {
+				WebStudio.
+					Core.
+						RuleFunctions.
+							Utils.RT.Builder.
+								Ops.Fetch.Serialize.
+									WS_RF_SerializeSingleFilter(commandFilter, commandInfo);
+			}
+		}
+	}
+}

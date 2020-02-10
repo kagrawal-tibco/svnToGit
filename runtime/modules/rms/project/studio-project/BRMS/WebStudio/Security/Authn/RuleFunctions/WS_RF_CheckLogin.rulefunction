@@ -1,0 +1,26 @@
+/**
+ * @description Checks the Login Session
+ */
+WebStudio.Security.Authn.Concepts.WS_C_LoggedInUser rulefunction WebStudio.Security.Authn.RuleFunctions.WS_RF_CheckLogin {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object asyncContextObject;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Security.Authn.RuleFunctions.WS_RF_CheckLogin");
+
+		Object servletResponse = HTTP.Servlet.getServletResponse(asyncContextObject);
+		
+		WS_C_LoggedInUser loggedInUser = WebStudio.Security.Authn.RuleFunctions.WS_RF_ValidateLogin(null, true);
+		if (loggedInUser == null) {
+			//Invalid session, so remove the cookie from client, set max age = 0
+			Log.log(LOGGER, "Debug", "Invalid token, removing cookie from client");
+			Object wsSessionId = HTTP.Servlet.Response.getCookie("WS_SESSION_ID", "", null, "/", 0);
+			HTTP.Servlet.Response.setCookie(servletResponse, wsSessionId);			
+		}
+		
+		return loggedInUser;																
+	}
+}

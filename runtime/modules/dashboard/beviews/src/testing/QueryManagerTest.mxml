@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Application xmlns:mx="http://www.adobe.com/2006/mxml" 
+	layout="vertical" 
+	creationComplete="init();"
+	xmlns:view="com.tibco.be.views.user.components.querymanager.view.*"
+	>
+	<view:QueryManagerUI id="qmAccordion"/>			
+	<mx:Script>
+		<![CDATA[
+			private var sampleQMXML:XML = 
+			<qmgrmdl selectedentityid="2">
+				<entity id="1" name="Foo"/>
+				<entity id="2" name="Bar">
+					<field id="1" name="Field1" datatype="boolean">
+						<defaultcondition operator="Is">
+							<value>false</value>
+						</defaultcondition>
+					</field>
+					<field id="2" name="Account Status" datatype="string">
+						<defaultcondition operator="Is">
+							<value>Normal</value>
+						</defaultcondition>
+					</field>
+					<field id="3" name="Tracking Date" datatype="datetime">
+						<defaultcondition operator="Is In The Range">
+							<value>1314193549026</value>
+							<value>1316370600000</value>
+						</defaultcondition>
+					</field>
+					<field id="4" name="Current Count" datatype="integer">
+						<defaultcondition operator="Is Greater Than Equal To">
+							<value>45</value>
+						</defaultcondition>
+					</field>
+				</entity>
+			</qmgrmdl>;
+			private function init():void{
+				qmAccordion.init(sampleQMXML);				
+			}
+		]]>
+	</mx:Script>
+</mx:Application>

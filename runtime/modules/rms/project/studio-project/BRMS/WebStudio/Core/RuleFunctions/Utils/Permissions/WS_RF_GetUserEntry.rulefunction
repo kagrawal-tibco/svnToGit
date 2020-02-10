@@ -1,0 +1,66 @@
+/**
+ * @description 
+ */
+WebStudio.Core.Concepts.DataSources.WS_C_TemporaryReturnData rulefunction WebStudio.Core.RuleFunctions.Utils.Permissions.WS_RF_GetUserEntry {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object servletRequest;
+		WebStudio.Security.Authn.Concepts.WS_C_LoggedInUser loggedInUser;
+		String userName;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.Permissions.WS_RF_CheckUserEntry");
+		
+		WS_C_ResponseData responseData = null;
+		String responseMessage = null;
+		String errorCode = null;
+		int recordCount = 0;
+		int responseStatus = 0;
+		
+		if (!WS_RF_CheckHTTPMethod(servletRequest, "GET")) {
+			responseStatus = -1;
+			recordCount = 0;
+			errorCode = "ERR_5101";
+			responseMessage = "Invalid HTTP Method, expect method is [GET].";
+			
+		} else {
+			boolean isAdmin = WS_RF_IsAdminRole(loggedInUser);
+			if (isAdmin) {
+				Log.log(LOGGER, "Debug", "Looking up UserId - %s", userName);
+				String subscriptionId = HTTP.Servlet.Request.getRequestParameter(servletRequest, "subscriptionId");
+				
+				Object userEntry = WS.Acl.getUser(userName, subscriptionId);
+				if (userEntry != null) {
+					Log.log(LOGGER, "Debug", "User with Id[%s] exists, returning details.", userName);
+					
+					responseData = Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/WS_C_ResponseData");
+					
+					WS_C_AbstractDataSourceRecord usersDataSourceRecord = Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/Records/WS_C_UsersDataSourceRecord");
+		    			Instance.PropertyArray.appendContainedConcept(responseData.record, usersDataSourceRecord, 1L);
+		    			WS_C_UsersDataSourceRecord usersDSRecord = usersDataSourceRecord;
+		    			
+		    			WebStudio.Core.Concepts.DataSources.WS_C_User userDetail = Instance.newTransientInstance("/WebStudio/Core/Concepts/DataSources/WS_C_User");
+					userDetail.userName = WS.Acl.getUserName(userEntry);
+					userDetail.userPassword = WS.Acl.getUserPassword(userEntry);
+					userDetail.roleName = WS.Acl.getUserRoleString(userEntry);
+					String sbsc = WS.Acl.getSubscriptionId(userEntry);
+					if (sbsc != null && !String.equals(sbsc,"")) userDetail.subscriptionId = sbsc;
+					
+		    			Instance.PropertyArray.appendContainedConcept(usersDSRecord.authEntry, userDetail, 1L);
+				} else {
+					responseStatus = -1;
+					errorCode = "ERR_7000";
+					responseMessage = "User with Id[" + userName + "] does not exist.";
+					Log.log(LOGGER, "Debug", responseMessage);
+				}
+			} else {
+				responseStatus = -1;
+				responseMessage = "User do not have this permission";
+			}
+		}
+		
+		return WS_RF_CreateTemporaryReturnData(responseStatus, recordCount, errorCode, responseMessage, responseData);
+	}
+}

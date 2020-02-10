@@ -1,0 +1,18 @@
+<div class="input-group input-group-sm">
+  <!-- <ng-select [(ngModel)]="active" [options]="candidates" [multiple]='true' (data)='values = $event' [placeholder]='placeholder'></ng-select> -->
+  <mat-form-field class="custom-form">
+    <mat-select [placeholder]='placeholder' [(ngModel)]='active' (selectionChange)='values = $event' multiple>
+      <mat-option *ngFor='let candidate of candidates' [value]='candidate'>
+        {{candidate}}
+      </mat-option>
+    </mat-select>
+  </mat-form-field>
+  <span class="input-group-btn">
+    <button class="mat-icon-button custom-button"  (click)='onCancel()'>
+      <i class="material-icons custom-clear" matTooltip="{{i18n('Cancel')}}" aria-label="clear" i18n-matTooltip>clear</i>
+    </button>
+    <button class="mat-icon-button custom-button" [disabled]='!values || values.value.length === 0' (click)='onConfirm()'>
+      <i class="material-icons" [ngClass]="{'custom-check': values && values.value && values.value.length > 0}" matTooltip="{{i18n('Confirm')}}" aria-label="check" i18n-matTooltip>check</i>
+    </button>
+  </span>
+</div>

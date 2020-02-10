@@ -1,0 +1,71 @@
+/**
+ * @description 
+ * @author hlouro-lt-T61
+ */
+rule Management.Rules.EntityMngmtRuleSet.GetMethodDescription_ValidToken {
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	declare {
+		Management.Events.request.MethodDescriptionRequestEvent requestevent;
+	}
+	when {
+		requestevent.token != null && String.length(requestevent.token) != 0;
+	}
+	then {
+		String family = "GetMethodDescription_ValidToken";
+		Shared.RuleFunctions.log(family,"DEBUG","Rule " + family + " triggered");
+		
+		String monitoredEntityName;
+		String entityType;
+		String methodName;
+		String methodGroup;
+		String methodFQName;
+		
+		try {
+			Shared.Concepts.LoggedInUser user = Instance.getByExtId(requestevent.token);
+			if (user == null) {
+			    Shared.Events.reqres.FailureResponseEvent event = Shared.Events.reqres.FailureResponseEvent.FailureResponseEvent(null,null,"001","Invalid token");
+			    Event.replyEvent(requestevent, event);
+			} 
+			else {
+			    user.lastAccessTime = System.currentTimeMillis();
+			    String mId = requestevent.monitorableid;
+			    Shared.Concepts.MonitorableEntity monitorable = Instance.getByExtId(mId);
+			    if (monitorable == null) {
+			        Shared.Events.reqres.FailureResponseEvent event = Shared.Events.reqres.FailureResponseEvent.FailureResponseEvent(null,null,"010","Invalid monitor id");
+			        Event.replyEvent(requestevent, event);
+			    }
+			    else {
+//			    	user.monitoring = monitorable;  //what is this for?
+//		        	monitorable.lastMonitoredTime = System.currentTimeMillis();
+					monitoredEntityName = getFQName(monitorable);
+					entityType = requestevent.entityType;
+			        methodName = requestevent.methodName ;
+			        methodGroup = requestevent.methodGroup;
+			        methodFQName = "/"+entityType+"/"+methodGroup+"/"+methodName;
+				
+				    Shared.RuleFunctions.log(family,"DEBUG","Retrieving descriptor of: " + 
+				    									methodFQName + " on monitored entity: " + monitoredEntityName );
+				
+				    String methodDescriptorXML = BEMM.methods.getMethodDescriptor(entityType, methodGroup, methodName);
+				    if (methodDescriptorXML == null || String.length(String.trim(methodDescriptorXML)) == 0) {
+				    	Exception.newException("Requested data not found", "No method description found for entity: " + entityType,null);
+				    }
+				    else {
+				       Shared.RuleFunctions.log(family,"DEBUG"," ... SENDING ... " + methodDescriptorXML);
+				        Shared.Events.reqres.SuccessXMLResponseEvent event = Shared.Events.reqres.SuccessXMLResponseEvent.SuccessXMLResponseEvent(null,methodDescriptorXML);
+				        Event.replyEvent(requestevent, event);
+				    }
+				}
+			}
+		} // try
+		catch(Exception e) {
+			Management.RuleFunctions.Exceptions.printAndSendException(e /*Except Object */,
+									family/*family String */,methodFQName/*methodFQName String */,
+									null /*monitoredEntityName String */,requestevent/*requestevent Event */);
+		}
+		
+	}
+}

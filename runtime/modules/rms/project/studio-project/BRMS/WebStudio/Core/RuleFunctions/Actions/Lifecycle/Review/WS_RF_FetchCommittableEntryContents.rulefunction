@@ -1,0 +1,88 @@
+/**
+ * @description Fetch contents of artifact committed for review.
+ */
+WebStudio.Core.Concepts.DataSources.WS_C_TemporaryReturnData rulefunction WebStudio.Core.RuleFunctions.Actions.Lifecycle.Review.WS_RF_FetchCommittableEntryContents {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		Object servletRequest;
+		WebStudio.Security.Authn.Concepts.WS_C_LoggedInUser loggedInUser;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Actions.Lifecycle.Review.WS_RF_FetchCommittableEntryContents");
+		
+		String responseMessage = null;
+		String errorCode = null;
+		int recordCount = 1;
+		int responseStatus = 0;
+		
+		WS_C_ResponseData responseData = null;
+		boolean unEscapeXML = false;
+		
+		if (!WS_RF_CheckHTTPMethod(servletRequest, "GET")) {
+			responseStatus = -1;
+			recordCount = 0;
+			errorCode = "ERR_5101";
+			responseMessage = "Invalid HTTP Method, expect method is [GET].";
+		} else {
+			String username = loggedInUser.username;
+			Log.log(LOGGER, "Debug", "Logged in user [%s]", username);
+			
+			//Get revisionid and artifact 
+			String revisionIdParam = HTTP.Servlet.Request.getRequestParameter(servletRequest, "revisionId");
+			String artifactPath = HTTP.Servlet.Request.getRequestParameter(servletRequest, "artifactPath");
+			String artifactExtn = HTTP.Servlet.Request.getRequestParameter(servletRequest, "artifactExtension");
+			
+			Log.log(LOGGER, "Info", "Revision Id requested [%s] and artifact path [%s] and extension [%s]", revisionIdParam, artifactPath, artifactExtn);
+			
+			String subscriptionId = null;
+			if (loggedInUser.jwtToken != null) subscriptionId = loggedInUser.jwtToken.sbsc;
+			
+			if (revisionIdParam == null || artifactPath == null) {
+				responseStatus = -1;
+				errorCode = "ERR_1170";
+				responseMessage = String.format("Mandatory revision id and artifact path are missing");
+			} else {
+				String reviewTaskExtId = WS_RF_CreateUserArtifactExtId(revisionIdParam, null, null, null, subscriptionId, null);
+				WS_C_AbstractReviewTask reviewTask = Instance.getByExtIdByUri(reviewTaskExtId, "/WebStudio/Core/Concepts/Lifecycle/WS_C_ReviewTask");
+				if (reviewTask != null) {
+					//Get checkin
+					WS_C_UserCheckin userCheckin = Instance.getByExtIdByUri(reviewTask.referencedCheckinId, "/WebStudio/Core/Concepts/Lifecycle/WS_C_UserCheckin");
+					//Find matching committable entry.
+					WS_C_UserArtifactRevision matchingArtifactRevsion = null;
+					WS_C_CommittableDeltaEntry[] checkinEntries = Instance.PropertyArray.toArrayConcept(userCheckin.committables);
+					
+					for (int loop = 0; loop < checkinEntries@length; loop++) {
+						WS_C_CommittableDeltaEntry checkinEntry = checkinEntries[loop];
+						WS_C_UserArtifactRevision revision = Instance.PropertyAtom.getConceptReference(checkinEntry.userArtifactRevision, 1L);
+						
+						WS_C_UserArtifact parentArtifact = WS_RF_IsUserArtifact(revision.parentArtifactId, revision.parentArtifactType);
+						if (String.equals(parentArtifact.artifactPath, artifactPath)) {
+							matchingArtifactRevsion = revision;
+							//Match found
+							break;
+						}
+					}
+					if (matchingArtifactRevsion != null) {
+						WS_C_AnyArtifactDetails contentsConcept = WS_RF_GetArtifactContentInstance(matchingArtifactRevsion.artifactContentsId, matchingArtifactRevsion.parentArtifactType);
+						
+						int pageNum = 0;
+						if (String.equals(artifactExtn, "rulefunctionimpl")) {
+							String pageNumParam = HTTP.Servlet.Request.getRequestParameter(servletRequest, "pageNum");
+							if (pageNumParam != null) {
+								pageNum = Number.valueOfString(pageNumParam, 10);
+							}
+						}
+					 	responseData = WS_RF_ResponseDSXMLBuilder(userCheckin.managedProjectName, artifactPath, artifactExtn, contentsConcept, errorCode, username, pageNum);
+					}					
+				}
+			}
+		}
+		
+		WS_C_TemporaryReturnData tempReturnData = WS_RF_CreateTemporaryReturnData(responseStatus, recordCount, errorCode, responseMessage, responseData);
+		tempReturnData.unEscapeXML = unEscapeXML;
+		
+		return tempReturnData;
+	}
+}

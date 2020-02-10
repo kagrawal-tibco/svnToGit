@@ -1,0 +1,34 @@
+<div ng-controller='IndexCtrl' class="appManagementPage tea-theme wrapper row-offcanvas row-offcanvas-left">
+   	<div ng-include src="'partials/templates/header.html'"></div>
+    <div class="beTeaAgentView">
+     <aside class="left-side sidebar-offcanvas" ng-class="">
+        <div ng-include src="'partials/templates/leftNav.html'"></div>
+     </aside>
+	 <div class="adminView" ng-controller = "appAgentClassesCtrl">
+	 	<div id="loaderdiv" style="display: none;">
+			<img src="images/icons/loader.gif" class="ajax-loader" />
+		</div>
+        <h3>Agents</h3>  
+        <div ng-include="'partials/templates/aboutBETeaView.html'"></div>
+        <div class="row" style="padding-bottom: 10px">
+            <div class="col-md-4 appSearch" style="padding-left: 0px;">               
+                <div class="input-prepend-inner pull-left" >
+                    <span class="add-on"><i class="fa fa-filter fa-lg"></i></span>
+                    <input ng-model="search.name" class="appSearchInput col-md-7" placeholder="Filter agents">
+                    <i class="global-filter-reset ng-hide" ng-show="nameFilter" ng-click="nameFilter = ''"></i>
+                </div>
+            </div>
+        </div>      
+         <div>	
+         	<div ng-repeat="type in agentTypeList" class="be_agentType_div">
+				{{capitalizeFirstLetter(type)}}
+				<ul style="margin-top: 10px;width: 380px;" class="appManagement_appList clearfix"> 
+					<li class="appManagement_appItem" ng-show="agent.config.agentType == type" ng-repeat="agent in agents| filter:{name:search.name}">
+						<agentdiv be-agent-class-object="agent"></agentdiv>	
+					</li>		
+				</ul>
+			</div>	
+     	</div>        
+     </div>   
+    </div>
+</div>    

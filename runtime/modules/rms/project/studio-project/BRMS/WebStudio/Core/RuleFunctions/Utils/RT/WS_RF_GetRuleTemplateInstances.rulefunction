@@ -1,0 +1,58 @@
+/**
+ * @description 
+ */
+WebStudio.Core.Concepts.RuleTemplateInstance.WS_C_AbstractRuleTemplate[] rulefunction WebStudio.Core.RuleFunctions.Utils.RT.WS_RF_GetRuleTemplateInstances {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String projectName;
+		String ruleTemplatePath;
+		String userName;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.RT.WS_RF_GetRuleTemplateInstances");
+		
+		String userProjectExtId = WS_RF_CreateUserArtifactExtId(null, null, projectName, userName, null, null);
+		WebStudio.Core.Concepts.WS_C_UserProject userProject = Cluster.DataGrid.CacheLoadConceptByExtIdByUri(userProjectExtId, true, "/WebStudio/Core/Concepts/WS_C_UserProject");
+		
+		String stackID = "RTI_Artifacts_" + System.nanoTime();
+		Object rtiStack = WS.Common.Stack.create(stackID);
+		
+		if (userProject != null) {
+			WS_C_UserArtifact[] artifacts = Instance.PropertyArray.toArrayContainedConcept(userProject.userArtifacts);
+			Log.log(LOGGER, "Debug", "Project Artifact Size - %s", artifacts@length);
+			
+			WS_C_UserArtifact userArtifact = null;
+			for (int i=0; i<artifacts@length; i++) {
+				userArtifact = artifacts[i];
+				if (String.equals(userArtifact.artifactFileExtn, "ruletemplateinstance")) {
+					if (userArtifact != null) {
+						String[] revisionIds = Instance.PropertyArray.toArrayString(userArtifact.artifactRevisionIds);
+						Log.log(LOGGER, "Debug", "Total Revisions for RTI[%s] - %s", userArtifact.artifactPath, revisionIds@length);
+						
+						// Need to update only if there are any revisions
+						if (revisionIds@length > 0) {
+							String latestRevision = revisionIds[revisionIds@length-1];
+							WS_C_UserArtifactRevision artifactRevision = Instance.getByExtIdByUri(latestRevision, "/WebStudio/Core/Concepts/WS_C_UserArtifactRevision");
+							if (artifactRevision != null) {								
+								Log.log(LOGGER, "Debug", "Latest Revision ExtId %s", artifactRevision@extId);
+								WS_C_AbstractRuleTemplate ruleTemplate = WS_RF_GetArtifactContentInstance(artifactRevision.artifactContentsId, artifactRevision.parentArtifactType);
+								
+								if (ruleTemplate != null && String.equals(ruleTemplate.implementsPath, ruleTemplatePath)) {
+									WS.Common.Stack.push(rtiStack, ruleTemplate);
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	
+		WS_C_AbstractRuleTemplate[] ruleTemplates = WS.Common.Stack.toArray(rtiStack, "be.gen.WebStudio.Core.Concepts.RuleTemplateInstance.WS_C_AbstractRuleTemplate", "com.tibco.cep.runtime.service.loader.BEClassLoader");
+		
+		WS.Common.Stack.delete(stackID);
+		
+		return ruleTemplates;
+	}
+}

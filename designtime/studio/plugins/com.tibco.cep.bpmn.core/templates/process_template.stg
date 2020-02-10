@@ -1,0 +1,666 @@
+group processTemplateGroup;
+
+indexFrameTemplate(cssPath,dataObject) ::= <<
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Frameset//EN" "http://www.w3.org/TR/html4/frameset.dtd">
+<!--NewPage-->
+<HTML>
+<HEAD>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<TITLE>
+Generated Documentation (Untitled)
+</TITLE>
+<SCRIPT type="text/javascript">
+    targetPage = "" + window.location.search;
+    if (targetPage != "" && targetPage != "undefined")
+        targetPage = targetPage.substring(1);
+    if (targetPage.indexOf(":") != -1)
+        targetPage = "undefined";
+    function loadFrames() {
+        if (targetPage != "" && targetPage != "undefined")
+             top.classFrame.location = top.targetPage;
+    }
+</SCRIPT>
+<NOSCRIPT>
+</NOSCRIPT>
+</HEAD>
+<FRAMESET cols="20%,80%" title="" onLoad="top.loadFrames()">
+<FRAMESET rows="30%,70%" title="" onLoad="top.loadFrames()">
+<FRAME src="overview-frame.html" name="overviewFrame" title="All Elements">
+<FRAME src="allclasses-frame.html" name="packageFrame" title="All Properties">
+</FRAMESET>
+<FRAME src="class-frame.html" name="classFrame" title="" scrolling="yes">
+<NOFRAMES>
+<H2>
+Frame Alert</H2>
+
+<P>
+This document is designed to be viewed using the frames feature. If you see this message, you are using a non-frame-capable web client.
+<BR>
+Link to<A HREF="overview-summary.html">Non-frame version.</A>
+</NOFRAMES>
+</FRAMESET>
+</HTML>
+>>
+
+
+packageFrameTemplate(cssPath,dataObject) ::= <<
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<!--NewPage-->
+<HTML>
+	<HEAD>
+		<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+		<TITLE></TITLE>
+		<LINK REL ="stylesheet" TYPE="text/css" HREF="$cssPath$" TITLE="Style">
+	</HEAD>
+	<BODY BGCOLOR="white">
+		$if(dataObject.packageName)$
+			<FONT size="+1" CLASS="FrameTitleFont">
+				<a href="package-summary.html" target="classFrame">$dataObject.packageName$</a>
+			</FONT><BR/>
+		$endif$
+		$if(dataObject.subProcesses)$
+			<table width="100%" border="0" summary=""><tbody>
+				<tr><td nowrap="">
+					<font size="+1" class="FrameHeadingFont">Sub Processes</font>&nbsp;
+					<font class="FrameItemFont">
+						$dataObject.subProcesses: {e|<br/><a href="$e.link$" target="$e.target$" title="$e.title$"><nobr>$e.name$</nobr></a>
+						}$
+					</font>
+				</tb></tr>
+			</tbody></table>
+		$endif$
+		$if(dataObject.events)$
+			<table width="100%" border="0" summary=""><tbody>
+				<tr><td nowrap="">
+					<font size="+1" class="FrameHeadingFont">Events</font>&nbsp;
+					<font class="FrameItemFont">
+						$dataObject.events: {e|<br/><a href="$e.link$" target="$e.target$" title="$e.title$"><nobr>$e.name$</nobr></a>
+						}$
+					</font>
+				</tb></tr>
+			</tbody></table>
+		$endif$
+		$if(dataObject.elements)$
+			<table width="100%" border="0" summary=""><tbody>
+				<tr><td nowrap="">
+					<font size="+1" class="FrameHeadingFont">Elements</font>&nbsp;
+					<font class="FrameItemFont">
+						$dataObject.elements: {e|<br/><a href="$e.link$" target="$e.target$" title="$e.title$"><nobr>$e.name$</nobr></a>
+						}$
+					</font>
+				</tb></tr>
+			</tbody></table>
+		$endif$
+		$if(dataObject.sequences)$
+			<table width="100%" border="0" summary=""><tbody>
+				<tr><td nowrap="">
+					<font size="+1" class="FrameHeadingFont">Sequences</font>&nbsp;
+					<font class="FrameItemFont">
+						$dataObject.sequences: {e|<br/><a href="$e.link$" target="$e.target$" title="$e.title$"><nobr>$e.name$</nobr></a>
+						}$
+					</font>
+				</tb></tr>
+			</tbody></table>
+		$endif$
+	</BODY>
+</HTML>
+>>
+
+overviewFrameTemplate(cssPath,dataObject) ::= <<
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<!--Overview page-->
+<HTML>
+	<HEAD>
+		<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+		<TITLE>BE doc overview</TITLE>
+		<LINK REL ="stylesheet" TYPE="text/css" HREF="$cssPath$" TITLE="Style">
+	</HEAD>
+
+	<BODY BGCOLOR="white">
+		<table width="100%" border="0" summary="">
+			<tbody><tr>
+				<th nowrap="" align="left"><font size="+1" class="FrameTitleFont">
+				<b><span style="white-space:nowrap;">BPMN Processes</span></b></font></th>
+			</tr></tbody>
+		</table>
+		<table width="100%" border="0" summary="">
+			<tbody><tr>
+				<td nowrap="">
+					<font class="FrameItemFont"><a href="allclasses-frame.html" target="packageFrame">All Elements</a></font>
+					<p>
+						<font size="+1" class="FrameHeadingFont"><b>Processes</b></font>
+						$dataObject.entries: {entry|
+						<font class="FrameItemFont">
+						<br/><a href="$entry.link$" target="$entry.target$" title="$entry.title$">$entry.name$</a>
+						</font>
+						}$
+					</p>
+				</td>
+			</tbody></tr>
+		</table>
+	</BODY>
+</HTML>
+>>
+
+homeFrameTemplate(cssPath,dataObject) ::= <<
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<!--Overview page-->
+<HTML>
+	<HEAD>
+		<TITLE></TITLE>
+		<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+		<LINK REL ="stylesheet" TYPE="text/css" HREF="$cssPath$" TITLE="Style">
+	</HEAD>
+
+	<BODY BGCOLOR="white">
+	</BODY>
+</HTML>
+>>
+
+processSummaryPageTemplate(cssPath,dataObject) ::= <<
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<!--NewPage-->
+<HTML>
+<HEAD>
+<TITLE></TITLE>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<LINK REL ="stylesheet" TYPE="text/css" HREF="$cssPath$" TITLE="Style">
+</HEAD>
+<BODY BGCOLOR="white" onload="windowTitle();">
+	<hr/>
+	<table width="100%" cellspacing="0" cellpadding="1" border="0" summary=""><tbody>
+		<tr>
+			<td bgcolor="#EEEEFF" class="NavBarCell1" colspan="2">
+				<table cellspacing="3" cellpadding="0" border="0" summary=""><tbody>
+					<tr valign="top" align="center">&nbsp;</tr>
+				</tbody></table>
+			</td>
+			<td valign="top" align="right" rowspan="3"><em>
+				<span style="white-space:nowrap;">$dataObject.currentVersionName$</span></em>
+			</td>
+		</tr>
+		<tr>
+			<td bgcolor="white" class="NavBarCell2" width="50%">
+				<font size="-2">&nbsp;&nbsp;&nbsp;</font>
+			</td>
+			<td bgcolor="white" class="NavBarCell2"><font size="-2">
+				<a target="_top" href="$dataObject.indexFilePath$?$dataObject.fileRelativePath$"><b>FRAMES</b></a>  &nbsp;&nbsp;<a target="_top" href="#"><b>NO FRAMES</b></a>  &nbsp;&nbsp;
+			</font></td>
+		</tr>
+		<tr>
+			<td valign="top" class="NavBarCell3"><font size="-2"></font>
+			</td>
+			<td valign="top" class="NavBarCell3"><font size="-2">
+			</font></td>
+		</tr>
+	</tbody></table>
+	<hr/>
+	<h2><font size="-1">$if(dataObject.parentProcessName)$Sub-Process:$else$Process:$endif$</font><br/>$dataObject.name$</h2>
+	
+	$showDescription(dataObject.description)$
+	
+	<p> </p>
+	$showProcessProperties(dataObject)$
+	
+	$showVariables(dataObject.variables)$
+	
+	$showConceptsList(dataObject.concepts)$
+	
+	
+	<!-- footer -->
+</BODY>
+</HTML>
+>>
+
+showVariables(varObjects) ::= <<
+<!-- Variables -->
+	$if(varObjects)$
+	<br/><hr/>
+	<table width="100%" cellspacing="0" cellpadding="3" border="1" summary=""><tbody>
+		<tr bgcolor="#CCCCFF" class="TableHeadingColor">
+			<th align="left" colspan="3">
+				<font size="+2"><b>Variable Summary</b></font>
+			</th>
+		</tr>
+		<tr bgcolor="white" class="TableRowColor">
+			<td align="center"><b>Name</b></td>
+			<td align="center"><b>Type</b></td>
+			<td align="center"><b>Multiple</b></td>
+		</tr>
+		$varObjects: {variable|
+		<tr bgcolor="white" class="TableRowColor">
+			<td width="25%"><b>$variable.name$</b></td>
+			<td>$if(variable.hyperlink)$ <a href="$variable.hyperlink.link$" target="$variable.hyperlink.target$" title="$variable.hyperlink.title$">$variable.type$</a>
+				$else$ $variable.type$ $endif$
+			</td>
+			<td align="center">$if(variable.collection)$Yes$else$No$endif$</td>
+		</tr>
+}$
+	</tbody></table>
+	$endif$
+>>
+
+showDescription(description) ::= <<
+<!-- Description -->
+	$if(description)$
+	<table width="100%" cellspacing="0" cellpadding="3" border="0" summary=""><tbody>
+		<tr>
+			<td width="5%"></td>
+			<td class="TableSubHeadingColor">$description$</td>
+		</tr>
+	</tbody></table>
+	$endif$
+>>
+
+showSinceVersion(sinceVersion) ::= <<
+$if(sinceVersion)$
+<dl>
+<dt><b>Since:</b></dt>
+  <dd>$sinceVersion$</dd>
+</dl>
+$endif$
+>>
+
+showConceptsList(concepts) ::= <<
+<!-- Concepts -->
+	$if(concepts)$
+	<br/><hr/>
+	<table width="100%" cellspacing="0" cellpadding="3" border="1" summary=""><tbody>
+		<tr bgcolor="#CCCCFF" class="TableHeadingColor">
+			<th align="left" colspan="3">
+				<font size="+2"><b>Concept Summary</b></font>
+			</th>
+		</tr>
+		$concepts.keys: {k|
+		<tr bgcolor="white" class="TableRowColor">
+			<td width="25%"><nobr><b>
+			$if(k.link)$<a href="$k.link$" title="$k.title$" target="$k.target$">$k.name$</a>
+					$else$ $k.name$ $endif$
+				</b></nobr>
+			</td>
+			<td>$concepts.(k)$</td>
+		</tr>
+}$
+	</tbody></table>
+	$endif$
+>>
+
+FlowElementTemplate(cssPath,dataObject) ::= <<
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<!--NewPage-->
+<HTML>
+<HEAD>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<TITLE>
+$dataObject.name$
+</TITLE>
+
+<LINK REL ="stylesheet" TYPE="text/css" HREF="$cssPath$" TITLE="Style">
+
+<SCRIPT type="text/javascript">
+function windowTitle()
+{
+    if (location.href.indexOf('is-external=true') == -1) {
+        parent.document.title="$dataObject.name$";
+    }
+}
+</SCRIPT>
+</HEAD>
+<BODY BGCOLOR="white" onload="windowTitle();">
+	<hr/>
+	<table width="100%" cellspacing="0" cellpadding="1" border="0" summary=""><tbody>
+		<tr>
+			<td bgcolor="#EEEEFF" class="NavBarCell1" colspan="2">
+				<table cellspacing="3" cellpadding="0" border="0" summary=""><tbody>
+					<tr valign="top" align="center">&nbsp;</tr>
+				</tbody></table>
+			</td>
+			<td valign="top" align="right" rowspan="3"><em>
+				<span style="white-space:nowrap;">$dataObject.currentVersionName$</span></em>
+			</td>
+		</tr>
+		<tr>
+			<td bgcolor="white" class="NavBarCell2" width="50%">
+				<font size="-2">&nbsp;&nbsp;&nbsp;</font>
+			</td>
+			<td bgcolor="white" class="NavBarCell2"><font size="-2">
+				<a target="_top" href="$dataObject.indexFilePath$?$dataObject.fileRelativePath$"><b>FRAMES</b></a>  &nbsp;&nbsp;<a target="_top" href="#"><b>NO FRAMES</b></a>  &nbsp;&nbsp;
+			</font></td>
+		</tr>
+		<tr>
+			<td valign="top" class="NavBarCell3"><font size="-2"></font>
+			</td>
+			<td valign="top" class="NavBarCell3"><font size="-2">
+			</font></td>
+		</tr>
+	</tbody></table>
+	<hr/>
+	<h2>
+		<font size="-1">$if(dataObject.parentProcessName)$$dataObject.parentProcessName$.$endif$$dataObject.processName$
+		</font>
+		<br/>$dataObject.name$
+	</h2>
+	
+	$showDescription(dataObject.description)$
+	
+	$showNodeProperties(dataObject)$
+	
+	$ShowReplyEvents(dataObject.replyConsumeEvents)$
+	
+	$ShowInputMapper(dataObject)$
+	
+	$ShowOutputMapper(dataObject)$
+	
+	$ShowTransportProperties(dataObject.transportProperties)$
+</BODY>
+</HTML>
+>>
+
+showProcessProperties(dataObject) ::= <<
+<!-- Process Properties -->
+$! when adding or removing properties, accordingly modify the isShowProperties() of Bean class. !$
+$if(dataObject)$$if(dataObject.showProperties)$
+	<br/><hr/>
+	<table width="100%" cellspacing="0" cellpadding="3" border="1" summary=""><tbody>
+		<tr bgcolor="#CCCCFF" class="TableHeadingColor">
+			<th align="left" colspan="3">
+				<font size="+2"><b>General</b></font>
+			</th>
+		</tr>
+		$if(dataObject.author)$
+		<tr bgcolor="white" class="TableRowColor"><td><b>Author</b></td><td>$dataObject.author$</td></tr>
+		$endif$
+		$if(dataObject.processType)$
+		<tr bgcolor="white" class="TableRowColor"><td width="25%"><b>Process Type</b></td><td>$dataObject.processType$</td></tr>
+		$endif$
+		$if(dataObject.revision)$
+		<tr bgcolor="white" class="TableRowColor"><td><b>Revision number</b></td><td>$dataObject.revision$</td></tr>
+		$endif$
+		$if(dataObject.showCheckpoint)$
+		<tr bgcolor="white" class="TableRowColor"><td width="25%"><b>Checkpoint</b></td><td>$if(dataObject.checkpoint)$Enabled$else$Disabled$endif$</td></tr>
+		$endif$
+		$if(dataObject.showTriggerByEvent)$
+		<tr bgcolor="white" class="TableRowColor"><td><b>Triggered By Event</b></td><td>$if(dataObject.triggerByEvent)$Enabled$else$Disabled$endif$</td></tr>
+		$endif$
+	</tbody></table>
+$endif$$endif$
+>>
+
+showNodeProperties(dataObject) ::= <<
+<!-- Node properties -->
+$! when adding or removing properties, accordingly modify the isShowProperties() of Bean class. !$
+$if(dataObject)$$if(dataObject.showProperties)$
+	<br/><hr/>
+	<table width="100%" cellspacing="0" cellpadding="3" border="1" summary=""><tbody>
+		<tr bgcolor="#CCCCFF" class="TableHeadingColor">
+			<th align="left" colspan="3">
+				<font size="+2"><b>General</b></font>
+			</th>
+		</tr>
+		
+		$! Show chekpoint enabled/disabled !$
+		$if(dataObject.checkpointDefined)$
+		<tr bgcolor="white" class="TableRowColor"><td><b>Checkpoint</b></td><td>$if(dataObject.checkpoint)$Enabled$else$Disabled$endif$</td></tr>
+		$endif$
+		
+		$! Show priority of node !$
+		$if(dataObject.priority)$
+		<tr bgcolor="white" class="TableRowColor"><td><b>Priority</b></td><td>$dataObject.priority$</td></tr>
+		$endif$
+		
+		$! Show rules of an Inference node, on UI these are labeld as Resource !$
+		$if(dataObject.rules)$
+			<tr bgcolor="white" class="TableRowColor"><td><B>Resource</B></td>
+			<td>$dataObject.rules: {rule|
+					$if(rule.link)$
+						<a href="$rule.link$" title="$rule.title$" target="$rule.target$">$rule.name$</a>
+					$else$
+						$rule.name$
+					$endif$<br/>
+				}$
+			</td>
+			</tr>
+		$endif$
+		
+		$! Show resource of a node !$
+		$if(dataObject.resource)$
+			<tr bgcolor="white" class="TableRowColor"><td><B>Resource</B></td>
+			<td>$if(dataObject.resource.link)$
+					<a href="$dataObject.resource.link$" title="$dataObject.resource.title$" target="$dataObject.resource.target$">$dataObject.resource.name$</a>
+				$else$
+					$dataObject.resource.name$
+				$endif$
+			</td>
+			</tr>
+		$endif$
+		
+		$! Show destination of node !$
+		$if(dataObject.destination)$
+			<tr bgcolor="white" class="TableRowColor"><td><B>Destination</B></td>
+			<td>$if(dataObject.destination.link)$
+					<a href="$dataObject.destination.link$" title="$dataObject.destination.title$" target="$dataObject.destination.target$">$dataObject.destination.name$</a>
+				$else$
+					$dataObject.destination.name$
+				$endif$
+			</td>
+			</tr>
+		$endif$
+		
+		$! show merge expression in case of parallel gateway !$
+		$if(dataObject.mergeExpression)$
+			<tr bgcolor="white" class="TableRowColor">
+				<td><B>Merge Expression</B></td>
+				<td>$dataObject.mergeExpression$</td>
+			</tr>
+		$endif$
+		
+		$! show join rulefunction !$
+		$if(dataObject.joinRuleFunction)$
+			<tr bgcolor="white" class="TableRowColor"><td><B>Join Rulefunction</B></td>
+			<td>$if(dataObject.joinRuleFunction.link)$
+					<a href="$dataObject.joinRuleFunction.link$" title="$dataObject.joinRuleFunction.title$" target="$dataObject.joinRuleFunction.target$">$dataObject.joinRuleFunction.name$</a>
+				$else$
+					$dataObject.joinRuleFunction.name$
+				$endif$
+			</td>
+			</tr>
+		$endif$
+		
+		$! show fork rulefunction !$
+		$if(dataObject.forkRuleFunction)$
+			<tr bgcolor="white" class="TableRowColor"><td><B>Fork Rulefunction</B></td>
+			<td>$if(dataObject.forkRuleFunction.link)$
+					<a href="$dataObject.forkRuleFunction.link$" title="$dataObject.forkRuleFunction.title$" target="$dataObject.forkRuleFunction.target$">$dataObject.forkRuleFunction.name$</a>
+				$else$
+					$dataObject.forkRuleFunction.name$
+				$endif$
+			</td>
+			</tr>
+		$endif$
+		
+		$! show key expression !$
+		$if(dataObject.keyExpression)$
+			<tr bgcolor="white" class="TableRowColor">
+				<td><B>Key Expression</B></td>
+				<td>$dataObject.keyExpression$</td>
+			</tr>
+		$endif$
+		
+		$! show list of implementation URI of a business rule task !$
+		$if(dataObject.implementationURI)$
+			<tr bgcolor="white" class="TableRowColor"><td><B>Implementation URI</B></td>
+			<td>$dataObject.implementationURI: {uri|$if(uri.link)$<a href="$uri.link$" title="$uri.title$" target="$uri.target$">$uri.name$</a>
+					$else$ $uri.name$
+					$endif$<br/>
+				}$
+			</td>
+			</tr>
+		$endif$
+		
+		$! show sourceRef of a sequence flow !$
+		$if(dataObject.sourceRef)$
+			<tr bgcolor="white" class="TableRowColor"><td width="25%"><B>Source node</B></td>
+			<td>$if(dataObject.sourceRef.link)$
+					<a href="$dataObject.sourceRef.link$" title="$dataObject.sourceRef.title$" target="$dataObject.sourceRef.target$">$dataObject.sourceRef.name$</a>
+				$else$
+					$dataObject.sourceRef.name$
+				$endif$
+			</td>
+			</tr>
+		$endif$
+		
+		$! show target ref of a sequence flow !$
+		$if(dataObject.targetRef)$
+			<tr bgcolor="white" class="TableRowColor"><td><B>Target node</B></td>
+			<td>$if(dataObject.targetRef.link)$
+					<a href="$dataObject.targetRef.link$" title="$dataObject.targetRef.title$" target="$dataObject.targetRef.target$">$dataObject.targetRef.name$</a>
+				$else$
+					$dataObject.targetRef.name$
+				$endif$
+			</td>
+			</tr>
+		$endif$
+		
+		$! show incoming sequences for any node !$
+		$if(dataObject.incomingSequences)$
+			<tr bgcolor="white" class="TableRowColor"><td width="25%"><B>Incoming sequences</B></td>
+			<td>$dataObject.incomingSequences: {sequence|$if(sequence.link)$<a href="$sequence.link$" title="$sequence.title$" target="$sequence.target$">$sequence.name$</a>
+					$else$ $sequence.name$
+					$endif$<br/>
+				}$
+			</td>
+			</tr>
+		$endif$
+		
+		$! show ougoing sequences for any node, also indicate default if any !$
+		$if(dataObject.showOutgoingSequences)$
+			<tr bgcolor="white" class="TableRowColor"><td width="25%"><B>Outgoing sequences</B></td>
+			<td>$if(dataObject.defaultSequence)$
+					$if(dataObject.defaultSequence.link)$<a href="$dataObject.defaultSequence.link$" title="$dataObject.defaultSequence.title$" target="$dataObject.defaultSequence.target$">$dataObject.defaultSequence.name$</a>
+					$else$ $dataObject.defaultSequence.name$
+					$endif$ <b> (Default)</b><br/>
+				$endif$
+				$dataObject.outgoingSequences: {sequence|$if(sequence.link)$<a href="$sequence.link$" title="$sequence.title$" target="$sequence.target$">$sequence.name$</a>
+					$else$ $sequence.name$
+					$endif$<br/>
+				}$
+			</td>
+			</tr>
+		$endif$
+	</tbody></table>
+$endif$$endif$
+>>
+
+ShowInputMapper(dataObject) ::= <<
+$if(dataObject.inputMapScopeVariables)$
+	<br/><hr/>
+	<table width="100%" cellspacing="0" cellpadding="3" border="1" summary=""><tbody>
+		<tr bgcolor="#CCCCFF" class="TableHeadingColor">
+			<th align="left" colspan="2">
+				<font size="+2"><b>Input mapper</b></font>
+			</th>
+		</tr>
+	</table>
+	$if(dataObject.inputMapScopeVariables)$
+	<br/><b>Scope variables:</b>
+	<table width="100%" cellspacing="0" cellpadding="3" border="1" summary=""><tbody>
+		$dataObject.inputMapScopeVariables.keys, dataObject.inputMapScopeVariables.values: {k, v|
+			<tr><td width="25%">$k$</td>
+			<td>$if(v.link)$<a href="$v.link$" title="$v.title$" target="$v.target$">$v.name$</a>
+				$else$ $v.name$ $endif$
+			</td></tr>
+		}$
+	</table>
+	$endif$
+	$if(dataObject.inputMapReceivingParams)$
+	<br/><b>Receiving Parameters:</b>
+	<table width="100%" cellspacing="0" cellpadding="3" border="1" summary=""><tbody>
+		$dataObject.inputMapReceivingParams.keys, dataObject.inputMapReceivingParams.values: {k, v|
+			<tr><td width="25%">$k$</td>
+			<td>$if(v.link)$<a href="$v.link$" title="$v.title$" target="$v.target$">$v.name$</a>
+				$else$ $v.name$ $endif$
+			</td></tr>
+		}$
+	</table>
+	$endif$
+$endif$
+>>
+
+ShowOutputMapper(dataObject) ::= <<
+$if(dataObject.outputMapScopeVariables)$
+	<br/><hr/>
+	<table width="100%" cellspacing="0" cellpadding="3" border="1" summary=""><tbody>
+		<tr bgcolor="#CCCCFF" class="TableHeadingColor">
+			<th align="left" colspan="2">
+				<font size="+2"><b>Output mapper</b></font>
+			</th>
+		</tr>
+	</table>
+	$if(dataObject.outputMapScopeVariables)$
+	<br/><b>Scope variables:</b>
+	<table width="100%" cellspacing="0" cellpadding="3" border="1" summary=""><tbody>
+		$dataObject.outputMapScopeVariables.keys, dataObject.outputMapScopeVariables.values: {k, v|
+			<tr><td width="25%">$k$</td>
+			<td>$if(v.link)$<a href="$v.link$" title="$v.title$" target="$v.target$">$v.name$</a>
+				$else$ $v.name$ $endif$
+			</td></tr>
+		}$
+	</table>
+	$endif$
+	$if(dataObject.outputMapReceivingParams)$
+	<br/><b>Receiving Parameters:</b>
+	<table width="100%" cellspacing="0" cellpadding="3" border="1" summary=""><tbody>
+		$dataObject.outputMapReceivingParams.keys, dataObject.outputMapReceivingParams.values: {k, v|
+			<tr><td width="25%">$k$</td>
+			<td>$if(v.link)$<a href="$v.link$" title="$v.title$" target="$v.target$">$v.name$</a>
+				$else$ $v.name$ $endif$
+			</td></tr>
+		}$
+	</table>
+	$endif$
+$endif$
+>>
+
+ShowReplyEvents(replyConsumeEvents) ::= <<
+$if(replyConsumeEvents)$
+	<br/><hr/>
+	<table width="100%" cellspacing="0" cellpadding="3" border="1" summary=""><tbody>
+		<tr bgcolor="#CCCCFF" class="TableHeadingColor">
+			<th align="left" colspan="3">
+				<font size="+2"><b>Reply Event</b></font>
+			</th>
+		</tr>
+		<tr bgcolor="white" class="TableRowColor">
+			<td align="center"><b>Name</b></td>
+			<td align="center"><b>ReplyTo</b></td>
+			<td align="center"><b>Consume</b></td>
+		</tr>
+		$replyConsumeEvents.keys: {k|
+		<tr bgcolor="white" class="TableRowColor">
+			<td width="25%"><b>$k$</b></td>
+			<td align="center">$if(replyConsumeEvents.(k).replyTo)$Enabled$else$Disabled$endif$</td>
+			<td align="center">$if(replyConsumeEvents.(k).consume)$Enabled$else$Disabled$endif$</td>
+		</tr>
+		}$
+	</tbody></table>
+	$endif$
+>>
+
+ShowTransportProperties(transportProperties) ::= <<
+$if(transportProperties)$
+	<br/><hr/>
+	<table width="100%" cellspacing="0" cellpadding="3" border="1" summary=""><tbody>
+		<tr bgcolor="#CCCCFF" class="TableHeadingColor">
+			<th align="left" colspan="3">
+				<font size="+2"><b>Transport Properties</b></font>
+			</th>
+		</tr>
+		$transportProperties.keys: {k|
+		<tr bgcolor="white" class="TableRowColor">
+			<td width="25%"><b>$k$</b></td>
+			<td>$transportProperties.(k)$</td>
+		</tr>
+		}$
+	</tbody></table>
+$endif$
+>>

@@ -1,0 +1,50 @@
+<div class='card'>
+  <div class='card-header' i18n>{{i18n('
+    User Management 
+    ')}}</div>
+  <div class='card-body'>
+    <div class="bottom-pad top-pad">
+      <button class="btn btn-success btn-sm" (click)="onUserAdd()" i18n>{{i18n('Add new user')}}</button>
+    </div>
+    <div>
+      <p i18n>{{i18n('Select user: ')}}</p>
+    </div>
+    <div *ngIf='userItemsSub | async; let users'>
+      <ng-select 
+        [options]="users"
+        [multiple]='false'
+        [allowClear]='true'
+        (selected)="onUserSelected($event)"
+        (deselected)="onUserRemoved()"
+        [placeholder]="'Type to filter...'" i18n-placeholder>
+      </ng-select>        
+    </div>
+    <div class='top-pad'>
+      <div class="form-group" *ngIf="selectedUser">
+        <label><ng-container i18n>{{i18n('Enabled:  ')}}</ng-container>
+          <input type="checkbox" [checked]="userEnabled" (change)="userEnabled = !userEnabled">
+        </label>
+      </div>
+      <div class="bottom-pad top-pad">
+        <button type="button" class="btn btn-danger btn-sm" [disabled]="!selectedUser" (click)="onUserRemoved()" i18n>{{i18n('Delete selected user')}}</button>
+        <password-button [disabled]="!selectedUser" [user]="selectedUser" [buttonText]="'Change user\'s password'"></password-button>
+      </div>
+      <div class="form-group role-select"><!--  *ngIf="activeRolesSub | async; let activeRoles"> -->
+        <label for="rolesSelect" i18n>{{i18n('Roles:')}}
+        </label>
+        <ng-select 
+          id="rolesSelect"
+          [(ngModel)]="activeRoles"
+          [options]="roleItems"
+          [multiple]='true'
+          (selected)="onRoleAdded($event)"
+          (deselected)="onRoleRemoved($event)"
+          [disabled]='!selectedUser'
+          [placeholder]='selectedUser ? " No role is assigned to this user. Click here to assign the user a role." : " Select a user to see the roles."'
+        ></ng-select>        
+      </div>
+      <button class='btn btn-outline-primary btn-sm btn-narrow' [disabled]='!selectedUser || !isDirty()' (click)='cancelUserEdit()' i18n>{{i18n('Cancel')}}</button>
+      <button class='btn btn-primary btn-sm btn-narrow' [disabled]='!selectedUser || !isDirty()' (click)='saveUserEdit()' i18n>{{i18n('Save')}}</button>
+    </div>
+  </div>
+</div>

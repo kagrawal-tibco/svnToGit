@@ -1,0 +1,63 @@
+/**
+ * @description 
+ */
+Object rulefunction WebStudio.Core.RuleFunctions.Utils.WS_RF_GetProjectListPayload {
+	attribute {
+		validity = ACTION;
+	}
+	scope {
+		String loggedInUser;
+		String subscriptionId;
+	}
+	body {
+		Object LOGGER = Log.getLogger("WebStudio.Core.RuleFunctions.Utils.WS_RF_GetProjectListPayload");
+		String scsRootURL = WS_RF_GetSCSRootURL(null, subscriptionId);
+		if (scsRootURL == null) {
+			throw Exception.newException(null, "SCS root url not configured. Please configure using ws.scs.rootURL property", null);
+		}
+		String scsIntegrationType = System.getSystemPropertyAsString("ws.scs.impl.type", "file");
+		
+		Log.log(LOGGER, "DEBUG", "scsIntegrationType - %s", scsIntegrationType);
+		
+		String scsUserName = null, scsPassword = null;
+		if (loggedInUser != null && !String.equals(loggedInUser, "")) {
+			String[] scsCredentials = WS_RF_GetSCSCredentials(loggedInUser);
+			if (scsCredentials != null && scsCredentials@length > 1) {
+				scsUserName = scsCredentials[0];
+				scsPassword = scsCredentials[1];
+			}
+		} else {
+			// Since we have still not logged-in, use the default scs creds
+			scsUserName = System.getSystemPropertyAsString("ws.scs.default.username", null);
+			scsPassword = System.getSystemPropertyAsString("ws.scs.default.password", null);
+		}
+
+		Log.log(LOGGER, "DEBUG", "Retrieved credentials for User Name - %s", scsUserName);
+		
+		Object outputMap = Collections.Map.getMap("ProjectListOutputMap");
+		if (outputMap == null || Collections.Map.size(outputMap) == 0) {
+			outputMap = Collections.Map.createHashMapWithId("ProjectListOutputMap");
+			Log.log(LOGGER, "Debug", "OutputMap did not exist, created a new one !!");
+			
+			try {
+				String[] rootUrls = String.split(scsRootURL, ",");
+				for (int i=0; i<rootUrls@length; i++) {
+					String url = rootUrls[i];
+					if (subscriptionId != null) url += ("/" + subscriptionId);
+					String output = WS.SCS.listManagedProjects(scsIntegrationType, url, scsUserName, scsPassword);
+					Log.log(LOGGER, "Debug", "Managed Projects list for url[%s] - %s", url, output);
+					Collections.Map.put(outputMap, url, output);
+				}
+			} catch(Exception e) {
+				Log.logException(LOGGER, "Error", "Exception validating SCS credentials - %s", e, e@message);
+			}
+		}
+		
+		if (Collections.Map.size(outputMap) == 0) {
+			Log.log(LOGGER, "Debug", "No projects found !!");
+			return null;
+		}
+
+		return outputMap;
+	}
+}

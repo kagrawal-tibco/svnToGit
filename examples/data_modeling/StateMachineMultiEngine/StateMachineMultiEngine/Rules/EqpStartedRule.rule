@@ -1,0 +1,26 @@
+/**
+ * @description 
+ * @author TIBCO Software Inc.
+ */
+rule Rules.EqpStartedRule {
+	
+	attribute {
+		priority = 5;
+		forwardChain = true;
+	}
+	
+	declare {
+		
+		Events.CreateEvent eqpcreatedevent;
+	}
+	
+	when {
+		
+	}
+	
+	then {
+		Concepts.Equipment.Equipment(eqpcreatedevent.eqpName, eqpcreatedevent.eqpName, "Created");
+		System.debugOut(" ####RULE###   Equipment :" + eqpcreatedevent.eqpName + " created");
+	}
+	
+}

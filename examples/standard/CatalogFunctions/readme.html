@@ -1,0 +1,93 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>     CatalogFunctions
+
+- TIBCO BusinessEvents&reg; Examples
+</title>
+<meta http-equiv="Content-type" content="text/html; charset=iso-8859-1" />
+<meta http-equiv="Content-Language" content="en-us" />
+<link rel="Shortcut Icon" href="../../_resources/icon.gif" type="image/gif" />
+<style type="text/css" media="all">@import "../../_resources/examples.css";</style>
+<script type="text/javascript" src="../../_resources/examples.js" /></script>
+<script type="text/javascript">
+function buildForms() {
+ var form;
+
+
+ SendEventForm.setServer("http://localhost:8103");
+
+
+ form = SendEventForm.get("postValueForm");
+ form.setDestinationPath("/Channels/HTTPChannel/bookData");
+ form.setEventPath("/Events/BookDataEvent");
+ form.addProperty("BookTitle", "Succeed in Life");
+ form.addProperty("BookAuthor", "Ima Success");
+ form.addProperty("BookPrice", "300");
+ form.build();
+
+
+}
+</script>
+</head>
+<body onLoad="buildForms()">
+
+
+<h1>Catalog Functions</h1>
+
+
+<h2>Purpose of This Example</h2>
+
+<p>This example demonstrates how catalog functions can be invoked in TIBCO BusinessEvents&reg;.
+You can examine the project in TIBCO BusinessEvents Studio to understand the setup,
+and refer to Chapter 15, Functions in <i>TIBCO BusinessEvents Developer's Guide</i> for details on using catalog functions. </p>
+<p>The example makes use of the DateTime, Event, Math, String, and System functions, located under the Standard Section of the Built-in Functions.</p>
+
+<h2>How to Run the Example</h2>
+<ol>
+
+
+<li>
+<p>Open a command window and at the command prompt, start the TIBCO BusinessEvents engine using the following command.</i>.</p>
+
+<pre class="commands">
+cd <i>BE_HOME</i>/examples/standard/CatalogFunctions
+<i>BE_HOME</i>/bin/be-engine --propFile <i>BE_HOME</i>/bin/be-engine.tra -u default -c CatalogFunctions/CatalogFunctions.cdd CatalogFunctions.ear
+</pre>
+
+<p>Adapt the command as needed, for example, if you have customized the example project, or are running it from a different directory.</p>
+</li>
+
+
+<li>
+<p>Use the following form to create a BookDataEvent. Change the values as desired. Use whole numbers.</p>
+
+<form id="postValueForm"></form>
+
+<p>A message arriving at the BookData destination within the HTTPChannel channel is transformed into a BookDataEvent which is asserted. The BookInformationRule executes on assertion of this event and makes some calculations using catalog functions. It prints the details of the message to the command window. For example (some system data omitted):</p>
+<p><span class="logs">
+######### Publishing Book Information ##########
+Current Date/Time: 2010-07-14 15:09:56.624 -0700
+Book 'Succeed in Life' is written by Ima Success.
+Its market price is just $300
+There is a volume discount for this book:
+For buying     1-10, you get  3.0% discount,
+              11-20,         15.0% discount,
+              21-30,         26.0% discount,
+            over 30,         38.0% discount.
+</span></p>
+</li>
+
+
+</ol>
+
+
+
+<div class="footer">
+<p>TIBCO BusinessEvents&reg; 5.6<br />
+Copyright&copy; 2004-2019 TIBCO Software Inc. All rights reserved.</p>
+</div>
+</body>
+</html>
