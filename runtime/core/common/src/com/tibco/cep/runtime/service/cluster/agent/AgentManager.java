@@ -9,12 +9,14 @@
 package com.tibco.cep.runtime.service.cluster.agent;
 
 import java.util.Collection;
+import java.util.Map;
 
 import com.tibco.cep.impl.common.resource.UID;
 import com.tibco.cep.runtime.service.cluster.CacheAgent;
 import com.tibco.cep.runtime.service.cluster.Cluster;
 import com.tibco.cep.runtime.service.cluster.om.RuleFunctionService;
 import com.tibco.cep.runtime.service.om.api.ControlDao;
+import com.tibco.cep.runtime.session.RuleServiceProvider;
 
 /*
 * Author: Suresh Subramani / Date: Nov 4, 2010 / Time: 4:58:35 PM
@@ -28,7 +30,7 @@ public interface AgentManager {
      * @param cluster
      * @throws Exception
      */
-    void init(Cluster cluster) throws Exception;
+    void init(String clusterName, RuleServiceProvider rsp, Cluster cluster) throws Exception;
 
     /**
      * Start the AgentManager
@@ -37,7 +39,7 @@ public interface AgentManager {
      */
     void start() throws Exception;
 
-    ControlDao<Integer, AgentTuple> getAgentTable();
+    Map<String, AgentTuple> getAgentTable();
 
     CacheAgent[] getLocalAgents();
 

@@ -3,8 +3,6 @@ package com.tibco.cep.runtime.cluster;
 import java.net.URL;
 import java.util.List;
 
-import com.tibco.cep.kernel.service.logging.Level;
-import com.tibco.cep.kernel.service.logging.LogManagerFactory;
 import com.tibco.cep.runtime.driver.AbstractDriverManager;
 import com.tibco.cep.runtime.driver.DriverPojo;
 import com.tibco.cep.runtime.driver.DriverXmlParser;
@@ -14,11 +12,11 @@ import com.tibco.xml.data.primitive.ExpandedName;
  * @author ssinghal
  *
  */
-public class ClusterDriverManager extends AbstractDriverManager{
+public class StoreDriverManager extends AbstractDriverManager{
 	
-	protected static final String LOCAL_DRIVERS_XML_NAME = "cluster.xml";
-	protected static final ExpandedName DRIVER_FILE_NODE_NAME_ROOT = ExpandedName.makeName("cluster");
-	protected static final String DRIVER_CATEGORY = "cluster";
+	protected static final String LOCAL_DRIVERS_XML_NAME = "store.xml";
+	protected static final ExpandedName DRIVER_FILE_NODE_NAME_ROOT = ExpandedName.makeName("store");
+	protected static final String DRIVER_CATEGORY = "store";
 	
 	
 	@Override
@@ -28,7 +26,7 @@ public class ClusterDriverManager extends AbstractDriverManager{
 	
 	@Override
 	protected void register(URL url) {
-		final ClusterDriverManager.ClusterDriverRegistration registration = new ClusterDriverManager.ClusterDriverRegistration(url);
+		final StoreDriverManager.StoreDriverRegistration registration = new StoreDriverManager.StoreDriverRegistration(url);
 		d_registrations.add(registration);
 	}
 
@@ -37,14 +35,11 @@ public class ClusterDriverManager extends AbstractDriverManager{
 		return xmlParser.loadDrivers(getDriverUrls());
 	}
 	
-	class ClusterDriverRegistration extends AbstractDriverRegistration {
+	class StoreDriverRegistration extends AbstractDriverRegistration {
 		
-		public ClusterDriverRegistration(URL url) {
+		public StoreDriverRegistration(URL url) {
 			super(url, DRIVER_CATEGORY);
 		}
 	}
-
-
-	
 
 }

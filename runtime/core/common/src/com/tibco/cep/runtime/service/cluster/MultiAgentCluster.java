@@ -37,6 +37,7 @@ import com.tibco.cep.runtime.service.cluster.util.DefaultCacheSequenceManager;
 import com.tibco.cep.runtime.service.om.api.DaoProvider;
 import com.tibco.cep.runtime.service.om.api.DaoProviderFactory;
 import com.tibco.cep.runtime.service.om.api.GroupMemberMediator;
+import com.tibco.cep.runtime.service.om.api.InvocationService;
 import com.tibco.cep.runtime.session.RuleServiceProvider;
 import com.tibco.cep.runtime.session.impl.locks.DefaultConcurrentLockManager;
 import com.tibco.cep.runtime.session.locks.LockManager;
@@ -54,45 +55,60 @@ public class MultiAgentCluster implements Cluster {
     private RuleServiceProvider rsp;
     private ResourceProvider resourceProvider;
     private GroupMembershipService gmpService;
-    private DaoProvider daoProvider;
-    private MetadataCache metadataCache;
-    private ExternalClassesCache externalClassCache;
-    private ObjectTable objectTableCache;
+    //private DaoProvider daoProvider;
+    private IMetadataCache metadataCache;
+    private IExternalClassesCache externalClassCache;
+    private ObjectTable objectTableCache; ///////Check
     private ClusterIdGenerator idGenerator;
 
     private ClusterConfiguration clusterConfig;
-    private TopicRegistry topicRegistry;
+    private TopicRegistry topicRegistry; ///////////check
     private LockManager lockManager;
     private CacheSequenceManager sequenceManager;
     private SchedulerCache schedulerCache;
-    private EventTableProvider eventTableProvider;
+    private EventTableProvider eventTableProvider; ///////required
     private GroupMemberMediator groupMemberMediator;
     private AgentManager agentManager;
     private RecoveryManager recoveryManager;
     private HotDeployer hotDeployer;
-    private CacheClusterMBean mbean;
+    private CacheClusterMBean mbean; ///////////////
+    
+    
+    
+    private InvocationService invocationService;
+	private LockCache lockCache;
+    
+    private ClusterProvider clusterProvider;
+    //private BEStore defaultStore;
 
     public MultiAgentCluster(String name, RuleServiceProvider rsp) throws Exception {
         this.clusterName = name;
         this.rsp = rsp;
         this.resourceProvider = new DefaultResourceProvider();
         this.clusterConfig = new DefaultClusterConfiguration(name, rsp);
-        this.idGenerator = new DefaultClusterIdGenerator();
-        this.daoProvider = DaoProviderFactory.getInstance().newProvider();
-        this.metadataCache = new MetadataCache();
-        this.externalClassCache = new ExternalClassesCache();
+        
+        ClusterProviderFactory.INSTANCE.configure(this, rsp.getProperties());
+        clusterProvider = ClusterProviderFactory.INSTANCE.getClusterProvider();
+        
+        
+        this.idGenerator = clusterProvider.getIdGenerator();
+       // this.daoProvider = DaoProviderFactory.getInstance().newProvider();
+        this.metadataCache = clusterProvider.getMetadataCache();
+        this.externalClassCache = clusterProvider.getExternalClassCache();
         this.objectTableCache = new ObjectTableCache();
-        this.gmpService = new GroupMembershipServiceImpl();
+        
+        this.gmpService = clusterProvider.getGmpService();
         this.topicRegistry = new DefaultTopicRegistry();
         this.lockManager = new DefaultConcurrentLockManager();
         this.sequenceManager =  new DefaultCacheSequenceManager();
-        this.schedulerCache = new DefaultSchedulerCache();
+        this.schedulerCache = clusterProvider.getSchedulerCache();
         this.eventTableProvider = new DefaultEventTableProvider();
-        this.agentManager = new DefaultAgentManager(name, rsp);
+        this.agentManager = clusterProvider.getAgentManager();
         this.recoveryManager = createRecoveryManager();
-        this.groupMemberMediator = this.daoProvider.newGroupMemberMediator();
-        this.groupMemberMediator.addGroupMemberServiceListener(this.gmpService);
-        this.hotDeployer = new DefaultHotDeployer();
+        this.invocationService = clusterProvider.getInvocationService();
+        this.groupMemberMediator = clusterProvider.getGroupMemberMediator();
+        this.groupMemberMediator.addGroupMemberServiceListener(gmpService);
+        this.hotDeployer = clusterProvider.getHotDeployer();
     }
 
     @Override
@@ -105,8 +121,12 @@ public class MultiAgentCluster implements Cluster {
         LogDelegatorService logDelegatorService = new LogDelegatorService();
         logDelegatorService.start();
         this.resourceProvider.registerResource(LoggerService.class, logDelegatorService);
+        
+        clusterProvider.init(rsp.getProperties(), this);
+        
+        this.invocationService.init(this);
 
-        this.daoProvider.init(this);
+       // this.daoProvider.init(this);
         this.groupMemberMediator.init(this);
         this.gmpService.init(this);
         this.gmpService.waitForQuorum();
@@ -121,7 +141,7 @@ public class MultiAgentCluster implements Cluster {
         this.recoveryManager.init(this);
         this.schedulerCache.init(this);
         this.eventTableProvider.init(this);
-        this.agentManager.init(this);
+        this.agentManager.init(clusterName, rsp, this);
         this.hotDeployer.init(this);
 
         //Couldn't find a better place to register this MBean.
@@ -146,10 +166,13 @@ public class MultiAgentCluster implements Cluster {
         return gmpService;
     }
 
-    @Override
-    public DaoProvider getDaoProvider() {
-        return this.daoProvider;
-    }
+	
+	/*@Override 
+	public DaoProvider getDaoProvider() { 
+		//return this.daoProvider;
+		return null;
+	}*/
+	 
 
     @Override
     public RuleServiceProvider getRuleServiceProvider() {
@@ -157,12 +180,12 @@ public class MultiAgentCluster implements Cluster {
     }
 
     @Override
-    public MetadataCache getMetadataCache() {
+    public IMetadataCache getMetadataCache() {
         return this.metadataCache;
     }
 
     @Override
-    public ExternalClassesCache getExternalClassesCache() {
+    public IExternalClassesCache getExternalClassesCache() {
         return this.externalClassCache;
     }
 
@@ -197,25 +220,20 @@ public class MultiAgentCluster implements Cluster {
     }
 
     @Override
-    public GenericBackingStore getBackingStore() {
-        return this.daoProvider.getBackingStore();
+    public BEStore getBackingStore() {
+       // return this.daoProvider.getBackingStore();
+    	return null;
     }
 
-    @Override
+ /*   @Override
     public BackingStore getCacheAsideStore() {
-    	GenericBackingStore gbs = this.daoProvider.getBackingStore();
-        if ((gbs != null) && (gbs instanceof BackingStore)) {
-    		return (BackingStore)gbs;
-    	}
+		
         return null;
-    }
+    }*/
 
-    @Override
+  /*  @Override
     public BackingStore getRecoveryBackingStore() {
-        GenericBackingStore gbs = this.daoProvider.getBackingStore();
-        if ((gbs != null) && (gbs instanceof BackingStore)) {
-    		return (BackingStore)gbs;
-    	}
+		
         return null;
     }
 
@@ -228,7 +246,7 @@ public class MultiAgentCluster implements Cluster {
     public EventTableProvider getEventTableProvider() {
         return this.eventTableProvider;
     }
-
+*/
     @Override
     public void flushAll() {
         //To change body of implemented methods use File | Settings | File Templates.
@@ -247,7 +265,9 @@ public class MultiAgentCluster implements Cluster {
     @Override
     public void start() throws LifecycleException {
         try {
-            this.daoProvider.start();
+        	clusterProvider.start();
+        	//lockCache.start();
+            //this.daoProvider.start();
             this.gmpService.start();
             this.idGenerator.start();
             this.metadataCache.start();
@@ -270,7 +290,8 @@ public class MultiAgentCluster implements Cluster {
     public void stop() throws LifecycleException {
         lockManager.discard();
         resourceProvider.discard();
-        daoProvider.stop();
+        clusterProvider.stop();
+       // daoProvider.stop();
     }
 
     public GroupMemberMediator getGroupMemberMediator() {
@@ -312,4 +333,19 @@ public class MultiAgentCluster implements Cluster {
             return new com.tibco.cep.runtime.service.cluster.backingstore.recovery.ClusterCacheRecoveryManager();
         }
     }
+
+	@Override
+	public InvocationService getInvocationService() {
+		return invocationService;
+	}
+
+	@Override
+	public LockCache getApplicationLockCache() {
+		return lockCache;
+	}
+
+	@Override
+	public ClusterProvider getClusterProvider() {
+		return clusterProvider;
+	}
 }

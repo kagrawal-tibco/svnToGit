@@ -8,28 +8,28 @@
 
 package com.tibco.cep.runtime.service.cluster;
 
+import java.util.EnumMap;
+
 import com.tibco.cep.common.resource.ResourceProvider;
 import com.tibco.cep.runtime.service.cluster.agent.AgentManager;
-import com.tibco.cep.runtime.service.cluster.backingstore.BackingStore;
-import com.tibco.cep.runtime.service.cluster.backingstore.GenericBackingStore;
-import com.tibco.cep.runtime.service.cluster.backingstore.RecoveryManager;
+//import com.tibco.cep.runtime.service.cluster.backingstore.CacheAsideBackingStore;
+//import com.tibco.cep.runtime.service.cluster.backingstore.RecoveryManager;
 import com.tibco.cep.runtime.service.cluster.deploy.HotDeployer;
 import com.tibco.cep.runtime.service.cluster.events.EventTableProvider;
 import com.tibco.cep.runtime.service.cluster.events.notification.TopicRegistry;
 import com.tibco.cep.runtime.service.cluster.gmp.GroupMembershipService;
 import com.tibco.cep.runtime.service.cluster.scheduler.SchedulerCache;
 import com.tibco.cep.runtime.service.cluster.system.ClusterIdGenerator;
-import com.tibco.cep.runtime.service.cluster.system.ExternalClassesCache;
-import com.tibco.cep.runtime.service.cluster.system.MetadataCache;
+import com.tibco.cep.runtime.service.cluster.system.IExternalClassesCache;
+import com.tibco.cep.runtime.service.cluster.system.IMetadataCache;
+import com.tibco.cep.runtime.service.cluster.system.LockCache;
 import com.tibco.cep.runtime.service.cluster.system.ObjectTable;
-import com.tibco.cep.runtime.service.om.api.DaoProvider;
 import com.tibco.cep.runtime.service.om.api.GroupMemberMediator;
+import com.tibco.cep.runtime.service.om.api.InvocationService;
 import com.tibco.cep.runtime.session.RuleServiceProvider;
 import com.tibco.cep.runtime.session.locks.LockManager;
 import com.tibco.cep.runtime.session.sequences.SequenceManager;
 import com.tibco.cep.service.Service;
-
-import java.util.EnumMap;
 
 public interface Cluster extends Service {
 
@@ -41,15 +41,15 @@ public interface Cluster extends Service {
 
     GroupMembershipService getGroupMembershipService();
 
-    DaoProvider getDaoProvider();
+//    DaoProvider getDaoProvider();
 
     RuleServiceProvider getRuleServiceProvider();
 
     ResourceProvider getResourceProvider();
 
-    MetadataCache getMetadataCache();
+    IMetadataCache getMetadataCache();
 
-    ExternalClassesCache getExternalClassesCache();
+    IExternalClassesCache getExternalClassesCache();
 
     ObjectTable getObjectTableCache();
 
@@ -58,18 +58,18 @@ public interface Cluster extends Service {
     ClusterConfiguration getClusterConfig();
 
     TopicRegistry getTopicRegistry();
-
+//TODO:6 later on revive seq mgr..
     SequenceManager getSequenceManager();
 
     SchedulerCache getSchedulerCache();
 
-    GenericBackingStore getBackingStore();
+//    CacheAsideBackingStore getBackingStore();
 
-    BackingStore getCacheAsideStore();
+//    BackingStore getCacheAsideStore();
 
-    BackingStore getRecoveryBackingStore();
+//    BackingStore getRecoveryBackingStore();
 
-    RecoveryManager getRecoveryManager();
+//    RecoveryManager getRecoveryManager();
 
     EventTableProvider getEventTableProvider();
 
@@ -82,4 +82,23 @@ public interface Cluster extends Service {
     HotDeployer getHotDeployer();
 
     ClusterIdGenerator getIdGenerator();
+    
+//    ZKClusterService getZKClusterService();
+    
+    InvocationService getInvocationService();
+
+//	TxnCacheService getTxnCacheService();
+
+	LockCache getApplicationLockCache();
+
+	ClusterProvider getClusterProvider();
+
+//	CacheProvider getCacheProvider();
+	
+	BEStore getBackingStore();
+
+	//BEStore getBackingStoreForType(int typeId);
+	
+	//BEStore registerBEStoreForType(int typeId, String storeUri) throws Exception;
+
 }

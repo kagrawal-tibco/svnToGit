@@ -436,6 +436,7 @@ public enum SystemProperty {
      * AJ: internal
      */
     VM_DAOPROVIDER_CLASSNAME("be.dao.provider.className","com.tibco.cep.runtime.service.dao.impl.tibas.ASDaoProvider","com.tibco.cep.runtime.service.cluster.om.impl.CoherenceDaoProvider"),
+    VM_CLUSTER_CONFIG("be.cluster.config"),
 
     /**
      * Need a reference to this

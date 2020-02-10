@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Observer;
 import java.util.Set;
 
+import com.tibco.cep.runtime.service.cluster.Cluster;
 import com.tibco.cep.runtime.service.cluster.gmp.GroupMember;
 
 public interface InvocationService {
@@ -23,11 +24,13 @@ public interface InvocationService {
      */
     Map<String, Invocable.Result> invoke(Invocable invocable, Set<GroupMember> members);
     
+    void init(Cluster cluster) throws Exception;
+    
     /**
      * execute the callback function on a member, and observe execution.
      * @param def
      * @param members
      * @return
      */
-    Map<String, Invocable.Result> invokeAndObserve(Invocable invocable, GroupMember member, Observer observer);
+    //Map<String, Invocable.Result> invokeAndObserve(Invocable invocable, GroupMember member, Observer observer);
 }

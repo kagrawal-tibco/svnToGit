@@ -14,7 +14,7 @@ import java.util.Map;
 /*
 * Author: Ashwin Jayaprakash Date: Apr 28, 2009 Time: 10:09:26 AM
 */
-public interface ControlDao<K, V> extends Map<K, V>, FilterableMap, Invoker {
+public interface ControlDao<K, V> extends Map<K, V>, FilterableMap, InvocationService {
     String getName();
 
     ControlDaoType getType();
@@ -33,7 +33,7 @@ public interface ControlDao<K, V> extends Map<K, V>, FilterableMap, Invoker {
     
     Map getInternal();
 
-    void registerListener(ChangeListener<K, V> changeListener);
+    void registerListener(MapChangeListener<K, V> changeListener);
 
     //void registerListener(ChangeListener<K, V> changeListener, Filter filter);
 
