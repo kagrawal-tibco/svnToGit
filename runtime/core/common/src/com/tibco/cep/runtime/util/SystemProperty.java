@@ -437,6 +437,7 @@ public enum SystemProperty {
      */
     VM_DAOPROVIDER_CLASSNAME("be.dao.provider.className","com.tibco.cep.runtime.service.dao.impl.tibas.ASDaoProvider","com.tibco.cep.runtime.service.cluster.om.impl.CoherenceDaoProvider"),
     VM_CLUSTER_CONFIG("be.cluster.config"),
+    VM_CACHE_CONFIG("be.cache.config"),
 
     /**
      * Need a reference to this

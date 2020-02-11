@@ -21,10 +21,10 @@ public class ClusterProviderFactory extends ServiceProviderFactory{
 	
 	public static ClusterProviderFactory INSTANCE = new ClusterProviderFactory();
 	
-	private ClusterProviderFactory() {
-	}
+	private ClusterProviderFactory() {}
 
-	public ClusterProvider getClusterProvider() {
+	@Override
+	public Object getProvider() {
 		return clusterProvider;
 	}
 	
@@ -37,12 +37,14 @@ public class ClusterProviderFactory extends ServiceProviderFactory{
 		if (beClusterConfig == null) {
 			clusterProviderClz = "com.tibco.be.noop.services.NoOpClusterProvider";
 		} else {
-			ClusterDriverPojo clustProviderPojo = beClusterConfig.getCdp();
+			ClusterDriverPojo clustProviderPojo = (ClusterDriverPojo) beClusterConfig.getDp();
 			clusterProviderClz = clustProviderPojo.getClassName();
 			beClusterConfig.setProperty("clusterName", this.cluster.getClusterName());
 		}
 		clusterProvider = (ClusterProvider) Class.forName(clusterProviderClz).getConstructor(BEClusterConfiguration.class).newInstance(beClusterConfig);
 		
 	}
+
+	
 
 }

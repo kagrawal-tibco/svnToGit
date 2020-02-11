@@ -48,7 +48,7 @@ public class EntityDaoConfigCreator {
      * @return
      * @throws RuntimeException
      */
-    public static EntityDaoConfig createAndPutIfAbsent(Cluster cluster, Class<? extends Entity> entityClass, HashMap<Class, EntityDaoConfig> entityDaoConfigs) {
+    public static EntityDaoConfig createAndPutIfAbsent(Cluster cluster, Class<? extends Entity> entityClass, Map<Class, EntityDaoConfig> entityDaoConfigs) {
         if (entityClass != null) {
             EntityDaoConfig config = entityDaoConfigs.get(entityClass);
             if (config == null) {
@@ -458,4 +458,5 @@ public class EntityDaoConfigCreator {
 
         return mode;
     }
+    
 }

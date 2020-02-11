@@ -79,7 +79,7 @@ public class MultiAgentCluster implements Cluster {
 	private LockCache lockCache;
     
     private ClusterProvider clusterProvider;
-    private GenericBackingStore defaultStore;
+    private GenericBackingStore backingStore;
     private BECacheProvider beCacheProvider;
 
     public MultiAgentCluster(String name, RuleServiceProvider rsp) throws Exception {
@@ -89,7 +89,11 @@ public class MultiAgentCluster implements Cluster {
         this.clusterConfig = new DefaultClusterConfiguration(name, rsp);
         
         ClusterProviderFactory.INSTANCE.configure(this, rsp.getProperties());
-        clusterProvider = ClusterProviderFactory.INSTANCE.getClusterProvider();
+        clusterProvider = (ClusterProvider) ClusterProviderFactory.INSTANCE.getProvider();
+        
+        
+        CacheProviderFactory.INSTANCE.configure(this, rsp.getProperties());
+        beCacheProvider = (BECacheProvider) ClusterProviderFactory.INSTANCE.getProvider();
         
         
         this.idGenerator = clusterProvider.getIdGenerator();
@@ -105,7 +109,7 @@ public class MultiAgentCluster implements Cluster {
         this.schedulerCache = clusterProvider.getSchedulerCache();
         this.eventTableProvider = new DefaultEventTableProvider();
         this.agentManager = clusterProvider.getAgentManager();
-        this.recoveryManager = createRecoveryManager();
+        this.recoveryManager = null; //createRecoveryManager(); ///// TODO - 6.0 rectify this - getRecoveryManager is not part of BackingStore
         this.invocationService = clusterProvider.getInvocationService();
         this.groupMemberMediator = clusterProvider.getGroupMemberMediator();
         this.groupMemberMediator.addGroupMemberServiceListener(gmpService);
@@ -325,15 +329,15 @@ public class MultiAgentCluster implements Cluster {
         }
     }
 
-    private RecoveryManager createRecoveryManager() {
-        String strategy = System.getProperty(SystemProperty.DATAGRID_RECOVERY_DISTRIBUTED_STRATEGY.getPropertyName(), /* alternative */
-                          System.getProperty(SystemProperty.DATAGRID_RECOVERY_GENERALIZED_STRATEGY.getPropertyName(), "nobatch"));
-        if ("nobatch".equals(strategy)){
-            return new com.tibco.cep.runtime.service.cluster.backingstore.ClusterCacheRecoveryManager();
-        } else {
-            return new com.tibco.cep.runtime.service.cluster.backingstore.recovery.ClusterCacheRecoveryManager();
-        }
-    }
+//    private RecoveryManager createRecoveryManager() {
+//        String strategy = System.getProperty(SystemProperty.DATAGRID_RECOVERY_DISTRIBUTED_STRATEGY.getPropertyName(), /* alternative */
+//                          System.getProperty(SystemProperty.DATAGRID_RECOVERY_GENERALIZED_STRATEGY.getPropertyName(), "nobatch"));
+//        if ("nobatch".equals(strategy)){
+//            return new com.tibco.cep.runtime.service.cluster.backingstore.ClusterCacheRecoveryManager();
+//        } else {
+//            return new com.tibco.cep.runtime.service.cluster.backingstore.recovery.ClusterCacheRecoveryManager();
+//        }
+//    }
 
 	@Override
 	public InvocationService getInvocationService() {

@@ -114,9 +114,6 @@ public class MetadataCache implements IMetadataCache {
 		ClusterProvider clusterProvider = cluster.getClusterProvider();
 //		daoProvider = clusterProvider.getDaoProvider();
 
-		
-		BEStore defaultStore = cluster.getBackingStore();
-
         this.masterCache = clusterProvider.
                 createControlDao(String.class, byte[].class, ControlDaoType.Master, cluster);
 
@@ -255,7 +252,7 @@ public class MetadataCache implements IMetadataCache {
     	try {
 	        logger.log(Level.INFO, "Attempting to recover cluster-wide metadata ");
 	
-	        CacheAsideBackingStore store = cluster.getBackingStore();
+	        CacheAsideBackingStore store = (CacheAsideBackingStore) cluster.getBackingStore();
 	
 	        Map<String, Integer> typeRegistry = null;
 //	        if (store != null && store instanceof BackingStore) {
@@ -295,7 +292,7 @@ public class MetadataCache implements IMetadataCache {
         }
         int oldLen = metadataDescriptors.length;
         metadataDescriptors = Arrays.copyOf(metadataDescriptors, oldLen + newEntries.size());
-        CacheAsideBackingStore store = cluster.getBackingStore();
+        CacheAsideBackingStore store = (CacheAsideBackingStore) cluster.getBackingStore();
         for (TypeDescriptor td : newEntries) {
             reloadType(td, null, true);
             if (store != null) {
@@ -496,7 +493,7 @@ public class MetadataCache implements IMetadataCache {
      * @throws Exception 
      */
     
-    public EntityDao createEntityDaoAndRegister_old(Class entityClass, String uri, int typeId) throws Exception {
+    public EntityDao createEntityDaoAndRegister(Class entityClass, String uri, int typeId) throws Exception {
         EntityDao entityDao = null;
 
         EntityDaoConfig daoConfig = entityDaoConfigs.get(entityClass);
@@ -824,7 +821,7 @@ public class MetadataCache implements IMetadataCache {
      * @param typeId
      * @return
      */
-    public EntityDao<Id, com.tibco.cep.kernel.model.entity.Entity> getEntityDao(int typeId) {
+    public EntityDao<Long, com.tibco.cep.kernel.model.entity.Entity> getEntityDao(int typeId) {
         if ((typeId < 0) || (typeId >= metadataDescriptors.length + BE_TYPE_START)) {
             throw new RuntimeException("Invalid typeId specified.");
         }
