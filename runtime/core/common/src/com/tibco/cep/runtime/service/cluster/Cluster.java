@@ -27,6 +27,7 @@ import com.tibco.cep.runtime.service.cluster.system.LockCache;
 import com.tibco.cep.runtime.service.cluster.system.ObjectTable;
 import com.tibco.cep.runtime.service.om.api.GroupMemberMediator;
 import com.tibco.cep.runtime.service.om.api.InvocationService;
+import com.tibco.cep.runtime.service.store.StoreProvider;
 import com.tibco.cep.runtime.session.RuleServiceProvider;
 import com.tibco.cep.runtime.session.locks.LockManager;
 import com.tibco.cep.runtime.session.sequences.SequenceManager;
@@ -91,7 +92,7 @@ public interface Cluster extends Service {
 //	TxnCacheService getTxnCacheService();
 
 	ClusterProvider getClusterProvider();
-	BECacheProvider getBECacheProvider();
+	StoreProvider getStoreProvider();
 
 //	CacheProvider getCacheProvider();
 	

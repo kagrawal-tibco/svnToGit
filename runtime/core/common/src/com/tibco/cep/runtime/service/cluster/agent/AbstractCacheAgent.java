@@ -253,15 +253,14 @@ public abstract class AbstractCacheAgent implements CacheAgent {
         return type == Type.CACHESERVER;
     }
 
-	//TODO:6 removed this, revisit
-//	@Override
-//	public EntityDao getEntityDao(String entityURI) throws Exception {
-//	    TypeManager.TypeDescriptor td = cluster.getRuleServiceProvider().getTypeManager().getTypeDescriptor(entityURI);
-//	    if (td != null) {
-//	        return cluster.getCacheProvider().getEntityDao(td.getImplClass());
-//	    }
-//	    return null;
-//	}
+    @Override
+    public EntityDao getEntityDao(String entityURI) throws Exception {
+        TypeManager.TypeDescriptor td = cluster.getRuleServiceProvider().getTypeManager().getTypeDescriptor(entityURI);
+        if (td != null) {
+            return cluster.getDaoProvider().getEntityDao(td.getImplClass());
+        }
+        return null;
+    }
 
     protected void printInitializedInfo() { // TODO: Implement so it can be made avail in base class
 //        if (logger.isEnabledFor(Level.INFO)) {

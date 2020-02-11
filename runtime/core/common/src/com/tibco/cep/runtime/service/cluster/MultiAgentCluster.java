@@ -8,6 +8,9 @@
 
 package com.tibco.cep.runtime.service.cluster;
 
+import java.lang.reflect.Method;
+import java.util.EnumMap;
+
 import com.tibco.be.util.config.ClusterProviderConfiguration;
 import com.tibco.cep.common.exception.LifecycleException;
 import com.tibco.cep.common.exception.RecoveryException;
@@ -17,38 +20,33 @@ import com.tibco.cep.common.resource.ResourceProvider;
 import com.tibco.cep.impl.common.log.LogDelegatorService;
 import com.tibco.cep.impl.common.resource.DefaultResourceProvider;
 import com.tibco.cep.runtime.service.cluster.agent.AgentManager;
-import com.tibco.cep.runtime.service.cluster.agent.DefaultAgentManager;
-import com.tibco.cep.runtime.service.cluster.backingstore.BackingStore;
 import com.tibco.cep.runtime.service.cluster.backingstore.GenericBackingStore;
 import com.tibco.cep.runtime.service.cluster.backingstore.RecoveryManager;
-import com.tibco.cep.runtime.service.cluster.deploy.DefaultHotDeployer;
 import com.tibco.cep.runtime.service.cluster.deploy.HotDeployer;
 import com.tibco.cep.runtime.service.cluster.events.DefaultEventTableProvider;
 import com.tibco.cep.runtime.service.cluster.events.EventTableProvider;
 import com.tibco.cep.runtime.service.cluster.events.notification.TopicRegistry;
 import com.tibco.cep.runtime.service.cluster.events.notification.impl.DefaultTopicRegistry;
 import com.tibco.cep.runtime.service.cluster.gmp.GroupMembershipService;
-import com.tibco.cep.runtime.service.cluster.gmp.impl.GroupMembershipServiceImpl;
 import com.tibco.cep.runtime.service.cluster.mm.CacheClusterMBean;
 import com.tibco.cep.runtime.service.cluster.scheduler.SchedulerCache;
-import com.tibco.cep.runtime.service.cluster.scheduler.impl.DefaultSchedulerCache;
-import com.tibco.cep.runtime.service.cluster.system.*;
-import com.tibco.cep.runtime.service.cluster.system.impl.ObjectTableCache;
+import com.tibco.cep.runtime.service.cluster.system.CacheSequenceManager;
+import com.tibco.cep.runtime.service.cluster.system.ClusterIdGenerator;
+import com.tibco.cep.runtime.service.cluster.system.IExternalClassesCache;
+import com.tibco.cep.runtime.service.cluster.system.IMetadataCache;
+import com.tibco.cep.runtime.service.cluster.system.ObjectTable;
 import com.tibco.cep.runtime.service.cluster.util.DefaultCacheSequenceManager;
-import com.tibco.cep.runtime.service.om.api.DaoProvider;
-import com.tibco.cep.runtime.service.om.api.DaoProviderFactory;
 import com.tibco.cep.runtime.service.om.api.GroupMemberMediator;
 import com.tibco.cep.runtime.service.om.api.InvocationService;
+import com.tibco.cep.runtime.service.store.StoreProvider;
+import com.tibco.cep.runtime.service.store.StoreProviderConfig;
+import com.tibco.cep.runtime.service.store.StoreProviderFactory;
 import com.tibco.cep.runtime.session.RuleServiceProvider;
 import com.tibco.cep.runtime.session.impl.locks.DefaultConcurrentLockManager;
 import com.tibco.cep.runtime.session.locks.LockManager;
 import com.tibco.cep.runtime.session.sequences.SequenceManager;
 import com.tibco.cep.runtime.util.SystemProperty;
 import com.tibco.cep.service.Service;
-
-import java.lang.reflect.Method;
-import java.util.EnumMap;
-
 
 public class MultiAgentCluster implements Cluster {
 
@@ -74,13 +72,10 @@ public class MultiAgentCluster implements Cluster {
     private HotDeployer hotDeployer;
     private CacheClusterMBean mbean; ///////////////
     
-    
-    
     private InvocationService invocationService;
     
+    private StoreProvider storeProvider;
     private ClusterProvider clusterProvider;
-    private GenericBackingStore backingStore;
-    private BECacheProvider beCacheProvider;
 
     public MultiAgentCluster(String name, RuleServiceProvider rsp) throws Exception {
         this.clusterName = name;
@@ -91,12 +86,15 @@ public class MultiAgentCluster implements Cluster {
         ClusterProviderConfiguration clusterConfig = (ClusterProviderConfiguration) rsp.getProperties().get(SystemProperty.VM_CLUSTER_CONFIG.getPropertyName());
         clusterProvider = ClusterProviderFactory.getClusterProvider(this, clusterConfig);
         
+        StoreProviderConfig storeConfig = null;//TODO:
+        this.storeProvider = StoreProviderFactory.getStoreProvider(storeConfig);
+        
         this.idGenerator = clusterProvider.getIdGenerator();
        // this.daoProvider = DaoProviderFactory.getInstance().newProvider();
         this.metadataCache = clusterProvider.getMetadataCache();
         this.externalClassCache = clusterProvider.getExternalClassCache();
-        this.objectTableCache = new ObjectTableCache();
-        
+        this.objectTableCache = storeProvider.getCacheProvider().getObjectTableCache();
+                
         this.gmpService = clusterProvider.getGmpService();
         this.topicRegistry = new DefaultTopicRegistry();
         this.lockManager = new DefaultConcurrentLockManager();
@@ -345,8 +343,8 @@ public class MultiAgentCluster implements Cluster {
 	}
 	
 	@Override
-	public BECacheProvider getBECacheProvider() {
-		return beCacheProvider;
+	public StoreProvider getStoreProvider() {
+		return storeProvider;
 	}
 
 	@Override
