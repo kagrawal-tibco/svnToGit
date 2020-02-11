@@ -8,6 +8,7 @@
 
 package com.tibco.cep.runtime.service.cluster;
 
+import com.tibco.be.util.config.ClusterProviderConfiguration;
 import com.tibco.cep.common.exception.LifecycleException;
 import com.tibco.cep.common.exception.RecoveryException;
 import com.tibco.cep.common.log.LoggerService;
@@ -76,7 +77,6 @@ public class MultiAgentCluster implements Cluster {
     
     
     private InvocationService invocationService;
-	private LockCache lockCache;
     
     private ClusterProvider clusterProvider;
     private GenericBackingStore backingStore;
@@ -88,13 +88,8 @@ public class MultiAgentCluster implements Cluster {
         this.resourceProvider = new DefaultResourceProvider();
         this.clusterConfig = new DefaultClusterConfiguration(name, rsp);
         
-        ClusterProviderFactory.INSTANCE.configure(this, rsp.getProperties());
-        clusterProvider = (ClusterProvider) ClusterProviderFactory.INSTANCE.getProvider();
-        
-        
-        CacheProviderFactory.INSTANCE.configure(this, rsp.getProperties());
-        beCacheProvider = (BECacheProvider) ClusterProviderFactory.INSTANCE.getProvider();
-        
+        ClusterProviderConfiguration clusterConfig = (ClusterProviderConfiguration) rsp.getProperties().get(SystemProperty.VM_CLUSTER_CONFIG.getPropertyName());
+        clusterProvider = ClusterProviderFactory.getClusterProvider(this, clusterConfig);
         
         this.idGenerator = clusterProvider.getIdGenerator();
        // this.daoProvider = DaoProviderFactory.getInstance().newProvider();
@@ -111,7 +106,7 @@ public class MultiAgentCluster implements Cluster {
         this.agentManager = clusterProvider.getAgentManager();
         this.recoveryManager = null; //createRecoveryManager(); ///// TODO - 6.0 rectify this - getRecoveryManager is not part of BackingStore
         this.invocationService = clusterProvider.getInvocationService();
-        this.groupMemberMediator = clusterProvider.getGroupMemberMediator();
+        this.groupMemberMediator = clusterProvider.getGroupMediator();
         this.groupMemberMediator.addGroupMemberServiceListener(gmpService);
         this.hotDeployer = clusterProvider.getHotDeployer();
     }
@@ -342,11 +337,6 @@ public class MultiAgentCluster implements Cluster {
 	@Override
 	public InvocationService getInvocationService() {
 		return invocationService;
-	}
-
-	@Override
-	public LockCache getApplicationLockCache() {
-		return lockCache;
 	}
 
 	@Override

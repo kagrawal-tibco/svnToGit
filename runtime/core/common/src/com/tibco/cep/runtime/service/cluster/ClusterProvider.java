@@ -15,25 +15,16 @@ import com.tibco.cep.runtime.service.om.api.GroupMemberMediator;
 import com.tibco.cep.runtime.service.om.api.InvocationService;
 
 public interface ClusterProvider extends LifeCycleService {
+	
 	GroupMembershipService getGmpService();
-
 	IMetadataCache getMetadataCache();
-
 	IExternalClassesCache getExternalClassCache();
-
-	CacheSequenceManager getSequenceManager();
-
 	SchedulerCache getSchedulerCache();
-
-	GroupMemberMediator getGroupMemberMediator();
-
+	GroupMemberMediator getGroupMediator();
 	AgentManager getAgentManager();
-
 	HotDeployer getHotDeployer();
-
-	LockCache getLockCache();
-
 	ClusterIdGenerator getIdGenerator();
+	CacheSequenceManager getSequenceManager();
 
 	<K, V> ControlDao<K, V> createControlDao(Class<K> keyClass, Class<V> valueClass, ControlDaoType daoType,
 			Object... additionalProps) throws Exception;

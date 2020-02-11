@@ -1,50 +1,36 @@
 package com.tibco.cep.runtime.service.cluster;
 
-import java.util.Properties;
+import java.lang.reflect.InvocationTargetException;
 
-import com.tibco.be.util.config.BEClusterConfiguration;
+import com.tibco.be.util.config.ClusterProviderConfiguration;
 import com.tibco.cep.kernel.service.logging.LogManagerFactory;
 import com.tibco.cep.kernel.service.logging.Logger;
 import com.tibco.cep.runtime.cluster.ClusterDriverPojo;
-import com.tibco.cep.runtime.util.SystemProperty;
 
 /**
  * @author ssinghal
  *
  */
-public class ClusterProviderFactory extends ServiceProviderFactory{
+public class ClusterProviderFactory{
 	
 	private final static Logger logger = LogManagerFactory.getLogManager().getLogger(ClusterProviderFactory.class.getSimpleName());
-	private Cluster cluster;
-	private ClusterProvider clusterProvider;
+	private static ClusterProvider clusterProvider;
 	
-	
-	public static ClusterProviderFactory INSTANCE = new ClusterProviderFactory();
-	
-	private ClusterProviderFactory() {}
-
-	@Override
-	public Object getProvider() {
-		return clusterProvider;
-	}
-	
-	public void configure(Cluster cluster, Properties properties) throws Exception {
-		
-		super.configure(cluster, properties);
+	public static ClusterProvider getClusterProvider(Cluster cluster, ClusterProviderConfiguration clusterConfig) 
+			throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, ClassNotFoundException {
 		
 		String clusterProviderClz;
-		BEClusterConfiguration beClusterConfig = (BEClusterConfiguration)properties.get(SystemProperty.VM_CLUSTER_CONFIG.getPropertyName());
+		ClusterProviderConfiguration beClusterConfig = clusterConfig;
 		if (beClusterConfig == null) {
 			clusterProviderClz = "com.tibco.be.noop.services.NoOpClusterProvider";
 		} else {
 			ClusterDriverPojo clustProviderPojo = (ClusterDriverPojo) beClusterConfig.getDp();
 			clusterProviderClz = clustProviderPojo.getClassName();
-			beClusterConfig.setProperty("clusterName", this.cluster.getClusterName());
+			beClusterConfig.setProperty("clusterName", cluster.getClusterName());
 		}
-		clusterProvider = (ClusterProvider) Class.forName(clusterProviderClz).getConstructor(BEClusterConfiguration.class).newInstance(beClusterConfig);
+		clusterProvider = (ClusterProvider) Class.forName(clusterProviderClz).getConstructor(ClusterProviderConfiguration.class).newInstance(beClusterConfig);
+		return clusterProvider;
 		
 	}
-
 	
-
 }

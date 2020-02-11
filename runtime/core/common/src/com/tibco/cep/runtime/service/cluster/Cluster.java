@@ -90,8 +90,6 @@ public interface Cluster extends Service {
 
 //	TxnCacheService getTxnCacheService();
 
-	LockCache getApplicationLockCache();
-
 	ClusterProvider getClusterProvider();
 	BECacheProvider getBECacheProvider();
 
