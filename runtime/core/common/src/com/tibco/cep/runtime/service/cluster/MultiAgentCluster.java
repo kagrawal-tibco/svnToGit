@@ -20,6 +20,7 @@ import com.tibco.cep.common.resource.ResourceProvider;
 import com.tibco.cep.impl.common.log.LogDelegatorService;
 import com.tibco.cep.impl.common.resource.DefaultResourceProvider;
 import com.tibco.cep.runtime.service.cluster.agent.AgentManager;
+import com.tibco.cep.runtime.service.cluster.backingstore.BackingStore;
 import com.tibco.cep.runtime.service.cluster.backingstore.GenericBackingStore;
 import com.tibco.cep.runtime.service.cluster.backingstore.RecoveryManager;
 import com.tibco.cep.runtime.service.cluster.deploy.HotDeployer;
@@ -32,45 +33,45 @@ import com.tibco.cep.runtime.service.cluster.mm.CacheClusterMBean;
 import com.tibco.cep.runtime.service.cluster.scheduler.SchedulerCache;
 import com.tibco.cep.runtime.service.cluster.system.CacheSequenceManager;
 import com.tibco.cep.runtime.service.cluster.system.ClusterIdGenerator;
-import com.tibco.cep.runtime.service.cluster.system.IExternalClassesCache;
-import com.tibco.cep.runtime.service.cluster.system.IMetadataCache;
 import com.tibco.cep.runtime.service.cluster.system.ObjectTable;
 import com.tibco.cep.runtime.service.cluster.util.DefaultCacheSequenceManager;
+import com.tibco.cep.runtime.service.om.api.DaoProvider;
 import com.tibco.cep.runtime.service.om.api.GroupMemberMediator;
 import com.tibco.cep.runtime.service.om.api.InvocationService;
+import com.tibco.cep.runtime.service.store.ProxyDaoProvider;
 import com.tibco.cep.runtime.service.store.StoreProvider;
 import com.tibco.cep.runtime.service.store.StoreProviderConfig;
 import com.tibco.cep.runtime.service.store.StoreProviderFactory;
 import com.tibco.cep.runtime.session.RuleServiceProvider;
-import com.tibco.cep.runtime.session.impl.locks.DefaultConcurrentLockManager;
 import com.tibco.cep.runtime.session.locks.LockManager;
 import com.tibco.cep.runtime.session.sequences.SequenceManager;
 import com.tibco.cep.runtime.util.SystemProperty;
 import com.tibco.cep.service.Service;
 
+
 public class MultiAgentCluster implements Cluster {
 
-    private String clusterName;
+	private String clusterName;
     private RuleServiceProvider rsp;
     private ResourceProvider resourceProvider;
     private GroupMembershipService gmpService;
-    //private DaoProvider daoProvider;
-    private IMetadataCache metadataCache;
-    private IExternalClassesCache externalClassCache;
-    private ObjectTable objectTableCache; ///////Check
+    private DaoProvider daoProvider;
+    private MetadataCache metadataCache;
+    private ExternalClassesCache externalClassCache;
+    private ObjectTable objectTableCache;
     private ClusterIdGenerator idGenerator;
 
     private ClusterConfiguration clusterConfig;
-    private TopicRegistry topicRegistry; ///////////check
+    private TopicRegistry topicRegistry;
     private LockManager lockManager;
     private CacheSequenceManager sequenceManager;
     private SchedulerCache schedulerCache;
-    private EventTableProvider eventTableProvider; ///////required
+    private EventTableProvider eventTableProvider;
     private GroupMemberMediator groupMemberMediator;
     private AgentManager agentManager;
     private RecoveryManager recoveryManager;
     private HotDeployer hotDeployer;
-    private CacheClusterMBean mbean; ///////////////
+    private CacheClusterMBean mbean;
     
     private InvocationService invocationService;
     
@@ -90,19 +91,19 @@ public class MultiAgentCluster implements Cluster {
         this.storeProvider = StoreProviderFactory.getStoreProvider(storeConfig);
         
         this.idGenerator = clusterProvider.getIdGenerator();
-       // this.daoProvider = DaoProviderFactory.getInstance().newProvider();
+        this.daoProvider = new ProxyDaoProvider(storeProvider, clusterProvider);// DaoProviderFactory.getInstance().newProvider();
         this.metadataCache = clusterProvider.getMetadataCache();
         this.externalClassCache = clusterProvider.getExternalClassCache();
         this.objectTableCache = storeProvider.getCacheProvider().getObjectTableCache();
                 
         this.gmpService = clusterProvider.getGmpService();
         this.topicRegistry = new DefaultTopicRegistry();
-        this.lockManager = new DefaultConcurrentLockManager();
+        this.lockManager = clusterProvider.getConcurrentLockManager();
         this.sequenceManager =  new DefaultCacheSequenceManager();
         this.schedulerCache = clusterProvider.getSchedulerCache();
         this.eventTableProvider = new DefaultEventTableProvider();
         this.agentManager = clusterProvider.getAgentManager();
-        this.recoveryManager = null; //createRecoveryManager(); ///// TODO - 6.0 rectify this - getRecoveryManager is not part of BackingStore
+        this.recoveryManager = this.storeProvider.getRecoveryManager();
         this.invocationService = clusterProvider.getInvocationService();
         this.groupMemberMediator = clusterProvider.getGroupMediator();
         this.groupMemberMediator.addGroupMemberServiceListener(gmpService);
@@ -124,7 +125,7 @@ public class MultiAgentCluster implements Cluster {
         
         this.invocationService.init(this);
 
-       // this.daoProvider.init(this);
+        this.daoProvider.init(this);
         this.groupMemberMediator.init(this);
         this.gmpService.init(this);
         this.gmpService.waitForQuorum();
@@ -164,26 +165,23 @@ public class MultiAgentCluster implements Cluster {
         return gmpService;
     }
 
-	
-	/*@Override 
-	public DaoProvider getDaoProvider() { 
-		//return this.daoProvider;
-		return null;
-	}*/
+	@Override 
+	public DaoProvider getDaoProvider() {
+		return daoProvider;
+	}
 	 
-
     @Override
     public RuleServiceProvider getRuleServiceProvider() {
         return this.rsp;
     }
 
     @Override
-    public IMetadataCache getMetadataCache() {
+    public MetadataCache getMetadataCache() {
         return this.metadataCache;
     }
 
     @Override
-    public IExternalClassesCache getExternalClassesCache() {
+    public ExternalClassesCache getExternalClassesCache() {
         return this.externalClassCache;
     }
 
@@ -219,32 +217,37 @@ public class MultiAgentCluster implements Cluster {
 
     @Override
     public GenericBackingStore getBackingStore() {
-       // return this.daoProvider.getBackingStore();
-    	return null;
+        return this.daoProvider.getBackingStore();
     }
 
- /*   @Override
+    @Override
     public BackingStore getCacheAsideStore() {
-		
+    	GenericBackingStore gbs = this.storeProvider.getBackingStore();
+        if ((gbs != null) && (gbs instanceof BackingStore)) {
+    		return (BackingStore)gbs;
+    	}
         return null;
-    }*/
+    }
 
-  /*  @Override
+    @Override
     public BackingStore getRecoveryBackingStore() {
-		
+        GenericBackingStore gbs = this.daoProvider.getBackingStore();
+        if ((gbs != null) && (gbs instanceof BackingStore)) {
+    		return (BackingStore)gbs;
+    	}
         return null;
     }
 
     @Override
     public RecoveryManager getRecoveryManager() {
-        return this.recoveryManager;
+    	return recoveryManager;
     }
 
     @Override
     public EventTableProvider getEventTableProvider() {
         return this.eventTableProvider;
     }
-*/
+
     @Override
     public void flushAll() {
         //To change body of implemented methods use File | Settings | File Templates.
@@ -265,7 +268,7 @@ public class MultiAgentCluster implements Cluster {
         try {
         	clusterProvider.start();
         	//lockCache.start();
-            //this.daoProvider.start();
+            this.daoProvider.start();
             this.gmpService.start();
             this.idGenerator.start();
             this.metadataCache.start();
@@ -289,7 +292,7 @@ public class MultiAgentCluster implements Cluster {
         lockManager.discard();
         resourceProvider.discard();
         clusterProvider.stop();
-       // daoProvider.stop();
+        daoProvider.stop();
     }
 
     public GroupMemberMediator getGroupMemberMediator() {
@@ -322,16 +325,6 @@ public class MultiAgentCluster implements Cluster {
         }
     }
 
-//    private RecoveryManager createRecoveryManager() {
-//        String strategy = System.getProperty(SystemProperty.DATAGRID_RECOVERY_DISTRIBUTED_STRATEGY.getPropertyName(), /* alternative */
-//                          System.getProperty(SystemProperty.DATAGRID_RECOVERY_GENERALIZED_STRATEGY.getPropertyName(), "nobatch"));
-//        if ("nobatch".equals(strategy)){
-//            return new com.tibco.cep.runtime.service.cluster.backingstore.ClusterCacheRecoveryManager();
-//        } else {
-//            return new com.tibco.cep.runtime.service.cluster.backingstore.recovery.ClusterCacheRecoveryManager();
-//        }
-//    }
-
 	@Override
 	public InvocationService getInvocationService() {
 		return invocationService;
@@ -346,12 +339,4 @@ public class MultiAgentCluster implements Cluster {
 	public StoreProvider getStoreProvider() {
 		return storeProvider;
 	}
-
-	@Override
-	public EventTableProvider getEventTableProvider() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	
 }

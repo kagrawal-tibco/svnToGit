@@ -12,7 +12,9 @@ import java.util.EnumMap;
 
 import com.tibco.cep.common.resource.ResourceProvider;
 import com.tibco.cep.runtime.service.cluster.agent.AgentManager;
+import com.tibco.cep.runtime.service.cluster.backingstore.BackingStore;
 import com.tibco.cep.runtime.service.cluster.backingstore.GenericBackingStore;
+import com.tibco.cep.runtime.service.cluster.backingstore.RecoveryManager;
 //import com.tibco.cep.runtime.service.cluster.backingstore.CacheAsideBackingStore;
 //import com.tibco.cep.runtime.service.cluster.backingstore.RecoveryManager;
 import com.tibco.cep.runtime.service.cluster.deploy.HotDeployer;
@@ -23,8 +25,8 @@ import com.tibco.cep.runtime.service.cluster.scheduler.SchedulerCache;
 import com.tibco.cep.runtime.service.cluster.system.ClusterIdGenerator;
 import com.tibco.cep.runtime.service.cluster.system.IExternalClassesCache;
 import com.tibco.cep.runtime.service.cluster.system.IMetadataCache;
-import com.tibco.cep.runtime.service.cluster.system.LockCache;
 import com.tibco.cep.runtime.service.cluster.system.ObjectTable;
+import com.tibco.cep.runtime.service.om.api.DaoProvider;
 import com.tibco.cep.runtime.service.om.api.GroupMemberMediator;
 import com.tibco.cep.runtime.service.om.api.InvocationService;
 import com.tibco.cep.runtime.service.store.StoreProvider;
@@ -43,7 +45,7 @@ public interface Cluster extends Service {
 
     GroupMembershipService getGroupMembershipService();
 
-//    DaoProvider getDaoProvider();
+    DaoProvider getDaoProvider();
 
     RuleServiceProvider getRuleServiceProvider();
 
@@ -67,11 +69,11 @@ public interface Cluster extends Service {
 
 //    CacheAsideBackingStore getBackingStore();
 
-//    BackingStore getCacheAsideStore();
+    BackingStore getCacheAsideStore();
 
-//    BackingStore getRecoveryBackingStore();
+    BackingStore getRecoveryBackingStore();
 
-//    RecoveryManager getRecoveryManager();
+    RecoveryManager getRecoveryManager();
 
     EventTableProvider getEventTableProvider();
 
@@ -97,9 +99,4 @@ public interface Cluster extends Service {
 //	CacheProvider getCacheProvider();
 	
 	GenericBackingStore getBackingStore();
-
-	//BEStore getBackingStoreForType(int typeId);
-	
-	//BEStore registerBEStoreForType(int typeId, String storeUri) throws Exception;
-
 }

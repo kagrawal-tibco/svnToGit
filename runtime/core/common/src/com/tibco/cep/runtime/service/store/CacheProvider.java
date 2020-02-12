@@ -1,5 +1,7 @@
 package com.tibco.cep.runtime.service.store;
 
+import java.util.Collection;
+
 import com.tibco.cep.kernel.model.entity.Entity;
 import com.tibco.cep.runtime.service.cluster.LifeCycleService;
 import com.tibco.cep.runtime.service.cluster.system.ObjectTable;
@@ -12,12 +14,14 @@ public interface CacheProvider <K, E extends Entity> extends LifeCycleService {
 	
 	EntityDao getEntityDao(Class implClass);
 
-	EntityDao createOrGetEntityDao(Class entityClass, EntityDaoConfig daoConfig, boolean b) throws Exception;
+	EntityDao createOrGetEntityDao(Class entityClass, EntityDaoConfig daoConfig) throws Exception;
 	
 	Entity getEntity (Object id);
 
 	String getCacheName(Class implClass);
 
 	EntityDao<K, E> getEntityDao(String cacheName);
+
+	Collection<? extends EntityDao> getAllEntityDao();
 }
   

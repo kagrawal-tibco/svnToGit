@@ -2,8 +2,8 @@ package com.tibco.cep.runtime.service.cluster;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Map.Entry;
+import java.util.Properties;
 
 import com.tibco.be.util.config.ClusterProviderConfig;
 import com.tibco.cep.common.exception.LifecycleException;
@@ -15,12 +15,12 @@ import com.tibco.cep.runtime.service.cluster.gmp.GroupMembershipService;
 import com.tibco.cep.runtime.service.cluster.scheduler.SchedulerCache;
 import com.tibco.cep.runtime.service.cluster.system.CacheSequenceManager;
 import com.tibco.cep.runtime.service.cluster.system.ClusterIdGenerator;
-import com.tibco.cep.runtime.service.cluster.system.IExternalClassesCache;
-import com.tibco.cep.runtime.service.cluster.system.IMetadataCache;
 import com.tibco.cep.runtime.service.om.api.ControlDao;
 import com.tibco.cep.runtime.service.om.api.ControlDaoType;
 import com.tibco.cep.runtime.service.om.api.GroupMemberMediator;
 import com.tibco.cep.runtime.service.om.api.InvocationService;
+import com.tibco.cep.runtime.session.impl.locks.DefaultConcurrentLockManager;
+import com.tibco.cep.runtime.session.locks.LockManager;
 
 abstract public class AbstractClusterProvider implements ClusterProvider {
 
@@ -31,8 +31,8 @@ abstract public class AbstractClusterProvider implements ClusterProvider {
 	protected ControlDao<String, Integer> clusterLockMgr;
 	protected GroupMemberMediator groupMemberMediator;
 	protected GroupMembershipService gmpService;
-	protected IMetadataCache metadataCache;
-	protected IExternalClassesCache externalClasses;
+	protected MetadataCache metadataCache;
+	protected ExternalClassesCache externalClasses;
 	protected SchedulerCache schedulerCache;
 	protected AgentManager agentManager;
 	protected HotDeployer hotDeployer;
@@ -88,12 +88,12 @@ abstract public class AbstractClusterProvider implements ClusterProvider {
 	}
 
 	@Override
-	public IMetadataCache getMetadataCache() {
+	public MetadataCache getMetadataCache() {
 		return metadataCache;
 	}
 
 	@Override
-	public IExternalClassesCache getExternalClassCache() {
+	public ExternalClassesCache getExternalClassCache() {
 		return externalClasses;
 	}
 
@@ -132,6 +132,10 @@ abstract public class AbstractClusterProvider implements ClusterProvider {
 		return invocationService;
 	}
 
+	@Override
+	public LockManager getConcurrentLockManager() {
+		return new DefaultConcurrentLockManager();
+	}
 	
 	protected String getDaoName(ControlDaoType daoType, Object[] additionalProps) {
 		String daoName = null;

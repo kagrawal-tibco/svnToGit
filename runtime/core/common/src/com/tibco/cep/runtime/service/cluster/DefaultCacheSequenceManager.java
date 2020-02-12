@@ -12,13 +12,13 @@ import java.io.Serializable;
 import java.util.HashMap;
 
 import com.tibco.be.noop.kit.LocalMap;
-import com.tibco.be.util.config.StoreConfigManager.StoreProvider;
 import com.tibco.cep.runtime.service.cluster.DefaultCacheSequenceManager.CacheSequenceRecord;
 import com.tibco.cep.runtime.service.cluster.backingstore.CacheAsideBackingStore;
 import com.tibco.cep.runtime.service.cluster.system.CacheSequenceManager;
 import com.tibco.cep.runtime.service.om.api.ControlDao;
 import com.tibco.cep.runtime.service.om.api.ControlDaoType;
 import com.tibco.cep.runtime.service.om.api.MapChangeListener;
+import com.tibco.cep.runtime.service.store.StoreProvider;
 
 /**
  * Created by IntelliJ IDEA.
