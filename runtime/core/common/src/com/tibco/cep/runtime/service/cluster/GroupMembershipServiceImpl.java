@@ -196,11 +196,11 @@ public class GroupMembershipServiceImpl implements GroupMembershipService {
 	}
 
 	public boolean suspendAll() throws Exception {
-		return SuspendAgents.suspendAgents(null);
+		return SuspendAgents.suspendAgents();
 	}
 
 	public boolean resumeAll() throws Exception {
-		return ResumeAgents.resumeAgents(null);
+		return ResumeAgents.resumeAgents();
 	}
 
 	public boolean suspend(Set<GroupMember> members) {

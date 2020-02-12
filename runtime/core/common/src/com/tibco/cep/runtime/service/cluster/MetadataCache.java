@@ -73,27 +73,23 @@ import com.tibco.xml.data.primitive.ExpandedName;
  */
 public class MetadataCache implements IMetadataCache {
 	//TODO:6 change it to a meaningful value
-    private static final String MIN_VALUE = "MIN_VALUE";
-
 	protected static Logger logger = LogManagerFactory.getLogManager().getLogger(MetadataCache.class);
 
     Cluster cluster;
 
-    ControlDao<String, byte[]> masterCache;
+    ControlDao<Integer, byte[]> masterCache;
 
-    Map<String, Integer> typeIdDao;// = new HashMap<String, Integer>();
-    
-    Map<String, Integer> lockTableDao;
+    ControlDao<String, Integer> typeIdDao;
 
-    ControlDao<String, Object> recoveryCoordinatorDao;
+    ControlDao<Object, Object> recoveryCoordinatorDao;
 
     MetadataDescriptor[] metadataDescriptors = new MetadataDescriptor[0];
 
-    Map<Class, MetadataDescriptor> classToMetadata = new HashMap<Class, MetadataDescriptor>();
+    HashMap<Class, MetadataDescriptor> classToMetadata = new HashMap<Class, MetadataDescriptor>();
 
-    Map<String, MetadataDescriptor> classNameToMetadata = new HashMap<String, MetadataDescriptor>();
+    HashMap<String, MetadataDescriptor> classNameToMetadata = new HashMap<String, MetadataDescriptor>();
 
-    Map<Class, EntityDaoConfig> entityDaoConfigs = new HashMap<Class, EntityDaoConfig>();
+    HashMap<Class, EntityDaoConfig> entityDaoConfigs = new HashMap<Class, EntityDaoConfig>();
     
     boolean hasStarted = false;
 
@@ -110,24 +106,15 @@ public class MetadataCache implements IMetadataCache {
 
     public void init(Cluster cluster) throws Exception {
         this.cluster = cluster;
-        
-		ClusterProvider clusterProvider = cluster.getClusterProvider();
-//		daoProvider = clusterProvider.getDaoProvider();
 
-        this.masterCache = clusterProvider.
-                createControlDao(String.class, byte[].class, ControlDaoType.Master, cluster);
+        this.masterCache = cluster.getDaoProvider().
+                createControlDao(Integer.class, byte[].class, ControlDaoType.Master);
 
-       /* this.typeIdDao = clusterProvider.
-                createControlDao(String.class, Integer.class, ControlDaoType.TypeIds, cluster);*/
-        
-        //this.typeIdDao = defaultStore.createOrGetStoreControlDao(String.class, Integer.class, ControlDaoType.TypeIds.getAlias(), cluster);
-        this.typeIdDao = new LocalMap(ControlDaoType.TypeIds.getAlias(), ControlDaoType.TypeIds);
-        //TODO - What in case of only cluster config?
-        
-        //this.lockTableDao = defaultStore.createStoreControlDao(String.class, Integer.class, "LockTable", cluster);
+        this.typeIdDao = cluster.getDaoProvider().
+                createControlDao(String.class, Integer.class, ControlDaoType.TypeIds);
 
-        this.recoveryCoordinatorDao = clusterProvider.
-                createControlDao(String.class, Object.class, ControlDaoType.RecoveryCoordinator, cluster);
+        this.recoveryCoordinatorDao = cluster.getDaoProvider().
+                createControlDao(Object.class, Object.class, ControlDaoType.MetadataRegistry);
 
         initEntityDaoConfiguration();
     }
@@ -462,7 +449,7 @@ public class MetadataCache implements IMetadataCache {
             Cannot use typeIdDao.lock(uri, -1) - because AS does a put(k, null) on a lock. This would then return a null value
             when doing typeIdDao.get(uri).
             */
-            masterCache.lock(MIN_VALUE, -1);
+            masterCache.lock(Integer.MIN_VALUE, -1);
             //lockTableDao.lock();
             Integer typeIdObj = typeIdDao.get(uri);
             int typeId;
@@ -479,7 +466,7 @@ public class MetadataCache implements IMetadataCache {
 
             return typeId;
         } finally {
-            masterCache.unlock(MIN_VALUE);
+            masterCache.unlock(Integer.MIN_VALUE);
         }
     }
 
@@ -498,7 +485,7 @@ public class MetadataCache implements IMetadataCache {
 
         EntityDaoConfig daoConfig = entityDaoConfigs.get(entityClass);
 
-        cluster.getBECacheProvider().createOrGetEntityDao(entityClass, daoConfig, true);
+        entityDao = cluster.getDaoProvider().createEntityDao(entityClass, daoConfig, true);
 
         MetadataDescriptor md = new MetadataDescriptor(uri, entityClass, typeId, entityDao);
         metadataDescriptors[typeId - BE_TYPE_START] = md;

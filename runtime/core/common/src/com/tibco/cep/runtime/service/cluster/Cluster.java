@@ -24,7 +24,6 @@ import com.tibco.cep.runtime.service.cluster.gmp.GroupMembershipService;
 import com.tibco.cep.runtime.service.cluster.scheduler.SchedulerCache;
 import com.tibco.cep.runtime.service.cluster.system.ClusterIdGenerator;
 import com.tibco.cep.runtime.service.cluster.system.IExternalClassesCache;
-import com.tibco.cep.runtime.service.cluster.system.IMetadataCache;
 import com.tibco.cep.runtime.service.cluster.system.ObjectTable;
 import com.tibco.cep.runtime.service.om.api.DaoProvider;
 import com.tibco.cep.runtime.service.om.api.GroupMemberMediator;
@@ -51,7 +50,7 @@ public interface Cluster extends Service {
 
     ResourceProvider getResourceProvider();
 
-    IMetadataCache getMetadataCache();
+    MetadataCache getMetadataCache();
 
     IExternalClassesCache getExternalClassesCache();
 

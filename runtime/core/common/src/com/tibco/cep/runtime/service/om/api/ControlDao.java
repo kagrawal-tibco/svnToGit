@@ -33,7 +33,7 @@ public interface ControlDao<K, V> extends Map<K, V>, FilterableMap, InvocationSe
     
     Map getInternal();
 
-    void registerListener(MapChangeListener<K, V> changeListener);
+    void registerListener(ChangeListener<K, V> changeListener);
 
     //void registerListener(ChangeListener<K, V> changeListener, Filter filter);
 
