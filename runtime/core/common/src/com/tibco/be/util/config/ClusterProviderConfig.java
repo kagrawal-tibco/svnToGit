@@ -5,6 +5,6 @@ import com.tibco.be.util.config.BEProviderConfiguration;
  * @author ssinghal
  *
  */
-public class ClusterProviderConfiguration extends BEProviderConfiguration{
+public class ClusterProviderConfig extends BEProviderConfiguration{
 
 }

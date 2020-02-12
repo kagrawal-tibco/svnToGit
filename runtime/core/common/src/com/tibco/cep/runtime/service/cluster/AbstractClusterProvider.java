@@ -5,7 +5,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Map.Entry;
 
-import com.tibco.be.util.config.ClusterProviderConfiguration;
+import com.tibco.be.util.config.ClusterProviderConfig;
 import com.tibco.cep.common.exception.LifecycleException;
 import com.tibco.cep.kernel.service.logging.Level;
 import com.tibco.cep.kernel.service.logging.Logger;
@@ -26,7 +26,7 @@ abstract public class AbstractClusterProvider implements ClusterProvider {
 
 	protected Cluster cluster;
 	protected Map<String, ControlDao> controlDaos = new LinkedHashMap<String, ControlDao>();
-	protected ClusterProviderConfiguration beClusterConfig;
+	protected ClusterProviderConfig beClusterConfig;
 	
 	protected ControlDao<String, Integer> clusterLockMgr;
 	protected GroupMemberMediator groupMemberMediator;
@@ -41,7 +41,7 @@ abstract public class AbstractClusterProvider implements ClusterProvider {
 	protected InvocationService invocationService;
 	protected Logger logger;
 
-	public AbstractClusterProvider(ClusterProviderConfiguration beClusterConfig) {
+	public AbstractClusterProvider(ClusterProviderConfig beClusterConfig) {
 		this.beClusterConfig = beClusterConfig;
 		gmpService = new GroupMembershipServiceImpl();
 		metadataCache = new MetadataCache();

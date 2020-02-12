@@ -11,7 +11,7 @@ package com.tibco.cep.runtime.service.cluster;
 import java.lang.reflect.Method;
 import java.util.EnumMap;
 
-import com.tibco.be.util.config.ClusterProviderConfiguration;
+import com.tibco.be.util.config.ClusterProviderConfig;
 import com.tibco.cep.common.exception.LifecycleException;
 import com.tibco.cep.common.exception.RecoveryException;
 import com.tibco.cep.common.log.LoggerService;
@@ -83,7 +83,7 @@ public class MultiAgentCluster implements Cluster {
         this.resourceProvider = new DefaultResourceProvider();
         this.clusterConfig = new DefaultClusterConfiguration(name, rsp);
         
-        ClusterProviderConfiguration clusterConfig = (ClusterProviderConfiguration) rsp.getProperties().get(SystemProperty.VM_CLUSTER_CONFIG.getPropertyName());
+        ClusterProviderConfig clusterConfig = (ClusterProviderConfig) rsp.getProperties().get(SystemProperty.VM_CLUSTER_CONFIG.getPropertyName());
         clusterProvider = ClusterProviderFactory.getClusterProvider(this, clusterConfig);
         
         StoreProviderConfig storeConfig = null;//TODO:
